@@ -1,8 +1,9 @@
 // Site settings — the only file you need to edit to switch things on.
 window.PR_CONFIG = {
-  // Where pre-order requests are sent. Paste a Formspree endpoint here,
-  // e.g. "https://formspree.io/f/abcdwxyz". While empty, the form says that
-  // pre-orders open soon and sends nothing.
+  // Where pre-orders, notify requests and questions are sent.
+  // Google Sheet: paste the Apps Script Web app URL (https://script.google.com/macros/s/…/exec),
+  // see tools/google-sheet.gs. A Formspree endpoint works too.
+  // While empty, the forms say they open soon and send nothing.
   FORM_ENDPOINT: "",
   // Public contact e-mail shown in the footer (leave empty to hide it).
   CONTACT_EMAIL: ""

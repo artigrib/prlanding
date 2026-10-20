@@ -37,8 +37,14 @@
   /* shared sender for every form (pre-order, notify, question, school) */
   function send(payload) {
     if (!CFG.FORM_ENDPOINT) return Promise.reject(new Error('no-endpoint'));
-    return fetch(CFG.FORM_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(payload) })
-      .then(function (res) { if (!res.ok) throw new Error(res.status); return res; });
+    var gs = /script\.google\.com/.test(CFG.FORM_ENDPOINT);
+    payload._gotcha = (document.querySelector('input[name=_gotcha]') || {}).value || '';
+    // Google Apps Script cannot answer a CORS preflight, so it gets a "simple" text/plain request
+    return fetch(CFG.FORM_ENDPOINT, { method: 'POST', redirect: 'follow',
+      headers: gs ? { 'Content-Type': 'text/plain;charset=utf-8' } : { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload) })
+      .then(function (res) { if (!res.ok) throw new Error(res.status); return gs ? res.json() : res; })
+      .then(function (j) { if (gs && !(j && j.ok)) throw new Error((j && j.error) || 'rejected'); return j; });
   }
   var NO_ENDPOINT_MSG = 'Formulář spouštíme během několika dní. Zatím jsme nic neodeslali — zkuste to prosím brzy znovu' + (CFG.CONTACT_EMAIL ? ' nebo napište na ' + CFG.CONTACT_EMAIL : '') + '.';
   function validEmailStr(v) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(v).trim()); }

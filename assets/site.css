@@ -301,3 +301,4 @@ input[aria-invalid=true]{border-color:var(--accent-text)!important;box-shadow:in
 .ask{display:flex;flex-direction:column;gap:14px;max-width:40rem;padding-top:24px;border-top:1px solid var(--ink)}
 .ask textarea,.ask input{width:100%}
 @media (max-width:860px){.prep-alt a{grid-template-columns:96px minmax(0,1fr);gap:14px}.prep-alt b{font-size:20px}}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
