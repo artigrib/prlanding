@@ -2,17 +2,34 @@
 <html lang="cs">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stránka nenalezena — printedrobotics.cz</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nenalezeno — printedrobotics.cz</title>
 <meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E8461E'/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/site.css">
 </head>
-<body>
-<main class="wrap" style="padding-top:20vh">
-<div class="mono">404</div>
-<h1 class="hero-h1" style="margin-top:24px">Tenhle díl<br>jsme nevytiskli.</h1>
-<p style="margin-top:48px"><a class="btn" href="/">Zpět na katalog →</a></p>
+<body data-page="notfound" data-root="/">
+<header class="site-h" id="site-h">
+<div class="wrap"><div class="hbar">
+<div class="brand"><i aria-hidden="true"></i><a href="/">printedrobotics</a></div>
+<nav class="nav" aria-label="Hlavní menu"><a href="/#katalog">Katalog</a><a href="/#postup">Jak to funguje</a><a href="/#licence">Licence</a></nav>
+<a class="pill" href="/kviz.html">Najít robota <span aria-hidden="true">→</span></a>
+</div></div>
+</header>
+<main class="wrap" style="padding-bottom:120px">
+<div class="g" style="padding-top:clamp(32px,8vh,96px);row-gap:24px">
+<div class="a1 mono">404 — Nenalezeno</div>
+<div class="a4" style="display:flex;flex-direction:column;gap:24px">
+<h1 class="hero-h1" id="nf-title" style="margin:0">Tenhle díl<br>jsme nevytiskli.</h1>
+<p class="lead ink2" id="nf-lead" style="margin:0;max-width:36rem">Stránka neexistuje nebo byla přesunuta.</p>
+<div style="display:flex;flex-wrap:wrap;gap:10px"><a class="btn" href="/#katalog">Celý katalog →</a><a class="btn btn-o" href="/kviz.html">Poradit s výběrem</a></div>
+</div>
+</div>
+<div class="g" style="margin-top:64px"><div class="a1 mono">Možná hledáte</div><div class="a4 alts" id="nf-cards"></div></div>
 </main>
+<script src="/assets/config.js"></script>
+<script src="/assets/data.js"></script>
+<script src="/assets/app.js"></script>
 </body>
 </html>
