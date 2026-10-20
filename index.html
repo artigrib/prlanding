@@ -2,12 +2,13 @@
 <html lang="cs">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>printedrobotics.cz — stavebnice open-source robotů</title>
 <meta name="description" content="Open-source roboty jako stavebnice: díly vytiskneme z originálních souborů, doplníme hardware podle kusovníku a pošleme v jedné krabici. SO-101, LeKiwi, Open Duck Mini, AmazingHand a další. Praha, ČR a EU.">
 <link rel="canonical" href="https://printedrobotics.cz/">
 <meta name="robots" content="index,follow">
 <meta name="geo.placename" content="Prague"><meta name="geo.region" content="CZ">
+<meta name="theme-color" content="#FFFFFF">
 <meta property="og:type" content="website">
 <meta property="og:title" content="printedrobotics.cz — stavebnice open-source robotů">
 <meta property="og:description" content="Vytiskneme díly, zkompletujeme hardware, pošleme v jedné krabici. Vy robota složíte.">
@@ -20,6 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
+<link rel="preload" as="image" href="img/so101_white.jpg" fetchpriority="high">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"Organization","name":"printedrobotics.cz","url":"https://printedrobotics.cz/",
  "description":"Stavebnice open-source robotů: tisk dílů, kompletace hardwaru a doprava po ČR a EU.",
@@ -27,58 +29,52 @@
 </script>
 </head>
 <body data-page="home">
-<a class="sr-only" href="#katalog">Přejít na katalog</a>
+<a class="sr-only skip" href="#katalog">Přejít na katalog</a>
 
-<header class="wrap site-h">
-<div class="g">
-<div class="a1 brand"><i aria-hidden="true"></i><a href="./">printedrobotics</a></div>
-<nav class="a4s nav" aria-label="Hlavní menu">
-<a href="#katalog">Katalog</a><a href="#postup">Postup</a><a href="kviz.html">Který robot?</a><a href="#licence">Licence</a>
-</nav>
-<div class="a10 h-right"><span class="mono hide-s">CZ</span><a class="mono" style="color:var(--ink);text-decoration:none;padding:12px 0" href="kviz.html">Kvíz →</a></div>
-</div>
+<header class="site-h" id="site-h">
+<div class="wrap"><div class="hbar">
+<div class="brand"><i aria-hidden="true"></i><a href="./">printedrobotics</a></div>
+<nav class="nav" aria-label="Hlavní menu"><a href="#katalog" data-sec="katalog">Katalog</a><a href="#postup" data-sec="postup">Jak to funguje</a><a href="#licence" data-sec="licence">Licence</a></nav>
+<a class="pill" href="kviz.html">Najít robota <span aria-hidden="true">→</span></a>
+</div></div>
 </header>
 
 <main>
 <section id="top" class="wrap">
-<div class="g mono" style="padding-top:40px">
-<div class="a1">N° 01</div>
-<div class="a4s">Stavebnice open-source robotů</div>
+<div class="g mono hero-meta">
+<div class="a1">N° 01 — Stavebnice open-source robotů</div>
 <div class="a10 hide-s" style="text-align:right">Tisk a kompletace v Praze</div>
 </div>
 <h1 class="hero-h1">
 <span>Open-source roboty,</span>
 <span class="ind">vytištěné námi,</span>
-<span class="ind" style="color:#6B6B66">složené vámi.</span>
+<span class="ind" style="color:#5E5E59">složené vámi.</span>
 </h1>
-<div class="g" style="margin-top:72px;row-gap:32px;align-items:end">
-<div class="a1" style="display:flex;flex-direction:column;gap:24px">
-<div class="big-num">10</div>
-<p class="ink2" style="margin:0;font-size:15px;max-width:15rem">robotů v katalogu. Licenci konstrukčních souborů ověřujeme u každého projektu zvlášť.</p>
+<div class="g hero-row">
+<div class="a4s" style="grid-column:4 / span 5"><p class="lead" style="max-width:34rem">Vyberete si ověřený open-source projekt. Díly vytiskneme z originálních souborů, doplníme hardware podle kusovníku a pošleme vše v jedné krabici.</p></div>
+<div class="a10" style="display:flex;flex-direction:column;gap:10px">
+<a class="btn" href="#katalog">Vybrat robota <span aria-hidden="true">↓</span></a>
+<a class="btn btn-o" href="kviz.html">Nevím, kterého <span class="mono-s">Kvíz 30 s</span></a>
 </div>
-<div class="a4s"><p class="lead" style="max-width:34rem">Vyberete si ověřený open-source projekt. Díly vytiskneme z originálních souborů, doplníme hardware podle kusovníku a pošleme vše v jedné krabici — připravené ke stavbě.</p></div>
-<div class="a10" style="display:flex;flex-direction:column;gap:12px">
-<a class="btn" href="#katalog">Vybrat robota <span aria-hidden="true">→</span></a>
-<a class="btn btn-o" href="kviz.html">Který robot pro mě? <span class="mono-s">Kvíz 30 s</span></a>
+<div class="a1" style="grid-row:1;display:flex;align-items:baseline;gap:12px"><div class="big-num">10</div><p class="ink2" style="margin:0;font-size:15px;max-width:13rem">robotů v katalogu, licence ověřená u každého</p></div>
 </div>
-</div>
-<figure class="g" style="margin:96px 0 0;row-gap:16px">
-<figcaption class="a1 mono" style="align-self:end;line-height:1.6">Obr. 1<br>SO-101, follower<br>Design: The Robot Studio a Hugging Face, Apache-2.0<br>Vizualizace z CAD projektu</figcaption>
-<div class="a4 hero-fig"><img src="img/so101_white.jpg" alt="Robotická ruka SO-101 v bílém provedení" width="1200" height="900"></div>
+<figure class="g hero-fig">
+<figcaption class="a1 mono" style="align-self:end;line-height:1.6">Obr. 1 — SO-101 · design The Robot Studio a Hugging Face, Apache-2.0 · vizualizace z CAD projektu</figcaption>
+<div class="a4 hero-img"><img src="img/so101_white.jpg" alt="Robotická ruka SO-101 v bílém provedení" width="1200" height="900" fetchpriority="high"></div>
 </figure>
 </section>
 
 <section id="postup" class="wrap section">
 <div class="g rule">
-<div class="a1 mono">N° 02 — Postup</div>
+<div class="a1 mono">N° 02 — Jak to funguje</div>
 <h2 class="a4 h2" style="max-width:52rem">Tři kroky mezi repozitářem na GitHubu a robotem na vašem stole.</h2>
 </div>
-<div class="g" style="margin-top:80px">
+<div class="g" style="margin-top:clamp(24px,5vw,80px)">
 <div class="a1 hide-s"></div>
 <div class="a4 steps">
-<div class="step"><span class="mono" style="color:var(--ink)">01</span><h3>Tiskneme</h3><p>Díly tiskneme z originálních STL souborů projektu s ověřeným profilem — PLA+ nebo PETG, v barvě dle výběru. Rozměry kontrolujeme kalibrem.</p></div>
-<div class="step"><span class="mono" style="color:var(--ink)">02</span><h3>Kompletujeme</h3><p>Podle kusovníku doplníme serva či krokové motory, řídicí desky, šrouby, ložiska, kabely a zdroj. Vše roztříděné podle kroků montáže.</p></div>
-<div class="step"><span class="mono" style="color:var(--ink)">03</span><h3>Posíláme</h3><p>Doručení po ČR a EU s tištěným návodem a odkazy na oficiální dokumentaci a komunitu projektu.</p></div>
+<div class="step"><span class="mono" style="color:var(--ink)">01</span><h3>Tiskneme</h3><p>Díly z originálních STL souborů projektu, PLA+ nebo PETG, v barvě dle výběru. Rozměry kontrolujeme kalibrem.</p></div>
+<div class="step"><span class="mono" style="color:var(--ink)">02</span><h3>Kompletujeme</h3><p>Serva či motory, řídicí desky, šrouby, ložiska, kabely a zdroj podle kusovníku — roztříděné po krocích montáže.</p></div>
+<div class="step"><span class="mono" style="color:var(--ink)">03</span><h3>Posíláme</h3><p>Po ČR a EU s tištěným návodem a odkazy na dokumentaci a komunitu projektu.</p></div>
 </div>
 </div>
 </section>
@@ -89,8 +85,9 @@
 <h2 class="a4s h2">Deset robotů. Od prvního sestavení po výzkum.</h2>
 <div class="a10 filters" id="filters" role="group" aria-label="Filtr podle typu"></div>
 </div>
-<a class="quiz-cta" href="kviz.html"><span><b>Nevíte, kterého vybrat?</b><span class="muted">Tři otázky a doporučíme robota podle zkušeností a cíle.</span></span><span class="btn">Spustit kvíz →</span></a>
+<p class="mono count" id="count" aria-live="polite"></p>
 <div class="cards" id="cards"></div>
+<a class="quiz-cta" href="kviz.html" style="margin-top:56px"><span><b>Nevíte, kterého vybrat?</b><span class="muted">Tři otázky a doporučíme robota podle zkušeností a cíle.</span></span><span class="btn">Spustit kvíz <span aria-hidden="true">→</span></span></a>
 <noscript><p>Pro katalog zapněte JavaScript, nebo přejděte přímo: <a href="sada.html?r=so101">SO-101</a>, <a href="sada.html?r=lekiwi">LeKiwi</a>, <a href="sada.html?r=thor">Thor</a>.</p></noscript>
 </section>
 
@@ -98,9 +95,9 @@
 <div class="g rule">
 <div class="a1 mono">N° 04 — Licence</div>
 <h2 class="a4s h2">Prodáváme jen to, co licence dovoluje.</h2>
-<p class="a10 ink2" style="margin:0">U každé sady ověřujeme licenci konstrukčních souborů zvlášť od licence softwaru. U projektů s doložkou NC žádáme autory o písemný souhlas, jinak je nenabízíme.</p>
+<p class="a10 ink2" style="margin:0;font-size:16px">Licenci konstrukčních souborů ověřujeme zvlášť od licence softwaru. Projekty s doložkou NC nabízíme jen s písemným souhlasem autorů.</p>
 </div>
-<div class="g" style="margin-top:80px">
+<div class="g" style="margin-top:clamp(24px,5vw,80px)">
 <div class="a1 hide-s"></div>
 <div class="a4" style="overflow-x:auto">
 <table class="lic"><thead><tr><th scope="col">Licence hardwaru</th><th scope="col">Prodej sady</th><th scope="col">Naše povinnost</th></tr></thead><tbody id="lic-body"></tbody></table>

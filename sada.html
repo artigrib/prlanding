@@ -2,10 +2,11 @@
 <html lang="cs">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Stavebnice robota — printedrobotics.cz</title>
 <meta name="description" content="Stavebnice open-source robota: vytištěné díly a kompletní hardware podle kusovníku projektu.">
 <link rel="canonical" href="https://printedrobotics.cz/sada.html">
+<meta name="theme-color" content="#FFFFFF">
 <meta property="og:type" content="product">
 <meta property="og:site_name" content="printedrobotics.cz">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E8461E'/%3E%3C/svg%3E">
@@ -14,112 +15,133 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
 </head>
-<body data-page="product">
+<body data-page="product" class="has-sbar">
+<a class="sr-only skip" href="#predobjednavka">Přejít k předobjednávce</a>
 
-<header class="wrap site-h">
-<div class="g">
-<div class="a1 brand"><i aria-hidden="true"></i><a href="./">printedrobotics</a></div>
-<nav class="a4s nav" aria-label="Hlavní menu"><a href="./#katalog">Katalog</a><a href="kviz.html">Který robot?</a><a href="#licence">Licence</a></nav>
-<div class="a10 h-right"><a class="mono" style="color:var(--ink);text-decoration:none;padding:12px 0" href="#predobjednavka">Předobjednat ↓</a></div>
-</div>
+<header class="site-h" id="site-h">
+<div class="wrap"><div class="hbar">
+<div class="brand"><i aria-hidden="true"></i><a href="./">printedrobotics</a></div>
+<nav class="nav" aria-label="Hlavní menu"><a href="./#katalog">Katalog</a><a href="./#postup">Jak to funguje</a><a href="./#licence">Licence</a></nav>
+<a class="pill" href="kviz.html">Najít robota <span aria-hidden="true">→</span></a>
+</div></div>
 </header>
 
 <nav class="wrap crumb" aria-label="Drobečková navigace">
-<div class="g mono"><div class="a1"><a href="./#katalog">← Katalog</a></div><div class="a4">Katalog / <span id="crumb-cat"></span> / <span id="crumb-name" style="color:var(--ink)"></span></div></div>
+<div class="g mono"><div class="a1"><a href="./#katalog">← Katalog</a> <span class="muted" style="display:none" id="crumb-sep"></span></div><div class="a4 hide-s">Katalog / <span id="crumb-cat"></span> / <span id="crumb-name" style="color:var(--ink)"></span></div></div>
 </nav>
 
 <main>
 <section class="wrap">
 <div class="g p-top">
 <div class="gal">
-<figure style="margin:0;display:flex;flex-direction:column;gap:12px">
+<figure style="margin:0;display:flex;flex-direction:column;gap:10px">
 <div class="tile" id="p-tile"></div>
-<figcaption class="mono" style="display:flex;justify-content:space-between;gap:16px"><span id="p-cap"></span><span id="p-credit"></span></figcaption>
+<figcaption class="mono" style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap"><span id="p-cap"></span><span id="p-credit"></span></figcaption>
 </figure>
 </div>
 
-<div class="buy" id="predobjednavka">
+<div class="buy">
 <div style="display:flex;flex-direction:column;gap:10px">
 <div class="mono" style="display:flex;justify-content:space-between;gap:12px"><span id="p-no"></span><span id="p-hw"></span></div>
-<div class="muted" style="font-size:18px">Stavebnice pro</div>
+<div class="muted" style="font-size:17px">Stavebnice pro</div>
 <h1 class="p-name" id="p-name"></h1>
-<div class="mono-s" id="p-author"></div>
-<p class="ink2" style="margin:6px 0 0;font-size:18px;line-height:1.45" id="p-lead"></p>
+<div class="mono" id="p-author"></div>
+<p class="ink2" style="margin:6px 0 0;font-size:17px;line-height:1.5" id="p-lead"></p>
 </div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<p class="status" id="p-status"><i aria-hidden="true"></i><span>Předobjednávka · cenu a termín potvrdíme e-mailem</span></p>
+<a class="btn btn-act" id="top-cta" href="#predobjednavka">Předobjednat <span aria-hidden="true">↓</span></a>
+</div>
+</div>
+</div>
+<nav class="jump" aria-label="Obsah stránky">
+<a href="#predobjednavka">Konfigurace</a><a href="#obsah">Obsah krabice</a><a href="#parametry">Parametry</a><a href="#faq">Otázky</a><a href="#licence">Licence a bezpečnost</a>
+</nav>
+</section>
 
+<section id="predobjednavka" class="wrap section">
+<div class="g rule">
+<div class="a1 mono">01 — Konfigurace a předobjednávka</div>
+<div class="a4s" style="display:flex;flex-direction:column;gap:28px">
 <fieldset id="setups-wrap"><legend>Sestava</legend><div class="opts2" id="setups"></div></fieldset>
 <fieldset><legend>Rozsah</legend><div class="tiers" id="tiers"></div></fieldset>
-<fieldset><legend>Barva · <span id="color-name" style="color:var(--ink)"></span></legend><div class="swatches" id="colors"></div></fieldset>
+<fieldset><legend>Barva: <span id="color-name" style="color:var(--ink)"></span></legend><div class="swatches" id="colors"></div></fieldset>
 <fieldset><legend>Materiál</legend><div class="opts2" id="mats"></div></fieldset>
-
-<form id="preorder" novalidate style="display:flex;flex-direction:column;gap:14px;border-top:1px solid var(--ink);padding-top:20px">
-<div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px"><b id="po-title" style="font-weight:500;font-size:18px"></b><span class="muted" id="summary" style="font-size:14px;text-align:right"></span></div>
+</div>
+<div class="a10" style="grid-column:10 / span 3">
+<div id="po-wrap">
+<form id="preorder" novalidate style="display:flex;flex-direction:column;gap:14px">
+<div><b id="po-title" style="font-weight:500;font-size:19px;display:block"></b><span class="muted" id="summary" style="font-size:15px"></span></div>
 <p class="ink2" id="po-prep" hidden style="margin:0;font-size:15px">Než sadu nabídneme, ověřujeme s autory licenci konstrukčních souborů.</p>
-<div class="note-bar"><i aria-hidden="true"></i><span>Cenu a termín expedice potvrdíme e-mailem. Platíte až po potvrzení.</span></div>
-<label class="field">E-mail<input type="email" name="email" autocomplete="email" required placeholder="vas@email.cz"></label>
-<label class="field"><span>Poznámka <span class="muted">— nepovinné</span></span><textarea name="note" rows="2" placeholder="Např. počet sad pro školu"></textarea></label>
+<div class="note-bar"><i aria-hidden="true"></i><span>Nezávazné. Cenu a termín potvrdíme e-mailem, platíte až po potvrzení.</span></div>
+<label class="field" for="po-email">E-mail</label>
+<input id="po-email" class="field-in" type="email" name="email" autocomplete="email" autocapitalize="off" spellcheck="false" inputmode="email" required aria-describedby="po-email-err" style="min-height:52px;padding:12px 14px;border:1px solid var(--line-2);font-family:inherit;font-size:17px;margin-top:-8px">
+<span class="err" id="po-email-err" hidden>Zkontrolujte prosím e-mailovou adresu.</span>
+<label class="field" for="po-note">Poznámka <span class="muted" style="font-weight:400">(nepovinné)</span></label>
+<textarea id="po-note" name="note" rows="2" placeholder="Např. počet sad pro školu" style="min-height:52px;padding:12px 14px;border:1px solid var(--line-2);font-family:inherit;font-size:17px;margin-top:-8px"></textarea>
 <label class="check"><input type="checkbox" id="po-consent"><span>Souhlasím se zpracováním e-mailu za účelem vyřízení předobjednávky.</span></label>
-<button type="submit" class="btn" id="po-btn" disabled style="min-height:60px;font-size:17px">Předobjednat <span aria-hidden="true">→</span></button>
+<button type="submit" class="btn btn-act" id="po-btn" style="min-height:56px;font-size:17px"><span id="po-btn-t">Předobjednat</span> <span aria-hidden="true">→</span></button>
 <p class="form-msg" id="form-msg" role="status" aria-live="polite" hidden></p>
 </form>
 </div>
 </div>
+</div>
 </section>
 
-<section class="wrap section">
-<div class="g rule">
-<div class="a1 mono">01 — Obsah krabice</div>
-<div class="a4">
-<h2 class="h2" id="box-title" style="margin-bottom:48px"></h2>
+<section id="obsah" class="wrap section">
+<details class="acc" data-mobile-open="1">
+<summary class="g rule"><span class="a1 mono">02 — Obsah krabice</span><span class="a4" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="h2" id="box-title"></span><span class="acc-ico" aria-hidden="true">+</span></span></summary>
+<div class="g" style="margin-top:24px"><div class="a1 hide-s"></div><div class="a4">
 <ol class="box" id="box"></ol>
-<p class="mono-s" id="box-note" style="margin:16px 0 0"></p>
-</div>
-</div>
+<p class="mono" id="box-note" style="margin:16px 0 0"></p>
+</div></div>
+</details>
 </section>
 
-<section class="wrap section">
-<div class="g rule">
-<div class="a1 mono">02 — Parametry</div>
-<dl class="a4 specs" id="specs"></dl>
-</div>
+<section id="parametry" class="wrap section">
+<details class="acc">
+<summary class="g rule"><span class="a1 mono">03 — Parametry</span><span class="a4" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="h2" id="specs-title">Parametry</span><span class="acc-ico" aria-hidden="true">+</span></span></summary>
+<div class="g" style="margin-top:24px"><div class="a1 hide-s"></div><dl class="a4 specs" id="specs"></dl></div>
+</details>
 </section>
 
-<section class="wrap section">
+<section id="faq" class="wrap section">
 <div class="g rule">
-<div class="a1 mono">03 — Časté otázky</div>
-<div class="a4 faq" id="faq"></div>
+<div class="a1 mono">04 — Časté otázky</div>
+<div class="a4 faq" id="faq-list"></div>
 </div>
 </section>
 
 <section id="licence" class="wrap section">
-<div class="g rule">
-<div class="a1 mono">04 — Projekt, licence, bezpečnost</div>
-<div class="a4s ink2" style="display:flex;flex-direction:column;gap:16px">
+<details class="acc">
+<summary class="g rule"><span class="a1 mono">05 — Projekt, licence, bezpečnost</span><span class="a4" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="h2">Licence a bezpečnost</span><span class="acc-ico" aria-hidden="true">+</span></span></summary>
+<div class="g" style="margin-top:24px;row-gap:24px">
+<div class="a1 hide-s"></div>
+<div class="a4s ink2" style="display:flex;flex-direction:column;gap:14px">
 <p style="margin:0">Tato sada vychází z otevřeného projektu <span id="l-name"></span>, jehož autorem je <span id="l-author"></span>. Konstrukční soubory jsou zveřejněny pod licencí <span id="l-hw"></span>, software pod licencí <span id="l-sw"></span>.</p>
 <p style="margin:0">printedrobotics.cz vyrábí tištěné díly a kompletuje sadu podle kusovníku projektu <span id="l-name2"></span>. Autoři projektu s námi nejsou spojeni a tento produkt neschválili.</p>
-<div style="display:flex;flex-wrap:wrap;gap:8px 24px"><a id="l-repo" href="#" rel="noopener" style="padding:10px 0;text-decoration:none">Zdrojové soubory ↗</a><a id="l-docs" href="#" rel="noopener" style="padding:10px 0;text-decoration:none">Návod projektu ↗</a></div>
+<div style="display:flex;flex-wrap:wrap;gap:8px"><a class="btn btn-o" id="l-repo" href="#" rel="noopener" style="min-height:44px;font-size:15px">Zdrojové soubory ↗</a><a class="btn btn-o" id="l-docs" href="#" rel="noopener" style="min-height:44px;font-size:15px">Návod projektu ↗</a></div>
 </div>
-<dl class="a10" style="margin:0;font-size:14px">
-<div style="border-top:1px solid var(--line);padding:10px 0"><dt class="mono-s">Licence hardwaru</dt><dd style="margin:0" id="l-hw2"></dd></div>
-<div style="border-top:1px solid var(--line);padding:10px 0"><dt class="mono-s">Licence softwaru</dt><dd style="margin:0" id="l-sw2"></dd></div>
+<dl class="a10" style="margin:0;font-size:15px">
+<div style="border-top:1px solid var(--line);padding:10px 0"><dt class="mono">Licence hardwaru</dt><dd style="margin:0" id="l-hw2"></dd></div>
+<div style="border-top:1px solid var(--line);padding:10px 0"><dt class="mono">Licence softwaru</dt><dd style="margin:0" id="l-sw2"></dd></div>
 </dl>
-</div>
-<div class="g" style="margin-top:48px">
 <div class="a1 hide-s"></div>
 <div class="a4 panel">
-<div><span class="mono-s">Bezpečnostní upozornění</span><p style="font-weight:500;margin-top:8px">Není hračka. Obsahuje malé díly — nebezpečí spolknutí.</p><p class="ink2" style="margin-top:8px">Určeno osobám od 14 let; mladší pouze pod dohledem dospělého. Pohyblivé části mohou přiskřípnout prsty. Používejte pouze dodaný napájecí zdroj.</p></div>
-<div><span class="mono-s">Výrobce sady</span><p class="ink2" style="margin-top:8px">printedrobotics.cz, Praha. Úplné údaje o výrobci a prohlášení o shodě uvedeme před zahájením prodeje.</p></div>
+<div><span class="mono">Bezpečnostní upozornění</span><p style="font-weight:500;margin-top:8px">Není hračka. Obsahuje malé díly — nebezpečí spolknutí.</p><p class="ink2" style="margin-top:8px">Určeno osobám od 14 let; mladší pouze pod dohledem dospělého. Pohyblivé části mohou přiskřípnout prsty. Používejte pouze dodaný napájecí zdroj.</p></div>
+<div><span class="mono">Výrobce sady</span><p class="ink2" style="margin-top:8px">printedrobotics.cz, Praha. Úplné údaje o výrobci a prohlášení o shodě uvedeme před zahájením prodeje.</p></div>
 </div>
 </div>
+</details>
 </section>
 
 <section class="wrap section">
 <div class="g rule" style="align-items:baseline">
-<div class="a1 mono">05 — Navazuje</div>
+<div class="a1 mono">06 — Navazuje</div>
 <h2 class="a4s h2">Další krok</h2>
-<a class="a10" href="./#katalog" style="justify-self:end;text-decoration:none;padding:12px 0">Celý katalog →</a>
+<a class="a10" href="./#katalog" style="justify-self:start;text-decoration:none;padding:12px 0">Celý katalog →</a>
 </div>
-<div class="g" style="margin-top:48px"><div class="a1 hide-s"></div><div class="a4 rel" id="related"></div></div>
+<div class="g" style="margin-top:32px"><div class="a1 hide-s"></div><div class="a4 rel" id="related"></div></div>
 </section>
 </main>
 
@@ -130,6 +152,11 @@
 <div class="a10">Všechny projekty patří svým autorům.</div>
 </div>
 </footer>
+
+<div class="sbar" id="sbar" aria-hidden="true">
+<div style="min-width:0"><b id="sb-name"></b><span id="sb-sum"></span></div>
+<a class="btn btn-act" href="#predobjednavka" tabindex="-1">Předobjednat</a>
+</div>
 
 <script src="assets/config.js"></script>
 <script src="assets/data.js"></script>
