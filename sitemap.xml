@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://prague2030.github.io/prlanding/</loc>
-    <lastmod>2026-08-19</lastmod>
-  </url>
+  <url><loc>https://printedrobotics.cz/</loc><lastmod>2026-10-20</lastmod></url>
+  <url><loc>https://printedrobotics.cz/kviz.html</loc><lastmod>2026-10-20</lastmod></url>
+  <url><loc>https://printedrobotics.cz/sada.html?r=so101</loc><lastmod>2026-10-20</lastmod></url>
+  <url><loc>https://printedrobotics.cz/sada.html?r=lekiwi</loc><lastmod>2026-10-20</lastmod></url>
+  <url><loc>https://printedrobotics.cz/sada.html?r=xle</loc><lastmod>2026-10-20</lastmod></url>
+  <url><loc>https://printedrobotics.cz/sada.html?r=duck</loc><lastmod>2026-10-20</lastmod></url>
+  <url><loc>https://printedrobotics.cz/sada.html?r=hand</loc><lastmod>2026-10-20</lastmod></url>
+  <url><loc>https://printedrobotics.cz/sada.html?r=otto</loc><lastmod>2026-10-20</lastmod></url>
+  <url><loc>https://printedrobotics.cz/sada.html?r=spot</loc><lastmod>2026-10-20</lastmod></url>
+  <url><loc>https://printedrobotics.cz/sada.html?r=sawppy</loc><lastmod>2026-10-20</lastmod></url>
+  <url><loc>https://printedrobotics.cz/sada.html?r=thor</loc><lastmod>2026-10-20</lastmod></url>
+  <url><loc>https://printedrobotics.cz/sada.html?r=exomy</loc><lastmod>2026-10-20</lastmod></url>
 </urlset>

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stavebnice robota — printedrobotics.cz</title>
+<meta name="description" content="Stavebnice open-source robota: vytištěné díly a kompletní hardware podle kusovníku projektu.">
+<link rel="canonical" href="https://printedrobotics.cz/sada.html">
+<meta property="og:type" content="product">
+<meta property="og:site_name" content="printedrobotics.cz">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E8461E'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body data-page="product">
+
+<header class="wrap site-h">
+<div class="g">
+<div class="a1 brand"><i aria-hidden="true"></i><a href="./">printedrobotics</a></div>
+<nav class="a4s nav" aria-label="Hlavní menu"><a href="./#katalog">Katalog</a><a href="kviz.html">Který robot?</a><a href="#licence">Licence</a></nav>
+<div class="a10 h-right"><a class="mono" style="color:var(--ink);text-decoration:none;padding:12px 0" href="#predobjednavka">Předobjednat ↓</a></div>
+</div>
+</header>
+
+<nav class="wrap crumb" aria-label="Drobečková navigace">
+<div class="g mono"><div class="a1"><a href="./#katalog">← Katalog</a></div><div class="a4">Katalog / <span id="crumb-cat"></span> / <span id="crumb-name" style="color:var(--ink)"></span></div></div>
+</nav>
+
+<main>
+<section class="wrap">
+<div class="g p-top">
+<div class="gal">
+<figure style="margin:0;display:flex;flex-direction:column;gap:12px">
+<div class="tile" id="p-tile"></div>
+<figcaption class="mono" style="display:flex;justify-content:space-between;gap:16px"><span id="p-cap"></span><span id="p-credit"></span></figcaption>
+</figure>
+</div>
+
+<div class="buy" id="predobjednavka">
+<div style="display:flex;flex-direction:column;gap:10px">
+<div class="mono" style="display:flex;justify-content:space-between;gap:12px"><span id="p-no"></span><span id="p-hw"></span></div>
+<div class="muted" style="font-size:18px">Stavebnice pro</div>
+<h1 class="p-name" id="p-name"></h1>
+<div class="mono-s" id="p-author"></div>
+<p class="ink2" style="margin:6px 0 0;font-size:18px;line-height:1.45" id="p-lead"></p>
+</div>
+
+<fieldset id="setups-wrap"><legend>Sestava</legend><div class="opts2" id="setups"></div></fieldset>
+<fieldset><legend>Rozsah</legend><div class="tiers" id="tiers"></div></fieldset>
+<fieldset><legend>Barva · <span id="color-name" style="color:var(--ink)"></span></legend><div class="swatches" id="colors"></div></fieldset>
+<fieldset><legend>Materiál</legend><div class="opts2" id="mats"></div></fieldset>
+
+<form id="preorder" novalidate style="display:flex;flex-direction:column;gap:14px;border-top:1px solid var(--ink);padding-top:20px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px"><b id="po-title" style="font-weight:500;font-size:18px"></b><span class="muted" id="summary" style="font-size:14px;text-align:right"></span></div>
+<p class="ink2" id="po-prep" hidden style="margin:0;font-size:15px">Než sadu nabídneme, ověřujeme s autory licenci konstrukčních souborů.</p>
+<div class="note-bar"><i aria-hidden="true"></i><span>Cenu a termín expedice potvrdíme e-mailem. Platíte až po potvrzení.</span></div>
+<label class="field">E-mail<input type="email" name="email" autocomplete="email" required placeholder="vas@email.cz"></label>
+<label class="field"><span>Poznámka <span class="muted">— nepovinné</span></span><textarea name="note" rows="2" placeholder="Např. počet sad pro školu"></textarea></label>
+<label class="check"><input type="checkbox" id="po-consent"><span>Souhlasím se zpracováním e-mailu za účelem vyřízení předobjednávky.</span></label>
+<button type="submit" class="btn" id="po-btn" disabled style="min-height:60px;font-size:17px">Předobjednat <span aria-hidden="true">→</span></button>
+<p class="form-msg" id="form-msg" role="status" aria-live="polite" hidden></p>
+</form>
+</div>
+</div>
+</section>
+
+<section class="wrap section">
+<div class="g rule">
+<div class="a1 mono">01 — Obsah krabice</div>
+<div class="a4">
+<h2 class="h2" id="box-title" style="margin-bottom:48px"></h2>
+<ol class="box" id="box"></ol>
+<p class="mono-s" id="box-note" style="margin:16px 0 0"></p>
+</div>
+</div>
+</section>
+
+<section class="wrap section">
+<div class="g rule">
+<div class="a1 mono">02 — Parametry</div>
+<dl class="a4 specs" id="specs"></dl>
+</div>
+</section>
+
+<section class="wrap section">
+<div class="g rule">
+<div class="a1 mono">03 — Časté otázky</div>
+<div class="a4 faq" id="faq"></div>
+</div>
+</section>
+
+<section id="licence" class="wrap section">
+<div class="g rule">
+<div class="a1 mono">04 — Projekt, licence, bezpečnost</div>
+<div class="a4s ink2" style="display:flex;flex-direction:column;gap:16px">
+<p style="margin:0">Tato sada vychází z otevřeného projektu <span id="l-name"></span>, jehož autorem je <span id="l-author"></span>. Konstrukční soubory jsou zveřejněny pod licencí <span id="l-hw"></span>, software pod licencí <span id="l-sw"></span>.</p>
+<p style="margin:0">printedrobotics.cz vyrábí tištěné díly a kompletuje sadu podle kusovníku projektu <span id="l-name2"></span>. Autoři projektu s námi nejsou spojeni a tento produkt neschválili.</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px 24px"><a id="l-repo" href="#" rel="noopener" style="padding:10px 0;text-decoration:none">Zdrojové soubory ↗</a><a id="l-docs" href="#" rel="noopener" style="padding:10px 0;text-decoration:none">Návod projektu ↗</a></div>
+</div>
+<dl class="a10" style="margin:0;font-size:14px">
+<div style="border-top:1px solid var(--line);padding:10px 0"><dt class="mono-s">Licence hardwaru</dt><dd style="margin:0" id="l-hw2"></dd></div>
+<div style="border-top:1px solid var(--line);padding:10px 0"><dt class="mono-s">Licence softwaru</dt><dd style="margin:0" id="l-sw2"></dd></div>
+</dl>
+</div>
+<div class="g" style="margin-top:48px">
+<div class="a1 hide-s"></div>
+<div class="a4 panel">
+<div><span class="mono-s">Bezpečnostní upozornění</span><p style="font-weight:500;margin-top:8px">Není hračka. Obsahuje malé díly — nebezpečí spolknutí.</p><p class="ink2" style="margin-top:8px">Určeno osobám od 14 let; mladší pouze pod dohledem dospělého. Pohyblivé části mohou přiskřípnout prsty. Používejte pouze dodaný napájecí zdroj.</p></div>
+<div><span class="mono-s">Výrobce sady</span><p class="ink2" style="margin-top:8px">printedrobotics.cz, Praha. Úplné údaje o výrobci a prohlášení o shodě uvedeme před zahájením prodeje.</p></div>
+</div>
+</div>
+</section>
+
+<section class="wrap section">
+<div class="g rule" style="align-items:baseline">
+<div class="a1 mono">05 — Navazuje</div>
+<h2 class="a4s h2">Další krok</h2>
+<a class="a10" href="./#katalog" style="justify-self:end;text-decoration:none;padding:12px 0">Celý katalog →</a>
+</div>
+<div class="g" style="margin-top:48px"><div class="a1 hide-s"></div><div class="a4 rel" id="related"></div></div>
+</section>
+</main>
+
+<footer class="wrap site-f">
+<div class="g">
+<div class="a1" style="color:var(--ink)">printedrobotics.cz</div>
+<div class="a4s">Praha · Předobjednávky jsou nezávazné <span id="footer-contact"></span></div>
+<div class="a10">Všechny projekty patří svým autorům.</div>
+</div>
+</footer>
+
+<script src="assets/config.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
