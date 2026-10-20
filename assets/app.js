@@ -118,7 +118,8 @@
     set('#po-title', r.preparing ? 'Upozornění na dostupnost' : 'Nezávazná předobjednávka');
     $('#po-prep').hidden = !r.preparing;
 
-    function renderImg() { var t = $('#p-tile'); t.outerHTML = tile(r, st.color, '', true).replace('class="tile"', 'class="tile" id="p-tile"'); }
+    var mode3d = false, viewer = null;
+    function renderImg() { var t = $('#p-tile'); t.outerHTML = tile(r, st.color, '', true).replace('class="tile"', 'class="tile" id="p-tile"' + (mode3d ? ' hidden' : '')); }
     function btns(list, key, cls, fmt) {
       return list.map(function (o) { return '<button type="button" class="' + cls + '" data-k="' + key + '" data-v="' + o[0] + '" aria-pressed="' + (st[key] === o[0]) + '">' + fmt(o) + '</button>'; }).join('');
     }
@@ -152,7 +153,8 @@
     document.addEventListener('click', function (e) {
       var b = e.target.closest('[data-k]'); if (!b) return;
       st[b.getAttribute('data-k')] = b.getAttribute('data-v');
-      renderBuy(); if (b.getAttribute('data-k') === 'color') renderImg();
+      renderBuy();
+      if (b.getAttribute('data-k') === 'color') { renderImg(); if (viewer) viewer.setColor(C.filter(function (c) { return c.id === st.color; })[0].hex); }
     });
     renderImg(); renderBuy();
 
@@ -169,6 +171,32 @@
     $('#faq-list').innerHTML = FAQ.map(function (f) { return '<details><summary>' + esc(f[0]) + '</summary><p>' + esc(f[1]) + '</p></details>'; }).join('');
     $('#related').innerHTML = r.related.map(function (id) { var x = byId[id];
       return '<a href="sada.html?r=' + x.id + '">' + tile(x, 'white') + '<span class="card-meta mono"><span>' + no(x) + '</span><span>' + status(x) + '</span></span><b>' + esc(x.name) + '</b><span class="muted" style="font-size:15px">' + esc(x.short) + '</span></a>'; }).join('');
+
+    /* 3D viewer (lazy) */
+    if (r.glb) {
+      var tabs = $('#viewtabs'), host = $('#v3d'), bar = $('#v3d-bar'), msg3 = $('#v3d-msg'), range = $('#v3d-range'), tog = $('#v3d-toggle'), play = $('#v3d-play');
+      tabs.hidden = false;
+      function syncBar() { var e = viewer ? viewer.explode : 0; range.value = Math.round(e * 100); tog.firstChild.textContent = e > 0.5 ? 'Složit ' : 'Rozložit '; }
+      function setMode(m) {
+        mode3d = m === '3d';
+        tabs.querySelectorAll('.vtab').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-view') === m)); });
+        $('#p-tile').hidden = mode3d; host.hidden = !mode3d; bar.hidden = !mode3d;
+        if (mode3d && !viewer) {
+          import('./viewer3d.js').then(function (mod) {
+            viewer = mod.mountViewer(host, 'models/' + r.id + '.glb', {
+              color: C.filter(function (c) { return c.id === st.color; })[0].hex,
+              label: '3D model: ' + r.name,
+              onReady: function (n) { msg3.remove(); $('#v3d-hint').textContent = n + ' dílů · táhněte pro otočení · dva prsty nebo kolečko pro přiblížení'; },
+              onError: function () { msg3.textContent = '3D model se nepodařilo načíst.'; }
+            });
+          }).catch(function () { msg3.textContent = 'Váš prohlížeč 3D náhled nepodporuje.'; });
+        }
+      }
+      tabs.addEventListener('click', function (e) { var b = e.target.closest('[data-view]'); if (b) setMode(b.getAttribute('data-view')); });
+      range.addEventListener('input', function () { if (viewer) { viewer.setExplode(range.value / 100); tog.firstChild.textContent = range.value > 50 ? 'Složit ' : 'Rozložit '; } });
+      tog.addEventListener('click', function () { if (!viewer) return; var to = viewer.explode > 0.5 ? 0 : 1; viewer.animateTo(to, syncBar); tog.firstChild.textContent = to ? 'Složit ' : 'Rozložit '; });
+      play.addEventListener('click', function () { if (viewer) viewer.assemble(syncBar); });
+    }
 
     /* collapsible sections: open on desktop; on mobile only the flagged one */
     var accs = document.querySelectorAll('details.acc');

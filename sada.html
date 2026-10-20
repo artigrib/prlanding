@@ -14,6 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head>
 <body data-page="product" class="has-sbar">
 <a class="sr-only skip" href="#predobjednavka">Přejít k předobjednávce</a>
@@ -35,7 +36,18 @@
 <div class="g p-top">
 <div class="gal">
 <figure style="margin:0;display:flex;flex-direction:column;gap:10px">
+<div class="viewtabs" id="viewtabs" role="group" aria-label="Zobrazení" hidden>
+<button type="button" class="vtab" data-view="photo" aria-pressed="true">Obrázek</button>
+<button type="button" class="vtab" data-view="3d" aria-pressed="false">3D model</button>
+</div>
 <div class="tile" id="p-tile"></div>
+<div class="tile v3d" id="v3d" hidden><span class="v3d-load mono" id="v3d-msg">Načítáme 3D model…</span></div>
+<div class="v3d-bar" id="v3d-bar" hidden>
+<button type="button" class="btn btn-o" id="v3d-toggle">Rozložit <span aria-hidden="true">↔</span></button>
+<label class="v3d-range"><span class="mono">Rozložení</span><input type="range" id="v3d-range" min="0" max="100" value="0" aria-label="Míra rozložení dílů"></label>
+<button type="button" class="btn btn-o" id="v3d-play">Sestavení <span aria-hidden="true">▶</span></button>
+<p class="mono" id="v3d-hint" style="margin:0;grid-column:1/-1">Táhněte pro otočení · dva prsty nebo kolečko pro přiblížení</p>
+</div>
 <figcaption class="mono" style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap"><span id="p-cap"></span><span id="p-credit"></span></figcaption>
 </figure>
 </div>
