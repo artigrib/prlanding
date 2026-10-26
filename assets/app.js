@@ -144,7 +144,7 @@
     set('#crumb-cat', CATS[r.cat]); set('#crumb-name', r.name);
     set('#p-no', 'N° ' + no(r) + ' — ' + r.type); set('#p-hw', r.hw); set('#p-name', r.name);
     set('#p-author', 'Open-source design: ' + r.author); set('#p-lead', r.lead);
-    set('#p-credit', r.render ? 'Vizualizace z CAD projektu' : (r.credit || ''));
+    set('#p-credit', r.credit || (r.render ? 'Vizualizace z CAD projektu' : ''));
     set('#p-cap', 'Obr. 1 — ' + r.name);
     set('#l-name', r.name); set('#l-name2', r.name); set('#l-author', r.author); set('#l-hw', r.hw); set('#l-sw', r.sw); set('#l-hw2', r.hw); set('#l-sw2', r.sw);
     $('#l-repo').href = r.repo; $('#l-docs').href = r.docs;
@@ -389,23 +389,27 @@
       hand: ['8 stupňů volnosti ve dlani', 'Doplněk k ruce SO-101', 'Pro výzkum úchopu'],
       exomy: ['Rover podle ExoMars od ESA', 'Webové ovládání z mobilu, ROS uvnitř', 'Šest kol, každé řízené'],
       sawppy: ['Zmenšenina roveru Curiosity', 'Podvozek rocker-bogie zvládne terén', 'Velký projekt na léto'],
-      xle: ['Dvě ruce a mobilní základna', 'Ovládání přes VR či gamepad', 'Připravujeme']
+      xle: ['Dvě ruce a mobilní základna', 'Ovládání přes VR či gamepad', 'Připravujeme'],
+      so102: ['Tužší a rychlejší nástupce SO-101, stále kompatibilní s LeRobot', 'Paralelní chapadlo s kamerou a nosnost 300 g', 'Otevřený hardware i pro komerční použití'],
+      aira: ['Silné motory Damiao jako u výzkumných rukou', 'Plugin pro LeRobot: ACT, Diffusion Policy i PI0 hned', 'Šest os a chapadlo z karbonového PLA a TPU'],
+      parol6: ['Nejbližší průmyslovému robotu, co si vytisknete doma', 'Opakovatelnost 0,08 mm díky planetovým převodovkám', 'Vlastní GUI se simulátorem, Python API i ROS 2'],
+      bhl: ['Open-source humanoid v dětské velikosti', 'I převodovky pohonů se tisknou z PLA', 'Chodí díky RL politice přenesené ze simulace'],
+      osr: ['Robustní rover z hliníku podle marsovských vozítek', 'Open-source hardware s certifikací OSHWA', 'Rocker-bogie a natáčení všech rohových kol'],
+      stackchan: ['Nejroztomilejší open-source robot na stůl', 'Programování v JavaScriptu i blocích v prohlížeči', 'Jen dvě serva a pár šroubků — ideální první stavba']
     };
     // first pick per goal × experience × size; every available kit wins at least once
     var MATRIX = {
-      ai:     { none: 'so101', some: { small: 'so101', mid: 'lekiwi', big: 'lekiwi' }, pro: { small: 'so101', mid: 'lekiwi', big: 'lekiwi' } },
-      school: { none: 'otto', some: { small: 'otto', mid: 'so101', big: 'so101' }, pro: { small: 'so101', mid: 'spot', big: 'spot' } },
-      walk:   { none: { small: 'otto', mid: 'otto', big: 'spot' }, some: { small: 'spot', mid: 'spot', big: 'duck' }, pro: 'duck' },
-      rover:  { none: 'exomy', some: { small: 'exomy', mid: 'exomy', big: 'sawppy' }, pro: 'sawppy' },
-      lab:    { none: 'so101', some: { small: 'hand', mid: 'so101', big: 'so101' }, pro: { small: 'hand', mid: 'thor', big: 'thor' } }
+      ai:     { none: 'so101', some: { small: 'so101', mid: 'lekiwi', big: 'lekiwi' }, pro: { small: 'so102', mid: 'lekiwi', big: 'aira' } },
+      school: { none: { small: 'stackchan', mid: 'otto', big: 'otto' }, some: { small: 'otto', mid: 'so101', big: 'so101' }, pro: { small: 'so101', mid: 'spot', big: 'spot' } },
+      walk:   { none: { small: 'otto', mid: 'otto', big: 'spot' }, some: { small: 'spot', mid: 'spot', big: 'duck' }, pro: { small: 'duck', mid: 'duck', big: 'bhl' } },
+      rover:  { none: 'exomy', some: { small: 'exomy', mid: 'exomy', big: 'sawppy' }, pro: { small: 'sawppy', mid: 'sawppy', big: 'osr' } },
+      lab:    { none: 'so101', some: { small: 'hand', mid: 'so101', big: 'so102' }, pro: { small: 'hand', mid: 'thor', big: 'parol6' } }
     };
-    var FAMILY = { ai: ['so101', 'lekiwi', 'xle', 'hand'], school: ['otto', 'so101', 'spot'], walk: ['otto', 'spot', 'duck'], rover: ['exomy', 'sawppy', 'lekiwi'], lab: ['so101', 'hand', 'thor'] };
+    var FAMILY = { ai: ['so101', 'lekiwi', 'so102', 'aira', 'xle', 'hand'], school: ['stackchan', 'otto', 'so101', 'spot'], walk: ['otto', 'spot', 'duck', 'bhl'], rover: ['exomy', 'sawppy', 'osr', 'lekiwi'], lab: ['so101', 'so102', 'hand', 'thor', 'parol6'] };
     function pick(a) {
       var exp = a[0], goal = a[1], size = a[2], m = MATRIX[goal][exp];
       var first = typeof m === 'string' ? m : m[size];
-      var fam = FAMILY[goal].slice();
-      if (goal === 'ai' && exp === 'pro' && size === 'big') fam = ['xle', 'so101', 'hand']; // flagship is still in preparation: offer it as the alternative
-      return [first].concat(fam.filter(function (id) { return id !== first; })).slice(0, 3);
+      return [first].concat(FAMILY[goal].filter(function (id) { return id !== first; })).slice(0, 3);
     }
     window.PR_QUIZ_PICK = pick; // exposed for automated checks
     // configuration handed to the product page
