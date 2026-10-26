@@ -251,7 +251,7 @@
       function when(m) { return [m.source, m.date].filter(Boolean).map(esc).join(' · '); }
       $('#vids').innerHTML = vids.map(function (m, i) {
         return '<figure class="vid"><button type="button" class="vid-play" data-yt="' + m.yt + '" aria-label="Přehrát video: ' + esc(m.title) + '">' +
-          tile(r, C[i % C.length].id).replace('class="tile"', 'class="tile vid-tile"') + '<span class="vid-ico" aria-hidden="true">▶</span></button>' +
+          tile(r, C[i % C.length].id, '<span class="tag">YouTube · ' + esc(m.source) + '</span>').replace('class="tile"', 'class="tile vid-tile"') + '<span class="vid-ico" aria-hidden="true">▶</span></button>' +
           '<figcaption><b>' + esc(m.title) + '</b><span class="mono">' + when(m) + '</span>' + (m.note ? '<span class="ink2">' + esc(m.note) + '</span>' : '') +
           '<a href="' + esc(m.url) + '" class="mono">Otevřít na YouTube ↗</a></figcaption></figure>';
       }).join('');
