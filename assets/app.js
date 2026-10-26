@@ -66,6 +66,11 @@
   }
 
   /* Czech typography on all visible text: no one-letter preposition at a line end, numbers glued to units, en dash */
+  // short words that must not end a line (designer's rule): Czech prepositions/conjunctions + English function words
+  var SHORT_RE = new RegExp('(^|[\\s(„“"\'/–-])(' + [
+    'a', 'i', 'k', 'o', 's', 'u', 'v', 'z', 've', 'ze', 'ke', 'se', 'na', 'do', 'od', 'po', 'za', 'ku', 'až', 'či', 'ač', 'ani', 'pro', 'při', 'nad', 'pod', 'bez', 'než', 'jak', 'aby', 'ale', 'tak', 'jen', 'už',
+    'an', 'and', 'at', 'the', 'of', 'to', 'in', 'on', 'by', 'for', 'or', 'is', 'it', 'as', 'be', 'we', 'my', 'no'
+  ].join('|') + ') (?=\\S)', 'gi');
   function typo(root) {
     var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: function (n) {
       var p = n.parentNode && n.parentNode.nodeName;
@@ -73,11 +78,10 @@
     var n;
     while ((n = w.nextNode())) {
       var t = n.nodeValue, u = t
-        .replace(/(^|[\s(„“])([kKsSvVzZoOuUaAiI]) (?=\S)/g, '$1$2 ')
-        .replace(/(^|[\s(„“])([kKsSvVzZoOuUaAiI]) (?=\S)/g, '$1$2 ')
+        .replace(SHORT_RE, '$1$2\u00A0').replace(SHORT_RE, '$1$2\u00A0')
         .replace(/(\d) (?=(\d{3})\b)/g, '$1 ')
         .replace(/(\d) (?=(Kč|EUR|USD|€|V|A|h|mm|cm|m|kg|g|Nm|ks|%|dní|let|os)\b)/g, '$1 ')
-        .replace(/ — /g, ' – ');
+        .replace(/ [—–] /g, ' – ');
       if (u !== t) n.nodeValue = u;
     }
   }
