@@ -4,11 +4,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Stavebnice pro SO-101 — printedrobotics.cz</title>
-<meta name="description" content="Stavebnice pro SO-101: vytištěné díly a kompletní hardware podle open-source projektu (The Robot Studio a Hugging Face, Apache-2.0). Šestiosá ruka pro AI a teleoperaci s knihovnou LeRobot. Pár leader a follower.">
+<title>SO-101 – stavebnice: robotická ruka | printedrobotics.cz</title>
+<meta name="description" content="Stavebnice SO-101: vytištěné díly a hardware podle kusovníku v jedné krabici. Ruka s pěti osami a chapadlem pro AI a teleoperaci s knihovnou LeRobot. Pár…">
 <link rel="canonical" href="https://printedrobotics.cz/sada/so101/">
 <meta property="og:title" content="Stavebnice pro SO-101">
-<meta property="og:description" content="Šestiosá ruka pro AI a teleoperaci s knihovnou LeRobot. Pár leader a follower.">
+<meta property="og:description" content="Ruka s pěti osami a chapadlem pro AI a teleoperaci s knihovnou LeRobot. Pár ovládací + výkonná ruka.">
 <meta property="og:url" content="https://printedrobotics.cz/sada/so101/">
 <meta property="og:image" content="https://printedrobotics.cz/img/so101_white.jpg">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="900">
@@ -16,7 +16,7 @@
 <meta property="og:locale" content="cs_CZ">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" as="image" href="../../img/so101_white.jpg" fetchpriority="high">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Stavebnice pro SO-101","description":"Šestiosá ruka pro učení robotů a teleoperaci. Leader ruku vedete rukou, follower opakuje pohyb — a s knihovnou LeRobot se úlohu naučí sama.","category":"Robotická ruka","image":"https://printedrobotics.cz/img/so101_white.jpg","url":"https://printedrobotics.cz/sada/so101/","brand":{"@type":"Brand","name":"printedrobotics.cz"},"isBasedOn":"https://github.com/TheRobotStudio/SO-ARM100","additionalProperty":[{"@type":"PropertyValue","name":"Stupně volnosti","value":"5 os + chapadlo"},{"@type":"PropertyValue","name":"Pohon","value":"Feetech STS3215"},{"@type":"PropertyValue","name":"Napájení","value":"5 V"},{"@type":"PropertyValue","name":"Tisk","value":"PLA+, vrstva 0,2 mm"},{"@type":"PropertyValue","name":"Doba tisku","value":"≈ 16,5 h za pár"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Stavebnice pro SO-101","description":"Ruka s pěti osami a chapadlem pro učení robotů a teleoperaci. Ovládací ruku (leader) vedete vlastní rukou, výkonná ruka (follower) pohyb opakuje – a s knihovnou LeRobot se úlohu naučí sama.","category":"Robotická ruka","image":"https://printedrobotics.cz/img/so101_white.jpg","url":"https://printedrobotics.cz/sada/so101/","brand":{"@type":"Brand","name":"printedrobotics.cz"},"isBasedOn":"https://github.com/TheRobotStudio/SO-ARM100","additionalProperty":[{"@type":"PropertyValue","name":"Stupně volnosti","value":"5 os + chapadlo"},{"@type":"PropertyValue","name":"Pohon","value":"Feetech STS3215"},{"@type":"PropertyValue","name":"Napájení","value":"5 V"},{"@type":"PropertyValue","name":"Tisk","value":"PLA+, vrstva 0,2 mm"},{"@type":"PropertyValue","name":"Doba tisku","value":"≈ 16,5 h za pár"}]}</script>
 <meta name="theme-color" content="#FFFFFF">
 <meta property="og:type" content="product">
 <meta property="og:site_name" content="printedrobotics.cz">
@@ -69,7 +69,7 @@
 <div class="muted" style="font-size:17px">Stavebnice pro</div>
 <h1 class="p-name" id="p-name">SO-101</h1>
 <div class="mono" id="p-author"></div>
-<p class="ink2" style="margin:6px 0 0;font-size:17px;line-height:1.5" id="p-lead">Šestiosá ruka pro učení robotů a teleoperaci. Leader ruku vedete rukou, follower opakuje pohyb — a s knihovnou LeRobot se úlohu naučí sama.</p>
+<p class="ink2" style="margin:6px 0 0;font-size:17px;line-height:1.5" id="p-lead">Ruka s pěti osami a chapadlem pro učení robotů a teleoperaci. Ovládací ruku (leader) vedete vlastní rukou, výkonná ruka (follower) pohyb opakuje – a s knihovnou LeRobot se úlohu naučí sama.</p>
 </div>
 <div style="display:flex;flex-direction:column;gap:12px">
 <p class="status" id="p-status"><i aria-hidden="true"></i><span>Předobjednávka · cenu a termín potvrdíme e-mailem</span></p>
@@ -84,7 +84,7 @@
 
 <section id="predobjednavka" class="wrap section">
 <div class="g rule">
-<div class="a1 mono" id="sec1-label">01 — Konfigurace a předobjednávka</div>
+<div class="a1 mono" role="heading" aria-level="2" id="sec1-label">01 — Konfigurace a předobjednávka</div>
 <div class="a4s" style="display:flex;flex-direction:column;gap:28px">
 <p class="note-bar" id="quiz-note" hidden><i aria-hidden="true"></i><span>Konfiguraci jsme předvyplnili podle vašich odpovědí v kvízu. Můžete ji změnit.</span></p>
 <div id="prep-info" class="prep" hidden>
@@ -106,14 +106,15 @@
 <label class="field" for="po-email">E-mail</label>
 <input id="po-email" class="field-in" type="email" name="email" autocomplete="email" autocapitalize="off" spellcheck="false" inputmode="email" required aria-describedby="po-email-err" style="min-height:52px;padding:12px 14px;border:1px solid var(--line-2);font-family:inherit;font-size:17px;margin-top:-8px">
 <span class="err" id="po-email-err" hidden>Zkontrolujte prosím e-mailovou adresu.</span>
-<label class="field" for="po-note">Poznámka <span class="muted" style="font-weight:400">(nepovinné)</span></label>
+<label class="field" for="po-note">Poznámka <span class="muted" style="font-weight:400">(nepovinná)</span></label>
 <textarea id="po-note" name="note" rows="2" placeholder="Např. otázka ke kompletaci" style="min-height:52px;padding:12px 14px;border:1px solid var(--line-2);font-family:inherit;font-size:17px;margin-top:-8px"></textarea>
 <label class="check" data-hide-prep><input type="checkbox" id="po-school" name="school"><span>Objednávám pro školu, kroužek nebo firmu (více sad, faktura)</span></label>
 <div id="po-school-f" class="school-f" hidden>
 <label class="field" for="po-qty">Počet sad<input id="po-qty" name="qty" type="number" min="1" max="200" value="1" inputmode="numeric"></label>
 <label class="field" for="po-ico">IČO pro fakturu<input id="po-ico" name="ico" type="text" inputmode="numeric" autocomplete="off" maxlength="12"></label>
 </div>
-<label class="check"><input type="checkbox" id="po-consent"><span id="po-consent-t">Souhlasím se zpracováním e-mailu za účelem vyřízení předobjednávky.</span></label>
+<label class="check"><input type="checkbox" id="po-consent" aria-describedby="po-consent-err"><span id="po-consent-t">Souhlasím se zpracováním e-mailu za účelem vyřízení předobjednávky.</span></label>
+<span class="err" id="po-consent-err" hidden>Potvrďte prosím souhlas se zpracováním e-mailu.</span>
 <button type="submit" class="btn btn-act" id="po-btn" style="min-height:56px;font-size:17px"><span id="po-btn-t">Předobjednat</span> <span aria-hidden="true">→</span></button>
 <p class="form-msg" id="form-msg" role="status" aria-live="polite" hidden></p>
 </form>
@@ -124,9 +125,9 @@
 
 <section id="obsah" class="wrap section" data-hide-prep>
 <details class="acc" data-mobile-open="1">
-<summary class="g rule"><span class="a1 mono">02 — Obsah krabice</span><span class="a4" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="h2" id="box-title"></span><span class="acc-ico" aria-hidden="true">+</span></span></summary>
+<summary class="g rule"><span class="a1 mono" role="heading" aria-level="2">02 — Obsah krabice</span><span class="a4" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="h2" id="box-title"></span><span class="acc-ico" aria-hidden="true">+</span></span></summary>
 <div class="g" style="margin-top:24px"><div class="a1 hide-s"></div><div class="a4">
-<ol class="box" id="box"></ol>
+<ol class="box" id="box"><li><span class="n">01</span><span>Tištěné díly podle STL projektu</span><span class="q">1 sada</span><span class="t"></span></li></ol>
 <p class="mono" id="box-note" style="margin:16px 0 0"></p>
 </div></div>
 </details>
@@ -134,14 +135,14 @@
 
 <section id="parametry" class="wrap section">
 <details class="acc">
-<summary class="g rule"><span class="a1 mono">03 — Parametry</span><span class="a4" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="h2" id="specs-title">Parametry</span><span class="acc-ico" aria-hidden="true">+</span></span></summary>
-<div class="g" style="margin-top:24px"><div class="a1 hide-s"></div><dl class="a4 specs" id="specs"></dl></div>
+<summary class="g rule"><span class="a1 mono" role="heading" aria-level="2">03 — Parametry</span><span class="a4" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="h2" id="specs-title">Parametry</span><span class="acc-ico" aria-hidden="true">+</span></span></summary>
+<div class="g" style="margin-top:24px"><div class="a1 hide-s"></div><dl class="a4 specs" id="specs"><div><dt>Stupně volnosti</dt><dd>5 os + chapadlo</dd></div><div><dt>Pohon</dt><dd>Feetech STS3215</dd></div><div><dt>Napájení</dt><dd>5 V</dd></div><div><dt>Tisk</dt><dd>PLA+, vrstva 0,2 mm</dd></div><div><dt>Doba tisku</dt><dd>≈ 16,5 h za pár</dd></div></dl></div>
 </details>
 </section>
 
 <section id="faq" class="wrap section">
 <div class="g rule">
-<div class="a1 mono">04 — Časté otázky</div>
+<div class="a1 mono" role="heading" aria-level="2">04 — Časté otázky</div>
 <div class="a4" style="display:flex;flex-direction:column;gap:40px">
 <div class="faq" id="faq-list"></div>
 <form id="ask" class="ask" novalidate>
@@ -158,11 +159,11 @@
 
 <section id="licence" class="wrap section">
 <details class="acc">
-<summary class="g rule"><span class="a1 mono">05 — Projekt, licence, bezpečnost</span><span class="a4" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="h2">Licence a bezpečnost</span><span class="acc-ico" aria-hidden="true">+</span></span></summary>
+<summary class="g rule"><span class="a1 mono" role="heading" aria-level="2">05 — Projekt, licence, bezpečnost</span><span class="a4" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="h2">Licence a bezpečnost</span><span class="acc-ico" aria-hidden="true">+</span></span></summary>
 <div class="g" style="margin-top:24px;row-gap:24px">
 <div class="a1 hide-s"></div>
 <div class="a4s ink2" style="display:flex;flex-direction:column;gap:14px">
-<p style="margin:0">Tato sada vychází z otevřeného projektu <span id="l-name"></span>, jehož autorem je <span id="l-author"></span>. Konstrukční soubory jsou zveřejněny pod licencí <span id="l-hw"></span>, software pod licencí <span id="l-sw"></span>.</p>
+<p style="margin:0">Tato sada vychází z otevřeného projektu <span id="l-name">SO-101</span>, jehož autorem je <span id="l-author">The Robot Studio a Hugging Face</span>. Konstrukční soubory jsou zveřejněny pod licencí <span id="l-hw"></span>, software pod licencí <span id="l-sw"></span>.</p>
 <p style="margin:0">printedrobotics.cz vyrábí tištěné díly a kompletuje sadu podle kusovníku projektu <span id="l-name2"></span>. Autoři projektu s námi nejsou spojeni a tento produkt neschválili.</p>
 <div style="display:flex;flex-wrap:wrap;gap:8px"><a class="btn btn-o" id="l-repo" href="#" rel="noopener" style="min-height:44px;font-size:15px">Zdrojové soubory ↗</a><a class="btn btn-o" id="l-docs" href="#" rel="noopener" style="min-height:44px;font-size:15px">Návod projektu ↗</a></div>
 </div>
@@ -172,7 +173,7 @@
 </dl>
 <div class="a1 hide-s"></div>
 <div class="a4 panel">
-<div><span class="mono">Bezpečnostní upozornění</span><p style="font-weight:500;margin-top:8px">Není hračka. Obsahuje malé díly — nebezpečí spolknutí.</p><p class="ink2" style="margin-top:8px">Určeno osobám od 14 let; mladší pouze pod dohledem dospělého. Pohyblivé části mohou přiskřípnout prsty. Používejte pouze dodaný napájecí zdroj.</p></div>
+<div><span class="mono">Bezpečnostní upozornění</span><p style="font-weight:500;margin-top:8px">Není hračka. Obsahuje malé díly — nebezpečí spolknutí.</p><p class="ink2" style="margin-top:8px" id="safety">Určeno osobám od 14 let; mladší pouze pod dohledem dospělého. Pohyblivé části mohou přiskřípnout prsty.</p></div>
 <div><span class="mono">Výrobce sady</span><p class="ink2" style="margin-top:8px">printedrobotics.cz, Praha. Úplné údaje o výrobci a prohlášení o shodě uvedeme před zahájením prodeje.</p></div>
 </div>
 </div>
@@ -192,11 +193,11 @@
 
 <section class="wrap section" id="dalsi">
 <div class="g rule" style="align-items:baseline">
-<div class="a1 mono">07 — Navazuje</div>
+<div class="a1 mono" role="heading" aria-level="2">07 — Navazuje</div>
 <h2 class="a4s h2">Další krok</h2>
 <a class="a10" href="../../#katalog" style="justify-self:start;text-decoration:none;padding:12px 0">Celý katalog →</a>
 </div>
-<div class="g" style="margin-top:32px"><div class="a1 hide-s"></div><div class="a4 rel" id="related"></div></div>
+<div class="g" style="margin-top:32px"><div class="a1 hide-s"></div><div class="a4 rel" id="related"><a href="../../sada/hand/"><b>AmazingHand</b><span class="muted" style="font-size:15px">Čtyřprstá dlaň s 8 stupni volnosti a pohony uvnitř.</span></a><a href="../../sada/lekiwi/"><b>LeKiwi</b><span class="muted" style="font-size:15px">Holonomní tříkolová základna s rukou SO-101, Raspberry Pi 5 a dvěma kamerami.</span></a><a href="../../sada/xle/"><b>XLeRobot</b><span class="muted" style="font-size:15px">Dvě ruce SO-101 na mobilní základně. Teleoperace přes VR či gamepad.</span></a></div></div>
 </section>
 </main>
 

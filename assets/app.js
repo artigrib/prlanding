@@ -65,6 +65,53 @@
     hdr.addEventListener('focusin', function () { hdr.classList.remove('is-hidden'); });
   }
 
+  /* Czech typography on all visible text: no one-letter preposition at a line end, numbers glued to units, en dash */
+  function typo(root) {
+    var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: function (n) {
+      var p = n.parentNode && n.parentNode.nodeName;
+      return /^(SCRIPT|STYLE|TEXTAREA|CODE|PRE|TITLE)$/.test(p) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT; } });
+    var n;
+    while ((n = w.nextNode())) {
+      var t = n.nodeValue, u = t
+        .replace(/(^|[\s(„“])([kKsSvVzZoOuUaAiI]) (?=\S)/g, '$1$2 ')
+        .replace(/(^|[\s(„“])([kKsSvVzZoOuUaAiI]) (?=\S)/g, '$1$2 ')
+        .replace(/(\d) (?=(\d{3})\b)/g, '$1 ')
+        .replace(/(\d) (?=(Kč|EUR|USD|€|V|A|h|mm|cm|m|kg|g|Nm|ks|%|dní|let|os)\b)/g, '$1 ')
+        .replace(/ — /g, ' – ');
+      if (u !== t) n.nodeValue = u;
+    }
+  }
+  var typoQueued = false;
+  function typoSoon() { if (typoQueued) return; typoQueued = true; requestAnimationFrame(function () { typoQueued = false; typo(document.body); }); }
+  if ('MutationObserver' in window) new MutationObserver(typoSoon).observe(document.body, { childList: true, subtree: true });
+  typoSoon();
+
+  /* soft capture: one e-mail field for visitors not ready to pre-order (price alert / news) */
+  function softForm(kind, robot) {
+    var t = kind === 'price'
+      ? ['Zatím nevíte?', 'Pošleme vám jeden e-mail s cenou a termínem, až je budeme znát.', 'Poslat cenu']
+      : ['Novinky a ceny e-mailem', 'Nové sady a spuštění prodeje. Nejvýš jednou za měsíc, odhlásíte se jedním klikem.', 'Odebírat'];
+    return '<form class="soft" novalidate data-soft="' + kind + '"' + (robot ? ' data-robot="' + esc(robot) + '"' : '') + '>' +
+      '<b>' + t[0] + '</b><span class="muted">' + t[1] + '</span>' +
+      '<span class="soft-row"><label class="sr-only" for="soft-' + kind + '">E-mail</label>' +
+      '<input id="soft-' + kind + '" type="email" name="email" autocomplete="email" autocapitalize="off" spellcheck="false" inputmode="email" placeholder="vas@email.cz">' +
+      '<button type="submit" class="btn btn-o">' + t[2] + '</button></span>' +
+      '<span class="mono soft-note">Odesláním souhlasíte se zasláním těchto e-mailů. Adresu nikomu nepředáme.</span>' +
+      '<span class="soft-msg" role="status" aria-live="polite"></span></form>';
+  }
+  document.addEventListener('submit', function (e) {
+    var f = e.target.closest && e.target.closest('form.soft'); if (!f) return;
+    e.preventDefault();
+    var em = f.querySelector('input[type=email]'), m = f.querySelector('.soft-msg');
+    if (!validEmailStr(em.value)) { em.setAttribute('aria-invalid', 'true'); m.textContent = 'Zkontrolujte prosím e-mailovou adresu.'; em.focus(); return; }
+    em.removeAttribute('aria-invalid'); m.textContent = 'Odesíláme…';
+    var kind = f.getAttribute('data-soft'), robot = f.getAttribute('data-robot') || '';
+    send({ _subject: (kind === 'price' ? 'Cena na e-mail: ' : 'Novinky: ') + (robot || 'web'), type: kind === 'price' ? 'price' : 'news', robot: robot, email: em.value.trim(), page: location.href, source: page === 'quiz' ? 'kviz' : 'web' })
+      .then(function () { f.innerHTML = '<b>Hotovo.</b><span class="muted">' + (kind === 'price' ? 'Cenu pošleme na ' + esc(em.value.trim()) + ', jakmile ji budeme znát.' : 'Díky, ozveme se, až bude co ukázat.') + '</span>'; })
+      .catch(function (er) { m.textContent = er && er.message === 'no-endpoint' ? NO_ENDPOINT_MSG : 'Odeslání se nezdařilo. Zkuste to prosím znovu.'; });
+  });
+  (function () { var ft = document.querySelector('.site-f'); if (ft && !ft.querySelector('form.soft')) { var d = document.createElement('div'); d.className = 'soft-foot'; d.innerHTML = softForm('news'); ft.insertBefore(d, ft.firstChild); } })();
+
   var page = document.body.getAttribute('data-page');
 
   /* ---------- home ---------- */
@@ -119,26 +166,25 @@
   if (page === 'product') {
     var r = byId[document.body.getAttribute('data-robot')] || byId.so101;
     var TIERS = [['parts', 'Tištěné díly', 'Hardware si obstaráte sami.'], ['kit', 'Kompletní sada', 'Díly a veškerý hardware dle kusovníku.', 1], ['tested', 'Sada s oživením', 'Elektronika nastavená a otestovaná.']];
-    var MATS = [['pla', 'PLA+', 'Standard'], ['petg', 'PETG', 'Odolnější teplu']];
+    var MATS = r.mats || [['pla', 'PLA+', 'Standard'], ['petg', 'PETG', 'Odolnější teplu']];
     function oneOf(v, list, d) { return list.indexOf(v) >= 0 ? v : d; }
     // configuration lives in the URL so it can be shared and handed over from the quiz
     var st = {
       setup: oneOf(qs('setup'), ['pair', 'single'], 'pair'),
       tier: oneOf(qs('tier'), ['parts', 'kit', 'tested'], 'kit'),
       color: oneOf(qs('color'), C.map(function (c) { return c.id; }), 'white'),
-      material: oneOf(qs('material'), ['pla', 'petg'], 'pla')
+      material: oneOf(qs('material'), MATS.map(function (m) { return m[0]; }), MATS[0][0])
     };
     function syncUrl() {
       var q = [];
       if (r.setups && st.setup !== 'pair') q.push('setup=' + st.setup);
       if (st.tier !== 'kit') q.push('tier=' + st.tier);
       if (st.color !== 'white') q.push('color=' + st.color);
-      if (st.material !== 'pla') q.push('material=' + st.material);
+      if (st.material !== MATS[0][0]) q.push('material=' + st.material);
       try { history.replaceState(null, '', location.pathname + (q.length ? '?' + q.join('&') : '') + location.hash); } catch (e) {}
     }
     var fromQuiz = qs('z') === 'kviz';
 
-    document.title = 'Stavebnice pro ' + r.name + ' — printedrobotics.cz';
 
     function set(sel, txt) { var el = $(sel); if (el) el.textContent = txt; }
     set('#crumb-cat', CATS[r.cat]); set('#crumb-name', r.name);
@@ -148,6 +194,17 @@
     set('#p-cap', 'Obr. 1 — ' + r.name);
     set('#l-name', r.name); set('#l-name2', r.name); set('#l-author', r.author); set('#l-hw', r.hw); set('#l-sw', r.sw); set('#l-hw2', r.hw); set('#l-sw2', r.sw);
     $('#l-repo').href = r.repo; $('#l-docs').href = r.docs;
+    /* safety notes built from what this robot actually contains */
+    (function () {
+      var all = JSON.stringify([r.bom || [], r.specs || [], r.lead || '']);
+      var w = ['Určeno osobám od 14 let; mladší pouze pod dohledem dospělého. Pohyblivé části mohou přiskřípnout prsty.'];
+      if (/LiPo|Li-Pol|Li-ion|akumulátor|baterie/i.test(all)) w.push('Lithiové akumulátory nabíjejte jen vhodnou nabíječkou, pod dohledem a mimo hořlavé předměty; poškozený článek nepoužívejte.');
+      if (/\b(24|22,2|14,8) ?V\b|\d+ ?Nm/.test(all)) w.push('Silné motory: pohybující se rameno může způsobit zranění. Při oživování držte ruce mimo dosah a mějte po ruce vypínač napájení.');
+      if (/pneumat/i.test(all)) w.push('Pneumatické chapadlo pracuje se stlačeným vzduchem – používejte jen schválený zdroj a hadice.');
+      if (/230 ?V|síťov/i.test(all)) w.push('Zdroj připojený k síti 230 V smí zapojovat jen osoba s odpovídající kvalifikací.');
+      w.push('Hardware z této sady napájejte jen zdrojem uvedeným v návodu projektu.');
+      $('#safety').innerHTML = w.map(esc).join('<br>');
+    })();
     set('#sb-name', r.name);
 
     /* back to catalogue: return to the same filter and scroll position */
@@ -177,6 +234,7 @@
       set('#po-consent-t', 'Souhlasím se zpracováním e-mailu za účelem zaslání upozornění na dostupnost.');
     }
     set('#po-title', r.preparing ? 'Upozornění na dostupnost' : 'Nezávazná předobjednávka');
+    if (!r.preparing) { var tc = $('#top-cta'); var sd = document.createElement('div'); sd.innerHTML = softForm('price', r.name); tc.parentNode.appendChild(sd.firstChild); }
     $('#po-prep').hidden = true;
 
     var mode3d = false, viewer = null;
@@ -186,12 +244,12 @@
     }
     function colorObj() { return C.filter(function (c) { return c.id === st.color; })[0]; }
     function tierName() { return TIERS.filter(function (t) { return t[0] === st.tier; })[0][1]; }
-    function summary() { return (r.setups ? (st.setup === 'pair' ? 'Pár · ' : 'Follower · ') : '') + tierName() + ' · ' + colorObj().name + ' · ' + (st.material === 'pla' ? 'PLA+' : 'PETG'); }
+    function summary() { return (r.setups ? (st.setup === 'pair' ? 'Pár · ' : 'Follower · ') : '') + tierName() + ' · ' + colorObj().name + ' · ' + MATS.filter(function (m) { return m[0] === st.material; })[0][1]; }
     function renderBuy() {
       var pair = r.setups && st.setup === 'pair';
       $('#setups-wrap').hidden = !r.setups || r.preparing;
       $('#setups').innerHTML = btns([['pair', 'Pár', 'Leader + follower'], ['single', 'Follower', 'Jedna ruka']], 'setup', 'opt', function (o) { return o[1] + '<span>' + o[2] + '</span>'; });
-      $('#tiers').innerHTML = btns(TIERS, 'tier', 'tier', function (o) { return '<i aria-hidden="true"></i><span><b>' + o[1] + '</b>' + (o[3] ? '<span class="badge">Nejčastější volba</span>' : '') + '<small>' + o[2] + '</small></span>'; });
+      $('#tiers').innerHTML = btns(TIERS, 'tier', 'tier', function (o) { return '<i aria-hidden="true"></i><span><b>' + o[1] + '</b>' + (o[3] ? '<span class="badge">Doporučujeme</span>' : '') + '<small>' + o[2] + '</small></span>'; });
       $('#colors').innerHTML = C.map(function (c) { return '<button type="button" class="sw" data-k="color" data-v="' + c.id + '" aria-pressed="' + (st.color === c.id) + '" aria-label="' + c.name + '"><i style="background:' + c.hex + '" aria-hidden="true"></i></button>'; }).join('');
       set('#color-name', colorObj().name);
       $('#mats').innerHTML = btns(MATS, 'material', 'opt', function (o) { return o[1] + '<span>' + o[2] + '</span>'; });
@@ -203,7 +261,7 @@
           items.push(['Servo Feetech STS3215 7,4 V, převod 1/345', pair ? '7×' : '6×', 'Hardware']);
           if (pair) { items.push(['Servo Feetech STS3215 7,4 V, převod 1/191', '2×', 'Hardware']); items.push(['Servo Feetech STS3215 7,4 V, převod 1/147', '3×', 'Hardware']); }
           items.push(['Řídicí deska serv', pair ? '2×' : '1×', 'Hardware'], ['Zdroj 5 V', pair ? '2×' : '1×', 'Hardware'], ['Kabel USB-C', '2×', 'Hardware'], ['Svěrky ke stolu', pair ? '4×' : '2×', 'Hardware']);
-        } else { r.bom.forEach(function (b) { items.push([b[0], b[1], 'Hardware']); }); }
+        } else { r.bom.forEach(function (b) { if (r.setups && !pair && /leader/i.test(b[0]) && !/follower/i.test(b[0])) return; items.push([b[0], b[1], 'Hardware']); }); }
         items.push(['Spojovací materiál, roztříděný po krocích', '1 sada', 'Hardware']);
       }
       if (st.tier === 'tested') items.push(['Nastavení elektroniky a funkční test', '—', 'Servis']);
@@ -250,7 +308,7 @@
       var TYPE = { article: 'Článek', paper: 'Studie', docs: 'Dokumentace', community: 'Komunita' };
       function when(m) { return [m.source, m.date].filter(Boolean).map(esc).join(' · '); }
       $('#vids').innerHTML = vids.map(function (m, i) {
-        return '<figure class="vid"><button type="button" class="vid-play" data-yt="' + m.yt + '" aria-label="Přehrát video: ' + esc(m.title) + '">' +
+        return '<figure class="vid"><button type="button" class="vid-play" data-yt="' + m.yt + '" aria-label="YouTube · ' + esc(m.source) + ': přehrát video ' + esc(m.title) + '">' +
           tile(r, C[i % C.length].id, '<span class="tag">YouTube · ' + esc(m.source) + '</span>').replace('class="tile"', 'class="tile vid-tile"') + '<span class="vid-ico" aria-hidden="true">▶</span></button>' +
           '<figcaption><b>' + esc(m.title) + '</b><span class="mono">' + when(m) + '</span>' + (m.note ? '<span class="ink2">' + esc(m.note) + '</span>' : '') +
           '<a href="' + esc(m.url) + '" class="mono">Otevřít na YouTube ↗</a></figcaption></figure>';
@@ -264,7 +322,7 @@
         var b = e.target.closest('[data-yt]'); if (!b) return;
         var f = document.createElement('iframe');
         f.src = 'https://www.youtube-nocookie.com/embed/' + b.getAttribute('data-yt') + '?autoplay=1&rel=0';
-        f.title = b.getAttribute('aria-label').replace('Přehrát video: ', '');
+        f.title = b.getAttribute('aria-label').replace(/^.*?přehrát video /, '');
         f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true; f.className = 'vid-frame';
         b.replaceWith(f);
       });
@@ -331,7 +389,8 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       if (!validEmailStr(email.value)) { showErr(true); email.focus(); return; }
-      if (!consent.checked) { msg.hidden = false; msg.textContent = 'Potvrďte prosím souhlas se zpracováním e-mailu.'; consent.focus(); return; }
+      if (!consent.checked) { $('#po-consent-err').hidden = false; consent.setAttribute('aria-invalid', 'true'); consent.focus(); return; }
+      $('#po-consent-err').hidden = true; consent.removeAttribute('aria-invalid');
       var qty = parseInt(form.qty.value, 10) || 1;
       var payload = { _subject: (r.preparing ? 'Upozornění: ' : 'Předobjednávka: ') + r.name + (qty > 1 ? ' ×' + qty : ''), email: email.value.trim(), note: form.note.value, robot: r.name,
         configuration: r.preparing ? '' : summary(), setup: r.setups ? st.setup : '', tier: st.tier, color: st.color, material: st.material, qty: qty,
@@ -347,7 +406,7 @@
     function done(p) {
       var steps = r.preparing
         ? [['Teď', 'Jste na seznamu. Nic dalšího dělat nemusíte.'], ['Až sadu spustíme', 'Pošleme jeden e-mail na ' + p.email + ' s cenou a termínem.'], ['Kdykoli', 'Odhlásíte se odpovědí na kterýkoli náš e-mail.']]
-        : [['Do 2 pracovních dnů', 'Pošleme na ' + p.email + ' cenu a termín expedice pro ' + p.configuration + (p.qty > 1 ? ', ' + p.qty + ' ks' : '') + '.'], ['Po vašem potvrzení', 'Pošleme platební odkaz. Do té doby nic neplatíte a můžete zrušit.'], ['Tisk a kompletace', 'Díly vytiskneme, sadu zkompletujeme a pošleme s číslem zásilky.']];
+        : [['Do 2 pracovních dnů', 'Pošleme na ' + p.email + ' cenu a termín expedice pro ' + p.configuration + (p.qty > 1 ? ', ' + p.qty + ' ks' : '') + '.'], ['Po vašem potvrzení', p.school ? 'Vystavíme fakturu na školu nebo firmu' + (p.ico ? ' (IČO ' + p.ico + ')' : '') + ' se splatností. Do té doby nic neplatíte a můžete zrušit.' : 'Pošleme platební odkaz. Do té doby nic neplatíte a můžete zrušit.'], ['Tisk a kompletace', 'Díly vytiskneme, sadu zkompletujeme a pošleme s číslem zásilky.']];
       var shareUrl = SITE + 'sada/' + r.id + '/';
       $('#po-wrap').innerHTML = '<div class="form-ok" role="status" tabindex="-1" id="po-ok"><span class="mono">Hotovo</span><b>Děkujeme, máme to.</b>' +
         '<ol class="next">' + steps.map(function (s) { return '<li><span class="mono">' + esc(s[0]) + '</span><span>' + esc(s[1]) + '</span></li>'; }).join('') + '</ol>' +
@@ -445,7 +504,6 @@
       var q = ['z=kviz'];
       if (b.preparing) return '?' + q.join('&');
       if (a[0] === 'none' && b.level !== 'Začátečník') q.push('tier=tested');
-      if (b.setups && a[1] === 'school') q.push('setup=single');
       return '?' + q.join('&');
     }
     var step = 0, ans = [], editing = false;
@@ -471,7 +529,7 @@
           '<a class="btn btn-o" href="' + href(b.id) + c + '">Detail sady <span aria-hidden="true">→</span></a></div></div>' +
           '<div><div class="mono" style="border-top:1px solid var(--ink);padding-top:12px;margin-bottom:16px">Také by vás mohlo bavit</div><div class="alts">' +
           res.slice(1).map(function (id) { var x = byId[id]; return '<a href="' + href(x.id) + cfg(x, ans) + '">' + tile(x, 'white') + '<span><b style="font-size:21px;font-weight:500;letter-spacing:-.03em;display:block">' + esc(x.name) + '</b><span class="muted" style="font-size:15px">' + (x.preparing ? 'Připravujeme' : x.level) + ' · ' + esc(x.type) + '</span></span></a>'; }).join('') +
-          '</div></div><button type="button" id="restart" class="linkbtn" style="align-self:flex-start">Začít kvíz znovu</button></div></div>';
+          '</div></div>' + (b.preparing ? '' : softForm('price', b.name)) + '<button type="button" id="restart" class="linkbtn" style="align-self:flex-start">Začít kvíz znovu</button></div></div>';
         $('#q-h').focus();
       }
     }

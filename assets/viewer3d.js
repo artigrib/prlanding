@@ -32,6 +32,8 @@ export function mountViewer(host, url, opts) {
 
   const camera = new THREE.PerspectiveCamera(32, 4 / 3, 0.01, 50);
   const controls = new OrbitControls(camera, renderer.domElement);
+  // let vertical swipes scroll the page on touch screens; horizontal drag still rotates
+  renderer.domElement.style.touchAction = 'pan-y';
   controls.enableDamping = true; controls.enablePan = false;
   controls.autoRotate = !reduce; controls.autoRotateSpeed = 1.2;
   controls.addEventListener('start', () => { controls.autoRotate = false; });

@@ -1212,7 +1212,7 @@ window.PR_MEDIA = {
 "source": "GitHub",
 "url": "https://github.com/AngelLM/Thor/wiki/FAQ",
 "date": "2017-05",
-"note": "Odpovědi na časté otázky: cena dílů, asi 200 hodin tisku, nosnost a elektronika."
+"note": "Odpovědi na časté otázky: cena dílů, doba tisku, nosnost a elektronika."
 },
 {
 "type": "paper",

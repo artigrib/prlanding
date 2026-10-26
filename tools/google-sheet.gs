@@ -15,7 +15,7 @@
  */
 
 const NOTIFY_BY_EMAIL = true;           // e-mail to the sheet owner on every new request
-const TYPES = { preorder: 'Předobjednávka', notify: 'Upozornění', question: 'Dotaz' };
+const TYPES = { preorder: 'Předobjednávka', notify: 'Upozornění', question: 'Dotaz', price: 'Cena na e-mail', news: 'Novinky' };
 const SHEET_NAME = 'Zájemci';           // rows go to this tab; it is created with headers if missing
 const HEADERS = ['Datum', 'Typ', 'Robot', 'Konfigurace', 'Sestava', 'Rozsah', 'Barva', 'Materiál', 'Počet sad', 'Škola', 'IČO', 'E-mail', 'Poznámka / dotaz', 'Zdroj', 'Stránka', 'Stav'];
 
