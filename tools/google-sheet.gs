@@ -4,6 +4,7 @@
  * Setup (once):
  *  1. Open the sheet "printedrobotics.cz — předobjednávky" → Rozšíření / Extensions → Apps Script.
  *  2. Replace everything in Code.gs with this file and save.
+ *     Rows go to the tab "Zájemci" (created automatically), whatever the tab order.
  *  3. Run the function `test` once and allow the permissions (adds a test row, sends you an e-mail).
  *  4. Deploy → New deployment → type "Web app":
  *       Execute as: Me    ·    Who has access: Anyone
@@ -15,6 +16,20 @@
 
 const NOTIFY_BY_EMAIL = true;           // e-mail to the sheet owner on every new request
 const TYPES = { preorder: 'Předobjednávka', notify: 'Upozornění', question: 'Dotaz' };
+const SHEET_NAME = 'Zájemci';           // rows go to this tab; it is created with headers if missing
+const HEADERS = ['Datum', 'Typ', 'Robot', 'Konfigurace', 'Sestava', 'Rozsah', 'Barva', 'Materiál', 'Počet sad', 'Škola', 'IČO', 'E-mail', 'Poznámka / dotaz', 'Zdroj', 'Stránka', 'Stav'];
+
+function sheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(SHEET_NAME);
+  if (!sh) {
+    sh = ss.insertSheet(SHEET_NAME, 0);
+    sh.appendRow(HEADERS);
+    sh.setFrozenRows(1);
+    sh.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
+  }
+  return sh;
+}
 
 function doPost(e) {
   const lock = LockService.getScriptLock();
@@ -31,7 +46,7 @@ function doPost(e) {
       new Date(), typ, d.robot, d.configuration, d.setup, d.tier, d.color, d.material,
       d.qty, d.school, d.ico, email, d.note || d.question, d.source, d.page, 'Nová'
     ].map((v, i) => (i === 0 ? v : clean(v)));
-    SpreadsheetApp.getActiveSpreadsheet().getSheets()[0].appendRow(row);
+    sheet().appendRow(row);
 
     if (NOTIFY_BY_EMAIL) {
       const me = Session.getEffectiveUser().getEmail();
