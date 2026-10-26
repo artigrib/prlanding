@@ -242,6 +242,34 @@
     }
     $('#related').innerHTML = relHtml(r.related);
 
+    /* videos and articles about the project (click-to-load YouTube, nothing third-party loads before a click) */
+    var MEDIA = (window.PR_MEDIA || {})[r.id] || [];
+    if (MEDIA.length) {
+      var vids = MEDIA.filter(function (m) { return m.type === 'video' && /^[\w-]{11}$/.test(m.yt || ''); });
+      var reads = MEDIA.filter(function (m) { return m.type !== 'video'; });
+      var TYPE = { article: 'Článek', paper: 'Studie', docs: 'Dokumentace', community: 'Komunita' };
+      function when(m) { return [m.source, m.date].filter(Boolean).map(esc).join(' · '); }
+      $('#vids').innerHTML = vids.map(function (m, i) {
+        return '<figure class="vid"><button type="button" class="vid-play" data-yt="' + m.yt + '" aria-label="Přehrát video: ' + esc(m.title) + '">' +
+          tile(r, C[i % C.length].id).replace('class="tile"', 'class="tile vid-tile"') + '<span class="vid-ico" aria-hidden="true">▶</span></button>' +
+          '<figcaption><b>' + esc(m.title) + '</b><span class="mono">' + when(m) + '</span>' + (m.note ? '<span class="ink2">' + esc(m.note) + '</span>' : '') +
+          '<a href="' + esc(m.url) + '" class="mono">Otevřít na YouTube ↗</a></figcaption></figure>';
+      }).join('');
+      $('#reads').innerHTML = reads.map(function (m) {
+        return '<li><a href="' + esc(m.url) + '"><span class="mono">' + (TYPE[m.type] || 'Odkaz') + '</span><span><b>' + esc(m.title) + ' ↗</b><span class="mono">' + when(m) + '</span>' + (m.note ? '<span class="ink2">' + esc(m.note) + '</span>' : '') + '</span></a></li>';
+      }).join('');
+      $('#vids').hidden = !vids.length; $('#reads').hidden = !reads.length;
+      $('#media').hidden = false; $('#jump-media').hidden = false;
+      $('#vids').addEventListener('click', function (e) {
+        var b = e.target.closest('[data-yt]'); if (!b) return;
+        var f = document.createElement('iframe');
+        f.src = 'https://www.youtube-nocookie.com/embed/' + b.getAttribute('data-yt') + '?autoplay=1&rel=0';
+        f.title = b.getAttribute('aria-label').replace('Přehrát video: ', '');
+        f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true; f.className = 'vid-frame';
+        b.replaceWith(f);
+      });
+    }
+
     /* 3D viewer (lazy) */
     if (r.glb) {
       var tabs = $('#viewtabs'), host = $('#v3d'), bar = $('#v3d-bar'), msg3 = $('#v3d-msg'), range = $('#v3d-range'), tog = $('#v3d-toggle'), play = $('#v3d-play');

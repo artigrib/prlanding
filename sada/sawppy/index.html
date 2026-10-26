@@ -78,7 +78,7 @@
 </div>
 </div>
 <nav class="jump" aria-label="Obsah stránky">
-<a href="#predobjednavka" id="jump-po">Konfigurace</a><a href="#obsah" data-hide-prep>Obsah krabice</a><a href="#parametry">Parametry</a><a href="#faq">Otázky</a><a href="#licence">Licence a bezpečnost</a>
+<a href="#predobjednavka" id="jump-po">Konfigurace</a><a href="#obsah" data-hide-prep>Obsah krabice</a><a href="#parametry">Parametry</a><a href="#media" id="jump-media" hidden>Videa a články</a><a href="#faq">Otázky</a><a href="#licence">Licence a bezpečnost</a>
 </nav>
 </section>
 
@@ -179,9 +179,20 @@
 </details>
 </section>
 
+<section class="wrap section" id="media" hidden>
+<div class="g rule" style="align-items:baseline">
+<div class="a1 mono">06 — Videa a články</div>
+<div class="a4s"><h2 class="h2">Jak ho staví a co o něm píšou</h2><p class="muted" style="margin:8px 0 0;font-size:15px">Výběr z YouTube, médií a komunity projektu. Obsah patří jeho autorům.</p></div>
+</div>
+<div class="g" style="margin-top:32px;row-gap:40px"><div class="a1 hide-s"></div><div class="a4" style="display:flex;flex-direction:column;gap:40px">
+<div class="vids" id="vids"></div>
+<ol class="reads" id="reads"></ol>
+</div></div>
+</section>
+
 <section class="wrap section" id="dalsi">
 <div class="g rule" style="align-items:baseline">
-<div class="a1 mono">06 — Navazuje</div>
+<div class="a1 mono">07 — Navazuje</div>
 <h2 class="a4s h2">Další krok</h2>
 <a class="a10" href="../../#katalog" style="justify-self:start;text-decoration:none;padding:12px 0">Celý katalog →</a>
 </div>
@@ -204,6 +215,7 @@
 
 <script src="../../assets/config.js"></script>
 <script src="../../assets/data.js"></script>
+<script src="../../assets/media.js"></script>
 <script src="../../assets/app.js"></script>
 </body>
 </html>
