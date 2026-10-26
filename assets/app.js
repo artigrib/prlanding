@@ -69,11 +69,13 @@
 
   /* ---------- home ---------- */
   if (page === 'home') {
-    var FILTERS = [['all', 'Vše'], ['arm', 'Ruce a dlaně'], ['mobile', 'Mobilní'], ['legged', 'Kráčející']];
+    var FILTERS = [['all', 'Vše'], ['arm', 'Ruce a dlaně'], ['mobile', 'Mobilní'], ['legged', 'Kráčející'], ['desk', 'Stolní']];
+    ['#robot-count', '#robot-count2'].forEach(function (sel) { var el = $(sel); if (el) el.textContent = R.length; });
     var filter = qs('typ'); if (!FILTERS.some(function (f) { return f[0] === filter; })) filter = 'all';
     function renderFilters() {
       $('#filters').innerHTML = FILTERS.map(function (f) {
         var n = f[0] === 'all' ? R.length : R.filter(function (r) { return r.cat === f[0]; }).length;
+        if (!n) return '';
         return '<button type="button" class="filter" data-f="' + f[0] + '" aria-pressed="' + (filter === f[0]) + '"><i aria-hidden="true"></i>' + f[1] + '<small>' + n + '</small></button>';
       }).join('');
     }
