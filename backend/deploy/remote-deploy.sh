@@ -409,6 +409,19 @@ tls_state() ( set +eu +o pipefail
     n=$(cnt "$k")
     [ "$n" -gt 0 ] && say "tls log category '$k': $n line(s)"
   done
+  local d80 d443 pc
+  d80=$(iptables -t nat -S 2>/dev/null | grep -- '-j DNAT' | grep -cE -- '--dport 80( |$)' || true)
+  d443=$(iptables -t nat -S 2>/dev/null | grep -- '-j DNAT' | grep -cE -- '--dport 443( |$)' || true)
+  pc=$(docker ps --format '{{.Label "com.docker.compose.project"}} {{.Ports}}' | grep -v '^printedrobotics ' | grep -cE '(0\.0\.0\.0|::\]?):(80|443)->' || true)
+  say "tls nat: DNAT rules dport 80: $d80, dport 443: $d443; other running containers publishing host 80/443: $pc; nft dnat 80/443 rules: $(nft list ruleset 2>/dev/null | grep -E 'dport (80|443)' | grep -c dnat || true)"
+  local pubip hl
+  pubip=$(ip -4 route get 1.1.1.1 2>/dev/null | sed -n 's/.* src \([0-9.]*\).*/\1/p')
+  for h in api; do
+    hl=$(curl -s -D - -o /dev/null --max-time 5 -H "Host: $h.printedrobotics.cz" "http://127.0.0.1/.well-known/acme-challenge/probe" | tr -d '\r' | sed -n '1s/.* \([0-9][0-9][0-9]\).*/\1/p;s/^[Ss]erver: *//p' | tr 'A-Z\n' 'a-z ' | sed -E 's/[^ ]*caddy[^ ]*/caddy/;s/[^ ]*nginx[^ ]*/nginx/;s/[^ ]*traefik[^ ]*/traefik/' | grep -oE '^[0-9]{3}( (caddy|nginx|traefik))?' )
+    say "tls host-local http via loopback: ${hl:-none}"
+    [ -n "$pubip" ] && hl=$(curl -s -D - -o /dev/null --max-time 5 -H "Host: $h.printedrobotics.cz" "http://$pubip/.well-known/acme-challenge/probe" | tr -d '\r' | sed -n '1s/.* \([0-9][0-9][0-9]\).*/\1/p;s/^[Ss]erver: *//p' | tr 'A-Z\n' 'a-z ' | sed -E 's/[^ ]*caddy[^ ]*/caddy/;s/[^ ]*nginx[^ ]*/nginx/;s/[^ ]*traefik[^ ]*/traefik/' | grep -oE '^[0-9]{3}( (caddy|nginx|traefik))?' )
+    say "tls host-local http via primary address: ${hl:-none}"
+  done
   say "tls: caddy host-network listeners :80 $(ss -ltnH 'sport = :80' | wc -l), :443 $(ss -ltnH 'sport = :443' | wc -l)"
   if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q '^Status: active'; then
     u=$(ufw status 2>/dev/null)

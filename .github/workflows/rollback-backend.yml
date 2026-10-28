@@ -90,6 +90,17 @@ jobs:
               h=$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "http://$f$path" 2>/dev/null)
               s=$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "https://$f$path" 2>/dev/null)
               echo "::notice::tls $n: resolves to VPS: $r; tcp:$tp; http status ${h:-000}; https status ${s:-000}"
+              # Who answers outside? Fixed categories only.
+              hd=$(curl -s -D - -o /dev/null --max-time 8 "http://$f/.well-known/acme-challenge/probe" 2>/dev/null | tr -d '\r')
+              sv=$(printf '%s\n' "$hd" | sed -n 's/^[Ss]erver: *//p' | head -1 | tr 'A-Z' 'a-z')
+              case "$sv" in "") sv=none;; *caddy*) sv=caddy;; *traefik*) sv=traefik;; *nginx*) sv=nginx;; *apache*) sv=apache;; *) sv=other;; esac
+              lo=$(printf '%s\n' "$hd" | sed -n 's/^[Ll]ocation: *//p' | head -1)
+              case "$lo" in "") lc=none;; "https://$f/.well-known/acme-challenge/probe") lc="https same host+path";; https://$f*) lc="https same host";; https://*) lc="https other host";; *) lc=other;; esac
+              cs=$(printf '%s\n' "$hd" | head -1 | grep -o ' [0-9][0-9][0-9]' | tr -d ' ')
+              iss=$(echo | timeout 8 openssl s_client -connect "$vps:443" -servername "$f" 2>/dev/null | openssl x509 -noout -issuer 2>/dev/null | tr 'A-Z' 'a-z')
+              case "$iss" in "") ic="no certificate/handshake failed";; *"traefik default"*) ic="traefik default cert";; *"caddy local"*) ic="caddy local CA";; *"let's encrypt"*|*"lets encrypt"*) ic="lets encrypt";; *"kubernetes ingress"*|*fake*) ic="ingress fake cert";; *) ic=other;; esac
+              ah=$(printf '' | timeout 8 openssl s_client -connect "$vps:443" -servername "$f" -alpn acme-tls/1 2>&1 | grep -ao 'ALPN protocol: [a-z0-9/.-]*\|No ALPN negotiated\|alert [a-z ]*' | head -1)
+              echo "::notice::tls $n outside: challenge-path status ${cs:-000}; server header $sv; redirect $lc; 443 cert issuer: $ic; acme-tls/1 probe: ${ah:-none}"
             done
           fi
           # Use the script from this commit (it does not need the deploy files for these actions).
