@@ -348,6 +348,11 @@ function setMap(id) {
   if (map) { removeBodies(); map.dispose(); }
   map = makeMap(m.id);
   if (world) map.physics(RAPIER, world);
+  // player marker readable on dark arenas
+  const bg = new THREE.Color((map.raw.env && map.raw.env.background) || '#EEEEEB');
+  const dark = bg.r * 0.3 + bg.g * 0.59 + bg.b * 0.11 < 0.35;
+  ring.material.color.set(dark ? '#F4F4F1' : '#0E0E0E');
+  document.body.classList.toggle('dark-map', dark);
   rig.invalidate();
   if (brain) brain = createBrain(brain.level.id, map);
   park();
