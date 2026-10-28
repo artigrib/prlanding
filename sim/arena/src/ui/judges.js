@@ -5,16 +5,16 @@ export const CATS = [
   { id: 'aggression', name: 'Agrese', pts: 3 },
   { id: 'control', name: 'Kontrola', pts: 3 }
 ];
-function split(pts, a, b, coin) {
+function split(pts, a, b) {
   a = Math.max(0, a); b = Math.max(0, b);
-  if (a + b < 1e-6) { const h = Math.floor(pts / 2); return coin ? [pts - h, h] : [h, pts - h]; }
+  if (a + b < 1e-6) { const h = Math.floor(pts / 2); return [h, h]; }   // nothing to separate them: even split
   const x = Math.round(pts * a / (a + b));
   return [x, pts - x];
 }
 // a, b: { damage, aggression, control } raw tallies for player / opponent
 export function judge(a, b, rnd = Math.random) {
   const cats = {}, total = [0, 0];
-  for (const c of CATS) { cats[c.id] = split(c.pts, a[c.id], b[c.id], rnd() < 0.5); total[0] += cats[c.id][0]; total[1] += cats[c.id][1]; }
+  for (const c of CATS) { cats[c.id] = split(c.pts, a[c.id], b[c.id]); total[0] += cats[c.id][0]; total[1] += cats[c.id][1]; }
   const judges = [], votes = [0, 0];
   for (let j = 0; j < 3; j++) {
     // each judge sees the fight a little differently
@@ -22,7 +22,7 @@ export function judge(a, b, rnd = Math.random) {
     const s = [0, 0];
     let dmg = null;
     for (const c of CATS) {
-      const p = split(c.pts, a[c.id] * n(), b[c.id] * n(), rnd() < 0.5);
+      const p = split(c.pts, a[c.id] * n(), b[c.id] * n());
       s[0] += p[0]; s[1] += p[1];
       if (c.id === 'damage') dmg = p;
     }
