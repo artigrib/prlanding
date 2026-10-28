@@ -234,10 +234,9 @@ async function enterCal() {
   try { await S.disableTorque(bus); } catch (e) { console.error(e); }
 }
 
-$('cal-mid-help').addEventListener('click', () => {
-  // LeRobot "middle of the range": joints centred, gripper half open
-  st.sweep = { k: 0, t: 0, seq: JOINTS.map((_, i) => [i, sim.ctrl(i), i === 5 ? (sim.range[5][0] + sim.range[5][1]) / 2 : 0, 0.6]) };
-});
+// LeRobot "middle of the range": joints centred, gripper half open
+const MID = [0, 0, 0, 0, 0, (GRIP[0] + GRIP[1]) / 2];
+$('cal-mid-help').addEventListener('click', () => { st.sweep = { k: 0, t: 0, from: null, seq: [{ to: MID, T: 1.2 }] }; });
 
 $('cal-mid').addEventListener('click', () => task(async () => {
   st.sweep = null;
@@ -249,14 +248,21 @@ $('cal-mid').addEventListener('click', () => task(async () => {
 }, $('cal-msg')));
 
 $('cal-sweep').addEventListener('click', () => {
-  // each joint: to one stop, to the other, back to the middle (wrist_roll is recorded as a full turn anyway)
+  // Each joint: stop to stop with a short dwell, then back. Like a person would, the other joints are
+  // first put where the swept link cannot hit the table (lift: elbow folded; elbow: arm raised back).
+  // wrist_roll is recorded as a full turn anyway (so_follower.calibrate).
   const seq = [];
   for (let i = 0; i < N; i++) {
     if (S.MOTORS[i].name === S.FULL_TURN) continue;
-    const [lo, hi] = sim.range[i], mid = sim.ctrl(i);
-    seq.push([i, mid, lo, 0.9], [i, lo, lo, 0.4], [i, lo, hi, 1.4], [i, hi, hi, 0.4], [i, hi, mid, 0.8]);   // dwell at each stop
+    const pose = MID.slice();
+    if (S.MOTORS[i].name === 'shoulder_lift') pose[2] = sim.range[2][0];
+    if (S.MOTORS[i].name === 'elbow_flex') pose[1] = -1.5;
+    const at = (v) => { const p = pose.slice(); p[i] = v; return p; };
+    const [lo, hi] = sim.range[i];
+    seq.push({ to: pose, T: 0.8 }, { to: at(lo), T: 0.9 }, { to: at(lo), T: 0.4 }, { to: at(hi), T: 1.4 }, { to: at(hi), T: 0.4 }, { to: pose, T: 0.8 });
   }
-  st.sweep = { k: 0, t: 0, seq };
+  seq.push({ to: MID, T: 0.8 });
+  st.sweep = { k: 0, t: 0, from: null, seq };
 });
 
 $('cal-save').addEventListener('click', () => task(async () => {
@@ -380,10 +386,11 @@ function frame(dt) {
     const s = st.sweep, cur = s.seq[s.k];
     if (!cur) st.sweep = null;
     else {
+      if (!s.from) s.from = JOINTS.map((_, i) => sim.ctrl(i));
       s.t += dt;
-      const [i, a, b, T] = cur, k = Math.min(1, s.t / T), e = k * k * (3 - 2 * k);
-      hand(i, a + (b - a) * e);
-      if (k >= 1) { s.k++; s.t = 0; }
+      const k = Math.min(1, s.t / cur.T), e = k * k * (3 - 2 * k);
+      cur.to.forEach((b, i) => hand(i, s.from[i] + (b - s.from[i]) * e));
+      if (k >= 1) { s.k++; s.t = 0; s.from = null; }
     }
   }
   if (st.demo && st.targets) {

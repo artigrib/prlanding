@@ -61,7 +61,7 @@ async function wizardSetup(page, base, { shots = false, prefix = '' } = {}) {
   await idle(page);
   // calibration A: centre
   await page.click('#cal-mid-help');
-  await page.evaluate(() => window.__wiz.advance(1.5));
+  await page.evaluate(() => window.__wiz.advance(2));
   await page.click('#cal-mid');
   await page.waitForSelector('#cal-b:not([hidden])');
   await idle(page);
@@ -93,8 +93,9 @@ async function diag(page) {
   const srv = await server();
   const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   try {
+    const ONLY = process.env.ONLY || '';
     // 1) mission page regression after the core.js refactor
-    {
+    if (!ONLY || ONLY === 'mission') {
       const errors = [];
       const page = await newPage(browser, { width: 1280, height: 800 }, errors);
       await page.goto(srv.url + '/sim/so101/?test=1');
@@ -109,7 +110,7 @@ async function diag(page) {
     }
 
     // 2) wizard happy path, desktop
-    {
+    if (!ONLY || ONLY === 'happy') {
       const errors = [];
       const page = await newPage(browser, { width: 1280, height: 800 }, errors);
       await wizardSetup(page, srv.url, { shots: true, prefix: 'd' });
@@ -117,6 +118,7 @@ async function diag(page) {
       for (let i = 0; i < 12 && !(await state(page)).won; i++) await page.evaluate(() => window.__wiz.advance(1));
       const s = await state(page);
       ok(s.won, 'wizard: mission through the bus wins');
+      if (!s.won) console.log(JSON.stringify(await page.evaluate(() => { const a = window.__wiz.arm; return { hud: document.getElementById('hud-text').textContent, cal: window.__wiz.state().cal, goals: a.servos.map((x) => x.reg('Goal_Position')), torque: a.servos.map((x) => x.mem[40]), q: a.servos.map((x, i) => a.plant.q(i)) }; })));
       await page.waitForTimeout(400);
       await shot(page, 'd4-test-win');
       await page.click('#again');
@@ -134,7 +136,7 @@ async function diag(page) {
     }
 
     // 3) fault scenarios
-    for (const [fault, code, name] of [['cable', 'cable', 'loose cable'], ['dupid', 'dup-id', 'duplicate ID'], ['supply', 'overvolt', 'wrong supply']]) {
+    for (const [fault, code, name] of (!ONLY || ONLY === 'faults') ? [['cable', 'cable', 'loose cable'], ['dupid', 'dup-id', 'duplicate ID'], ['supply', 'overvolt', 'wrong supply']] : []) {
       const errors = [];
       const page = await newPage(browser, { width: 1280, height: 800 }, errors);
       await wizardSetup(page, srv.url, { prefix: fault + ': ' });
@@ -151,7 +153,7 @@ async function diag(page) {
     }
 
     // 4) phone layout
-    {
+    if (!ONLY || ONLY === 'phone') {
       const errors = [];
       const page = await newPage(browser, { width: 390, height: 844 }, errors);
       await page.goto(srv.url + '/sim/so101/nastaveni/?test=1');
