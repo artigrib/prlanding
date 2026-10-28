@@ -78,7 +78,7 @@
 </div>
 </div>
 <nav class="jump" aria-label="Obsah stránky">
-<a href="#predobjednavka" id="jump-po">Konfigurace</a><a href="#obsah" data-hide-prep hidden>Obsah krabice</a><a href="#parametry">Parametry</a><a href="#media" id="jump-media" hidden>Videa a články</a><a href="#faq">Otázky</a><a href="#licence">Licence a bezpečnost</a>
+<a href="#predobjednavka" id="jump-po">Upozornění</a><a href="#obsah" data-hide-prep hidden>Obsah krabice</a><a href="#parametry">Parametry</a><a href="#media" id="jump-media" hidden>Videa a články</a><a href="#faq">Otázky</a><a href="#licence">Licence a bezpečnost</a>
 </nav>
 </section>
 
@@ -100,20 +100,20 @@
 <div id="po-wrap">
 <form id="preorder" novalidate style="display:flex;flex-direction:column;gap:14px">
 <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
-<div><b id="po-title" style="font-weight:500;font-size:19px;display:block"></b><span class="muted" id="summary" style="font-size:15px"></span></div>
+<div><b id="po-title" style="font-weight:500;font-size:19px;display:block">Upozornění na dostupnost</b><span class="muted" id="summary" style="font-size:15px"></span></div>
 <p class="ink2" id="po-prep" hidden style="margin:0;font-size:15px">Než sadu nabídneme, ověřujeme s autory licenci konstrukčních souborů.</p>
 <div class="note-bar" data-hide-prep hidden><i aria-hidden="true"></i><span>Nezávazné. Cenu a termín potvrdíme e-mailem, platíte až po potvrzení.</span></div>
 <label class="field" for="po-email">E-mail</label>
 <input id="po-email" class="field-in" type="email" name="email" autocomplete="email" autocapitalize="off" spellcheck="false" inputmode="email" required aria-describedby="po-email-err" style="min-height:52px;padding:12px 14px;border:1px solid var(--line-2);font-family:inherit;font-size:17px;margin-top:-8px">
 <span class="err" id="po-email-err" hidden>Zkontrolujte prosím e-mailovou adresu.</span>
 <label class="field" for="po-note">Poznámka <span class="muted" style="font-weight:400">(nepovinná)</span></label>
-<textarea id="po-note" name="note" rows="2" placeholder="Např. otázka ke kompletaci" style="min-height:52px;padding:12px 14px;border:1px solid var(--line-2);font-family:inherit;font-size:17px;margin-top:-8px"></textarea>
+<textarea id="po-note" name="note" rows="2" placeholder="Na co se těšíte?" style="min-height:52px;padding:12px 14px;border:1px solid var(--line-2);font-family:inherit;font-size:17px;margin-top:-8px"></textarea>
 <label class="check" data-hide-prep hidden><input type="checkbox" id="po-school" name="school"><span>Objednávám pro školu, kroužek nebo firmu (více sad, faktura)</span></label>
 <div id="po-school-f" class="school-f" hidden>
 <label class="field" for="po-qty">Počet sad<input id="po-qty" name="qty" type="number" min="1" max="200" value="1" inputmode="numeric"></label>
 <label class="field" for="po-ico">IČO pro fakturu<input id="po-ico" name="ico" type="text" inputmode="numeric" autocomplete="off" maxlength="12"></label>
 </div>
-<label class="check"><input type="checkbox" id="po-consent" aria-describedby="po-consent-err"><span id="po-consent-t">Souhlasím se zpracováním e-mailu za účelem vyřízení předobjednávky.</span></label>
+<label class="check"><input type="checkbox" id="po-consent" aria-describedby="po-consent-err"><span id="po-consent-t">Souhlasím se zpracováním e-mailu za účelem zaslání upozornění na dostupnost.</span></label>
 <span class="err" id="po-consent-err" hidden>Potvrďte prosím souhlas se zpracováním e-mailu.</span>
 <button type="submit" class="btn btn-act" id="po-btn" style="min-height:56px;font-size:17px"><span id="po-btn-t">Dejte mi vědět</span> <span aria-hidden="true">→</span></button>
 <p class="form-msg" id="form-msg" role="status" aria-live="polite" hidden></p>
@@ -211,7 +211,7 @@
 
 <div class="sbar" id="sbar" aria-hidden="true">
 <div style="min-width:0"><b id="sb-name"></b><span id="sb-sum"></span></div>
-<a class="btn btn-act" href="#predobjednavka" tabindex="-1">Předobjednat</a>
+<a class="btn btn-act" href="#predobjednavka" tabindex="-1">Dejte mi vědět</a>
 </div>
 
 <script src="../../assets/config.js"></script>

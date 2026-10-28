@@ -178,7 +178,7 @@ window.PR_ROBOTS = [
     specs: [['Hmotnostní třída', '150 g (UK antweight, US fairyweight)'], ['Půdorys', 'v limitu CCRL 15 × 15 cm'], ['Pohon', '4× N10, 4×4'], ['Zbraň', 'klín, flipper nebo chapadlo (moduly)'], ['Varianty', '4 motory, nebo 2 motory s řemenem'], ['Řízení', 'Malenki Nano, FlySky AFHDS 2A'], ['Napájení', 'LiPo 2S'], ['Tisk', 'PLA, PC nebo PA12; boční pancíř a držáky z TPU'], ['Doba tisku', '—']],
     related: ['vert150', 'otto', 'exomy'] },
 
-  { id: 'vert150', glb: true, render: true, sim: 'arena', credit: 'Vizualizace z modelu TheBlackfish, remix „150g vert“ od Muffin578 (CC BY-SA 4.0)', preparing: true, name: 'Vertikální spinner 150 g', type: 'Bojový robot 150 g', cat: 'combat', level: 'Střední', hw: 'CC BY-SA 4.0, nebo BY-NC-SA (ověřujeme s autory)', sw: '—',
+  { id: 'vert150', glb: true, render: true, sim: 'arena', credit: 'Vizualizace z modelu TheBlackfish, remix „150g vert“ od Muffin578 (CC BY-SA 4.0)', preparing: true, name: 'Vertikální spinner 150 g', type: 'Bojový robot 150 g', cat: 'combat', level: 'Střední', hw: 'CC BY-SA 4.0 nebo BY-NC-SA 4.0 (ověřujeme s autory)', sw: '—',
     author: 'TheBlackfish (remix „150g vert“ od Muffin578)', alt: 'Malý bojový robot s vertikálním rotujícím ostřím',
     short: 'Dvoukolový robot do 150 g s vertikálním rotujícím ostřím. Jen pro uzavřenou arénu.',
     lead: 'Dvoukolový bojový robot do 150 g s vertikálním spinnerem poháněným střídavým motorem BE1806. Pohon zajišťují dva převodové motory N20 přes Malenki Nano, zbraň vlastní regulátor ZTW Mantis Slim. Ostří se tiskne, tělo z PETG za zhruba dvě hodiny. Rotující zbraň je nebezpečná – zapínat jen v uzavřené aréně a s funkčním failsafe.',
@@ -189,12 +189,15 @@ window.PR_ROBOTS = [
     specs: [['Hmotnostní třída', '150 g (UK antweight, US fairyweight)'], ['Půdorys', 'v limitu CCRL 15 × 15 cm'], ['Pohon', '2× N20, dvě kola'], ['Zbraň', 'vertikální spinner, BE1806'], ['Řízení', 'Malenki Nano + ZTW Mantis Slim 15A'], ['Napájení', 'LiPo 2S'], ['Tisk', 'PETG, tištěné ostří'], ['Doba tisku', '≈ 2,1 h (54 g)'], ['Bezpečnost', 'jen v uzavřené aréně, failsafe povinný']],
     related: ['svrn', 'otto', 'sawppy'] }
 ];
-// Browser demos linked from product pages (r.sim). Sizes = measured transfer of a first visit
+// Browser demos linked from product pages (r.sim). colorParam: the sim reads ?color= (so101 does not yet).
+// Sizes = measured transfer of a first visit
 // (gzip for code; meshes/models counted as served), re-measure when sim/** changes.
 window.PR_SIMS = {
-  arena: { path: 'sim/arena/', robotParam: true, label: 'Vyzkoušejte v aréně', note: 'Hra v prohlížeči · zdarma · ≈\u00A01,3\u00A0MB' },
-  so101: { path: 'sim/so101/', label: 'Vyzkoušejte v simulaci', note: 'Simulace v prohlížeči · zdarma · ≈\u00A04–5\u00A0MB' }
+  arena: { path: 'sim/arena/', robotParam: true, colorParam: true, label: 'Vyzkoušejte v aréně', note: 'Hra v prohlížeči · zdarma · ≈\u00A01,3\u00A0MB' },
+  so101: { path: 'sim/so101/', label: 'Vyzkoušejte v simulaci', note: 'Simulace v prohlížeči · zdarma · ≈\u00A04–\u20605\u00A0MB' }
 };
+// Robot without its own software (RC-controlled); same test in app.js and tools/build.mjs.
+window.PR_NO_SW = function (r) { return !r.sw || String(r.sw).trim() === '—'; };
 // Safety notes built from what a robot actually contains (used by app.js and tools/build.mjs).
 window.PR_SAFETY = function (r) {
   var all = JSON.stringify([r.bom || [], r.specs || [], r.lead || '']);

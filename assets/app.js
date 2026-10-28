@@ -197,9 +197,9 @@
     set('#p-credit', r.credit || (r.render ? 'Vizualizace z CAD projektu' : ''));
     set('#p-cap', 'Obr. 1 — ' + r.name);
     set('#l-name', r.name); set('#l-name2', r.name); set('#l-author', r.author); set('#l-hw', r.hw); set('#l-sw', r.sw); set('#l-hw2', r.hw); set('#l-sw2', r.sw);
-    if (r.sw === '—') {
+    if (window.PR_NO_SW(r)) {
       var lsp = $('#l-sw') && $('#l-sw').parentNode;
-      if (lsp) lsp.innerHTML = lsp.innerHTML.replace(/, software pod licencí <span id="l-sw">[^<]*<\/span>/, ' (vlastní software nepotřebuje, ovládá se RC vysílačem)');
+      if (lsp) lsp.innerHTML = lsp.innerHTML.replace(/, software pod licencí <span id="l-sw">[^<]*<\/span>/, '. Vlastní software nepotřebuje, ovládá se RC vysílačem');
       set('#l-sw2', 'bez vlastního softwaru (RC vysílač)');
     }
     $('#l-repo').href = r.repo; $('#l-docs').href = r.docs;
@@ -234,12 +234,12 @@
       set('#po-consent-t', 'Souhlasím se zpracováním e-mailu za účelem zaslání upozornění na dostupnost.');
     }
     set('#po-title', r.preparing ? 'Upozornění na dostupnost' : 'Nezávazná předobjednávka');
-    /* browser demo (sim/arena): prerendered by tools/build.mjs; the chosen colour follows the visitor */
+    /* browser demo (sim/arena): prerendered by tools/build.mjs; the chosen colour follows the visitor where the sim reads ?color= */
     var SIM = r.sim && (window.PR_SIMS || {})[r.sim], simA = $('#sim-cta'), colorChosen = !!qs('color');
     function simHref() {
       var q = [];
       if (SIM.robotParam) q.push('robot=' + r.id);
-      if (!r.preparing && colorChosen) q.push('color=' + st.color);
+      if (SIM.colorParam && !r.preparing && colorChosen) q.push('color=' + st.color);
       return ROOT + SIM.path + (q.length ? '?' + q.join('&') : '');
     }
     if (SIM && !simA) {

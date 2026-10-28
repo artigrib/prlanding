@@ -29,7 +29,7 @@ for (const r of R) {
   const specs = ctx.window.PR_SPECS(r);
   const sim = r.sim && SIMS[r.sim];
   const simCta = sim ? `<a class="sim-cta" id="sim-cta" href="${ROOT}${sim.path}${sim.robotParam ? '?robot=' + r.id : ''}"><span><b>${esc(sim.label)}</b><small>${esc(sim.note)}</small></span><span aria-hidden="true">→</span></a>\n` : '';
-  const noSw = !r.sw || r.sw === '—';
+  const noSw = ctx.window.PR_NO_SW(r);
   const prerender = {
     specs: specs.map(x => `<div><dt>${esc(x[0])}</dt><dd>${esc(x[1])}</dd></div>`).join(''),
     box: [['Tištěné díly podle STL projektu', '1 sada']].concat(r.bom || []).map((b, i) => `<li><span class="n">${String(i + 1).padStart(2, '0')}</span><span>${esc(b[0])}</span><span class="q">${esc(b[1])}</span><span class="t"></span></li>`).join(''),
@@ -54,7 +54,7 @@ for (const r of R) {
     `<meta property="og:locale" content="cs_CZ">`,
     `<meta name="twitter:card" content="summary_large_image">`,
     `<link rel="preload" as="image" href="${ROOT}img/${r.id}_white.jpg" fetchpriority="high">`,
-    `<script type="application/ld+json">${JSON.stringify(ld)}</script>`
+    `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`
   ].join('\n');
 
   let html = tpl
@@ -72,7 +72,7 @@ for (const r of R) {
     .replace('<span id="l-author"></span>', `<span id="l-author">${esc(r.author)}</span>`)
     .replace('<span id="l-name2"></span>', `<span id="l-name2">${esc(r.name)}</span>`)
     .replace('<span id="l-hw"></span>', `<span id="l-hw">${esc(r.hw)}</span>`)
-    .replace(', software pod licencí <span id="l-sw"></span>.', noSw ? ' (vlastní software nepotřebuje, ovládá se RC vysílačem).' : `, software pod licencí <span id="l-sw">${esc(r.sw)}</span>.`)
+    .replace(', software pod licencí <span id="l-sw"></span>.', noSw ? '. Vlastní software nepotřebuje, ovládá se RC vysílačem.' : `, software pod licencí <span id="l-sw">${esc(r.sw)}</span>.`)
     .replace('<dd style="margin:0" id="l-hw2"></dd>', `<dd style="margin:0" id="l-hw2">${esc(r.hw)}</dd>`)
     .replace('<dd style="margin:0" id="l-sw2"></dd>', `<dd style="margin:0" id="l-sw2">${noSw ? 'bez vlastního softwaru (RC vysílač)' : esc(r.sw)}</dd>`)
     .replace('id="l-repo" href="#"', `id="l-repo" href="${esc(r.repo)}"`)
@@ -80,6 +80,7 @@ for (const r of R) {
     .replace(/(<p class="ink2" style="margin-top:8px" id="safety">)[^<]*(<\/p>)/, `$1${ctx.window.PR_SAFETY(r).map(esc).join('<br>')}$2`)
     .replace('<span class="h2" id="specs-title">Parametry</span>', `<span class="h2" id="specs-title">Parametry · ${specs.length}</span>`)
     .replace('<!--sim-cta-->\n', simCta)
+    .replace('<b id="po-title" style="font-weight:500;font-size:19px;display:block"></b>', `<b id="po-title" style="font-weight:500;font-size:19px;display:block">${r.preparing ? 'Upozornění na dostupnost' : 'Nezávazná předobjednávka'}</b>`)
     // hero, crumb and meta line so the page reads right without scripts (app.js rewrites the same nodes)
     .replace('<div class="tile" id="p-tile"></div>', `<div class="tile" id="p-tile"><img src="${ROOT}img/${r.id}_white.jpg" alt="${esc(r.alt)}" fetchpriority="high" width="1200" height="900"></div>`)
     .replace('<span id="crumb-cat"></span>', `<span id="crumb-cat">${esc(ctx.window.PR_CATS[r.cat])}</span>`)
@@ -99,7 +100,11 @@ for (const r of R) {
       .replace('id="sec1-label">01 — Konfigurace a předobjednávka<', 'id="sec1-label">01 — Upozornění na dostupnost<')
       .replace('<span id="po-btn-t">Předobjednat</span>', '<span id="po-btn-t">Dejte mi vědět</span>')
       .replace(/ data-hide-prep>/g, ' data-hide-prep hidden>')
-      .replace('<fieldset id="setups-wrap">', '<fieldset id="setups-wrap" hidden>');
+      .replace('<fieldset id="setups-wrap">', '<fieldset id="setups-wrap" hidden>')
+      .replace('id="jump-po">Konfigurace<', 'id="jump-po">Upozornění<')
+      .replace('<a class="btn btn-act" href="#predobjednavka" tabindex="-1">Předobjednat</a>', '<a class="btn btn-act" href="#predobjednavka" tabindex="-1">Dejte mi vědět</a>')
+      .replace('za účelem vyřízení předobjednávky.</span>', 'za účelem zaslání upozornění na dostupnost.</span>')
+      .replace('placeholder="Např. otázka ke kompletaci"', 'placeholder="Na co se těšíte?"');
     if (!html.includes('Dejte mi vědět <span')) throw new Error('template changed (preparing): ' + r.id);
   }
   if (!html.includes(`data-robot="${r.id}"`) || !html.includes('og:image') || html.includes('<!--sim-cta-->') || !html.includes('id="l-hw">')) throw new Error('template changed: ' + r.id);
