@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Aréna 150 g – printedrobotics.cz</title>
+<meta name="description" content="Vyzkoušej si bojového robota do 150 g v aréně přímo v prohlížeči.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#EEEEEB">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="modulepreload" href="build/arena.js">
+<style>
+:root{--ink:#0E0E0E;--ink-2:#3A3A36;--mute:#5E5E59;--line:#DADAD5;--line-2:#8A8A84;--paper:#fff;--stone:#EEEEEB;--sand:#F4F4F1;--accent:#E8461E;--accent-d:#D23C15;--accent-text:#B33A16;
+--sans:'Inter Tight','Helvetica Neue',Arial,sans-serif;--mono:'Geist Mono',ui-monospace,monospace;--pad:clamp(12px,2.4vw,28px)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--stone);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+body{position:fixed;inset:0;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+a{color:var(--ink)}
+button{font-family:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+#stage,#stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#stage canvas{outline:none}
+.mono{font-family:var(--mono);font-size:12px;letter-spacing:.02em;color:var(--mute)}
+kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line-2);border-bottom-width:2px;padding:1px 5px;margin:0 1px;background:#fff;border-radius:2px;color:var(--ink)}
+
+/* HUD */
+#hud{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 10px) var(--pad) 0;display:grid;grid-template-columns:1fr auto 1fr;align-items:start;gap:12px;pointer-events:none}
+.side{display:flex;flex-direction:column;gap:2px;min-width:0}
+.side.r{align-items:flex-end;text-align:right}
+.who{display:flex;align-items:center;gap:8px;font-weight:500;font-size:15px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.who i{width:12px;height:12px;flex:none;border:1px solid var(--ink)}
+.who em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
+.stat{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.stat.warn{color:var(--accent-text);font-weight:500}
+#timer{font-family:var(--mono);font-weight:500;font-size:clamp(26px,3.4vw,40px);line-height:1;letter-spacing:-.02em;background:var(--ink);color:#fff;padding:8px 12px 7px}
+#timer.low{background:var(--accent);color:var(--ink)}
+#msg{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);font-weight:600;font-size:clamp(64px,13vw,150px);letter-spacing:-.05em;line-height:1;pointer-events:none;color:var(--ink);text-shadow:0 2px 0 #fff}
+
+/* panels */
+.panel{position:absolute;background:#fff;border:1px solid var(--ink);padding:24px;display:flex;flex-direction:column;gap:16px;max-height:calc(100% - 24px);overflow:auto;touch-action:pan-y}
+.panel h1{margin:0;font-weight:500;font-size:clamp(30px,3.4vw,44px);line-height:1.02;letter-spacing:-.04em}
+.panel p{margin:0;color:var(--ink-2);font-size:15px;line-height:1.45}
+.brand{display:flex;align-items:center;gap:8px;text-decoration:none;font-weight:600;font-size:14px}
+.brand i{width:10px;height:10px;background:var(--accent);display:block}
+.lbl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:8px;letter-spacing:.02em}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opt{display:flex;flex-direction:column;gap:2px;text-align:left;padding:10px 12px;border:1px solid var(--line);background:#fff;cursor:pointer;min-height:56px}
+.opt b{font-weight:500;font-size:15px;letter-spacing:-.01em}.opt small{font-size:12px;color:var(--mute)}
+.opt[aria-pressed=true]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.sws{display:flex;gap:10px}
+.sw{width:40px;height:40px;border:1px solid var(--line-2);background:var(--c);cursor:pointer;padding:0;position:relative}
+.sw[aria-pressed=true]{outline:2px solid var(--ink);outline-offset:3px}
+.btn{display:inline-flex;justify-content:space-between;align-items:center;gap:16px;min-height:56px;padding:0 20px;background:var(--ink);color:#fff;text-decoration:none;font-weight:500;font-size:16px;border:1px solid var(--ink);cursor:pointer;width:100%}
+.btn:hover{background:#2a2a2a;color:#fff}
+.btn-o{background:#fff;color:var(--ink)}.btn-o:hover{background:var(--sand);color:var(--ink)}
+.btn-act{background:var(--accent);border-color:var(--accent);color:var(--ink);font-weight:600}
+.btn-act:hover{background:var(--accent-d);border-color:var(--accent-d);color:var(--ink)}
+.btn[disabled]{background:var(--line);border-color:var(--line);color:var(--ink-2);cursor:progress}
+.row{display:flex;gap:8px}
+.row .btn{padding:0 14px;white-space:nowrap;gap:10px}
+.hint{font-size:13px;color:var(--mute);line-height:1.7}
+#start{left:var(--pad);top:50%;transform:translateY(-50%);width:min(400px,calc(100% - 2*var(--pad)))}
+#end,#fail{left:50%;top:50%;transform:translate(-50%,-50%);width:min(420px,calc(100% - 2*var(--pad)))}
+#end h1{font-size:clamp(48px,8vw,84px);letter-spacing:-.05em}
+#end.win h1{color:var(--accent-text)}
+#end .kit{border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:12px}
+#end .kit b{font-weight:500;font-size:18px;letter-spacing:-.02em}
+
+/* touch controls */
+.tc{display:none}
+.touch body.playing .tc{display:block}
+#stick{position:absolute;left:calc(var(--pad) + env(safe-area-inset-left));bottom:calc(env(safe-area-inset-bottom) + 24px);width:150px;height:150px;border-radius:50%;border:1px solid var(--ink);background:rgba(255,255,255,.55);touch-action:none}
+#stick.on{background:rgba(255,255,255,.8)}
+#knob{position:absolute;left:50%;top:50%;width:62px;height:62px;margin:-31px 0 0 -31px;border-radius:50%;background:var(--ink);pointer-events:none}
+#fire{position:absolute;right:calc(var(--pad) + env(safe-area-inset-right));bottom:calc(env(safe-area-inset-bottom) + 40px);width:108px;height:108px;border-radius:50%;border:1px solid var(--ink);background:var(--accent);font-weight:600;font-size:15px;touch-action:none;cursor:pointer}
+#fire.on{background:var(--accent-d);transform:scale(.96)}
+
+@media (max-width:640px){
+  .who{font-size:13px}.who em{display:none}
+  .stat{font-size:11px}
+  #start{left:0;right:0;width:auto;top:auto;bottom:0;transform:none;border-left:0;border-right:0;border-bottom:0;padding:18px 16px calc(env(safe-area-inset-bottom) + 16px);gap:14px}
+  .panel h1{font-size:30px}
+  .opt small{display:none}
+}
+@media (max-height:520px) and (orientation:landscape){
+  #start{top:8px;transform:none;max-height:calc(100% - 16px)}
+  #stick{width:120px;height:120px}
+}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+
+<div id="hud" hidden>
+  <div class="side"><div class="who"><i id="p-sw"></i><em>Ty</em><span id="p-name"></span></div><div class="stat" id="p-stat"></div></div>
+  <div id="timer" role="timer" aria-live="off">2:00</div>
+  <div class="side r"><div class="who"><span id="o-name"></span><em>AI</em><i id="o-sw"></i></div><div class="stat" id="o-stat"></div></div>
+</div>
+<div id="msg" hidden aria-live="assertive"></div>
+
+<div class="tc" id="stick" aria-hidden="true"><div id="knob"></div></div>
+<button class="tc" id="fire" type="button"><span id="fire-l">Zbraň</span></button>
+
+<section class="panel" id="start" aria-labelledby="start-h">
+  <a class="brand" id="back" href="../../"><i></i>printedrobotics.cz <span class="mono">← zpět na sadu</span></a>
+  <div>
+    <div class="mono">Aréna 150 g · prototyp</div>
+    <h1 id="start-h">Vyzkoušej v aréně</h1>
+  </div>
+  <p>Vytlač soupeře z arény nebo do jámy, případně ho převrať tak, aby se 10&nbsp;s nemohl hýbat. Zápas trvá 2 minuty.</p>
+  <div><div class="lbl"><span>Robot</span></div><div class="opts" id="pick"></div></div>
+  <div><div class="lbl"><span>Barva tisku</span><span id="color-name"></span></div><div class="sws" id="colors"></div></div>
+  <button class="btn btn-act" id="go" type="button" disabled><span>Načítám…</span><span aria-hidden="true">→</span></button>
+  <div class="hint" id="hint"></div>
+</section>
+
+<section class="panel" id="end" hidden aria-live="polite" aria-labelledby="end-title">
+  <div class="mono">Konec zápasu</div>
+  <h1 id="end-title">Výhra</h1>
+  <p id="end-why"></p>
+  <div class="mono" id="end-stats"></div>
+  <div class="kit">
+    <div><div class="mono">Stavebnice</div><b id="end-kit"></b></div>
+    <div class="row">
+      <button class="btn btn-o" id="again" type="button"><span>Znovu</span><span aria-hidden="true">↻</span></button>
+      <a class="btn btn-act" id="cta" href="../../"><span>Postav si ho</span><span aria-hidden="true">→</span></a>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="fail" hidden>
+  <div class="mono">Aréna 150 g</div>
+  <h1>Aréna se nespustila</h1>
+  <p></p>
+  <a class="btn btn-act" href="../../"><span>Zpět na sadu</span><span aria-hidden="true">→</span></a>
+</section>
+
+<noscript><section class="panel" style="left:50%;top:50%;transform:translate(-50%,-50%)"><h1>Aréna potřebuje JavaScript</h1><p>Zapni JavaScript, nebo se vrať na <a href="../../">printedrobotics.cz</a>.</p></section></noscript>
+<script type="module" src="build/arena.js"></script>
+<script nomodule>document.getElementById('fail').hidden=false;document.querySelector('#fail p').textContent='Tento prohlížeč je příliš starý na 3D arénu.';document.getElementById('start').hidden=true;</script>
+</body>
+</html>

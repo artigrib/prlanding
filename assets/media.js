@@ -817,6 +817,117 @@ window.PR_MEDIA = {
 "note": "Další stavby a úpravy Sawppyho od komunity – dobrá inspirace."
 }
 ],
+"svrn": [
+{
+"type": "docs",
+"title": "Project SVRN Combat Robot (150g UK Antweight / US Fairyweight)",
+"source": "Printables (Shoverobotics)",
+"url": "https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai",
+"note": "Oficiální podklady: STEP sestavy, PDF návod se seznamem dílů, zapojením a moduly flipper a grabber."
+},
+{
+"type": "video",
+"title": "SVRN a 150g Combat Robot you can 3D print and build!",
+"source": "Shoverobots",
+"url": "https://www.youtube.com/watch?v=1mmZvLIwh6s",
+"yt": "1mmZvLIwh6s",
+"date": "2025-04",
+"note": "Autor ukazuje stavbu platformy a její nasazení v zápasech po roce testování."
+},
+{
+"type": "article",
+"title": "Step Into Combat Robotics With Project SVRN!",
+"source": "Hackaday",
+"url": "https://hackaday.com/2025/06/11/step-into-combat-robotics-with-project-svrn/",
+"date": "2025-06",
+"note": "Představení robota: pohon 4× N10, deska Malenki Nano a výměnné zbraně pro začátečníky."
+},
+{
+"type": "community",
+"title": "Project SVRN modular 3d printed robot files",
+"source": "Bristol Bot Builders Forum",
+"url": "https://forum.bristolbotbuilders.com/t/project-svrn-modular-3d-printed-robot-files/472",
+"date": "2025-04",
+"note": "Vlákno autora na fóru britských stavitelů, kde přibyl i modul grabberu."
+},
+{
+"type": "video",
+"title": "How to build the ARC 150g kit combat robot (Complete beginners guide)",
+"source": "Adelaide Robot Combat",
+"url": "https://www.youtube.com/watch?v=cwAmzbAXF7w",
+"yt": "cwAmzbAXF7w",
+"note": "Obecný návod pro úplné začátečníky, jak postavit 150g bojového robota ze stavebnice."
+},
+{
+"type": "docs",
+"title": "Guides, Parts & Rules",
+"source": "Bristol Bot Builders",
+"url": "https://bristolbotbuilders.com/guides/",
+"note": "Rozcestník návodů pro antweighty: pájení, párování vysílačky, failsafe a pravidla."
+},
+{
+"type": "docs",
+"title": "Váhová kategorie – bojoví roboti",
+"source": "FLS Battlebots",
+"url": "https://www.flsbattlebots.cz/kategorie-robotu/vahova-kategorie",
+"note": "Česky o váhových kategoriích České ligy; antweight do 150 g je ideální první robot."
+}
+],
+"vert150": [
+{
+"type": "docs",
+"title": "Vertical Spinner Battlebot - Antweight (150 g)",
+"source": "Printables (TheBlackfish)",
+"url": "https://www.printables.com/model/1146226-vertical-spinner-battlebot-antweight-150-g",
+"date": "2025-01",
+"note": "Modely ke stažení se seznamem dílů: motor BE1806, regulátor ZTW Mantis 15A a Malenki Nano."
+},
+{
+"type": "docs",
+"title": "Vertical Spinner Battlebot - Antweight (150 g)",
+"source": "MakerWorld (TheBlackfish)",
+"url": "https://makerworld.com/en/models/985299-vertical-spinner-battlebot-antweight-150-g",
+"note": "Stejný model na MakerWorld s profilem tisku z PETG (asi 54 g materiálu, 2 desky)."
+},
+{
+"type": "video",
+"title": "Antweight Vertical Spinner Combat Robot Tutorial",
+"source": "NDA Combat Robotics",
+"url": "https://www.youtube.com/watch?v=s-UqY_yoGX8",
+"yt": "s-UqY_yoGX8",
+"note": "Obecný návod na stavbu malého vertikálního spinneru, nejde přímo o tento model."
+},
+{
+"type": "docs",
+"title": "Malenki Nano Integrated: Triple Brushed ESC + Receiver Combo",
+"source": "Turnabot",
+"url": "https://turnabot.com/products/malenki-nano-integrated-6-channel-triple-electronic-speed-controller-receiver-combo",
+"note": "Parametry desky přijímač + regulátory (2,4 g, 1S–2S, AFHDS2A) a odkaz na uživatelský manuál."
+},
+{
+"type": "video",
+"title": "Malenki Radio Setup",
+"source": "Turnabot",
+"url": "https://www.youtube.com/watch?v=OmhVEuRo15Q",
+"yt": "OmhVEuRo15Q",
+"date": "2025-04",
+"note": "Výrobce ukazuje, jak spárovat a nastavit vysílačku s deskou Malenki."
+},
+{
+"type": "docs",
+"title": "Pravidla antweight do 150 g (CCRL)",
+"source": "FLS Battlebots",
+"url": "https://www.flsbattlebots.cz/pravidla/antweight",
+"note": "Česká pravidla ligy: limit 150 g, rozměr 15 × 15 cm, max. 24 V a zakázané zbraně."
+},
+{
+"type": "community",
+"title": "Turnaje bojových robotů v ČR – Česká liga (CCRL)",
+"source": "FLS Battlebots",
+"url": "https://www.flsbattlebots.cz/turnaje",
+"note": "Kalendář turnajů České ligy bojových robotů, kde si hotového robota můžete vyzkoušet."
+}
+],
 "so101": [
 {
 "type": "video",

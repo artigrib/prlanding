@@ -238,6 +238,12 @@
       set('#po-consent-t', 'Souhlasím se zpracováním e-mailu za účelem zaslání upozornění na dostupnost.');
     }
     set('#po-title', r.preparing ? 'Upozornění na dostupnost' : 'Nezávazná předobjednávka');
+    if (r.sim) {
+      var sl = document.createElement('a'); sl.className = 'btn btn-o';
+      sl.href = ROOT + (r.sim === 'arena' ? 'sim/arena/?robot=' + r.id : 'sim/' + r.sim + '/');
+      sl.innerHTML = (r.sim === 'arena' ? 'Vyzkoušejte v aréně' : 'Vyzkoušejte v simulaci') + ' <span aria-hidden="true">→</span>';
+      $('#top-cta').parentNode.appendChild(sl);
+    }
     if (!r.preparing) { var tc = $('#top-cta'); var sd = document.createElement('div'); sd.innerHTML = softForm('price', r.name); tc.parentNode.appendChild(sd.firstChild); }
     $('#po-prep').hidden = true;
 
@@ -486,6 +492,8 @@
       parol6: ['Nejbližší průmyslovému robotu, co si vytisknete doma', 'Opakovatelnost 0,08 mm díky planetovým převodovkám', 'Vlastní GUI se simulátorem, Python API i ROS 2'],
       bhl: ['Open-source humanoid v dětské velikosti', 'I převodovky pohonů se tisknou z PLA', 'Chodí díky RL politice přenesené ze simulace'],
       osr: ['Robustní rover z hliníku podle marsovských vozítek', 'Open-source hardware s certifikací OSHWA', 'Rocker-bogie a natáčení všech rohových kol'],
+      svrn: ['Modulární robot pro první soutěže do 150 g', 'Pohon 4×4 a moduly flipper nebo chapadlo', 'Bez rotující zbraně – bezpečný pro první zápasy'],
+      vert150: ['Klasický vertikální spinner v kategorii 150 g', 'Běžné díly: BE1806, Malenki Nano, motory N20', 'Jen pro uzavřenou arénu a zkušené stavitele'],
       stackchan: ['Nejroztomilejší open-source robot na stůl', 'Programování v JavaScriptu i blocích v prohlížeči', 'Jen dvě serva a pár šroubků — ideální první stavba']
     };
     // first pick per goal × experience × size; every available kit wins at least once
