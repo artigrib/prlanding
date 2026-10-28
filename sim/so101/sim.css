@@ -13,6 +13,7 @@ a{color:var(--ink)}a:hover{color:var(--accent-text)}
 button{font-family:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 [hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mono{font-family:var(--mono);font-size:13px;color:var(--mute);letter-spacing:.01em;margin:0}
 .mono-s{font-family:var(--mono);font-size:12px;color:var(--mute);letter-spacing:.02em}
 .muted{color:var(--mute)}.ink2{color:var(--ink-2)}
@@ -79,6 +80,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .loader-in{width:min(320px,100%);display:flex;flex-direction:column;gap:10px}
 .prog{height:2px;background:var(--line)}
 .prog b{display:block;height:100%;width:0;background:var(--accent);transition:width .15s}
+.fail-in .btn{align-self:stretch}
 .fail-in{max-width:440px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
 .fail-in h2,.win h2{margin:0;font-weight:500;font-size:26px;line-height:1.12;letter-spacing:-.03em}
 .fail-in p{margin:0}
@@ -109,7 +111,8 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   .win p{display:none}
   .win .win-k{display:block}
   .win-b{flex-wrap:nowrap}
-  .win-b .btn{min-height:48px;padding:0 14px;font-size:15px}
+  .win-b .btn{min-height:48px;padding:0 12px;gap:8px;font-size:15px;white-space:nowrap}
+  .win-b #again{flex:0 0 auto}
   @keyframes pop{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Aréna 150 g – printedrobotics.cz</title>
 <meta name="description" content="Vyzkoušej si bojového robota do 150 g v aréně přímo v prohlížeči.">
 <meta name="robots" content="noindex">
@@ -16,13 +16,13 @@
 --sans:'Inter Tight','Helvetica Neue',Arial,sans-serif;--mono:'Geist Mono',ui-monospace,monospace;--pad:clamp(12px,2.4vw,28px)}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;background:var(--stone);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;overscroll-behavior:none}
-body{position:fixed;inset:0;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+body{position:fixed;inset:0;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 a{color:var(--ink)}
 button{font-family:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 [hidden]{display:none!important}
 #stage,#stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-#stage canvas{outline:none}
+#stage canvas{outline:none;touch-action:none}
 .mono{font-family:var(--mono);font-size:12px;letter-spacing:.02em;color:var(--mute)}
 kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line-2);border-bottom-width:2px;padding:1px 5px;margin:0 1px;background:#fff;border-radius:2px;color:var(--ink)}
 
@@ -62,6 +62,9 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line-2);border
 .row{display:flex;gap:8px}
 .row .btn{padding:0 14px;white-space:nowrap;gap:10px}
 .hint{font-size:13px;color:var(--mute);line-height:1.7}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.credit{font-size:12px;line-height:1.5;color:var(--mute)}
+.credit a{color:var(--mute)}
 #start{left:var(--pad);top:50%;transform:translateY(-50%);width:min(400px,calc(100% - 2*var(--pad)))}
 #end,#fail{left:50%;top:50%;transform:translate(-50%,-50%);width:min(420px,calc(100% - 2*var(--pad)))}
 #end h1{font-size:clamp(48px,8vw,84px);letter-spacing:-.05em}
@@ -86,7 +89,13 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line-2);border
   .opt small{display:none}
 }
 @media (max-height:520px) and (orientation:landscape){
-  #start{top:8px;transform:none;max-height:calc(100% - 16px)}
+  /* landscape phones: two columns so Start fits without scrolling */
+  #start{top:8px;transform:none;max-height:calc(100% - 16px);flex-direction:row;gap:20px;width:min(760px,calc(100% - 2*var(--pad)));padding:16px 20px}
+  #start .col{flex:1 1 0;gap:12px}
+  #start h1{font-size:28px}#start p{font-size:14px}
+  .opt{min-height:48px;padding:8px 10px}.opt small{display:none}
+  .sw{width:36px;height:36px}
+  #start .btn{min-height:48px}
   #stick{width:120px;height:120px}
 }
 </style>
@@ -99,22 +108,27 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line-2);border
   <div id="timer" role="timer" aria-live="off">2:00</div>
   <div class="side r"><div class="who"><span id="o-name"></span><em>AI</em><i id="o-sw"></i></div><div class="stat" id="o-stat"></div></div>
 </div>
-<div id="msg" hidden aria-live="assertive"></div>
+<div id="msg" hidden aria-live="polite"></div>
 
 <div class="tc" id="stick" aria-hidden="true"><div id="knob"></div></div>
 <button class="tc" id="fire" type="button"><span id="fire-l">Zbraň</span></button>
 
 <section class="panel" id="start" aria-labelledby="start-h">
-  <a class="brand" id="back" href="../../"><i></i>printedrobotics.cz <span class="mono">← zpět na sadu</span></a>
-  <div>
-    <div class="mono">Aréna 150 g · prototyp</div>
-    <h1 id="start-h">Vyzkoušej v aréně</h1>
+  <div class="col">
+    <a class="brand" id="back" href="../../"><i></i>printedrobotics.cz <span class="mono">← zpět na sadu</span></a>
+    <div>
+      <div class="mono">Aréna 150 g · prototyp</div>
+      <h1 id="start-h">Vyzkoušej v aréně</h1>
+    </div>
+    <p>Vytlač soupeře z arény nebo do jámy, případně ho převrať tak, aby se 10&nbsp;s nemohl hýbat. Zápas trvá 2 minuty.</p>
   </div>
-  <p>Vytlač soupeře z arény nebo do jámy, případně ho převrať tak, aby se 10&nbsp;s nemohl hýbat. Zápas trvá 2 minuty.</p>
-  <div><div class="lbl"><span>Robot</span></div><div class="opts" id="pick"></div></div>
-  <div><div class="lbl"><span>Barva tisku</span><span id="color-name"></span></div><div class="sws" id="colors"></div></div>
-  <button class="btn btn-act" id="go" type="button" disabled><span>Načítám…</span><span aria-hidden="true">→</span></button>
-  <div class="hint" id="hint"></div>
+  <div class="col">
+    <div><div class="lbl"><span>Robot</span></div><div class="opts" id="pick"></div></div>
+    <div><div class="lbl"><span>Barva tisku</span><span id="color-name"></span></div><div class="sws" id="colors"></div></div>
+    <button class="btn btn-act" id="go" type="button" disabled><span>Načítám…</span><span aria-hidden="true">→</span></button>
+    <div class="hint" id="hint"></div>
+    <div class="credit">3D modely: Project SVRN – Shoverobotics (CC&nbsp;BY&nbsp;4.0); vertikální spinner – TheBlackfish, remix „150g vert“ od Muffin578 (CC&nbsp;BY-SA&nbsp;4.0), upraveno. <a href="NOTICE.txt">Licence a zdroje</a></div>
+  </div>
 </section>
 
 <section class="panel" id="end" hidden aria-live="polite" aria-labelledby="end-title">
@@ -123,12 +137,13 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line-2);border
   <p id="end-why"></p>
   <div class="mono" id="end-stats"></div>
   <div class="kit">
-    <div><div class="mono">Stavebnice</div><b id="end-kit"></b></div>
+    <div><div class="mono" id="end-kit-l">Stavebnice</div><b id="end-kit"></b></div>
     <div class="row">
       <button class="btn btn-o" id="again" type="button"><span>Znovu</span><span aria-hidden="true">↻</span></button>
-      <a class="btn btn-act" id="cta" href="../../"><span>Postav si ho</span><span aria-hidden="true">→</span></a>
+      <a class="btn btn-act" id="cta" href="../../"><span id="cta-l">Postav si ho</span><span aria-hidden="true">→</span></a>
     </div>
   </div>
+  <div class="credit">3D modely: Shoverobotics (CC&nbsp;BY&nbsp;4.0), TheBlackfish / Muffin578 (CC&nbsp;BY-SA&nbsp;4.0). <a href="NOTICE.txt">Licence a zdroje</a></div>
 </section>
 
 <section class="panel" id="fail" hidden>

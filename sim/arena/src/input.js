@@ -3,18 +3,21 @@
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-export function createInput(els) {
+export function createInput(els, isPlaying = () => true) {
   const keys = new Set();
   let firePressed = false;      // edge from keyboard / touch / pad
   let padFireWas = false;
   const stick = { x: 0, y: 0, id: null };
 
-  const isTyping = e => e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName);
+  // only take over Space / arrows during a match, and never from a focused control
+  // (so Space still activates buttons and arrows still scroll the menu)
+  const interactive = e => e.target && e.target.closest && e.target.closest('button,a,input,select,textarea,[contenteditable],[tabindex]:not(canvas)');
   addEventListener('keydown', e => {
-    if (isTyping(e)) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    keys.add(e.code);
+    if (!isPlaying() || interactive(e)) return;
     if (e.code === 'Space') { if (!e.repeat) firePressed = true; e.preventDefault(); }
     if (/^Arrow/.test(e.code)) e.preventDefault();
-    keys.add(e.code);
   });
   addEventListener('keyup', e => keys.delete(e.code));
   addEventListener('blur', () => keys.clear());
@@ -32,11 +35,17 @@ export function createInput(els) {
   }
   function stickEnd() { stick.id = null; stick.x = stick.y = 0; knob.style.transform = ''; base.classList.remove('on'); }
   base.addEventListener('pointerdown', e => {
-    stick.id = e.pointerId; base.setPointerCapture(e.pointerId); base.classList.add('on'); stickMove(e); e.preventDefault();
+    e.preventDefault();
+    if (stick.id !== null) return;                       // a second finger must not steal the stick
+    stick.id = e.pointerId;
+    try { base.setPointerCapture(e.pointerId); } catch (_) {}
+    base.classList.add('on'); stickMove(e);
   });
   base.addEventListener('pointermove', e => { if (e.pointerId === stick.id) stickMove(e); });
-  base.addEventListener('pointerup', stickEnd);
-  base.addEventListener('pointercancel', stickEnd);
+  const stickUp = e => { if (e.pointerId === stick.id) stickEnd(); };
+  base.addEventListener('pointerup', stickUp);
+  base.addEventListener('pointercancel', stickUp);
+  base.addEventListener('lostpointercapture', stickUp);
   fireBtn.addEventListener('pointerdown', e => { firePressed = true; fireBtn.classList.add('on'); e.preventDefault(); });
   const fireUp = () => fireBtn.classList.remove('on');
   fireBtn.addEventListener('pointerup', fireUp); fireBtn.addEventListener('pointercancel', fireUp);

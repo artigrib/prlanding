@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>SO-101 v simulaci – vyzkoušej si robotickou ruku | printedrobotics.cz</title>
-<meta name="description" content="Vyzkoušej si robotickou ruku SO-101 přímo v prohlížeči. Fyzikální simulace MuJoCo: ovládej klouby a přenes kostku do misky.">
+<title>SO-101 v simulaci – vyzkoušejte si robotickou ruku | printedrobotics.cz</title>
+<meta name="description" content="Vyzkoušejte si robotickou ruku SO-101 přímo v prohlížeči. Fyzikální simulace MuJoCo: ovládejte klouby a přeneste kostku do misky.">
 <link rel="canonical" href="https://printedrobotics.cz/sim/so101/">
 <meta property="og:title" content="SO-101 v simulaci">
-<meta property="og:description" content="Ovládej robotickou ruku SO-101 v prohlížeči a přenes kostku do misky.">
+<meta property="og:description" content="Ovládejte robotickou ruku SO-101 v prohlížeči a přeneste kostku do misky.">
 <meta property="og:url" content="https://printedrobotics.cz/sim/so101/">
 <meta property="og:image" content="https://printedrobotics.cz/img/so101_white.jpg">
 <meta property="og:locale" content="cs_CZ">
@@ -29,19 +29,20 @@
   <a class="pill" href="../../sada/so101/"><span aria-hidden="true">←</span> Zpět na SO-101</a>
 </header>
 
+<p class="sr-only" id="sr" role="status" aria-live="polite"></p>
 <main class="sim">
   <section class="stage" aria-label="3D simulace robotické ruky">
     <canvas id="c" aria-label="Robotická ruka SO-101 na stole, kostka a miska. Ovládání posuvníky vpravo."></canvas>
 
     <div class="hud" id="hud" hidden>
       <span class="hud-dot" id="hud-dot" aria-hidden="true"></span>
-      <span id="hud-text" role="status" aria-live="polite">Natoč ruku ke kostce</span>
+      <span id="hud-text" role="status" aria-live="polite">Natočte ruku ke kostce</span>
     </div>
-    <p class="hint mono" id="hint" hidden>Táhni pro otočení pohledu · kolečko nebo dva prsty pro přiblížení</p>
+    <p class="hint mono" id="hint" hidden>Táhněte pro otočení pohledu · kolečko nebo dva prsty pro přiblížení</p>
 
     <div class="loader" id="loader">
       <div class="loader-in">
-        <p class="mono">Načítáme simulaci…</p>
+        <p class="mono" role="status">Načítáme simulaci…</p>
         <div class="prog" aria-hidden="true"><b id="prog"></b></div>
         <p class="mono muted" id="loader-sub">Fyzikální engine MuJoCo · první načtení trvá pár sekund</p>
       </div>
@@ -51,17 +52,18 @@
       <div class="fail-in">
         <p class="mono">Simulace se nespustila</p>
         <h2>Tenhle prohlížeč simulaci nezvládne.</h2>
-        <p id="fail-msg">Simulace potřebuje WebAssembly a WebGL. Zkus aktuální Chrome, Firefox, Safari nebo Edge, případně počítač místo telefonu.</p>
+        <p id="fail-msg">Simulace potřebuje WebAssembly a WebGL. Zkuste aktuální Chrome, Firefox, Safari nebo Edge, případně počítač místo telefonu.</p>
+        <button type="button" class="btn btn-o" id="reload" hidden>Obnovit stránku <span aria-hidden="true">↻</span></button>
         <a class="btn btn-act" href="../../sada/so101/">Zpět na SO-101 <span aria-hidden="true">→</span></a>
       </div>
     </div>
 
     <div class="win" id="win" hidden role="dialog" aria-modal="false" aria-labelledby="win-h">
       <p class="mono win-k">Mise splněna</p>
-      <h2 id="win-h">Hotovo! Kostka je v misce.</h2>
-      <p>Přesně takové úlohy se skutečná SO-101 učí s knihovnou LeRobot: předvedeš je ovládací rukou a výkonná ruka je pak zvládne sama.</p>
+      <h2 id="win-h" tabindex="-1">Hotovo! Kostka je v misce.</h2>
+      <p>Přesně takové úlohy se skutečná SO-101 učí s knihovnou LeRobot: předvedete je ovládací rukou a výkonná ruka je pak zvládne sama.</p>
       <div class="win-b">
-        <a class="btn btn-act" id="cta" href="../../sada/so101/">Postav si SO-101 <span aria-hidden="true">→</span></a>
+        <a class="btn btn-act" id="cta" href="../../sada/so101/">Postavte si SO-101 <span aria-hidden="true">→</span></a>
         <button type="button" class="btn btn-o" id="again">Zkusit znovu</button>
       </div>
     </div>
@@ -70,8 +72,8 @@
   <aside class="panel" aria-label="Ovládání">
     <div class="mission">
       <p class="mono">Mise 01</p>
-      <h1>Přenes kostku do misky</h1>
-      <p class="ink2">Natoč ruku ke kostce, otevři chapadlo, sjeď dolů, sevři a přenes kostku do modré misky.</p>
+      <h1>Přeneste kostku do misky</h1>
+      <p class="ink2">Natočte ruku ke kostce, otevřete chapadlo, sjeďte dolů, sevřete a přeneste kostku do modré misky.</p>
     </div>
 
     <fieldset class="joints" id="joints" disabled>

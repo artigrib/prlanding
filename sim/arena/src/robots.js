@@ -13,20 +13,21 @@ export const ROBOTS = {
     chassis: [0.54, 0.15, 0.45],                                   // collider half extents (incl. wheels)
     mounts: [[0.4, 0.3, 1], [-0.4, 0.3, 1], [0.4, -0.3, 1], [-0.4, -0.3, 1]],   // x, z, drives
     wheels: [[0.48, 0.28], [-0.48, 0.28], [0.48, -0.28], [-0.48, -0.28]], wheelR: 0.2,
-    glbYaw: 0
+    glbYaw: 0, glbWheels: /^(SV06|SV07)_\d+$/   // printed hubs + TPU tyres in svrn.glb
   },
   vert150: {
     id: 'vert150', name: 'Vertikální spinner 150 g', short: 'VERT', weapon: 'spinner',
+    preparing: true,   // kit not on sale yet: end screen asks to be notified instead of "build it"
     blurb: 'Dvoukolový vertikální spinner',
     mass: 1.5, vmax: 6.1, yawMax: 5.0, mu: 1.0, invertible: true,
     chassis: [0.56, 0.12, 0.4],
     mounts: [[0.42, -0.15, 1], [-0.42, -0.15, 1], [0.16, 0.36, 0], [-0.16, 0.36, 0]],
     wheels: [[0.48, -0.15], [-0.48, -0.15]], wheelR: 0.25,
-    glbYaw: 0
+    glbYaw: 0, glbWheels: /^wheel_\d+(_tyre|_hub)?$/i
   }
 };
 
-const _v = new THREE.Vector3(), _w = new THREE.Vector3(), _q = new THREE.Quaternion(), _o = new THREE.Vector3();
+const _v = new THREE.Vector3(), _w = new THREE.Vector3(), _q = new THREE.Quaternion(), _o = new THREE.Vector3(), _o2 = new THREE.Vector3();
 const Y = new THREE.Vector3(0, 1, 0);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const V = o => new THREE.Vector3(o.x, o.y, o.z);
@@ -95,7 +96,6 @@ export class Robot {
   resetState() {
     this.spin = 0; this.weaponOn = false; this.cooldown = 0; this.hitCooldown = 0;
     this.flippedTime = 0; this.contacts = 0; this.score = 0; this.hits = 0; this.wiggle = 0;
-    this.out = null;
   }
   setColor(hex) { this.printMats.forEach(m => m.color.set(hex)); }
 
@@ -119,7 +119,7 @@ export class Robot {
       const fork = RAPIER.ColliderDesc.cuboid(0.2, 0.17, 0.17).setTranslation(0, -0.03, 0.47).setMass(d.mass * 0.12).setFriction(0.2).setRestitution(0.05);
       this.colliders.push(world.createCollider(fork, this.body));
     }
-    this.handles = new Set(this.colliders.map(c => c.handle));
+    this.ray = new RAPIER.Ray({ x: 0, y: 0, z: 0 }, { x: 0, y: -1, z: 0 });
   }
 
   reset(x, z, yaw) {
@@ -132,16 +132,17 @@ export class Robot {
   }
 
   // frame vectors from the physics body
+  // (vectors are reused between calls: clone them if you need to keep a value)
   frame() {
-    const r = this.body.rotation(); _q.set(r.x, r.y, r.z, r.w);
-    this.q = this.q || new THREE.Quaternion(); this.q.copy(_q);
-    this.pos = V(this.body.translation());
-    this.up = new THREE.Vector3(0, 1, 0).applyQuaternion(_q);
-    this.fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(_q);
+    if (!this.q) { this.q = new THREE.Quaternion(); this.qi = new THREE.Quaternion(); this.pos = new THREE.Vector3(); this.up = new THREE.Vector3(); this.fwd = new THREE.Vector3(); }
+    const r = this.body.rotation(); this.q.set(r.x, r.y, r.z, r.w); this.qi.copy(this.q).invert();
+    const t = this.body.translation(); this.pos.set(t.x, t.y, t.z);
+    this.up.set(0, 1, 0).applyQuaternion(this.q);
+    this.fwd.set(0, 0, 1).applyQuaternion(this.q);
     return this;
   }
-  local(p) { return p.clone().sub(this.pos).applyQuaternion(this.q.clone().invert()); }
-  toWorld(lx, ly, lz) { return new THREE.Vector3(lx, ly, lz).applyQuaternion(this.q).add(this.pos); }
+  local(p, out = new THREE.Vector3()) { return out.copy(p).sub(this.pos).applyQuaternion(this.qi); }
+  toWorld(lx, ly, lz, out = new THREE.Vector3()) { return out.set(lx, ly, lz).applyQuaternion(this.q).add(this.pos); }
 
   // one fixed physics step: suspension, drive, weapon
   step(dt, input, opp, fx) {
@@ -158,8 +159,10 @@ export class Robot {
     this.inverted = inv;
     for (const [mx, mz, drives] of d.mounts) {
       if (drives) driveN++;
-      const o = this.toWorld(mx, 0, mz);
-      const hit = this.world.castRay(new R.Ray(o, down), rest + 0.06, true, undefined, undefined, undefined, b);
+      const o = this.toWorld(mx, 0, mz, _o2);
+      const ray = this.ray;
+      ray.origin.x = o.x; ray.origin.y = o.y; ray.origin.z = o.z; ray.dir.x = down.x; ray.dir.y = down.y; ray.dir.z = down.z;
+      const hit = this.world.castRay(ray, rest + 0.06, true, undefined, undefined, undefined, b);
       if (!hit || hit.timeOfImpact > rest) continue;
       const comp = rest - hit.timeOfImpact;
       const vp = _v.copy(ang).cross(_w.copy(o).sub(com)).add(lin);
@@ -192,7 +195,7 @@ export class Robot {
         const wy = ang.y, blend = Math.min(1, 14 * dt) * grounded;
         b.setAngvel({ x: ang.x, y: wy + (want - wy) * blend, z: ang.z }, true);
       }
-    } else if ((d.invertible ? Math.abs(this.up.y) : this.up.y) < 0.4 && (Math.abs(input.throttle) + Math.abs(input.turn)) > 0.3) {
+    } else if ((d.invertible ? Math.abs(this.up.y) : this.up.y) < 0.4 && Math.abs(lin.y) < 0.8 && this.restingOnSomething() && (Math.abs(input.throttle) + Math.abs(input.turn)) > 0.3) {
       // stranded: driving the wheels rocks the robot a bit — sometimes enough to roll back
       this.wiggle += dt;
       if (this.wiggle > 0.55) {
@@ -209,6 +212,13 @@ export class Robot {
     this.hitCooldown = Math.max(0, this.hitCooldown - dt);
     if (d.weapon === 'flipper') this.stepFlipper(input, opp, fx, m);
     else this.stepSpinner(dt, input, opp, fx, m);
+  }
+
+  // is anything right below the robot? (stops mid-air "wiggle" control)
+  restingOnSomething() {
+    const ray = this.ray, t = this.pos;
+    ray.origin.x = t.x; ray.origin.y = t.y; ray.origin.z = t.z; ray.dir.x = 0; ray.dir.y = -1; ray.dir.z = 0;
+    return !!this.world.castRay(ray, 0.6, true, undefined, undefined, undefined, this.body);
   }
 
   stepFlipper(input, opp, fx, m) {
@@ -312,12 +322,17 @@ export class Robot {
       mats.forEach(mt => { if (mt.name === 'print' && !prints.includes(mt)) prints.push(mt); });
     });
     // animate named weapon nodes if the model has them
-    const spinNode = this.def.weapon === 'spinner' && findNode(m, /blade|spinner|weapon|disc|drum/i);
-    const flipNode = this.def.weapon === 'flipper' && findNode(m, /flipper|wedge|lifter/i);
+    // exact names first, then looser matches ("weapon_mount" must never win over "blade")
+    const spinNode = this.def.weapon === 'spinner' && (findNode(m, /^(blade|disc|drum|spinner)$/i) ||
+      findNode(m, /blade|disc|drum/i) || findNode(m, /spinner|weapon(?!_mount|_motor)/i));
+    const flipNode = this.def.weapon === 'flipper' && (findNode(m, /^(flipper|lifter)$/i) || findNode(m, /flipper|lifter/i));
+    const wheelNodes = [];
+    if (this.def.glbWheels) m.traverse(o => { if (o !== m && this.def.glbWheels.test(o.name || '')) wheelNodes.push(o); });
+    const oldParts = this.parts;
     this.root.remove(this.visual);
     this.visual = m; this.root.add(m);
     if (prints.length) { prints.forEach(mt => mt.color.copy(this.printMat.color)); this.printMats = prints; }
-    this.parts = { wheels: [] };
+    this.parts = { wheels: wheelNodes.map(n => pivotAround(n, 'center')) };
     if (spinNode) {
       // spin about the motor axis when the model has one (blades are often asymmetric around their bbox)
       const motor = findNode(m, /weapon_motor|motor|hub/i);
@@ -328,7 +343,12 @@ export class Robot {
       piv.parent.add(blur); blur.position.copy(piv.position);
     }
     if (flipNode) { this.parts.flipper = pivotAround(flipNode, 'back'); this.parts.flipRest = this.parts.flipper.rotation.x; }
-    return { scale: s, prints: prints.length, spin: !!spinNode, flip: !!flipNode };
+    else if (oldParts.flipper) {
+      // model has no separate flipper part: keep the placeholder's steel flipper plate on top of it
+      this.root.add(oldParts.flipper);
+      this.parts.flipper = oldParts.flipper; this.parts.flipRest = oldParts.flipRest;
+    }
+    return { scale: s, prints: prints.length, spin: spinNode ? spinNode.name : false, flip: flipNode ? flipNode.name : !!this.parts.flipper, wheels: wheelNodes.length };
   }
 }
 

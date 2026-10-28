@@ -3,6 +3,7 @@
 // Model: MuJoCo Menagerie robotstudio_so101 (Apache-2.0), see NOTICE.txt.
 
 const $ = (id) => document.getElementById(id);
+const TEST = new URLSearchParams(location.search).get('test') === '1';  // Playwright hook only
 const BASE = new URL('./', import.meta.url);
 
 // Filament colours — same values as window.PR_COLORS in /assets/data.js
@@ -51,17 +52,23 @@ function fail(msg) {
   $('fail').hidden = false;
   document.body.classList.add('sim-fail');
   if (msg) $('fail-msg').textContent = msg;
-  window.__sim = { error: msg || 'fail' };
+  if (TEST) window.__sim = { error: msg || 'fail' };
 }
 function hasWebGL() {
-  try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; }
+  try {
+    const c = document.createElement('canvas');
+    const gl = c.getContext('webgl2') || c.getContext('webgl');
+    if (!gl) return false;
+    const ext = gl.getExtension('WEBGL_lose_context'); if (ext) ext.loseContext();  // free the probe context
+    return true;
+  } catch (e) { return false; }
 }
 if (typeof WebAssembly !== 'object' || !hasWebGL()) {
   fail();
 } else {
   main().catch((e) => {
     console.error(e);
-    fail('Při načítání simulace nastala chyba. Zkus stránku obnovit, případně jiný prohlížeč.');
+    fail('Při načítání simulace nastala chyba. Zkuste stránku obnovit, případně jiný prohlížeč.');
   });
 }
 
@@ -108,8 +115,10 @@ async function main() {
   $('loader').hidden = true;
   $('hud').hidden = false;
   $('hint').hidden = false;
-  window.__sim = app.api();
-  window.__sim.loadMs = Math.round(performance.now() - t0);
+  $('sr').textContent = 'Simulace je připravena, ovládání je dostupné.';
+  if (TEST) { window.__sim = app.api(); window.__sim.loadMs = Math.round(performance.now() - t0); }
+  // free WASM heap objects (Embind handles are not garbage-collected)
+  addEventListener('pagehide', (e) => { if (!e.persisted) app.dispose(); });
 }
 
 async function loadModelFiles(onProgress) {
@@ -180,7 +189,16 @@ class Sim {
     this.setColor(this.loadColor());
     this.last = performance.now();
     this.loop = this.loop.bind(this);
-    requestAnimationFrame(this.loop);
+    this.raf = requestAnimationFrame(this.loop);
+  }
+
+  dispose() {
+    if (this.disposed) return;
+    this.disposed = true;
+    cancelAnimationFrame(this.raf);
+    try { this.d.delete(); this.m.delete(); } catch (e) {}
+    this.controls.dispose();
+    this.renderer.dispose();
   }
 
   ids() {
@@ -229,6 +247,13 @@ class Sim {
     this.controls.addEventListener('start', () => { $('hint').hidden = true; });
     this.resetView();
 
+    canvas.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault(); this.lost = true;
+      $('fail-msg').textContent = 'Grafika prohlížeče se resetovala. Počkejte chvíli, nebo obnovte stránku.';
+      $('reload').hidden = false; $('fail').hidden = false;
+    });
+    canvas.addEventListener('webglcontextrestored', () => { this.lost = false; $('fail').hidden = true; $('reload').hidden = true; });
+    $('reload').addEventListener('click', () => location.reload());
     const ro = new ResizeObserver(() => this.resize()); ro.observe(canvas.parentElement);
     this.resize();
   }
@@ -349,7 +374,7 @@ class Sim {
       const wrap = document.createElement('div'); wrap.className = 'jn' + (j.grip ? ' grip' : '');
       const id = 'j-' + j.name;
       wrap.innerHTML = `<label for="${id}">${j.label}</label><output for="${id}"></output>` +
-        `<input type="range" id="${id}" min="${lo}" max="${hi}" step="0.005">`;
+        `<input type="range" id="${id}" min="${lo}" max="${hi}" step="any">`;
       const input = wrap.querySelector('input'), out = wrap.querySelector('output');
       input.addEventListener('input', () => { this.stopDemo(); this.setCtrl(i, +input.value); });
       box.appendChild(wrap);
@@ -397,14 +422,25 @@ class Sim {
   }
   loadColor() { try { return localStorage.getItem('pr-sim-color') || 'white'; } catch (e) { return 'white'; } }
 
+  respawnCube() {
+    // put the cube back to its start pose (from the keyframe) and stop it
+    const q = this.d.qpos, k = this.m.key_qpos, a = this.cubeQ;
+    for (let i = 0; i < 7; i++) q[a + i] = k[a + i];
+    const v = this.d.qvel, dv = this.m.jnt_dofadr[this.m.body_jntadr[this.cubeBody]];
+    for (let i = 0; i < 6; i++) v[dv + i] = 0;
+    this.mj.mj_forward(this.m, this.d);
+  }
+
   goHome() { this.home.forEach((v, i) => this.setCtrl(i, v)); }
 
   reset() {
     this.stopDemo();
     this.mj.mj_resetDataKeyframe(this.m, this.d, 0);
     this.mj.mj_forward(this.m, this.d);
-    this.won = false; this.inBowl = 0; this.stage = 0;
+    const hadFocus = $('win').contains(document.activeElement);
+    this.won = false; this.inBowl = 0; this.fellAt = null;
     $('win').hidden = true;
+    if (hadFocus) $('demo').focus({ preventScroll: true });
     this.refreshSliders(); this.sync();
   }
 
@@ -443,24 +479,29 @@ class Sim {
       if (this.inBowl > WIN_HOLD && !this.won) this.win();
     } else {
       this.inBowl = 0;
-      if (cz < -0.05) text = 'Kostka spadla ze stolu – dej Znovu';
-      else if (cz > 0.03) text = 'Výborně! Přenes ji nad misku a pusť';
-      else if (near) text = 'Teď sevři chapadlo';
-      else text = 'Natoč ruku ke kostce a sjeď k ní';
+      if (cz < -0.1) { this.respawnCube(); this.fellAt = this.d.time; }
+      if (this.fellAt != null && this.d.time - this.fellAt < 2.5) text = 'Kostka spadla ze stolu, vrátili jsme ji zpět';
+      else if (cz > 0.03) text = 'Výborně! Přeneste ji nad misku a pusťte';
+      else if (near) text = 'Teď sevřete chapadlo';
+      else text = 'Natočte ruku ke kostce a sjeďte k ní';
     }
     if (this.won) { text = 'Mise splněna'; ok = true; }
+    // write only on change: #hud-text is a live region
     if (text !== this.hudText) { $('hud-text').textContent = text; this.hudText = text; }
-    $('hud').classList.toggle('ok', ok);
+    if (ok !== this.hudOk) { $('hud').classList.toggle('ok', ok); this.hudOk = ok; }
   }
 
   win() {
     this.won = true;
     $('win').hidden = false;
+    $('win-h').focus({ preventScroll: true });
     try { window.dataLayer && window.dataLayer.push({ event: 'sim_success', robot: 'so101' }); } catch (e) {}
   }
 
   loop(now) {
-    requestAnimationFrame(this.loop);
+    if (this.disposed) return;
+    this.raf = requestAnimationFrame(this.loop);
+    if (this.lost) { this.last = now; return; }
     let dt = (now - this.last) / 1000; this.last = now;
     if (!(dt > 0)) dt = 0; if (dt > 1 / 20) dt = 1 / 20;   // tab switch / slow frame: don't spiral
     this.tickDemo(dt);
@@ -485,11 +526,8 @@ class Sim {
       demo: () => this.startDemo(),
       // test hook: advance simulated time synchronously (headless GPUs render too slowly for real time)
       advance: (sec) => {
-        for (let t = 0; t < sec; t += 1 / 60) {
-          this.tickDemo(1 / 60);
-          for (let i = 0; i < Math.round(1 / 60 / this.m.opt.timestep); i++) this.mj.mj_step(this.m, this.d);
-          this.check(1 / 60);
-        }
+        const ts = this.m.opt.timestep, n = Math.round(sec / ts);
+        for (let i = 0; i < n; i++) { this.tickDemo(ts); this.mj.mj_step(this.m, this.d); this.check(ts); }
         this.sync();
       },
       reset: () => this.reset(),
