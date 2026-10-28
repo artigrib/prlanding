@@ -47,9 +47,8 @@ export const kladivo = {
       decorate(group, { quality }) {
         // overhead work lights: warm pools on the floor (cheap additive quads, no extra lights)
         const pool = new THREE.MeshBasicMaterial({ map: glowTexture('rgba(255,236,210,1)'), transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false });
-        for (const [x, z] of [[-3, -3], [3, 3], [-3, 3], [3, -3]]) {
-          const m = new THREE.Mesh(new THREE.PlaneGeometry(9, 9), pool); m.rotation.x = -Math.PI / 2; m.position.set(x, 0.01, z); m.renderOrder = 4; group.add(m);
-        }
+        const pm = mesh(merge([[-3, -3], [3, 3], [-3, 3], [3, -3]].map(([x, z]) => new THREE.PlaneGeometry(9, 9).rotateX(-Math.PI / 2).translate(x, 0.01, z))), pool, { receive: false });
+        pm.renderOrder = 4; group.add(pm);
         // hazard sign and floor lettering
         decal(group, textTexture([{ text: 'KLADIVO', font: '700 150px "Inter Tight", Arial, sans-serif', spacing: 18 }], { color: 'rgba(255,90,0,0.55)', w: 1024, h: 256 }), 1.1, -4.9, 4.2, 1.05, 0);
         decal(group, textTexture([{ text: 'JÁMA', font: '700 150px "Inter Tight", Arial, sans-serif', spacing: 14 }], { color: 'rgba(255,255,255,0.35)', w: 1024, h: 256 }), -4.8, 2.8, 3.2, 0.8, 0);

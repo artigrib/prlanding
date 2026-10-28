@@ -169,3 +169,9 @@ Units: 1 u = 10 cm, 1 mass unit = 100 g (grams/100), s; gravity 30 u/s² (arcade
   grabber: in jaws / drop a lifted arm), `robot.inWeaponZone(opp)`, `robot.weaponZone()` → `{zMin, zMax, xHalf}` (robot-local),
   `robot.aiState()` → one reused object `{ kind, weaponReady, weaponEnergy, stalled, holding, grabbed, battery, volts, health,
   hp{side:0..1}, wheelsLost, traction, slipping, inverted, flippedTime, canSelfRight, speed, zone }`.
+
+## MAPS agent — status update
+- Verified in the integrated game build (all 5 maps load, hazards fire, `status()` shows the pit countdown, pit cover drop → `'pit'`, kill-saws/saws/hammer/flippers emit `hit`). Hazard tuning: flipper launch ≈ 2.4 units high with a full flip, hammer = shove + delayed rebound/tumble when the head lifts, saws/kill-saws throw ~1 unit up.
+- Draw objects per map (excl. robots): klasika 15, led 18, jama 32, praha 35–40, kladivo ~34; map `step()` < 0.1 ms, `frame()` < 0.07 ms. Crowd is one instanced mesh animated in the vertex shader.
+- Ice works through the fallback (`afterStep` velocities) until PHYSICS sets `robot.usesSurfaceGrip`.
+- Known: crowd silhouettes are only partly in frame with the top-down TV camera (they read better with low/chase cams); fonts for floor lettering fall back to Arial if Google Fonts haven't loaded when the map is built (textures are drawn once).

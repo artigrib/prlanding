@@ -240,21 +240,20 @@ export class SawStrip {
     const L = this.len + 0.3, W = 0.12;
     const slot = new THREE.Mesh(new THREE.PlaneGeometry(this.axis === 'x' ? L : W, this.axis === 'x' ? W : L), new THREE.MeshBasicMaterial({ color: '#050505', polygonOffset: true, polygonOffsetFactor: -2 }));
     slot.rotation.x = -Math.PI / 2; slot.position.set(this.cx, 0.004, this.cz); group.add(slot);
-    const st = stripeTexture(INK, ORANGE);
+    const st = stripeTexture(INK, ORANGE), sg = [], lg = [];
     for (const s of [-1, 1]) {
       const g = new THREE.PlaneGeometry(L, 0.14);
       const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * L / 0.6);
-      const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: st, roughness: 0.7, polygonOffset: true, polygonOffsetFactor: -2 }));
-      m.rotation.set(-Math.PI / 2, 0, this.axis === 'x' ? 0 : Math.PI / 2);
-      m.position.set(this.cx + (this.axis === 'x' ? 0 : s * 0.16), 0.004, this.cz + (this.axis === 'x' ? s * 0.16 : 0));
-      m.receiveShadow = true; group.add(m);
+      g.rotateX(-Math.PI / 2); g.rotateY(this.axis === 'x' ? 0 : Math.PI / 2);
+      g.translate(this.cx + (this.axis === 'x' ? 0 : s * 0.16), 0.004, this.cz + (this.axis === 'x' ? s * 0.16 : 0));
+      sg.push(g);
+      const lx = this.cx + this.ux * s * (L / 2 + 0.15), lz = this.cz + this.uz * s * (L / 2 + 0.15);
+      lg.push(boxGeo(lx - 0.08, lx + 0.08, 0, 0.06, lz - 0.08, lz + 0.08));
     }
+    group.add(mesh(merge(sg), new THREE.MeshStandardMaterial({ map: st, roughness: 0.7, polygonOffset: true, polygonOffsetFactor: -2 })));
     // lamps at both ends
     this.lamp = lampMaterial(ORANGE);
-    for (const s of [-1, 1]) {
-      const l = mesh(new THREE.BoxGeometry(0.16, 0.06, 0.16), this.lamp);
-      l.position.set(this.cx + this.ux * s * (L / 2 + 0.15), 0.03, this.cz + this.uz * s * (L / 2 + 0.15)); group.add(l);
-    }
+    group.add(mesh(merge(lg), this.lamp));
     this.glow = glowDisc(group, this.cx, this.cz, this.len * 0.7);
     // discs: one instanced mesh
     const geo = new THREE.CircleGeometry(this.R, 32);
