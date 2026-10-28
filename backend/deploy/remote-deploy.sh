@@ -390,6 +390,11 @@ tls_state() ( set +eu +o pipefail
   local lh
   lh=$(dc exec -T caddy wget -q -T 3 -S -O /dev/null http://127.0.0.1:80/.well-known/acme-challenge/x 2>&1 | head -1)
   say "tls local port 80 answers: $(printf '%s' "$lh" | grep -ao 'HTTP/[0-9.]* [0-9]*' | head -1)"
+  # ACME detail text with every word outside a fixed vocabulary masked, so no hosts/IPs/ids can leak.
+  say "tls acme detail (masked): $(lg | awk '
+    BEGIN { split("cannot negotiate alpn protocol acme tls for challenge during secondary validation invalid response from fetching timeout connect likely firewall problem unauthorized remote error handshake failure certificate unknown authority no application internal unrecognized name connection refused reset by peer eof read write dial the a an of to is was not found got expected returned status code http https redirect redirects too many while verifying server did present valid cert alert bad protocol version first record does look like handshake mismatch could get incorrect key authorization dns lookup no such host timed out context deadline exceeded network unreachable no route i o", w, " "); for (i in w) ok[w[i]]=1 }
+    /urn:ietf:params:acme:error/ { x=tolower($0) }
+    END { if (x=="") { print "none"; exit } i=index(x,"urn:ietf:params:acme:error"); x=substr(x,i+27,400); gsub(/[^a-z]+/," ",x); n=split(x,t," "); out=""; for (j=1;j<=n;j++) { o=(t[j] in ok)?t[j]:"_"; if (o=="_" && prev=="_") continue; out=out o " "; prev=o } print substr(out,1,300) }')"
   local ec2
   say "tls acme problem types: $(lg | awk '{ while (match($0, /urn:ietf:params:acme:error:[A-Za-z]+/)) { t=substr($0, RSTART+27, RLENGTH-27); c[t]++; $0=substr($0, RSTART+RLENGTH) } } END { for (t in c) printf "%s=%d ", t, c[t]; print "" }')"
   say "tls acme http codes: $(lg | awk '{ while (match($0, /HTTP [0-9][0-9][0-9]/)) { t=substr($0, RSTART+5, 3); c[t]++; $0=substr($0, RSTART+RLENGTH) } } END { for (t in c) printf "%s=%d ", t, c[t]; print "" }')"
