@@ -1,64 +1,58 @@
-// Garage data adapter: reads the physics agent's modification model from robots.js when it
-// exists (MODS / statsFor / MASS_LIMIT) and falls back to stats derived from the robot defs.
+// Garage data adapter over the physics agent's catalogue (robots.js: MODS, buildDef, statsFor,
+// MASS_LIMIT_G). A build = one option per slot; we store only the non-default picks ('slot:option').
 import * as RB from '../robots.js';
 
-const LIMIT = RB.MASS_LIMIT || 150;
-const NAMES = { speed: 'Rychlost', agility: 'Obratnost', turn: 'Obratnost', push: 'Tlak', grip: 'Přilnavost', weapon: 'Zbraň', armor: 'Odolnost', armour: 'Odolnost', stability: 'Stabilita' };
+const LIMIT = RB.MASS_LIMIT_G || 150;
+const STAT_NAMES = [['speed', 'Rychlost'], ['push', 'Tlak'], ['weapon', 'Zbraň'], ['armor', 'Odolnost']];
 
-function modsOf(id) {
-  const M = RB.MODS;
-  if (!M) return [];
-  let list = Array.isArray(M) ? M.filter(m => !m.robots || m.robots.includes(id)) : (M[id] || []).concat(M['*'] || M.all || []);
-  return list.filter(m => m && m.id).map(m => ({ id: m.id, name: m.name || m.id, desc: m.desc || m.blurb || '', grams: +m.grams || +m.mass || 0, slot: m.slot || m.id }));
+function modsOf(id) { return (RB.MODS && RB.MODS[id]) || []; }
+function build(id, mods) {
+  try { return RB.buildDef ? RB.buildDef(id, mods) : RB.ROBOTS[id]; } catch (_) { return RB.ROBOTS[id]; }
 }
-function baseGrams(def) {
-  if (def.grams) return def.grams;
-  if (RB.baseGrams) try { return RB.baseGrams(def); } catch (_) {}
-  return Math.round((def.mass || 1.4) * 100);
-}
-const clamp01 = v => Math.max(0, Math.min(1, v));
+const gramsOf = def => Math.round(def.grams || def.massG || (def.mass || 1.5) * 100);
 
 export const garageModel = {
   limit: LIMIT,
-  list: modsOf,
-  sameSlot(id, a, b) {
-    const L = modsOf(id), A = L.find(m => m.id === a), B = L.find(m => m.id === b);
-    return !!(A && B && A.slot === B.slot);
-  },
-  // known ids only, one per slot, keep within the mass limit (unless allowOver, for what-if checks)
-  sanitize(id, ids, allowOver = false) {
-    const L = modsOf(id), out = [], slots = new Set();
-    let g = baseGrams(RB.ROBOTS[id] || {});
-    for (const x of ids || []) {
-      const m = L.find(k => k.id === x);
-      if (!m || slots.has(m.slot)) continue;
-      if (!allowOver && g + m.grams > LIMIT) continue;
-      slots.add(m.slot); out.push(x); g += m.grams;
+  // [{ slot, name, options: [{ id, name, desc, grams, default }] }]
+  slots(id) {
+    const out = [];
+    for (const m of modsOf(id)) {
+      let s = out.find(x => x.slot === m.slot);
+      if (!s) out.push(s = { slot: m.slot, name: m.slotName || m.slot, options: [] });
+      s.options.push(m);
     }
     return out;
   },
+  // known, non-default ids, one per slot, and the whole build within the mass limit
+  sanitize(id, ids) {
+    const L = modsOf(id), seen = new Set(), out = [];
+    for (const x of Array.isArray(ids) ? ids : []) {
+      const m = L.find(k => k.id === x);
+      if (!m || m.default || seen.has(m.slot)) continue;
+      seen.add(m.slot); out.push(x);
+    }
+    while (out.length && gramsOf(build(id, out)) > LIMIT) out.pop();
+    return out;
+  },
+  // pick option `modId` (replaces that slot's choice)
+  choose(id, mods, modId) {
+    const m = modsOf(id).find(k => k.id === modId);
+    if (!m) return mods;
+    const rest = mods.filter(x => { const k = modsOf(id).find(o => o.id === x); return k && k.slot !== m.slot; });
+    return m.default ? rest : [...rest, modId];
+  },
+  isOn(id, mods, modId) {
+    const m = modsOf(id).find(k => k.id === modId);
+    if (!m) return false;
+    const picked = mods.find(x => x.split(':')[0] === m.slot);
+    return picked ? picked === modId : !!m.default;
+  },
+  gramsWith(id, mods) { return gramsOf(build(id, mods)); },
   summary(id, mods) {
-    const def = RB.ROBOTS[id] || {};
-    let grams = baseGrams(def), stats = null;
-    for (const m of modsOf(id)) if (mods.includes(m.id)) grams += m.grams;
-    if (typeof RB.statsFor === 'function') {
-      try {
-        const s = RB.statsFor(def, mods);
-        if (s) {
-          if (typeof s.grams === 'number') grams = Math.round(s.grams);
-          const src = s.bars || s;
-          stats = Object.keys(src).filter(k => NAMES[k] && typeof src[k] === 'number').map(k => ({ name: NAMES[k], v: clamp01(src[k] > 1.5 ? src[k] / 10 : src[k]) }));
-        }
-      } catch (_) {}
-    }
-    if (!stats || !stats.length) {
-      stats = [
-        { name: 'Rychlost', v: clamp01((def.vmax || 6) / 7.5) },
-        { name: 'Obratnost', v: clamp01((def.yawMax || 4.5) / 6) },
-        { name: 'Tlak', v: clamp01((def.mu || 1) / 1.4) },
-        { name: 'Zbraň', v: def.weapon === 'spinner' ? 0.85 : 0.65 }
-      ];
-    }
-    return { grams: Math.round(grams), limit: LIMIT, mods: mods.length, stats };
+    const def = build(id, mods);
+    const st = def.stats || (RB.statsFor ? RB.statsFor(id, mods) : null) || {};
+    const stats = STAT_NAMES.filter(([k]) => typeof st[k] === 'number').map(([k, name]) => ({ name, v: Math.max(0, Math.min(1, st[k])) }));
+    if (!stats.length) stats.push({ name: 'Rychlost', v: Math.min(1, (def.vmax || 6) / 9) });
+    return { grams: gramsOf(def), limit: LIMIT, mods: mods.length, stats, problems: def.problems || [] };
   }
 };

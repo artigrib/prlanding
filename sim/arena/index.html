@@ -99,6 +99,9 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line-2);border
   #stick{width:120px;height:120px}
 }
 
+#hud .mid{display:flex;flex-direction:column;align-items:center;gap:4px}
+#map-status{background:rgba(255,255,255,.85);padding:2px 6px;color:var(--accent-text);font-weight:500}
+#map-status:empty{display:none}
 /* v2: menu, garage, end card, toolbar, replay, pops */
 #start{width:min(420px,calc(100% - 2*var(--pad)))}
 .opts.four{grid-template-columns:1fr 1fr}
@@ -128,7 +131,13 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line-2);border
 .stats{margin:0;display:grid;gap:8px}
 .stats div{display:grid;grid-template-columns:96px 1fr;align-items:center;gap:10px}
 .stats dt{font-size:13px;color:var(--ink-2)}.stats dd{margin:0}
-.mods{display:grid;grid-template-columns:1fr;gap:6px}
+.slot .lbl span:last-child{text-align:right;max-width:60%;font-family:var(--sans);font-size:12px}
+.seg.wrap{flex-wrap:wrap}
+.seg.wrap button{flex:1 1 auto;min-height:40px;font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1.15;padding:4px 8px}
+.seg .mp{display:inline-block;width:12px;height:12px;border:2px solid;margin-bottom:2px}
+#maps button{flex-direction:row;gap:6px}
+.seg.wrap button small{font-family:var(--mono);font-size:10px;opacity:.75}
+.seg button[disabled]{opacity:.4;cursor:not-allowed}
 .mod{display:grid;grid-template-columns:1fr auto;column-gap:10px;min-height:52px}
 .mod em{grid-row:1/3;grid-column:2;align-self:center;font-style:normal;font-family:var(--mono);font-size:12px;color:var(--mute)}
 .mod[disabled]{opacity:.45;cursor:not-allowed}
@@ -191,7 +200,7 @@ body.split::after{content:'';position:absolute;background:var(--ink);pointer-eve
 
 <div id="hud" hidden>
   <div class="side"><div class="who"><i id="p-sw"></i><em id="p-tag">Vy</em><span id="p-name"></span></div><div class="stat" id="p-stat"></div><div class="dmg" title="Poškození"><i id="p-dmg"></i></div></div>
-  <div id="timer" role="timer" aria-live="off">2:00</div>
+  <div class="mid"><div id="timer" role="timer" aria-live="off">2:00</div><div id="map-status" class="mono"></div></div>
   <div class="side r"><div class="who"><span id="o-name"></span><em id="o-tag">AI</em><i id="o-sw"></i></div><div class="stat" id="o-stat"></div><div class="dmg" title="Poškození"><i id="o-dmg"></i></div></div>
 </div>
 <div id="msg" hidden aria-live="polite"></div>
@@ -223,7 +232,7 @@ body.split::after{content:'';position:absolute;background:var(--ink);pointer-eve
     <div role="group" aria-label="Robot"><div class="lbl"><span>Robot</span></div><div class="opts" id="pick"></div></div>
     <button class="opt gbtn" id="garage-btn" type="button"><b>Garáž a úpravy</b><small></small></button>
     <div role="group" aria-label="Barva tisku"><div class="lbl"><span>Barva tisku</span><span id="color-name"></span></div><div class="sws" id="colors"></div></div>
-    <div id="map-row" role="group" aria-label="Aréna"><div class="lbl"><span>Aréna</span></div><div class="opts" id="maps"></div></div>
+    <div id="map-row" role="group" aria-label="Aréna"><div class="lbl"><span>Aréna</span></div><div class="seg wrap" id="maps"></div><p class="hint" id="mapdesc"></p></div>
     <div class="hint" id="hint"></div>
     <div class="gofoot"><button class="btn btn-act" id="go" type="button" disabled><span>Načítám…</span><span aria-hidden="true">→</span></button></div>
     <div class="credit">3D modely: Project SVRN – Shoverobotics (CC&nbsp;BY&nbsp;4.0); vertikální spinner – TheBlackfish, remix „150g vert“ od Muffin578 (CC&nbsp;BY-SA&nbsp;4.0), upraveno. Zvuky jsou syntetizované. <a href="NOTICE.txt">Licence a zdroje</a></div>

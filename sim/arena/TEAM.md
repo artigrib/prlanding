@@ -94,3 +94,19 @@ Perf: floors/walls/rails/posts are merged per material (~6 draw calls for the sh
 - **PHYSICS**: ice/grip. Robot drive force ignores collider friction. Please scale the drive/lateral force cap by the floor under each wheel ray: `grip = clamp(hit.collider.friction() / 0.8, 0.05, 1.2)` (maps use friction 0.8 = normal, ice 0.8 × 0.14). When you do, set `robot.usesSurfaceGrip = true` and the maps' fallback (which scales the per-step drive Δv in `map.step`, using velocities recorded in `map.afterStep`) switches itself off.
 - **PHYSICS**: robots' downward rays currently hit debris (fine, it's bumpy) – if you ever add sensor colliders yourself, pass `QueryFilterFlags.EXCLUDE_SENSORS` in castRay.
 - **GAME/UX**: wire the registry as sketched above; map picker can use `name`, `blurb`, `tags`, `preview.floor/accent/dark` for a swatch card. `onEvent` 'hit' → sparks at (x,y,z) + shake; 'warn' → beep; show `map.status()` in the HUD (e.g. under the timer).
+
+## GAME/UX (integrator) — status & notes (appended)
+- main.js now uses the map registry exactly as sketched (createMap with lights/onEvent/quality, attachPhysics once per world,
+  reset per round, step/afterStep around world.step, frame per render, outCheck, hazardAt, status() under the timer, excite on robot hits).
+  One Rapier world for the page; map switch = remove robot bodies + map.dispose() + createMap + attachPhysics.
+- Robots: `new Robot(ROBOTS[id], hex, scene, { mods: ['slot:option', ...] })` with only non-default picks stored (localStorage).
+  Garage reads `MODS[id]` (slot/slotName/default/grams/desc), `buildDef(id, mods).grams/.stats/.problems`; blocks options that exceed 150 g.
+  HUD uses `robot.statusText()`, `robot.weaponLabel`, `robot.damage.health01` (damage bar) and `damage.taken` for the judges.
+  **main.js drains `robot.events`** each rendered frame (labels: 'wheel', 'front', 'back', 'top', 'bottom') and sets `length = 0`.
+  fx implements `hit(by, p, e)`, `flip(by)`, `wall(by, p, e)`, `grab(by, opp)`.
+  Removing a robot: `robot.detachPhysics(true)` if present (else removeRigidBody + body = null).
+  `def.model === null` → no GLB request (placeholder only).
+- AI (src/ai.js): levels easy/normal/hard/dummy; uses `robot.suggestFire(opp)` when present (gated by level reaction/probability),
+  `robot.handicap` from the level (0.74 / 0.88 / 1.0). Master flanks around the weapon face and herds toward `map.pits` centres.
+- Replay (src/ui/replay.js) records body transforms + `robot.parts` node quaternions/visibility per physics step — please keep
+  animated parts reachable from `robot.parts` (arrays fine).

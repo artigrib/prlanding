@@ -30,10 +30,20 @@ export function createBrain(levelId, map) {
       if (spinner && !ai.weaponOn && time > L.spinUpAt) cmd.fire = true;
       // self-righting (a flipped flipper bot fires to roll back)
       if (flipper && me.up.y < 0.35 && ai.flippedTime > L.selfRight && ai.cooldown <= 0) cmd.fire = true;
+      const hooks = typeof ai.suggestFire === 'function';
+      if (hooks) {
+        // physics agent's hook says what a sensible pilot would press; the level decides how often we listen
+        cmd.fire = false;
+        const upside = me.up.y < 0.35 && !ai.def.invertible;
+        if (spinner) cmd.fire = time > L.spinUpAt && ai.suggestFire(o);
+        else if (upside) cmd.fire = ai.flippedTime > L.selfRight && ai.suggestFire(o);
+      }
       if (L.idle) { cmd.throttle = 0; cmd.turn = 0; return cmd; }
       if (s.t > 0) return cmd;
       s.t = L.react[0] + Math.random() * L.react[1];
-      if (flipper && ai.cooldown <= 0) {
+      if (hooks && flipper && me.up.y >= 0.35) {
+        if (ai.suggestFire(o) && Math.random() < L.fireP) cmd.fire = true;
+      } else if (flipper && ai.cooldown <= 0) {
         const l = me.local(o.pos, _l);
         const window = L.flank ? 1.25 : 1.15;
         if (l.z > 0.35 && l.z < window && Math.abs(l.x) < 0.7 && Math.random() < L.fireP) cmd.fire = true;

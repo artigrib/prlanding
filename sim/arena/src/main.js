@@ -68,42 +68,43 @@ const saveSettings = () => store.set('settings', { robot: S.robot, color: S.colo
 let ladder = store.get('ladder', { stage: 0, champion: 0 });
 if (!ladder || typeof ladder.stage !== 'number') ladder = { stage: 0, champion: 0 };
 
-// ------------------------------------------------------------------ maps (registry from arena.js, legacy fallback)
-function legacyMap() {
-  const { HALF, PIT, GAP, inPit } = ARENA;
-  let group = null;
+// ------------------------------------------------------------------ maps (registry from arena.js / maps/)
+const hemi = new THREE.HemisphereLight(0xffffff, 0xd8d8d2, 0.85);
+const MAP_LIST = ARENA.MAPS ? (ARENA.MAP_LIST || Object.keys(ARENA.MAPS)).map(id => ARENA.MAPS[id]).map(m => ({ id: m.id, name: m.name, blurb: m.description || m.blurb || '', preview: m.preview })) : [{ id: 'klasika', name: 'Klasická aréna', blurb: '' }];
+// wraps the maps agent's runtime (TEAM.md) into what the game loop uses
+function makeMap(id) {
+  const m = ARENA.createMap(id, { scene, quality: touch ? 'low' : 'high', lights: { key, hemi }, onEvent: mapEvent });
+  const pits = (m.pits || []).map(p => ({ x: (p.x0 + p.x1) / 2, z: (p.z0 + p.z1) / 2 }));
   return {
-    id: 'classic', name: 'Klasická aréna', blurb: 'Jáma v rohu a výjezd ve zdi',
-    visual(scene) { group = ARENA.buildArenaVisual(scene); },
-    physics(R, world) { ARENA.buildArenaPhysics(R, world); },
-    spawns: [{ x: -3.6, z: 3.6, yaw: Math.PI * 0.75 }, { x: 3.6, z: -3.6, yaw: -Math.PI * 0.25 }],
-    bounds: { x0: -HALF, x1: HALF, z0: -HALF, z1: HALF },
-    hazards: [{ x: (PIT.x0 + PIT.x1) / 2, z: (PIT.z0 + PIT.z1) / 2 }, { x: (GAP.x0 + GAP.x1) / 2, z: -HALF - 0.6 }],
-    hazardAt: (x, z) => (x > PIT.x0 - 0.4 && z > PIT.z0 - 0.4) || (z < -HALF + 0.9 && x > GAP.x0 - 0.3 && x < GAP.x1 + 0.3),
-    outcome: p => (p.y < -0.5 ? (inPit(p.x, p.z) ? 'pit' : 'out') : null),
-    update() {},
-    dispose(scene) { if (group) { scene.remove(group); group = null; } }
+    id: m.id, name: m.name, raw: m,
+    physics: (R, w) => m.attachPhysics(R, w),
+    get spawns() { return m.spawnPoints || m.spawns; },
+    bounds: m.bounds || { x0: -6, x1: 6, z0: -6, z1: 6 },
+    hazards: pits,
+    hazardAt: (x, z) => m.hazardAt(x, z),
+    outcome: p => m.outCheck(p.x, p.y, p.z),
+    reset: () => m.reset && m.reset(),
+    step: (dt, robots, fighting) => m.step && m.step(dt, robots, fighting),
+    afterStep: robots => m.afterStep && m.afterStep(robots),
+    frame: dt => m.frame && m.frame(dt),
+    status: () => (m.status ? m.status() : null),
+    dispose: () => m.dispose()
   };
 }
-// adapter for the maps agent's registry (see TEAM.md); anything missing falls back to the legacy arena
-const MAP_LIST = (() => {
-  const reg = ARENA.MAPS;
-  if (!reg || typeof ARENA.createMap !== 'function') return [{ id: 'classic', name: 'Klasická aréna', blurb: 'Jáma v rohu a výjezd ve zdi', make: legacyMap }];
-  return Object.values(reg).map(m => ({ id: m.id, name: m.name, blurb: m.blurb || '', make: () => adaptMap(ARENA.createMap(m.id)) }));
-})();
-function adaptMap(m) {
-  const b = m.bounds || { x0: -6, x1: 6, z0: -6, z1: 6 };
-  return {
-    id: m.id, name: m.name, blurb: m.blurb,
-    visual: scene => m.buildVisual(scene), physics: (R, w) => m.buildPhysics(R, w),
-    spawns: m.spawns, bounds: b, hazards: m.hazards || [],
-    hazardAt: m.hazardAt ? (x, z) => m.hazardAt(x, z) : () => false,
-    outcome: p => (m.outcome ? m.outcome(p) : p.y < -0.5 ? 'out' : null),
-    update: (dt, robots, fxApi) => m.update && m.update(dt, robots, fxApi),
-    dispose: scene => m.dispose && m.dispose(scene)
-  };
+// map hazards report hits / strikes / warnings here (sound, sparks, labels, judges)
+function mapEvent(type, d) {
+  if (!d) return;
+  const p = { x: d.x || 0, y: d.y || 0.3, z: d.z || 0 };
+  if (type === 'hit') {
+    emitSparks(p, d.energy || 0.6); sfx.hit(d.energy || 0.6, true);
+    if (S.shake) rig.shake(0.2);
+    if (d.robot && (d.robot === player || d.robot === opp)) popLabel(p, 'Nástraha!', true);
+    if (game.state === 'fight' || game.state === 'ko') replay.event({ type: 'hit', p, e: d.energy || 0.6 });
+  } else if (type === 'strike') { sfx.wall(d.energy || 0.6); if (S.shake) rig.shake(0.08); }
+  else if (type === 'warn') sfx.beep(false);
+  else if (type === 'pit-open') { sfx.fall(); flash('Jáma se otevřela!', 1.4); }
 }
-if (!MAP_LIST.some(m => m.id === S.map)) S.map = MAP_LIST[0].id;
+if (!MAP_LIST.some(m => m.id === S.map)) S.map = ARENA.DEFAULT_MAP || MAP_LIST[0].id;
 
 // ------------------------------------------------------------------ UI refs
 const ui = {
@@ -115,7 +116,7 @@ const ui = {
   card: $('#card'), next: $('#next'), menuBtn: $('#to-menu'), replayBtn: $('#replay-btn'), share: $('#share'), shareMsg: $('#share-msg'),
   endKit: $('#end-kit'), endKitL: $('#end-kit-l'), ctaL: $('#cta-l'), hint: $('#hint'), wbtn: $('#fire'), wlabel: $('#fire-l'), fail: $('#fail'),
   camBtn: $('#cam-btn'), sndBtn: $('#snd-btn'), pauseBtn: $('#pause-btn'), resetBtn: $('#reset-btn'), dummyBtn: $('#dummy-btn'), tools: $('#tools'),
-  pops: $('#pops'), replayBar: $('#replay-bar'), skip: $('#skip'), live: $('#live'), garageBtn: $('#garage-btn')
+  pops: $('#pops'), mapStatus: $('#map-status'), replayBar: $('#replay-bar'), skip: $('#skip'), live: $('#live'), garageBtn: $('#garage-btn')
 };
 
 let failed = false;
@@ -168,7 +169,7 @@ key.position.set(-5, 14, 7); key.castShadow = true;
 key.shadow.mapSize.set(touch ? 1024 : 2048, touch ? 1024 : 2048);
 Object.assign(key.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 40 });
 key.shadow.bias = -0.0004; key.shadow.normalBias = 0.02; key.shadow.radius = 4;
-scene.add(key, new THREE.HemisphereLight(0xffffff, 0xd8d8d2, 0.85));
+scene.add(key, hemi);
 
 const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 200);
 const rig = new CameraRig(camera, { reduceMotion: reduce });
@@ -246,6 +247,7 @@ const fx = {
     if (e > 0.4) game.hitstop = Math.max(game.hitstop, 0.04 + 0.08 * e);
     sfx.hit(e, by.def.weapon === 'spinner');
     if (e > 0.75) sfx.crowd(0.6);
+    map && map.raw.excite && map.raw.excite(Math.min(1, 0.3 + e));
     if (navigator.vibrate && touch && (by === player || victim === player)) try { navigator.vibrate(by === player ? 30 : 60); } catch (_) {}
     const dmg = Math.round(4 + 16 * e);
     if (game.state === 'fight') {
@@ -255,6 +257,11 @@ const fx = {
     popLabel(p, by.def.weapon === 'flipper' ? 'Flip!' : e > 0.85 ? `Kritický zásah −${dmg}` : `−${dmg}`, e > 0.85);
     game.events.push({ t: +game.time.toFixed(2), type: 'hit', by: by === player ? 'p1' : 'p2', e: +e.toFixed(2) });
   },
+  wall(by, p, e) {
+    sfx.wall(Math.min(1, e + 0.2)); emitSparks(p, e * 0.6);
+    if (S.shake && e > 0.4) rig.shake(0.08 + 0.12 * e);
+  },
+  grab(by) { sfx.flip(); popLabel(by.root.position, 'Chycen!', false); },
   flip(by) {
     sfx.flip();
     game.events.push({ t: +game.time.toFixed(2), type: 'fire', by: by === player ? 'p1' : 'p2' });
@@ -281,7 +288,7 @@ function oppSetup() {
   return { id, hex, level: S.mode === 'training' ? 'dummy' : S.level, name: ROBOTS[id].name };
 }
 function makeRobots() {
-  if (player) { disposeRobot(player); disposeRobot(opp); }
+  if (player) { if (world) removeBodies(); disposeRobot(player); disposeRobot(opp); }
   const o = oppSetup();
   player = new Robot(ROBOTS[S.robot], colorHex(S.color), scene, { mods: modsFor(S.robot) });
   opp = new Robot(ROBOTS[o.id], o.hex, scene, { mods: [] });
@@ -303,8 +310,8 @@ function park() {
 const gltfLoader = new GLTFLoader(); gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 const modelCache = {};
 function loadModel(robot) {
-  const id = robot.def.model || robot.def.id;
-  if (modelCache[id] === false) return;
+  const id = 'model' in robot.def ? robot.def.model : robot.def.id;
+  if (!id || modelCache[id] === false) return;
   const p = modelCache[id] || (modelCache[id] = new Promise((res, rej) => gltfLoader.load(MODEL_URL(id), g => { g.scene.traverse(o => { if (o.geometry) o.geometry.userData.fromGlb = true; }); res(g.scene); }, undefined, rej)));
   p.then(sc => {
     if (robot.root.parent !== scene) return;
@@ -320,21 +327,23 @@ let RAPIER, world, ready = false;
 function setMap(id) {
   const m = MAP_LIST.find(x => x.id === id) || MAP_LIST[0];
   S.map = m.id;
-  if (map) map.dispose(scene);
-  map = m.make();
-  map.visual(scene);
+  if (map) { removeBodies(); map.dispose(); }
+  map = makeMap(m.id);
+  if (world) map.physics(RAPIER, world);
   rig.invalidate();
   if (brain) brain = createBrain(brain.level.id, map);
   park();
 }
-function newWorld() {
-  if (world) {
-    for (const r of [player, opp]) if (r) r.body = null;
-    try { world.free(); } catch (_) {}
-  }
+function ensureWorld() {
+  if (world) return;
   world = new RAPIER.World({ x: 0, y: -GRAVITY, z: 0 });
   world.timestep = DT;
   map.physics(RAPIER, world);
+}
+function removeBodies() {
+  for (const r of [player, opp]) if (r && r.body) {
+    if (r.detachPhysics) r.detachPhysics(true); else { world.removeRigidBody(r.body); r.body = null; }
+  }
 }
 import('@dimforge/rapier3d-compat').then(async mod => {
   RAPIER = mod.default || mod;
@@ -365,8 +374,10 @@ function startRound() {
   sfx.unlock();
   clearTimeout(endTimer);
   replay.stop();
+  ensureWorld();
+  removeBodies();
   makeRobots();
-  newWorld();
+  map.reset();
   for (const r of [player, opp]) r.attachPhysics(RAPIER, world);
   placeAtSpawns();
   brain && brain.reset();
@@ -378,7 +389,7 @@ function startRound() {
   rig.set(S.mode === 'duo' && S.cam === 'split' ? 'tv' : camModeFor(), true);
   hudNames(); renderTools();
   showScreen('play');
-  ui.wlabel.textContent = player.def.weapon === 'flipper' ? 'Flipper' : 'Zbraň';
+  ui.wlabel.textContent = player.weaponLabel || (player.def.weapon === 'flipper' ? 'Flipper' : 'Zbraň');
   renderer.domElement.focus({ preventScroll: true });
 }
 function camModeFor() { return CAM_MODES.some(c => c.id === S.cam) ? S.cam : 'tv'; }
@@ -463,8 +474,9 @@ function physicsStep(c1, c2) {
   player.step(DT, pin, opp, fx);
   opp.step(DT, oin, player, fx);
   c1.fire = false; if (c2) c2.fire = false;
-  map.update(DT, [player, opp], fx);
+  map.step(DT, [player, opp], live);
   world.step();
+  map.afterStep([player, opp]);
   wallKnocks();
   if (game.state === 'fight' || game.state === 'ko') replay.record(game.time, [player, opp]);
   if (!live) return;
@@ -532,6 +544,7 @@ function tickClock(dt) {
   game.left -= dt;
   if (game.left <= 0) {
     game.left = 0;
+    for (const [a, b] of [[player, opp], [opp, player]]) if (b.damage && typeof b.damage.taken === 'number') stats.get(a).damage = b.damage.taken / 10 + stats.get(a).hits * 0.2;
     const card = judge(stats.get(player), stats.get(opp));
     const draw = card.winner === null;
     const v = card.votes;
@@ -610,6 +623,7 @@ function updateCameras(dt, snap) {
 // ------------------------------------------------------------------ HUD
 function setText(el, t) { if (el._t !== t) { el._t = t; el.textContent = t; } }
 function statusOf(r, mine) {
+  if (r.flippedTime <= 0.6 && r.statusText) return r.inverted ? 'Jede vzhůru nohama' : r.statusText();
   if (r.flippedTime > 0.6) {
     const t = `Převrácený ${Math.max(0, Math.ceil(FLIP_LIMIT - r.flippedTime))} s`;
     if (!mine) return t;
@@ -620,8 +634,17 @@ function statusOf(r, mine) {
   return r.cooldown > 0 ? 'Flipper nabíjí' : 'Flipper připraven';
 }
 function dmgOf(r) {
-  if (typeof r.damage === 'number') return r.damage <= 1 ? r.damage * 100 : r.damage;
+  if (r.damage && typeof r.damage.health01 === 'number') return (1 - r.damage.health01) * 100;
   return r.dmgTaken || 0;
+}
+// damage events from robots.js: broken sides / lost wheels -> labels
+const EVENT_LABEL = { wheel: 'Kolo upadlo!', front: 'Zbraň ohnutá!', back: 'Baterie poškozena!', top: 'Elektronika otřesena!', bottom: 'Elektronika otřesena!' };
+function drainEvents() {
+  for (const r of [player, opp]) {
+    if (!r || !r.events || !r.events.length) continue;
+    for (const e of r.events) if (EVENT_LABEL[e]) { popLabel(r.root.position, EVENT_LABEL[e], true); if (e === 'wheel') sfx.crowd(0.7); }
+    r.events.length = 0;
+  }
 }
 let lastCount = 0;
 function hud() {
@@ -634,6 +657,8 @@ function hud() {
   ui.oStat.classList.toggle('warn', opp.flippedTime > 0.6);
   ui.pDmg.style.transform = `scaleX(${(dmgOf(player) / 100).toFixed(3)})`;
   ui.oDmg.style.transform = `scaleX(${(dmgOf(opp) / 100).toFixed(3)})`;
+  const ms = map && game.state === 'fight' ? map.status() : null;
+  setText(ui.mapStatus, ms ? (typeof ms === 'string' ? ms : ms.text || '') : '');
   if (game.state === 'countdown') {
     const n = Math.ceil(game.count - 0.2);
     if (n !== lastCount) { lastCount = n; if (n > 0 && n <= 3) sfx.beep(false); else if (n <= 0) sfx.beep(true); }
@@ -684,6 +709,7 @@ function frame(now) {
     if (respawnT > 0) { respawnT -= wall; if (respawnT <= 0) { placeAtSpawns(); brain && brain.reset(); } }
     if (flashT > 0) { flashT -= wall; if (flashT <= 0) ui.msg.hidden = true; }
     player.sync(dt); opp.sync(dt);
+    drainEvents();
     hud();
   } else if (player && !reduce && st === 'menu' && ui.garage.hidden) {
     player.root.rotation.y += dt * _menuSpin; opp.root.rotation.y -= dt * _menuSpin;
@@ -697,6 +723,7 @@ function frame(now) {
     ring2.visible = duo && q.y > -0.3; ring2.position.set(q.x, 0.012, q.z);
   } else { ring.visible = ring2.visible = false; }
   sounds();
+  if (map) map.frame(dt);
   stepSparks(dt);
   stepPops(dt);
   updateCameras(dt);
@@ -737,7 +764,7 @@ function toMenu() {
   clearTimeout(endTimer);
   replay.stop();
   game.state = 'menu';
-  if (world) { for (const r of [player, opp]) if (r) r.body = null; try { world.free(); } catch (_) {} world = null; }
+  if (world) removeBodies();
   makeRobots();
   rig.set('tv');
   showScreen('menu');
@@ -767,12 +794,13 @@ function buildMenu() {
   for (const id of robotIds) ui.pick.appendChild(btn('opt', `<b>${esc(ROBOTS[id].name)}</b><small>${esc(ROBOTS[id].blurb || '')}</small>`, () => { if (S.robot === id) return; S.robot = id; applyChoice(); }, { 'data-id': id }));
   for (const c of COLORS) ui.colors.appendChild(btn('sw', '', () => { S.color = c.id; applyChoice(true); }, { 'data-id': c.id, 'aria-label': c.name, title: c.name, style: `--c:${c.hex}` }));
   ui.mapRow.hidden = MAP_LIST.length < 2;
-  for (const m of MAP_LIST) ui.maps.appendChild(btn('opt', `<b>${esc(m.name)}</b><small>${esc(m.blurb || '')}</small>`, () => { if (S.map === m.id) return; setMap(m.id); renderMenu(); saveSettings(); syncUrl(); }, { 'data-id': m.id }));
+  for (const m of MAP_LIST) ui.maps.appendChild(btn('', `${m.preview ? `<i class="mp" style="background:${esc(m.preview.floor || '#eee')};border-color:${esc(m.preview.accent || '#0E0E0E')}"></i>` : ''}${esc(m.name)}`, () => { if (S.map === m.id) return; setMap(m.id); renderMenu(); saveSettings(); syncUrl(); }, { 'data-id': m.id }));
 }
 function pressed(container, id) { container.querySelectorAll('button[data-id]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === id))); }
 function renderMenu() {
   pressed(ui.modes, S.mode); pressed(ui.pick, S.robot); pressed(ui.colors, S.color); pressed(ui.maps, S.map);
   $('#color-name').textContent = COLORS.find(c => c.id === S.color).name;
+  $('#mapdesc').textContent = (MAP_LIST.find(m => m.id === S.map) || {}).blurb || '';
   // per-mode context row
   const c = ui.ctx; c.innerHTML = '';
   if (S.mode === 'quick') {
@@ -836,38 +864,40 @@ function openGarage() {
   renderGarage();
   $('#garage-done').focus();
 }
-function renderGarage() {
+function renderGarage(focusId) {
   const root = $('#garage-body');
-  const mods = modsFor(S.robot);
-  const sum = garageModel.summary(S.robot, mods);
-  let h = `<div class="mono">Garáž</div><h1 id="garage-h">${esc(ROBOTS[S.robot].name)}</h1>`;
-  const over = sum.grams > sum.limit;
-  h += `<div class="budget${over ? ' over' : ''}"><div class="lbl"><span>Hmotnost</span><span>${sum.grams} / ${sum.limit} g</span></div><div class="bar"><i style="transform:scaleX(${Math.min(1, sum.grams / sum.limit).toFixed(3)})"></i></div></div>`;
-  h += '<dl class="stats">' + sum.stats.map(s => `<div><dt>${s.name}</dt><dd><span class="bar"><i style="transform:scaleX(${s.v.toFixed(3)})"></i></span></dd></div>`).join('') + '</dl>';
+  const id = S.robot, mods = modsFor(id);
+  const sum = garageModel.summary(id, mods);
+  let h = `<div class="mono">Garáž · ${esc(ROBOTS[id].short || '')}</div><h1 id="garage-h">${esc(ROBOTS[id].name)}</h1>`;
+  const pct = Math.min(1, sum.grams / sum.limit);
+  h += `<div class="budget${sum.grams > sum.limit ? ' over' : ''}"><div class="lbl"><span>Hmotnost (limit ${sum.limit} g)</span><span>${sum.grams} g · rezerva ${sum.limit - sum.grams} g</span></div><div class="bar" role="meter" aria-valuemin="0" aria-valuemax="${sum.limit}" aria-valuenow="${sum.grams}" aria-label="Hmotnost robota"><i style="transform:scaleX(${pct.toFixed(3)})"></i></div></div>`;
+  h += '<dl class="stats">' + sum.stats.map(x => `<div><dt>${x.name}</dt><dd><span class="bar"><i style="transform:scaleX(${x.v.toFixed(3)})"></i></span></dd></div>`).join('') + '</dl>';
   root.innerHTML = h;
-  const list = document.createElement('div'); list.className = 'mods';
-  const avail = garageModel.list(S.robot);
-  if (!avail.length) {
-    const p = document.createElement('p'); p.className = 'hint'; p.textContent = 'Úpravy pro tohoto robota připravujeme.'; list.appendChild(p);
+  const slots = garageModel.slots(id);
+  if (!slots.length) { const p = document.createElement('p'); p.className = 'hint'; p.textContent = 'Úpravy pro tohoto robota připravujeme.'; root.appendChild(p); }
+  for (const sl of slots) {
+    const g = document.createElement('div'); g.className = 'slot'; g.setAttribute('role', 'group'); g.setAttribute('aria-label', sl.name);
+    const cur = sl.options.find(o => garageModel.isOn(id, mods, o.id));
+    g.innerHTML = `<div class="lbl"><span>${esc(sl.name)}</span><span>${esc(cur ? cur.desc : '')}</span></div>`;
+    const row = document.createElement('div'); row.className = 'seg wrap';
+    for (const o of sl.options) {
+      const on = garageModel.isOn(id, mods, o.id);
+      const next = garageModel.choose(id, mods, o.id);
+      const over = !on && garageModel.gramsWith(id, next) > sum.limit;
+      const b = btn('', `${esc(o.name)}${o.grams ? `<small>${o.grams > 0 ? '+' : '−'}${Math.abs(o.grams)} g</small>` : ''}`, () => {
+        S.mods[id] = garageModel.choose(id, modsFor(id), o.id);
+        saveSettings(); makeRobots(); renderGarage(o.id); renderMenu();
+      }, { 'data-id': o.id, 'aria-pressed': String(on), title: o.desc || '' });
+      if (over) { b.disabled = true; b.title = `Překročili byste limit ${sum.limit} g`; }
+      row.appendChild(b);
+    }
+    g.appendChild(row); root.appendChild(g);
   }
-  for (const m of avail) {
-    const on = mods.includes(m.id);
-    const test = garageModel.summary(S.robot, on ? mods.filter(x => x !== m.id) : garageModel.sanitize(S.robot, [...mods.filter(x => !garageModel.sameSlot(S.robot, x, m.id)), m.id], true));
-    const blocked = !on && test.grams > test.limit;
-    const b = btn('opt mod', `<b>${esc(m.name)}</b><small>${esc(m.desc || '')}</small><em>${m.grams > 0 ? '+' : ''}${m.grams} g</em>`, () => {
-      const cur = modsFor(S.robot);
-      S.mods[S.robot] = on ? cur.filter(x => x !== m.id) : [...cur.filter(x => !garageModel.sameSlot(S.robot, x, m.id)), m.id];
-      saveSettings(); makeRobots(); renderGarage(); renderMenu();
-      const again = list.querySelector(`[data-id="${m.id}"]`); again && again.focus();
-    }, { 'data-id': m.id, 'aria-pressed': String(on) });
-    if (blocked) { b.disabled = true; b.title = 'Překročili byste limit 150 g'; }
-    list.appendChild(b);
-  }
-  root.appendChild(list);
-  const lbl = document.createElement('div'); lbl.className = 'lbl'; lbl.innerHTML = '<span>Barva tisku</span>';
+  const lbl = document.createElement('div'); lbl.className = 'lbl'; lbl.innerHTML = `<span>Barva tisku</span><span>${COLORS.find(c => c.id === S.color).name}</span>`;
   const sws = document.createElement('div'); sws.className = 'sws';
-  for (const c of COLORS) sws.appendChild(btn('sw', '', () => { S.color = c.id; applyChoice(true); renderGarage(); sws.querySelector(`[data-id="${c.id}"]`) && root.querySelector(`.sws [data-id="${c.id}"]`).focus(); }, { 'data-id': c.id, 'aria-label': c.name, title: c.name, style: `--c:${c.hex}`, 'aria-pressed': String(S.color === c.id) }));
+  for (const c of COLORS) sws.appendChild(btn('sw', '', () => { S.color = c.id; applyChoice(true); renderGarage(c.id); }, { 'data-id': c.id, 'aria-label': c.name, title: c.name, style: `--c:${c.hex}`, 'aria-pressed': String(S.color === c.id) }));
   const wrap = document.createElement('div'); wrap.append(lbl, sws); root.appendChild(wrap);
+  if (focusId) { const f = root.querySelector(`[data-id="${focusId}"]`); f && f.focus(); }
 }
 
 // ------------------------------------------------------------------ share
