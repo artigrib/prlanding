@@ -400,6 +400,14 @@ tls_state() ( set +eu +o pipefail
 )
 
 case "$ACTION" in
+  tlsrestart)
+    [ -f "$ROOT/release.env" ] || die "no release deployed yet"
+    build_env
+    dc restart caddy && say "restarted our caddy container" || warn "caddy restart failed"
+    sleep 90
+    tls_state
+    exit 0
+    ;;
   tls)
     [ -f "$ROOT/release.env" ] || die "no release deployed yet"
     build_env

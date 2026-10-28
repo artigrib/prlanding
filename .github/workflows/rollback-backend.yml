@@ -15,7 +15,7 @@ on:
       action:
         description: What to do
         type: choice
-        options: [status, rollback, diag, porttest, fixports, tls]
+        options: [status, rollback, diag, porttest, fixports, tls, tlsrestart]
         default: status
 permissions:
   contents: read
@@ -25,7 +25,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     environment: production
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -66,9 +66,9 @@ jobs:
         run: |
           ACT="$ACT_INPUT"
           [ -n "$ACT" ] || ACT=$(awk 'NR==1{print $1}' backend/deploy/ops-request 2>/dev/null)
-          case "$ACT" in status|rollback|diag|porttest|fixports|tls) ;; *) echo "::error::bad action"; exit 1;; esac
+          case "$ACT" in status|rollback|diag|porttest|fixports|tls|tlsrestart) ;; *) echo "::error::bad action"; exit 1;; esac
           set +e
-          if [ "$ACT" = tls ]; then
+          if [ "$ACT" = tls ] || [ "$ACT" = tlsrestart ]; then
             # Outside view from the runner; prints fixed strings only (no IPs).
             vps=$(getent ahostsv4 "$HOST" | awk 'NR==1{print $1}')
             for n in api mcp relay; do
