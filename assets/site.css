@@ -349,7 +349,7 @@ html:has(body.has-sbar){scroll-padding-bottom:110px}
 /* ---------- home v2 (Oct 2026): try in the browser first ---------- */
 ol.steps,ul.soon,ol.news,ul.bots,ul.ticks{list-style:none;margin:0;padding:0}
 .hero-h1-3{color:var(--mute)}
-.hero-h1.hero-h1{margin-top:clamp(28px,4.4vw,72px);font-size:clamp(46px,6.6vw,104px)}
+.hero-h1.hero-h1{margin-top:clamp(24px,3.2vw,48px);font-size:clamp(46px,6.6vw,104px)}
 .hero-row{margin-top:clamp(28px,3.6vw,56px);align-items:start}
 .hero-side{grid-column:1 / span 4;display:flex;flex-direction:column;gap:clamp(24px,2.6vw,40px)}
 .hero-lead.lead{font-size:clamp(17px,1.35vw,20px);max-width:34rem}

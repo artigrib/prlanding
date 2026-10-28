@@ -45,6 +45,48 @@ await check('catalog filter', '/', async p => {
   if (after >= before) throw new Error(`filter did not narrow (${before} -> ${after})`);
 });
 
+// home v2: one-click try. CTAs in the first screen, preview never pulls the sims' engines onto the home page
+for (const vp of [{ width: 360, height: 780 }, { width: 1440, height: 900 }]) {
+  await check(`home CTAs ${vp.width}px`, '/', async p => {
+    await p.setViewportSize(vp);
+    const sim = p.locator('a[data-cta="hero-sim"]'), arena = p.locator('a[data-cta="hero-arena"]');
+    if (!/Vyzkoušejte SO-101 v prohlížeči/.test(await sim.innerText())) throw new Error('primary CTA text');
+    if (!/Bojová aréna/.test(await arena.innerText())) throw new Error('secondary CTA text');
+    const u1 = await sim.evaluate(a => new URL(a.href).pathname), u2 = await arena.evaluate(a => new URL(a.href).pathname);
+    if (u1 !== '/sim/so101/' || u2 !== '/sim/arena/') throw new Error(`CTA targets ${u1} ${u2}`);
+    const box = await sim.boundingBox();
+    if (!box || box.y + box.height > vp.height) throw new Error('primary CTA below the first screen');
+    if ((await p.locator('a[data-cta="arena"]').getAttribute('href')) !== 'sim/arena/') throw new Error('arena section CTA');
+    if (vp.width > 400 && (await p.evaluate(() => document.documentElement.scrollWidth)) > vp.width) throw new Error('horizontal scroll');
+  });
+}
+
+await check('home preview stays light', '/', async p => {
+  const heavy = [];
+  p.on('request', r => { if (/mujoco|three|rapier|\.wasm|\/sim\//i.test(r.url())) heavy.push(r.url()); });
+  await p.reload({ waitUntil: 'load' });
+  await p.waitForFunction(() => { const v = document.querySelector('.hero-video'); return v && v.querySelector('source'); }, null, { timeout: 10000 });
+  const poster = await p.locator('.hero-media img').evaluate(i => i.complete && i.naturalWidth);
+  if (!poster) throw new Error('poster not loaded');
+  await p.waitForTimeout(500);
+  if (heavy.length) throw new Error('home loaded sim assets: ' + heavy.join(', '));
+});
+
+await check('home reduced motion shows poster only', '/', async p => {
+  await p.emulateMedia({ reducedMotion: 'reduce' });
+  await p.reload({ waitUntil: 'load' });
+  await p.waitForTimeout(800);
+  if (await p.locator('.hero-video source').count()) throw new Error('video loaded despite reduced motion');
+});
+
+await check('waitlist form (no send)', '/', async p => {
+  const f = p.locator('form#waitlist');
+  await f.locator('input[type=email]').fill('neplatny');
+  await f.locator('button[type=submit]').click();
+  await p.waitForFunction(() => /e-mailovou adresu/.test(document.querySelector('#waitlist .soft-msg').textContent));
+  if ((await f.locator('input[type=email]').getAttribute('aria-invalid')) !== 'true') throw new Error('invalid e-mail not flagged');
+});
+
 for (const id of ['so101', 'svrn', 'vert150']) {
   await check('product ' + id, `/sada/${id}/`, async p => {
     await p.waitForSelector('h1');

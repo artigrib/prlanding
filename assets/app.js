@@ -166,7 +166,7 @@
           links.forEach(function (a) { if (a.getAttribute('data-sec') === e.target.id) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
         });
       }, { rootMargin: '-45% 0px -50% 0px' });
-      ['vyzkousejte', 'arena', 'katalog', 'novinky', 'licence'].forEach(function (id) { var el = document.getElementById(id); if (el) io.observe(el); });
+      ['top', 'vyzkousejte', 'arena', 'pripravujeme', 'katalog', 'novinky', 'postup', 'komunita', 'licence'].forEach(function (id) { var el = document.getElementById(id); if (el) io.observe(el); });
     }
     // hero preview: a short loop recorded from the real sim (no MuJoCo/three here). Loads only after the page,
     // only when visible, never with reduced motion or Save-Data; the poster image stays underneath.
