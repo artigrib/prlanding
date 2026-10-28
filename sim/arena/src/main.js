@@ -593,10 +593,13 @@ function endReplay() {
 const orbitC = new THREE.Vector3();
 
 // ------------------------------------------------------------------ layout / camera band
+const _sz = new THREE.Vector2();
 const band = { top: 16, bottom: 16, left: 0, right: 0, w: 1, h: 1 };
 function layout() {
   const w = innerWidth, h = innerHeight;
-  renderer.setSize(w, h);
+  // setSize resets the canvas (blank frame), so only when the size really changed
+  const sz = renderer.getSize(_sz);
+  if (sz.x !== w || sz.y !== h) renderer.setSize(w, h);
   const playing = !ui.hud.hidden;
   let top = playing ? (w < 640 ? 64 : 76) : 16;
   let bottom = touch && playing ? Math.min(210, h * 0.26) : playing ? 56 : 16, left = 0, right = 0;

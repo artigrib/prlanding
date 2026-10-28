@@ -44,7 +44,8 @@ export class CameraRig {
     const key = [x0, x1, z0, z1].map(v => Math.round(v * 8)).join() + `|${el.toFixed(3)}|${top}|${bottom}|${left}|${right}|${w}|${h}|${this.camera.fov}`;
     if (key === this.fit.key) return this.fit.d;
     const cam = this.camera, dir = _f.set(0, Math.sin(el), Math.cos(el));
-    const save = cam.position.clone(), saveQ = cam.quaternion.clone();
+    const save = cam.position.clone(), saveQ = cam.quaternion.clone(), saveN = cam.near, saveF = cam.far;
+    cam.near = 0.1; cam.far = 400; cam.updateProjectionMatrix();
     let i = 0;
     for (const x of [x0, x1]) for (const z of [z0, z1]) for (const y of [-0.5, 1.2]) this.fit.pts[i++].set(x, y, z);
     const fits = d => {
@@ -58,7 +59,7 @@ export class CameraRig {
     };
     let lo = 3, hi = 140;
     for (let k = 0; k < 22; k++) { const m = (lo + hi) / 2; if (fits(m)) hi = m; else lo = m; }
-    cam.position.copy(save); cam.quaternion.copy(saveQ);
+    cam.position.copy(save); cam.quaternion.copy(saveQ); cam.near = saveN; cam.far = saveF; cam.updateProjectionMatrix();
     this.fit.key = key; this.fit.d = hi;
     return hi;
   }
@@ -66,7 +67,7 @@ export class CameraRig {
   // ctx: { focus, other (robots with .root), bounds {x0,x1,z0,z1}, band, follow, snap, orbitCenter }
   update(dt, ctx) {
     const cam = this.camera, d = this.dummy;
-    let fov = 38, near = 0.1;
+    let fov = 38, near = 0.1, far = 90;   // tight near/far: phones with 16-bit depth buffers z-fight otherwise
     const up = _u.copy(UP);
     const focus = ctx.focus && ctx.focus.root, other = ctx.other && ctx.other.root;
     let mode = this.mode;
@@ -94,6 +95,7 @@ export class CameraRig {
       _p.copy(s.target).addScaledVector(_f.set(0, Math.sin(el), Math.cos(el)), s.dist);
       _l.copy(s.target);
       if (top) up.set(0, 0, -1);
+      near = Math.max(0.1, s.dist - 26); far = s.dist + 30;
     } else if (mode === 'chase') {
       const s = this.chase, rp = focus.position;
       _f.set(0, 0, 1).applyQuaternion(focus.quaternion); _f.y = 0;
@@ -112,11 +114,21 @@ export class CameraRig {
       _p.copy(s.pos); _l.copy(s.look);
       fov = 58;
     } else if (mode === 'fpv') {
+      // mounted on the robot's lid; when it is on its back the "camera mount" self-levels
       focus.updateMatrixWorld();
-      _p.set(0, 0.46, 0.22); focus.localToWorld(_p);
-      _l.set(0, 0.12, 4); focus.localToWorld(_l);
-      up.set(0, 1, 0).applyQuaternion(focus.quaternion);
-      fov = 74; near = 0.04;
+      const rUp = _n.set(0, 1, 0).applyQuaternion(focus.quaternion);
+      _f.set(0, 0, 1).applyQuaternion(focus.quaternion);
+      if (rUp.y > 0.25) {
+        _p.set(0, 0.46, 0.22); focus.localToWorld(_p);
+        _l.set(0, 0.12, 4); focus.localToWorld(_l);
+        up.copy(rUp);
+      } else {
+        _f.y = 0; if (_f.lengthSq() < 1e-4) _f.set(0, 0, 1); _f.normalize();
+        const rp = focus.position;
+        _p.set(rp.x - _f.x * 0.2, rp.y + 0.5, rp.z - _f.z * 0.2);
+        _l.set(rp.x + _f.x * 4, rp.y + 0.1, rp.z + _f.z * 4);
+      }
+      fov = 74; near = 0.04; far = 60;
     } else if (mode === 'orbit') {
       const o = this.orbit;
       if (!this.reduce) o.angle += dt * 0.32;
@@ -137,7 +149,8 @@ export class CameraRig {
       this.blend = 1;
       cam.position.copy(d.position); cam.quaternion.copy(d.quaternion); cam.fov = fov;
     }
-    if (cam.near !== near) cam.near = near;
+    if (this.blend < 1) { near = Math.min(near, 0.1); far = Math.max(far, 200); }
+    cam.near = near; cam.far = far;
     cam.updateProjectionMatrix();
     if (this.shakeAmt > 0) {
       const a = this.shakeAmt * (mode === 'fpv' ? 0.25 : 1);
