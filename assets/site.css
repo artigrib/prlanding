@@ -402,7 +402,7 @@ ol.steps,ul.soon,ol.news,ul.bots,ul.ticks{list-style:none;margin:0;padding:0}
 
 /* coming soon: dashed tag = not available yet */
 .prep-row{margin-top:clamp(24px,4vw,56px)}
-.soon{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:var(--gutter)}
+.soon{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:var(--gutter)}
 .soon li{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:20px 0 28px;border-top:1px solid var(--line)}
 .soon h3{margin:0;font-size:24px;font-weight:500;letter-spacing:-.025em;line-height:1.1}
 .soon p{margin:0;color:var(--ink-2);max-width:32rem}
@@ -422,6 +422,7 @@ ol.steps,ul.soon,ol.news,ul.bots,ul.ticks{list-style:none;margin:0;padding:0}
   .arena-fig{grid-column:1 / span 7}.arena-txt{grid-column:8 / span 5}
   .hero-side{grid-column:1 / span 5}.hero-row .hero-fig{grid-column:6 / span 7}
   .bots{grid-template-columns:minmax(0,1fr)}
+  .soon{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:860px){
   .hero-cta .btn{width:100%}
@@ -443,3 +444,11 @@ ol.steps,ul.soon,ol.news,ul.bots,ul.ticks{list-style:none;margin:0;padding:0}
   .waitlist>b{font-size:19px}
 }
 @media (prefers-reduced-motion:reduce){.hero-video{display:none}}
+
+/* phone header: all nav items visible, never cut mid-word (spread across the row, wrap only if a font runs wide) */
+@media (max-width:860px){
+  .nav{overflow:visible;margin:0;padding:0;flex-wrap:wrap;gap:0 20px}
+  [data-page=home] .nav{justify-content:space-between;gap:0 12px;font-size:14px}
+  .nav a{padding:12px 0 10px}
+}
+@media (max-width:350px){[data-page=home] .nav{font-size:13px;gap:0 6px}}
