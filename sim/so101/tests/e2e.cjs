@@ -36,7 +36,10 @@ async function advanceUntil(page, cond, max = 40, step = 2) {
   }
   return -1;
 }
-async function shot(page, name) { await page.screenshot({ path: path.join(OUT, name + '.png'), timeout: 120000 }); }
+async function shot(page, name) {
+  try { await page.screenshot({ path: path.join(OUT, name + '.png'), timeout: 150000 }); }
+  catch (e) { console.log('note screenshot ' + name + ' timed out (software GL)'); }
+}
 // pointer events like a finger (Playwright's touchscreen can only tap)
 async function touchDrag(page, from, to, steps = 8) {
   await S(page, ([a, b, n]) => {
@@ -56,10 +59,12 @@ async function touchDrag(page, from, to, steps = 8) {
   const browser = await chromium.launch({ args: ARGS });
   try {
     // ---------------- desktop ----------------
-    const p = await open(browser, base + '?test=1&mise=bowl', { width: 1280, height: 800 });
+    // software GL is very slow: low detail and no wrist camera except where a screenshot needs them
+    const p = await open(browser, base + '?test=1&mise=bowl&detail=low', { width: 1280, height: 800 });
     console.log('load ms', await S(p, () => window.__sim.loadMs));
     await S(p, () => window.__sim.wrist(true));
     await shot(p, 'desk-01-start');
+    await S(p, () => window.__sim.wrist(false));
 
     // smart move: drag the gizmo with the mouse
     let a = await S(p, () => window.__sim.screen('target'));
@@ -90,10 +95,10 @@ async function touchDrag(page, from, to, steps = 8) {
     a = await S(p, () => window.__sim.screen('target'));
     await p.mouse.move(a.x, a.y); await p.mouse.down();
     for (let i = 1; i <= 12; i++) await p.mouse.move(a.x - 40 * i, a.y - 10 * i);
-    const far = await ux(p);
     await S(p, () => window.__sim.advance(0.5));
-    await shot(p, 'desk-02-unreachable');
+    const far = await ux(p);
     await p.mouse.up();
+    await shot(p, 'desk-02-unreachable');
     ok(!far.reachable, 'far target is reported unreachable (red)');
     // keyboard: space toggles the gripper
     const g0 = await S(p, () => window.__sim.state().ctrl[5]);
@@ -151,6 +156,7 @@ async function touchDrag(page, from, to, steps = 8) {
     await p.waitForTimeout(1500);
     await shot(p, 'desk-07-top');
     await S(p, () => window.__sim.camera('orbit'));
+    await S(p, () => window.__sim.quality('high'));
     await p.waitForFunction(() => window.__sim.ux().hiDetail, null, { timeout: 120000 }).catch(() => {});
     ok((await ux(p)).hiDetail, 'high-detail GLB meshes swapped in');
     await S(p, () => window.__sim.explode(true));
@@ -164,14 +170,14 @@ async function touchDrag(page, from, to, steps = 8) {
     await p.close();
 
     // ---------------- onboarding (first visit) ----------------
-    const o = await open(browser, base + '?test=1&onboard=1', { width: 1280, height: 800 });
+    const o = await open(browser, base + '?test=1&onboard=1&detail=low', { width: 1280, height: 800 });
     await o.waitForTimeout(1500);
     ok(await S(o, () => !document.querySelector('.ux-coach').hidden), 'onboarding is shown');
     await shot(o, 'desk-10-onboarding');
     await o.close();
 
     // ---------------- phone ----------------
-    const ph = await open(browser, base + '?test=1&mise=bowl', { width: 390, height: 844 }, true);
+    const ph = await open(browser, base + '?test=1&mise=bowl&detail=low', { width: 390, height: 844 }, true);
     await shot(ph, 'phone-01-start');
     a = await S(ph, () => window.__sim.screen('target'));
     const pt0 = await ux(ph);

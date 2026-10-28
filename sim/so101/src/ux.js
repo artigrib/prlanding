@@ -148,7 +148,9 @@ class UX {
 
   startDemo() {
     this.teach.stopReplay();
+    const rec = this.teach.recording;
     this.app.reset();
+    if (rec) this.teach.startRec();     // recording the planner's solution is a valid demonstration
     this.runner.start();
     const plan = this.runner.m.solve(this.ctl, this.world);
     this.preview(plan, true);

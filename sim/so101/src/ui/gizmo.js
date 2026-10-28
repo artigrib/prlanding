@@ -77,14 +77,16 @@ export class Gizmo {
 
   ghostBuild() {
     const T = this.T, m = this.m;
-    this.ghostMat = new T.MeshStandardMaterial({ color: BLUE, transparent: true, opacity: 0.2, depthWrite: false, roughness: 0.6 });
+    // polygon offset: where the ghost coincides with the real arm, the real arm wins (no speckles)
+    this.ghostMat = new T.MeshStandardMaterial({ color: BLUE, transparent: true, opacity: 0.2, depthWrite: false, roughness: 0.6,
+      polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 8 });
     const bodies = this.kin.c.bodies;
     const index = new Map(bodies.map((b, i) => [b.id, i]));
     this.ghosts = [];
     const G = new T.Group(); G.visible = false; this.ghost = G;
     for (const [g, mesh] of this.app.geoms) {
       const k = index.get(m.geom_bodyid[g]);
-      if (k == null) continue;
+      if (k == null || bodies[k].parent < 0) continue;     // the base never moves: no ghost needed
       const gm = new T.Mesh(mesh.geometry, this.ghostMat);
       gm.matrixAutoUpdate = false; gm.renderOrder = 2;
       const q = m.geom_quat.subarray(4 * g, 4 * g + 4), p = m.geom_pos.subarray(3 * g, 3 * g + 3);
@@ -189,7 +191,7 @@ export class Gizmo {
     for (const b of plan.bad) { const mm = new T.Mesh(dot, new T.MeshBasicMaterial({ color: RED })); mm.position.set(b[0], b[1], b[2]); mm.scale.setScalar(1.6); g.add(mm); }
     void marks;
     this.app.world.add(g);
-    this.path = { g, geo, mat, total: geo.index.count, t: animate ? 0 : 1, fade: 0 };
+    this.path = { g, geo, mat, total: geo.index.count, t: animate ? 0 : 1, t0: performance.now(), fade: 0 };
     geo.setDrawRange(0, animate ? 0 : geo.index.count);
   }
   fadePath() { if (this.path) this.path.fade = 1; }
@@ -202,7 +204,7 @@ export class Gizmo {
   syncPath(dt) {
     const P = this.path; if (!P) return;
     if (P.t < 1) {
-      P.t = Math.min(1, P.t + dt / 0.6);
+      P.t = Math.min(1, (performance.now() - P.t0) / 600);   // wall clock: same speed at any frame rate
       const n = Math.floor(P.total * P.t / 3) * 3; P.geo.setDrawRange(0, n);
     }
     if (P.fade) {

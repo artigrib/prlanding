@@ -9,7 +9,7 @@ export function defaultQuality(touch) {
     const c = navigator.connection;
     if (c && (c.saveData || /2g/.test(c.effectiveType || ''))) return 'low';
     const mem = navigator.deviceMemory;
-    if (touch && mem && mem < 4) return 'low';
+    if (touch && mem && mem < 6) return 'low';
   } catch (e) { /* ignore */ }
   return 'high';
 }
@@ -17,7 +17,8 @@ export function defaultQuality(touch) {
 export class HiDetail {
   constructor(ux) {
     this.ux = ux; this.app = ux.app; this.T = ux.T;
-    this.quality = store.get('quality', null) || defaultQuality(ux.touch);
+    const forced = new URLSearchParams(location.search).get('detail');   // ?detail=low|high (tests, support)
+    this.quality = forced === 'low' || forced === 'high' ? forced : store.get('quality', null) || defaultQuality(ux.touch);
     this.loaded = false; this.loading = null;
     this.lo = new Map(); this.hi = new Map();   // mesh id -> geometry
     for (const [g, mesh] of this.app.geoms) if (this.app.m.geom_type[g] === 7) this.lo.set(this.app.m.geom_dataid[g], mesh.geometry);

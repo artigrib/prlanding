@@ -37,6 +37,16 @@ if it *drives* the arm, call `app.ux.ctl.cancel()` first (same as the sliders).
 - `src/ui/*` – gizmo + ghost + path preview + pen (gizmo.js), cameras + wrist PiP (cameras.js), teach & replay +
   JSON export (teach.js), panel DOM (panel.js), onboarding, sound/haptics (audio.js), confetti (fx.js),
   extra meshes + studio lighting (extras.js), localStorage wrapper (store.js).
+- `src/ui/hidetail.js` – lazy high-detail visuals: `model/visual/so101_visual.glb` (all 14 original Menagerie
+  STLs, 325 020 triangles, meshopt + 14-bit quantization, **0.98 MB**, 0.6 MB gzipped) is loaded after start
+  (idle callback) and swapped in for the decimated `.msh` geometry, which stays the physics/collision mesh.
+  Raw STL coordinates are mapped into MuJoCo's processed mesh frame with `mesh_pos` / `mesh_quat`.
+  Quality setting "Detail modelu: Vysoký / Úsporný" (localStorage `pr-sim-quality`, `?detail=low|high`);
+  default low on Save-Data / 2G and on touch devices reporting < 6 GB `deviceMemory`.
+  Rebuild with `tools/stl-to-glb.mjs` (instructions in the file header).
+- `src/ui/explode.js` – "Z čeho se SO-101 skládá": exploded view (slider), Czech part names on hover/tap,
+  printed vs. bought legend, assembly animation in the order of the LeRobot SO-101 guide (Joint 1 … Gripper),
+  CTA "Tyto díly vám vytiskneme" → ../../sada/so101/.
 - `model/scene.xml` – new bodies `cube_b`, `ball` (free), `bowl` / `bowl2` / `goal` (mocap). Their geoms are in
   group 3 so app.js does not draw them; `src/ui/extras.js` does.
 
