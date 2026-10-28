@@ -361,7 +361,7 @@ ol.steps,ul.soon,ol.news,ul.bots,ul.ticks{list-style:none;margin:0;padding:0}
 .hero-media img,.hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .hero-video{opacity:0;transition:opacity .4s ease}
 .hero-video.on{opacity:1}
-.hero-play{position:absolute;left:0;bottom:0;display:inline-flex;align-items:center;gap:16px;min-height:52px;padding:0 20px;background:var(--ink);color:#fff;font-weight:500;font-size:16px}
+.hero-play{position:absolute;left:0;top:0;display:inline-flex;align-items:center;gap:16px;min-height:52px;padding:0 20px;background:var(--ink);color:#fff;font-weight:500;font-size:16px}
 .hero-media:hover .hero-play,.hero-media:focus-visible .hero-play{background:var(--accent);color:var(--ink)}
 .steps4{grid-template-columns:repeat(4,minmax(0,1fr))}
 .step-a{margin-top:auto;display:inline-flex;align-items:center;min-height:44px;font-weight:500;text-underline-offset:4px;align-self:flex-start}
@@ -381,7 +381,8 @@ ol.steps,ul.soon,ol.news,ul.bots,ul.ticks{list-style:none;margin:0;padding:0}
 .ticks{align-self:stretch;border-top:1px solid #4A4A45}
 .ticks li{display:grid;grid-template-columns:18px minmax(0,1fr);gap:8px;padding:12px 0;border-bottom:1px solid #4A4A45;font-size:15px;color:#E4E4DF}
 .ticks li::before{content:'';width:8px;height:8px;margin-top:7px;background:var(--accent)}
-.bots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px var(--gutter);margin-top:clamp(48px,7vw,104px)}
+.bots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px var(--gutter)}
+.band ul.bots{margin-top:clamp(48px,7vw,104px)}
 .bots a{display:grid;grid-template-columns:168px minmax(0,1fr);gap:20px;align-items:center;padding-top:16px;border-top:1px solid #fff;text-decoration:none}
 .bots a:hover b{text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px}
 .bot-img{display:block;aspect-ratio:4/3;overflow:hidden;background:var(--stone)}
@@ -426,7 +427,7 @@ ol.steps,ul.soon,ol.news,ul.bots,ul.ticks{list-style:none;margin:0;padding:0}
   .hero-cta .btn{width:100%}
   .hero-row{row-gap:32px}
   .hero-h1.hero-h1{font-size:clamp(34px,9.6vw,44px);margin-top:24px}
-  .hero-play{min-height:44px;padding:0 14px;font-size:15px}
+  .hero-play{min-height:40px;padding:0 12px;gap:10px;font-size:14px}
   .steps4{grid-template-columns:minmax(0,1fr)}
   .band{padding-top:16px}
   .arena-txt .btn{width:100%}
