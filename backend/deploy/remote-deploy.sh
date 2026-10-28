@@ -366,6 +366,12 @@ tls_state() ( set +eu +o pipefail
     say "tls $h: site enabled: $en; cert present: $cert; last acme error: $cat"
   done
   say "tls: acme dns-01 not used; http-01 only"
+  say "tls log counts: lines $(printf '%s\n' "$logs" | grep -c .), obtaining $(printf '%s\n' "$logs" | grep -ci 'obtain'), obtained $(printf '%s\n' "$logs" | grep -ci 'certificate obtained'), errors $(printf '%s\n' "$logs" | grep -c '"level":"error"'), cert dirs $(dc exec -T caddy sh -c 'ls -d /data/caddy/certificates/*/* 2>/dev/null | wc -l')"
+  local k n
+  for k in 'rateLimited' 'Timeout during connect' 'Connection refused' 'unauthorized' 'Invalid response' 'no valid A records' 'DNS problem' 'CAA' 'context deadline' 'permission denied' 'read-only'; do
+    n=$(printf '%s\n' "$logs" | grep -ci -- "$k")
+    [ "$n" -gt 0 ] && say "tls log category '$k': $n line(s)"
+  done
   say "tls: caddy host-network listeners :80 $(ss -ltnH 'sport = :80' | wc -l), :443 $(ss -ltnH 'sport = :443' | wc -l)"
   if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q '^Status: active'; then
     u=$(ufw status 2>/dev/null)
