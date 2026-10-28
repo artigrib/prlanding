@@ -365,6 +365,23 @@ tls_state() ( set +eu +o pipefail
   cp=0; ours=0
   for pid in $(pgrep -x caddy); do cp=$((cp + 1)); grep -q "$fid" "/proc/$pid/cgroup" 2>/dev/null && ours=$((ours + 1)); done
   say "tls caddy processes on host: $cp, in our container: $ours; our network mode: $(docker inspect -f '{{.HostConfig.NetworkMode}}' "$cid" 2>/dev/null | sed 's/^container:.*/container/'); whoami root: $([ "$(id -u)" = 0 ] && echo yes || echo no)"
+  local hostns cg cgid kind
+  hostns=$(readlink /proc/1/ns/net)
+  for pid in $(pgrep -x caddy); do
+    grep -q "$fid" "/proc/$pid/cgroup" 2>/dev/null && continue
+    cg=$(cat "/proc/$pid/cgroup" 2>/dev/null)
+    cgid=$(printf '%s' "$cg" | grep -oE '[0-9a-f]{64}' | head -1)
+    if [ -n "$cgid" ]; then
+      if docker inspect "$cgid" >/dev/null 2>&1; then
+        kind="docker container ($(docker inspect -f '{{if eq (index .Config.Labels "com.docker.compose.project") "printedrobotics"}}our project{{else}}other project{{end}}, net={{.HostConfig.NetworkMode}}' "$cgid" | sed 's/net=container:.*/net=container/; s/net=[^h].*/net=bridge-or-custom/'))"
+      else kind="cgroup of a docker container that no longer exists"; fi
+    else
+      case "$cg" in *system.slice*caddy*) kind="systemd caddy unit";; *system.slice*) kind="other systemd unit";; *user.slice*|*session*) kind="user session";; *) kind="other cgroup";; esac
+    fi
+    case "$(tr '\0' ' ' < /proc/$pid/cmdline)" in "caddy run --config /etc/caddy/Caddyfile --adapter caddyfile "*) cm="same command as ours";; *" run "*|*" run") cm="caddy run (other args)";; *) cm="other command";; esac
+    [ "$(readlink /proc/$pid/ns/net)" = "$hostns" ] && ns=host || ns=separate
+    say "tls other caddy: $kind; $cm; netns $ns; started $(ps -o lstart= -p "$pid" 2>/dev/null | awk '{print $2" "$3" "$4}'); systemd caddy.service active: $(systemctl is-active caddy 2>/dev/null || echo n/a)"
+  done
   for port in 80 443; do
     hex=$(printf '%04X' "$port")
     owner=""
