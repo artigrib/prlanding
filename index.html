@@ -3,17 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>printedrobotics.cz — stavebnice open-source robotů</title>
-<meta name="description" content="Open-source roboty jako stavebnice: díly vytiskneme z originálních souborů, doplníme hardware podle kusovníku a pošleme v jedné krabici. SO-101, LeKiwi, Open Duck Mini, AmazingHand a další. Praha, ČR a EU.">
+<title>printedrobotics.cz — vyzkoušejte robota v prohlížeči, pak si ho postavte</title>
+<meta name="description" content="Robotickou ruku SO-101 si vyzkoušíte ve fyzikální simulaci přímo v prohlížeči, bojové roboty v aréně. Pak vám díly vytiskneme, doplníme hardware podle kusovníku a pošleme v jedné krabici.">
 <link rel="canonical" href="https://printedrobotics.cz/">
 <meta name="robots" content="index,follow">
 <meta name="geo.placename" content="Prague"><meta name="geo.region" content="CZ">
 <meta name="theme-color" content="#FFFFFF">
 <meta property="og:type" content="website">
-<meta property="og:title" content="printedrobotics.cz — stavebnice open-source robotů">
-<meta property="og:description" content="Vytiskneme díly, zkompletujeme hardware, pošleme v jedné krabici. Vy robota složíte.">
+<meta property="og:site_name" content="printedrobotics.cz">
+<meta property="og:title" content="Vyzkoušejte robota v prohlížeči, pak si ho postavte">
+<meta property="og:description" content="Simulace ruky SO-101 a bojová aréna zdarma v prohlížeči. Stavebnice open-source robotů: vytiskneme, zkompletujeme, pošleme.">
 <meta property="og:url" content="https://printedrobotics.cz/">
-<meta property="og:image" content="https://printedrobotics.cz/img/so101_white.jpg">
+<meta property="og:image" content="https://printedrobotics.cz/assets/media/og-home.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Robotická ruka SO-101 v simulaci přenáší kostku do misky">
 <meta property="og:locale" content="cs_CZ">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E8461E'/%3E%3C/svg%3E">
@@ -21,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
-<link rel="preload" as="image" href="img/so101_white.jpg" fetchpriority="high">
+<link rel="preload" as="image" href="assets/media/so101-poster.jpg" fetchpriority="high">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"Organization","name":"printedrobotics.cz","url":"https://printedrobotics.cz/",
  "description":"Stavebnice open-source robotů: tisk dílů, kompletace hardwaru a doprava po ČR a EU.",
@@ -29,59 +32,142 @@
 </script>
 </head>
 <body data-page="home">
-<a class="sr-only skip" href="#katalog">Přejít na katalog</a>
+<a class="sr-only skip" href="#obsah">Přejít na obsah</a>
 
 <header class="site-h" id="site-h">
 <div class="wrap"><div class="hbar">
 <div class="brand"><i aria-hidden="true"></i><a href="./">printedrobotics</a></div>
-<nav class="nav" aria-label="Hlavní menu"><a href="#katalog" data-sec="katalog">Katalog</a><a href="#postup" data-sec="postup">Jak to funguje</a><a href="#licence" data-sec="licence">Licence</a></nav>
+<nav class="nav" aria-label="Hlavní menu"><a href="#vyzkousejte" data-sec="vyzkousejte">Simulace</a><a href="#arena" data-sec="arena">Aréna</a><a href="#katalog" data-sec="katalog">Katalog</a><a href="#novinky" data-sec="novinky">Novinky</a><a href="#licence" data-sec="licence">Licence</a></nav>
 <a class="pill" href="kviz.html">Najít robota <span aria-hidden="true">→</span></a>
 </div></div>
 </header>
 
-<main>
-<section id="top" class="wrap">
+<main id="obsah">
+<section id="top" class="wrap" aria-labelledby="hero-h">
 <div class="g mono hero-meta">
 <div class="a1">N° 01 — Stavebnice open-source robotů</div>
 <div class="a10 hide-s" style="text-align:right">Tisk a kompletace v Praze</div>
 </div>
-<h1 class="hero-h1">
-<span>Open-source roboty,</span>
-<span class="ind">vytištěné námi,</span>
-<span class="ind" style="color:#5E5E59">složené vámi.</span>
+<h1 class="hero-h1" id="hero-h">
+<span>Open-source roboty.</span>
+<span class="ind">Nejdřív v prohlížeči,</span>
+<span class="ind hero-h1-3">pak na vašem stole.</span>
 </h1>
 <div class="g hero-row">
-<div class="a4s" style="grid-column:4 / span 5"><p class="lead" style="max-width:34rem">Vyberete si ověřený open-source projekt. Díly vytiskneme z originálních souborů, doplníme hardware podle kusovníku a pošleme vše v jedné krabici.</p></div>
-<div class="a10" style="display:flex;flex-direction:column;gap:10px">
-<a class="btn" href="#katalog">Vybrat robota <span aria-hidden="true">↓</span></a>
-<a class="btn btn-o" href="kviz.html">Nevím, kterého <span class="mono-s">Kvíz 30 s</span></a>
+<div class="hero-side">
+<p class="lead hero-lead">Robotickou ruku SO-101 si vyzkoušíte ve fyzikální simulaci, bojové roboty v aréně. Až budete chtít skutečného robota, díly vytiskneme z originálních souborů, doplníme hardware podle kusovníku a pošleme vše v jedné krabici.</p>
+<div class="hero-cta">
+<a class="btn btn-act" href="sim/so101/" data-cta="hero-sim">Vyzkoušejte SO-101 v prohlížeči <span aria-hidden="true">→</span></a>
+<a class="btn btn-o" href="sim/arena/" data-cta="hero-arena">Bojová aréna <span aria-hidden="true">→</span></a>
+<span class="mono-s hero-note">Zdarma, bez registrace. Funguje i na telefonu.</span>
 </div>
-<div class="a1" style="grid-row:1;display:flex;align-items:baseline;gap:12px"><div class="big-num" id="robot-count">18</div><p class="ink2" style="margin:0;font-size:15px;max-width:13rem">robotů v katalogu, u každého prověřujeme licenci</p></div>
 </div>
-<figure class="g hero-fig">
-<figcaption class="a1 mono" style="align-self:end;line-height:1.6">Obr. 1 — SO-101 · design The Robot Studio a Hugging Face, Apache-2.0 · vizualizace z CAD projektu</figcaption>
-<div class="a4 hero-img"><img src="img/so101_white.jpg" alt="Robotická ruka SO-101 v bílém provedení" width="1200" height="900" fetchpriority="high"></div>
+<figure class="hero-fig">
+<a class="hero-media" href="sim/so101/" data-cta="hero-preview">
+<img src="assets/media/so101-poster.jpg" width="1280" height="720" alt="Simulovaná robotická ruka SO-101 nad stolem s červenou kostkou a modrou miskou" fetchpriority="high">
+<video class="hero-video" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" data-webm="assets/media/so101-loop.webm" data-mp4="assets/media/so101-loop.mp4" width="1280" height="720"></video>
+<span class="hero-play"><span>Spustit simulaci</span><span aria-hidden="true">→</span></span>
+</a>
+<figcaption class="mono">Obr. 1 — Záznam ze simulace SO-101: ruka sama vezme kostku a položí ji do misky. Fyzika MuJoCo, běží v prohlížeči.</figcaption>
 </figure>
+</div>
 </section>
 
-<section id="postup" class="wrap section">
+<section id="vyzkousejte" class="wrap section" aria-labelledby="vyzk-h">
 <div class="g rule">
-<div class="a1 mono">N° 02 — Jak to funguje</div>
-<h2 class="a4 h2" style="max-width:52rem">Tři kroky mezi repozitářem na GitHubu a robotem na vašem stole.</h2>
+<div class="a1 mono">N° 02 — Vyzkoušejte, než koupíte</div>
+<h2 class="a4 h2" id="vyzk-h" style="max-width:52rem">Od simulace k robotovi na stole. Každý krok si můžete projít předem.</h2>
 </div>
 <div class="g" style="margin-top:clamp(24px,5vw,80px)">
 <div class="a1 hide-s"></div>
-<div class="a4 steps">
-<div class="step"><span class="mono" style="color:var(--ink)">01</span><h3>Tiskneme</h3><p>Díly z originálních STL souborů projektu, PLA+ nebo PETG, v barvě dle výběru. Rozměry kontrolujeme posuvným měřítkem.</p></div>
-<div class="step"><span class="mono" style="color:var(--ink)">02</span><h3>Kompletujeme</h3><p>Serva či motory, řídicí desky, šrouby, ložiska, kabely a zdroj podle kusovníku — roztříděné po krocích montáže.</p></div>
-<div class="step"><span class="mono" style="color:var(--ink)">03</span><h3>Posíláme</h3><p>Po ČR a EU s tištěným návodem a odkazy na dokumentaci a komunitu projektu.</p></div>
+<ol class="a4 steps steps4">
+<li class="step"><span class="mono" style="color:var(--ink)">01</span><h3>Vyzkoušejte</h3><p>Táhnete modrou kouli a ruka ji sleduje. Kliknete na kostku a ruka ji sama vezme. Myší i prstem, se skutečnou fyzikou.</p><a class="step-a" href="sim/so101/">Spustit simulaci</a></li>
+<li class="step"><span class="mono" style="color:var(--ink)">02</span><h3>Naučte se</h3><p>Pět misí, od přenesení kostky po kreslení perem. Pohyb nahrajete a ruka ho zopakuje, stejně jako při učení skutečné SO-101 s LeRobotem.</p><a class="step-a" href="sim/so101/objects.html">Předměty s fyzikou</a></li>
+<li class="step"><span class="mono" style="color:var(--ink)">03</span><h3>Objednejte</h3><p>Díly vytiskneme z originálních souborů projektu, hardware doplníme podle kusovníku. Předobjednávka je nezávazná, cenu a termín potvrdíme e-mailem.</p><a class="step-a" href="sada/so101/">Sada SO-101</a></li>
+<li class="step"><span class="mono" style="color:var(--ink)">04</span><h3>Postavte</h3><p>Rozložený pohled z originálních STL ukáže každý díl. ID serv, kalibraci a test si projdete na virtuální ruce, ještě než krabice dorazí.</p><a class="step-a" href="sim/so101/nastaveni/">Nastavení serv nanečisto</a></li>
+</ol>
 </div>
+</section>
+
+<section id="arena" class="band section-band" aria-labelledby="arena-h">
+<div class="wrap">
+<div class="g rule rule-inv">
+<div class="a1 mono">N° 03 — Bojoví roboti</div>
+<h2 class="a4 h2" id="arena-h" style="max-width:52rem">Roboti do 150 g. Zápas si nejdřív odehrajete v aréně.</h2>
+</div>
+<div class="g arena-row">
+<figure class="arena-fig">
+<a href="sim/arena/" class="arena-shot" data-cta="arena-shot"><img src="assets/media/arena.jpg" width="1280" height="720" alt="Bojová aréna v prohlížeči: oranžový Project SVRN proti modrému robotovi Klepeto" loading="lazy" decoding="async"></a>
+<figcaption class="mono">Obr. 2 — Bojová aréna v prohlížeči, Project SVRN proti Klepetu.</figcaption>
+</figure>
+<div class="arena-txt">
+<p class="lead">Fyzika s hmotností a třením, několik map, kamery včetně TV přenosu. Rychlý zápas, turnaj, dva hráči na jedné klávesnici nebo trénink bez časového limitu.</p>
+<ul class="ticks">
+<li>V garáži měníte kola, převody a zbraně, hmotnost se hlídá do 150 g.</li>
+<li>Soupeři Kosa a Klepeto mají vlastní původní modely.</li>
+</ul>
+<a class="btn btn-act" href="sim/arena/" data-cta="arena">Spustit bojovou arénu <span aria-hidden="true">→</span></a>
+</div>
+</div>
+<ul class="bots">
+<li><a href="sada/svrn/"><span class="bot-img"><img src="img/svrn_white.jpg" width="1200" height="900" alt="Malý bojový robot Project SVRN s pohonem 4×4 a klínem" loading="lazy" decoding="async"></span><span class="bot-t"><span class="bot-st">Předobjednávka</span><b>Project SVRN</b><span>Tlačný robot s pohonem 4×4, k tomu flipper nebo chapadlo.</span></span></a></li>
+<li><a href="sada/vert150/"><span class="bot-img"><img src="img/vert150_white.jpg" width="1200" height="900" alt="Malý bojový robot s vertikálním rotujícím ostřím" loading="lazy" decoding="async"></span><span class="bot-t"><span class="bot-st bot-st-p">Připravujeme</span><b>Vertikální spinner 150 g</b><span>Dvoukolový robot s rotujícím ostřím. Jen pro uzavřenou arénu.</span></span></a></li>
+</ul>
+</div>
+</section>
+
+<section id="novinky" class="wrap section" aria-labelledby="nov-h">
+<div class="g rule">
+<div class="a1 mono">N° 04 — Co je nového</div>
+<h2 class="a4 h2" id="nov-h">Co jsme přidali.</h2>
+</div>
+<div class="g" style="margin-top:clamp(24px,4vw,56px)">
+<div class="a1 hide-s"></div>
+<ol class="a4 news" reversed>
+<li><time datetime="2026-10-28">28. 10. 2026</time><span><b>Simulace SO-101: chytré ovládání</b>Ruku vedete myší nebo prstem, na předmět stačí kliknout. Pohyb nahrajete a přehrajete, mise mají hvězdičky.</span><a href="sim/so101/">Simulace</a></li>
+<li><time datetime="2026-10-28">28. 10. 2026</time><span><b>Z čeho se SO-101 skládá</b>Rozložený pohled z originálních STL souborů s českými názvy dílů a animací montáže.</span><a href="sim/so101/">Simulace</a></li>
+<li><time datetime="2026-10-28">28. 10. 2026</time><span><b>Nastavení serv nanečisto</b>Emulátor serv a průvodce: ID, kalibrace, test a hledání závad na virtuální ruce.</span><a href="sim/so101/nastaveni/">Průvodce</a></li>
+<li><time datetime="2026-10-28">28. 10. 2026</time><span><b>Předměty s fyzikou</b>Knihovna naskenovaných předmětů s hmotností a třením, na stole s rukou SO-101.</span><a href="sim/so101/objects.html">Knihovna</a></li>
+<li><time datetime="2026-10-28">28. 10. 2026</time><span><b>Bojová aréna, druhá verze</b>Nová fyzika, mapy, kamery a režimy, garáž s úpravami a původní modely Kosa a Klepeto.</span><a href="sim/arena/">Aréna</a></li>
+<li><time datetime="2026-10-28">28. 10. 2026</time><span><b>Kvíz: Souboje robotů</b>Nová volba pro ty, kdo chtějí bojového robota do 150 g.</span><a href="kviz.html">Kvíz</a></li>
+<li><time datetime="2026-10-23">23. 10. 2026</time><span><b>PROTO ROBOT #0</b>Proběhlo první pražské setkání o robotice a fyzické AI.</span><a href="https://protorobot.cz/">protorobot.cz</a></li>
+</ol>
+</div>
+</section>
+
+<section id="pripravujeme" class="wrap section" aria-labelledby="prip-h">
+<div class="g rule">
+<div class="a1 mono">N° 05 — Připravujeme</div>
+<h2 class="a4 h2" id="prip-h" style="max-width:52rem">Na čem pracujeme. Zatím to vyzkoušet nejde.</h2>
+</div>
+<div class="g prep-row">
+<div class="a1 hide-s"></div>
+<ul class="a4 soon">
+<li><span class="soon-t">Připravujeme</span><h3>Vaše AI v simulaci</h3><p>Jazykový model, například Claude, bude ovládat simulovanou SO-101 přes protokol MCP.</p></li>
+<li><span class="soon-t">Připravujeme</span><h3>Skutečná ruka podle simulace</h3><p>Digitální dvojče v prohlížeči bude řídit vaši skutečnou SO-101. Limity kloubů a rychlosti pohlídá software.</p></li>
+<li><span class="soon-t">Připravujeme</span><h3>Záznamy zápasů</h3><p>Zápas z arény si budete moci uložit a přehrát znovu.</p></li>
+<li><span class="soon-t">Připravujeme</span><h3>Konstruktor bojových robotů</h3><p>Robota navrhnete v prohlížeči, otestujete v aréně a díly vám vytiskneme.</p></li>
+</ul>
+</div>
+<div class="g">
+<div class="a1 hide-s"></div>
+<form class="a4 soft waitlist" novalidate data-soft="waitlist" id="waitlist" aria-labelledby="wl-h">
+<b id="wl-h">Připojte svou SO-101 nebo svou AI</b>
+<span class="muted">Napíšeme jednou, až půjde připojení vyzkoušet.</span>
+<fieldset class="wl-pick"><legend class="sr-only">Co chcete připojit</legend>
+<label class="chip"><input type="checkbox" name="want" value="so101" checked> Svou SO-101</label>
+<label class="chip"><input type="checkbox" name="want" value="ai"> Svou AI</label>
+</fieldset>
+<span class="soft-row"><label class="sr-only" for="soft-waitlist">E-mail</label><input id="soft-waitlist" type="email" name="email" autocomplete="email" autocapitalize="off" spellcheck="false" inputmode="email" placeholder="vas@email.cz" required><button type="submit" class="btn" data-cta="waitlist">Chci vědět první</button></span>
+<span class="mono soft-note">Odesláním souhlasíte se zasláním tohoto e-mailu. Adresu nikomu nepředáme.</span>
+<span class="soft-msg" role="status" aria-live="polite"></span>
+</form>
 </div>
 </section>
 
 <section id="katalog" class="wrap section">
 <div class="g rule" style="align-items:start">
-<div class="a1 mono">N° 03 — Katalog</div>
+<div class="a1 mono">N° 06 — Katalog</div>
 <h2 class="a4s h2"><span id="robot-count2">18</span> robotů. Od prvního sestavení po výzkum.</h2>
 <div class="a10 filters" id="filters" role="group" aria-label="Filtr podle typu"></div>
 </div>
@@ -106,12 +192,38 @@
 <a class="card" href="sada/svrn/"><div class="tile"><span class="tag">Předobjednávka</span><img src="img/svrn_white.jpg" alt="Malý bojový robot Project SVRN s pohonem 4×4 a klínem" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">17</span><span class="mono">Začátečník</span></span><span><h3>Project SVRN</h3><span class="type">Bojový robot 150 g</span></span><span class="spec1">do 150 g · 4× N10</span><p class="desc">Modulární bojový robot do 150 g: tlačný robot (pusher) s pohonem 4×4, k tomu flipper nebo chapadlo.</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>
 <a class="card" href="sada/vert150/"><div class="tile"><span class="tag">Připravujeme</span><img src="img/vert150_white.jpg" alt="Malý bojový robot s vertikálním rotujícím ostřím" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">18</span><span class="mono">Připravujeme</span></span><span><h3>Vertikální spinner 150 g</h3><span class="type">Bojový robot 150 g</span></span><span class="spec1">do 150 g · vertikální spinner</span><p class="desc">Dvoukolový robot do 150 g s vertikálním rotujícím ostřím. Jen pro uzavřenou arénu.</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>
 </div><!--/cards-->
-<a class="quiz-cta" href="kviz.html" style="margin-top:56px"><span><b>Nevíte, kterého vybrat?</b><span class="muted">Tři otázky a doporučíme robota podle zkušeností a cíle.</span></span><span class="btn">Spustit kvíz <span aria-hidden="true">→</span></span></a>
+<a class="quiz-cta" href="kviz.html" style="margin-top:56px"><span><b>Nevíte, kterého vybrat?</b><span class="muted">Tři otázky a doporučíme robota podle zkušeností a cíle, nově i pro souboje robotů.</span></span><span class="btn">Spustit kvíz <span aria-hidden="true">→</span></span></a>
+</section>
+
+<section id="postup" class="wrap section" aria-labelledby="post-h">
+<div class="g rule">
+<div class="a1 mono">N° 07 — Jak to funguje</div>
+<h2 class="a4 h2" id="post-h" style="max-width:52rem">Tři kroky mezi repozitářem na GitHubu a robotem na vašem stole.</h2>
+</div>
+<div class="g" style="margin-top:clamp(24px,5vw,80px)">
+<div class="a1 hide-s"></div>
+<ol class="a4 steps">
+<li class="step"><span class="mono" style="color:var(--ink)">01</span><h3>Tiskneme</h3><p>Díly z originálních STL souborů projektu, PLA+ nebo PETG, v barvě dle výběru. Rozměry kontrolujeme posuvným měřítkem.</p></li>
+<li class="step"><span class="mono" style="color:var(--ink)">02</span><h3>Kompletujeme</h3><p>Serva či motory, řídicí desky, šrouby, ložiska, kabely a zdroj podle kusovníku — roztříděné po krocích montáže.</p></li>
+<li class="step"><span class="mono" style="color:var(--ink)">03</span><h3>Posíláme</h3><p>Po ČR a EU s tištěným návodem a odkazy na dokumentaci a komunitu projektu.</p></li>
+</ol>
+</div>
+</section>
+
+<section id="komunita" class="wrap section" aria-labelledby="proto-h">
+<div class="g rule">
+<div class="a1 mono">N° 08 — Komunita</div>
+<div class="a4 proto">
+<h2 class="h2" id="proto-h">PROTO ROBOT</h2>
+<p class="lead">Pražské setkání o robotice a fyzické AI: přednášky, živé ukázky a lidé, kteří roboty staví nebo chtějí začít. První proběhlo 23. 10. 2026, další připravujeme.</p>
+<a class="btn btn-o" href="https://protorobot.cz/">Program na protorobot.cz <span aria-hidden="true">↗</span></a>
+</div>
+</div>
 </section>
 
 <section id="licence" class="wrap section">
 <div class="g rule">
-<div class="a1 mono">N° 04 — Licence</div>
+<div class="a1 mono">N° 09 — Licence</div>
 <h2 class="a4s h2">Prodáváme jen to, co licence dovoluje.</h2>
 <p class="a10 ink2" style="margin:0;font-size:16px">Licenci konstrukčních souborů ověřujeme zvlášť od licence softwaru. Projekty s doložkou NC nabízíme jen s písemným souhlasem autorů.</p>
 </div>
@@ -128,7 +240,7 @@
 <div class="g">
 <div class="a1" style="color:var(--ink)">printedrobotics.cz</div>
 <div class="a4s">Praha · Předobjednávky jsou nezávazné <span id="footer-contact"></span></div>
-<div class="a10">Vizualizace z otevřených CAD modelů projektů (Sawppy podle modelu Curio, ExoMy podle simulačního modelu ESA). Všechny projekty patří svým autorům.</div>
+<div class="a10">Vizualizace z otevřených CAD modelů projektů (Sawppy podle modelu Curio, ExoMy podle simulačního modelu ESA). Záznamy na této stránce pocházejí z našich simulací v prohlížeči. Všechny projekty patří svým autorům.</div>
 </div>
 </footer>
 
