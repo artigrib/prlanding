@@ -13,7 +13,9 @@ import { LEVELS, createBrain } from './ai.js';
 import { sfx } from './audio/sfx.js';
 import { store } from './ui/store.js';
 import { judge, CATS } from './ui/judges.js';
-import { Replay } from './ui/replay.js';
+import { createReplayUI } from './ui/replay.js';
+import { Recorder, deserialize, serialize as serializeReplay } from './replay/codec.js';
+import { createBinding, remapBinding } from './replay/scene.js';
 import { garageModel } from './ui/garage.js';
 
 const { ROBOTS, Robot } = RB;
@@ -102,7 +104,7 @@ function mapEvent(type, d) {
     emitSparks(p, d.energy || 0.6); sfx.hit(d.energy || 0.6, true);
     if (S.shake) rig.shake(0.2);
     if (d.robot && (d.robot === player || d.robot === opp)) popLabel(p, 'Nástraha!', true);
-    if (game.state === 'fight' || game.state === 'ko') replay.event({ type: 'hit', p, e: d.energy || 0.6 });
+    if (game.state === 'fight' || game.state === 'ko') recEvent({ type: 'hit', by: -1, who: d.robot === player ? 0 : d.robot === opp ? 1 : -1, p: rp(p), e: +(d.energy || 0.6).toFixed(2) });
   } else if (type === 'strike') { sfx.wall(d.energy || 0.6); if (S.shake) rig.shake(0.08); }
   else if (type === 'warn') sfx.beep(false);
   else if (type === 'pit-open') { sfx.fall(); flash('Jáma se otevřela!', 1.4); }
@@ -119,7 +121,7 @@ const ui = {
   card: $('#card'), next: $('#next'), menuBtn: $('#to-menu'), replayBtn: $('#replay-btn'), share: $('#share'), shareMsg: $('#share-msg'),
   endKit: $('#end-kit'), endKitL: $('#end-kit-l'), ctaL: $('#cta-l'), hint: $('#hint'), wbtn: $('#fire'), wlabel: $('#fire-l'), fail: $('#fail'),
   camBtn: $('#cam-btn'), sndBtn: $('#snd-btn'), pauseBtn: $('#pause-btn'), resetBtn: $('#reset-btn'), dummyBtn: $('#dummy-btn'), tools: $('#tools'),
-  pops: $('#pops'), mapStatus: $('#map-status'), replayBar: $('#replay-bar'), skip: $('#skip'), live: $('#live'), garageBtn: $('#garage-btn')
+  pops: $('#pops'), mapStatus: $('#map-status'), replayBar: $('#replay-ui'), skip: $('#skip'), fullBtn: $('#full-btn'), lastBtn: $('#last-btn'), live: $('#live'), garageBtn: $('#garage-btn')
 };
 
 let failed = false;
@@ -257,7 +259,7 @@ const fx = {
   hit(by, p, e) {
     const victim = by === player ? opp : player;
     emitSparks(p, e);
-    if (game.state === 'fight' || game.state === 'ko') replay.event({ type: 'hit', p: { x: p.x, y: p.y, z: p.z }, e });
+    if (game.state === 'fight' || game.state === 'ko') recEvent({ type: 'hit', by: by === player ? 0 : 1, p: rp(p), e: +e.toFixed(2) });
     if (S.shake) { rig.shake(0.12 + 0.25 * e); rigA.shake(0.1 + 0.2 * e); rigB.shake(0.1 + 0.2 * e); }
     if (e > 0.4) game.hitstop = Math.max(game.hitstop, 0.04 + 0.08 * e);
     sfx.hit(e, by.def.weapon === 'spinner');
@@ -279,6 +281,7 @@ const fx = {
   grab(by) { sfx.flip(); popLabel(by.root.position, 'Chycen!', false); },
   flip(by) {
     sfx.flip();
+    recEvent({ type: 'fire', by: by === player ? 0 : 1 });
     if (game.events.length < 400) game.events.push({ t: +game.time.toFixed(2), type: 'fire', by: by === player ? 'p1' : 'p2' });
   }
 };
@@ -339,7 +342,6 @@ function loadModel(robot) {
   p.then(sc => {
     if (robot.root.parent !== scene) return;
     hook.models[id] = robot.useModel(sc.clone(true));
-    replay.invalidate();
   }).catch(() => { modelCache[id] = false; });
 }
 // mods: physics agent's data model via garage.js (empty when unavailable)
@@ -386,8 +388,50 @@ import('@dimforge/rapier3d-compat').then(async mod => {
 const input = createInput({ stick: $('#stick'), knob: $('#knob'), fire: ui.wbtn }, () => game.state === 'countdown' || game.state === 'fight');
 const game = { state: 'loading', time: 0, left: ROUND, count: 0, acc: 0, result: null, events: [], hitstop: 0, ko: 0, koCount: 0, slow: 1, lastBeep: 0, pausedFrom: null, kos: 0 };
 const stats = new Map();
-const replay = new Replay(DT);
-replay.onEvent = e => { if (e.type === 'hit') { emitSparks(e.p, e.e); sfx.hit(e.e, true); if (S.shake) rig.shake(0.08 + 0.15 * e.e); } };
+// ---- match recording (src/replay/*): 30 Hz snapshots of robots, hazards and loose bits
+let rec = null, recBind = null, recVals = null, replaySrc = null;
+const recUp = [1, 1];
+const rp = p => ({ x: +p.x.toFixed(2), y: +(p.y || 0).toFixed(2), z: +p.z.toFixed(2) });
+function recStart() {
+  recBind = createBinding([player, opp], map.raw);
+  rec = new Recorder(recBind.layout, { maxSeconds: S.mode === 'training' ? 300 : ROUND + 60 });
+  recVals = new Float64Array(recBind.channels);
+  recUp[0] = recUp[1] = 1;
+}
+function recTick() {
+  if (!rec || game.time + 1e-9 < rec.time) return;
+  rec.push(recBind.sample(recVals));
+  if (DEBUG && hook.probe) { const a = player.body.translation(), b = opp.body.translation(); hook.probe.push([rec.ticks - 1, a.x, a.y, a.z, b.x, b.y, b.z]); }
+  [player, opp].forEach((r, i) => {
+    const q = r.body.rotation(), up = 1 - 2 * (q.x * q.x + q.z * q.z);
+    if (recUp[i] > 0.2 && up < -0.2) recEvent({ type: 'flip', who: i, p: rp(r.body.translation()) });
+    if (up > 0.2 || up < -0.2) recUp[i] = up;
+  });
+}
+function recEvent(e) { if (rec) rec.event(e); }
+function replayHeader() {
+  return {
+    app: 'printedrobotics.cz/sim/arena', created: new Date().toISOString(), map: S.map, mode: S.mode, round: ROUND, timed: timed(),
+    robots: [player, opp].map((r, i) => ({
+      id: r.def.id, mods: r.def.modList, color: '#' + r.printMat.color.getHexString(),
+      name: i ? (opp.displayName || r.def.name) : r.def.name, tag: (i ? ui.oTag : ui.pTag).textContent
+    })),
+    hazards: recBind.hazardsSpec, result: game.result ? { win: game.result.win, why: game.result.why, kind: game.result.kind } : null
+  };
+}
+const rui = createReplayUI({
+  scene, canvas: renderer.domElement,
+  names: () => replayNames,
+  camPose: () => ({ angle: Math.atan2(camera.position.x - orbitC.x, camera.position.z - orbitC.z) }),
+  onEvent(e) {
+    if (e.type === 'hit' && e.p) { emitSparks(e.p, e.e || 0.6); sfx.hit(e.e || 0.6, true); if (S.shake) rig.shake(0.06 + 0.12 * (e.e || 0.6)); }
+    else if (e.type === 'flip' || e.type === 'fire') sfx.flip();
+    else if (e.type === 'pit' || e.type === 'out') sfx.fall();
+    else if (e.type === 'ko') sfx.crowd(0.8);
+  },
+  onClose: closedReplay
+});
+let replayNames = ['Vy', 'Soupeř'];
 const timed = () => S.mode !== 'training';
 
 function newStats() {
@@ -401,7 +445,7 @@ function startRound() {
   if (!ready || failed) return;
   sfx.unlock();
   clearTimeout(endTimer);
-  replay.stop();
+  quitReplay();
   ensureWorld();
   removeBodies();
   makeRobots();
@@ -409,7 +453,7 @@ function startRound() {
   for (const r of [player, opp]) r.attachPhysics(RAPIER, world);
   placeAtSpawns();
   brain && brain.reset();
-  newStats(); replay.clear();
+  newStats(); recStart();
   Object.assign(game, { state: 'countdown', time: 0, left: ROUND, count: 3.2, acc: 0, result: null, events: [], hitstop: 0, ko: 0, slow: 1, lastBeep: 0, kos: 0 });
   input.reset();
   input.split.on = S.mode === 'duo';
@@ -438,14 +482,13 @@ function endRound(win, why, kind) {
 }
 function afterKo() {
   const r = game.result;
-  if (r.kind === 'ko' && S.autoReplay && replay.length > 60) playReplay(true);
+  if (r.kind === 'ko' && S.autoReplay && rec && rec.length > 60) openReplay('instant', 'auto');
   else showEnd();
 }
 function showEnd() {
   // once per round: a double skip / double tap must not advance the ladder twice
   if (!game.result || game.result.shown) return;
   game.result.shown = true;
-  replay.stop();
   game.state = 'end';
   sfx.stopMotors();
   const { win, why, kind } = game.result;
@@ -475,7 +518,10 @@ function showEnd() {
   const soon = !!player.def.preparing, kit = KITS.has(player.def.id);
   ui.endKitL.textContent = !kit ? 'Zatím jen ve hře' : soon ? 'Stavebnici připravujeme' : 'Stavebnice';
   ui.ctaL.textContent = !kit ? 'Bojoví roboti v katalogu' : soon ? 'Dejte mi vědět' : 'Postavte si ho';
-  ui.replayBtn.hidden = !(kind === 'ko' && replay.length > 60);
+  const tr = rec && rec.length > 30;
+  ui.replayBtn.hidden = !(tr && (kind === 'ko' || rec.events.some(e => e.type === 'hit')));
+  ui.replayBtn.querySelector('span').textContent = kind === 'ko' ? 'Opakovat K.O.' : 'Opakovat zásah';
+  ui.fullBtn.hidden = !tr;
   ui.share.hidden = false; ui.shareMsg.textContent = '';
   ui.again.querySelector('span').textContent = S.mode === 'ladder' && !win ? 'Zkusit znovu' : 'Znovu';
   sfx.jingle(duo ? true : !!win);
@@ -509,12 +555,15 @@ function physicsStep(c1, c2) {
   world.step();
   map.afterStep([player, opp]);
   wallKnocks();
-  if (game.state === 'fight' || game.state === 'ko') replay.record(game.time, [player, opp]);
+  if (game.state === 'fight' || game.state === 'ko') recTick();
   if (!live) return;
   if (S.mode !== 'training') judgeTick();
   const po = map.outcome(player.body.translation()), oo = map.outcome(opp.body.translation());
   if (S.mode === 'training') return trainingChecks(po, oo);
   const P = nameOf(player), O = nameOf(opp), duo = S.mode === 'duo';
+  if (oo) recEvent({ type: oo === 'pit' ? 'pit' : 'out', who: 1, p: rp(opp.body.translation()) });
+  if (po) recEvent({ type: po === 'pit' ? 'pit' : 'out', who: 0, p: rp(player.body.translation()) });
+  if (!oo && !po) for (const [r, i] of [[opp, 1], [player, 0]]) if (r.flippedTime >= FLIP_LIMIT) { recEvent({ type: 'ko', who: i, p: rp(r.body.translation()) }); break; }
   if (oo) return endRound(true, oo === 'pit' ? `${duo ? 'Robot hráče 2' : 'Soupeř'} skončil v jámě.` : duo ? 'Hráč 1 vytlačil soupeře z arény.' : 'Vytlačili jste soupeře z arény.', 'ko');
   if (po) return endRound(false, po === 'pit' ? `${duo ? 'Robot hráče 1' : 'Váš robot'} skončil v jámě.` : `${duo ? 'Robot hráče 1' : 'Váš robot'} vypadl z arény.`, 'ko');
   if (opp.flippedTime >= FLIP_LIMIT) return endRound(true, `${O} se 10 s nemohl pohnout.`, 'ko');
@@ -560,6 +609,8 @@ let respawnT = 0;
 function trainingChecks(po, oo) {
   if (respawnT > 0) return;
   let txt = null;
+  if (oo || opp.flippedTime >= FLIP_LIMIT) recEvent({ type: oo === 'pit' ? 'pit' : oo ? 'out' : 'ko', who: 1, p: rp(opp.body.translation()) });
+  else if (po || player.flippedTime >= FLIP_LIMIT) recEvent({ type: po === 'pit' ? 'pit' : po ? 'out' : 'ko', who: 0, p: rp(player.body.translation()) });
   if (oo || opp.flippedTime >= FLIP_LIMIT) { game.kos++; txt = `K.O. č. ${game.kos}!`; sfx.crowd(0.8); }
   else if (po || player.flippedTime >= FLIP_LIMIT) txt = 'Zpátky na start';
   if (!txt) return;
@@ -588,22 +639,102 @@ function tickClock(dt) {
 }
 
 // ------------------------------------------------------------------ replay
-function playReplay(auto) {
-  if (replay.length < 30) return showEnd();
-  showScreen('replay');
+// kind: 'instant' (the KO / biggest hit, slow), 'full' (whole match), 'last' (last 20 s, from pause)
+// back: 'auto' (KO auto replay -> end screen), 'end', 'pause'
+function openReplay(kind, back) {
+  if (!rec || rec.length < 30) { if (back === 'auto') showEnd(); return; }
+  const track = rec.track();
+  let win = null, title = 'Celý zápas', speed = 1;
+  if (kind === 'instant') {
+    const h = highlightOf(track), t = h ? h.t : track.t1;
+    const ko = h && h.type !== 'hit';
+    win = [t - (ko ? 3.4 : 2.6), Math.min(track.t1, t + (ko ? 1.2 : 1.6))];
+    title = ko ? 'Záznam K.O.' : 'Opakovaný zásah'; speed = reduce ? 0.5 : 0.5;
+  } else if (kind === 'last') { win = [track.t1 - 20, track.t1]; title = 'Posledních 20 s'; }
+  replaySrc = { kind: 'live', back, saved: recBind.capture(), binding: recBind, robots: [player, opp] };
+  replayNames = [player, opp].map(r => r.def.short || r.def.name);
+  clearTimeout(endTimer);
   game.state = 'replay';
-  replay.autoEnd = auto;
-  replay.start([player, opp], reduce ? 0.5 : 0.35, 3.2, 1.1);
-  rig.set('orbit');
-  rig.orbit.radius = 4.2; rig.orbit.height = 2.2; rig.orbit.angle = Math.random() * 6.28;
+  sfx.stopMotors();
+  showScreen('replay');
+  rui.open({ track, binding: recBind, window: win, title, instant: kind !== 'full', autoClose: back === 'auto', speed, header: replayHeader(), timed: timed() });
+  updateCameras(0, true);
   ui.skip.focus({ preventScroll: true });
 }
-function endReplay() {
-  if (game.state !== 'replay') return;
-  replay.stop();
-  for (const r of [player, opp]) r.sync(0);
+function highlightOf(track) {
+  const ev = track.events;
+  const ko = ev.filter(e => e.type === 'ko' || e.type === 'pit' || e.type === 'out').pop();
+  if (ko) return ko;
+  let best = null;
+  for (const e of ev) if (e.type === 'hit' && (!best || e.e > best.e)) best = e;
+  return best;
+}
+// called by the replay UI when it closes
+function closedReplay(reason) {
+  const src = replaySrc; replaySrc = null;
+  rig.orbit.auto = true;
+  if (!src) return;
+  if (src.kind === 'file') { if (reason !== 'silent') { if (src.prevMap && src.prevMap !== S.map) setMap(src.prevMap); toMenu(); } return; }
+  src.binding.restore(src.saved, scene);
+  if (reason === 'silent') return;
   rig.set(camModeFor(), true);
-  if (replay.autoEnd) showEnd(); else { game.state = 'end'; showScreen('end'); ui.again.focus(); }
+  if (src.back === 'pause') { game.state = 'paused'; showScreen('pause'); $('#resume').focus(); }
+  else if (src.back === 'auto') showEnd();
+  else { game.state = 'end'; showScreen('end'); ui.again.focus(); }
+  hud();
+}
+function endReplay() { rui.close('user'); }
+// leave any replay without changing screens (new round, menu)
+function quitReplay() { if (rui.active) rui.close('silent'); }
+// import: rebuild the two robots and the arena from the file header, no physics
+async function playReplayFile(file) {
+  const msg = $('#load-msg'); msg.textContent = '';
+  let track;
+  try { track = await deserialize(new Uint8Array(await file.arrayBuffer())); } catch (e) { msg.textContent = e.message || 'Soubor se nepodařilo načíst.'; return; }
+  const h = track.header || {};
+  const rs = Array.isArray(h.robots) ? h.robots.slice(0, 2) : [];
+  if (rs.length !== 2 || !rs.every(r => r && own(ROBOTS, r.id))) { msg.textContent = 'Záznam obsahuje neznámého robota.'; return; }
+  const prevMap = S.map;
+  if (h.map && MAP_LIST.some(m => m.id === h.map) && h.map !== S.map) setMap(h.map);
+  if (world) removeBodies();
+  disposeRobot(player); disposeRobot(opp);
+  const col = c => (/^#[0-9a-f]{6}$/i.test(c || '') ? c : '#9A9A94');
+  player = new Robot(ROBOTS[rs[0].id], col(rs[0].color), scene, { mods: Array.isArray(rs[0].mods) ? rs[0].mods.map(String) : [] });
+  opp = new Robot(ROBOTS[rs[1].id], col(rs[1].color), scene, { mods: Array.isArray(rs[1].mods) ? rs[1].mods.map(String) : [] });
+  loadModel(player); loadModel(opp);
+  const binding = remapBinding(createBinding([player, opp], map.raw, Array.isArray(h.hazards) ? h.hazards : null), track);
+  replayNames = rs.map(r => ROBOTS[r.id].short || ROBOTS[r.id].name);
+  ui.pName.textContent = String(rs[0].name || ROBOTS[rs[0].id].name).slice(0, 60); ui.oName.textContent = String(rs[1].name || ROBOTS[rs[1].id].name).slice(0, 60);
+  ui.pTag.textContent = 'P1'; ui.oTag.textContent = 'P2';
+  ui.pSw.style.background = col(rs[0].color); ui.oSw.style.background = col(rs[1].color);
+  replaySrc = { kind: 'file', prevMap, header: h };
+  game.state = 'replay';
+  showScreen('replay');
+  rui.open({ track, binding, title: 'Záznam ze souboru', header: h, timed: h.timed !== false, noSave: false, speed: 1 });
+  updateCameras(0, true);
+}
+// short-link hook: ?replay=<same-origin path> plays a stored replay (backend can come later)
+async function replayFromUrl() {
+  const p = params.get('replay');
+  if (!p || !/^\/?[\w\-./]+$/.test(p) || p.includes('..')) return;
+  try {
+    const r = await fetch(p, { credentials: 'same-origin' });
+    if (!r.ok) return;
+    await playReplayFile(new File([await r.arrayBuffer()], 'replay.prreplay'));
+  } catch (_) { /* ignore */ }
+}
+function replayHud() {
+  const pb = rui.playback; if (!pb) return;
+  const b = pb.binding, v = pb.vals;
+  const a = b.hud(v, 0), o = b.hud(v, 1);
+  ui.pDmg.style.transform = `scaleX(${(1 - Math.max(0, Math.min(1, a.hp))).toFixed(3)})`;
+  ui.oDmg.style.transform = `scaleX(${(1 - Math.max(0, Math.min(1, o.hp))).toFixed(3)})`;
+  const st = x => (x.flipped > 0.6 ? `Převrácený ${Math.max(0, Math.ceil(FLIP_LIMIT - x.flipped))} s` : `Zásahy ${x.hits}`);
+  setText(ui.pStat, st(a)); setText(ui.oStat, st(o));
+  const timedRp = rui.playback && replaySrc && (replaySrc.kind === 'file' ? (replaySrc.header || {}).timed !== false : timed());
+  setText(ui.timer, timedRp ? fmt(ROUND - pb.t) : fmt(pb.t));
+  setText(ui.mapStatus, '');
+  ui.msg.hidden = true;
 }
 const orbitC = new THREE.Vector3();
 
@@ -642,10 +773,17 @@ function updateCameras(dt, snap) {
   const inMatch = player && player.body && ['countdown', 'fight', 'ko', 'end'].includes(game.state);
   const garage = !ui.garage.hidden;
   if (game.state === 'replay') {
-    // follow the robot that got knocked out (weighted toward it, the winner stays in frame)
-    const r = game.result, lo = r && r.win === false ? player : opp, wi = lo === player ? opp : player;
-    const a = lo.root.position, b = wi.root.position;
-    orbitC.lerp(_pp.set(a.x * 0.75 + b.x * 0.25, Math.max(-1.5, a.y * 0.75 + b.y * 0.25), a.z * 0.75 + b.z * 0.25), snap ? 1 : 1 - Math.exp(-dt * 3));
+    const c = rui.camera(dt) || { mode: 'tv', focus: 0 };
+    const f = c.focus ? opp : player, o = c.focus ? player : opp;
+    if (c.mode === 'orbit') {
+      rig.orbit.auto = false;
+      Object.assign(rig.orbit, c.orbit);
+      const tgt = c.follow || !c.center ? f.root.position : c.center;
+      orbitC.lerp(_pp.set(tgt.x, Math.max(-1.5, tgt.y), tgt.z), snap ? 1 : 1 - Math.exp(-dt * 4));
+    }
+    if (rig.mode !== c.mode) rig.set(c.mode, snap);
+    rig.update(dt, { focus: f, other: o, bounds: map.bounds, band, portrait: portrait(), follow: true, snap, orbitCenter: orbitC });
+    return;
   } else if (garage && player) orbitC.copy(player.root.position);
   rig.update(dt, {
     focus: player, other: opp, bounds: map.bounds, band, portrait: portrait(),
@@ -680,6 +818,7 @@ const EVENT_LABEL = { wheel: 'Kolo upadlo!', front: 'Zbraň ohnutá!', back: 'Ba
 function drainEvents() {
   for (const r of [player, opp]) {
     if (!r || !r.events || !r.events.length) continue;
+    for (const e of r.events) if (e === 'wheel') recEvent({ type: 'wheel', who: r === player ? 0 : 1, p: rp(r.root.position) });
     for (const e of r.events) if (EVENT_LABEL[e]) { popLabel(r.root.position, EVENT_LABEL[e], true); if (e === 'wheel') sfx.crowd(0.7); }
     r.events.length = 0;
   }
@@ -736,8 +875,8 @@ function frame(now) {
   }
   const st = game.state;
   if (st === 'replay') {
-    if (replay.tick(dt)) endReplay();
-    hud();
+    rui.tick(wall);
+    if (game.state === 'replay') replayHud();
   } else if (ready && player && player.body && (st === 'countdown' || st === 'fight' || st === 'ko' || st === 'end')) {
     if (st === 'countdown') { game.count -= dt; if (game.count <= 0) { game.state = 'fight'; game.time = 0; } }
     if (game.hitstop > 0) { game.hitstop -= wall; }
@@ -805,7 +944,7 @@ function showScreen(s) {
 }
 function toMenu() {
   clearTimeout(endTimer);
-  replay.stop();
+  quitReplay();
   game.state = 'menu';
   if (world) removeBodies();
   quickOpp = null;
@@ -818,6 +957,7 @@ function toMenu() {
 function pause(on) {
   if (on && (game.state === 'fight' || game.state === 'countdown')) {
     game.pausedFrom = game.state; game.state = 'paused';
+    ui.lastBtn.hidden = !(rec && rec.length > 60);
     sfx.stopMotors(); showScreen('pause'); $('#resume').focus();
   } else if (!on && game.state === 'paused') {
     game.state = game.pausedFrom; showScreen('play'); last = performance.now();
@@ -1000,7 +1140,7 @@ addEventListener('keydown', e => {
   sfx.unlock();
   const inField = e.target && e.target.closest && e.target.closest('input,select,textarea');
   if (inField) return;
-  if (game.state === 'replay' && !e.repeat && (e.code === 'Space' || e.code === 'Enter' || e.code === 'Escape')) { e.preventDefault(); endReplay(); return; }
+  if (game.state === 'replay') { if (rui.key(e)) e.preventDefault(); return; }
   if (e.code === 'Escape') {
     if (game.state === 'paused') pause(false);
     else if (game.state === 'fight' || game.state === 'countdown') pause(true);
@@ -1030,8 +1170,11 @@ try {
   ui.again.onclick = startRound;
   ui.next.onclick = startRound;
   ui.menuBtn.onclick = toMenu;
-  ui.replayBtn.onclick = () => playReplay(false);
-  ui.skip.onclick = endReplay;
+  ui.replayBtn.onclick = () => openReplay('instant', 'end');
+  ui.fullBtn.onclick = () => openReplay('full', 'end');
+  ui.lastBtn.onclick = () => openReplay('last', 'pause');
+  $('#load-replay').onclick = () => $('#replay-file').click();
+  $('#replay-file').onchange = e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) playReplayFile(f); };
   ui.share.onclick = shareResult;
   ui.garageBtn.onclick = openGarage;
   $('#garage-done').onclick = closeGarage;
@@ -1053,6 +1196,7 @@ try {
   rig.set('tv', true);
   showScreen('menu');
   requestAnimationFrame(frame);
+  replayFromUrl();
 } catch (e) {
   fail('Arénu se nepodařilo spustit. Zkuste stránku obnovit.');
   throw e;
@@ -1072,7 +1216,7 @@ const hook = {
     player.sync(sec); opp.sync(sec); hud();
     return this.state();
   },
-  LEVELS, game, input, models: {}, renderer, scene, camera, rig, replay, S, ladder: () => ladder,
+  LEVELS, game, input, models: {}, renderer, scene, camera, rig, rui, get rec() { return rec; }, openReplay, playReplayFile, probe: null, async exportReplay() { return Array.from(await serializeReplay(rec.track(), replayHeader())); }, S, ladder: () => ladder,
   get player() { return player; }, get ai() { return opp; }, get ready() { return ready; }, get map() { return map; },
   setMode(m) { S.mode = m; applyChoice(); },
   selfPlay(level) { selfBrain = level ? createBrain(level, map) : null; if (selfBrain && player) player.handicap = LEVELS[level].handicap; },

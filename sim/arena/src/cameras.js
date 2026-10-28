@@ -131,7 +131,7 @@ export class CameraRig {
       fov = 74; near = 0.04; far = 60;
     } else if (mode === 'orbit') {
       const o = this.orbit;
-      if (!this.reduce) o.angle += dt * 0.32;
+      if (!this.reduce && o.auto !== false) o.angle += dt * 0.32;
       const c = ctx.orbitCenter || o.center;
       _p.set(c.x + Math.sin(o.angle) * o.radius, Math.max(0, c.y) + o.height, c.z + Math.cos(o.angle) * o.radius);
       _l.set(c.x, c.y + 0.1, c.z);
