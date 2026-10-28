@@ -287,7 +287,7 @@ function disposeRobot(r) {
   });
   r.printMat && r.printMat.dispose();
 }
-let quickOpp = null;
+let quickOpp = null, selfBrain = null;   // selfBrain: debug-only AI pilot for the player
 function oppSetup() {
   if (S.mode === 'duo') return { id: S.p2robot, hex: S.p2robot === S.robot && S.color === 'blue' ? colorHex('orange') : S.color === 'blue' ? colorHex('orange') : colorHex('blue'), level: null, name: ROBOTS[S.p2robot].name };
   if (S.mode === 'ladder') {
@@ -486,7 +486,7 @@ function physicsStep(c1, c2) {
   game.time += DT;
   const live = game.state === 'fight';
   const idle = { throttle: 0, turn: 0, fire: false };
-  const pin = live ? c1 : idle;
+  const pin = live ? (selfBrain ? selfBrain.think(player, opp, DT, game.time) : c1) : idle;
   const oin = live ? (brain ? brain.think(opp, player, DT, game.time) : c2) : idle;
   player.step(DT, pin, opp, fx);
   opp.step(DT, oin, player, fx);
@@ -1049,7 +1049,9 @@ const hook = {
   },
   game, input, models: {}, renderer, scene, camera, rig, replay, S, ladder: () => ladder,
   get player() { return player; }, get ai() { return opp; }, get ready() { return ready; }, get map() { return map; },
-  setMode(m) { S.mode = m; applyChoice(); }, setMap(id) { setMap(id); renderMenu(); }, cycleCam, setLevel(l) { S.level = l; renderMenu(); },
+  setMode(m) { S.mode = m; applyChoice(); },
+  selfPlay(level) { selfBrain = level ? createBrain(level, map) : null; if (selfBrain && player) player.handicap = LEVELS[level].handicap; },
+  setup(o) { if (o.robot) S.robot = o.robot; if (o.opp) quickOpp = o.opp; if (o.level) S.level = o.level; if (o.map && o.map !== S.map) setMap(o.map); S.mode = o.mode || 'quick'; applyChoice(); }, setMap(id) { setMap(id); renderMenu(); }, cycleCam, setLevel(l) { S.level = l; renderMenu(); },
   skipReplay: () => game.state === 'replay' && endReplay(), garage: openGarage, closeGarage, pause, toMenu, frame(n = 1) { for (let i = 0; i < n; i++) { updateCameras(1 / 60); stepPops(1 / 60); } render(); },
   state() {
     const s = r => { const t = r.body ? r.body.translation() : r.root.position; const u = r.up; return { x: +t.x.toFixed(2), y: +t.y.toFixed(2), z: +t.z.toFixed(2), up: u ? +u.y.toFixed(2) : 1, spin: +(r.spin || 0).toFixed(2), hits: r.hits, flipped: +(r.flippedTime || 0).toFixed(1), dmg: Math.round(dmgOf(r)) }; };
