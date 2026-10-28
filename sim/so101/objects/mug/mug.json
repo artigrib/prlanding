@@ -1,0 +1,66 @@
+{
+ "id": "mug",
+ "name_cs": "Hrnek",
+ "name_en": "Mug",
+ "category": "kitchen",
+ "mass_kg": 0.08,
+ "size_m": [
+  0.0911,
+  0.069,
+  0.0521
+ ],
+ "friction": 0.8,
+ "license": "CC-BY-4.0",
+ "license_url": "https://creativecommons.org/licenses/by/4.0/",
+ "attribution": "\"Cole Hardware Mug Classic Blue\" by Google Research, Google Scanned Objects, CC BY 4.0; scaled to 55 %, visual mesh decimated, convex collision pieces merged and simplified by printedrobotics.cz",
+ "source_url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Cole_Hardware_Mug_Classic_Blue",
+ "files": {
+  "glb": "mug/mug.glb",
+  "mjcf": "mug/mug.xml"
+ },
+ "body": "obj_mug",
+ "graspable": true,
+ "source": {
+  "dataset": "https://github.com/kevinzakka/mujoco_scanned_objects",
+  "path": "Cole_Hardware_Mug_Classic_Blue"
+ },
+ "conversion": {
+  "scale": 0.55,
+  "mass_source": "usd:mass (scaled by volume)",
+  "friction_source": "usd",
+  "hull_source": "usd",
+  "hulls": 12,
+  "hull_vertices": [
+   48,
+   48,
+   48,
+   48,
+   48,
+   48,
+   48,
+   48,
+   48,
+   48,
+   48,
+   48
+  ],
+  "hull_volume_cm3": 90.48,
+  "com_m": [
+   -0.00618,
+   0.00089,
+   0.02308
+  ],
+  "usd_meters_per_unit": 0.01,
+  "usd_up_axis": "Y",
+  "glb": {
+   "bytes": 263184,
+   "triangles": 6000,
+   "texture": 384,
+   "attempts": 4
+  },
+  "usd_layers": [
+   "simready_usd/Cole_Hardware_Mug_Classic_Blue.usda"
+  ]
+ },
+ "brand_review": "2026-10-28: plain glazed mug without print or logo; the retailer name appears only in the source id, so the published id/names are generic."
+}

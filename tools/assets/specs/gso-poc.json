@@ -1,0 +1,48 @@
+{
+  "_comment": "Local proof-of-concept objects: Google Scanned Objects models as packaged by kevinzakka/mujoco_scanned_objects. Run with: python -I tools/assets/import_assets.py --spec tools/assets/specs/gso-poc.json --root <checkout>/models",
+  "kind": "gso",
+  "dataset": {
+    "name": "Google Scanned Objects (via kevinzakka/mujoco_scanned_objects)",
+    "url": "https://github.com/kevinzakka/mujoco_scanned_objects",
+    "license": "CC-BY-4.0"
+  },
+  "assets": [
+    {
+      "id": "mug",
+      "path": "Cole_Hardware_Mug_Classic_Blue",
+      "name_cs": "Hrnek",
+      "name_en": "Mug",
+      "category": "kitchen",
+      "scale": 0.55,
+      "mass": 0.08,
+      "friction": 0.8,
+      "attribution": "\"Cole Hardware Mug Classic Blue\" by Google Research, Google Scanned Objects, CC BY 4.0; scaled to 55 %, visual mesh decimated, convex collision pieces merged and simplified by printedrobotics.cz",
+      "source_url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Cole_Hardware_Mug_Classic_Blue",
+      "brand_review": "2026-10-28: plain glazed mug without print or logo; the retailer name appears only in the source id, so the published id/names are generic."
+    },
+    {
+      "id": "dino",
+      "path": "Dino_3",
+      "name_cs": "Dinosaurus",
+      "name_en": "Toy dinosaur",
+      "category": "toy",
+      "scale": 0.3,
+      "mass": 0.015,
+      "friction": 1.0,
+      "attribution": "\"Dino 3\" by Google Research, Google Scanned Objects, CC BY 4.0; scaled to 30 %, visual mesh decimated, convex collision pieces merged and simplified by printedrobotics.cz",
+      "source_url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Dino_3"
+    },
+    {
+      "id": "elephant",
+      "path": "Elephant",
+      "name_cs": "Slon",
+      "name_en": "Toy elephant",
+      "category": "toy",
+      "scale": 0.35,
+      "mass": 0.05,
+      "friction": 0.9,
+      "attribution": "\"Elephant\" by Google Research, Google Scanned Objects, CC BY 4.0; scaled to 35 %, visual mesh decimated, convex collision pieces merged and simplified by printedrobotics.cz",
+      "source_url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Elephant"
+    }
+  ]
+}

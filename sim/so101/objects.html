@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SO-101 a předměty – fyzikální knihovna objektů | printedrobotics.cz</title>
+<meta name="description" content="Naskenované předměty s fyzikou (hmotnost, tření, konvexní kolize) na stole s robotickou rukou SO-101. MuJoCo v prohlížeči.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://printedrobotics.cz/sim/so101/objects.html">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E8461E'/%3E%3C/svg%3E">
+<link rel="preload" href="vendor/mujoco/mujoco.wasm" as="fetch" type="application/wasm" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="sim.css">
+<style>
+  .objs { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .obj { border: 1px solid rgba(0,0,0,.12); border-radius: 10px; padding: 10px 12px; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; }
+  .obj h3 { margin: 0; font-size: 15px; font-weight: 600; }
+  .obj p { margin: 0; font-size: 12px; opacity: .75; grid-column: 1; }
+  .obj .btn { grid-row: 1 / span 2; grid-column: 2; white-space: nowrap; }
+  .obj[aria-busy=true] { outline: 2px solid #E8461E; }
+  .lic { font-size: 12px; opacity: .8; }
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.min.js"}}</script>
+</head>
+<body>
+<header class="bar">
+  <div class="brand"><i aria-hidden="true"></i><a href="../../">printedrobotics</a></div>
+  <span class="bar-t mono">SO-101 · předměty</span>
+  <a class="pill" href="./"><span aria-hidden="true">←</span> Zpět na simulaci</a>
+</header>
+
+<p class="sr-only" id="sr" role="status" aria-live="polite"></p>
+<main class="sim">
+  <section class="stage" aria-label="3D simulace: robotická ruka a předměty na stole">
+    <canvas id="c" aria-label="Robotická ruka SO-101 na stole s naskenovanými předměty."></canvas>
+    <div class="hud" id="hud" hidden>
+      <span class="hud-dot" id="hud-dot" aria-hidden="true"></span>
+      <span id="hud-text" role="status" aria-live="polite">Předměty dopadly na stůl</span>
+    </div>
+    <div class="loader" id="loader">
+      <div class="loader-in">
+        <p class="mono" role="status">Načítáme simulaci…</p>
+        <div class="prog" aria-hidden="true"><b id="prog"></b></div>
+        <p class="mono muted">Fyzika MuJoCo · modely předmětů se načítají postupně</p>
+      </div>
+    </div>
+    <div class="fail" id="fail" hidden>
+      <div class="fail-in">
+        <p class="mono">Simulace se nespustila</p>
+        <h2>Tenhle prohlížeč simulaci nezvládne.</h2>
+        <p id="fail-msg">Simulace potřebuje WebAssembly a WebGL.</p>
+        <a class="btn btn-act" href="./">Zpět na simulaci <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <aside class="panel" aria-label="Předměty">
+    <div class="mission">
+      <p class="mono">Knihovna předmětů</p>
+      <h1>Předměty s fyzikou</h1>
+      <p class="ink2">Každý předmět má skutečnou hmotnost, tření a kolizní tvar z konvexních dílů. Zvolte předmět a ruka ho zkusí uchopit shora.</p>
+    </div>
+    <ul class="objs" id="objs" aria-label="Seznam předmětů"></ul>
+    <div class="row-b">
+      <button type="button" class="btn btn-o" id="drop" disabled>Shodit znovu <span aria-hidden="true">↓</span></button>
+      <button type="button" class="btn btn-o" id="home" disabled>Domů <span aria-hidden="true">⌂</span></button>
+    </div>
+    <p class="foot mono-s">Fyzika <a href="https://mujoco.org/">MuJoCo</a> · SO-101 z MuJoCo Menagerie, Apache-2.0 (<a href="NOTICE.txt">licence</a>) · předměty: <a href="objects/LICENSES.md">licence a autoři</a>.</p>
+  </aside>
+</main>
+<noscript><p class="nojs">Simulace potřebuje JavaScript.</p></noscript>
+<script type="module" src="src/objects/demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+{
+ "id": "elephant",
+ "name_cs": "Slon",
+ "name_en": "Toy elephant",
+ "category": "toy",
+ "mass_kg": 0.05,
+ "size_m": [
+  0.067,
+  0.0735,
+  0.0947
+ ],
+ "friction": 0.9,
+ "license": "CC-BY-4.0",
+ "license_url": "https://creativecommons.org/licenses/by/4.0/",
+ "attribution": "\"Elephant\" by Google Research, Google Scanned Objects, CC BY 4.0; scaled to 35 %, visual mesh decimated, convex collision pieces merged and simplified by printedrobotics.cz",
+ "source_url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Elephant",
+ "files": {
+  "glb": "elephant/elephant.glb",
+  "mjcf": "elephant/elephant.xml"
+ },
+ "body": "obj_elephant",
+ "graspable": true,
+ "source": {
+  "dataset": "https://github.com/kevinzakka/mujoco_scanned_objects",
+  "path": "Elephant"
+ },
+ "conversion": {
+  "scale": 0.35,
+  "mass_source": "usd:mass (scaled by volume)",
+  "friction_source": "usd",
+  "hull_source": "usd",
+  "hulls": 12,
+  "hull_vertices": [
+   36,
+   48,
+   48,
+   48,
+   37,
+   48,
+   15,
+   48,
+   48,
+   48,
+   28,
+   48
+  ],
+  "hull_volume_cm3": 153.71,
+  "com_m": [
+   -0.00081,
+   0.00168,
+   0.03397
+  ],
+  "usd_meters_per_unit": 0.01,
+  "usd_up_axis": "Y",
+  "glb": {
+   "bytes": 275576,
+   "triangles": 5996,
+   "texture": 384,
+   "attempts": 4
+  },
+  "usd_layers": [
+   "simready_usd/Elephant.usda"
+  ]
+ }
+}

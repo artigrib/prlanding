@@ -1,0 +1,90 @@
+{
+ "version": 1,
+ "units": {
+  "mass": "kg",
+  "size": "m (x y z, Z-up, body origin = bottom centre)"
+ },
+ "objects": [
+  {
+   "id": "dino",
+   "name_cs": "Dinosaurus",
+   "name_en": "Toy dinosaur",
+   "category": "toy",
+   "mass_kg": 0.015,
+   "size_m": [
+    0.0866,
+    0.0206,
+    0.0382
+   ],
+   "friction": 1.0,
+   "graspable": true,
+   "body": "obj_dino",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Dino 3\" by Google Research, Google Scanned Objects, CC BY 4.0; scaled to 30 %, visual mesh decimated, convex collision pieces merged and simplified by printedrobotics.cz",
+   "source_url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Dino_3",
+   "files": {
+    "glb": "dino/dino.glb",
+    "mjcf": "dino/dino.xml"
+   },
+   "bytes": {
+    "glb": 274816,
+    "mjcf": 12352
+   }
+  },
+  {
+   "id": "elephant",
+   "name_cs": "Slon",
+   "name_en": "Toy elephant",
+   "category": "toy",
+   "mass_kg": 0.05,
+   "size_m": [
+    0.067,
+    0.0735,
+    0.0947
+   ],
+   "friction": 0.9,
+   "graspable": true,
+   "body": "obj_elephant",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Elephant\" by Google Research, Google Scanned Objects, CC BY 4.0; scaled to 35 %, visual mesh decimated, convex collision pieces merged and simplified by printedrobotics.cz",
+   "source_url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Elephant",
+   "files": {
+    "glb": "elephant/elephant.glb",
+    "mjcf": "elephant/elephant.xml"
+   },
+   "bytes": {
+    "glb": 275576,
+    "mjcf": 14893
+   }
+  },
+  {
+   "id": "mug",
+   "name_cs": "Hrnek",
+   "name_en": "Mug",
+   "category": "kitchen",
+   "mass_kg": 0.08,
+   "size_m": [
+    0.0911,
+    0.069,
+    0.0521
+   ],
+   "friction": 0.8,
+   "graspable": true,
+   "body": "obj_mug",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Cole Hardware Mug Classic Blue\" by Google Research, Google Scanned Objects, CC BY 4.0; scaled to 55 %, visual mesh decimated, convex collision pieces merged and simplified by printedrobotics.cz",
+   "source_url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Cole_Hardware_Mug_Classic_Blue",
+   "files": {
+    "glb": "mug/mug.glb",
+    "mjcf": "mug/mug.xml"
+   },
+   "bytes": {
+    "glb": 263184,
+    "mjcf": 16609
+   }
+  }
+ ]
+}

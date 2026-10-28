@@ -1,0 +1,13 @@
+{
+  "_comment": "Token -> Czech display name for auto-imported assets (manifest flags them name_cs_auto=true; fix by hand in the PR).",
+  "apple": "Jablko", "banana": "Banán", "orange": "Pomeranč", "lemon": "Citron", "pear": "Hruška", "peach": "Broskev",
+  "tomato": "Rajče", "potato": "Brambora", "carrot": "Mrkev", "onion": "Cibule", "pepper": "Paprika", "avocado": "Avokádo",
+  "mug": "Hrnek", "cup": "Hrnek", "bowl": "Miska", "plate": "Talíř", "bottle": "Láhev", "can": "Plechovka", "jar": "Sklenice",
+  "glass": "Sklenička", "spoon": "Lžíce", "fork": "Vidlička", "knife": "Nůž", "pan": "Pánev", "pot": "Hrnec", "kettle": "Konvice",
+  "box": "Krabička", "carton": "Krabice", "crate": "Přepravka", "basket": "Košík", "bin": "Koš", "tray": "Tácek", "tote": "Přepravka",
+  "cube": "Kostka", "block": "Kostka", "ball": "Míček", "toy": "Hračka", "dino": "Dinosaurus", "elephant": "Slon", "duck": "Kachnička",
+  "bear": "Medvídek", "car": "Autíčko", "hammer": "Kladivo", "screwdriver": "Šroubovák", "wrench": "Klíč", "pliers": "Kleště",
+  "drill": "Vrtačka", "tape": "Páska", "marker": "Fix", "pen": "Pero", "pencil": "Tužka", "scissors": "Nůžky", "book": "Kniha",
+  "shoe": "Bota", "sponge": "Houbička", "brush": "Kartáč", "clamp": "Svorka", "bolt": "Šroub", "nut": "Matice", "gear": "Ozubené kolo",
+  "pallet": "Paleta", "cone": "Kužel", "bucket": "Kbelík", "lid": "Víčko", "tube": "Tuba", "spray": "Sprej", "soap": "Mýdlo"
+}

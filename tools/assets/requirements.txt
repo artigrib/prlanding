@@ -1,0 +1,9 @@
+# tools/assets (python 3.12/3.13). Pinned: these produce the committed objects bit-for-bit (modulo float noise).
+usd-core==26.11
+mujoco==3.17.0
+coacd==1.0.14
+trimesh==5.2.0
+numpy==2.5.4
+scipy==1.18.1
+pillow==13.0.0
+huggingface_hub==0.36.0

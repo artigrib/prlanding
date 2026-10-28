@@ -1,0 +1,13 @@
+{
+  "name": "prlanding-asset-tools",
+  "private": true,
+  "type": "module",
+  "description": "GLB optimisation for tools/assets (OpenUSD -> sim/so101/objects).",
+  "dependencies": {
+    "@gltf-transform/core": "4.5.1",
+    "@gltf-transform/extensions": "4.5.1",
+    "@gltf-transform/functions": "4.5.1",
+    "meshoptimizer": "1.3.0",
+    "sharp": "0.35.5"
+  }
+}
