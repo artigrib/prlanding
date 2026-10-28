@@ -15,7 +15,7 @@ on:
       action:
         description: What to do
         type: choice
-        options: [status, rollback, diag, porttest, fixports]
+        options: [status, rollback, diag, porttest, fixports, tls]
         default: status
 permissions:
   contents: read
@@ -62,11 +62,31 @@ jobs:
         env:
           U: ${{ secrets.VPS_USER }}
           ACT_INPUT: ${{ inputs.action }}
+          HOST: ${{ secrets.VPS_HOST }}
         run: |
           ACT="$ACT_INPUT"
           [ -n "$ACT" ] || ACT=$(awk 'NR==1{print $1}' backend/deploy/ops-request 2>/dev/null)
-          case "$ACT" in status|rollback|diag|porttest|fixports) ;; *) echo "::error::bad action"; exit 1;; esac
+          case "$ACT" in status|rollback|diag|porttest|fixports|tls) ;; *) echo "::error::bad action"; exit 1;; esac
           set +e
+          if [ "$ACT" = tls ]; then
+            # Outside view from the runner; prints fixed strings only (no IPs).
+            vps=$(getent ahostsv4 "$HOST" | awk 'NR==1{print $1}')
+            for n in api mcp relay; do
+              f=$n.printedrobotics.cz
+              a=$(dig +short A "$f" @1.1.1.1 2>/dev/null | grep -E '^[0-9.]+$' | sort -u)
+              if [ -n "$a" ] && [ "$a" = "$vps" ]; then r=yes; elif [ -z "$a" ]; then r="no (no record)"; else r="no (other address)"; fi
+              tp=""
+              for port in 80 443; do
+                if timeout 6 bash -c "exec 3<>/dev/tcp/$vps/$port" 2>/dev/null; then st=open
+                else rc=$?; [ "$rc" = 124 ] && st=timeout || st=refused/unreachable; fi
+                tp="$tp $port=$st"
+              done
+              case $n in api) path=/health;; *) path=/healthz;; esac
+              h=$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "http://$f$path" 2>/dev/null)
+              s=$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "https://$f$path" 2>/dev/null)
+              echo "::notice::tls $n: resolves to VPS: $r; tcp:$tp; http status ${h:-000}; https status ${s:-000}"
+            done
+          fi
           # Use the script from this commit (it does not need the deploy files for these actions).
           out=$(ssh -o StrictHostKeyChecking=$STRICT -l "$U" vps "ACTION=$ACT bash -s" < backend/deploy/remote-deploy.sh 2>/dev/null)
           rc=$?

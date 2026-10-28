@@ -343,7 +343,53 @@ fixports() ( set +eu +o pipefail
   say "after cleanup: stale endpoints total $(stale_endpoints | grep -c .), docker-proxy for :80 $(pgrep -a docker-proxy | grep -c -- '-host-port 80 ')"
 )
 
+tls_state() ( set +eu +o pipefail
+  # Per-host ACME state as fixed strings: cert present + last error category from Caddy's log.
+  local h cert logs cat fw
+  logs=$(dc logs --no-color --tail 2000 caddy 2>&1)
+  for h in api mcp relay; do
+    cert=no
+    dc exec -T caddy sh -c "ls /data/caddy/certificates/*/$h.printedrobotics.cz/$h.printedrobotics.cz.crt" >/dev/null 2>&1 && cert=yes
+    [ -f "$ROOT/sites-enabled/$h.caddy" ] && en=yes || en=no
+    cat=none
+    l=$(printf '%s\n' "$logs" | grep -F "$h.printedrobotics.cz" | grep -iE 'error|fail|rateLimited|unauthorized' | tail -1)
+    if [ -n "$l" ]; then
+      case "$l" in
+        *rateLimited*|*"rate limit"*|*429*) cat="rate-limited";;
+        *"Timeout during connect"*|*"i/o timeout"*|*"timed out"*) cat="http-01 challenge: connection timeout";;
+        *"Connection refused"*|*"connection refused"*) cat="http-01 challenge: connection refused";;
+        *unauthorized*|*"Invalid response"*|*"404"*) cat="http-01 challenge: unauthorized/invalid response";;
+        *"no such host"*|*NXDOMAIN*|*"DNS problem"*) cat="DNS problem";;
+        *) cat="other error";;
+      esac
+    fi
+    say "tls $h: site enabled: $en; cert present: $cert; last acme error: $cat"
+  done
+  say "tls: acme dns-01 not used; http-01 only"
+  say "tls: caddy host-network listeners :80 $(ss -ltnH 'sport = :80' | wc -l), :443 $(ss -ltnH 'sport = :443' | wc -l)"
+  if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q '^Status: active'; then
+    u=$(ufw status 2>/dev/null)
+    a80=no; a443=no
+    printf '%s\n' "$u" | grep -E '^(80|80/tcp|Nginx|Apache|WWW)\b' | grep -q ALLOW && a80=yes
+    printf '%s\n' "$u" | grep -E '^(443|443/tcp|WWW Secure|Nginx HTTPS)\b' | grep -q ALLOW && a443=yes
+    fw="ufw active, 80 allowed $a80, 443 allowed $a443"
+  elif command -v nft >/dev/null 2>&1 && nft list ruleset 2>/dev/null | grep -qE 'hook input.*policy drop'; then
+    fw="nft input policy drop present (ports not evaluated)"
+  elif command -v iptables >/dev/null 2>&1 && iptables -S INPUT 2>/dev/null | grep -q '^-P INPUT DROP'; then
+    fw="iptables INPUT policy drop"
+  else
+    fw="inactive (no ufw, no drop-policy nft/iptables input)"
+  fi
+  say "tls firewall: $fw"
+)
+
 case "$ACTION" in
+  tls)
+    [ -f "$ROOT/release.env" ] || die "no release deployed yet"
+    build_env
+    tls_state
+    exit 0
+    ;;
   fixports)
     fixports
     porttest
