@@ -1,142 +1,154 @@
-// Robot definitions, placeholder meshes, physics (raycast suspension + arcade skid-steer)
-// and weapons. Local frame: +Z forward, +Y up, +X left side of the robot... (right-handed).
+// Robots: the Robot class ties together the data-driven def (robots/catalog.js), the drivetrain
+// (physics/drive.js), weapons (physics/weapons.js), damage (physics/damage.js) and the visuals
+// (robots/visuals.js or a GLB). Local frame: +Z forward, +Y up, +X = the robot's left side.
 import * as THREE from 'three';
+import { BASES, buildDef, MODS, SLOTS, statsFor, MASS_LIMIT_G, RIDE, GRAVITY } from './robots/catalog.js';
+import { buildPlaceholder } from './robots/visuals.js';
+import { Drive, Battery } from './physics/drive.js';
+import { Spinner, Arm } from './physics/weapons.js';
+import { Damage, SIDES } from './physics/damage.js';
 
-export const GRAVITY = 30;               // units/s² (1 unit = 10 cm), arcade-tuned
-const RIDE = 0.27;                        // chassis origin height above the floor at rest
+export { GRAVITY, MODS, SLOTS, statsFor, buildDef, MASS_LIMIT_G, BASES, SIDES, RIDE };
 
-export const ROBOTS = {
-  svrn: {
-    id: 'svrn', name: 'Project SVRN', short: 'SVRN', weapon: 'flipper',
-    blurb: 'Pohon 4×4, klín a flipper',
-    mass: 1.5, vmax: 6.6, yawMax: 4.3, mu: 1.15,
-    chassis: [0.54, 0.15, 0.45],                                   // collider half extents (incl. wheels)
-    mounts: [[0.4, 0.3, 1], [-0.4, 0.3, 1], [0.4, -0.3, 1], [-0.4, -0.3, 1]],   // x, z, drives
-    wheels: [[0.48, 0.28], [-0.48, 0.28], [0.48, -0.28], [-0.48, -0.28]], wheelR: 0.2,
-    glbYaw: 0, glbWheels: /^(SV06|SV07)_\d+$/   // printed hubs + TPU tyres in svrn.glb
-  },
-  vert150: {
-    id: 'vert150', name: 'Vertikální spinner 150 g', short: 'VERT', weapon: 'spinner',
-    preparing: true,   // kit not on sale yet: end screen asks to be notified instead of "build it"
-    blurb: 'Dvoukolový vertikální spinner',
-    mass: 1.5, vmax: 6.1, yawMax: 5.0, mu: 1.0, invertible: true,
-    chassis: [0.56, 0.12, 0.4],
-    mounts: [[0.42, -0.15, 1], [-0.42, -0.15, 1], [0.16, 0.36, 0], [-0.16, 0.36, 0]],
-    wheels: [[0.48, -0.15], [-0.48, -0.15]], wheelR: 0.25,
-    glbYaw: 0, glbWheels: /^wheel_\d+(_tyre|_hub)?$/i
-  }
-};
+// default build of every base design (main.js iterates this for the robot picker)
+export const ROBOTS = {};
+for (const id of Object.keys(BASES)) ROBOTS[id] = buildDef(id);
 
-const _v = new THREE.Vector3(), _w = new THREE.Vector3(), _q = new THREE.Quaternion(), _o = new THREE.Vector3(), _o2 = new THREE.Vector3();
+const REST = 0.32;                 // suspension ray length (u)
 const Y = new THREE.Vector3(0, 1, 0);
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const V = o => new THREE.Vector3(o.x, o.y, o.z);
+const _q = new THREE.Quaternion(), _v = new THREE.Vector3(), _w = new THREE.Vector3();
+let groupSeq = 0;
 
-// ---------------------------------------------------------------- visuals
-function placeholder(def, printMat) {
-  const g = new THREE.Group();
-  const ink = new THREE.MeshStandardMaterial({ color: '#1d1d1d', roughness: 0.85 });
-  const steel = new THREE.MeshStandardMaterial({ color: '#b9bab5', roughness: 0.35, metalness: 0.7 });
-  const dark = new THREE.MeshStandardMaterial({ color: '#2A2A2A', roughness: 0.6 });
-  const add = (geo, mat, x, y, z, parent = g) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m; };
-  const parts = { wheels: [] };
-  const wheelGeo = new THREE.CylinderGeometry(def.wheelR, def.wheelR, 0.12, 20); wheelGeo.rotateZ(Math.PI / 2);
-  const hubGeo = new THREE.CylinderGeometry(def.wheelR * 0.45, def.wheelR * 0.45, 0.13, 6); hubGeo.rotateZ(Math.PI / 2);
-  for (const [x, z] of def.wheels) {
-    const w = new THREE.Group(); w.position.set(x, -RIDE + def.wheelR, z); g.add(w);
-    add(wheelGeo, ink, 0, 0, 0, w); add(hubGeo, printMat, 0, 0, 0, w);
-    parts.wheels.push(w);
-  }
-  if (def.id === 'svrn') {
-    add(new THREE.BoxGeometry(0.82, 0.26, 0.86), printMat, 0, -0.01, -0.02);
-    add(new THREE.BoxGeometry(0.62, 0.04, 0.56), dark, 0, 0.13, -0.08);            // lid
-    add(new THREE.BoxGeometry(0.06, 0.05, 0.06), new THREE.MeshStandardMaterial({ color: '#E8461E' }), 0.22, 0.165, -0.28); // switch
-    // wedge / flipper plate, hinged at the top front edge
-    const pivot = new THREE.Group(); pivot.position.set(0, 0.12, 0.42); g.add(pivot);
-    const tip = new THREE.Vector3(0, -0.255 - 0.12, 0.86 - 0.42);
-    const len = tip.length(), ang = Math.atan2(-tip.y, tip.z);
-    const plate = add(new THREE.BoxGeometry(0.98, 0.035, len), steel, 0, 0, len / 2, pivot);
-    plate.rotation.x = 0; pivot.rotation.x = ang;
-    parts.flipper = pivot; parts.flipRest = ang;
-    // side armour (TPU in the real kit)
-    for (const s of [-1, 1]) add(new THREE.BoxGeometry(0.03, 0.18, 0.5), dark, s * 0.555, -0.02, 0);
-  } else {
-    add(new THREE.BoxGeometry(0.74, 0.2, 0.74), printMat, 0, -0.02, -0.08);
-    add(new THREE.BoxGeometry(0.6, 0.03, 0.58), dark, 0, 0.095, -0.1);
-    // forks
-    for (const s of [-1, 1]) {
-      const f = add(new THREE.BoxGeometry(0.07, 0.2, 0.42), printMat, s * 0.13, -0.03, 0.42);
-      f.rotation.x = -0.12;
-    }
-    const axle = new THREE.Group(); axle.position.set(0, 0, 0.5); g.add(axle);
-    const blade = new THREE.Group(); axle.add(blade);
-    add(new THREE.BoxGeometry(0.075, 0.56, 0.11), steel, 0, 0, 0, blade);
-    for (const s of [-1, 1]) add(new THREE.BoxGeometry(0.08, 0.09, 0.16), steel, 0, s * 0.24, s * 0.03, blade); // teeth
-    add(new THREE.CylinderGeometry(0.06, 0.06, 0.2, 12).rotateZ(Math.PI / 2), dark, 0, 0, 0, axle);
-    const blur = new THREE.Mesh(new THREE.CircleGeometry(0.29, 32), new THREE.MeshBasicMaterial({ color: '#c8c8c2', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
-    blur.rotation.y = Math.PI / 2; axle.add(blur);
-    parts.blade = blade; parts.blur = blur;
-    add(new THREE.BoxGeometry(0.06, 0.05, 0.06), new THREE.MeshStandardMaterial({ color: '#E8461E' }), -0.22, 0.12, -0.32);
-  }
-  return { group: g, parts };
-}
+const WEAPON_LABEL = { flipper: 'Flipper', vertical: 'Zbraň', horizontal: 'Zbraň', grabber: 'Kleště' };
 
-// ---------------------------------------------------------------- robot
 export class Robot {
-  constructor(def, color, scene) {
+  // opts.mods: [ 'slot:option', ... ] or { slot: option } — rebuilds the def with those modifications
+  constructor(def, color, scene, opts = {}) {
+    if (opts.mods || !def.drive) def = buildDef(def.id, opts.mods || def.modList);
     this.def = def;
+    this.RIDE = RIDE; this.REST = REST; this.G = GRAVITY;
+    this.mass = def.mass;
     this.printMat = new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0 });
     this.printMats = [this.printMat];
     this.root = new THREE.Group(); scene.add(this.root);
-    const ph = placeholder(def, this.printMat);
+    this.scene = scene;
+    const ph = buildPlaceholder(def, this.printMat);
     this.visual = ph.group; this.parts = ph.parts; this.root.add(this.visual);
-    this.wheelSpin = 0; this.flipAnim = 0; this.bladeAngle = 0; this.handicap = 1;
+    this.mapWheelSides();
+    this.drive = new Drive(def);
+    this.battery = new Battery();
+    this.damage = new Damage(this, def);
+    this.weapon = def.spinner ? new Spinner(this, def.spinner) : def.arm ? new Arm(this, def.arm) : null;
+    this.spinner = def.spinner ? this.weapon : null;
+    this.arm = def.arm ? this.weapon : null;
+    this.weaponLabel = WEAPON_LABEL[def.weaponKind] || 'Zbraň';
+    const h = def.chassis.half;
+    this.boundR = Math.hypot(h[0], h[1], h[2] + Math.abs(def.chassis.offset[2])) + (def.arm ? 0.5 : 0.1);
+    // scratch (no per-step allocation)
+    this._lin = new THREE.Vector3(); this._ang = new THREE.Vector3(); this._com = new THREE.Vector3();
+    this._nrm = new THREE.Vector3(); this._side = new THREE.Vector3(); this._o = new THREE.Vector3(); this._o2 = new THREE.Vector3();
+    this._prev = new THREE.Vector3(); this._ai = null;
+    this.wheelSpin = [0, 0]; this.flipAnim = 0; this.bladeAngle = 0; this.handicap = 1; this.stepIndex = 0;
+    this.debris = []; this.events = [];
+    this._body = null;
     this.resetState();
   }
   resetState() {
-    this.spin = 0; this.weaponOn = false; this.cooldown = 0; this.hitCooldown = 0;
     this.flippedTime = 0; this.contacts = 0; this.score = 0; this.hits = 0; this.wiggle = 0;
+    this.damageDealt = 0; this.wallHits = 0; this.inverted = false; this.vLong = 0; this.grabbedBy = null;
+    this._hasPrev = false; this.events.length = 0;
+    if (this.weapon) this.weapon.reset();
+    if (this.drive) this.drive.reset();
+    if (this.battery) this.battery.reset();
+    if (this.damage) this.damage.reset();
   }
   setColor(hex) { this.printMats.forEach(m => m.color.set(hex)); }
+
+  // ---- legacy weapon fields main.js / ai.js read
+  get spin() { return this.spinner ? this.spinner.frac : 0; }
+  set spin(v) { /* derived from the blade's ω */ }
+  get weaponOn() { return this.spinner ? this.spinner.on && !this.spinner.stalled : this.arm ? this.arm.holding : false; }
+  set weaponOn(v) { if (this.spinner) this.spinner.on = !!v; }
+  get cooldown() { return this.arm ? this.arm.cooldown : this.spinner && this.spinner.stalled ? 1 : 0; }
+  set cooldown(v) { if (this.arm) this.arm.cooldown = v; }
+  get hitCooldown() { return this.spinner ? this.spinner.hitCd : 0; }
+  set hitCooldown(v) {}
+
+  // main.js removes the chassis body itself and then sets `r.body = null`: clean up our extra bodies then
+  get body() { return this._body; }
+  set body(b) {
+    if (!b && this._body) this.detachPhysics(false);
+    this._body = b;
+  }
 
   attachPhysics(RAPIER, world) {
     this.R = RAPIER; this.world = world;
     const d = this.def;
-    this.body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setCcdEnabled(true)
+    // collision-group bit per robot: rays and weapon queries skip our own colliders
+    const bit = 1 << (groupSeq++ % 15);
+    this.groups = (bit << 16) | 0xffff;
+    this.rayGroups = (0xffff << 16) | (0xffff & ~bit);
+    this._body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setCcdEnabled(true)
       .setLinearDamping(0.05).setAngularDamping(0.4).setCanSleep(false));
-    const [hx, hy, hz] = d.chassis;
-    const cz = d.id === 'vert150' ? -0.05 : 0;
+    const armMass = d.arm ? d.arm.massG / 100 : 0;
+    const bodyMass = this.mass - armMass;
+    const [hx, hy, hz] = d.chassis.half, off = d.chassis.offset;
     this.colliders = [];
-    const chassis = RAPIER.ColliderDesc.cuboid(hx, hy, hz).setTranslation(0, d.id === 'vert150' ? -0.01 : 0, cz)
-      .setMass(d.mass * 0.88).setFriction(0.35).setRestitution(0.08);
-    this.colliders.push(world.createCollider(chassis, this.body));
-    if (d.id === 'svrn') {
-      const pts = [];
-      for (const s of [-1, 1]) pts.push(s * 0.5, 0.11, 0.42, s * 0.5, -0.15, 0.42, s * 0.5, -0.255, 0.86, s * 0.5, -0.215, 0.86);
-      const wedge = RAPIER.ColliderDesc.convexHull(new Float32Array(pts)).setMass(d.mass * 0.12).setFriction(0.04).setRestitution(0.02);
-      this.colliders.push(world.createCollider(wedge, this.body));
-    } else {
-      const fork = RAPIER.ColliderDesc.cuboid(0.2, 0.17, 0.17).setTranslation(0, -0.03, 0.47).setMass(d.mass * 0.12).setFriction(0.2).setRestitution(0.05);
-      this.colliders.push(world.createCollider(fork, this.body));
+    const add = (desc) => { const c = world.createCollider(desc.setCollisionGroups(this.groups), this._body); this.colliders.push(c); return c; };
+    const extras = d.id === 'vert150' ? 0.3 : d.id === 'kosa' ? 0.3 : 0;   // weapon mass sits up front
+    add(RAPIER.ColliderDesc.cuboid(hx, hy, hz).setTranslation(off[0], off[1], off[2])
+      .setMass(bodyMass * (1 - extras)).setFriction(d.chassis.friction).setRestitution(0.08));
+    if (d.id === 'vert150') {
+      // fork wedge in front of the blade: low leading edge so it can win the ground game
+      const f = [];
+      for (const s of [-1, 1]) f.push(s * 0.2, -0.235, 0.68, s * 0.2, -0.2, 0.68, s * 0.2, 0.12, 0.3, s * 0.2, -0.2, 0.3);
+      add(RAPIER.ColliderDesc.convexHull(new Float32Array(f)).setMass(bodyMass * extras).setFriction(0.15).setRestitution(0.05));
+    } else if (d.id === 'kosa') {
+      // weapon motor pod at the axle (the blade itself is swept, not a collider)
+      const a = d.spinner.axle;
+      add(RAPIER.ColliderDesc.cylinder(0.11, 0.12).setTranslation(a[0], a[1] + 0.09, a[2]).setMass(bodyMass * extras).setFriction(0.3).setRestitution(0.05));
     }
     this.ray = new RAPIER.Ray({ x: 0, y: 0, z: 0 }, { x: 0, y: -1, z: 0 });
+    if (this.arm) { this.arm.attach(RAPIER, world, this); this.colliders.push(this.arm.collider); }
+  }
+
+  // remove everything we added to the world. withChassis=false when main.js already removed the chassis.
+  detachPhysics(withChassis = true) {
+    if (this.arm) this.arm.detach();
+    for (const db of this.debris) {
+      if (db.body && this.world) { try { this.world.removeRigidBody(db.body); } catch (_) {} }
+      if (db.node.parent) db.node.parent.remove(db.node);
+      db.node.traverse(o => { if (o.isMesh && o.userData.debrisGeo) o.geometry.dispose(); });
+    }
+    this.debris.length = 0;
+    if (withChassis && this._body && this.world) { try { this.world.removeRigidBody(this._body); } catch (_) {} }
+    if (withChassis) this._body = null;
+    if (this.grabbedBy && this.grabbedBy.arm) this.grabbedBy.arm.releaseJoint();
   }
 
   reset(x, z, yaw) {
     this.resetState();
+    // put knocked-off wheels back
+    for (const db of this.debris) {
+      if (db.body && this.world) { try { this.world.removeRigidBody(db.body); } catch (_) {} }
+      if (db.restore) { db.restore.parent.add(db.node); db.node.position.copy(db.restore.p); db.node.quaternion.copy(db.restore.q); db.node.scale.copy(db.restore.s); }
+      else if (db.node.parent) db.node.parent.remove(db.node);
+    }
+    this.debris.length = 0;
     _q.setFromAxisAngle(Y, yaw);
-    this.body.setTranslation({ x, y: RIDE + 0.02, z }, true);
-    this.body.setRotation({ x: _q.x, y: _q.y, z: _q.z, w: _q.w }, true);
-    this.body.setLinvel({ x: 0, y: 0, z: 0 }, true); this.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    const b = this._body;
+    b.setTranslation({ x, y: RIDE + 0.02, z }, true);
+    b.setRotation({ x: _q.x, y: _q.y, z: _q.z, w: _q.w }, true);
+    b.setLinvel({ x: 0, y: 0, z: 0 }, true); b.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    if (this.arm) this.arm.place();
     this.sync(0);
   }
 
-  // frame vectors from the physics body
-  // (vectors are reused between calls: clone them if you need to keep a value)
+  // frame vectors from the physics body (reused between calls: clone them if you need to keep a value)
   frame() {
     if (!this.q) { this.q = new THREE.Quaternion(); this.qi = new THREE.Quaternion(); this.pos = new THREE.Vector3(); this.up = new THREE.Vector3(); this.fwd = new THREE.Vector3(); }
-    const r = this.body.rotation(); this.q.set(r.x, r.y, r.z, r.w); this.qi.copy(this.q).invert();
-    const t = this.body.translation(); this.pos.set(t.x, t.y, t.z);
+    const r = this._body.rotation(); this.q.set(r.x, r.y, r.z, r.w); this.qi.copy(this.q).invert();
+    const t = this._body.translation(); this.pos.set(t.x, t.y, t.z);
     this.up.set(0, 1, 0).applyQuaternion(this.q);
     this.fwd.set(0, 0, 1).applyQuaternion(this.q);
     return this;
@@ -144,155 +156,201 @@ export class Robot {
   local(p, out = new THREE.Vector3()) { return out.copy(p).sub(this.pos).applyQuaternion(this.qi); }
   toWorld(lx, ly, lz, out = new THREE.Vector3()) { return out.set(lx, ly, lz).applyQuaternion(this.q).add(this.pos); }
 
-  // one fixed physics step: suspension, drive, weapon
+  // one fixed physics step: suspension + drive, weapon, damage, battery
   step(dt, input, opp, fx) {
-    const R = this.R, b = this.body, d = this.def;
+    const b = this._body, d = this.def;
+    if (!b) return;
+    this.stepIndex++;
     this.frame();
-    const m = b.mass();
-    const lin = V(b.linvel()), ang = V(b.angvel()), com = V(b.worldCom());
-    const rest = 0.32, k = m / 4 * GRAVITY / (rest - RIDE), c = 2 * Math.sqrt(k * m / 4) * 0.75;
-    let load = 0, driveC = 0, driveN = 0;
+    const l = b.linvel(), a = b.angvel(), c = b.worldCom();
+    this._lin.set(l.x, l.y, l.z); this._ang.set(a.x, a.y, a.z); this._com.set(c.x, c.y, c.z);
+    this._side.set(1, 0, 0).applyQuaternion(this.q);
+    // impact damage from the velocity change since the last step
+    if (this._hasPrev) this.damage.impact(this._lin.x - this._prev.x, this._lin.y - this._prev.y, this._lin.z - this._prev.z, dt);
+    this.damage.step(dt);
+
     // invertible robots (big wheels) drive on either side
-    const inv = d.invertible && this.up.y < -0.35;
-    const nrm = inv ? this.up.clone().negate() : this.up;
-    const down = nrm.clone().negate();
+    const inv = !!d.invertible && this.up.y < -0.35;
     this.inverted = inv;
-    for (const [mx, mz, drives] of d.mounts) {
-      if (drives) driveN++;
-      const o = this.toWorld(mx, 0, mz, _o2);
-      const ray = this.ray;
-      ray.origin.x = o.x; ray.origin.y = o.y; ray.origin.z = o.z; ray.dir.x = down.x; ray.dir.y = down.y; ray.dir.z = down.z;
-      const hit = this.world.castRay(ray, rest + 0.06, true, undefined, undefined, undefined, b);
-      if (!hit || hit.timeOfImpact > rest) continue;
-      const comp = rest - hit.timeOfImpact;
-      const vp = _v.copy(ang).cross(_w.copy(o).sub(com)).add(lin);
-      const F = Math.max(0, k * comp - c * vp.dot(nrm));
-      b.applyImpulseAtPoint({ x: nrm.x * F * dt, y: nrm.y * F * dt, z: nrm.z * F * dt }, o, true);
-      load += F;
-      if (drives && nrm.y > 0.35) driveC++;
-    }
+    this._nrm.copy(this.up); if (inv) this._nrm.negate();
+    const yawN = this._ang.dot(this._nrm);
+    this.drive.command(input.throttle, input.turn, yawN, inv ? -1 : 1, this.handicap, dt);
+    const driveC = this.drive.apply(dt, this, this.battery);
     this.contacts = driveC;
-    const grounded = driveC / driveN;
 
-    // flipped / stranded detection
+    // flipped / stranded / immobile (lost all drive) → the 10 s count-out in main.js
     const tilt = d.invertible ? Math.abs(this.up.y) : this.up.y;
-    if (tilt < 0.25 && driveC === 0) this.flippedTime += dt; else if (tilt > 0.5 || driveC > 0) this.flippedTime = 0;
+    const immobile = this.drive.drivenAlive() === 0;
+    if ((tilt < 0.25 && driveC === 0) || immobile) this.flippedTime += dt; else if (tilt > 0.5 || driveC > 0) this.flippedTime = 0;
 
-    if (grounded > 0) {
-      const fl = _o.set(this.fwd.x, 0, this.fwd.z);
-      if (fl.lengthSq() > 1e-4) {
-        fl.normalize();
-        const side = new THREE.Vector3(fl.z, 0, -fl.x);
-        const Fmax = d.mu * Math.max(load, m * GRAVITY * 0.5) * grounded;
-        const target = input.throttle * d.vmax * this.handicap * (input.throttle < 0 ? 0.85 : 1);
-        const vL = lin.dot(fl), vS = lin.dot(side);
-        const FL = clamp((target - vL) * 9 * m, -Fmax, Fmax);
-        const FS = clamp(-vS * 14 * m, -Fmax, Fmax);
-        b.applyImpulse({ x: (fl.x * FL + side.x * FS) * dt, y: 0, z: (fl.z * FL + side.z * FS) * dt }, true);
-        // yaw: blend toward the commanded rate (skid steer); spinning vert is gyroscopically slower
-        const gyro = d.weapon === 'spinner' ? 1 - 0.35 * this.spin : 1;
-        const want = -input.turn * d.yawMax * gyro * (1 - 0.25 * Math.abs(input.throttle));
-        const wy = ang.y, blend = Math.min(1, 14 * dt) * grounded;
-        b.setAngvel({ x: ang.x, y: wy + (want - wy) * blend, z: ang.z }, true);
-      }
-    } else if ((d.invertible ? Math.abs(this.up.y) : this.up.y) < 0.4 && Math.abs(lin.y) < 0.8 && this.restingOnSomething() && (Math.abs(input.throttle) + Math.abs(input.turn)) > 0.3) {
-      // stranded: driving the wheels rocks the robot a bit — sometimes enough to roll back
+    if (driveC === 0 && !immobile && tilt < 0.4 && Math.abs(this._lin.y) < 0.8 && this.restingOnSomething() && (Math.abs(input.throttle) + Math.abs(input.turn)) > 0.3) {
+      // stranded: thrashing wheels rock the robot a bit, sometimes enough to roll back
       this.wiggle += dt;
       if (this.wiggle > 0.55) {
         this.wiggle = 0;
-        b.applyImpulse({ x: 0, y: m * 2.2, z: 0 }, true);
-        const ax = this.fwd.clone().multiplyScalar(Math.sign(input.turn || 1) * (3 + Math.random() * 3));
-        b.setAngvel({ x: ang.x + ax.x, y: ang.y + ax.y, z: ang.z + ax.z }, true);
+        b.applyImpulse({ x: 0, y: this.mass * 2.2, z: 0 }, true);
+        const k = Math.sign(input.turn || 1) * (3 + Math.random() * 3);
+        b.setAngvel({ x: a.x + this.fwd.x * k, y: a.y + this.fwd.y * k, z: a.z + this.fwd.z * k }, true);
       }
     }
-    this.vLong = lin.dot(this.fwd);
+    this.vLong = this._lin.dot(this.fwd);
 
-    // weapons
-    this.cooldown = Math.max(0, this.cooldown - dt);
-    this.hitCooldown = Math.max(0, this.hitCooldown - dt);
-    if (d.weapon === 'flipper') this.stepFlipper(input, opp, fx, m);
-    else this.stepSpinner(dt, input, opp, fx, m);
+    if (this.weapon) this.weapon.step(dt, !!input.fire, opp, fx, this.battery);
+    this.battery.update(dt, this.drive.current + (this.weapon ? this.weapon.current : 0));
+    this._prev.copy(this._lin); this._hasPrev = true;
   }
 
   // is anything right below the robot? (stops mid-air "wiggle" control)
   restingOnSomething() {
     const ray = this.ray, t = this.pos;
     ray.origin.x = t.x; ray.origin.y = t.y; ray.origin.z = t.z; ray.dir.x = 0; ray.dir.y = -1; ray.dir.z = 0;
-    return !!this.world.castRay(ray, 0.6, true, undefined, undefined, undefined, this.body);
+    return !!this.world.castRay(ray, 0.6, true, undefined, this.rayGroups, undefined, this._body);
   }
 
-  stepFlipper(input, opp, fx, m) {
-    if (!input.fire || this.cooldown > 0) return;
-    this.cooldown = this.handicap < 1 ? 1.6 : 0.9; this.flipAnim = 1; fx.flip(this);
-    const b = this.body;
-    if (this.up.y < 0.35) {
-      // self-righting: kick off the floor and roll back onto the wheels
-      b.applyImpulse({ x: 0, y: m * 7.5, z: 0 }, true);
-      let axis = new THREE.Vector3().crossVectors(this.up, Y);
-      if (axis.lengthSq() < 0.05) axis.copy(this.fwd);
-      axis.normalize().multiplyScalar(7.5);
-      b.setAngvel({ x: axis.x, y: axis.y, z: axis.z }, true);
-      return;
-    }
-    opp.frame();
-    const l = this.local(opp.pos);
-    if (l.z > 0.3 && l.z < 1.4 && Math.abs(l.x) < 0.85 && l.y < 0.9 && l.y > -0.5) {
-      const om = opp.body.mass();
-      const j = this.up.clone().multiplyScalar(7.4).add(this.fwd.clone().multiplyScalar(1.6)).multiplyScalar(om);
-      // lift the near edge so the opponent rotates over
-      const p = opp.pos.clone().add(this.pos.clone().sub(opp.pos).setY(0).setLength(0.32));
-      opp.body.applyImpulseAtPoint({ x: j.x, y: j.y, z: j.z }, p, true);
-      this.body.applyImpulse({ x: 0, y: -m * 2, z: 0 }, true);
-      this.hits++; this.score += 3; fx.hit(this, p, 0.6);
-    }
+  // knock a driven wheel loose on side 0 (left, +X) or 1 (right). Returns true if one came off.
+  loseWheel(side) {
+    const d = this.def, dr = this.drive;
+    let idx = -1;
+    for (let i = 0; i < d.mounts.length; i++) if (d.mounts[i][2] && dr.alive[i] && ((d.mounts[i][0] > 0 ? 0 : 1) === side)) { idx = i; if (d.mounts[i][1] > 0) break; }
+    if (idx < 0) return false;
+    dr.alive[idx] = 0;
+    // pick the visual wheel nearest to that mount
+    const mx = d.mounts[idx][0], mz = d.mounts[idx][1];
+    let best = null, bd = 1e9;
+    this.root.updateMatrixWorld(true);
+    (this.parts.wheels || []).forEach((w, i) => {
+      if (!w || w.userData.lost) return;
+      w.getWorldPosition(_v); this.root.worldToLocal(_v);
+      const dd = (_v.x - mx) ** 2 + (_v.z - mz) ** 2;
+      if (dd < bd) { bd = dd; best = w; }
+    });
+    if (best && this.world && this.scene) this.spawnDebris(best, side);
+    return true;
+  }
+  spawnDebris(node, side) {
+    const R = this.R, d = this.def;
+    node.userData.lost = true;
+    const restore = { parent: node.parent, p: node.position.clone(), q: node.quaternion.clone(), s: node.scale.clone() };
+    this.scene.attach(node);
+    node.getWorldPosition(_v); node.getWorldQuaternion(_q);
+    const lv = this._body.linvel();
+    _w.set(side === 0 ? 1 : -1, 0, 0).applyQuaternion(this.q);
+    const body = this.world.createRigidBody(R.RigidBodyDesc.dynamic().setTranslation(_v.x, _v.y + 0.05, _v.z)
+      .setRotation({ x: _q.x, y: _q.y, z: _q.z, w: _q.w })
+      .setLinvel(lv.x + _w.x * 4, lv.y + 5, lv.z + _w.z * 4).setAngvel({ x: _w.x * 20, y: 8, z: _w.z * 20 }).setCcdEnabled(true));
+    const rq = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 2);
+    this.world.createCollider(R.ColliderDesc.cylinder(0.06, d.wheelR).setRotation({ x: rq.x, y: rq.y, z: rq.z, w: rq.w })
+      .setMass(0.05).setFriction(0.9).setRestitution(0.35), body);
+    this.debris.push({ node, body, restore, t: 0 });
+    this.events.push('wheel');
   }
 
-  stepSpinner(dt, input, opp, fx, m) {
-    if (input.fire) this.weaponOn = !this.weaponOn;
-    this.spin = clamp(this.spin + (this.weaponOn ? 0.5 : -0.3) * dt, 0, 1);
-    if (this.spin < 0.5 || this.hitCooldown > 0) return;
-    // sample the front arc of the blade
-    for (let i = 0; i <= 8; i++) {
-      const th = THREE.MathUtils.degToRad(-80 + i * 15);
-      for (const r of [0.28, 0.34]) {
-        const p = this.toWorld(0, Math.sin(th) * r, 0.5 + Math.cos(th) * r);
-        if (!opp.colliders.some(c => c.containsPoint(p))) continue;
-        const e = this.spin, om = opp.body.mass();
-        const dir = this.fwd.clone().setY(0).normalize().multiplyScalar(0.75).add(new THREE.Vector3(0, 0.7, 0)).normalize();
-        const J = 6.4 * e * om;
-        // apply between the contact and the opponent's centre: a toss with some tumble, not an instant flip
-        const at = p.clone().lerp(V(opp.body.worldCom()), 0.6);
-        opp.body.applyImpulseAtPoint({ x: dir.x * J, y: dir.y * J, z: dir.z * J }, at, true);
-        const rc = this.fwd.clone().multiplyScalar(-0.55 * J).add(new THREE.Vector3(0, 0.22 * J, 0));
-        this.body.applyImpulseAtPoint({ x: rc.x, y: rc.y, z: rc.z }, this.toWorld(0, 0, 0.5), true);
-        this.spin *= 0.15; this.hitCooldown = 0.35; this.hits++; this.score += Math.round(1 + 3 * e);
-        fx.hit(this, p, e);
-        return;
-      }
+  // ---- status for HUD / AI ------------------------------------------------------------
+  // short Czech status line for the HUD
+  statusText() {
+    const k = this.def.weaponKind;
+    if (this.spinner) {
+      const s = this.spinner;
+      if (s.stalled) return 'Zbraň zaseknutá – znovu zapnout';
+      return s.on ? `Zbraň ${Math.round(s.frac * 100)} %` : 'Zbraň vypnutá';
     }
+    if (k === 'grabber') {
+      const a = this.arm;
+      if (a.holding) return `Drží soupeře ${Math.max(0, Math.ceil(a.s.grab.hold - a.holdT))} s`;
+      if (a.lifted) return 'Vidle nahoře';
+      return a.cooldown > 0 ? 'Kleště nabíjí' : 'Kleště připraveny';
+    }
+    return this.cooldown > 0 ? 'Flipper nabíjí' : 'Flipper připraven';
+  }
+  // weapon effective zone in robot-local coords (for AI / aim assist)
+  weaponZone() {
+    const d = this.def;
+    if (d.spinner) {
+      const s = d.spinner, a = s.axle;
+      return d.weaponKind === 'horizontal'
+        ? { zMin: a[2] - 0.1, zMax: a[2] + s.radius + 0.5, xHalf: s.radius + 0.4 }
+        : { zMin: a[2], zMax: a[2] + s.radius + 0.55, xHalf: 0.55 };
+    }
+    if (d.arm && d.arm.grab) { const g = d.arm.grab.zone; return { zMin: g[0], zMax: g[1], xHalf: g[2] }; }
+    return { zMin: 0.3, zMax: 1.35, xHalf: 0.75 };
+  }
+  inWeaponZone(target) {
+    if (!target || !target.body) return false;
+    target.frame();
+    const l = this.local(target.pos, _v), z = this.weaponZone();
+    return l.z > z.zMin && l.z < z.zMax && Math.abs(l.x) < z.xHalf && l.y < 0.9 && l.y > -0.6;
+  }
+  // what a sensible pilot would press now (AI hook; main/ai decide whether to use it)
+  suggestFire(target) {
+    if (!this.weapon) return false;
+    if (this.spinner) return this.spinner.stalled > 0 || !this.spinner.on;
+    if (this.up && this.up.y < 0.35 && this.flippedTime > 0.3) return this.cooldown <= 0;
+    if (this.arm.holding) return false;                     // keep holding until the clock runs out
+    if (this.arm.lifted) return true;
+    return this.cooldown <= 0 && this.inWeaponZone(target);
+  }
+  // physics-aware snapshot for the AI (one reused object)
+  aiState() {
+    const s = this._ai || (this._ai = { hp: {} });
+    s.kind = this.def.weaponKind;
+    s.weaponReady = this.spinner ? this.spinner.on && !this.spinner.stalled && this.spinner.frac > 0.6 : this.cooldown <= 0;
+    s.weaponEnergy = this.spinner ? this.spinner.frac : this.cooldown <= 0 ? 1 : 0;
+    s.stalled = !!(this.spinner && this.spinner.stalled);
+    s.holding = !!(this.arm && this.arm.holding);
+    s.grabbed = !!this.grabbedBy;
+    s.battery = this.battery.soc; s.volts = this.battery.volts;
+    s.health = this.damage.health01;
+    for (const k of SIDES) s.hp[k] = this.damage.side01(k);
+    s.wheelsLost = this.damage.wheelsLost;
+    s.traction = this.contacts / Math.max(1, this.drive.drivenAlive());
+    s.slipping = this.drive.slipping > 0;
+    s.inverted = this.inverted; s.flippedTime = this.flippedTime;
+    s.canSelfRight = !!this.arm || !!this.def.invertible;
+    s.speed = Math.hypot(this._lin.x, this._lin.z);
+    s.zone = this.weaponZone();
+    return s;
   }
 
   // copy physics → meshes and animate parts
   sync(dt) {
-    if (!this.body) return;
-    const t = this.body.translation(), r = this.body.rotation();
+    if (!this._body) return;
+    const t = this._body.translation(), r = this._body.rotation();
     this.root.position.set(t.x, t.y, t.z); this.root.quaternion.set(r.x, r.y, r.z, r.w);
     const p = this.parts;
-    if (dt) {
-      this.wheelSpin += (this.vLong || 0) / this.def.wheelR * dt;
-      p.wheels && p.wheels.forEach(w => { w.rotation.x = this.wheelSpin; });
-      if (p.flipper) {
-        this.flipAnim = Math.max(0, this.flipAnim - dt * 3.2);
-        const k = this.flipAnim > 0.7 ? (1 - this.flipAnim) / 0.3 : this.flipAnim / 0.7;
-        p.flipper.rotation.x = p.flipRest - k * 1.25;
-        if (p.flipperOnlyWhenFiring) p.flipper.visible = this.flipAnim > 0.01;
-      }
-      if (p.blade) {
-        this.bladeAngle += this.spin * 70 * dt;
-        p.blade.rotation.x = this.bladeAngle;
-        p.blur.material.opacity = Math.max(0, this.spin - 0.3) * 0.55;
-      }
+    for (const db of this.debris) {
+      if (!db.body) continue;
+      const bt = db.body.translation(), br = db.body.rotation();
+      db.node.position.set(bt.x, bt.y, bt.z); db.node.quaternion.set(br.x, br.y, br.z, br.w);
     }
+    if (!dt) return;
+    const om = this.drive.wheelOmega;
+    this.wheelSpin[0] += om[0] * dt; this.wheelSpin[1] += om[1] * dt;
+    if (p.wheels) for (let i = 0; i < p.wheels.length; i++) {
+      const w = p.wheels[i]; if (w.userData.lost) continue;
+      w.rotation.x = this.wheelSpin[p.wheelSide ? p.wheelSide[i] : 0];
+    }
+    if (p.flipper && this.arm) {
+      const ang = this.arm.angle;
+      p.flipper.rotation.x = p.flipRest + ang;
+      if (p.flipperOnlyWhenFiring) p.flipper.visible = ang < -0.06;
+    }
+    if (p.jaw && this.arm) {
+      const want = this.arm.holding ? -0.05 : p.jawOpen;
+      p.jaw.rotation.x += (want - p.jaw.rotation.x) * Math.min(1, dt * 14);
+    }
+    if (p.blade && this.spinner) {
+      const s = this.spinner;
+      this.bladeAngle += Math.min(s.omega, 42) * dt;
+      if (p.bladeAxis === 'y') p.blade.rotation.y = this.bladeAngle; else p.blade.rotation.x = -this.bladeAngle;
+      p.blur.material.opacity = Math.max(0, s.frac - 0.3) * 0.55;
+    }
+  }
+
+  // which drive side each visual wheel is on (0 = left/+X, 1 = right)
+  mapWheelSides() {
+    const p = this.parts; if (!p.wheels) return;
+    this.root.updateMatrixWorld(true);
+    p.wheelSide = p.wheels.map(w => { w.getWorldPosition(_v); this.root.worldToLocal(_v); return _v.x > 0 ? 0 : 1; });
   }
 
   // swap the placeholder for a GLB (scaled to the placeholder's footprint)
@@ -301,6 +359,7 @@ export class Robot {
     const savedP = this.root.position.clone(), savedQ = this.root.quaternion.clone();
     this.root.position.set(0, 0, 0); this.root.quaternion.identity(); this.root.updateMatrixWorld(true);
     const info = this._useModel(gltfScene);
+    this.mapWheelSides();
     this.root.position.copy(savedP); this.root.quaternion.copy(savedQ); this.root.updateMatrixWorld(true);
     return info;
   }
@@ -326,7 +385,7 @@ export class Robot {
     // exact names first, then looser matches ("weapon_mount" must never win over "blade")
     const spinNode = this.def.weapon === 'spinner' && (findNode(m, /^(blade|disc|drum|spinner)$/i) ||
       findNode(m, /blade|disc|drum/i) || findNode(m, /spinner|weapon(?!_mount|_motor)/i));
-    const flipNode = this.def.weapon === 'flipper' && (findNode(m, /^(flipper|lifter)$/i) || findNode(m, /flipper|lifter/i));
+    const flipNode = this.def.weaponKind === 'flipper' && (findNode(m, /^(flipper|lifter)$/i) || findNode(m, /flipper|lifter/i));
     const wheelNodes = [];
     if (this.def.glbWheels) m.traverse(o => { if (o !== m && this.def.glbWheels.test(o.name || '')) wheelNodes.push(o); });
     const oldParts = this.parts;
@@ -340,16 +399,17 @@ export class Robot {
       const piv = pivotAround(spinNode, 'center', motor);
       const blur = new THREE.Mesh(new THREE.CircleGeometry(0.29 / s, 32), new THREE.MeshBasicMaterial({ color: '#c8c8c2', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
       blur.rotation.y = Math.PI / 2;
-      this.parts.blade = piv; this.parts.blur = blur;
+      this.parts.blade = piv; this.parts.blur = blur; this.parts.bladeAxis = oldParts.bladeAxis || 'x';
       piv.parent.add(blur); blur.position.copy(piv.position);
     }
     if (flipNode) { this.parts.flipper = pivotAround(flipNode, 'back'); this.parts.flipRest = this.parts.flipper.rotation.x; }
     else if (oldParts.flipper) {
-      // model has no separate flipper part: reuse the placeholder's steel flipper plate for the kick
+      // model has no separate flipper part: reuse the placeholder's steel plate, shown only while it kicks
       this.root.add(oldParts.flipper);
       this.parts.flipper = oldParts.flipper; this.parts.flipRest = oldParts.flipRest;
-      this.parts.flipperOnlyWhenFiring = true; oldParts.flipper.visible = false;   // the model has its own wedge; show the plate only while it kicks
+      this.parts.flipperOnlyWhenFiring = true; oldParts.flipper.visible = false;
     }
+    if (oldParts.jaw) { this.parts.jaw = oldParts.jaw; this.parts.jawOpen = oldParts.jawOpen; }
     return { scale: s, prints: prints.length, spin: spinNode ? spinNode.name : false, flip: flipNode ? flipNode.name : !!this.parts.flipper, wheels: wheelNodes.length };
   }
 }
