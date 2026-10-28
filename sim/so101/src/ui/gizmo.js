@@ -406,7 +406,7 @@ export class Gizmo {
     if (this.strokeOn && e.pointerId === this.strokeId) { e.stopPropagation(); this.endStroke(cancelled); return; }
     const dn = this.down; this.down = null;
     if (!dn || dn.id !== e.pointerId || cancelled) return;
-    if (Math.hypot(e.clientX - dn.x, e.clientY - dn.y) > 7 || performance.now() - dn.t > 600) return;
+    if (Math.hypot(e.clientX - dn.x, e.clientY - dn.y) > 7) return;   // no time limit: a slow press without motion is still a click
     const hit = this.pickAt(e);
     if (hit) this.ux.onPick(hit.name, hit.point);
   }
@@ -423,6 +423,7 @@ export class Gizmo {
   /** Raycast pickable mission objects + the table. Returns { name, point:[x,y,z] } (MuJoCo frame) or null. */
   pickAt(e) {
     this.setRay(e);
+    this.app.world.updateMatrixWorld();   // object poses may have changed since the last rendered frame
     const list = this.ux.pickables();
     const h = this.ray.intersectObjects(list, true);
     if (!h.length) return null;

@@ -46,7 +46,7 @@ export class Teach {
     if (!this.recording) return;
     this.recording = false;
     if (this.demo && this.demo.t.length < 5) this.demo = null;   // too short to be useful
-    this.restored = false;
+    this.restored = false; this.shared = false;
     this.persist();
     this.changed();
   }
@@ -89,6 +89,35 @@ export class Teach {
     this.persist(); this.changed();
     return removed;
   }
+  /** A link that carries the demonstration (gzip + base64url in the #hash; no server involved). */
+  async shareURL() {
+    const D = this.demo; if (!D || typeof CompressionStream === 'undefined') return null;
+    const r = (v) => Math.round(v * 1e4) / 1e4, snap = {};
+    for (const k of SNAP_KEYS) snap[k] = D.snap[k] ? Array.from(D.snap[k], r) : null;
+    const body = JSON.stringify({ v: 1, m: D.mission.id, t: D.t.map(r), a: D.act.map((x) => x.map(r)), o: D.obs.map((x) => x.map(r)), s: snap });
+    const gz = await new Response(new Blob([body]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
+    let bin = ''; const u8 = new Uint8Array(gz); for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
+    const b64 = btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return location.origin + location.pathname + '#ukazka=' + b64;
+  }
+  /** Load a demonstration from the #ukazka= hash. Returns the number of frames or 0. */
+  async loadFromHash() {
+    const m = /#ukazka=([A-Za-z0-9_-]+)/.exec(location.hash);
+    if (!m || typeof DecompressionStream === 'undefined') return 0;
+    try {
+      const bin = atob(m[1].replace(/-/g, '+').replace(/_/g, '/')), u8 = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      const txt = await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+      const j = JSON.parse(txt), mission = MISSIONS.find((x) => x.id === j.m);
+      if (!mission || !j.t || j.t.length < 5 || j.s.qpos.length !== this.d.qpos.length) return 0;
+      const snap = { time: 0 }; for (const k of SNAP_KEYS) snap[k] = j.s[k] ? Float64Array.from(j.s[k]) : null;
+      this.demo = { t: j.t, obs: j.o, act: j.a, snap, mission, t0: 0, next: 0 };
+      this.restored = false; this.shared = true;
+      this.persist(); this.changed();
+      return j.t.length;
+    } catch (e) { return 0; }
+  }
+
   /** Import the JSON from download() (also from another computer). Returns the number of frames. */
   importJSON(j) {
     const ep = j && j.episodes && j.episodes[0];

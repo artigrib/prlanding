@@ -93,6 +93,11 @@ class UX {
 
     this.ctl.on('grip', (open) => { this.sound.grip(open); this.onboarding.notify('grip'); });
     this.ctl.on('done', () => { this.gizmo.fadePath(); });
+    this.ctl.on('floor', () => {   // once per gesture: "you hit the table"
+      if (this.floorNoted) return; this.floorNoted = true;
+      this.panel.toast('Níž to nejde, tam je stůl'); this.sound.blip(140, 0.06, 'square', 0.05);
+      setTimeout(() => { this.floorNoted = false; }, 2500);
+    });
     this.teach.onChange((t) => this.panel.showTeach(t));
     // joint sliders take over from the controller / replay
     document.getElementById('joints').addEventListener('input', () => {
@@ -123,6 +128,11 @@ class UX {
     this.app.reset();          // applies the mission layout through onReset()
     if (this.runner.m.look) this.cameras.set('orbit', this.runner.m.look);
     this.teach.load();         // the demonstration from the last visit, if any
+    this.teach.loadFromHash().then((n) => {   // a shared link (#ukazka=…) wins over the stored one
+      if (!n) return;
+      this.selectMission(this.teach.demo.mission.id);
+      this.panel.toast('Máte sdílenou ukázku – spusťte ji tlačítkem Přehrát v sekci Učení ukázkou');
+    });
     if (this.touch && !this.TEST && !store.get('tip-orbit', false)) {
       store.set('tip-orbit', true);
       setTimeout(() => this.panel.toast('Jedním prstem otáčíte pohled, dvěma přibližujete'), 2500);
@@ -244,13 +254,9 @@ class UX {
     this.cameras.set('orbit', this.runner.m.look);
   }
 
-  /** Target from user input (drag / keys): the table is the floor, say so once per gesture (P1-8). */
+  /** Target from user input (drag / keys); the controller reports hitting the table ('floor' event). */
   userSetTarget(x, y, z) {
-    const FLOOR = 0.009;
-    if (z < FLOOR) {
-      z = FLOOR;
-      if (!this.floorNoted) { this.floorNoted = true; this.panel.toast('Níž to nejde, tam je stůl'); this.sound.blip(140, 0.06, 'square', 0.05); }
-    } else if (z > FLOOR + 0.01) this.floorNoted = false;
+    if (z > 0.02) this.floorNoted = false;
     this.ctl.setTarget(x, y, z);
   }
   nextMission() {

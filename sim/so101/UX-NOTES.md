@@ -68,3 +68,23 @@ if it *drives* the arm, call `app.ux.ctl.cancel()` first (same as the sliders).
 
 `?mise=stack` (bowl, stack, sort, ball, trace) opens a mission directly and skips onboarding;
 `?onboard=1` forces the tutorial; `?test=1` exposes `window.__sim`.
+
+## Usability round 1 (branch `so101-flows`)
+
+Findings: scratchpad usability report (P0/P1/P2). Changes:
+
+- **Tap = pick, drag = move** (`gizmo.js`): pressing a gizmo handle only starts a drag after > 6 px; a tap picks the
+  object under it; a closer object wins outright. Lower height-arrow hit area shrunk. No time limit on clicks.
+- **Guided first task** (`onboarding.js`): click cube → click bowl → win → "Teď ručně" (drag) → height/wrist/gripper.
+  Phones: the guide is a strip under the stage (`.ux-under`), desktop bubble avoids covering cube/bowl/target.
+- **Gripper-aware HUD** (`missions.js graspHint`), pick missions start with the gripper open (`openStart`).
+- **Poradit** in the HUD after 20 s; Domů/Znovu/Ukázat řešení moved under the mode switch; phones get a sticky
+  row under the stage: HUD strip + Chapadlo · Domů · Poradit. Key **G** = gripper (besides Space).
+- "Ukázat řešení" / replay wins never count as the visitor's stars or record (`runner.assisted`).
+- Teach: demo persisted in localStorage, Oříznout (idle start/end), Smazat, Nahrát JSON (import of the export,
+  which now carries a `printedrobotics.snapshot`), **share link** `#ukazka=<gzip base64url>`.
+- Loading text with size, %, time left and cache note (`app.js loadingCopy`, marked `[ux-hook:loading]`).
+- Exploded view hides HUD/timer/toolbar/objects, frames the exploded parts; on phones the card moves into the panel.
+  "Z čeho se SO-101 skládá →" link under the mission.
+- Table floor: targets clamp at 9 mm with a one-off toast; "Mimo dosah" HUD text; joint sliders show "(doraz)" and
+  `aria-valuetext`; canvas focusable with a description; toolbar labels; per-mission tip and camera (`tip`, `look`).

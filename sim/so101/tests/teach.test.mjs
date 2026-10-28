@@ -47,3 +47,39 @@ test('loop replay restarts from the recorded snapshot (time, pose, progress)', (
   assert.equal(restarts, 1, 'looped once');
   assert.ok(minP >= 0, 'progress never negative (' + minP + ')');
 });
+
+test('trim removes the idle start/end; JSON export → import round-trips the actions', () => {
+  teach.stopReplay(); teach.loop = false;
+  mj.mj_resetDataKeyframe(m, d, 0); mj.mj_forward(m, d);
+  teach.startRec();
+  step(1);                                                     // idle
+  for (let i = 0; i < 6; i++) d.ctrl[act[i]] = [0.3, -0.5, 0.4, 1.0, 0.2, 1.0][i];
+  for (let k = 0; k < 30; k++) { d.ctrl[act[0]] = 0.3 + k * 0.01; step(1 / 30); }   // moving
+  step(1.5);                                                   // idle again
+  teach.stopRec();
+  const n0 = teach.demo.t.length, removed = teach.trim();
+  assert.ok(removed > 40, 'removed ' + removed + ' of ' + n0);
+  assert.equal(teach.demo.t[0], 0, 'trimmed demo starts at t = 0');
+  const j = JSON.parse(JSON.stringify(teach.toJSON()));
+  const a0 = teach.demo.act.map((a) => a.slice());
+  ux.runner.m = { id: 'bowl', n: '01', title: 'x' };
+  const n = teach.importJSON(j);
+  assert.equal(n, a0.length);
+  for (let i = 0; i < n; i += 7) for (let k = 0; k < 6; k++) assert.ok(Math.abs(teach.demo.act[i][k] - a0[i][k]) < 0.002, `frame ${i} joint ${k}`);
+  assert.ok(teach.demo.snap && teach.demo.snap.qpos.length === d.qpos.length, 'snapshot imported');
+  assert.throws(() => teach.importJSON({ hello: 1 }));
+});
+
+test('share link: #ukazka= hash round-trips the demonstration', async () => {
+  globalThis.location = { origin: 'https://printedrobotics.cz', pathname: '/sim/so101/', hash: '' };
+  const a0 = teach.demo.act.map((a) => a.slice()), n0 = teach.demo.t.length;
+  const url = await teach.shareURL();
+  assert.ok(url.startsWith('https://printedrobotics.cz/sim/so101/#ukazka='), url.slice(0, 60));
+  assert.ok(url.length < 60000, 'link length ' + url.length);
+  teach.demo = null;
+  globalThis.location.hash = url.slice(url.indexOf('#'));
+  const n = await teach.loadFromHash();
+  assert.equal(n, n0);
+  for (let i = 0; i < n; i += 9) for (let k = 0; k < 6; k++) assert.ok(Math.abs(teach.demo.act[i][k] - a0[i][k]) < 2e-4);
+  console.log('  share link length', url.length, 'chars for', n, 'frames');
+});

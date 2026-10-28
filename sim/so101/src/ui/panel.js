@@ -205,6 +205,7 @@ export class Panel {
         <button type="button" class="btn btn-o" id="ux-import" data-tip="Ukázku od učitele nebo z jiného počítače">Nahrát <span aria-hidden="true">↑</span></button>
       </div>
       <input type="file" id="ux-import-f" accept="application/json,.json" hidden>
+      <button type="button" class="ux-link" id="ux-share" disabled>Sdílet ukázku odkazem (třeba studentům) <span aria-hidden="true">🔗</span></button>
       <button type="button" class="ux-link" id="ux-export" disabled>Stáhnout ukázku jako JSON (formát podobný LeRobot) <span aria-hidden="true">⤓</span></button>
       <p class="mono-s muted" id="ux-teach-s" aria-live="polite">Zatím žádná ukázka.</p>
     </section>`));
@@ -220,6 +221,12 @@ export class Panel {
       try { const n = this.ux.teach.importJSON(JSON.parse(await f.text())); this.toast(`Ukázka nahrána (${n} snímků). Přehrajte si ji.`); }
       catch (err) { this.toast('Tohle není ukázka ze simulátoru SO-101', 'err'); }
     });
+    $('ux-share').addEventListener('click', async () => {
+      const url = await this.ux.teach.shareURL();
+      if (!url) { this.toast('Tento prohlížeč neumí odkaz vytvořit, použijte stažení JSON', 'err'); return; }
+      try { await navigator.clipboard.writeText(url); this.toast('Odkaz s ukázkou je ve schránce'); }
+      catch (e) { window.prompt('Zkopírujte odkaz s ukázkou:', url); }
+    });
     $('ux-export').addEventListener('click', () => { const j = this.ux.teach.download(); if (j) this.toast(`Staženo: ${j.episodes[0].length} snímků po 1/30 s`); });
   }
   showTeach(t) {
@@ -228,12 +235,13 @@ export class Panel {
     rec.querySelector('.l').textContent = t.recording ? 'Zastavit' : 'Nahrát';
     play.disabled = !t.demo || t.recording; loop.disabled = !t.demo || t.recording; ex.disabled = !t.demo || t.recording;
     $('ux-trim').disabled = $('ux-del').disabled = !t.demo || t.recording || t.replaying;
+    $('ux-share').disabled = !t.demo || t.recording;
     $('ux-import').disabled = t.recording;
     play.firstChild.textContent = t.replaying ? 'Stop ' : 'Přehrát ';
     play.querySelector('span').textContent = t.replaying ? '■' : '▶';
     loop.setAttribute('aria-pressed', String(t.loop));
     s.textContent = t.recording ? 'Nahrávám… pohybujte rukou.' : t.replaying ? 'Přehrávám ukázku.'
-      : t.demo ? `${t.restored ? 'Ukázka z minula' : 'Ukázka'}: ${fmt(t.duration())}, ${t.demo.t.length} snímků (mise ${t.demo.mission.n}).` : 'Zatím žádná ukázka.';
+      : t.demo ? `${t.shared ? 'Sdílená ukázka' : t.restored ? 'Ukázka z minula' : 'Ukázka'}: ${fmt(t.duration())}, ${t.demo.t.length} snímků (mise ${t.demo.mission.n}).` : 'Zatím žádná ukázka.';
     this.recBadge.hidden = !t.recording; this.playBar.hidden = !t.replaying;
     this.stage.classList.toggle('ux-replaying', t.replaying);
   }

@@ -57,7 +57,7 @@ export class Onboarding {
   /** phones: strip under the stage (inside the sticky .ux-under); desktops: floating inside the stage */
   place() {
     const narrow = this.mq.matches, el = this.el;
-    if (narrow) { const u = this.ux.panel.under; u.appendChild(el); el.style.transform = ''; el.classList.add('strip'); }
+    if (narrow) { const u = this.ux.panel.under; u.insertBefore(el, u.querySelector('.ux-qrow')); el.style.transform = ''; el.classList.add('strip'); }
     else { this.ux.panel.stage.appendChild(el); el.classList.remove('strip'); }
   }
 
