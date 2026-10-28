@@ -26,7 +26,7 @@ This folder (build/) bundles third-party code, and the page displays third-party
    Changes made by printedrobotics.cz: parts converted from the author's STEP files,
    meshes simplified, materials grouped for colour tinting, exported as glTF;
    in the arena the model is scaled, its wheels are animated and a schematic
-   flipper plate is drawn on top of it.
+   flipper plate is drawn at its front while the flipper fires.
 
 4) Vertical spinner 150 g 3D model (../../models/vert150.glb, shown in the arena)
    Author:  TheBlackfish, remix of "150g vert" by Muffin578

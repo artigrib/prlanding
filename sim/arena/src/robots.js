@@ -285,6 +285,7 @@ export class Robot {
         this.flipAnim = Math.max(0, this.flipAnim - dt * 3.2);
         const k = this.flipAnim > 0.7 ? (1 - this.flipAnim) / 0.3 : this.flipAnim / 0.7;
         p.flipper.rotation.x = p.flipRest - k * 1.25;
+        if (p.flipperOnlyWhenFiring) p.flipper.visible = this.flipAnim > 0.01;
       }
       if (p.blade) {
         this.bladeAngle += this.spin * 70 * dt;
@@ -344,9 +345,10 @@ export class Robot {
     }
     if (flipNode) { this.parts.flipper = pivotAround(flipNode, 'back'); this.parts.flipRest = this.parts.flipper.rotation.x; }
     else if (oldParts.flipper) {
-      // model has no separate flipper part: keep the placeholder's steel flipper plate on top of it
+      // model has no separate flipper part: reuse the placeholder's steel flipper plate for the kick
       this.root.add(oldParts.flipper);
       this.parts.flipper = oldParts.flipper; this.parts.flipRest = oldParts.flipRest;
+      this.parts.flipperOnlyWhenFiring = true; oldParts.flipper.visible = false;   // the model has its own wedge; show the plate only while it kicks
     }
     return { scale: s, prints: prints.length, spin: spinNode ? spinNode.name : false, flip: flipNode ? flipNode.name : !!this.parts.flipper, wheels: wheelNodes.length };
   }
