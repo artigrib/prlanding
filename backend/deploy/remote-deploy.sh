@@ -345,8 +345,10 @@ fixports() ( set +eu +o pipefail
 
 tls_state() ( set +eu +o pipefail
   # Per-host ACME state as fixed strings: cert present + last error category from Caddy's log.
-  local h cert logs cat fw
-  logs=$(dc logs --no-color --tail 2000 caddy 2>&1)
+  local h cert logs cat fw cid
+  cid=$(dc ps -q caddy 2>/dev/null | head -1)
+  logs=$(docker logs --tail 3000 "$cid" 2>&1)
+  say "tls caddy container: ${cid:+found}${cid:-missing}; log driver: $(docker inspect -f '{{.HostConfig.LogConfig.Type}}' "$cid" 2>/dev/null); started: $(docker inspect -f '{{.State.StartedAt}}' "$cid" 2>/dev/null | cut -c1-16)"
   for h in api mcp relay; do
     cert=no
     dc exec -T caddy sh -c "ls /data/caddy/certificates/*/$h.printedrobotics.cz/$h.printedrobotics.cz.crt" >/dev/null 2>&1 && cert=yes
