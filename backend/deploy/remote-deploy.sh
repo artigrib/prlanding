@@ -378,10 +378,11 @@ tls_state() ( set +eu +o pipefail
   say "tls admin http config: size $(printf '%s' "$hc" | wc -c), hosts $(printf '%s' "$hc" | grep -o '[a-z]*\.printedrobotics\.cz' | sort -u | wc -l), automatic_https disabled $(printf '%s' "$hc" | grep -ac '"automatic_https":{"disable"'); tls config is $(case "$cfg" in *error*) echo error-response;; null*|"") echo empty;; *) echo present;; esac)"
   say "tls docker log bytes: $(docker logs "$cid" 2>&1 | wc -c); since 1h lines: $(docker logs --since 1h "$cid" 2>&1 | wc -l)"
   local k n
-  for k in 'enabling automatic TLS certificate management' 'enabling automatic HTTP->HTTPS redirects' 'automatic HTTPS is completely disabled' 'serving initial configuration' 'using config from file' 'tls.obtain' 'tls.issuance' 'acme_client' 'tls.on_demand' 'certificate' 'level":"warn' 'level":"info' 'level":"error' 'HTTP->HTTPS' 'skipping' 'disabling' 'cleaning' 'unable'; do
+  for k in info warn error fatal caddyfile invalid listen bind permission address admin autosave started shutdown signal stopped reload config tls acme cert obtain redirect http2 http3 quic buffer user warning 'not found' 'no such' 'read-only' deprecated adapt overwritten; do
     n=$(lg | grep -aci -- "$k")
-    say "tls log token [$k]: $n"
+    [ "$n" -gt 0 ] && say "tls log word [$k]: $n"
   done
+  say "tls admin raw response: starts with brace $(printf '%s' "$hc" | head -c1 | grep -c '{'), contains html $(printf '%s' "$hc" | grep -aci '<html'), contains 'error' $(printf '%s' "$hc" | grep -aci error), contains 'wget' $(printf '%s' "$hc" | grep -aci wget)"
   say "tls admin http: reverse_proxy $(printf '%s' "$hc" | grep -ao 'reverse_proxy' | wc -l), host matchers $(printf '%s' "$hc" | grep -ao '"host"' | wc -l), listen entries $(printf '%s' "$hc" | grep -ao '"listen"' | wc -l)"
   for k in 'rateLimited' 'Timeout during connect' 'Connection refused' 'unauthorized' 'Invalid response' 'no valid A records' 'DNS problem' 'CAA' 'context deadline' 'permission denied' 'read-only'; do
     n=$(lg | grep -aci -- "$k")
