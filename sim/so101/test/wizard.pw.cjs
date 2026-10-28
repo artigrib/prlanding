@@ -45,8 +45,7 @@ async function wizardSetup(page, base, { shots = false, prefix = '' } = {}) {
   await page.waitForSelector('#v-connect:not([disabled])');
   if (shots) {
     await shot(page, prefix + '1-port');
-    ok(await page.isVisible('#r-connect') && !(await page.isVisible('#r-no')), prefix + 'Chromium: real-arm button offered (Web Serial present)');
-    ok(await page.isDisabled('#r-connect'), prefix + 'real-arm button locked until the risk checkbox is ticked');
+    ok(!(await page.isVisible('#real-card')), prefix + 'real-arm beta hidden without ?real=1');
   }
   await page.click('#v-connect');
   await page.waitForSelector('.step[data-step="ids"]:not([hidden])');
@@ -161,7 +160,7 @@ async function diag(page) {
       const errors = [];
       const page = await newPage(browser, { width: 390, height: 844 }, errors);
       await page.addInitScript(() => { delete Navigator.prototype.serial; });   // behave like Safari / iOS / Firefox
-      await page.goto(srv.url + '/sim/so101/nastaveni/?test=1');
+      await page.goto(srv.url + '/sim/so101/nastaveni/?test=1&real=1');
       await page.waitForFunction(() => window.__wiz, null, { timeout: 30000 });
       await page.evaluate(() => window.__wiz.ready());
       await page.waitForTimeout(500);
@@ -218,8 +217,9 @@ async function diag(page) {
           addEventListener() {}, removeEventListener() {}
         }) });
       });
-      await page.goto(srv.url + '/sim/so101/nastaveni/?test=1');
+      await page.goto(srv.url + '/sim/so101/nastaveni/?test=1&real=1');
       await page.waitForFunction(() => window.__wiz, null, { timeout: 30000 });
+      ok(await page.isVisible('#r-connect') && await page.isDisabled('#r-connect'), 'serial (?real=1): real-arm button shown, locked until the risk checkbox is ticked');
       await page.check('#r-ack');
       await page.click('#r-connect');
       await page.waitForSelector('.step[data-step="ids"]:not([hidden])', { timeout: 10000 });

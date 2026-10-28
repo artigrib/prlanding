@@ -92,6 +92,9 @@ const msg = (el, text, kind = '') => { el.textContent = text; el.className = 'ms
 // ---------- connect ----------
 document.querySelectorAll('input[name=variant]').forEach((r) => r.addEventListener('change', () => { st.variant = r.value; renderFaults(); }));
 
+// The real-arm beta is hidden until it has had a hardware safety review: only ?real=1 shows it.
+const REAL_ENABLED = new URLSearchParams(location.search).get('real') === '1';
+$('real-card').hidden = !REAL_ENABLED;
 if (!hasWebSerial()) { $('r-ok').hidden = true; $('r-no').hidden = false; }
 $('r-ack').addEventListener('change', () => { $('r-connect').disabled = !$('r-ack').checked; });
 
@@ -105,6 +108,7 @@ $('v-connect').addEventListener('click', () => task(async () => {
 }, $('port-msg')));
 
 $('r-connect').addEventListener('click', () => task(async () => {
+  if (!REAL_ENABLED) return;
   const t = new SerialTransport();
   try { await t.requestPort(); } catch (e) {
     msg($('port-msg'), e && e.name === 'NotFoundError' ? 'Port jste nevybrali. Zkuste to znovu a vyberte port bus adaptéru (USB Single Serial, CH343, CH340…).' : 'Port se nepodařilo vybrat: ' + e.message, 'err');
