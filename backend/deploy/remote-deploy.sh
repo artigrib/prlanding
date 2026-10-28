@@ -41,15 +41,23 @@ report_services() {
   while IFS= read -r line; do
     [ -n "$line" ] && say "service $line"
   done < <(dc ps --all --format '{{.Service}}: {{.State}} {{.Health}}' 2>/dev/null || true)
+  # For containers that are not running, show Docker's own start error (sanitized).
+  local id st
+  for id in $(dc ps --all -q 2>/dev/null || true); do
+    st=$(docker inspect -f '{{.State.Status}}|{{.State.ExitCode}}|{{.State.Error}}' "$id" 2>/dev/null || true)
+    case "$st" in running*) continue;; esac
+    warn "container $(docker inspect -f '{{index .Config.Labels "com.docker.compose.service"}}' "$id" 2>/dev/null): $(sanitize "$st")"
+  done
 }
 
 check_health() { # check_health EXPECTED_VERSION BRIDGE_ENABLED
   local v="$1" bridge="$2" body i
   for i in $(seq 1 20); do
-    body=$(dc exec -T caddy wget -q -T 3 -O - http://api:8081/health 2>/dev/null || true)
+    body=$(dc exec -T caddy wget -q -T 3 -O - http://api:8081/health 2>&1 || true)
     case "$body" in *'"ok":true'*) break;; esac
     sleep 3
   done
+  case "$body" in *'"ok":true'*) ;; *) warn "caddy -> api check output: $(sanitize "$body")";; esac
   case "$body" in
     *"\"version\":\"$v\""*) say "internal check: caddy -> api /health ok (version ${v:0:12})";;
     *'"ok":true'*) warn "internal check: api healthy but reports another version"; return 1;;
