@@ -384,6 +384,8 @@ tls_state() ( set +eu +o pipefail
     [ "$n" -gt 0 ] && say "tls log word [$k]: $n"
   done
   local ec
+  say "tls acme problem types: $(lg | awk '{ while (match($0, /urn:ietf:params:acme:error:[A-Za-z]+/)) { t=substr($0, RSTART+27, RLENGTH-27); c[t]++; $0=substr($0, RSTART+RLENGTH) } } END { for (t in c) printf "%s=%d ", t, c[t]; print "" }')"
+  say "tls acme http codes: $(lg | awk '{ while (match($0, /HTTP [0-9][0-9][0-9]/)) { t=substr($0, RSTART+5, 3); c[t]++; $0=substr($0, RSTART+RLENGTH) } } END { for (t in c) printf "%s=%d ", t, c[t]; print "" }')"
   for k in serverinternal 'error:internal' malformed badnonce rejectedidentifier incorrect secondary validation 'could not' 'http 500' 'http 400' 'http 403' 'http 429' 'http 503' 'status 500' 'maintenance' 'aaaa' ipv6 'ipv4' 'firewall' 'unexpected' 'bad' 'eof' 'reset' 'tls: ' 'handshake' 'unavailable' 'overloaded' 'try again' 'later' ratelimited 'rate limit' 429 'too many' timeout refused unauthorized 'invalid response' dns 'no valid' caa forbidden connection deadline retry policy account registration email zerossl letsencrypt 'rejected' 'urn:ietf' 'challenge' 'authorization' 'http-01' 'tls-alpn' 'dial' 'lookup' 'x509' 'storage' 'lock' 'permission' 'read-only file' 'directory' 'no such file' 'unable' 'cannot' 'invalid' 'order' 'finalize' 'server error' 'internal'; do
     ec=$(lg | awk -v k="$k" 'tolower($0) ~ /error/ && index(tolower($0),tolower(k)){n++} END{print n+0}')
     [ "$ec" -gt 0 ] && say "tls error-line word [$k]: $ec"
