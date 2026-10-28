@@ -99,13 +99,13 @@ function mapEvent(type, d) {
   if (!d) return;
   const p = { x: d.x || 0, y: d.y || 0.3, z: d.z || 0 };
   if (type === 'hit') {
-    emitSparks(p, d.energy || 0.6); sfx.hit(d.energy || 0.6, true);
+    emitSparks(p, d.energy || 0.6); sfx.hit(d.energy || 0.6, true, p);
     if (S.shake) rig.shake(0.2);
     if (d.robot && (d.robot === player || d.robot === opp)) popLabel(p, 'Nástraha!', true);
     if (game.state === 'fight' || game.state === 'ko') replay.event({ type: 'hit', p, e: d.energy || 0.6 });
-  } else if (type === 'strike') { sfx.wall(d.energy || 0.6); if (S.shake) rig.shake(0.08); }
+  } else if (type === 'strike') { sfx.wall(d.energy || 0.6, p); if (S.shake) rig.shake(0.08); }
   else if (type === 'warn') sfx.beep(false);
-  else if (type === 'pit-open') { sfx.fall(); flash('Jáma se otevřela!', 1.4); }
+  else if (type === 'pit-open') { sfx.pitOpen(); flash('Jáma se otevřela!', 1.4); }
 }
 if (!MAP_LIST.some(m => m.id === S.map)) S.map = ARENA.DEFAULT_MAP || MAP_LIST[0].id;
 
@@ -260,7 +260,7 @@ const fx = {
     if (game.state === 'fight' || game.state === 'ko') replay.event({ type: 'hit', p: { x: p.x, y: p.y, z: p.z }, e });
     if (S.shake) { rig.shake(0.12 + 0.25 * e); rigA.shake(0.1 + 0.2 * e); rigB.shake(0.1 + 0.2 * e); }
     if (e > 0.4) game.hitstop = Math.max(game.hitstop, 0.04 + 0.08 * e);
-    sfx.hit(e, by.def.weapon === 'spinner');
+    sfx.hit(e, by.def.weapon === 'spinner', p);
     if (e > 0.75) sfx.crowd(0.6);
     map && map.raw.excite && map.raw.excite(Math.min(1, 0.3 + e));
     if (navigator.vibrate && touch && (by === player || victim === player)) try { navigator.vibrate(by === player ? 30 : 60); } catch (_) {}
@@ -273,12 +273,12 @@ const fx = {
     if (game.events.length < 400) game.events.push({ t: +game.time.toFixed(2), type: 'hit', by: by === player ? 'p1' : 'p2', e: +e.toFixed(2) });
   },
   wall(by, p, e) {
-    sfx.wall(Math.min(1, e + 0.2)); emitSparks(p, e * 0.6);
+    sfx.wall(Math.min(1, e + 0.2), p); emitSparks(p, e * 0.6);
     if (S.shake && e > 0.4) rig.shake(0.08 + 0.12 * e);
   },
-  grab(by) { sfx.flip(); popLabel(by.root.position, 'Chycen!', false); },
+  grab(by) { sfx.grab(by); popLabel(by.root.position, 'Chycen!', false); },
   flip(by) {
-    sfx.flip();
+    sfx.flip(by);
     if (game.events.length < 400) game.events.push({ t: +game.time.toFixed(2), type: 'fire', by: by === player ? 'p1' : 'p2' });
   }
 };
@@ -387,7 +387,7 @@ const input = createInput({ stick: $('#stick'), knob: $('#knob'), fire: ui.wbtn 
 const game = { state: 'loading', time: 0, left: ROUND, count: 0, acc: 0, result: null, events: [], hitstop: 0, ko: 0, koCount: 0, slow: 1, lastBeep: 0, pausedFrom: null, kos: 0 };
 const stats = new Map();
 const replay = new Replay(DT);
-replay.onEvent = e => { if (e.type === 'hit') { emitSparks(e.p, e.e); sfx.hit(e.e, true); if (S.shake) rig.shake(0.08 + 0.15 * e.e); } };
+replay.onEvent = e => { if (e.type === 'hit') { emitSparks(e.p, e.e); sfx.hit(e.e, true, e.p); if (S.shake) rig.shake(0.08 + 0.15 * e.e); } };
 const timed = () => S.mode !== 'training';
 
 function newStats() {
@@ -527,7 +527,7 @@ function wallKnocks() {
     const v = r.body.linvel(), prev = _dv.get(r) || { x: v.x, y: v.y, z: v.z, cd: 0 };
     const dv = Math.hypot(v.x - prev.x, v.y - prev.y, v.z - prev.z);
     prev.cd = Math.max(0, prev.cd - DT);
-    if (dv > 2.6 && prev.cd <= 0) { prev.cd = 0.18; sfx.wall(Math.min(1, dv / 9)); }
+    if (dv > 2.6 && prev.cd <= 0) { prev.cd = 0.18; sfx.wall(Math.min(1, dv / 9), r.root.position); }
     prev.x = v.x; prev.y = v.y; prev.z = v.z; _dv.set(r, prev);
   }
 }
@@ -708,10 +708,11 @@ function hud() {
 }
 function sounds() {
   if (!player || !player.body) return;
+  sfx.listen(camera);
   for (const [i, r] of [[1, player], [2, opp]]) {
     const v = r.body.linvel();
     const lvl = game.state === 'fight' || game.state === 'countdown' ? Math.min(1, Math.hypot(v.x, v.z) / (r.def.vmax || 6)) : 0;
-    sfx.motor(i, lvl, game.state === 'fight' || game.state === 'ko' ? (r.spin || 0) : 0);
+    sfx.motor(i, lvl, game.state === 'fight' || game.state === 'ko' ? (r.spin || 0) : 0, r);
   }
 }
 

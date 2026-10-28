@@ -9,7 +9,7 @@ import { Gizmo } from './ui/gizmo.js';
 import { Cameras } from './ui/cameras.js';
 import { Teach } from './ui/teach.js';
 import { Panel } from './ui/panel.js';
-import { Sound } from './ui/audio.js';
+import { Sound } from './audio/sound.js';
 import { Confetti } from './ui/fx.js';
 import { Onboarding } from './ui/onboarding.js';
 import { Explode } from './ui/explode.js';
