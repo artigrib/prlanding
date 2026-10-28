@@ -10,4 +10,11 @@ vert150.glb  – "Vertical Spinner Battlebot – Antweight (150 g)" by TheBlackf
                This derivative (assembled pose, stand-in motor and wheels,
                recolouring) is shared under the same licence, CC BY-SA 4.0.
 
+kosa.glb     – "Kosa" 150 g horizontal undercutter and
+klepeto.glb  – "Klepeto" 150 g four-wheel lifter with a grabber claw:
+               original designs by printedrobotics.cz (not derived from any
+               third-party model), CC BY 4.0
+               (https://creativecommons.org/licenses/by/4.0/).
+               Parametric CAD sources: tools/robots-cad/ (build123d).
+
 Models of the other robots: see the credit line on each robot's page.

@@ -373,8 +373,11 @@ export class Robot {
     return info;
   }
   _useModel(gltfScene) {
-    const box = new THREE.Box3().setFromObject(this.visual);
+    if (this.def.glbNative) return this._useNativeModel(gltfScene);
+    // fit into the footprint the model was tuned for (falls back to the procedural visual's bounds)
+    const fit = this.def.glbFit, box = new THREE.Box3().setFromObject(this.visual);
     const size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
+    if (fit) { size.x = fit.size[0]; size.z = fit.size[1]; center.x = fit.center[0]; center.z = fit.center[1]; }
     const m = gltfScene;
     m.rotation.y = this.def.glbYaw || 0;
     m.updateMatrixWorld(true);
@@ -415,8 +418,7 @@ export class Robot {
       // spin about the motor axis when the model has one (blades are often asymmetric around their bbox)
       const motor = findNode(m, /weapon_motor|motor|hub/i);
       const piv = pivotAround(spinNode, 'center', motor);
-      const blur = new THREE.Mesh(new THREE.CircleGeometry(0.29 / s, 32), new THREE.MeshBasicMaterial({ color: '#c8c8c2', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
-      blur.rotation.y = Math.PI / 2;
+      const blur = blurDisc(this.def.spinner.radius / s, oldParts.bladeAxis || 'x');
       this.parts.blade = piv; this.parts.blur = blur; this.parts.bladeAxis = oldParts.bladeAxis || 'x';
       piv.parent.add(blur); blur.position.copy(piv.position);
     }
@@ -431,6 +433,59 @@ export class Robot {
     if (oldParts.extras) for (const e of oldParts.extras) this.root.add(e);   // mod parts the GLB does not have
     return { scale: s, prints: prints.length, spin: spinNode ? spinNode.name : false, flip: flipNode ? flipNode.name : !!this.parts.flipper, wheels: wheelNodes.length };
   }
+  // GLB authored in the sim frame (glbNative: tools/robots-cad): 1 u = 10 cm, origin = chassis origin,
+  // +Z forward, +X left. Every animated node's origin is its pivot and it has no rest rotation:
+  //   wheel_N (axle centre), blade (weapon axle), lifter | flipper (hinge), jaw (claw hinge, child of the lifter).
+  // Nodes named opt_<slot>_<option> are shown only when that modification is fitted.
+  _useNativeModel(m) {
+    const d = this.def, oldParts = this.parts;
+    m.position.set(0, 0, 0); m.rotation.set(0, 0, 0); m.scale.setScalar(1);
+    const prints = [], byName = {}, wheelNodes = [];
+    const wheelRe = d.glbWheels || /^wheel_\d+$/;
+    m.traverse(o => {
+      if (o !== m && o.name) {
+        if (!byName[o.name]) byName[o.name] = o;
+        if (wheelRe.test(o.name)) wheelNodes.push(o);
+        const opt = /^opt_([a-z]+)_([a-z0-9]+)$/i.exec(o.name);
+        if (opt) o.visible = d.mods ? d.mods[opt[1]] === opt[2] : false;
+      }
+      if (!o.isMesh) return;
+      o.castShadow = o.receiveShadow = true;
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      if (mats.some(mt => mt.name === 'print')) {
+        const own = mats.map(mt => {
+          if (mt.name !== 'print') return mt;
+          let c = prints.find(x => x.userData.src === mt);
+          if (!c) { c = mt.clone(); c.userData.src = mt; c.userData.perRobot = true; prints.push(c); }
+          return c;
+        });
+        o.material = Array.isArray(o.material) ? own : own[0];
+      }
+    });
+    this.root.remove(this.visual);
+    this.visual = m; this.root.add(m);
+    if (prints.length) { prints.forEach(mt => mt.color.copy(this.printMat.color)); this.printMats = prints; }
+    this.parts = { wheels: wheelNodes };
+    const blade = d.spinner && byName.blade;
+    if (blade) {
+      const axis = oldParts.bladeAxis || (Math.abs(d.spinner.axis[1]) > 0.5 ? 'y' : 'x');
+      const blur = blurDisc(d.spinner.radius, axis);
+      blade.parent.add(blur); blur.position.copy(blade.position);
+      this.parts.blade = blade; this.parts.blur = blur; this.parts.bladeAxis = axis;
+    }
+    const arm = d.arm && (byName.lifter || byName.flipper);
+    if (arm) { this.parts.flipper = arm; this.parts.flipRest = arm.rotation.x; }
+    const jaw = d.arm && byName.jaw;
+    if (jaw) { this.parts.jaw = jaw; this.parts.jawOpen = oldParts.jawOpen != null ? oldParts.jawOpen : -0.42; jaw.rotation.x = this.parts.jawOpen; }
+    if (oldParts.extras) for (const e of oldParts.extras) this.root.add(e);
+    return { scale: 1, native: true, prints: prints.length, spin: blade ? blade.name : false, flip: arm ? arm.name : false, jaw: !!jaw, wheels: wheelNodes.length };
+  }
+}
+
+function blurDisc(r, axis) {
+  const b = new THREE.Mesh(new THREE.CircleGeometry(r, 40), new THREE.MeshBasicMaterial({ color: '#c8c8c2', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+  if (axis === 'x') b.rotation.y = Math.PI / 2; else b.rotation.x = -Math.PI / 2;
+  return b;
 }
 
 function findNode(root, re) {

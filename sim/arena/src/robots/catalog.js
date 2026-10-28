@@ -6,7 +6,9 @@
 //
 // A robot = BASE design (geometry + parts list) + one option per modification slot.
 // buildDef(baseId, mods) resolves everything into a flat, frozen `def` the Robot class runs on.
-// Adding a robot is config: a BASES entry (+ a placeholder visual in visuals.js, or a GLB).
+// Adding a robot is config: a BASES entry (+ a procedural visual in visuals.js, and/or a GLB).
+// GLBs: `glbNative: true` = authored in this frame and units (tools/robots-cad, no fitting); otherwise the
+// model is scaled into `glbFit` ({ size: [x, z], center: [x, z] } footprint in u) and floored at -RIDE.
 
 export const MASS_LIMIT_G = 150;
 export const RIDE = 0.27;          // chassis origin height above the floor at rest (u)
@@ -66,7 +68,7 @@ export const BASES = {
       hull: (() => { const p = []; for (const s of [-1, 1]) p.push(s * 0.5, -0.01, 0, s * 0.5, -0.27, 0, s * 0.5, -0.375, 0.44, s * 0.5, -0.335, 0.44); return p; })(),
       friction: 0.04, range: 1.25, torque: 120, speed: 22, hold: 12, kick: 0.16, cooldown: 0.9, kickEnergy: 44
     },
-    glbYaw: 0, glbWheels: /^(SV06|SV07)_\d+$/,
+    glbYaw: 0, glbWheels: /^(SV06|SV07)_\d+$/, glbFit: { size: [1.14, 1.351], center: [0, 0.1955] },
     slots: ['wheels', 'gearing', 'flipper', 'armour', 'gyro']
   },
   vert150: {
@@ -79,12 +81,12 @@ export const BASES = {
     parts: { frame: 36, electronics: 10, battery: 12, driveMotors: 2 * 9, tyres: 2, weaponMotor: 18, blade: 30, forks: 6, hub: 6 },
     // vertical spinner: axis = local -X (front edge of the blade moves UP), axle position, blade radius
     spinner: { axis: [-1, 0, 0], axle: [0, 0, 0.5], radius: 0.29, I: 0.0125, wFree: 215, spinUp: 0.75, teeth: 2, e: 0.25, uppercut: 0, arc: [-95, 70], iStall: 16 },
-    glbYaw: 0, glbWheels: /^wheel_\d+(_tyre|_hub)?$/i,
+    glbYaw: 0, glbWheels: /^wheel_\d+(_tyre|_hub)?$/i, glbFit: { size: [1.09, 1.24], center: [0, 0.17] },
     slots: ['wheels', 'gearing', 'blade', 'wedge', 'armour', 'gyro']
   },
   kosa: {
     id: 'kosa', name: 'Kosa – horizontální spinner', short: 'KOSA', weapon: 'spinner', weaponKind: 'horizontal',
-    blurb: 'Nízký podřezávač s dlouhou čepelí', model: null, invertible: true,
+    blurb: 'Nízký podřezávač s dlouhou čepelí', model: 'kosa', glbNative: true, invertible: true,
     chassis: { half: [0.5, 0.12, 0.4], offset: [0, 0.0, -0.06], friction: 0.35 },
     mounts: [[0.38, -0.18, 1], [-0.38, -0.18, 1], [0.2, 0.26, 0], [-0.2, 0.26, 0]],
     wheels: [[0.43, -0.18], [-0.43, -0.18]], wheelR: 0.225,   // wheels stand proud of the lid: drives upside down
@@ -97,7 +99,7 @@ export const BASES = {
   },
   klepeto: {
     id: 'klepeto', name: 'Klepeto – zvedák s kleštěmi', short: 'KLEP', weapon: 'flipper', weaponKind: 'grabber',
-    blurb: 'Chytí soupeře, zvedne ho a odveze', model: null,
+    blurb: 'Chytí soupeře, zvedne ho a odveze', model: 'klepeto', glbNative: true,
     chassis: { half: [0.52, 0.16, 0.4], offset: [0, 0.01, -0.08], friction: 0.4 },
     mounts: [[0.38, 0.18, 1], [-0.38, 0.18, 1], [0.38, -0.3, 1], [-0.38, -0.3, 1]],
     wheels: [[0.44, 0.18], [-0.44, 0.18], [0.44, -0.3], [-0.44, -0.3]], wheelR: 0.19,

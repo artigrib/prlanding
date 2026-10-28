@@ -1,5 +1,18 @@
 # Aréna 150 g – changelog
 
+## Modely robotů (branch `arena-models`)
+- **Kosa a Klepeto mají vlastní 3D modely** (`models/kosa.glb` 211 kB, `models/klepeto.glb` 241 kB, meshopt):
+  původní parametrické návrhy v build123d (`tools/robots-cad/`), CC BY 4.0. Tištěná vana se zkosenými hranami,
+  víko s gravírovaným jménem, šrouby, náboje s paprsky, pneumatiky se vzorkem; Kosa: outrunner na výložníku,
+  ocelová tyč s břity (varianty disk / lehká čepel), Klepeto: zvedák s ocelovou lopatou a hroty, čelist se zuby a servem.
+- Modely jsou v jednotkách a souřadnicích simulace (`glbNative`): kola, čepel, zvedák a čelist mají pivot v počátku uzlu,
+  takže se animují přesně kolem os z katalogu; koliderům odpovídá rozvor, poloměr kol i půdorys.
+- Uzly `opt_<slot>_<volba>` se zobrazí jen s danou úpravou z garáže (titanový štít, TPU boky, typ čepele).
+- Procedurální náhradní vzhled (`robots/visuals.js`) bez hrubých kvádrů: zaoblené a zkosené výlisky, soustružené pneumatiky
+  se vzorkem, náboje, šrouby – pro načítání a pro budoucí roboty bez GLB. SVRN a vertikální spinner mají pevný
+  `glbFit`, jejich měřítko se nemění.
+- Rozmazaný disk zbraně u GLB modelů respektuje poloměr a osu zbraně (horizontální spinner už nemá svislý disk).
+
 ## v2 (branch `arena-v2`)
 
 ### Hra a UX
