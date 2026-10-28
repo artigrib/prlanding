@@ -383,6 +383,8 @@ tls_state() ( set +eu +o pipefail
     [ "$n" -gt 0 ] && say "tls log word [$k]: $n"
   done
   say "tls admin raw response: starts with brace $(printf '%s' "$hc" | head -c1 | grep -c '{'), contains html $(printf '%s' "$hc" | grep -aci '<html'), contains 'error' $(printf '%s' "$hc" | grep -aci error), contains 'wget' $(printf '%s' "$hc" | grep -aci wget)"
+  say "tls shape: log lines starting with brace $(lg | grep -ac '^{'), digit $(lg | grep -ac '^[0-9]'), letter $(lg | grep -ac '^[A-Za-z]'), other $(lg | grep -acv '^[{0-9A-Za-z]'); max line len $(lg | awk '{ if (length($0)>m) m=length($0) } END {print m+0}'); lines with 'msg' $(lg | grep -ac 'msg'); with 'ts' $(lg | grep -ac 'ts')"
+  say "tls shape: admin resp lines $(printf '%s\n' "$hc" | wc -l), starting with brace $(printf '%s\n' "$hc" | grep -ac '^{'), letter $(printf '%s\n' "$hc" | grep -ac '^[A-Za-z]'), digit $(printf '%s\n' "$hc" | grep -ac '^[0-9]'), with 'level' $(printf '%s\n' "$hc" | grep -aci level)"
   say "tls admin http: reverse_proxy $(printf '%s' "$hc" | grep -ao 'reverse_proxy' | wc -l), host matchers $(printf '%s' "$hc" | grep -ao '"host"' | wc -l), listen entries $(printf '%s' "$hc" | grep -ao '"listen"' | wc -l)"
   for k in 'rateLimited' 'Timeout during connect' 'Connection refused' 'unauthorized' 'Invalid response' 'no valid A records' 'DNS problem' 'CAA' 'context deadline' 'permission denied' 'read-only'; do
     n=$(lg | grep -aci -- "$k")
