@@ -645,7 +645,8 @@ function setText(el, t) { if (el._t !== t) { el._t = t; el.textContent = t; } }
 function statusOf(r, mine) {
   if (r.flippedTime <= 0.6 && r.statusText) return r.inverted ? 'Jede vzhůru nohama' : r.statusText();
   if (r.flippedTime > 0.6) {
-    const t = `Převrácený ${Math.max(0, Math.ceil(FLIP_LIMIT - r.flippedTime))} s`;
+    const left = Math.max(0, Math.ceil(FLIP_LIMIT - r.flippedTime));
+    const t = r.up && r.up.y > 0.5 && !r.inverted ? `Nepojízdný ${left} s` : `Převrácený ${left} s`;
     if (!mine) return t;
     return t + (r.def.weapon === 'flipper' ? (touch ? ' · flipper = otočit' : ' · zbraň = otočit') : ' · jeďte a rozhoupejte se');
   }

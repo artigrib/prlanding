@@ -80,6 +80,15 @@ export function createBrain(levelId, map) {
           if (!behind) _t.set(bx, 0, bz); else _t.set(o.pos.x + hx * 1.2, 0, o.pos.z + hz * 1.2);
         }
       }
+      // grabber holding the opponent: carry it to the nearest pit (not the beginner)
+      const holding = ai.arm && ai.arm.holding;
+      if (holding && levelId !== 'easy' && map.hazards && map.hazards.length) {
+        let best = map.hazards[0], bd = 1e9;
+        for (const h of map.hazards) { const dd = Math.hypot(h.x - me.pos.x, h.z - me.pos.z); if (dd < bd) { bd = dd; best = h; } }
+        _t.set(best.x, 0, best.z);
+        // opponent dangling over the hazard: let go and back off
+        if (map.hazardAt(o.pos.x, o.pos.z)) { cmd.fire = true; s.backing = 0.5; s.backTurn = 0; }
+      }
       if (s.errT <= 0) { s.err = (Math.random() - 0.5) * 2 * L.aimErr; s.errT = 0.6 + Math.random(); }
       // spinner with a slow blade keeps its distance while it spins up (master only)
       let retreat = L.flank && spinner && ai.weaponOn && ai.spin < 0.55 && dist < 2.5;
@@ -92,7 +101,7 @@ export function createBrain(levelId, map) {
       if (levelId === 'easy' && Math.random() < 0.08) cmd.throttle *= 0.3;   // hesitates
       // keep out of hazards ourselves (look ahead along our velocity)
       const ax = me.pos.x + me.fwd.x * 1.1 + v.x * 0.3, az = me.pos.z + me.fwd.z * 1.1 + v.z * 0.3;
-      if (map.hazardAt(ax, az) && !map.hazardAt(o.pos.x, o.pos.z)) { cmd.throttle = -0.6; cmd.turn = a > 0 ? 1 : -1; }
+      if (!holding && map.hazardAt(ax, az) && !map.hazardAt(o.pos.x, o.pos.z)) { cmd.throttle = -0.6; cmd.turn = a > 0 ? 1 : -1; }
       const close = dist < 1.6;
       if (cmd.throttle > 0.5 && speed < 0.6) s.stuck += close ? 0.05 : 0.1; else s.stuck = Math.max(0, s.stuck - 0.05);
       if (s.stuck > (L.flank ? 0.8 : 1.1)) { s.stuck = 0; s.backing = 0.7; s.backTurn = Math.random() < 0.5 ? -1 : 1; }
