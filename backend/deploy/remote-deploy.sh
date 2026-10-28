@@ -228,7 +228,28 @@ docker compose version >/dev/null || die "docker compose plugin missing"
 install -d -m 750 "$ROOT"
 cd "$ROOT"
 
+diagnose() {
+  # Low-sensitivity facts only: counts, our own network names, our own DNS lookups.
+  local id n
+  for id in $(dc ps --all -q 2>/dev/null || true); do
+    n=$(docker inspect -f '{{index .Config.Labels "com.docker.compose.service"}}: networks={{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' "$id" 2>/dev/null || true)
+    say "diag $n"
+  done
+  say "diag containers attached to our network: $(docker network inspect printedrobotics_web -f '{{len .Containers}}' 2>/dev/null || echo none)"
+  say "diag other containers publishing 80: $(docker ps --filter publish=80 --format '{{.Label "com.docker.compose.project"}}' | grep -vc '^printedrobotics$' || true), 443: $(docker ps --filter publish=443 --format '{{.Label "com.docker.compose.project"}}' | grep -vc '^printedrobotics$' || true)"
+  say "diag docker-proxy processes: $(pgrep -c docker-proxy || echo 0); listening tcp :80 sockets: $(ss -ltnH 'sport = :80' 2>/dev/null | wc -l)"
+  say "diag caddy resolves api: $(sanitize "$(dc exec -T caddy nslookup api 127.0.0.11 2>&1 | grep -ciE 'address' || true) address line(s)")"
+  say "diag docker: $(docker version -f '{{.Server.Version}}' 2>/dev/null), compose: $(docker compose version --short 2>/dev/null)"
+}
+
 case "$ACTION" in
+  diag)
+    [ -f "$ROOT/release.env" ] || die "no release deployed yet"
+    build_env
+    report_services
+    diagnose
+    exit 0
+    ;;
   status)
     [ -f "$ROOT/release.env" ] || die "no release deployed yet"
     build_env
@@ -285,6 +306,7 @@ fi
 
 warn "new release failed its health checks; rolling back"
 report_services
+diagnose
 if [ -d "$ROOT/prev-config" ]; then
   cp "$ROOT/prev-config/compose.yml" "$ROOT/compose.yml" 2>/dev/null || true
   cp "$ROOT/prev-config/Caddyfile" "$ROOT/Caddyfile" 2>/dev/null || true

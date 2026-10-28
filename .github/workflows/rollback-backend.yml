@@ -1,6 +1,7 @@
 # Manual rollback / status for the printedrobotics backend on vps1.
 #   rollback: switch to the previous release (images kept on the server) and health-check it.
 #   status:   show the current release and the state of our own containers.
+#   diag:     low-sensitivity diagnostics (counts, our network, docker/compose versions).
 # Prints only fixed STATUS/WARN/ERROR lines from remote-deploy.sh as annotations (public logs).
 name: Rollback backend
 on:
@@ -9,7 +10,7 @@ on:
       action:
         description: What to do
         type: choice
-        options: [status, rollback]
+        options: [status, rollback, diag]
         default: status
 permissions:
   contents: read
@@ -57,7 +58,7 @@ jobs:
           U: ${{ secrets.VPS_USER }}
           ACT: ${{ inputs.action }}
         run: |
-          case "$ACT" in status|rollback) ;; *) echo "::error::bad action"; exit 1;; esac
+          case "$ACT" in status|rollback|diag) ;; *) echo "::error::bad action"; exit 1;; esac
           set +e
           # Use the script from this commit (it does not need the deploy files for these actions).
           out=$(ssh -o StrictHostKeyChecking=$STRICT -l "$U" vps "ACTION=$ACT bash -s" < backend/deploy/remote-deploy.sh 2>/dev/null)
