@@ -75,6 +75,11 @@ jobs:
               f=$n.printedrobotics.cz
               a=$(dig +short A "$f" @1.1.1.1 2>/dev/null | grep -E '^[0-9.]+$' | sort -u)
               if [ -n "$a" ] && [ "$a" = "$vps" ]; then r=yes; elif [ -z "$a" ]; then r="no (no record)"; else r="no (other address)"; fi
+              aaaa=$(dig +short AAAA "$f" @1.1.1.1 2>/dev/null | grep -c ':' || true)
+              ns=$(dig +short NS printedrobotics.cz @1.1.1.1 2>/dev/null | sed -E 's/\.$//' | awk -F. '{print $(NF-1)"."$NF}' | sort -u | tr '\n' ' ')
+              caa=$(dig +short CAA printedrobotics.cz @1.1.1.1 2>/dev/null | grep -c . || true)
+              cn=$(dig +short CNAME "$f" @1.1.1.1 2>/dev/null | grep -c . || true)
+              echo "::notice::tls $n dns: AAAA records $aaaa; CNAME records $cn; zone CAA records $caa; nameserver domains: $ns"
               tp=""
               for port in 80 443; do
                 if timeout 6 bash -c "exec 3<>/dev/tcp/$vps/$port" 2>/dev/null; then st=open

@@ -383,7 +383,14 @@ tls_state() ( set +eu +o pipefail
     n=$(cnt "$k")
     [ "$n" -gt 0 ] && say "tls log word [$k]: $n"
   done
-  local ec
+  local ec pn
+  for pn in 80 443; do
+    say "tls tcp:$pn listener process: $(ss -ltnpH "sport = :$pn" 2>/dev/null | grep -ao 'users:(("[^"]*"' | sed 's/users:(("//;s/"//' | sort | uniq -c | awk '{print $2"x"$1}' | tr '\n' ' ')"
+  done
+  local lh
+  lh=$(dc exec -T caddy wget -q -T 3 -S -O /dev/null http://127.0.0.1:80/.well-known/acme-challenge/x 2>&1 | head -1)
+  say "tls local port 80 answers: $(printf '%s' "$lh" | grep -ao 'HTTP/[0-9.]* [0-9]*' | head -1)"
+  local ec2
   say "tls acme problem types: $(lg | awk '{ while (match($0, /urn:ietf:params:acme:error:[A-Za-z]+/)) { t=substr($0, RSTART+27, RLENGTH-27); c[t]++; $0=substr($0, RSTART+RLENGTH) } } END { for (t in c) printf "%s=%d ", t, c[t]; print "" }')"
   say "tls acme http codes: $(lg | awk '{ while (match($0, /HTTP [0-9][0-9][0-9]/)) { t=substr($0, RSTART+5, 3); c[t]++; $0=substr($0, RSTART+RLENGTH) } } END { for (t in c) printf "%s=%d ", t, c[t]; print "" }')"
   for k in serverinternal 'error:internal' malformed badnonce rejectedidentifier incorrect secondary validation 'could not' 'http 500' 'http 400' 'http 403' 'http 429' 'http 503' 'status 500' 'maintenance' 'aaaa' ipv6 'ipv4' 'firewall' 'unexpected' 'bad' 'eof' 'reset' 'tls: ' 'handshake' 'unavailable' 'overloaded' 'try again' 'later' ratelimited 'rate limit' 429 'too many' timeout refused unauthorized 'invalid response' dns 'no valid' caa forbidden connection deadline retry policy account registration email zerossl letsencrypt 'rejected' 'urn:ietf' 'challenge' 'authorization' 'http-01' 'tls-alpn' 'dial' 'lookup' 'x509' 'storage' 'lock' 'permission' 'read-only file' 'directory' 'no such file' 'unable' 'cannot' 'invalid' 'order' 'finalize' 'server error' 'internal'; do
