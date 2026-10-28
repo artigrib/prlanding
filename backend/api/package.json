@@ -1,0 +1,19 @@
+{
+  "name": "printedrobotics-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cookie-less, identifier-free event counter and health endpoint for printedrobotics.cz",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/main.ts",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2"
+  }
+}
