@@ -350,13 +350,9 @@ tls_state() ( set +eu +o pipefail
   lg() { docker logs "$cid" 2>&1; }
   cnt() { lg | awk -v k="$1" 'index(tolower($0),tolower(k)){n++} END{print n+0}'; }
   say "tls caddy container: $([ -n "$cid" ] && echo found || echo missing); log driver: $(docker inspect -f '{{.HostConfig.LogConfig.Type}}' "$cid" 2>/dev/null); started: $(docker inspect -f '{{.State.StartedAt}}' "$cid" 2>/dev/null | cut -c1-16)"
-  # Our own Caddy config (same content as the public repo), addresses/emails masked.
-  mask() { tr -d '\n\r' | sed -E 's/[0-9]{1,3}(\.[0-9]{1,3}){3}/<ip>/g; s/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+/<email>/g; s/[A-Za-z0-9+\/=]{40,}/<blob>/g' | cut -c1-"$1"; }
-  say "tls live tls app: $(dc exec -T caddy wget -q -T 3 -O - http://127.0.0.1:12019/config/apps/tls 2>&1 | mask 400)"
-  say "tls live top keys: $(dc exec -T caddy wget -q -T 3 -O - http://127.0.0.1:12019/config/ 2>&1 | tr -d '\n' | grep -o '"[a-z_]*":' | sort -u | tr -d '\n' | cut -c1-300)"
-  say "tls adapted tls app: $(dc exec -T caddy caddy adapt --config /etc/caddy/Caddyfile --adapter caddyfile 2>/dev/null | tr -d '\n' | grep -o '"tls":{.*' | mask 400)"
-  say "tls adapted http head: $(dc exec -T caddy caddy adapt --config /etc/caddy/Caddyfile --adapter caddyfile 2>/dev/null | tr -d '\n' | grep -o '"http":{.*' | mask 300)"
-  say "tls last error msgs: $(lg | grep -a '"level":"error"' | tail -3 | sed -E 's/.*"msg":"([^"]*)".*/\1/' | sort | uniq -c | tr '\n' ';' | mask 300)"
+  # Live TLS app shape as yes/no flags only.
+  local tj; tj=$(dc exec -T caddy wget -q -T 3 -O - http://127.0.0.1:12019/config/apps/tls 2>/dev/null)
+  say "tls live tls app: automation policy $(printf '%s' "$tj" | grep -q '"policies"' && echo yes || echo no); acme issuer $(printf '%s' "$tj" | grep -q '"module":"acme"' && echo yes || echo no); challenges block $(printf '%s' "$tj" | grep -q '"challenges"' && echo yes || echo no)"
   d80=$(iptables -t nat -S 2>/dev/null | grep -- '-j DNAT' | grep -cE -- '--dport 80( |$)' || true)
   say "tls nat DNAT dport 80 rules: $d80; iptables readable: $(iptables -t nat -S >/dev/null 2>&1 && echo yes || echo no)"
   for h in api mcp relay; do
