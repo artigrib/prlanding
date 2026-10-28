@@ -62,7 +62,17 @@ export function buildPlaceholder(def, printMat) {
   } else if (def.id === 'vert150') {
     add(new THREE.BoxGeometry(0.74, 0.2, 0.74), printMat, 0, -0.02, -0.08);
     add(new THREE.BoxGeometry(0.6, 0.03, 0.58), M.dark, 0, 0.095, -0.1);
-    for (const s of [-1, 1]) { const f = add(new THREE.BoxGeometry(0.07, 0.2, 0.42), printMat, s * 0.13, -0.03, 0.42); f.rotation.x = -0.12; }
+    if (def.wedge === 'klin') {
+      // full-width steel wedge under the blade
+      // two steel wedgelets either side of the blade slot
+      const len = Math.hypot(0.4, 0.33), ang = Math.atan2(0.33, 0.4);
+      const k = new THREE.Group();
+      for (const sx of [-1, 1]) { const w = add(new THREE.BoxGeometry(0.36, 0.03, len), M.steel, sx * 0.31, -0.08, 0.5, k); w.rotation.x = ang; }
+      g.add(k);
+      parts.extras = [k];      // kept when a GLB replaces the placeholder (the model has forks only)
+    } else if (def.wedge !== 'bez') {
+      for (const s of [-1, 1]) { const f = add(new THREE.BoxGeometry(0.07, 0.2, 0.42), printMat, s * 0.13, -0.03, 0.42); f.rotation.x = -0.12; }
+    }
     const axle = new THREE.Group(); axle.position.fromArray(def.spinner.axle); g.add(axle);
     const blade = new THREE.Group(); axle.add(blade);
     add(new THREE.BoxGeometry(0.075, 0.56, 0.11), M.steel, 0, 0, 0, blade);
@@ -74,7 +84,7 @@ export function buildPlaceholder(def, printMat) {
     // low wedge-shaped body, motor pod at the front, long bar blade sweeping the sides
     const body = new THREE.Shape(); // side profile (z, y), extruded across x
     body.moveTo(-0.46, -0.13); body.lineTo(0.3, -0.13); body.lineTo(0.3, 0.02); body.lineTo(0.05, 0.12); body.lineTo(-0.46, 0.12); body.closePath();
-    const bg = new THREE.ExtrudeGeometry(body, { depth: 0.66, bevelEnabled: false }); bg.rotateY(Math.PI / 2); bg.translate(-0.33, 0, 0);
+    const bg = new THREE.ExtrudeGeometry(body, { depth: 0.66, bevelEnabled: false }); bg.rotateY(-Math.PI / 2); bg.translate(0.33, 0, 0);
     add(bg, printMat, 0, 0, 0);
     add(new THREE.BoxGeometry(0.44, 0.03, 0.34), M.dark, 0, 0.125, -0.2);
     add(new THREE.BoxGeometry(0.06, 0.05, 0.06), M.orange, 0.16, 0.16, -0.32);

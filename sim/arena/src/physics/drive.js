@@ -52,7 +52,8 @@ export class Drive {
     this.cx = new Float32Array(this.n); this.cy = new Float32Array(this.n); this.cz = new Float32Array(this.n); // contact points
     this.hit = new Uint8Array(this.n);
     this.nx = new Float32Array(this.n); this.ny = new Float32Array(this.n); this.nz = new Float32Array(this.n); // contact normals
-    this.slip = new Uint8Array(this.n);          // 1 = wheel broken loose
+    this.slip = new Uint8Array(this.n);          // 1 = wheel broken loose (spinning or sliding)
+    this.grip = new Float32Array(this.n).fill(1); // floor grip under each contact (collider friction / 0.8)
     this.alive = new Uint8Array(this.n).fill(1); // wheel still attached
     this.wheelOmega = new Float32Array(2);       // visual wheel speed per side [left, right] rad/s
     this.uL = 0; this.uR = 0; this.yawI = 0; this.current = 0; this.slipping = 0; this.powerMul = 1;
@@ -140,6 +141,8 @@ export class Drive {
       n.x = -dx * F * dt; n.y = -dy * F * dt; n.z = -dz * F * dt;
       b.applyImpulseAtPoint(n, o, true);
       this.load[i] = F; this.hit[i] = 1; contacts++;
+      const fr = hit.collider ? hit.collider.friction() / 0.8 : 1;
+      this.grip[i] = fr < 0.05 ? 0.05 : fr > 1.2 ? 1.2 : fr;
       this.cx[i] = o.x + dx * hit.timeOfImpact; this.cy[i] = o.y + dy * hit.timeOfImpact; this.cz[i] = o.z + dz * hit.timeOfImpact;
       this.nx[i] = -dx; this.ny[i] = -dy; this.nz[i] = -dz;
       if (wheel) drivenC++;
@@ -171,7 +174,7 @@ export class Drive {
         // Combined-slip tyre: the patch slips with s = (u − vLong, −vLat) where u = wheel surface speed.
         // Friction opposes s, |F| = μ(|s|)·N·min(1, |s|/s0); μ falls from μs to μk as the slip grows
         // (wheelspin). Quasi-static wheel: find u where motor force = tyre longitudinal force.
-        const s0 = dr.s0, mus = dr.mu, muk = dr.mu * dr.kin;
+        const g = this.grip[i], s0 = dr.s0, mus = dr.mu * g, muk = dr.mu * dr.kin * g;
         let lo = Math.min(vLong, a * v0) - 1, hi = Math.max(vLong, a * v0) + 1;
         for (let it = 0; it < 14; it++) { const mid = (lo + hi) * 0.5; if (motorF(mid, F0w, a, v0) > tyreF(mid, vLong, vLat, mus, muk, N, s0)) lo = mid; else hi = mid; }
         const u = (lo + hi) * 0.5, sl = u - vLong, sm = Math.hypot(sl, vLat);
@@ -190,7 +193,7 @@ export class Drive {
         if (left) { vSideL += u; nL++; } else { vSideR += u; nR++; }
       } else {
         // skid / frame corner: kinetic sliding friction against the planar velocity
-        cap = dr.skidMu * N;
+        cap = dr.skidMu * N * this.grip[i];
         FL = -vLong * share / dt * 0.5; FS = -vLat * share / dt * 0.5;
         const mag = Math.hypot(FL, FS);
         if (mag > cap) { const s = cap / mag; FL *= s; FS *= s; }

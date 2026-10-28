@@ -58,7 +58,7 @@ export const BASES = {
     chassis: { half: [0.54, 0.15, 0.45], offset: [0, 0, 0], friction: 0.35 },
     mounts: [[0.4, 0.3, 1], [-0.4, 0.3, 1], [0.4, -0.3, 1], [-0.4, -0.3, 1]],
     wheels: [[0.48, 0.28], [-0.48, 0.28], [0.48, -0.28], [-0.48, -0.28]], wheelR: 0.2,
-    drive: { fStall: 66, motors: 4 }, yawRate: 4.6, gyro: true,
+    drive: { fStall: 66, motors: 4, vMul: 1.0 }, yawRate: 4.6, gyro: true,
     parts: { frame: 44, electronics: 10, battery: 12, driveMotors: 4 * 9, tyres: 4, flipperServo: 13, flipperPlate: 11 },
     // flipper: plate hinged at its top edge; hull points relative to the pivot (chassis-aligned at rest)
     arm: {
@@ -75,13 +75,12 @@ export const BASES = {
     chassis: { half: [0.56, 0.12, 0.4], offset: [0, -0.01, -0.05], friction: 0.35 },
     mounts: [[0.42, -0.15, 1], [-0.42, -0.15, 1], [0.16, 0.36, 0], [-0.16, 0.36, 0]],
     wheels: [[0.48, -0.15], [-0.48, -0.15]], wheelR: 0.25,
-    drive: { fStall: 52, motors: 2 }, yawRate: 5.2, gyro: true,
-    parts: { frame: 38, electronics: 10, battery: 12, driveMotors: 2 * 9, tyres: 2, weaponMotor: 18, blade: 30, forks: 6, hub: 6 },
+    drive: { fStall: 52, motors: 2, vMul: 0.96 }, yawRate: 5.2, gyro: true,
+    parts: { frame: 36, electronics: 10, battery: 12, driveMotors: 2 * 9, tyres: 2, weaponMotor: 18, blade: 30, forks: 6, hub: 6 },
     // vertical spinner: axis = local -X (front edge of the blade moves UP), axle position, blade radius
     spinner: { axis: [-1, 0, 0], axle: [0, 0, 0.5], radius: 0.29, I: 0.0125, wFree: 215, spinUp: 0.75, teeth: 2, e: 0.25, uppercut: 0, arc: [-95, 70], iStall: 16 },
-    wedge: { kind: 'vidle' },
     glbYaw: 0, glbWheels: /^wheel_\d+(_tyre|_hub)?$/i,
-    slots: ['wheels', 'gearing', 'blade', 'armour', 'gyro']
+    slots: ['wheels', 'gearing', 'blade', 'wedge', 'armour', 'gyro']
   },
   kosa: {
     id: 'kosa', name: 'Kosa – horizontální spinner', short: 'KOSA', weapon: 'spinner', weaponKind: 'horizontal',
@@ -89,7 +88,7 @@ export const BASES = {
     chassis: { half: [0.5, 0.12, 0.4], offset: [0, 0.0, -0.06], friction: 0.35 },
     mounts: [[0.38, -0.18, 1], [-0.38, -0.18, 1], [0.2, 0.26, 0], [-0.2, 0.26, 0]],
     wheels: [[0.43, -0.18], [-0.43, -0.18]], wheelR: 0.21,
-    drive: { fStall: 54, motors: 2 }, yawRate: 4.4, gyro: true,
+    drive: { fStall: 54, motors: 2, vMul: 1.04 }, yawRate: 4.4, gyro: true,
     parts: { frame: 34, electronics: 10, battery: 12, driveMotors: 2 * 9, tyres: 2, weaponMotor: 18, blade: 38, hub: 6 },
     // horizontal spinner: axis = +Y (counter-clockwise from above: the front tip sweeps to the robot's left)
     spinner: { axis: [0, 1, 0], axle: [0, -0.16, 0.42], radius: 0.5, I: 0.03, wFree: 125, spinUp: 0.9, teeth: 2, e: 0.2, uppercut: 0.28, arc: [-115, 115], iStall: 18 },
@@ -102,8 +101,8 @@ export const BASES = {
     chassis: { half: [0.52, 0.16, 0.4], offset: [0, 0.01, -0.08], friction: 0.4 },
     mounts: [[0.38, 0.18, 1], [-0.38, 0.18, 1], [0.38, -0.3, 1], [-0.38, -0.3, 1]],
     wheels: [[0.44, 0.18], [-0.44, 0.18], [0.44, -0.3], [-0.44, -0.3]], wheelR: 0.19,
-    drive: { fStall: 78, motors: 4 }, yawRate: 4.0, gyro: true,
-    parts: { frame: 40, electronics: 10, battery: 12, driveMotors: 4 * 9, tyres: 4, liftServo: 12, forks: 12, clamp: 8 },
+    drive: { fStall: 78, motors: 4, vMul: 0.9 }, yawRate: 4.0, gyro: true,
+    parts: { frame: 36, electronics: 10, battery: 12, driveMotors: 4 * 9, tyres: 4, liftServo: 12, forks: 12, clamp: 8 },
     // lifting forks hinged at the top-front of the chassis, tips just above the floor
     arm: {
       pivot: [0, 0.1, 0.3],
@@ -119,7 +118,7 @@ export const BASES = {
 // ---------------------------------------------------------------- modifications
 // slot → options. `g` = grams added (negative saves weight), `fx` = what it changes in buildDef.
 // stats (0..1 deltas) are only for the garage bars; physics comes from fx.
-const SLOT_NAMES = { wheels: 'Kola', gearing: 'Převody', flipper: 'Flipper', blade: 'Zbraň', clamp: 'Kleště', armour: 'Pancíř', gyro: 'Elektronika' };
+const SLOT_NAMES = { wedge: 'Klín', wheels: 'Kola', gearing: 'Převody', flipper: 'Flipper', blade: 'Zbraň', clamp: 'Kleště', armour: 'Pancíř', gyro: 'Elektronika' };
 export const SLOTS = SLOT_NAMES;
 const OPTIONS = {
   wheels: [
@@ -147,6 +146,11 @@ const OPTIONS = {
     { id: 'std', name: 'Kleště', desc: 'Drží až 5 s', g: 0, default: true },
     { id: 'silny', name: 'Silné servo', desc: 'Zvedne výš, +5 g', g: 5 }
   ],
+  wedge: [
+    { id: 'vidle', name: 'Vidlice', desc: 'Dvě nízké vidlice před zbraní', g: 0, default: true },
+    { id: 'klin', name: 'Široký klín', desc: 'Ocelový klín přes celou šířku – lépe podjede soupeře, +6 g', g: 6 },
+    { id: 'bez', name: 'Bez klínu', desc: 'Lehčí, ale soupeř se snadno dostane pod vás, −6 g', g: -6 }
+  ],
   armour: [
     { id: 'std', name: 'Tištěný plast', desc: 'Základní odolnost', g: 0, default: true },
     { id: 'tpu', name: 'TPU boky', desc: 'Měkké boky pohltí zásahy z boku, +9 g', g: 9 },
@@ -166,6 +170,7 @@ const STAT_FX = {
   'flipper:silny': { weapon: 0.15 }, 'flipper:rychly': { weapon: -0.08 },
   'blade:disk': { weapon: 0.18 }, 'blade:lehka': { weapon: -0.15 },
   'clamp:silny': { weapon: 0.12 },
+  'wedge:klin': { push: 0.06, armor: 0.04 }, 'wedge:bez': { push: -0.08 },
   'armour:tpu': { armor: 0.2 }, 'armour:titan': { armor: 0.3 }, 'armour:bez': { armor: -0.3 }
 };
 
@@ -222,7 +227,7 @@ export function buildDef(baseId, mods) {
   // ---- drive
   const gear = GEARING[pick.gearing || 'std'];
   const drive = {
-    vFree: gear.vFree, fStall: base.drive.fStall * gear.fStall, motors: base.drive.motors, iStall: gear.iStall,
+    vFree: gear.vFree * (base.drive.vMul || 1), fStall: base.drive.fStall * gear.fStall, motors: base.drive.motors, iStall: gear.iStall,
     mu: tyre.mu, kin: tyre.kin, latStiff: tyre.latStiff, s0: tyre.s0, skidMu: 0.3, crr: 0.03
   };
   const gyro = (pick.gyro || 'gyro') === 'gyro';
@@ -257,7 +262,7 @@ export function buildDef(baseId, mods) {
 
   // ---- garage stats (0..1 bars), rough but monotonic in the physics numbers
   const mass = grams / G_PER_MU;
-  const speed = clamp01((gear.vFree - 4) / 6);
+  const speed = clamp01((drive.vFree - 4) / 6);
   const push = clamp01((drive.fStall / mass) * Math.min(1, tyre.mu / 1.1) / 60 - 0.05);
   const weaponE = spinner ? spinner.energyMax : arm ? (arm.grab ? arm.torque * arm.range * 9 * arm.grab.lift * 2 : arm.kickEnergy * 6) : 0;
   const weapon = clamp01(weaponE / 420);
@@ -267,6 +272,7 @@ export function buildDef(baseId, mods) {
   return deepFreeze({
     ...base,
     mods: pick, modList, parts, grams, massG: grams, mass, valid: problems.length === 0, problems,
+    wedge: base.slots.includes('wedge') ? pick.wedge : null,
     drive, gyro, spinner, arm, hp, armourAbsorb: armour.absorb, stats,
     // legacy fields older code reads
     vmax: drive.vFree, mu: drive.mu, yawMax: base.yawRate

@@ -51,6 +51,7 @@ export class Robot {
     this.wheelSpin = [0, 0]; this.flipAnim = 0; this.bladeAngle = 0; this.handicap = 1; this.stepIndex = 0;
     this.debris = []; this.events = [];
     this._body = null;
+    this.usesSurfaceGrip = true;      // tyre μ is scaled by the floor collider's friction (ice maps)
     this.resetState();
   }
   resetState() {
@@ -95,14 +96,21 @@ export class Robot {
     const [hx, hy, hz] = d.chassis.half, off = d.chassis.offset;
     this.colliders = [];
     const add = (desc) => { const c = world.createCollider(desc.setCollisionGroups(this.groups), this._body); this.colliders.push(c); return c; };
-    const extras = d.id === 'vert150' ? 0.3 : d.id === 'kosa' ? 0.3 : 0;   // weapon mass sits up front
+    const extras = d.id === 'vert150' || d.id === 'kosa' ? 0.3 : 0;   // weapon mass sits up front
     add(RAPIER.ColliderDesc.cuboid(hx, hy, hz).setTranslation(off[0], off[1], off[2])
       .setMass(bodyMass * (1 - extras)).setFriction(d.chassis.friction).setRestitution(0.08));
-    if (d.id === 'vert150') {
-      // fork wedge in front of the blade: low leading edge so it can win the ground game
-      const f = [];
-      for (const s of [-1, 1]) f.push(s * 0.2, -0.235, 0.68, s * 0.2, -0.2, 0.68, s * 0.2, 0.12, 0.3, s * 0.2, -0.2, 0.3);
-      add(RAPIER.ColliderDesc.convexHull(new Float32Array(f)).setMass(bodyMass * extras).setFriction(0.15).setRestitution(0.05));
+    if (d.id === 'vert150' && d.wedge === 'bez') {
+      // no wedge: the weapon hub still carries the front mass
+      add(RAPIER.ColliderDesc.cuboid(0.12, 0.1, 0.1).setTranslation(0, 0, 0.42).setMass(bodyMass * extras).setFriction(0.3).setRestitution(0.05));
+    } else if (d.id === 'vert150') {
+      // wedge in front of the blade: low leading edge so it can win the ground game
+      // klin: two wedgelets either side of the blade slot; vidle: the narrow fork wedge
+      const parts = d.wedge === 'klin' ? [[0.12, 0.5], [-0.5, -0.12]] : [[-0.2, 0.2]], tip = d.wedge === 'klin' ? -0.25 : -0.235;
+      for (const [x0, x1] of parts) {
+        const f = [];
+        for (const x of [x0, x1]) f.push(x, tip, 0.7, x, tip + 0.03, 0.7, x, 0.12, 0.3, x, -0.2, 0.3);
+        add(RAPIER.ColliderDesc.convexHull(new Float32Array(f)).setMass(bodyMass * extras / parts.length).setFriction(d.wedge === 'klin' ? 0.08 : 0.15).setRestitution(0.05));
+      }
     } else if (d.id === 'kosa') {
       // weapon motor pod at the axle (the blade itself is swept, not a collider)
       const a = d.spinner.axle;
@@ -410,6 +418,7 @@ export class Robot {
       this.parts.flipperOnlyWhenFiring = true; oldParts.flipper.visible = false;
     }
     if (oldParts.jaw) { this.parts.jaw = oldParts.jaw; this.parts.jawOpen = oldParts.jawOpen; }
+    if (oldParts.extras) for (const e of oldParts.extras) this.root.add(e);   // mod parts the GLB does not have
     return { scale: s, prints: prints.length, spin: spinNode ? spinNode.name : false, flip: flipNode ? flipNode.name : !!this.parts.flipper, wheels: wheelNodes.length };
   }
 }
