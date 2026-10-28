@@ -43,7 +43,7 @@ jobs:
       ASSETS: ${{ inputs.assets }}
       MAX_COUNT: ${{ inputs.max_count }}
       REVISION: ${{ inputs.revision }}
-      LOGS: ${{ runner.temp }}/assets-logs
+      LOGS: /tmp/assets-logs
       HF_HUB_DISABLE_PROGRESS_BARS: '1'
       HF_HUB_DISABLE_TELEMETRY: '1'
     steps:
