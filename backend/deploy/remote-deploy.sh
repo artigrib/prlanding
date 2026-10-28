@@ -350,6 +350,15 @@ tls_state() ( set +eu +o pipefail
   lg() { docker logs "$cid" 2>&1; }
   cnt() { lg | awk -v k="$1" 'index(tolower($0),tolower(k)){n++} END{print n+0}'; }
   say "tls caddy container: $([ -n "$cid" ] && echo found || echo missing); log driver: $(docker inspect -f '{{.HostConfig.LogConfig.Type}}' "$cid" 2>/dev/null); started: $(docker inspect -f '{{.State.StartedAt}}' "$cid" 2>/dev/null | cut -c1-16)"
+  # Our own Caddy config (same content as the public repo), addresses/emails masked.
+  mask() { tr -d '\n\r' | sed -E 's/[0-9]{1,3}(\.[0-9]{1,3}){3}/<ip>/g; s/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+/<email>/g; s/[A-Za-z0-9+\/=]{40,}/<blob>/g' | cut -c1-"$1"; }
+  say "tls live tls app: $(dc exec -T caddy wget -q -T 3 -O - http://127.0.0.1:12019/config/apps/tls 2>&1 | mask 400)"
+  say "tls live top keys: $(dc exec -T caddy wget -q -T 3 -O - http://127.0.0.1:12019/config/ 2>&1 | tr -d '\n' | grep -o '"[a-z_]*":' | sort -u | tr -d '\n' | cut -c1-300)"
+  say "tls adapted tls app: $(dc exec -T caddy caddy adapt --config /etc/caddy/Caddyfile --adapter caddyfile 2>/dev/null | tr -d '\n' | grep -o '"tls":{.*' | mask 400)"
+  say "tls adapted http head: $(dc exec -T caddy caddy adapt --config /etc/caddy/Caddyfile --adapter caddyfile 2>/dev/null | tr -d '\n' | grep -o '"http":{.*' | mask 300)"
+  say "tls last error msgs: $(lg | grep -a '"level":"error"' | tail -3 | sed -E 's/.*"msg":"([^"]*)".*/\1/' | sort | uniq -c | tr '\n' ';' | mask 300)"
+  d80=$(iptables -t nat -S 2>/dev/null | grep -- '-j DNAT' | grep -cE -- '--dport 80( |$)' || true)
+  say "tls nat DNAT dport 80 rules: $d80; iptables readable: $(iptables -t nat -S >/dev/null 2>&1 && echo yes || echo no)"
   for h in api mcp relay; do
     cert=no
     dc exec -T caddy sh -c "ls /data/caddy/certificates/*/$h.printedrobotics.cz/$h.printedrobotics.cz.crt" >/dev/null 2>&1 && cert=yes
@@ -379,10 +388,6 @@ tls_state() ( set +eu +o pipefail
   say "tls admin http config: size $(printf '%s' "$hc" | wc -c), hosts $(printf '%s' "$hc" | grep -o '[a-z]*\.printedrobotics\.cz' | sort -u | wc -l), automatic_https disabled $(printf '%s' "$hc" | grep -ac '"automatic_https":{"disable"'); tls config is $(case "$cfg" in *error*) echo error-response;; null*|"") echo empty;; *) echo present;; esac)"
   say "tls docker log bytes: $(docker logs "$cid" 2>&1 | wc -c); since 1h lines: $(docker logs --since 1h "$cid" 2>&1 | wc -l)"
   local k n
-  for k in info warn error fatal caddyfile invalid listen bind permission address admin autosave started shutdown signal stopped reload config tls acme cert obtain redirect http2 http3 quic buffer user warning 'not found' 'no such' 'read-only' deprecated adapt overwritten; do
-    n=$(cnt "$k")
-    [ "$n" -gt 0 ] && say "tls log word [$k]: $n"
-  done
   local ec pn
   for pn in 80 443; do
     say "tls tcp:$pn listener process: $(ss -ltnpH "sport = :$pn" 2>/dev/null | grep -ao 'users:(("[^"]*"' | sed 's/users:(("//;s/"//' | sort | uniq -c | awk '{print $2"x"$1}' | tr '\n' ' ')"
@@ -398,10 +403,6 @@ tls_state() ( set +eu +o pipefail
   local ec2
   say "tls acme problem types: $(lg | awk '{ while (match($0, /urn:ietf:params:acme:error:[A-Za-z]+/)) { t=substr($0, RSTART+27, RLENGTH-27); c[t]++; $0=substr($0, RSTART+RLENGTH) } } END { for (t in c) printf "%s=%d ", t, c[t]; print "" }')"
   say "tls acme http codes: $(lg | awk '{ while (match($0, /HTTP [0-9][0-9][0-9]/)) { t=substr($0, RSTART+5, 3); c[t]++; $0=substr($0, RSTART+RLENGTH) } } END { for (t in c) printf "%s=%d ", t, c[t]; print "" }')"
-  for k in serverinternal 'error:internal' malformed badnonce rejectedidentifier incorrect secondary validation 'could not' 'http 500' 'http 400' 'http 403' 'http 429' 'http 503' 'status 500' 'maintenance' 'aaaa' ipv6 'ipv4' 'firewall' 'unexpected' 'bad' 'eof' 'reset' 'tls: ' 'handshake' 'unavailable' 'overloaded' 'try again' 'later' ratelimited 'rate limit' 429 'too many' timeout refused unauthorized 'invalid response' dns 'no valid' caa forbidden connection deadline retry policy account registration email zerossl letsencrypt 'rejected' 'urn:ietf' 'challenge' 'authorization' 'http-01' 'tls-alpn' 'dial' 'lookup' 'x509' 'storage' 'lock' 'permission' 'read-only file' 'directory' 'no such file' 'unable' 'cannot' 'invalid' 'order' 'finalize' 'server error' 'internal'; do
-    ec=$(lg | awk -v k="$k" 'tolower($0) ~ /error/ && index(tolower($0),tolower(k)){n++} END{print n+0}')
-    [ "$ec" -gt 0 ] && say "tls error-line word [$k]: $ec"
-  done
   say "tls admin raw response: starts with brace $(printf '%s' "$hc" | head -c1 | grep -c '{'), contains html $(printf '%s' "$hc" | grep -aci '<html'), contains 'error' $(printf '%s' "$hc" | grep -aci error), contains 'wget' $(printf '%s' "$hc" | grep -aci wget)"
   say "tls shape: lines with json msg field $(cnt '"msg"'), with level $(cnt level), with tab $(lg | awk '/	/{n++} END{print n+0}')"
   say "tls admin http: reverse_proxy $(printf '%s' "$hc" | grep -ao 'reverse_proxy' | wc -l), host matchers $(printf '%s' "$hc" | grep -ao '"host"' | wc -l), listen entries $(printf '%s' "$hc" | grep -ao '"listen"' | wc -l)"
