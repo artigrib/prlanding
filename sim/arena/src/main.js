@@ -82,6 +82,7 @@ function makeMap(id) {
     bounds: m.bounds || { x0: -6, x1: 6, z0: -6, z1: 6 },
     hazards: pits,
     hazardAt: (x, z) => m.hazardAt(x, z),
+    inPit: (x, z) => (m.inPit ? m.inPit(x, z) : false),
     outcome: p => m.outCheck(p.x, p.y, p.z),
     reset: () => m.reset && m.reset(),
     step: (dt, robots, fighting) => m.step && m.step(dt, robots, fighting),
@@ -627,8 +628,10 @@ function updateCameras(dt, snap) {
   const inMatch = player && player.body && ['countdown', 'fight', 'ko', 'end'].includes(game.state);
   const garage = !ui.garage.hidden;
   if (game.state === 'replay') {
-    const a = player.root.position, b = opp.root.position;
-    orbitC.lerp(_pp.set((a.x + b.x) / 2, Math.max(-1, (a.y + b.y) / 2), (a.z + b.z) / 2), snap ? 1 : 1 - Math.exp(-dt * 3));
+    // follow the robot that got knocked out (weighted toward it, the winner stays in frame)
+    const r = game.result, lo = r && r.win === false ? player : opp, wi = lo === player ? opp : player;
+    const a = lo.root.position, b = wi.root.position;
+    orbitC.lerp(_pp.set(a.x * 0.75 + b.x * 0.25, Math.max(-1.5, a.y * 0.75 + b.y * 0.25), a.z * 0.75 + b.z * 0.25), snap ? 1 : 1 - Math.exp(-dt * 3));
   } else if (garage && player) orbitC.copy(player.root.position);
   rig.update(dt, {
     focus: player, other: opp, bounds: map.bounds, band, portrait: portrait(),
@@ -1047,7 +1050,7 @@ const hook = {
     player.sync(sec); opp.sync(sec); hud();
     return this.state();
   },
-  game, input, models: {}, renderer, scene, camera, rig, replay, S, ladder: () => ladder,
+  LEVELS, game, input, models: {}, renderer, scene, camera, rig, replay, S, ladder: () => ladder,
   get player() { return player; }, get ai() { return opp; }, get ready() { return ready; }, get map() { return map; },
   setMode(m) { S.mode = m; applyChoice(); },
   selfPlay(level) { selfBrain = level ? createBrain(level, map) : null; if (selfBrain && player) player.handicap = LEVELS[level].handicap; },
