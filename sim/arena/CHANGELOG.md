@@ -35,3 +35,9 @@ Viz `TEAM.md` (MAPS): CCRL klasika, Jáma a rampy, Kladivo, Led, PROTO ROBOT Pra
 
 ### Testy
 Playwright smoke test přes `?debug` hook `window.__arena` (`sim()`, `frame()`, `halt`, `setMode()`, `cycleCam()`, …).
+
+### Známé limity
+- AI vs. AI (headless turnaj 16 zápasů na mapu): Pokročilý porazí Začátečníka zhruba 2 : 1, Mistr je proti oběma jen mírně lepší –
+  zápasy rozhoduje hodně chaos fyziky (rychlá K.O. do jámy). Kosa jako hráčova strana v self-play prohrává skoro vždy.
+- Výkon na skutečných telefonech nebyl měřen (testováno jen v SwiftShaderu); pro slabé GPU je adaptivní pixel ratio (1,75 → 1).
+- Rozdělená obrazovka je jen pro klávesnici / gamepady, na dotykovém displeji ovládá jen hráč 1.
