@@ -139,16 +139,36 @@ install_files() {
   say "https sites enabled:${enabled:- none}"
 }
 
+classify_err() { # map a docker error to a fixed, non-sensitive reason
+  case "$1" in
+    *unauthorized*|*denied*|*403*|*401*) echo "unauthorized/denied";;
+    *"no such host"*|*"server misbehaving"*|*"lookup "*) echo "DNS lookup failed";;
+    *timeout*|*"timed out"*|*"i/o timeout"*) echo "network timeout";;
+    *x509*|*certificate*) echo "TLS certificate problem";;
+    *"not found"*|*"manifest unknown"*) echo "image not found";;
+    *"no space"*) echo "no space left";;
+    *"Cannot connect to the Docker daemon"*) echo "docker daemon not reachable";;
+    *"not a docker command"*|*"unknown flag"*) echo "docker CLI too old";;
+    *) echo "other error";;
+  esac
+}
+
 pull_images() {
   local token="" tmp ref
   IFS= read -r token || true
   tmp=$(mktemp -d)
   if [ -n "$token" ] && [ -n "${GHCR_USER:-}" ]; then
-    printf '%s' "$token" | DOCKER_CONFIG="$tmp" docker login ghcr.io -u "$GHCR_USER" --password-stdin \
-      || { rm -rf "$tmp"; die "registry login failed"; }
+    if ! err=$(printf '%s' "$token" | DOCKER_CONFIG="$tmp" docker login ghcr.io -u "$GHCR_USER" --password-stdin 2>&1); then
+      warn "registry login failed ($(classify_err "$err")); trying anonymous pull"
+    fi
+  else
+    warn "token length ${#token}, user set: $([ -n "${GHCR_USER:-}" ] && echo yes || echo no)"
   fi
   for ref in "$API_IMAGE" ${BRIDGE_IMAGE:-}; do
-    DOCKER_CONFIG="$tmp" docker pull "$ref" || { DOCKER_CONFIG="$tmp" docker logout ghcr.io || true; rm -rf "$tmp"; die "image pull failed"; }
+    if ! err=$(DOCKER_CONFIG="$tmp" docker pull "$ref" 2>&1); then
+      DOCKER_CONFIG="$tmp" docker logout ghcr.io || true; rm -rf "$tmp"
+      die "image pull failed ($(classify_err "$err"))"
+    fi
   done
   DOCKER_CONFIG="$tmp" docker logout ghcr.io || true
   rm -rf "$tmp"
