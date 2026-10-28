@@ -38,7 +38,9 @@ const LADDER = [
 ];
 const ROUND = 120, FLIP_LIMIT = 10, DT = 1 / 120;
 const MODEL_URL = id => `../../models/${id}.glb`;
-const KIT_URL = id => `../../sada/${id}/`;
+// only these robots have a kit page; the rest exist only in the game
+const KITS = new Set(['svrn', 'vert150']);
+const KIT_URL = id => (KITS.has(id) ? `../../sada/${id}/` : '../../?typ=combat#katalog');
 
 const $ = s => document.querySelector(s);
 const params = new URLSearchParams(location.search);
@@ -268,7 +270,7 @@ const fx = {
       const st = stats.get(by); if (st) { st.damage += 0.3 + e; st.hits++; }
     }
     popLabel(p, by.def.weapon === 'flipper' ? 'Flip!' : e > 0.85 ? `Kritický zásah −${dmg}` : `−${dmg}`, e > 0.85);
-    game.events.push({ t: +game.time.toFixed(2), type: 'hit', by: by === player ? 'p1' : 'p2', e: +e.toFixed(2) });
+    if (game.events.length < 400) game.events.push({ t: +game.time.toFixed(2), type: 'hit', by: by === player ? 'p1' : 'p2', e: +e.toFixed(2) });
   },
   wall(by, p, e) {
     sfx.wall(Math.min(1, e + 0.2)); emitSparks(p, e * 0.6);
@@ -277,7 +279,7 @@ const fx = {
   grab(by) { sfx.flip(); popLabel(by.root.position, 'Chycen!', false); },
   flip(by) {
     sfx.flip();
-    game.events.push({ t: +game.time.toFixed(2), type: 'fire', by: by === player ? 'p1' : 'p2' });
+    if (game.events.length < 400) game.events.push({ t: +game.time.toFixed(2), type: 'fire', by: by === player ? 'p1' : 'p2' });
   }
 };
 function disposeRobot(r) {
@@ -287,6 +289,9 @@ function disposeRobot(r) {
     o.geometry && !o.geometry.userData.fromGlb && o.geometry.dispose();
   });
   r.printMat && r.printMat.dispose();
+  // per-robot materials (cloned GLB print materials, spinner blur disc)
+  (r.printMats || []).forEach(m => m !== r.printMat && m.userData.perRobot && m.dispose());
+  if (r.parts && r.parts.blur && r.parts.blur.material) r.parts.blur.material.dispose();
 }
 let quickOpp = null, selfBrain = null;   // selfBrain: debug-only AI pilot for the player
 function oppSetup() {
@@ -437,6 +442,9 @@ function afterKo() {
   else showEnd();
 }
 function showEnd() {
+  // once per round: a double skip / double tap must not advance the ladder twice
+  if (!game.result || game.result.shown) return;
+  game.result.shown = true;
   replay.stop();
   game.state = 'end';
   sfx.stopMotors();
@@ -464,9 +472,9 @@ function showEnd() {
   ui.endStats.textContent = `Zásahy ${player.hits} : ${opp.hits}  ·  čas ${fmt(game.result.time)}`;
   ui.endKit.textContent = player.def.name;
   ui.cta.href = KIT_URL(player.def.id);
-  const soon = !!player.def.preparing;
-  ui.endKitL.textContent = soon ? 'Stavebnici připravujeme' : 'Stavebnice';
-  ui.ctaL.textContent = soon ? 'Dejte mi vědět' : 'Postavte si ho';
+  const soon = !!player.def.preparing, kit = KITS.has(player.def.id);
+  ui.endKitL.textContent = !kit ? 'Zatím jen ve hře' : soon ? 'Stavebnici připravujeme' : 'Stavebnice';
+  ui.ctaL.textContent = !kit ? 'Bojoví roboti v katalogu' : soon ? 'Dejte mi vědět' : 'Postavte si ho';
   ui.replayBtn.hidden = !(kind === 'ko' && replay.length > 60);
   ui.share.hidden = false; ui.shareMsg.textContent = '';
   ui.again.querySelector('span').textContent = S.mode === 'ladder' && !win ? 'Zkusit znovu' : 'Znovu';
@@ -487,7 +495,7 @@ function renderCard(card) {
 const fmt = s => { s = Math.max(0, Math.ceil(s - 1e-6)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 
 // ------------------------------------------------------------------ physics step
-const _dv = new Map();
+const _dv = new WeakMap();
 function physicsStep(c1, c2) {
   game.time += DT;
   const live = game.state === 'fight';
@@ -591,6 +599,7 @@ function playReplay(auto) {
   ui.skip.focus({ preventScroll: true });
 }
 function endReplay() {
+  if (game.state !== 'replay') return;
   replay.stop();
   for (const r of [player, opp]) r.sync(0);
   rig.set(camModeFor(), true);
@@ -626,7 +635,7 @@ function layout() {
   camA.aspect = camB.aspect = half[0] / half[1]; camA.updateProjectionMatrix(); camB.updateProjectionMatrix();
 }
 const portrait = () => innerHeight > innerWidth * 1.1;
-addEventListener('resize', () => { layout(); updateCameras(0, true); });
+addEventListener('resize', () => { layout(); updateCameras(0, true); if (player) hudNames(); });
 
 function updateCameras(dt, snap) {
   if (!map) return;
@@ -872,7 +881,9 @@ function applyChoice(colorOnly) {
 function hudNames() {
   const o = oppSetup();
   const duo = S.mode === 'duo';
-  ui.pName.textContent = ROBOTS[S.robot].name; ui.oName.textContent = o.name;
+  const narrow = innerWidth < 640, nm = id => (narrow && ROBOTS[id].short) || ROBOTS[id].name;
+  ui.pName.textContent = nm(S.robot); ui.oName.textContent = o.name === ROBOTS[o.id].name ? nm(o.id) : o.name;
+  ui.pName.title = ROBOTS[S.robot].name; ui.oName.title = o.name;
   ui.pTag.textContent = duo ? 'P1' : 'Vy'; ui.oTag.textContent = duo ? 'P2' : o.level ? LEVELS[o.level].name : 'AI';
   ui.pSw.style.background = colorHex(S.color); ui.oSw.style.background = o.hex;
   ui.back.href = KIT_URL(S.robot);
@@ -1028,6 +1039,8 @@ try {
   $('#restart').onclick = startRound;
   $('#quit').onclick = toMenu;
   ui.camBtn.onclick = cycleCam; ui.sndBtn.onclick = toggleMute; ui.pauseBtn.onclick = () => pause(true);
+  // after a mouse click on the toolbar, Space / arrows must drive the robot again, not re-press the button
+  ui.tools.addEventListener('click', () => { if (game.state === 'fight' || game.state === 'countdown') renderer.domElement.focus({ preventScroll: true }); });
   ui.resetBtn.onclick = trainingReset; ui.dummyBtn.onclick = toggleDummy;
   $('#shake-opt').onchange = e => { S.shake = e.target.checked; saveSettings(); };
   $('#replay-opt').onchange = e => { S.autoReplay = e.target.checked; saveSettings(); };

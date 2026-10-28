@@ -388,7 +388,16 @@ export class Robot {
       if (!o.isMesh) return;
       o.castShadow = o.receiveShadow = true;
       const mats = Array.isArray(o.material) ? o.material : [o.material];
-      mats.forEach(mt => { if (mt.name === 'print' && !prints.includes(mt)) prints.push(mt); });
+      // clone() shares materials between robots of the same model: give each robot its own print material
+      if (mats.some(mt => mt.name === 'print')) {
+        const own = mats.map(mt => {
+          if (mt.name !== 'print') return mt;
+          let c = prints.find(x => x.userData.src === mt);
+          if (!c) { c = mt.clone(); c.userData.src = mt; c.userData.perRobot = true; prints.push(c); }
+          return c;
+        });
+        o.material = Array.isArray(o.material) ? own : own[0];
+      }
     });
     // animate named weapon nodes if the model has them
     // exact names first, then looser matches ("weapon_mount" must never win over "blade")
