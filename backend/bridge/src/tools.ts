@@ -62,7 +62,11 @@ function clientName(ctx: any, server: McpServer): string {
   const meta = ctx?.mcpReq?._meta;
   const fromMeta = meta && typeof meta === 'object' ? (meta as any)[CLIENT_INFO_META_KEY] : undefined;
   const info = fromMeta ?? server.server.getClientVersion?.();
-  return info && typeof info.name === 'string' ? info.name : 'MCP client';
+  if (info && typeof info.name === 'string') return info.name;
+  // 2025-era stateless requests carry no clientInfo: fall back to the User-Agent product token
+  const ua = ctx?.http?.req?.headers?.get?.('user-agent');
+  const m = typeof ua === 'string' ? /^[A-Za-z][A-Za-z0-9._-]{0,31}/.exec(ua) : null;
+  return m && !/^(node|undici|Mozilla)$/i.test(m[0]) ? m[0] : 'MCP client';
 }
 
 export function buildServer(reg: Registry, version: string): McpServer {

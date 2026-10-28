@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentBridge mock sim</title>
+</head>
+<body>
+<!-- Test page: a mock SO-101 handler behind the default panel. ?relay=ws://…/tab&speed=4 -->
+<div id="ai"></div>
+<script type="module">
+  import { mountPanel } from '../panel.js';
+  import { createMockHandler } from '../mock-handler.js';
+  const p = new URLSearchParams(location.search);
+  const handler = createMockHandler({ speed: Number(p.get('speed') || 1) });
+  window.__handler = handler;
+  window.__activity = [];
+  window.__bridge = mountPanel(document.getElementById('ai'), {
+    url: p.get('relay'),
+    handler,
+    ui: { onActivity: (a) => window.__activity.push(a) }
+  });
+</script>
+</body>
+</html>
