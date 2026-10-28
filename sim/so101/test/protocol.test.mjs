@@ -195,3 +195,98 @@ test('emergency stop turns torque off on every servo', async () => {
   const tq = await bus.syncReadReg('Torque_Enable', S.IDS);
   for (const id of S.IDS) assert.equal(tq.get(id).value, 0);
 });
+
+// ---------- safety (review B1, B2, M2, M3, M5) ----------
+import { SerialTransport } from '../lib/transport.js';
+
+test('B1: STOP during torque-on aborts it and ends with every servo off', async () => {
+  const { bus, arm } = await assembled();
+  let writes = 0, stopped = false;
+  bus.onPacket = (dir, b) => { if (dir === 'tx' && b[4] === INST.WRITE && b[5] === 40 && b[6] === 1) { if (++writes === 2) stopped = true; } };
+  await assert.rejects(S.enableTorque(bus, S.IDS, { abort: () => stopped }), (e) => e.code === 'aborted');
+  assert.equal(writes, 2, 'no torque-on writes after the STOP');
+  assert.deepEqual(arm.servos.map((s) => s.mem[40]), [0, 0, 0, 0, 0, 0]);
+});
+
+test('M2: a servo failing mid torque-on leaves no servo powered', async () => {
+  const { bus, arm } = await assembled();
+  arm.servos[3].dropWrites = 99;                      // servo 4 ignores everything (bad contact)
+  await assert.rejects(S.enableTorque(bus), (e) => e.code === 'verify');
+  assert.deepEqual(arm.servos.map((s) => s.mem[40]), [0, 0, 0, 0, 0, 0]);
+});
+
+test('M2: torque-off is verified by read-back and retried', async () => {
+  const { bus, arm } = await assembled();
+  await S.enableTorque(bus);
+  arm.servos[1].dropWrites = 1;                       // first torque-off write to servo 2 is lost
+  let r = await S.disableTorque(bus);
+  assert.ok(r.ok); assert.equal(arm.servos[1].mem[40], 0);
+  await S.enableTorque(bus);
+  arm.servos[1].dropWrites = 99;                      // servo 2 never takes it
+  r = await S.disableTorque(bus);
+  assert.deepEqual(r, { ok: false, unconfirmed: [2] });
+});
+
+/** Transport whose writes hang forever once `hang` is set (a wedged USB bridge). */
+class HangingTransport extends VirtualTransport {
+  constructor(arm) { super(arm); this.hang = false; }
+  write(bytes) { return this.hang ? new Promise(() => {}) : super.write(bytes); }
+}
+
+test('B2: STOP is bounded even when the port write hangs (no wire, not confirmed)', async () => {
+  const plant = new KinematicPlant(), arm = new VirtualArm({ plant });
+  const t = new HangingTransport(arm); await t.open();
+  const bus = new FeetechBus(t, { timeoutMs: 8 });
+  arm.servos.forEach((s, i) => { s.saved[5] = i + 1; }); arm.setWiring('chain');
+  await S.enableTorque(bus);
+  t.hang = true;
+  bus.ping(1);                                        // a transaction now stuck in the queue
+  const t0 = Date.now();
+  const r = await S.stopAll(bus, S.IDS, { timeoutMs: 400 });
+  assert.ok(Date.now() - t0 < 1500, 'STOP returned in bounded time');
+  assert.equal(r.ok, false); assert.equal(r.wire, false);
+});
+
+test('B2: the emergency packet bypasses a stuck transaction queue', async () => {
+  const { bus, arm, t } = await assembled();
+  await S.enableTorque(bus);
+  bus.lock(() => new Promise(() => {}));              // something holds the bus lock forever
+  const r = await S.stopAll(bus, S.IDS, { timeoutMs: 200 });
+  assert.equal(r.wire, true);
+  assert.equal(r.ok, false);                          // read-back could not run: reported, not claimed
+  assert.deepEqual(arm.servos.map((s) => s.mem[40]), [0, 0, 0, 0, 0, 0]);
+});
+
+test('B2: SerialTransport write times out, later writes fail fast, forceClose is bounded', async () => {
+  let release;
+  const port = {
+    open: async () => {}, close: () => new Promise(() => {}),        // close hangs too
+    readable: new ReadableStream({ start() {} }),
+    writable: new WritableStream({ write: () => new Promise((r) => { release = r; }) })
+  };
+  const t = new SerialTransport({ writeTimeoutMs: 80 });
+  t.port = port;
+  await t.open();
+  await assert.rejects(t.write([1, 2, 3]), (e) => e.code === 'timeout');
+  await assert.rejects(t.write([4]), (e) => e.code === 'closed');
+  const t0 = Date.now(); await t.forceClose();
+  assert.ok(Date.now() - t0 < 1500);
+  release && release();
+});
+
+test('M3/M5: configure clears Phase bit 4 and uses the Goal_Velocity unit from Phase bit 2', async () => {
+  const { bus, arm } = await assembled();
+  arm.servos[0].saved[18] = 0x14; arm.servos[0].mem[18] = 0x14;   // bit 2: 0.0146 rpm unit, bit 4 set
+  const r = await S.configureFollower(bus, { real: true, speedDegS: 30 });
+  assert.equal(arm.servos[0].mem[18], 0x04);
+  assert.equal((await bus.readReg(1, 'Goal_Velocity')).value, Math.ceil(37.5 / (0.0146 * 6)));
+  assert.equal((await bus.readReg(2, 'Goal_Velocity')).value, Math.ceil(37.5 / (0.732 * 6)));   // = 9
+  assert.equal((await bus.readReg(2, 'Acceleration')).value, 30);
+  assert.ok(Math.abs(r.units[2] - 4.392) < 1e-9);
+});
+
+test('M5: calibration outside 0..4095 is rejected', () => {
+  const offs = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+  const mins = { 1: -12, 2: 100, 3: 100, 4: 100, 5: 0, 6: 100 }, maxes = { 1: 3000, 2: 3000, 3: 3000, 4: 3000, 5: 4095, 6: 3000 };
+  assert.throws(() => S.buildCalibration(offs, mins, maxes), (e) => e.code === 'range');
+});

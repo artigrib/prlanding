@@ -38,6 +38,40 @@ const shot = async (page, name) => { if (!SHOTS) return; await page.evaluate(() 
 const state = (page) => page.evaluate(() => window.__wiz.state());
 const idle = (page) => page.waitForFunction(() => !window.__wiz.state().busy, null, { timeout: 20000 });
 
+// Fake Web Serial: a port whose streams talk to the emulator (no hardware). Knobs for the safety
+// tests: window.__fakeDelay (ms per write), window.__fakeHang (writes never complete),
+// window.__fakeDisc() (fires the 'disconnect' event), window.__fakeClosed (port.close() was called).
+function FAKE_SERIAL() {
+  let arm = null, onDisc = null;
+  class FakePort {
+    getInfo() { return { usbVendorId: 0x1a86, usbProductId: 0x55d3 }; }
+    async open({ baudRate }) {
+      const self = this; this.baud = baudRate;
+      this.readable = new ReadableStream({ start(c) { self.c = c; } });
+      this.writable = new WritableStream({ async write(chunk) {
+        if (window.__fakeHang) return new Promise(() => {});
+        if (window.__fakeDelay) await new Promise((r) => setTimeout(r, window.__fakeDelay));
+        const r = arm.receive(chunk, self.baud); setTimeout(() => r.forEach((x) => self.c.enqueue(x)), 1);
+      } });
+    }
+    async close() { window.__fakeClosed = true; this.readable = null; this.writable = null; }
+  }
+  const port = new FakePort();
+  window.__fakeDisc = () => onDisc && onDisc({ target: port });
+  Object.defineProperty(Navigator.prototype, 'serial', { configurable: true, get: () => ({
+    requestPort: async () => {
+      const { VirtualArm, KinematicPlant } = await import('/sim/so101/lib/sts3215-emu.js');
+      arm = new VirtualArm({ plant: new KinematicPlant([0.1, -0.2, 0.3, 0.1, 0, 0.8]) });
+      arm.servos.forEach((s, i) => { s.saved[5] = i + 1; });          // IDs already assigned
+      arm.setWiring('chain');
+      window.__fake = arm;
+      setInterval(() => arm.update(0.02), 20);
+      return port;
+    },
+    addEventListener(type, fn) { if (type === 'disconnect') onDisc = fn; }, removeEventListener() {}
+  }) });
+}
+
 async function wizardSetup(page, base, { shots = false, prefix = '' } = {}) {
   await page.goto(base + '/sim/so101/nastaveni/?test=1');
   await page.waitForFunction(() => window.__wiz, null, { timeout: 30000 });
@@ -192,31 +226,7 @@ async function diag(page) {
     if (!ONLY || ONLY === 'serial') {
       const errors = [];
       const page = await newPage(browser, { width: 1280, height: 800 }, errors);
-      await page.addInitScript(() => {
-        let arm = null;
-        class FakePort {
-          getInfo() { return { usbVendorId: 0x1a86, usbProductId: 0x55d3 }; }
-          async open({ baudRate }) {
-            const self = this; this.baud = baudRate;
-            this.readable = new ReadableStream({ start(c) { self.c = c; } });
-            this.writable = new WritableStream({ write(chunk) { const r = arm.receive(chunk, self.baud); setTimeout(() => r.forEach((x) => self.c.enqueue(x)), 1); } });
-          }
-          async close() { this.readable = null; this.writable = null; }
-        }
-        const port = new FakePort();
-        Object.defineProperty(Navigator.prototype, 'serial', { configurable: true, get: () => ({
-          requestPort: async () => {
-            const { VirtualArm, KinematicPlant } = await import('/sim/so101/lib/sts3215-emu.js');
-            arm = new VirtualArm({ plant: new KinematicPlant([0.1, -0.2, 0.3, 0.1, 0, 0.8]) });
-            arm.servos.forEach((s, i) => { s.saved[5] = i + 1; });          // IDs already assigned
-            arm.setWiring('chain');
-            window.__fake = arm;
-            setInterval(() => arm.update(0.02), 20);
-            return port;
-          },
-          addEventListener() {}, removeEventListener() {}
-        }) });
-      });
+      await page.addInitScript(FAKE_SERIAL);
       await page.goto(srv.url + '/sim/so101/nastaveni/?test=1&real=1');
       await page.waitForFunction(() => window.__wiz, null, { timeout: 30000 });
       ok(await page.isVisible('#r-connect') && await page.isDisabled('#r-connect'), 'serial (?real=1): real-arm button shown, locked until the risk checkbox is ticked');
@@ -246,7 +256,7 @@ async function diag(page) {
       const after = await page.evaluate(() => window.__fake.servos.map((s) => s.reg('Present_Position')));
       ok(after.every((p, i) => Math.abs(p - before[i]) <= 2), 'serial: enabling torque does not move the arm (goal = present first)');
       const vel = await page.evaluate(() => window.__fake.servos.map((s) => s.reg('Goal_Velocity')));
-      ok(vel.every((v) => v === Math.round(30 * 4096 / 360)), 'serial: servo-side speed cap written (' + vel[0] + ')');
+      ok(vel.every((v) => v === Math.ceil(30 * 1.25 / 4.392)), 'serial: servo-side speed cap written in 0.732 rpm units (' + vel[0] + ')');
       // ask for a big jump on the base; the browser rate limit (30 °/s) must spread it out
       await page.evaluate(() => { const i = document.getElementById('t-shoulder_pan'); i.value = i.max; i.dispatchEvent(new Event('input')); });
       const t0 = await page.evaluate(() => window.__fake.servos[0].reg('Goal_Position'));
@@ -262,8 +272,54 @@ async function diag(page) {
       await page.waitForTimeout(400);
       const tq = await page.evaluate(() => window.__fake.servos.map((s) => s.mem[40]));
       ok(tq.every((v) => v === 0), 'serial: Esc = STOP, torque off on all servos');
+      const torqueOf = () => page.evaluate(() => window.__fake.servos.map((s) => s.mem[40]));
+      // B1: STOP pressed while torque is being switched on must win
+      await idle(page);
+      await page.evaluate(() => { window.__fakeDelay = 25; });
+      await page.click('#t-torque');
+      await page.waitForTimeout(150);                 // configure / enable sequence is running
+      await page.keyboard.press('Escape');
+      await idle(page);
+      await page.waitForTimeout(600);
+      ok((await torqueOf()).every((v) => v === 0) && !(await state(page)).torque, 'serial B1: STOP during torque-on wins (all servos off, UI off)');
+      ok(/Zapnout|Znovu/.test(await page.textContent('#t-torque')), 'serial B1: button offers to switch torque on again');
+      // B2: the port stops taking data while the arm is powered -> STOP must not hang
+      await page.evaluate(() => { window.__fakeDelay = 0; });
+      await page.click('#t-torque');
+      await page.waitForFunction(() => window.__wiz.state().torque, null, { timeout: 10000 });
+      await idle(page);
+      await page.evaluate(() => { window.__fakeHang = true; });
+      await page.click('#stop');
+      await page.waitForFunction(() => /NEPODAŘILO/.test(document.getElementById('alert').textContent), null, { timeout: 6000 })
+        .catch(async (e) => { console.log('alert:', await page.textContent('#alert'), await page.textContent('#t-msg'), errors); throw e; });
+      ok(await page.evaluate(() => window.__fakeClosed === true), 'serial B2: wedged port is closed');
+      ok(await page.isDisabled('#stop'), 'serial B2: STOP disabled, user told to cut servo power');
       await shot(page, 'd6-real-beta');
       ok(!errors.length, 'serial: no console errors ' + errors.join(' | '));
+      await page.context().close();
+    }
+
+    // 6) B3: USB unplugged while connected -> honest message, STOP disabled, polling stops
+    if (!ONLY || ONLY === 'serial') {
+      const errors = [];
+      const page = await newPage(browser, { width: 1280, height: 800 }, errors);
+      await page.addInitScript(FAKE_SERIAL);
+      await page.goto(srv.url + '/sim/so101/nastaveni/?test=1&real=1');
+      await page.waitForFunction(() => window.__wiz, null, { timeout: 30000 });
+      await page.check('#r-ack');
+      await page.click('#r-connect');
+      await page.waitForSelector('.step[data-step="ids"]:not([hidden])', { timeout: 10000 });
+      await page.click('#id-skip');
+      await page.waitForSelector('.step[data-step="cal"]:not([hidden])', { timeout: 15000 });
+      await idle(page);
+      await page.evaluate(() => window.__fakeDisc());
+      await page.waitForTimeout(300);
+      const text = await page.textContent('#alert');
+      if (!/NEJDE/.test(text)) console.log('alert text:', JSON.stringify(text), await page.textContent('#t-msg'));
+      ok(/NEJDE vypnout/.test(text) && /napájení/.test(text) && !/Moment je vypnutý/.test(text), 'serial B3: disconnect says torque can NOT be switched off');
+      ok(await page.isDisabled('#stop'), 'serial B3: STOP disabled after disconnect');
+      await shot(page, 'd7-disconnect');
+      ok(!errors.length, 'serial B3: no console errors ' + errors.join(' | '));
       await page.context().close();
     }
   } finally {

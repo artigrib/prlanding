@@ -99,7 +99,8 @@ async function task(fn, msgEl) {
 }
 const msg = (el, text, kind = '') => { el.textContent = text; el.className = 'msg' + (kind ? ' ' + kind : ''); if (text) say(text); };
 /** Stage banner for safety-relevant state (role=alert). kind: 'err' | 'warn'; null text hides it. */
-function alertBox(text, kind = 'err') {
+function alertBox(text, kind = 'err', force = false) {
+  if (st.lost && !force) return;          // the "connection lost" message must stay visible
   const a = $('alert');
   if (!text) { a.hidden = true; a.textContent = ''; return; }
   a.textContent = text; a.className = 'alert ' + kind; a.hidden = false;
@@ -258,7 +259,7 @@ function enterCal() {
     const r = await S.configureFollower(bus, cfgOpts());
     st.units = r.units; st.torque = false; updateTorqueUi();
   })();
-  st.prep.catch((e) => { console.error(e); alertBox('Příprava serv se nepovedla: ' + e.message + ' Zkontrolujte kabely a zkuste krok znovu.', 'err'); });
+  st.prep.catch((e) => { if (st.lost) return; console.error(e); alertBox('Příprava serv se nepovedla: ' + e.message + ' Zkontrolujte kabely a zkuste krok znovu.', 'err'); });
 }
 const cfgOpts = () => ({ real: st.mode === 'real', speedDegS: st.mode === 'real' ? st.speed : 0 });
 
@@ -448,7 +449,7 @@ function lost(text) {
   updateTorqueUi();
   $('stop').disabled = true;
   $('stop').querySelector('.stop-t').textContent = 'nelze odeslat – vypněte napájení';
-  alertBox(text + ' Pro nové připojení obnovte stránku.', 'err');
+  alertBox(text + ' Pro nové připojení obnovte stránku.', 'err', true);
   msg($('t-msg'), text, 'err');
   document.body.classList.add('lost');
 }
@@ -527,7 +528,14 @@ function startPoll() {
   st.pollOn = true;
   (async () => {
     while (st.pollOn && !st.lost) {
-      if (st.step !== 'ids' && !st.busy) { try { await pollOnce(); } catch (e) { console.error(e); } }
+      if (st.step !== 'ids' && !st.busy) {
+        try { await pollOnce(); } catch (e) {
+          if (st.lost) break;
+          // the port stopped taking data: treat it like a STOP (which closes a wedged port)
+          if (st.mode === 'real' && (e.code === 'timeout' || e.code === 'closed')) { stop('Port přestal přijímat data.'); break; }
+          console.error(e);
+        }
+      }
       else renderReg(true);
       await sleep(st.mode === 'real' ? 100 : 120);
     }
