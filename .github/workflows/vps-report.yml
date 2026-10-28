@@ -1,4 +1,4 @@
-# Read-only report about the VPS (OS, disk, memory, Docker, open ports, web server).
+# Read-only, short summary of the VPS (OS, disk, memory, Docker, web server). Repo is public: no sensitive details are printed.
 # Runs only on pushes to the `backend` branch that touch this file, or by hand (workflow_dispatch).
 # Needs repository secrets: VPS_HOST, VPS_USER, VPS_SSH_KEY and optionally VPS_PORT (default 22).
 # The key never leaves GitHub; nothing is changed on the server.
@@ -37,25 +37,28 @@ jobs:
           printf '%s\n' "$KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p "${PORT:-22}" -T 10 "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
       - name: Collect read-only report
+        # The repo is public, so its Actions logs are public: print only a short, low-sensitivity
+        # summary as annotations. No port lists, container names, paths or IPs.
         env:
           HOST: ${{ secrets.VPS_HOST }}
           USER_: ${{ secrets.VPS_USER }}
           PORT: ${{ secrets.VPS_PORT }}
         run: |
-          ssh -i ~/.ssh/deploy_key -p "${PORT:-22}" -o BatchMode=yes -o ConnectTimeout=15 "$USER_@$HOST" 'bash -s' > report.txt 2>&1 <<'REMOTE' || true
-          sec(){ echo; echo "## $1"; }
-          sec "System";   . /etc/os-release 2>/dev/null; echo "$PRETTY_NAME"; uname -srm; uptime -p 2>/dev/null
-          sec "CPU / RAM"; nproc; free -h
-          sec "Disk";     df -h -x tmpfs -x devtmpfs -x overlay 2>/dev/null
-          sec "Docker";   (docker --version && docker ps --format '{{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}') 2>&1 | head -40
-          sec "Listening ports"; (ss -tlnp 2>/dev/null || netstat -tlnp 2>/dev/null) | head -40
-          sec "Web servers"; for s in nginx caddy apache2 httpd traefik; do command -v $s >/dev/null && echo "$s: $(systemctl is-active $s 2>/dev/null || echo installed)"; done
-          sec "Runtimes";  for b in node python3 uv git; do command -v $b >/dev/null && echo "$b $($b --version 2>&1 | head -1)"; done
-          sec "Firewall";  (ufw status 2>/dev/null || echo "ufw not available") | head -20
-          sec "Home dirs"; ls -1 ~ 2>/dev/null | head -40
+          set +e
+          out=$(ssh -i ~/.ssh/deploy_key -p "${PORT:-22}" -o BatchMode=yes -o ConnectTimeout=15 "$USER_@$HOST" 'bash -s' 2>/dev/null <<'REMOTE'
+          . /etc/os-release 2>/dev/null
+          echo "os=$PRETTY_NAME"
+          echo "cpu=$(nproc)"
+          echo "ram=$(free -h | awk '/Mem:/{print $2" total, "$7" available"}')"
+          echo "disk=$(df -h / | awk 'NR==2{print $4" free of "$2}')"
+          if command -v docker >/dev/null; then echo "docker=yes, $(docker ps -q | wc -l) running containers"; else echo "docker=no"; fi
+          for s in nginx caddy apache2 traefik; do command -v $s >/dev/null && w="$w $s"; done; echo "webserver=${w:-none}"
+          ss -tln 2>/dev/null | grep -qE ':(80|443) ' && echo "http_ports=80/443 in use" || echo "http_ports=80/443 free"
+          for b in node python3 uv; do command -v $b >/dev/null && v="$v $b:$($b --version 2>&1 | head -1 | awk '{print $NF}')"; done; echo "runtimes=${v:-none}"
           REMOTE
-          { echo '```'; cat report.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-          cat report.txt
+          )
+          if [ -z "$out" ]; then echo "::error::SSH connection failed (key not approved on the server, wrong host/port/user, or firewall)"; exit 1; fi
+          echo "$out" | while IFS= read -r l; do echo "::notice::$l"; done
       - name: Remove key
         if: always()
         run: rm -f ~/.ssh/deploy_key
