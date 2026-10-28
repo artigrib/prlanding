@@ -2,9 +2,9 @@
 // DOM/three-free (used by missions, planner and node tests).
 
 export const OBJECTS = {
-  cube:   { kind: 'free', half: 0.0125, label: 'oranžová kostka' },
-  cube_b: { kind: 'free', half: 0.0125, label: 'modrá kostka' },
-  ball:   { kind: 'free', half: 0.02, label: 'míček' },
+  cube:   { kind: 'free', half: 0.0125, label: 'oranžová kostka', acc: 'oranžovou kostku' },
+  cube_b: { kind: 'free', half: 0.0125, label: 'modrá kostka', acc: 'modrou kostku' },
+  ball:   { kind: 'free', half: 0.02, label: 'míček', acc: 'míček' },
   bowl:   { kind: 'mocap', label: 'modrá miska' },
   bowl2:  { kind: 'mocap', label: 'oranžová miska' },
   goal:   { kind: 'mocap', label: 'branka' }
@@ -61,7 +61,7 @@ export class World {
       mq[4 * i] = Math.cos(yaw / 2); mq[4 * i + 1] = 0; mq[4 * i + 2] = 0; mq[4 * i + 3] = Math.sin(yaw / 2);
     }
   }
-  park(name) { const p = PARK[name]; this.place(name, p[0], p[1], p[2]); this.o[name].active = false; }
+  park(name) { const p = PARK[name]; this.place(name, p[0], p[1], p[2]); this.o[name].active = false; this.activeList = null; }
 
   /** Set up a layout: { cube: [x, y, yaw?], bowl: [x, y, yaw?], ... }; everything else is parked. */
   layout(spec) {
@@ -70,6 +70,7 @@ export class World {
       if (s) { this.place(name, s[0], s[1], null, s[2] || 0); this.o[name].active = true; }
       else this.park(name);
     }
+    this.activeList = Object.values(this.o).filter((e) => e.active);
     this.mj.mj_forward(this.m, this.d);
   }
 
@@ -86,5 +87,5 @@ export class World {
     return null;
   }
 
-  active() { return Object.values(this.o).filter((e) => e.active); }
+  active() { return this.activeList || (this.activeList = Object.values(this.o).filter((e) => e.active)); }
 }

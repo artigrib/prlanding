@@ -111,6 +111,10 @@ async function main() {
   mj.mj_forward(model, data);
 
   const app = new Sim(THREE, OC.OrbitControls, mj, model, data);
+  // [ux-hook:install] optional UX layer (src/ux.js: smart move, missions, replay, cameras...).
+  // The plain slider sim keeps working if it fails to load.
+  try { await (await import('./src/ux.js')).install(app, { THREE, mj, TEST }); }
+  catch (e) { console.warn('UX layer disabled:', e); app.ux = null; }
   bar.style.width = '100%';
   $('loader').hidden = true;
   $('hud').hidden = false;
@@ -441,10 +445,12 @@ class Sim {
     this.won = false; this.inBowl = 0; this.fellAt = null;
     $('win').hidden = true;
     if (hadFocus) $('demo').focus({ preventScroll: true });
+    if (this.ux) this.ux.onReset();  // [ux-hook:reset] mission layout, controller sync
     this.refreshSliders(); this.sync();
   }
 
   startDemo() {
+    if (this.ux && this.ux.startDemo()) return;  // [ux-hook:demo] per-mission planner solution
     this.reset();
     this.demo = { i: 0, t: 0, from: this.act.map((a) => this.d.ctrl[a]) };
   }
@@ -504,18 +510,19 @@ class Sim {
     if (this.lost) { this.last = now; return; }
     let dt = (now - this.last) / 1000; this.last = now;
     if (!(dt > 0)) dt = 0; if (dt > 1 / 20) dt = 1 / 20;   // tab switch / slow frame: don't spiral
+    if (this.ux) this.ux.pre(dt);  // [ux-hook:pre] IK controller, replay, planner
     this.tickDemo(dt);
     this.ts = this.ts || this.m.opt.timestep;
     this.acc = (this.acc || 0) + dt;
     while (this.acc >= this.ts) { this.mj.mj_step(this.m, this.d); this.acc -= this.ts; }
     this.sync();
-    this.check(dt);
+    if (!(this.ux && this.ux.check(dt))) this.check(dt);  // [ux-hook:check] mission logic
     this.controls.update();
-    this.renderer.render(this.scene, this.camera);
+    if (this.ux) this.ux.render(dt); else this.renderer.render(this.scene, this.camera);  // [ux-hook:render]
   }
 
   api() {
-    return {
+    const api = {
       ready: true,
       setTargets: (q) => { this.stopDemo(); q.forEach((v, i) => v != null && this.setCtrl(i, v)); },
       state: () => ({
@@ -535,5 +542,6 @@ class Sim {
       DEMO,
       _app: this
     };
+    return this.ux ? this.ux.extendApi(api) : api;  // [ux-hook:api] test hooks of the UX layer
   }
 }

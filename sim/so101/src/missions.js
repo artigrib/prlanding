@@ -26,8 +26,9 @@ const near2 = (a, b, r) => Math.hypot(a[0] - b[0], a[1] - b[1]) < r;
 function stars3(t, t3, t2) { return t <= t3 ? 3 : t <= t2 ? 2 : 1; }
 
 // helper: is the object resting in a bowl?
+const SA = new Float64Array(3), SB = new Float64Array(3);   // scratch: checks run every frame
 function inBowl(w, obj, bowl) {
-  const p = w.pos(obj, [0, 0, 0]), b = w.pos(bowl, [0, 0, 0]);
+  const p = w.pos(obj, SA), b = w.pos(bowl, SB);
   return Math.hypot(p[0] - b[0], p[1] - b[1]) < 0.05 && p[2] < 0.03;
 }
 
@@ -41,7 +42,7 @@ export const MISSIONS = [
     rate: (t) => stars3(t, 25, 60),
     starsHint: '3 ★ do 25 s, 2 ★ do 60 s',
     check(c, dt) {
-      const w = c.w, cube = w.pos('cube', [0, 0, 0]);
+      const w = c.w, cube = w.pos('cube', c.s.a || (c.s.a = new Float64Array(3)));
       if (inBowl(w, 'cube', 'bowl')) {
         c.s.hold = w.speed('cube') < 0.05 ? (c.s.hold || 0) + dt : 0;
         return { text: 'Kostka je v misce…', ok: true, won: c.s.hold > 0.5 };
@@ -49,7 +50,7 @@ export const MISSIONS = [
       c.s.hold = 0;
       if (cube[2] > 0.03) return { text: 'Výborně! Přeneste ji nad misku a pusťte' };
       if (Math.hypot(c.tip[0] - cube[0], c.tip[1] - cube[1], c.tip[2] - cube[2]) < 0.035) return { text: 'Teď sevřete chapadlo' };
-      return { text: c.smart ? 'Táhněte oranžovou kouli ke kostce, nebo na kostku klikněte' : 'Natočte ruku ke kostce a sjeďte k ní' };
+      return { text: c.smart ? 'Táhněte modrou kouli ke kostce, nebo na kostku klikněte' : 'Natočte ruku ke kostce a sjeďte k ní' };
     },
     solve: (ctl, w) => pickPlace(ctl, w, 'cube', bowlDrop(w, 'bowl'))
   },
@@ -62,7 +63,7 @@ export const MISSIONS = [
     rate: (t, prec) => Math.min(stars3(t, 30, 75), prec < 0.004 ? 3 : prec < 0.008 ? 2 : 1),
     starsHint: '3 ★: do 30 s a odchylka pod 4 mm',
     check(c, dt) {
-      const w = c.w, a = w.pos('cube', [0, 0, 0]), b = w.pos('cube_b', [0, 0, 0]);
+      const w = c.w, a = w.pos('cube', c.s.a || (c.s.a = new Float64Array(3))), b = w.pos('cube_b', c.s.b || (c.s.b = new Float64Array(3)));
       const off = Math.hypot(a[0] - b[0], a[1] - b[1]);
       const onTop = off < 0.014 && a[2] > b[2] + 0.018 && a[2] < b[2] + 0.032;
       const free = Math.hypot(c.tip[0] - a[0], c.tip[1] - a[1], c.tip[2] - a[2]) > 0.03 || c.gripOpen;
@@ -112,7 +113,7 @@ export const MISSIONS = [
     rate: (t, prec) => Math.min(stars3(t, 25, 60), prec < 0.02 ? 3 : 2),
     starsHint: '3 ★: do 25 s a míček blízko středu branky',
     check(c, dt) {
-      const w = c.w, p = w.pos('ball', [0, 0, 0]), g = w.pos('goal', [0, 0, 0]), yaw = w.yaw('goal');
+      const w = c.w, p = w.pos('ball', c.s.a || (c.s.a = new Float64Array(3))), g = w.pos('goal', c.s.b || (c.s.b = new Float64Array(3))), yaw = w.yaw('goal');
       const dx = p[0] - g[0], dy = p[1] - g[1];
       const lx = Math.cos(yaw) * dx + Math.sin(yaw) * dy, ly = -Math.sin(yaw) * dx + Math.cos(yaw) * dy;
       const inside = lx > -0.045 && lx < 0.042 && Math.abs(ly) < 0.05 && p[2] < 0.04;

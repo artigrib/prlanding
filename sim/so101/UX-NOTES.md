@@ -1,0 +1,53 @@
+# SO-101 sim — UX layer (branch `so101-ux`)
+
+Everything new lives in separate modules; `app.js` and `index.html` only got small, marked hook points so the
+merge with the `servo-emulator` branch stays easy. Search for `[ux-hook:` (app.js) and `[ux]` (index.html).
+
+## Hook points
+
+| File | Marker | What it does |
+|---|---|---|
+| app.js `main()` | `[ux-hook:install]` | `import('./src/ux.js').install(app, {THREE, mj, TEST})` in try/catch. If the UX layer fails, the plain slider sim still runs (`app.ux = null`). |
+| app.js `reset()` | `[ux-hook:reset]` | `this.ux.onReset()` – mission layout, controller sync, path cleanup. |
+| app.js `startDemo()` | `[ux-hook:demo]` | "Ukázat řešení" runs the planner solution of the current mission (`return true` = handled). |
+| app.js `loop()` | `[ux-hook:pre]` | before physics: planner / IK controller / replay write `d.ctrl`. |
+| app.js `loop()` | `[ux-hook:check]` | mission logic replaces `app.check()` when the UX layer is present. |
+| app.js `loop()` | `[ux-hook:render]` | UX renders (main view + wrist PiP, gizmo, confetti…) instead of `renderer.render`. |
+| app.js `api()` | `[ux-hook:api]` | `ux.extendApi(api)` adds test hooks to `window.__sim` (?test=1). |
+| index.html head | `[ux]` | `src/ux.css` |
+| index.html panel | `[ux]` | `<div id="ux-mode">` before `#joints`, `<div id="ux-teach">` after `.row-b` |
+
+Everything else (stage toolbar, wrist-cam frame, toasts, dialogs, onboarding) is created by JS inside `.stage`
+/ `body`. Existing ids (`#joints`, `#home`, `#reset`, `#demo`, `#win`, `#hud`, `.mission h1`) are reused, not renamed.
+
+Who writes `d.ctrl`: joint sliders (app.js), scripted demo (app.js, only without UX), `ArmController`
+(src/controller.js, only while `active`), `Teach` replay. Slider `input` cancels controller + replay. A transport
+layer that mirrors a real servo bus should read `d.ctrl` / `d.qpos` and does not need to know about the UX layer;
+if it *drives* the arm, call `app.ux.ctl.cancel()` first (same as the sliders).
+
+## Modules
+
+- `src/kin.js` – kinematic chain read from the compiled MjModel, FK, damped-least-squares IK with a null-space
+  "approach pitch" task, joint limits, `solveAuto` (position first, gripper as vertical as possible).
+- `src/controller.js` – IK target following (rate-limited, smooth), planner: pick / place (closed-loop release
+  correction) / paths / pushes, reachability check for previews. DOM-free.
+- `src/world.js` – mission objects (cube, cube_b, ball, bowl, bowl2, goal); unused ones are parked on the hidden floor.
+- `src/missions.js` – 5 missions (layout, check, stars, automatic solution) + `MissionRunner`. DOM-free.
+- `src/ux.js` – glue: hooks, click-to-pick, keyboard, win flow, test API.
+- `src/ui/*` – gizmo + ghost + path preview + pen (gizmo.js), cameras + wrist PiP (cameras.js), teach & replay +
+  JSON export (teach.js), panel DOM (panel.js), onboarding, sound/haptics (audio.js), confetti (fx.js),
+  extra meshes + studio lighting (extras.js), localStorage wrapper (store.js).
+- `model/scene.xml` – new bodies `cube_b`, `ball` (free), `bowl` / `bowl2` / `goal` (mocap). Their geoms are in
+  group 3 so app.js does not draw them; `src/ui/extras.js` does.
+
+## Tests
+
+- `node --test sim/so101/tests/*.test.mjs` – IK/FK against MuJoCo (node + vendored WASM), each mission solved by
+  its plan in physics, drag-follow, random click-to-pick.
+- `sim/so101/tests/e2e.cjs` – Playwright (Chromium, SwiftShader): smart-move drag, click-to-pick, every mission,
+  record/replay/export, cameras, screenshots desktop 1280×800 and phone 390×844.
+
+## URL parameters
+
+`?mise=stack` (bowl, stack, sort, ball, trace) opens a mission directly and skips onboarding;
+`?onboard=1` forces the tutorial; `?test=1` exposes `window.__sim`.
