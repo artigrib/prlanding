@@ -4,7 +4,11 @@
 # after it has checked that the hostname's DNS A record already points at this server.
 {
 	admin 127.0.0.1:12019
-	cert_issuer acme
+	# http-01 answers were redirected to HTTPS instead of being solved (LE problem type "tls"),
+	# so validate over TLS-ALPN-01 on :443 instead.
+	cert_issuer acme {
+		disable_http_challenge
+	}
 }
 
 (common) {
