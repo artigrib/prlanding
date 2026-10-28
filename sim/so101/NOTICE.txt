@@ -13,8 +13,13 @@ copies of the licence texts are included next to each component.
      - STL meshes simplified (≈ 430k -> ≈ 120k triangles) and converted to MuJoCo .msh;
        mesh files renamed from .stl to .msh in so101.xml accordingly.
      - Unused mesh asset moving_jaw_so101_gripper_v1 removed from so101.xml.
-     - scene.xml is new (table, cube, bowl, home keyframe); it replaces Menagerie's scene.xml.
-     - The wrist camera mount is kept in physics but not drawn in the browser.
+     - scene.xml is new (table, cubes, bowls, ball, goal, home keyframe); it replaces Menagerie's scene.xml.
+     - The wrist camera mount is kept in physics; it is drawn only while the wrist camera view is on.
+     - model/visual/so101_visual.glb (visual only, not used for physics): the original, non-simplified
+       Menagerie STL files (robotstudio_so101/assets/*.stl, 14 visual meshes, 325 020 triangles) converted
+       with sim/so101/tools/stl-to-glb.mjs: vertices welded, positions only (normals are computed in the
+       browser), meshopt reordering, 14-bit position quantization (KHR_mesh_quantization) and
+       EXT_meshopt_compression. Geometry is otherwise unchanged; coordinates stay in the STL frame.
 
 2) MuJoCo WebAssembly bindings (vendor/mujoco/)
    Source:  npm package @mujoco/mujoco 3.17.0, Google DeepMind
@@ -23,6 +28,13 @@ copies of the licence texts are included next to each component.
    Unmodified (mujoco.js, mujoco.wasm).
 
 3) three.js (vendor/three/)
-   Source:  npm package three 0.160.0 (build/three.module.min.js, examples/jsm/controls/OrbitControls.js)
+   Source:  npm package three 0.160.0 (build/three.module.min.js, examples/jsm/controls/OrbitControls.js,
+            examples/jsm/loaders/GLTFLoader.js, examples/jsm/utils/BufferGeometryUtils.js)
    Licence: MIT (vendor/three/LICENSE)
+   Unmodified.
+
+4) meshoptimizer decoder (vendor/three/libs/meshopt_decoder.module.js)
+   Source:  as shipped in npm package three 0.160.0 (examples/jsm/libs/), from
+            https://github.com/zeux/meshoptimizer, Copyright (C) 2016-2022 Arseny Kapoulkine
+   Licence: MIT (stated at the top of the file)
    Unmodified.
