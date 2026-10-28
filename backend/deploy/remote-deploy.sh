@@ -353,6 +353,12 @@ tls_state() ( set +eu +o pipefail
   # Live TLS app shape as yes/no flags only.
   local tj; tj=$(dc exec -T caddy wget -q -T 3 -O - http://127.0.0.1:12019/config/apps/tls 2>/dev/null)
   say "tls live tls app: automation policy $(printf '%s' "$tj" | grep -q '"policies"' && echo yes || echo no); acme issuer $(printf '%s' "$tj" | grep -q '"module":"acme"' && echo yes || echo no); challenges block $(printf '%s' "$tj" | grep -q '"challenges"' && echo yes || echo no)"
+  # Caddy log "msg" values counted against a fixed allowlist of Caddy/CertMagic message strings.
+  say "tls caddy msgs: $(lg | awk '
+    BEGIN { n=split("obtaining certificate|trying to solve challenge|served key authentication|validations succeeded|certificate obtained successfully|challenge failed|validating authorization|could not get certificate from issuer|will retry|job failed|no information found to solve challenge|looking up info for HTTP challenge|server running|server is listening only on the HTTP port, so no automatic HTTPS will be applied to this server|enabling automatic HTTP->HTTPS redirects|enabling automatic TLS certificate management|admin endpoint started|serving initial configuration|started background certificate maintenance|new ACME account registered|creating new account because no account for configured email is known to us|waiting on internal rate limiter|authorization finalized|using ACME account|config is unchanged|load complete|HTTP/2 skipped because it requires TLS|failed to solve HTTP challenge|redirected default logger|using adjacent Caddyfile|adapted config to JSON|stopped previous server|shutting down apps, then terminating", m, "|"); for (i=1;i<=n;i++) ok[m[i]]=1 }
+    { if (match($0, /"msg":"[^"]*"/)) { s=substr($0, RSTART+7, RLENGTH-8); if (!(s in ok)) s="(other)"; c[s]++ } }
+    { if (match($0, /"challenge_type":"[a-z0-9-]*"/)) ct[substr($0, RSTART+18, RLENGTH-19)]++ }
+    END { for (s in c) printf "%s=%d; ", s, c[s]; for (t in ct) printf "challenge %s=%d; ", t, ct[t]; print "" }')"
   d80=$(iptables -t nat -S 2>/dev/null | grep -- '-j DNAT' | grep -cE -- '--dport 80( |$)' || true)
   say "tls nat DNAT dport 80 rules: $d80; iptables readable: $(iptables -t nat -S >/dev/null 2>&1 && echo yes || echo no)"
   for h in api mcp relay; do
