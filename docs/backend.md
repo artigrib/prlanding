@@ -12,16 +12,24 @@ Browser (printedrobotics.cz on GitHub Pages)
    │  POST https://api.printedrobotics.cz/e        (assets/track.js, sendBeacon)
    │  WSS  wss://relay.printedrobotics.cz/...      (bridge, later)
    ▼
-vps1 ── docker compose project "printedrobotics" (own network "printedrobotics_web")
-   caddy :80/:443   Let's Encrypt only, automatic HTTPS, no access log
-     api.printedrobotics.cz   ─▶ api:8081     (backend/api)
-     mcp.printedrobotics.cz   ─▶ bridge:8080  (backend/bridge, MCP Streamable HTTP)
-     relay.printedrobotics.cz ─▶ bridge:8080  (backend/bridge, WebSocket relay)
+vps1 ── docker compose project "printedrobotics"
+   caddy (host network) :80/:443   Let's Encrypt only, automatic HTTPS, no access log
+     api.printedrobotics.cz   ─▶ 127.0.0.1:18181 ─▶ api:8081     (backend/api)
+     mcp.printedrobotics.cz   ─▶ 127.0.0.1:18180 ─▶ bridge:8080  (backend/bridge, MCP Streamable HTTP)
+     relay.printedrobotics.cz ─▶ 127.0.0.1:18180 ─▶ bridge:8080  (backend/bridge, WebSocket relay)
    api      Node 24 + TypeScript, SQLite file in volume printedrobotics_api_data
-   bridge   placeholder until backend/bridge/Dockerfile exists (compose profile "bridge")
+   bridge   built and started once backend/bridge/Dockerfile exists (compose profile "bridge")
+   network  printedrobotics_web (api, bridge); nothing else of ours on the host network
 ```
 
-Only Caddy publishes ports. Every container is read-only, drops all capabilities, has
+Why Caddy uses the host network: on vps1, Docker 29 kept host port 80 marked as "already
+allocated" after early failed Caddy starts, even with no listener, endpoint or container left.
+Only a restart of the Docker daemon clears that, and the daemon has no live-restore, so it would
+restart the other projects' containers too. Caddy therefore binds 80/443 directly, and api/bridge
+are published on 127.0.0.1 only. If the owner restarts Docker in a maintenance window, Caddy can
+go back to bridge mode (the steps are in a comment in `backend/deploy/compose.yml`).
+
+Every container is read-only, drops all capabilities, has
 `no-new-privileges`, memory/CPU/PID limits, `restart: unless-stopped` and json-file logs
 rotated at 10 MB × 3.
 
@@ -110,9 +118,13 @@ Why the GHCR images are not built on push to `main`: the backend lives only on b
 ## How to roll back
 
 - Automatic: a deploy whose health check fails restores the previous release by itself.
-- Manual: **Actions → Rollback backend → Run workflow → action `rollback`**. It switches to the
-  previous release kept on the server and health-checks it. `status` shows the current release and
-  the state of our containers.
+- Manual: workflow **Rollback backend** with action `rollback`. It switches to the previous
+  release kept on the server and health-checks it. `status` shows the current release and the
+  state of our containers; `diag`, `porttest` and `fixports` are low-sensitivity diagnostics.
+  How to start it: `workflow_dispatch` only works for workflows on the default branch (`main`),
+  so on branch `backend` commit a change to `backend/deploy/ops-request` whose first word is the
+  action (for example `rollback`) and push. Once the workflow file is also on `main`, the
+  **Run workflow** button works too.
 - To go back to any older commit: re-run its **Deploy backend** run (Actions → the run → Re-run
   all jobs), or revert the commit on `backend` and push.
 
@@ -125,7 +137,8 @@ Why the GHCR images are not built on push to `main`: the backend lives only on b
    `0 issue "letsencrypt.org"` (Caddy is configured for Let's Encrypt only, and GitHub Pages also
    uses Let's Encrypt).
 2. **Firewall**: if a host firewall (ufw, provider firewall) is active, allow TCP 80, TCP 443 and
-   UDP 443. Let's Encrypt needs port 80 or 443 reachable from the internet.
+   UDP 443. Caddy runs on the host network, so ufw rules apply to it (unlike Docker-published
+   ports). Let's Encrypt needs port 80 or 443 reachable from the internet.
 3. **Pin the SSH host key** (`VPS_KNOWN_HOSTS` secret). Until it is set, each run trusts the key it
    sees (trust on first use) and prints the SHA256 fingerprints as notices. On your own computer:
 

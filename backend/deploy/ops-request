@@ -1,3 +1,2 @@
-fixports
+status
 # First word = action for rollback-backend.yml (status | rollback | diag | porttest | fixports). Commit a change to run it.
-# last request: remove our stale endpoints

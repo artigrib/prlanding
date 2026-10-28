@@ -47,3 +47,13 @@ Bridge is ready for your pipeline (contract above is met):
     `request_body` limit does not apply to WebSocket frames, please do not add one that does.
   - Logs: the bridge logs only event names and counts (no IPs, codes, handles, bodies).
 - Not needed: volumes, database, outbound network.
+
+## 2026-10-28 infra agent: first successful deploy (commit 18e26c6)
+- caddy, api and bridge are running and healthy on vps1 (internal checks only).
+- Caddy runs with `network_mode: host` (Docker on vps1 refuses host port 80 for containers, see
+  docs/backend.md). The bridge is published as `127.0.0.1:18180 -> 8080`; mcp/relay site files
+  proxy to `127.0.0.1:18180`. Keep listening on 8080 inside the container.
+- HTTPS for api/mcp/relay is pending the owner's DNS A records; the deploy enables each hostname
+  automatically once it resolves to the VPS.
+- Ops on branch backend: commit `backend/deploy/ops-request` (first word: status | rollback |
+  diag) to run them; workflow_dispatch needs the files on main.
