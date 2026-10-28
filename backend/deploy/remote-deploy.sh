@@ -53,7 +53,7 @@ report_services() {
 check_health() { # check_health EXPECTED_VERSION BRIDGE_ENABLED
   local v="$1" bridge="$2" body i
   for i in $(seq 1 20); do
-    body=$(dc exec -T caddy wget -q -T 3 -O - http://api:8081/health 2>&1 || true)
+    body=$(dc exec -T caddy wget -q -T 3 -O - http://127.0.0.1:18181/health 2>&1 || true)
     case "$body" in *'"ok":true'*) break;; esac
     sleep 3
   done
@@ -65,7 +65,7 @@ check_health() { # check_health EXPECTED_VERSION BRIDGE_ENABLED
   esac
   if [ "$bridge" = 1 ]; then
     for i in $(seq 1 20); do
-      body=$(dc exec -T caddy wget -q -T 3 -O - http://bridge:8080/healthz 2>/dev/null || true)
+      body=$(dc exec -T caddy wget -q -T 3 -O - http://127.0.0.1:18180/healthz 2>/dev/null || true)
       case "$body" in *'"ok":true'*) break;; esac
       sleep 3
     done
@@ -109,13 +109,6 @@ bring_up() {
   build_env
   fixports
   fix_stale_ports
-  # A Caddy container left half-started (not attached to our network) is removed first.
-  local cid nets
-  cid=$(dc ps --all -q caddy 2>/dev/null || true)
-  if [ -n "$cid" ]; then
-    nets=$(docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' "$cid" 2>/dev/null || true)
-    case "$nets" in *printedrobotics_web*) ;; *) warn "removing a caddy container that is not on our network"; dc rm -sf caddy || true;; esac
-  fi
   local profiles
   profiles=$(release_var "$ROOT/release.env" COMPOSE_PROFILES)
   local err
@@ -137,7 +130,7 @@ sanitize() { # strip addresses, ids and paths from an error line before it reach
 }
 
 caddy_reload() {
-  dc exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+  dc exec -T caddy caddy reload --address 127.0.0.1:12019 --config /etc/caddy/Caddyfile --adapter caddyfile
 }
 
 prune_old_images() {

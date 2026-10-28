@@ -1,5 +1,6 @@
 # Docker Compose project "printedrobotics" on vps1 (installed to the deploy root by deploy-backend.yml).
-# Only Caddy publishes ports. Everything else is on the project's own network.
+# Caddy runs on the host network (see below); api and bridge sit on the project's own network
+# and are published on 127.0.0.1 only.
 # Image references come from release.env (written by remote-deploy.sh), secrets from secrets.env
 # (generated on the server, never in GitHub). Never run `docker compose config` in CI logs.
 name: printedrobotics
@@ -14,12 +15,13 @@ services:
   caddy:
     image: ${CADDY_IMAGE:-caddy:2-alpine}
     restart: unless-stopped
-    # IPv4 only: on vps1 Docker reports [::]:80 as already allocated, and the hostnames have
-    # no AAAA records. Add "[::]:80:80" etc. here once IPv6 is wanted and that is resolved.
-    ports:
-      - "0.0.0.0:80:80"
-      - "0.0.0.0:443:443"
-      - "0.0.0.0:443:443/udp"
+    # Host networking: Docker 29 on vps1 keeps host port 80 marked as "already allocated" after
+    # failed starts (only a dockerd restart clears that, which would restart the other projects'
+    # containers). Caddy therefore binds 80/443 itself and reaches api/bridge through ports
+    # published on 127.0.0.1 only. To go back to bridge mode after a dockerd restart: remove
+    # network_mode, add ports "80:80", "443:443", "443:443/udp", networks [web], and point the
+    # site files at api:8081 / bridge:8080 again.
+    network_mode: host
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./sites-enabled:/etc/caddy/sites-enabled:ro
@@ -34,9 +36,8 @@ services:
     cpus: 0.5
     pids_limit: 200
     logging: *logging
-    networks: [web]
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8099/health"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:18199/health"]
       interval: 15s
       timeout: 3s
       retries: 3
@@ -50,6 +51,8 @@ services:
       ALLOWED_ORIGINS: https://printedrobotics.cz
       TRUST_PROXY: "1"
       STATS_TOKEN: ${STATS_TOKEN:-}
+    ports:
+      - "127.0.0.1:18181:8081"
     volumes:
       - api_data:/data
     read_only: true
@@ -76,6 +79,8 @@ services:
       ALLOWED_ORIGINS: https://printedrobotics.cz
       TRUST_PROXY: "1"
       BRIDGE_HMAC_KEY: ${BRIDGE_HMAC_KEY:-}
+    ports:
+      - "127.0.0.1:18180:8080"
     read_only: true
     tmpfs: [/tmp]
     cap_drop: [ALL]

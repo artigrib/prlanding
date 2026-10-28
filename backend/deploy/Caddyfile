@@ -3,7 +3,7 @@
 # Site blocks live in sites/*.caddy; the deploy workflow copies a site into sites-enabled/ only
 # after it has checked that the hostname's DNS A record already points at this server.
 {
-	admin localhost:2019
+	admin 127.0.0.1:12019
 	cert_issuer acme
 }
 
@@ -19,8 +19,9 @@
 	}
 }
 
-# Internal health endpoint for the container healthcheck (port not published).
-http://:8099 {
+# Internal health endpoint for the container healthcheck (loopback only; Caddy uses host networking).
+http://127.0.0.1:18199 {
+	bind 127.0.0.1
 	respond /health "ok" 200
 	respond 404
 }
