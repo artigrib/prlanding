@@ -20,7 +20,7 @@ function samplePolyline(c, step) {
   }
   return out;
 }
-export const TRACE = { corners: STAR_PTS, checkpoints: samplePolyline(STAR_PTS, 0.007), penDown: 0.016, hit: 0.0065 };
+export const TRACE = { corners: STAR_PTS, checkpoints: samplePolyline(STAR_PTS, 0.007), penDown: 0.016, hit: 0.009, done: 0.85 };
 
 const near2 = (a, b, r) => Math.hypot(a[0] - b[0], a[1] - b[1]) < r;
 
@@ -160,15 +160,18 @@ export const MISSIONS = [
   },
   {
     id: 'trace', n: '05', title: 'Obkreslete hvězdu',
-    desc: 'Ruka drží fix. Sjeďte hrotem k papíru a obtáhněte hvězdu. Můžete ji také nakreslit prstem nástrojem Pero – ruka vaši čáru přesně zopakuje.',
+    desc: 'Ruka drží fix. Táhněte po papíře a fix kreslí – výška se drží sama, magnet vám pomáhá zůstat na čáře. Nebo hvězdu nakreslete prstem a ruka ji přesně zopakuje.',
     short: 'Kreslení hvězdy',
     layout: {},
     pen: true,
-    tip: 'Zvolte <b>Pero</b> a nakreslete hvězdu myší nebo prstem – ruka ji obtáhne.',
-    look: { t: [0.2, 0.02, 0.0], p: [0.52, 0.4, -0.38], pn: [0.48, 0.5, -0.45] },
+    tip: 'Táhněte po <b>papíře</b> – fix kreslí. <b>Pero nahoru</b> (P) mezi tahy. Nebo <b>Nakreslit prstem</b> – ruka čáru zopakuje.',
+    // top-down over the paper (three.js coords: x, z_mj, -y_mj)
+    look: { t: [0.215, 0.0, 0.0], p: [0.2151, 0.34, -0.0001], pn: [0.2151, 0.42, -0.0001] },
+    draw: true,
     targets: {},
-    rate: (t, prec) => Math.min(stars3(t, 45, 100), prec < 0.003 ? 3 : prec < 0.005 ? 2 : 1),
-    starsHint: '3 ★: do 45 s a průměrná odchylka čáry pod 3 mm',
+    // tuned so a beginner finishes in < 2 min; 3 ★ still needs a precise line
+    rate: (t, prec) => Math.min(stars3(t, 60, 150), prec < 0.0025 ? 3 : prec < 0.005 ? 2 : 1),
+    starsHint: '3 ★: do 60 s a průměrná odchylka čáry pod 2,5 mm',
     check(c) {
       const s = c.s;
       if (!s.hit) { s.hit = new Uint8Array(TRACE.checkpoints.length); s.n = 0; s.errSum = 0; s.errN = 0; }
@@ -186,9 +189,9 @@ export const MISSIONS = [
         if (seg < 0.03) { s.errSum += seg; s.errN++; }
       }
       const cov = s.n / TRACE.checkpoints.length, prec = s.errN ? s.errSum / s.errN : 1;
-      if (cov >= 0.9) return { text: 'Hvězda je hotová!', ok: true, won: true, prec, progress: cov };
+      if (cov >= TRACE.done) return { text: 'Hvězda je hotová!', ok: true, won: true, prec, progress: cov };
       if (s.n) return { text: `Obkresleno ${Math.round(cov * 100)} %`, ok: cov > 0.5, prec, progress: cov };
-      return { text: c.smart ? 'Sjeďte koulí až k papíru a táhněte po hvězdě, nebo zvolte Pero' : 'Sjeďte hrotem k papíru a táhněte po hvězdě', progress: 0 };
+      return { text: c.smart ? (c.touch ? 'Táhněte prstem po papíře – fix kreslí. Nebo zvolte Nakreslit prstem' : 'Táhněte myší po papíře – fix kreslí. P zvedne pero') : 'Sjeďte hrotem k papíru a táhněte po hvězdě', progress: 0 };
     },
     solve: (ctl) => ctl.planPath(TRACE.corners.map(([x, y]) => [x, y, 0.009]), { grip: false, speed: 0.05, roll: 0 })
   }

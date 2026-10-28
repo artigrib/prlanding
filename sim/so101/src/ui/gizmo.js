@@ -164,6 +164,16 @@ export class Gizmo {
     }
   }
 
+  /** drawing mission: the floor ring marks where the marker lands; green / orange / red by deviation */
+  drawCursor(d) {
+    this.foot.position.set(d.goal[0], d.goal[1], 0.0012);
+    const g = d.grade();
+    this.lineMat.color.setHex(!d.penDown ? 0x8a8a84 : g === 'ok' ? 0x1fa34a : g === 'warn' ? 0xf09a00 : 0xff2a1a);
+    this.lineMat.opacity = 0.9;
+    this.foot.scale.setScalar(1.7);
+    this.okCol = null;   // let setColor() restore the normal colour later
+  }
+
   // ---------- planner path preview ----------
   showPath(plan, animate) {
     const T = this.T;
@@ -258,6 +268,9 @@ export class Gizmo {
       const P = this.pend; this.pend = null;
       this.startDrag(P.kind, { pointerId: P.id, clientX: P.x, clientY: P.y });
     }
+    const lk = this.ux.links;
+    if ((lk.pend || lk.drag) && e.pointerType === 'touch') { lk.cancelPress(); return; }   // two fingers = camera
+    if (this.drawing && e.pointerId !== this.drawing.id) { this.drawing = null; return; }
     if (this.drag) {
       // second finger while dragging: twist = wrist rotation
       if (e.pointerType === 'touch' && this.pointers.size === 2) {
@@ -283,6 +296,28 @@ export class Gizmo {
       if (ux.penTool) {
         const p = this.tablePoint(e);
         if (p) { this.startStroke(e, p); e.stopPropagation(); e.preventDefault(); return; }
+      }
+      // drawing mission: a drag on the paper moves the marker in the paper plane
+      if (ux.drawMode()) {
+        const p = this.tablePoint(e);
+        if (p && ux.onPaper(p)) {
+          this.drawing = { id: e.pointerId };
+          try { this.canvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+          ux.drawPoint(p[0], p[1]);
+          e.stopPropagation(); e.preventDefault(); return;
+        }
+      }
+    }
+    // any part of the arm: rotate that joint (objects in front of it still win)
+    if (lk.enabled()) {
+      const lh = lk.hit(e);
+      if (lh) {
+        const pk = this.pickAt(e);
+        if (!(pk && pk.name !== 'table' && this.pickDist < lh.dist)) {
+          lk.down(e, lh);
+          try { this.canvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+          e.stopPropagation(); e.preventDefault(); return;
+        }
       }
     }
     this.down = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now() };
@@ -336,6 +371,12 @@ export class Gizmo {
 
   onMove(e) {
     if (this.pointers.has(e.pointerId)) this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (this.ux.links.move(e)) { e.stopPropagation(); e.preventDefault(); return; }
+    if (this.drawing && e.pointerId === this.drawing.id) {
+      e.stopPropagation(); e.preventDefault();
+      const p = this.tablePoint(e); if (p) this.ux.drawPoint(p[0], p[1]);
+      return;
+    }
     const P = this.pend;
     if (P && e.pointerId === P.id) {
       e.stopPropagation(); e.preventDefault();
@@ -353,7 +394,9 @@ export class Gizmo {
       }
       if (e.pointerId !== D.id) return;
       this.setRay(e);
-      if (D.kind === 'move') {
+      if (D.kind === 'move' && this.ux.drawMode()) {   // paper-plane mode: the ball slides on the paper
+        const p = this.tablePoint(e); if (p) this.ux.drawPoint(p[0], p[1]);
+      } else if (D.kind === 'move') {
         this.plane.copy(D.plane);
         const p = this.tip;
         if (this.rayPlane(p)) this.ux.userSetTarget(p[0] + this.off[0], p[1] + this.off[1], D.vertical ? p[2] + this.off[2] : t[2]);
@@ -376,7 +419,9 @@ export class Gizmo {
       const now = performance.now();
       if (now - (this.hoverT || 0) < 50) return; this.hoverT = now;
       let cur = '';
-      if (this.ux.mode === 'smart' && this.hitHandle(e)) cur = 'grab';
+      if (this.ux.mode === 'smart' && this.hitHandle(e)) { cur = 'grab'; this.ux.links.clear(); }
+      else if (this.ux.drawMode() && (() => { const p = this.tablePoint(e); return p && this.ux.onPaper(p); })()) cur = 'crosshair';
+      else if (this.ux.links.enabled() && this.ux.links.hover(e)) cur = 'grab';
       else if (this.ux.penTool && this.tablePoint(e)) cur = 'crosshair';
       else if (this.pickAt(e)) cur = 'pointer';
       this.hover = cur === 'grab';
@@ -386,6 +431,8 @@ export class Gizmo {
 
   onUp(e, cancelled) {
     this.pointers.delete(e.pointerId);
+    if (this.ux.links.up(e, cancelled)) { e.stopPropagation(); return; }
+    if (this.drawing && e.pointerId === this.drawing.id) { this.drawing = null; e.stopPropagation(); return; }
     const P = this.pend;
     if (P && e.pointerId === P.id) {
       this.pend = null; e.stopPropagation();

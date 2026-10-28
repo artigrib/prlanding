@@ -141,7 +141,20 @@ export class Panel {
       </ul>
       <div class="ux-row2">
         <button type="button" class="btn btn-o" id="ux-grip" aria-pressed="false" data-tip="Mezerník">Zavřít chapadlo <span class="kbd" aria-hidden="true">␣</span></button>
-        <button type="button" class="btn btn-o" id="ux-pen" aria-pressed="false" data-tip="Nakreslete na stůl čáru, ruka ji projede (P)">Pero <span aria-hidden="true">✎</span></button>
+        <button type="button" class="btn btn-o" id="ux-pen" aria-pressed="false" data-tip="Nakreslete na stůl čáru, ruka ji projede (K)">Nakreslit prstem <span aria-hidden="true">✎</span></button>
+      </div>
+      <div class="ux-draw" id="ux-draw" hidden>
+        <div class="ux-row2">
+          <button type="button" class="btn btn-o" id="ux-penup" aria-pressed="false" data-tip="Zvednout / položit fix (P)">Pero nahoru <span class="kbd" aria-hidden="true">P</span></button>
+          <button type="button" class="btn btn-o" id="ux-drawview">3D pohled</button>
+        </div>
+        <p class="mono" id="ux-help-l">Pomoc při kreslení</p>
+        <div class="ux-seg ux-seg-s ux-seg3" role="radiogroup" aria-labelledby="ux-help-l">
+          <button type="button" role="radio" data-h="0">Žádná</button>
+          <button type="button" role="radio" data-h="1">Mírná</button>
+          <button type="button" role="radio" data-h="2">Silná</button>
+        </div>
+        <p class="mono-s muted">Magnet přitahuje fix k předloze. Zelený kroužek = na čáře, oranžový = kousek vedle.</p>
       </div>
       <div class="jn"><label for="ux-roll">Rotace zápěstí</label><output for="ux-roll" id="ux-roll-o"></output>
         <input type="range" id="ux-roll" step="any"></div>
@@ -152,7 +165,14 @@ export class Panel {
     mount.appendChild(smart);
     this.seg = [...mount.querySelectorAll('[data-mode]')];
     for (const b of this.seg) b.addEventListener('click', () => this.ux.setMode(b.dataset.mode));
-    this.gripBtn = $('ux-grip'); this.penBtn = $('ux-pen');
+    this.gripBtn = $('ux-grip'); this.penBtn = $('ux-pen'); this.drawBox = $('ux-draw');
+    $('ux-penup').addEventListener('click', () => this.ux.togglePenUp());
+    $('ux-drawview').addEventListener('click', () => {
+      const ux = this.ux, top = ux.cameras.view === 'look';
+      if (top) ux.cameras.set('orbit'); else ux.cameras.set('orbit', ux.runner.m.look);
+      $('ux-drawview').textContent = top ? 'Pohled shora' : '3D pohled';
+    });
+    for (const b of this.drawBox.querySelectorAll('[data-h]')) b.addEventListener('click', () => this.ux.setDrawHelp(+b.dataset.h));
     this.gripBtn.addEventListener('click', () => this.ux.toggleGrip());
     this.penBtn.addEventListener('click', () => this.ux.togglePen());
     const roll = this.roll = $('ux-roll'), pitch = this.pitch = $('ux-pitch');
@@ -168,6 +188,15 @@ export class Panel {
     let t = m.tip || '';
     if (this.ux.touch) t = t.replace(/Klikněte/g, 'Klepněte').replace(/myší nebo prstem/g, 'prstem');
     if (li && li.innerHTML !== t) li.innerHTML = t;
+    this.drawBox.hidden = !m.draw;
+    if (m.draw) { this.showDraw(this.ux); $('ux-drawview').textContent = '3D pohled'; }
+  }
+
+  showDraw(ux) {
+    const d = ux.draw, b = $('ux-penup');
+    b.firstChild.textContent = d.penDown ? 'Pero nahoru ' : 'Pero dolů ';
+    b.setAttribute('aria-pressed', String(!d.penDown));
+    for (const x of this.drawBox.querySelectorAll('[data-h]')) x.setAttribute('aria-checked', String(+x.dataset.h === d.help));
   }
 
   showMode(mode) {
@@ -273,7 +302,7 @@ export class Panel {
     st.appendChild(this.playBar);
     this.timer = h(`<span class="ux-timer mono" id="ux-timer" aria-hidden="true">0:00</span>`);
     $('hud').appendChild(this.timer);
-    this.penHint = h(`<p class="ux-penhint mono-s" hidden>Pero: táhněte prstem nebo myší po stole, ruka čáru zopakuje</p>`);
+    this.penHint = h(`<p class="ux-penhint mono-s" hidden>Nakreslete čáru po stole prstem nebo myší – ruka ji zopakuje</p>`);
     st.appendChild(this.penHint);
   }
   showView(v) { $('ux-view-l').textContent = VIEW_LABELS[v].replace('Volný pohled', 'Volný'); }
@@ -393,14 +422,18 @@ export class Panel {
       ['A / D', 'rotace zápěstí'],
       ['Mezerník / G', 'otevřít / zavřít chapadlo'],
       ['M', 'chytrý pohyb ↔ klouby'],
-      ['P', 'pero – nakreslete cestu'],
+      ['K', 'nakreslit cestu prstem – ruka ji projede'],
+      ['P', 'kreslení: pero nahoru / dolů'],
+      ['1 – 6', 'vybrat kloub (pak ← → otáčí, Esc zruší)'],
+      ['Shift + 1 – 5', 'výběr mise'],
+      ['Část ruky', 'tažením otočíte jejím kloubem, dvojklik = výchozí poloha'],
+      ['Čelisti', 'klepnutím otevřete / zavřete chapadlo'],
       ['C', 'přepnout pohled kamery'],
       ['V', 'kamera na zápěstí'],
       ['X', 'rozložený pohled'],
       ['T / L', 'nahrát / přehrát ukázku'],
       ['H', 'ruka domů'],
       ['R', 'začít misi znovu'],
-      ['1 – 5', 'výběr mise'],
       ['S', 'zvuk'],
       ['Esc', 'zrušit pohyb, zavřít okno']
     ];

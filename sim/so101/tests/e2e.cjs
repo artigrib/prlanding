@@ -135,6 +135,54 @@ async function touchDrag(page, from, to, steps = 8) {
     const tg1 = (await ux(p)).target;
     ok(Math.hypot(tg1[0] - tg0[0], tg1[1] - tg0[1]) > 0.01, 'P0-1: drag > 6 px moves the target');
 
+    // ---- direct joint manipulation: drag any link → only that joint moves ----
+    const names = ['pan', 'lift', 'elbow', 'flex', 'roll', 'gripper'];
+    for (let j = 0; j < 6; j++) {
+      await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.3));
+      const lp = await S(p, (jj) => window.__sim.linkPoint(jj), j);
+      if (!lp) { ok(false, `link ${names[j]}: no grabbable screen point`); continue; }
+      const c0 = await S(p, () => window.__sim.state().ctrl);
+      await p.mouse.move(lp.x, lp.y); await p.mouse.down();
+      for (let i = 1; i <= 8; i++) await p.mouse.move(lp.x + 6 * i, lp.y + 4 * i);
+      await p.mouse.up();
+      const c1 = await S(p, () => window.__sim.state().ctrl);
+      const others = c1.map((v, i) => (i === j ? 0 : Math.abs(v - c0[i]))).reduce((a, b) => Math.max(a, b), 0);
+      ok(Math.abs(c1[j] - c0[j]) > 0.02 && others < 1e-6, `drag on ${lp.body} turns only ${names[j]} (Δ ${(c1[j] - c0[j]).toFixed(3)} rad, others ${others.toExponential(1)})`);
+    }
+    // empty space: camera orbit, never the arm
+    await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.3));
+    {
+      const c0 = await S(p, () => window.__sim.state().ctrl), cam0 = await S(p, () => window.__sim._ux.app.camera.position.toArray());
+      const r = await S(p, () => { const r = document.getElementById('c').getBoundingClientRect(); return { x: r.left + r.width * 0.12, y: r.top + r.height * 0.3 }; });
+      const free = await S(p, ([x, y]) => { const u = window.__sim._ux, e = { clientX: x, clientY: y }; return !u.links.hit(e) && !u.gizmo.hitHandle(e) && !(u.gizmo.pickAt(e) && u.gizmo.pickAt(e).name !== 'table'); }, [r.x, r.y]);
+      await p.mouse.move(r.x, r.y); await p.mouse.down();
+      for (let i = 1; i <= 8; i++) await p.mouse.move(r.x + 15 * i, r.y + 3 * i);
+      await p.mouse.up(); await S(p, () => window.__sim.advance(0.3));
+      const c1 = await S(p, () => window.__sim.state().ctrl), cam1 = await S(p, () => window.__sim._ux.app.camera.position.toArray());
+      const dq = c1.reduce((a, v, i) => Math.max(a, Math.abs(v - c0[i])), 0), dc = Math.hypot(cam1[0] - cam0[0], cam1[1] - cam0[1], cam1[2] - cam0[2]);
+      ok(free && dq < 1e-6 && dc > 0.01, `drag on empty space orbits the camera (Δcam ${dc.toFixed(3)}) and never moves the arm (Δq ${dq.toExponential(1)})`);
+    }
+    // keyboard: 3 selects the elbow, → turns only it
+    {
+      await S(p, () => window.__sim.reset());
+      const c0 = await S(p, () => window.__sim.state().ctrl);
+      await p.keyboard.press('3'); await p.keyboard.press('ArrowRight'); await p.keyboard.press('ArrowRight'); await p.keyboard.press('Escape');
+      const c1 = await S(p, () => window.__sim.state().ctrl);
+      ok(Math.abs(c1[2] - c0[2] - 4 * Math.PI / 180) < 1e-3 && Math.abs(c1[1] - c0[1]) < 1e-9, 'keys 3 + → → turn the elbow by 4°, nothing else');
+    }
+    // tap on the jaws toggles the gripper; the HUD follows
+    {
+      await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.3));
+      await S(p, () => { const u = window.__sim._ux, c = u.world.pos('cube', [0, 0, 0]); u.ctl.begin(); u.ctl.setGrip(false); u.ctl.setTarget(c[0], c[1], c[2] + 0.035); });
+      await S(p, () => window.__sim.advance(3));
+      const h0 = (await ux(p)).hud, g0 = await S(p, () => window.__sim._ux.ctl.grip);
+      const jp = await S(p, () => window.__sim.linkPoint(5));
+      await p.mouse.click(jp.x, jp.y);
+      await S(p, () => window.__sim.advance(1.2));
+      const h1 = (await ux(p)).hud, g1 = await S(p, () => window.__sim.state().ctrl[5]);
+      ok(g0 < 0 && g1 > 1 && /Otevřete/.test(h0) && /Sjeďte dolů/.test(h1), `tap on the jaw opens the gripper (${g0.toFixed(2)} → ${g1.toFixed(2)}); HUD "${h0}" → "${h1}"`);
+    }
+
     // click-to-pick: click the cube, then the bowl
     await S(p, () => window.__sim.reset());
     a = await S(p, () => window.__sim.screen('cube'));
@@ -160,6 +208,43 @@ async function touchDrag(page, from, to, steps = 8) {
       const u = await ux(p);
       ok(t > 0, `mission ${id} solved by its plan (${t}s, ${u.result ? u.result.stars + '★' : u.hud})`);
       if (id === 'trace' || id === 'sort') await shot(p, 'desk-05-' + id);
+    }
+
+    // drawing mission: top-down view, paper-plane drag keeps the pen on the paper; finger trace → robot completes it
+    {
+      await S(p, () => window.__sim.mission('trace')); await p.waitForTimeout(900);
+      const top = await S(p, () => { const c = window.__sim._ux.app.camera, t = window.__sim._ux.app.controls.target; const d = c.position.clone().sub(t).normalize(); return d.y; });
+      ok(top > 0.95, 'drawing mission starts with a top-down camera (' + top.toFixed(3) + ')');
+      const corners = await S(p, () => window.__sim._ux.runner.m && [[0.215, 0.055], [0.2009, 0.0194], [0.1627, 0.017], [0.192, -0.0074], [0.1827, -0.0445]]);
+      let zmin = 1, zmax = 0, started = false;
+      for (let i = 1; i < corners.length; i++) {
+        for (let k = 0; k <= 6; k++) {
+          const x = corners[i - 1][0] + (corners[i][0] - corners[i - 1][0]) * k / 6, y = corners[i - 1][1] + (corners[i][1] - corners[i - 1][1]) * k / 6;
+          const sp = await S(p, ([x, y]) => window.__sim._ux.gizmo.project([x, y, 0], {}), [x, y]);
+          if (!started) { await p.mouse.move(sp.x, sp.y); await p.mouse.down(); started = true; await S(p, () => window.__sim.advance(2.5)); }
+          else await p.mouse.move(sp.x, sp.y);
+          await S(p, () => window.__sim.advance(0.12));
+          const z = (await ux(p)).tip[2]; zmin = Math.min(zmin, z); zmax = Math.max(zmax, z);
+        }
+      }
+      await p.mouse.up();
+      const prog = await S(p, () => window.__sim._ux.runner.last.progress || 0);
+      ok(zmax < 0.016 && zmin > 0.003 && prog > 0.1, `paper-plane drag: tip ${zmin.toFixed(4)}…${zmax.toFixed(4)} m, ink coverage ${(prog * 100).toFixed(0)} %`);
+      await shot(p, 'desk-11-draw');
+      // finger trace (K): draw the whole star, the robot reproduces it
+      await S(p, () => window.__sim.reset()); await p.keyboard.press('k');
+      const star = [[0.215, 0.055], [0.2009, 0.0194], [0.1627, 0.017], [0.192, -0.0074], [0.1827, -0.0445], [0.215, -0.024], [0.2473, -0.0445], [0.238, -0.0074], [0.2673, 0.017], [0.2291, 0.0194], [0.215, 0.055]];
+      let first = true;
+      for (let i = 1; i < star.length; i++) for (let k = 0; k < 8; k++) {
+        const x = star[i - 1][0] + (star[i][0] - star[i - 1][0]) * k / 8, y = star[i - 1][1] + (star[i][1] - star[i - 1][1]) * k / 8;
+        const sp = await S(p, ([x, y]) => window.__sim._ux.gizmo.project([x, y, 0], {}), [x, y]);
+        if (first) { await p.mouse.move(sp.x, sp.y); await p.mouse.down(); first = false; } else await p.mouse.move(sp.x, sp.y);
+      }
+      await p.mouse.up();
+      ok((await ux(p)).busy, 'finger trace starts a planned path');
+      const tw = await advanceUntil(p, () => window.__sim.ux().won, 45, 3);
+      ok(tw > 0, `finger-traced star completes the drawing mission (${tw}s, ${JSON.stringify((await ux(p)).result)})`);
+      await p.keyboard.press('k');
     }
 
     // teach & replay

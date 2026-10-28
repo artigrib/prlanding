@@ -29,6 +29,13 @@ const STEPS = [
       ? 'Šipkou nad koulí ruku zvednete, druhým prstem otočíte zápěstí. Chapadlo ovládá tlačítko <b>Otevřít / Zavřít chapadlo</b> pod scénou.'
       : 'Šipkou nad koulí ruku zvednete, kroužkem nebo kolečkem myši otočíte zápěstí. <span class="kbd">Mezerník</span> otevře a zavře chapadlo.'),
     done: (k) => k === 'dragend-height' || k === 'dragend-roll' || k === 'wheel' || k === 'grip'
+  },
+  {
+    anchor: 'elbow', title: () => 'Chyťte kteroukoli část ruky a otočte s ní',
+    text: (u) => (u.touch
+      ? 'Táhněte prstem za rameno, loket nebo zápěstí – otočí se jen ten kloub. Klepnutí na čelisti otevře / zavře chapadlo, dvojité klepnutí vrátí kloub domů.'
+      : 'Táhněte myší za rameno, loket nebo zápěstí – otočí se jen ten kloub. Klik na čelisti otevře / zavře chapadlo, dvojklik vrátí kloub domů. Klávesy 1–6 vyberou kloub.'),
+    done: (k) => k === 'link'
   }
 ];
 
@@ -107,6 +114,11 @@ export class Onboarding {
     const ux = this.ux;
     if (a === 'target') return ux.ctl.active ? ux.ctl.target : ux.gizmo.tip;
     if (a === 'bowl' && ux.world.o.bowl.active) return ux.world.pos('bowl');
+    if (a === 'elbow') {
+      const m = ux.app.m, b = ux.mj.mj_name2id(m, ux.mj.mjtObj.mjOBJ_BODY.value, 'lower_arm'), x = ux.app.d.xpos;
+      this.eb = this.eb || [0, 0, 0]; this.eb[0] = x[3 * b]; this.eb[1] = x[3 * b + 1]; this.eb[2] = x[3 * b + 2];
+      return this.eb;
+    }
     const o = ux.world.active().find((e) => e.kind === 'free');
     return o ? ux.world.pos(o.name) : ux.gizmo.tip;
   }

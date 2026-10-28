@@ -199,11 +199,28 @@
   .ux-hintbtn{display:none}
   .ux-toast{top:12px}
   .ux-recb{top:12px}
-  .win-b{flex-wrap:wrap}
-  .win-b .btn{flex:1 1 40%}
-  .win-b #cta{flex:1 1 100%}
 }
-@media (max-width:480px){.win{padding:16px}.win-b .btn{font-size:14.5px}}
 .jn output.ux-lim{color:var(--accent-text);font-weight:500}
 #c:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .ux-tb svg{width:20px;height:20px}
+
+/* win card: buttons never stick out at any width 320–1366 px, any orientation (grid instead of nowrap flex) */
+.win{box-sizing:border-box;max-width:calc(100% - 24px);max-height:calc(100% - 24px);overflow:auto}
+.win-b{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.win-b #cta{grid-column:1 / -1}
+.win-b:has(#ux-next[hidden]) #again{grid-column:1 / -1}
+.win-b .btn{min-width:0;width:100%;white-space:normal;overflow-wrap:anywhere;text-align:left;line-height:1.2;padding:8px 14px;min-height:48px;gap:8px}
+.win-b .btn span{flex:none}
+.win h2{overflow-wrap:anywhere}
+@media (max-width:360px){.win{padding:14px}.win-b{grid-template-columns:minmax(0,1fr)}.win-b .btn{font-size:14.5px}}
+/* button rows never overflow narrow phones (320 px) */
+.ux-row2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.ux-row3{grid-template-columns:1.2fr 1fr 1fr}
+.ux-row2 .btn,.ux-row3 .btn,.ux-qrow .btn{min-width:0;white-space:normal;line-height:1.15}
+.ux-row3>*{min-width:0}
+@media (max-width:360px){.ux-row3{grid-template-columns:repeat(3,minmax(0,1fr))}.ux-row2 .btn,.ux-row3 .btn,.ux-qrow .btn{padding:0 8px;font-size:13.5px;gap:4px}}
+.ux-seg3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ux-draw{display:flex;flex-direction:column;gap:8px}
+.ux-draw .mono,.ux-draw .mono-s{margin:0}
+.ux-jlabel{position:absolute;left:0;top:0;pointer-events:none;background:var(--ink);color:#fff;padding:6px 10px;font:500 13.5px/1.2 var(--sans);white-space:nowrap;z-index:6;border-left:4px solid var(--ok)}
+.ux-jlabel.stop{border-left-color:#ff2a1a;background:#B3200F}
