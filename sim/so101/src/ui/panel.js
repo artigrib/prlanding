@@ -1,0 +1,350 @@
+// DOM for the UX layer: mode switch, smart-move controls, mission picker, teach & replay, stage toolbar,
+// wrist-cam frame, toasts, win dialog extras, keyboard shortcuts dialog. Formal Czech ("vy").
+
+import { MISSIONS } from '../missions.js';
+import { VIEW_LABELS } from './cameras.js';
+
+const $ = (id) => document.getElementById(id);
+const h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
+
+const I = {
+  cam: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.4-6.4M21 12a9 9 0 0 1-15.4 6.4"/><path d="M18.5 2.5v3.6h-3.6M5.5 21.5v-3.6h3.6"/><circle cx="12" cy="12" r="2.6"/></svg>',
+  wrist: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6.5" width="13" height="11" rx="1.5"/><path d="M15.5 10.5l6-3.2v9.4l-6-3.2z"/></svg>',
+  snd: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9h4l5-4v14l-5-4h-4z"/><path class="on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg>',
+  help: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.4a2.8 2.8 0 1 1 3.9 2.6c-.8.4-1.2 1-1.2 1.9v.6"/><circle cx="12" cy="17.6" r=".6"/></svg>',
+  parts: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 17.5h7M17.5 14v7"/></svg>'
+};
+
+export class Panel {
+  constructor(ux) {
+    this.ux = ux;
+    this.stage = document.querySelector('.stage');
+    this.missionUI();
+    this.modeUI();
+    this.teachUI();
+    this.stageUI();
+    this.winUI();
+    this.helpUI();
+  }
+
+  // ---------- mission header + picker ----------
+  missionUI() {
+    const box = document.querySelector('.mission');
+    this.mNum = box.querySelector('p.mono');
+    this.mTitle = box.querySelector('h1');
+    this.mDesc = box.querySelector('p.ink2');
+    const row = h(`<div class="ux-mrow">
+      <span class="ux-stars" id="ux-mstars" aria-label=""></span>
+      <button type="button" class="ux-link" id="ux-pick-mission" aria-haspopup="dialog">Vybrat misi <span aria-hidden="true">▾</span></button>
+    </div>`);
+    box.appendChild(row);
+    this.mStars = row.querySelector('#ux-mstars');
+    row.querySelector('button').addEventListener('click', () => this.openPicker());
+
+    const dlg = this.picker = h(`<div class="ux-modal" id="ux-picker" hidden role="dialog" aria-modal="true" aria-labelledby="ux-picker-h">
+      <div class="ux-modal-in">
+        <div class="ux-modal-top"><p class="mono">Mise</p><button type="button" class="ux-x" aria-label="Zavřít">×</button></div>
+        <h2 id="ux-picker-h">Vyberte si úkol</h2>
+        <div class="ux-cards"></div>
+        <p class="mono-s muted">Hvězdičky a nejlepší časy se ukládají jen ve vašem prohlížeči.</p>
+      </div></div>`);
+    document.body.appendChild(dlg);
+    trapFocus(dlg);
+    dlg.querySelector('.ux-x').addEventListener('click', () => this.closePicker());
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) this.closePicker(); });
+    this.cards = dlg.querySelector('.ux-cards');
+  }
+
+  renderCards() {
+    const prog = this.ux.progress;
+    this.cards.textContent = '';
+    for (const m of MISSIONS) {
+      const p = prog[m.id];
+      const b = h(`<button type="button" class="ux-card${m.id === this.ux.runner.m.id ? ' cur' : ''}">
+        <span class="mono">Mise ${m.n}</span>
+        <b>${m.title}</b>
+        <span class="ux-stars">${starStr(p ? p.stars : 0)}</span>
+        <span class="mono-s muted">${p ? 'nejlepší čas ' + fmt(p.time) : m.starsHint}</span>
+      </button>`);
+      b.addEventListener('click', () => { this.closePicker(); this.ux.selectMission(m.id); });
+      this.cards.appendChild(b);
+    }
+  }
+  openPicker() {
+    this.renderCards(); this.picker.hidden = false; this.lastFocus = document.activeElement;
+    const cur = this.cards.querySelector('.cur') || this.cards.firstElementChild; cur && cur.focus();
+  }
+  closePicker() { this.picker.hidden = true; if (this.lastFocus) this.lastFocus.focus({ preventScroll: true }); }
+
+  showMission(m, prog) {
+    this.mNum.textContent = `Mise ${m.n} / 0${MISSIONS.length}`;
+    this.mTitle.textContent = m.title;
+    this.mDesc.textContent = m.desc;
+    const s = prog ? prog.stars : 0;
+    this.mStars.innerHTML = starStr(s);
+    this.mStars.setAttribute('aria-label', s ? `Nejlepší hodnocení ${s} ze 3 hvězdiček` : 'Zatím nesplněno');
+    document.title = `${m.title} – SO-101 v simulaci | printedrobotics.cz`;
+  }
+
+  // ---------- mode switch + smart controls ----------
+  modeUI() {
+    const mount = $('ux-mode');
+    mount.appendChild(h(`<div class="ux-seg" role="radiogroup" aria-label="Způsob ovládání">
+      <button type="button" role="radio" data-mode="smart" data-tip="Ruka sleduje modrou kouli (M)">Chytrý pohyb</button>
+      <button type="button" role="radio" data-mode="joints" data-tip="Každý kloub zvlášť posuvníkem (M)">Klouby</button>
+    </div>`));
+    const smart = this.smart = h(`<div class="ux-smart" id="ux-smart">
+      <ul class="ux-tips">
+        <li><i class="dot" aria-hidden="true"></i><span>Táhněte <b>modrou kouli</b>, ruka ji sleduje. Červená = tam nedosáhne.</span></li>
+        <li><i aria-hidden="true">↕</i><span>Šipky nad a pod koulí mění výšku.</span></li>
+        <li><i aria-hidden="true">⟳</i><span>Kroužek, kolečko myši nebo druhý prst otáčí zápěstím.</span></li>
+        <li><i aria-hidden="true">☝</i><span>Klikněte na <b>kostku</b> – ruka ji sama vezme. Pak klikněte na <b>misku</b>.</span></li>
+      </ul>
+      <div class="ux-row2">
+        <button type="button" class="btn btn-o" id="ux-grip" aria-pressed="false" data-tip="Mezerník">Zavřít chapadlo <span class="kbd" aria-hidden="true">␣</span></button>
+        <button type="button" class="btn btn-o" id="ux-pen" aria-pressed="false" data-tip="Nakreslete na stůl čáru, ruka ji projede (P)">Pero <span aria-hidden="true">✎</span></button>
+      </div>
+      <div class="jn"><label for="ux-roll">Rotace zápěstí</label><output for="ux-roll" id="ux-roll-o"></output>
+        <input type="range" id="ux-roll" step="any"></div>
+      <div class="jn"><label for="ux-pitch">Náklon chapadla</label><output for="ux-pitch" id="ux-pitch-o"></output>
+        <input type="range" id="ux-pitch" min="0" max="90" step="1"></div>
+      <p class="mono-s muted ux-ik">Úhly kloubů dopočítává inverzní kinematika (metoda tlumených nejmenších čtverců), stejně jako u skutečných robotů.</p>
+    </div>`);
+    mount.appendChild(smart);
+    this.seg = [...mount.querySelectorAll('[data-mode]')];
+    for (const b of this.seg) b.addEventListener('click', () => this.ux.setMode(b.dataset.mode));
+    this.gripBtn = $('ux-grip'); this.penBtn = $('ux-pen');
+    this.gripBtn.addEventListener('click', () => this.ux.toggleGrip());
+    this.penBtn.addEventListener('click', () => this.ux.togglePen());
+    const roll = this.roll = $('ux-roll'), pitch = this.pitch = $('ux-pitch');
+    const [lo, hi] = this.ux.ctl.kin.c.range[4];
+    roll.min = lo; roll.max = hi;
+    roll.addEventListener('input', () => this.ux.setRoll(+roll.value));
+    pitch.addEventListener('input', () => this.ux.setPitch(+pitch.value * Math.PI / 180));
+  }
+
+  showMode(mode) {
+    for (const b of this.seg) b.setAttribute('aria-checked', String(b.dataset.mode === mode));
+    this.smart.hidden = mode !== 'smart';
+    $('joints').hidden = mode === 'smart';
+    document.body.classList.toggle('ux-smartmode', mode === 'smart');
+  }
+  showGrip(open) {
+    this.gripBtn.firstChild.textContent = open ? 'Zavřít chapadlo ' : 'Otevřít chapadlo ';
+    this.gripBtn.setAttribute('aria-pressed', String(!open));
+  }
+  showPen(on) { this.penBtn.setAttribute('aria-pressed', String(on)); this.stage.classList.toggle('ux-pen-on', on); }
+  showRoll(r) {
+    if (document.activeElement !== this.roll) this.roll.value = r;
+    const t = Math.round(r * 180 / Math.PI); if (t !== this.rollT) { $('ux-roll-o').textContent = t + '°'; this.rollT = t; }
+  }
+  showPitch(p) { this.pitch.value = Math.round(p * 180 / Math.PI); $('ux-pitch-o').textContent = Math.round(p * 180 / Math.PI) === 90 ? 'svisle dolů' : Math.round(p * 180 / Math.PI) + '°'; }
+
+  // ---------- teach & replay ----------
+  teachUI() {
+    const mount = $('ux-teach');
+    mount.appendChild(h(`<section class="ux-teach" aria-labelledby="ux-teach-h">
+      <p class="mono" id="ux-teach-h">Učení ukázkou</p>
+      <p class="ink2">Nahrajte, jak úkol řešíte, a nechte ruku pohyb zopakovat. <b>Tohle je princip učení napodobováním:</b> skutečná SO-101 se z desítek takových ukázek (nahraných ovládací rukou) naučí úkol sama, třeba metodou ACT v knihovně LeRobot.</p>
+      <div class="ux-row3">
+        <button type="button" class="btn btn-o" id="ux-rec" aria-pressed="false" data-tip="Nahrávání (T)"><span class="rec" aria-hidden="true"></span><span class="l">Nahrát</span></button>
+        <button type="button" class="btn btn-o" id="ux-play" disabled data-tip="Přehrát ukázku (L)">Přehrát <span aria-hidden="true">▶</span></button>
+        <button type="button" class="btn btn-o" id="ux-loop" aria-pressed="false" disabled data-tip="Přehrávat dokola">Smyčka <span aria-hidden="true">↻</span></button>
+      </div>
+      <button type="button" class="ux-link" id="ux-export" disabled>Stáhnout ukázku jako JSON (formát podobný LeRobot) <span aria-hidden="true">⤓</span></button>
+      <p class="mono-s muted" id="ux-teach-s" aria-live="polite">Zatím žádná ukázka.</p>
+    </section>`));
+    $('ux-rec').addEventListener('click', () => this.ux.toggleRec());
+    $('ux-play').addEventListener('click', () => this.ux.togglePlay());
+    $('ux-loop').addEventListener('click', () => { const t = this.ux.teach; t.loop = !t.loop; this.showTeach(t); });
+    $('ux-export').addEventListener('click', () => { const j = this.ux.teach.download(); if (j) this.toast(`Staženo: ${j.episodes[0].length} snímků po 1/30 s`); });
+  }
+  showTeach(t) {
+    const rec = $('ux-rec'), play = $('ux-play'), loop = $('ux-loop'), ex = $('ux-export'), s = $('ux-teach-s');
+    rec.setAttribute('aria-pressed', String(t.recording));
+    rec.querySelector('.l').textContent = t.recording ? 'Zastavit' : 'Nahrát';
+    play.disabled = !t.demo || t.recording; loop.disabled = !t.demo || t.recording; ex.disabled = !t.demo || t.recording;
+    play.firstChild.textContent = t.replaying ? 'Stop ' : 'Přehrát ';
+    play.querySelector('span').textContent = t.replaying ? '■' : '▶';
+    loop.setAttribute('aria-pressed', String(t.loop));
+    s.textContent = t.recording ? 'Nahrávám… pohybujte rukou.' : t.replaying ? 'Přehrávám ukázku.'
+      : t.demo ? `Ukázka: ${fmt(t.duration())}, ${t.demo.t.length} snímků (mise ${t.demo.mission.n}).` : 'Zatím žádná ukázka.';
+    this.recBadge.hidden = !t.recording; this.playBar.hidden = !t.replaying;
+    this.stage.classList.toggle('ux-replaying', t.replaying);
+  }
+
+  // ---------- stage overlays ----------
+  stageUI() {
+    const st = this.stage;
+    const bar = this.toolbar = h(`<div class="ux-tools" role="toolbar" aria-label="Pohled a zvuk">
+      <button type="button" class="ux-tb" id="ux-view" data-tip="Přepnout pohled (C)">${I.cam}<span class="ux-tbl" id="ux-view-l">Volný</span></button>
+      <button type="button" class="ux-tb" id="ux-wrist" aria-pressed="false" aria-label="Kamera na zápěstí" data-tip="Kamera na zápěstí (V)">${I.wrist}</button>
+      <button type="button" class="ux-tb" id="ux-parts" aria-pressed="false" aria-label="Rozložený pohled" data-tip="Rozložený pohled – z čeho se skládá (X)">${I.parts}</button>
+      <button type="button" class="ux-tb" id="ux-sound" aria-pressed="false" aria-label="Zvuk" data-tip="Zvuk (S)">${I.snd}</button>
+      <button type="button" class="ux-tb" id="ux-help" aria-label="Klávesové zkratky a nápověda" data-tip="Nápověda (?)">${I.help}</button>
+    </div>`);
+    st.appendChild(bar);
+    $('ux-view').addEventListener('click', () => this.ux.cycleView());
+    $('ux-wrist').addEventListener('click', () => this.ux.setWrist(!this.ux.cameras.wristOn));
+    $('ux-sound').addEventListener('click', () => this.ux.setSound(!this.ux.sound.on));
+    $('ux-help').addEventListener('click', () => this.openHelp());
+    $('ux-parts').addEventListener('click', () => this.ux.toggleExplode());
+
+    this.pip = h(`<div class="ux-pip" hidden aria-hidden="true"><span class="mono-s">Kamera na zápěstí</span></div>`);
+    st.appendChild(this.pip);
+    this.toastEl = h(`<div class="ux-toast" role="status" aria-live="polite" hidden></div>`);
+    st.appendChild(this.toastEl);
+    this.recBadge = h(`<div class="ux-recb mono" hidden><i aria-hidden="true"></i>REC <span id="ux-rec-t">0:00</span></div>`);
+    st.appendChild(this.recBadge);
+    this.playBar = h(`<div class="ux-playbar" hidden><span class="mono-s">Přehrávám ukázku</span><b><i id="ux-play-p"></i></b></div>`);
+    st.appendChild(this.playBar);
+    this.timer = h(`<span class="ux-timer mono" id="ux-timer" aria-hidden="true">0:00</span>`);
+    $('hud').appendChild(this.timer);
+    this.penHint = h(`<p class="ux-penhint mono-s" hidden>Pero: táhněte prstem nebo myší po stole, ruka čáru zopakuje</p>`);
+    st.appendChild(this.penHint);
+  }
+  showView(v) { $('ux-view-l').textContent = VIEW_LABELS[v].replace('Volný pohled', 'Volný'); }
+  showWrist(on) { $('ux-wrist').setAttribute('aria-pressed', String(on)); this.pip.hidden = !on; this.pipCache = null; }
+  showSound(on) { $('ux-sound').setAttribute('aria-pressed', String(on)); $('ux-sound').classList.toggle('muted', !on); }
+  showExplode(on) { $('ux-parts').setAttribute('aria-pressed', String(on)); }
+
+  /** wrist-cam rectangle in canvas CSS px (cached until resize) */
+  pipRect() {
+    if (this.pip.hidden) return null;
+    const c = this.ux.app.renderer.domElement;
+    if (!this.pipCache || this.pipCache.cw !== c.clientWidth || this.pipCache.ch !== c.clientHeight) {
+      const a = c.getBoundingClientRect(), b = this.pip.getBoundingClientRect();
+      this.pipCache = { cw: c.clientWidth, ch: c.clientHeight, x: Math.round(b.left - a.left + 1), y: Math.round(b.top - a.top + 1), w: Math.round(b.width - 2), h: Math.round(b.height - 2) };
+    }
+    return this.pipCache;
+  }
+
+  toast(msg, kind) {
+    const t = this.toastEl;
+    t.textContent = msg; t.className = 'ux-toast' + (kind ? ' ' + kind : ''); t.hidden = false;
+    clearTimeout(this.toastT);
+    this.toastT = setTimeout(() => { t.hidden = true; }, kind === 'err' ? 2600 : 2200);
+  }
+
+  tick() {
+    const ux = this.ux, r = ux.runner;
+    const ti = Math.floor(r.time); if (ti !== this.timerS) { this.timer.textContent = fmt(ti); this.timerS = ti; }
+    const t = ux.teach;
+    if (t.recording) { const rs = Math.floor(ux.app.d.time - t.demo.t0); if (rs !== this.recS) { $('ux-rec-t').textContent = fmt(rs); this.recS = rs; } }
+    if (t.replaying) $('ux-play-p').style.width = (t.progress() * 100).toFixed(1) + '%';
+    this.showRoll(ux.ctl.active ? ux.ctl.roll : ux.app.d.ctrl[ux.app.act[4]]);
+    const open = ux.app.d.ctrl[ux.app.act[5]] > 0.5;
+    if (open !== this.gripOpen) { this.gripOpen = open; this.showGrip(open); }
+  }
+
+  // ---------- model detail (quality) ----------
+  qualityUI() {
+    const colors = document.querySelector('.colors');
+    const el = h(`<div class="ux-quality">
+      <p class="mono">Detail modelu</p>
+      <div class="ux-seg ux-seg-s" role="radiogroup" aria-label="Detail modelu">
+        <button type="button" role="radio" data-q="high">Vysoký</button>
+        <button type="button" role="radio" data-q="low">Úsporný</button>
+      </div>
+      <p class="mono-s muted" id="ux-q-s"></p>
+    </div>`);
+    colors.parentNode.insertBefore(el, colors.nextSibling);
+    this.qBtns = [...el.querySelectorAll('[data-q]')];
+    for (const b of this.qBtns) b.addEventListener('click', () => {
+      const q = b.dataset.q; this.showQuality(q, false, q === 'high');
+      this.ux.hd.set(q).catch(() => this.toast('Detailní model se nepodařilo načíst', 'err'));
+    });
+    this.showQuality(this.ux.hd.quality, false, this.ux.hd.quality === 'high');
+  }
+  showQuality(q, hi, loading) {
+    for (const b of this.qBtns) b.setAttribute('aria-checked', String(b.dataset.q === q));
+    const s = document.getElementById('ux-q-s');
+    s.textContent = q === 'low' ? 'Zjednodušené díly (rychlejší na slabších telefonech).'
+      : hi ? 'Původní tvary dílů, 325 tisíc trojúhelníků (≈ 1 MB).' : loading ? 'Načítám detailní díly…' : '';
+  }
+
+  // ---------- win dialog ----------
+  winUI() {
+    const win = $('win');
+    this.winStars = h(`<div class="ux-winstars" aria-hidden="true"><span>★</span><span>★</span><span>★</span></div>`);
+    win.insertBefore(this.winStars, win.querySelector('h2'));
+    this.winStats = h(`<p class="mono ux-winstats"></p>`);
+    win.insertBefore(this.winStats, win.querySelector('.win-b'));
+    this.nextBtn = h(`<button type="button" class="btn btn-o" id="ux-next">Další mise <span aria-hidden="true">→</span></button>`);
+    win.querySelector('.win-b').appendChild(this.nextBtn);
+    this.nextBtn.addEventListener('click', () => this.ux.nextMission());
+    this.winText = win.querySelector('p:not(.mono)');
+    this.winH = $('win-h');
+    this.defaultWin = this.winText.textContent;
+  }
+  showWin(m, res, best, isNew) {
+    this.winH.textContent = m.id === 'bowl' ? 'Hotovo! Kostka je v misce.' : 'Hotovo! ' + m.short + ' zvládnuto.';
+    const sp = this.winStars.children;
+    for (let i = 0; i < 3; i++) { sp[i].className = i < res.stars ? 'on' : ''; sp[i].style.animationDelay = (0.15 + i * 0.18) + 's'; }
+    this.winStars.setAttribute('aria-label', `${res.stars} ze 3 hvězdiček`);
+    let st = `Čas ${fmt(res.time)}`;
+    if (res.prec) st += ` · přesnost ${(res.prec * 1000).toFixed(1)} mm`;
+    st += ` · ${'★'.repeat(res.stars)}${'☆'.repeat(3 - res.stars)}`;
+    if (isNew) st += ' · nový rekord';
+    else if (best) st += ` · rekord ${fmt(best.time)}`;
+    this.winStats.textContent = st;
+    this.winText.textContent = this.defaultWin;
+    const last = MISSIONS[MISSIONS.length - 1].id === m.id;
+    this.nextBtn.hidden = last;
+  }
+
+  // ---------- help ----------
+  helpUI() {
+    const keys = [
+      ['Myš / prst', 'tažením otáčíte pohled, kolečkem či dvěma prsty přibližujete'],
+      ['Modrá koule', 'tažením vedete ruku (chytrý pohyb)'],
+      ['Klik na kostku', 'ruka ji vezme; klik na misku nebo stůl ji položí'],
+      ['←  →  ↑  ↓', 'posun cíle po stole'],
+      ['PgUp / PgDn', 'výška cíle (také Q / E)'],
+      ['A / D', 'rotace zápěstí'],
+      ['Mezerník', 'otevřít / zavřít chapadlo'],
+      ['M', 'chytrý pohyb ↔ klouby'],
+      ['P', 'pero – nakreslete cestu'],
+      ['C', 'přepnout pohled kamery'],
+      ['V', 'kamera na zápěstí'],
+      ['X', 'rozložený pohled'],
+      ['T / L', 'nahrát / přehrát ukázku'],
+      ['H', 'ruka domů'],
+      ['R', 'začít misi znovu'],
+      ['1 – 5', 'výběr mise'],
+      ['S', 'zvuk'],
+      ['Esc', 'zrušit pohyb, zavřít okno']
+    ];
+    const dlg = this.help = h(`<div class="ux-modal" id="ux-helpdlg" hidden role="dialog" aria-modal="true" aria-labelledby="ux-help-h">
+      <div class="ux-modal-in">
+        <div class="ux-modal-top"><p class="mono">Nápověda</p><button type="button" class="ux-x" aria-label="Zavřít">×</button></div>
+        <h2 id="ux-help-h">Ovládání a zkratky</h2>
+        <dl class="ux-keys">${keys.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
+        <div class="ux-row2"><button type="button" class="btn btn-o" id="ux-tour">Spustit průvodce znovu</button></div>
+      </div></div>`);
+    document.body.appendChild(dlg);
+    trapFocus(dlg);
+    dlg.querySelector('.ux-x').addEventListener('click', () => this.closeHelp());
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) this.closeHelp(); });
+    $('ux-tour').addEventListener('click', () => { this.closeHelp(); this.ux.onboarding.start(true); });
+  }
+  openHelp() { this.lastFocus = document.activeElement; this.help.hidden = false; this.help.querySelector('.ux-x').focus(); }
+  closeHelp() { this.help.hidden = true; if (this.lastFocus) this.lastFocus.focus({ preventScroll: true }); }
+  modalOpen() { return !this.help.hidden || !this.picker.hidden; }
+  closeModals() { if (!this.help.hidden) this.closeHelp(); if (!this.picker.hidden) this.closePicker(); }
+}
+
+// keep Tab inside an aria-modal dialog
+function trapFocus(dlg) {
+  dlg.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+    const f = [...dlg.querySelectorAll('button:not([disabled]), a[href], input, [tabindex]:not([tabindex="-1"])')].filter((x) => x.offsetParent !== null);
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+}
+
+export function fmt(t) { t = Math.max(0, t || 0); const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + String(s).padStart(2, '0'); }
+function starStr(n) { let s = ''; for (let i = 0; i < 3; i++) s += `<i class="${i < n ? 'on' : ''}">★</i>`; return s; }

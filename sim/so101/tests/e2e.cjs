@@ -1,0 +1,210 @@
+// End-to-end test of the UX layer in Chromium (Playwright, software GL; slow but works without a GPU).
+//   node sim/so101/tests/e2e.cjs [screenshot-dir]
+// Starts `python3 -m http.server` on a free port at the repo root. Physics is advanced synchronously through
+// window.__sim.advance() (?test=1), so the results do not depend on the (slow) frame rate.
+const { chromium } = require('playwright');
+const { spawn } = require('child_process');
+const net = require('net');
+const path = require('path');
+const fs = require('fs');
+
+const ROOT = path.resolve(__dirname, '../../..');
+const OUT = process.argv[2] || path.join(require('os').tmpdir(), 'so101ux');
+fs.mkdirSync(OUT, { recursive: true });
+const ARGS = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'];
+let fails = 0;
+const ok = (cond, msg) => { console.log((cond ? 'ok   ' : 'FAIL ') + msg); if (!cond) fails++; };
+
+function freePort() { return new Promise((r) => { const s = net.createServer(); s.listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => r(p)); }); }); }
+
+async function open(browser, url, vp, touch) {
+  const page = await browser.newPage({ viewport: vp, deviceScaleFactor: 1, hasTouch: !!touch, isMobile: !!touch });
+  page.on('pageerror', (e) => { console.log('PAGEERROR', e.message); fails++; });
+  page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) console.log('console.error', m.text()); });
+  await page.goto(url);
+  await page.waitForFunction(() => window.__sim && (window.__sim.ready || window.__sim.error), null, { timeout: 300000 });
+  const err = await page.evaluate(() => window.__sim.error);
+  if (err) throw new Error('sim failed: ' + err);
+  return page;
+}
+const S = (page, fn, arg) => page.evaluate(fn, arg);
+const ux = (page) => S(page, () => window.__sim.ux());
+async function advanceUntil(page, cond, max = 40, step = 2) {
+  for (let t = 0; t < max; t += step) {
+    await S(page, (s) => window.__sim.advance(s), step);
+    if (await S(page, cond)) return t + step;
+  }
+  return -1;
+}
+async function shot(page, name) {
+  try { await page.screenshot({ path: path.join(OUT, name + '.png'), timeout: 150000 }); }
+  catch (e) { console.log('note screenshot ' + name + ' timed out (software GL)'); }
+}
+// pointer events like a finger (Playwright's touchscreen can only tap)
+async function touchDrag(page, from, to, steps = 8) {
+  await S(page, ([a, b, n]) => {
+    const c = document.getElementById('c');
+    const ev = (type, x, y) => c.dispatchEvent(new PointerEvent(type, { pointerId: 7, pointerType: 'touch', isPrimary: true, clientX: x, clientY: y, button: 0, buttons: type === 'pointerup' ? 0 : 1, bubbles: true, cancelable: true }));
+    ev('pointerdown', a.x, a.y);
+    for (let i = 1; i <= n; i++) ev('pointermove', a.x + (b.x - a.x) * i / n, a.y + (b.y - a.y) * i / n);
+    ev('pointerup', b.x, b.y);
+  }, [from, to, steps]);
+}
+
+(async () => {
+  const port = await freePort();
+  const srv = spawn('python3', ['-m', 'http.server', String(port), '--bind', '127.0.0.1', '--directory', ROOT], { stdio: 'ignore' });
+  await new Promise((r) => setTimeout(r, 800));
+  const base = `http://127.0.0.1:${port}/sim/so101/`;
+  const browser = await chromium.launch({ args: ARGS });
+  try {
+    // ---------------- desktop ----------------
+    // software GL is very slow: low detail and no wrist camera except where a screenshot needs them
+    const p = await open(browser, base + '?test=1&mise=bowl&detail=low', { width: 1280, height: 800 });
+    console.log('load ms', await S(p, () => window.__sim.loadMs));
+    await S(p, () => window.__sim.wrist(true));
+    await shot(p, 'desk-01-start');
+    await S(p, () => window.__sim.wrist(false));
+
+    // smart move: drag the gizmo with the mouse
+    let a = await S(p, () => window.__sim.screen('target'));
+    let st0 = await ux(p);
+    await p.mouse.move(a.x, a.y); await p.mouse.down();
+    for (let i = 1; i <= 10; i++) await p.mouse.move(a.x - 12 * i, a.y + 14 * i);
+    const mid = await ux(p);
+    await p.mouse.up();
+    ok(mid.active && Math.hypot(mid.target[0] - st0.target[0], mid.target[1] - st0.target[1]) > 0.03, 'drag moves the IK target ' + JSON.stringify(mid.target.map((v) => +v.toFixed(3))));
+    ok(Math.abs(mid.target[2] - st0.target[2]) < 1e-6, 'horizontal drag keeps the height');
+    await S(p, () => window.__sim.advance(2));
+    let s1 = await ux(p);
+    ok(Math.hypot(s1.tip[0] - s1.target[0], s1.tip[1] - s1.target[1], s1.tip[2] - s1.target[2]) < 0.008, 'arm tip follows the target (err ' + Math.hypot(s1.tip[0] - s1.target[0], s1.tip[1] - s1.target[1], s1.tip[2] - s1.target[2]).toFixed(4) + ')');
+    // height arrow
+    a = await S(p, () => window.__sim.screen('up'));
+    await p.mouse.move(a.x, a.y); await p.mouse.down();
+    for (let i = 1; i <= 6; i++) await p.mouse.move(a.x, a.y + 12 * i);
+    await p.mouse.up();
+    const s2 = await ux(p);
+    ok(s2.target[2] < s1.target[2] - 0.01, `height handle lowers the target (${s1.target[2].toFixed(3)} -> ${s2.target[2].toFixed(3)})`);
+    // wheel over the gizmo = wrist roll
+    const r0 = await S(p, () => window.__sim._ux.ctl.roll);
+    a = await S(p, () => window.__sim.screen('target'));
+    await p.mouse.move(a.x, a.y); await p.mouse.wheel(0, 300);
+    const r1 = await S(p, () => window.__sim._ux.ctl.roll);
+    ok(Math.abs(r1 - r0) > 0.05, `wheel over the gizmo rotates the wrist (${r0.toFixed(2)} -> ${r1.toFixed(2)})`);
+    // unreachable: drag far away
+    a = await S(p, () => window.__sim.screen('target'));
+    await p.mouse.move(a.x, a.y); await p.mouse.down();
+    for (let i = 1; i <= 12; i++) await p.mouse.move(a.x - 40 * i, a.y - 10 * i);
+    await S(p, () => window.__sim.advance(0.5));
+    const far = await ux(p);
+    await p.mouse.up();
+    await shot(p, 'desk-02-unreachable');
+    ok(!far.reachable, 'far target is reported unreachable (red)');
+    // keyboard: space toggles the gripper
+    const g0 = await S(p, () => window.__sim.state().ctrl[5]);
+    await p.keyboard.press('Space'); await S(p, () => window.__sim.advance(0.6));
+    const g1 = await S(p, () => window.__sim.state().ctrl[5]);
+    ok(Math.abs(g1 - g0) > 0.5, `Space toggles the gripper (${g0.toFixed(2)} -> ${g1.toFixed(2)})`);
+
+    // click-to-pick: click the cube, then the bowl
+    await S(p, () => window.__sim.reset());
+    a = await S(p, () => window.__sim.screen('cube'));
+    await p.mouse.click(a.x, a.y);
+    const busy = await ux(p);
+    ok(busy.busy, 'click on the cube starts a planned pick');
+    await S(p, () => window.__sim.advance(0.3));
+    await shot(p, 'desk-03-path-preview');
+    const tPick = await advanceUntil(p, () => window.__sim.ux().held === 'cube' && !window.__sim.ux().busy, 14, 1);
+    ok(tPick > 0, `cube picked after ${tPick}s`);
+    a = await S(p, () => window.__sim.screen('bowl'));
+    await p.mouse.click(a.x, a.y);
+    const tWin = await advanceUntil(p, () => window.__sim.ux().won, 16, 1);
+    ok(tWin > 0, `click on the bowl places the cube, mission won after ${tWin}s`);
+    await S(p, () => window.__sim.advance(0.4));
+    await shot(p, 'desk-04-win');
+
+    // every mission: automatic solution
+    for (const id of await S(p, () => window.__sim.missions)) {
+      await S(p, (m) => window.__sim.mission(m), id);
+      await S(p, () => window.__sim.solve());
+      const t = await advanceUntil(p, () => window.__sim.ux().won, 45, 3);
+      const u = await ux(p);
+      ok(t > 0, `mission ${id} solved by its plan (${t}s, ${u.result ? u.result.stars + '★' : u.hud})`);
+      if (id === 'trace' || id === 'sort') await shot(p, 'desk-05-' + id);
+    }
+
+    // teach & replay
+    await S(p, () => window.__sim.mission('stack'));
+    await S(p, () => { window.__sim.record(true); window.__sim.solve(); });
+    const tr = await advanceUntil(p, () => window.__sim.ux().won, 30, 2);
+    await S(p, () => window.__sim.advance(1)); await S(p, () => window.__sim.record(false));
+    const rec = await ux(p);
+    ok(tr > 0 && rec.demoFrames > 100, `recorded demonstration (${rec.demoFrames} frames)`);
+    const j = await S(p, () => window.__sim.exportDemo());
+    ok(j && j.fps === 30 && j.episodes[0].frames.length === rec.demoFrames && j.features['observation.state'].names.length === 6, 'export: LeRobot-like JSON');
+    await S(p, () => window.__sim.reset());
+    ok(!(await ux(p)).won, 'reset clears the win');
+    await S(p, () => window.__sim.replay(false));
+    await S(p, () => window.__sim.advance(1));
+    await shot(p, 'desk-06-replay');
+    const trp = await advanceUntil(p, () => window.__sim.ux().won, 30, 2);
+    ok(trp > 0, `replay repeats the demonstration and wins again (${trp}s)`);
+
+    // cameras + exploded view + hi-detail
+    await S(p, () => window.__sim.mission('bowl'));
+    await S(p, () => window.__sim.camera('top')); await S(p, () => window.__sim.advance(0.2));
+    await p.waitForTimeout(1500);
+    await shot(p, 'desk-07-top');
+    await S(p, () => window.__sim.camera('orbit'));
+    await S(p, () => window.__sim.quality('high'));
+    await p.waitForFunction(() => window.__sim.ux().hiDetail, null, { timeout: 120000 }).catch(() => {});
+    ok((await ux(p)).hiDetail, 'high-detail GLB meshes swapped in');
+    await S(p, () => window.__sim.explode(true));
+    await p.waitForTimeout(2500);
+    await shot(p, 'desk-08-explode');
+    ok((await ux(p)).explode > 0.3, 'exploded view separates the parts');
+    await S(p, () => window.__sim.assemble());
+    await p.waitForTimeout(2500);
+    await shot(p, 'desk-09-assembly');
+    await S(p, () => window.__sim.explode(false));
+    await p.close();
+
+    // ---------------- onboarding (first visit) ----------------
+    const o = await open(browser, base + '?test=1&onboard=1&detail=low', { width: 1280, height: 800 });
+    await o.waitForTimeout(1500);
+    ok(await S(o, () => !document.querySelector('.ux-coach').hidden), 'onboarding is shown');
+    await shot(o, 'desk-10-onboarding');
+    await o.close();
+
+    // ---------------- phone ----------------
+    const ph = await open(browser, base + '?test=1&mise=bowl&detail=low', { width: 390, height: 844 }, true);
+    await shot(ph, 'phone-01-start');
+    a = await S(ph, () => window.__sim.screen('target'));
+    const pt0 = await ux(ph);
+    await touchDrag(ph, a, { x: a.x - 60, y: a.y + 50 });
+    const pt1 = await ux(ph);
+    ok(Math.hypot(pt1.target[0] - pt0.target[0], pt1.target[1] - pt0.target[1]) > 0.02, 'touch drag moves the target on a phone');
+    await S(ph, () => window.__sim.advance(1.5));
+    await shot(ph, 'phone-02-drag');
+    await S(ph, () => window.__sim.reset());
+    a = await S(ph, () => window.__sim.screen('cube'));
+    await ph.touchscreen.tap(a.x, a.y);
+    ok((await ux(ph)).busy, 'tap on the cube starts a pick on a phone');
+    const tp = await advanceUntil(ph, () => window.__sim.ux().held === 'cube' && !window.__sim.ux().busy, 14, 1);
+    ok(tp > 0, 'phone: cube picked');
+    await ph.evaluate(() => window.scrollTo(0, 500));
+    await shot(ph, 'phone-03-panel');
+    await ph.evaluate(() => window.scrollTo(0, 0));
+    await S(ph, () => window.__sim.explode(true)); await ph.waitForTimeout(2000);
+    await shot(ph, 'phone-04-explode');
+    await S(ph, () => window.__sim.explode(false));
+    await S(ph, () => { window.__sim.solve(); });
+    await advanceUntil(ph, () => window.__sim.ux().won, 30, 3);
+    await S(ph, () => window.__sim.advance(0.3));
+    await shot(ph, 'phone-05-win');
+    await ph.close();
+  } catch (e) { console.log('FAIL exception', e); fails++; }
+  await browser.close(); srv.kill();
+  console.log(fails ? `\n${fails} FAILED` : '\nALL OK', '— screenshots in', OUT);
+  process.exit(fails ? 1 : 0);
+})();
