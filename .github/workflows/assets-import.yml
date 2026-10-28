@@ -1,0 +1,144 @@
+name: assets-import
+
+# Manual only. Downloads ONLY the requested SimReady packages from a Hugging Face dataset, converts them to
+# sim/so101/objects (meshopt GLB + MJCF), applies the licence/brand gate, drop-tests them in MuJoCo and opens
+# a pull request with the result and a licence report. See docs/objects.md.
+# Public repo: the log shows fixed status lines only; asset-derived details go to the PR and the run artifact.
+on:
+  workflow_dispatch:
+    inputs:
+      hf_repo:
+        description: 'Hugging Face dataset, owner/name (e.g. nvidia/PhysicalAI-SimReady-...)'
+        required: true
+        type: string
+      assets:
+        description: 'Package names or globs, comma-separated (e.g. "apple*,mug_a01" or "fruits/*")'
+        required: true
+        type: string
+      max_count:
+        description: 'Maximum number of packages to import (1-50)'
+        required: true
+        default: '5'
+        type: string
+      revision:
+        description: 'Dataset branch, tag or commit (pinned to its commit SHA)'
+        required: false
+        default: 'main'
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: assets-import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      HF_REPO: ${{ inputs.hf_repo }}
+      ASSETS: ${{ inputs.assets }}
+      MAX_COUNT: ${{ inputs.max_count }}
+      REVISION: ${{ inputs.revision }}
+      LOGS: ${{ runner.temp }}/assets-logs
+      HF_HUB_DISABLE_PROGRESS_BARS: '1'
+      HF_HUB_DISABLE_TELEMETRY: '1'
+    steps:
+      - name: Validate inputs
+        run: |
+          re_repo='^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}/[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$'
+          re_assets='^[A-Za-z0-9_.*?/, -]{1,500}$'
+          re_rev='^[A-Za-z0-9_./-]{1,100}$'
+          [[ "$HF_REPO" =~ $re_repo ]] || { echo "::error::invalid hf_repo"; exit 1; }
+          [[ "$ASSETS" =~ $re_assets ]] && [[ "$ASSETS" != *..* ]] || { echo "::error::invalid assets"; exit 1; }
+          [[ "$REVISION" =~ $re_rev ]] && [[ "$REVISION" != *..* ]] || { echo "::error::invalid revision"; exit 1; }
+          [[ "$MAX_COUNT" =~ ^[0-9]{1,2}$ ]] && (( MAX_COUNT >= 1 && MAX_COUNT <= 50 )) || { echo "::error::max_count must be 1-50"; exit 1; }
+          mkdir -p "$LOGS"
+          echo "::notice::inputs ok"
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: tools/assets/requirements.txt
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tools/assets/package-lock.json
+
+      - name: Install converter dependencies
+        run: |
+          python -m pip install -q -r tools/assets/requirements.txt > "$LOGS/pip.log" 2>&1 || { echo "::error::pip install failed"; exit 1; }
+          npm ci --prefix tools/assets --no-audit --no-fund > "$LOGS/npm.log" 2>&1 || { echo "::error::npm ci failed"; exit 1; }
+          echo "::notice::dependencies installed"
+
+      - name: Pipeline self-test (synthetic packages)
+        run: python -I tools/assets/test_pipeline.py > "$LOGS/selftest.log" 2>&1 || { echo "::error::pipeline self-test failed"; exit 1; }
+
+      - name: Download requested packages
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python -I tools/assets/hf_fetch.py --repo "$HF_REPO" --assets "$ASSETS" --max-count "$MAX_COUNT" \
+            --revision "$REVISION" --out "$RUNNER_TEMP/hf" --result "$LOGS/fetch.json" 2> "$LOGS/fetch.log" \
+            || { echo "::error::download failed (see run artifact)"; exit 1; }
+
+      - name: Convert (licence + brand gate, drop test)
+        run: |
+          python -I tools/assets/import_assets.py --fetch "$LOGS/fetch.json" --report-dir "$LOGS" --quiet 2> "$LOGS/import.log" \
+            || { echo "::error::import failed (see run artifact)"; exit 1; }
+
+      - name: Validate whole library in MuJoCo
+        run: |
+          python -I tools/assets/validate.py --report "$LOGS/validate.json" 2> "$LOGS/validate.log" \
+            || { echo "::error::validation failed (see run artifact)"; exit 1; }
+
+      - name: Regenerate manifest and licence list
+        run: python -I tools/assets/manifest.py 2> "$LOGS/manifest.log" || { echo "::error::manifest failed"; exit 1; }
+
+      - name: Library unit tests (node + MuJoCo WASM)
+        run: node --test sim/so101/test/objects.test.mjs > "$LOGS/node-test.log" 2>&1 || { echo "::error::object library tests failed"; exit 1; }
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: assets-import-${{ github.run_id }}
+          path: ${{ runner.temp }}/assets-logs
+          retention-days: 14
+
+      - name: Open pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: assets/import-${{ github.run_id }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$(git status --porcelain -- sim/so101/objects)" ]; then
+            echo "::notice::nothing new to import (all requested packages excluded or unchanged)"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BRANCH"
+          git add sim/so101/objects
+          git commit -q -m "objects: import from Hugging Face (run ${GITHUB_RUN_ID})"
+          git push -q origin "$BRANCH"
+          {
+            echo "Automated import by \`assets-import\` ([run]($RUN_URL)) from \`$HF_REPO\` @ \`$(python -c 'import json,sys;print(json.load(open(sys.argv[1]))["revision"])' "$LOGS/fetch.json")\`."
+            echo
+            echo "Before merging: check every licence line below against the dataset card, look at each object in"
+            echo "\`/sim/so101/objects.html\`, and fix \`name_cs\` where \`name_cs_auto\` is set."
+            echo
+            cat "$LOGS/import-report.md"
+          } > "$LOGS/pr-body.md"
+          gh pr create --base main --head "$BRANCH" --title "Objects: import from Hugging Face (run ${GITHUB_RUN_ID})" \
+            --body-file "$LOGS/pr-body.md" > /dev/null \
+            && echo "::notice::pull request opened" \
+            || echo "::warning::branch pushed but the PR could not be opened (allow Actions to create PRs, or open it by hand)"
