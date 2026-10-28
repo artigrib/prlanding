@@ -1,0 +1,85 @@
+name: site-tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, ci-tests]   # TEMP-TRIGGER: ci-tests
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Regenerate product pages and sitemap
+        run: node tools/build.mjs
+      - name: Tree must be unchanged
+        run: git diff --exit-code && test -z "$(git status --porcelain)"
+
+  arena:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: sim/arena
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: sim/arena/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Committed build/ must be reproducible
+        run: git diff --exit-code -- build && test -z "$(git status --porcelain -- build)"
+
+  so101-unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Run node tests under sim/so101/test*/
+        run: |
+          shopt -s nullglob globstar
+          files=(sim/so101/test*/**/*.test.{mjs,js} sim/so101/test*/**/test*.{mjs,js})
+          mapfile -t files < <(printf '%s\n' "${files[@]}" | sort -u | sed '/^$/d')
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No so101 unit tests found, skipping."
+            exit 0
+          fi
+          node --test "${files[@]}"
+
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install Playwright
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.0
+          npx playwright install --with-deps chromium
+      - name: Serve site
+        run: |
+          python3 -m http.server 8123 >/tmp/http.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8123/ >/dev/null && break; sleep 1; done
+      - name: Smoke test
+        run: node tests/smoke.mjs
