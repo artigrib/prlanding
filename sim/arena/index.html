@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Aréna 150 g – printedrobotics.cz</title>
-<meta name="description" content="Vyzkoušej si bojového robota do 150 g v aréně přímo v prohlížeči.">
+<meta name="description" content="Vyzkoušejte si bojového robota do 150 g v aréně přímo v prohlížeči – rychlý zápas, turnaj, dva hráči a tréninková hala.">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#EEEEEB">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -98,17 +98,112 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line-2);border
   #start .btn{min-height:48px}
   #stick{width:120px;height:120px}
 }
+
+/* v2: menu, garage, end card, toolbar, replay, pops */
+#start{width:min(420px,calc(100% - 2*var(--pad)))}
+.opts.four{grid-template-columns:1fr 1fr}
+.seg{display:flex;border:1px solid var(--ink)}
+.seg button{flex:1;min-height:44px;border:0;border-left:1px solid var(--ink);background:#fff;font-size:14px;font-weight:500;cursor:pointer;padding:0 8px}
+.seg button:first-child{border-left:0}
+.seg button[aria-pressed=true]{background:var(--ink);color:#fff}
+.link{background:none;border:0;padding:4px 0;text-decoration:underline;font-size:13px;color:var(--ink-2);cursor:pointer;align-self:flex-start}
+.ladder{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;counter-reset:l}
+.ladder li{display:flex;align-items:baseline;gap:10px;padding:8px 10px;border:1px solid var(--line);counter-increment:l}
+.ladder li::before{content:counter(l);font-family:var(--mono);font-size:12px;color:var(--mute)}
+.ladder li b{font-weight:500;font-size:14px}.ladder li small{font-size:12px;color:var(--mute);margin-left:auto;text-align:right}
+.ladder li.done{opacity:.55}.ladder li.done b{text-decoration:line-through}
+.ladder li.now{border-color:var(--ink);box-shadow:inset 3px 0 0 var(--accent)}
+.gbtn{flex-direction:row;align-items:center;justify-content:space-between;min-height:48px;width:100%}
+.gbtn b::after{content:' →';color:var(--mute)}
+#start .gofoot{position:sticky;bottom:-24px;margin:0 -24px -16px;padding:12px 24px 24px;background:#fff;border-top:1px solid var(--line);z-index:1}
+#start .gofoot+.credit{margin-top:8px}
+#mode-ctx{display:flex;flex-direction:column;gap:8px}
+#mode-ctx .hint{margin:0}
+#garage{left:var(--pad);top:50%;transform:translateY(-50%);width:min(420px,calc(100% - 2*var(--pad)))}
+#garage-body{display:flex;flex-direction:column;gap:14px}
+.bar{display:block;height:8px;background:var(--sand);border:1px solid var(--line);position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0;background:var(--ink);transform-origin:left;display:block}
+.budget.over .bar i{background:var(--accent)}
+.budget.over .lbl span:last-child{color:var(--accent-text);font-weight:500}
+.stats{margin:0;display:grid;gap:8px}
+.stats div{display:grid;grid-template-columns:96px 1fr;align-items:center;gap:10px}
+.stats dt{font-size:13px;color:var(--ink-2)}.stats dd{margin:0}
+.mods{display:grid;grid-template-columns:1fr;gap:6px}
+.mod{display:grid;grid-template-columns:1fr auto;column-gap:10px;min-height:52px}
+.mod em{grid-row:1/3;grid-column:2;align-self:center;font-style:normal;font-family:var(--mono);font-size:12px;color:var(--mute)}
+.mod[disabled]{opacity:.45;cursor:not-allowed}
+#end .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#end .btns .btn{padding:0 14px;min-height:48px;font-size:15px}
+#end{width:min(460px,calc(100% - 2*var(--pad)))}
+#card table{width:100%;border-collapse:collapse;font-size:14px}
+#card caption{text-align:left;font-family:var(--mono);font-size:12px;color:var(--mute);padding-bottom:6px}
+#card th,#card td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right;font-weight:400}
+#card th[scope=row]{text-align:left}#card th small{color:var(--mute);font-size:11px}
+#card thead th{font-family:var(--mono);font-size:12px;color:var(--mute)}
+#card .sum th,#card .sum td{font-weight:600;border-bottom:0}
+#card p{margin-top:6px;font-size:11px}
+#share-msg{font-size:12px;color:var(--ink-2);min-height:0;word-break:break-all}
+#share-msg:empty{display:none}
+.dmg{width:120px;max-width:40vw;height:4px;background:rgba(14,14,14,.12);margin-top:4px;position:relative;overflow:hidden}
+.side.r .dmg{align-self:flex-end}
+.dmg i{position:absolute;inset:0;background:var(--accent);transform:scaleX(0);transform-origin:left;display:block;transition:transform .2s}
+.side.r .dmg i{transform-origin:right}
+#tools{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 12px);display:flex;gap:6px;z-index:2}
+#tools button{min-height:36px;padding:0 12px;border:1px solid var(--ink);background:rgba(255,255,255,.88);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
+#tools button[aria-pressed=true]#dummy-btn{background:var(--ink);color:#fff}
+#tools kbd{margin-left:6px}
+.touch #tools{bottom:auto;top:calc(env(safe-area-inset-top) + 64px)}
+.touch #tools kbd{display:none}
+#pause{left:50%;top:50%;transform:translate(-50%,-50%);width:min(360px,calc(100% - 2*var(--pad)))}
+.chk{display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink-2);min-height:32px;cursor:pointer}
+.chk input{width:18px;height:18px;accent-color:var(--ink)}
+#replay-bar{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 18px);transform:translateX(-50%);display:flex;align-items:center;gap:14px;background:var(--ink);color:#fff;padding:8px 8px 8px 16px}
+#replay-bar .rec{width:10px;height:10px;border-radius:50%;background:var(--accent);animation:blink 1s steps(2) infinite}
+#replay-bar b{font-weight:500;font-size:14px;letter-spacing:.02em}
+#replay-bar button{min-height:40px;padding:0 14px;background:#fff;color:var(--ink);border:0;font-weight:500;cursor:pointer}
+@keyframes blink{50%{opacity:.2}}
+@media (prefers-reduced-motion:reduce){#replay-bar .rec{animation:none}.dmg i{transition:none}}
+#pops{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.pop{position:absolute;left:0;top:0;font-family:var(--mono);font-weight:500;font-size:15px;color:var(--ink);background:#fff;border:1px solid var(--ink);padding:1px 6px;white-space:nowrap;will-change:transform}
+.pop.big{background:var(--accent);font-size:17px}
+body.split #hud .stat{display:none}
+body.split::after{content:'';position:absolute;background:var(--ink);pointer-events:none}
+@media (orientation:landscape){body.split::after{left:50%;top:0;bottom:0;width:2px;margin-left:-1px}}
+@media (orientation:portrait){body.split::after{top:50%;left:0;right:0;height:2px;margin-top:-1px}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:640px){
+  #garage{left:0;right:0;width:auto;top:auto;bottom:0;transform:none;border-left:0;border-right:0;border-bottom:0;padding:18px 16px calc(env(safe-area-inset-bottom) + 16px);max-height:62%}
+  #start{max-height:64%}
+  #start .gofoot{margin:0 -16px;padding:10px 16px 12px;bottom:calc(-1 * (env(safe-area-inset-bottom) + 16px))}
+  #tools button{min-height:34px;padding:0 9px;font-size:12px}
+  #end .btns .btn{font-size:14px}
+}
+@media (max-height:520px) and (orientation:landscape){
+  #garage{top:8px;transform:none;max-height:calc(100% - 16px)}
+  #start .gofoot{margin:0 -20px;padding:10px 20px 16px;bottom:-16px}
+  .touch #tools{top:calc(env(safe-area-inset-top) + 56px)}
+}
 </style>
 </head>
 <body>
 <div id="stage"></div>
+<div id="pops" aria-hidden="true"></div>
 
 <div id="hud" hidden>
-  <div class="side"><div class="who"><i id="p-sw"></i><em>Ty</em><span id="p-name"></span></div><div class="stat" id="p-stat"></div></div>
+  <div class="side"><div class="who"><i id="p-sw"></i><em id="p-tag">Vy</em><span id="p-name"></span></div><div class="stat" id="p-stat"></div><div class="dmg" title="Poškození"><i id="p-dmg"></i></div></div>
   <div id="timer" role="timer" aria-live="off">2:00</div>
-  <div class="side r"><div class="who"><span id="o-name"></span><em>AI</em><i id="o-sw"></i></div><div class="stat" id="o-stat"></div></div>
+  <div class="side r"><div class="who"><span id="o-name"></span><em id="o-tag">AI</em><i id="o-sw"></i></div><div class="stat" id="o-stat"></div><div class="dmg" title="Poškození"><i id="o-dmg"></i></div></div>
 </div>
 <div id="msg" hidden aria-live="polite"></div>
+<div id="live" class="sr" aria-live="polite"></div>
+
+<div id="tools" hidden>
+  <button type="button" id="cam-btn" title="Přepnout kameru (C)"><span>TV přenos</span><kbd>C</kbd></button>
+  <button type="button" id="snd-btn" aria-pressed="true" title="Zvuk (M)"><span>Zvuk zap.</span><kbd>M</kbd></button>
+  <button type="button" id="reset-btn" hidden title="Vrátit na start (R)">Na start</button>
+  <button type="button" id="dummy-btn" hidden aria-pressed="false" title="Soupeř jezdí (T)">Soupeř jezdí</button>
+  <button type="button" id="pause-btn" title="Pauza (Esc)">Pauza</button>
+</div>
 
 <div class="tc" id="stick" aria-hidden="true"><div id="knob"></div></div>
 <button class="tc" id="fire" type="button"><span id="fire-l">Zbraň</span></button>
@@ -117,31 +212,58 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line-2);border
   <div class="col">
     <a class="brand" id="back" href="../../"><i></i>printedrobotics.cz <span class="mono">← zpět na sadu</span></a>
     <div>
-      <div class="mono">Aréna 150 g · prototyp</div>
-      <h1 id="start-h">Vyzkoušej v aréně</h1>
+      <div class="mono">Aréna 150 g</div>
+      <h1 id="start-h">Vyzkoušejte v aréně</h1>
     </div>
-    <p>Vytlač soupeře z arény nebo do jámy, případně ho převrať tak, aby se 10&nbsp;s nemohl hýbat. Zápas trvá 2 minuty.</p>
+    <p>Vytlačte soupeře z arény nebo do jámy, případně ho převraťte tak, aby se 10&nbsp;s nemohl hýbat. Zápas trvá 2 minuty, pak rozhodují rozhodčí.</p>
   </div>
   <div class="col">
-    <div><div class="lbl"><span>Robot</span></div><div class="opts" id="pick"></div></div>
-    <div><div class="lbl"><span>Barva tisku</span><span id="color-name"></span></div><div class="sws" id="colors"></div></div>
-    <button class="btn btn-act" id="go" type="button" disabled><span>Načítám…</span><span aria-hidden="true">→</span></button>
+    <div role="group" aria-label="Režim hry"><div class="lbl"><span>Režim</span></div><div class="opts four" id="modes"></div></div>
+    <div id="mode-ctx"></div>
+    <div role="group" aria-label="Robot"><div class="lbl"><span>Robot</span></div><div class="opts" id="pick"></div></div>
+    <button class="opt gbtn" id="garage-btn" type="button"><b>Garáž a úpravy</b><small></small></button>
+    <div role="group" aria-label="Barva tisku"><div class="lbl"><span>Barva tisku</span><span id="color-name"></span></div><div class="sws" id="colors"></div></div>
+    <div id="map-row" role="group" aria-label="Aréna"><div class="lbl"><span>Aréna</span></div><div class="opts" id="maps"></div></div>
     <div class="hint" id="hint"></div>
-    <div class="credit">3D modely: Project SVRN – Shoverobotics (CC&nbsp;BY&nbsp;4.0); vertikální spinner – TheBlackfish, remix „150g vert“ od Muffin578 (CC&nbsp;BY-SA&nbsp;4.0), upraveno. <a href="NOTICE.txt">Licence a zdroje</a></div>
+    <div class="gofoot"><button class="btn btn-act" id="go" type="button" disabled><span>Načítám…</span><span aria-hidden="true">→</span></button></div>
+    <div class="credit">3D modely: Project SVRN – Shoverobotics (CC&nbsp;BY&nbsp;4.0); vertikální spinner – TheBlackfish, remix „150g vert“ od Muffin578 (CC&nbsp;BY-SA&nbsp;4.0), upraveno. Zvuky jsou syntetizované. <a href="NOTICE.txt">Licence a zdroje</a></div>
   </div>
 </section>
 
+<section class="panel" id="garage" hidden aria-labelledby="garage-h">
+  <div id="garage-body"></div>
+  <button class="btn" id="garage-done" type="button"><span>Hotovo</span><span aria-hidden="true">✓</span></button>
+</section>
+
+<section class="panel" id="pause" hidden aria-labelledby="pause-h">
+  <div class="mono">Zápas stojí</div>
+  <h1 id="pause-h">Pauza</h1>
+  <button class="btn btn-act" id="resume" type="button"><span>Pokračovat</span><span aria-hidden="true">▶</span></button>
+  <div class="row"><button class="btn btn-o" id="restart" type="button"><span>Od začátku</span><span aria-hidden="true">↻</span></button><button class="btn btn-o" id="quit" type="button"><span>Do menu</span><span aria-hidden="true">≡</span></button></div>
+  <label class="chk"><input type="checkbox" id="shake-opt"> Otřesy kamery při zásahu</label>
+  <label class="chk"><input type="checkbox" id="replay-opt"> Automaticky přehrát záznam K.O.</label>
+  <div class="hint"><kbd>C</kbd> kamera · <kbd>M</kbd> zvuk · <kbd>Esc</kbd> pokračovat</div>
+</section>
+
+<div id="replay-bar" hidden><i class="rec" aria-hidden="true"></i><b>Záznam K.O. · zpomaleně</b><button type="button" id="skip">Přeskočit</button></div>
+
 <section class="panel" id="end" hidden aria-live="polite" aria-labelledby="end-title">
-  <div class="mono">Konec zápasu</div>
+  <div class="mono" id="end-kicker">Konec zápasu</div>
   <h1 id="end-title">Výhra</h1>
   <p id="end-why"></p>
+  <div id="card" hidden></div>
   <div class="mono" id="end-stats"></div>
+  <div class="btns">
+    <button class="btn btn-act" id="next" type="button" hidden style="grid-column:1/-1"><span>Další soupeř</span><span aria-hidden="true">→</span></button>
+    <button class="btn" id="again" type="button"><span>Znovu</span><span aria-hidden="true">↻</span></button>
+    <button class="btn btn-o" id="to-menu" type="button"><span>Menu</span><span aria-hidden="true">≡</span></button>
+    <button class="btn btn-o" id="replay-btn" type="button" hidden><span>Záznam K.O.</span><span aria-hidden="true">▶</span></button>
+    <button class="btn btn-o" id="share" type="button"><span>Sdílet výsledek</span><span aria-hidden="true">↗</span></button>
+  </div>
+  <div id="share-msg" role="status"></div>
   <div class="kit">
     <div><div class="mono" id="end-kit-l">Stavebnice</div><b id="end-kit"></b></div>
-    <div class="row">
-      <button class="btn btn-o" id="again" type="button"><span>Znovu</span><span aria-hidden="true">↻</span></button>
-      <a class="btn btn-act" id="cta" href="../../"><span id="cta-l">Postav si ho</span><span aria-hidden="true">→</span></a>
-    </div>
+    <a class="btn btn-act" id="cta" href="../../"><span id="cta-l">Postavte si ho</span><span aria-hidden="true">→</span></a>
   </div>
   <div class="credit">3D modely: Shoverobotics (CC&nbsp;BY&nbsp;4.0), TheBlackfish / Muffin578 (CC&nbsp;BY-SA&nbsp;4.0). <a href="NOTICE.txt">Licence a zdroje</a></div>
 </section>
@@ -153,7 +275,7 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line-2);border
   <a class="btn btn-act" href="../../"><span>Zpět na sadu</span><span aria-hidden="true">→</span></a>
 </section>
 
-<noscript><section class="panel" style="left:50%;top:50%;transform:translate(-50%,-50%)"><h1>Aréna potřebuje JavaScript</h1><p>Zapni JavaScript, nebo se vrať na <a href="../../">printedrobotics.cz</a>.</p></section></noscript>
+<noscript><section class="panel" style="left:50%;top:50%;transform:translate(-50%,-50%)"><h1>Aréna potřebuje JavaScript</h1><p>Zapněte JavaScript, nebo se vraťte na <a href="../../">printedrobotics.cz</a>.</p></section></noscript>
 <script type="module" src="build/arena.js"></script>
 <script nomodule>document.getElementById('fail').hidden=false;document.querySelector('#fail p').textContent='Tento prohlížeč je příliš starý na 3D arénu.';document.getElementById('start').hidden=true;</script>
 </body>
