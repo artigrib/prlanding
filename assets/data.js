@@ -6,7 +6,7 @@ window.PR_COLORS = [
   { id: 'orange', name: 'Oranžová', hex: '#E8461E' },
   { id: 'blue', name: 'Modrá', hex: '#1F3BFF' }
 ];
-window.PR_CATS = { arm: 'Ruce a dlaně', mobile: 'Mobilní', legged: 'Kráčející', desk: 'Stolní' };
+window.PR_CATS = { arm: 'Ruce a dlaně', mobile: 'Mobilní', legged: 'Kráčející', desk: 'Stolní', combat: 'Bojoví roboti' };
 window.PR_ROBOTS = [
   { id: 'so101', glb: true, name: 'SO-101', type: 'Robotická ruka', cat: 'arm', level: 'Začátečník', hw: 'Apache-2.0', sw: 'Apache-2.0',
     author: 'The Robot Studio a Hugging Face', render: true, alt: 'Robotická ruka SO-101',

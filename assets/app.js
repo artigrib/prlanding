@@ -120,7 +120,7 @@
 
   /* ---------- home ---------- */
   if (page === 'home') {
-    var FILTERS = [['all', 'Vše'], ['arm', 'Ruce a dlaně'], ['mobile', 'Mobilní'], ['legged', 'Kráčející'], ['desk', 'Stolní']];
+    var FILTERS = [['all', 'Vše'], ['arm', 'Ruce a dlaně'], ['mobile', 'Mobilní'], ['legged', 'Kráčející'], ['desk', 'Stolní'], ['combat', 'Bojoví roboti']];
     ['#robot-count', '#robot-count2'].forEach(function (sel) { var el = $(sel); if (el) el.textContent = R.length; });
     var filter = qs('typ'); if (!FILTERS.some(function (f) { return f[0] === filter; })) filter = 'all';
     function renderFilters() {
