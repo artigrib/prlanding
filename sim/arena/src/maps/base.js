@@ -6,7 +6,7 @@ import {
   staticBody, boxCollider, inRect, disposeGroup, mesh, quadGeo
 } from './kit.js';
 
-const LIGHT_KEYS = ['intensity'];
+const _lv = { x: 0, y: 0, z: 0 }, _av = { x: 0, y: 0, z: 0 };
 
 // find the scene's main lights when main.js did not hand them over
 function findLights(scene) {
@@ -124,8 +124,9 @@ export function createRuntime(spec, ctx) {
         if (g >= 0.99) continue;
         const v = r.body.linvel(), w = r.body.angvel();
         const k = Math.max(0.04, g);
-        r.body.setLinvel({ x: v0.x + (v.x - v0.x) * k, y: v.y, z: v0.z + (v.z - v0.z) * k }, true);
-        r.body.setAngvel({ x: w.x, y: v0.wy + (w.y - v0.wy) * Math.min(1, k * 2.5), z: w.z }, true);
+        _lv.x = v0.x + (v.x - v0.x) * k; _lv.y = v.y; _lv.z = v0.z + (v.z - v0.z) * k;
+        _av.x = w.x; _av.y = v0.wy + (w.y - v0.wy) * Math.min(1, k * 2.5); _av.z = w.z;
+        r.body.setLinvel(_lv, true); r.body.setAngvel(_av, true);
       }
     },
     // every fixed physics step, right after world.step() (records velocities for the ice fallback)

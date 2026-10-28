@@ -99,10 +99,10 @@ export class Hammer {
     this.axis = new THREE.Vector3(-this.dz, 0, this.dx);   // rotating +θ lifts the arm
     this.yaw = Math.atan2(this.dx, this.dz);
     this.period = period; this.zoneR = 1.35;
-    this.up = 1.45; this.theta = this.up;
+    this.up = 1.2; this.theta = this.up;
     this.reset();
   }
-  reset() { this.state = 'idle'; this.st = 0; this.loiter = 0; this.since = 0; this.theta = this.up; this.didHit = false; }
+  reset() { this.state = 'idle'; this.st = 0; this.loiter = 0; this.since = 0; this.theta = this.up; this.didHit = false; (this.victims ||= []).length = 0; }
   build(group) {
     const g = new THREE.Group(); g.position.set(this.px, this.py, this.pz); group.add(g);
     // column + base plate (static)
@@ -179,17 +179,33 @@ export class Hammer {
             const p = r.body.translation();
             const dx = p.x - this.tx, dz = p.z - this.tz, d = Math.hypot(dx, dz);
             if (!alive(p) || d > 1.05 || p.y > 1.2) continue;
-            // bounce + tumble: direction away from the head centre (or away from the column)
+            // smash: shoved out from under the head now, the rebound + tumble comes when the
+            // head lifts (an upward kick right now would just hit the head)
             const ux = d > 0.05 ? dx / d : this.dx, uz = d > 0.05 ? dz / d : this.dz;
-            kick(r, ux * 3.5, 7.5, uz * 3.5, uz * rnd(6, 11) * (Math.random() < 0.5 ? -1 : 1), rnd(-3, 3), -ux * rnd(6, 11));
+            kick(r, ux * 3, -1.5, uz * 3, 0, rnd(-4, 4), 0);
+            this.victims.push(r);
             api.emit('hit', { hazard: 'hammer', robot: r, x: p.x, y: p.y + 0.4, z: p.z, energy: 1 });
           }
         }
         if (this.st > 0.11) { this.state = 'hold'; this.st = 0; }
         break;
       }
-      case 'hold': this.theta = 0; if (this.st > 0.35) { this.state = 'lift'; this.st = 0; } break;
+      case 'hold':
+        this.theta = 0;
+        if (this.st > 0.18) { this.state = 'lift'; this.st = 0; }
+        break;
       case 'lift':
+        // rebound + tumble once the head is clear
+        if (this.victims.length && this.st > 0.3) {
+          for (const r of this.victims) {
+            if (!r.body) continue;
+            const p = r.body.translation();
+            if (!alive(p)) continue;
+            const s = Math.random() < 0.5 ? -1 : 1;
+            kick(r, 0, 7, 0, -this.dz * s * rnd(9, 15), 0, this.dx * s * rnd(9, 15));
+          }
+          this.victims.length = 0;
+        }
         this.theta = this.up * smooth(clamp01(this.st / 1.2));
         if (this.st > 1.2) { this.state = 'idle'; this.st = 0; this.since = 0; this.loiter = 0; }
         break;
@@ -455,7 +471,7 @@ export class FloorFlipper {
           if (!this.on(p)) continue;
           // further from the hinge = more lift; rotation about the hinge axis flips the robot
           const f = 0.45 + 0.55 * clamp01(((p.x - this.hx) * this.dx + (p.z - this.hz) * this.dz) / this.len);
-          kick(r, -this.dx * 2.2 * f, 10 + 5 * f, -this.dz * 2.2 * f, this.axis.x * 9 * f, rnd(-2, 2), this.axis.z * 9 * f);
+          kick(r, -this.dx * 2.2 * f, 8 + 4 * f, -this.dz * 2.2 * f, this.axis.x * 9 * f, rnd(-2, 2), this.axis.z * 9 * f);
           api.emit('hit', { hazard: 'flipper', robot: r, x: p.x, y: p.y, z: p.z, energy: 0.6 });
         }
       } break;

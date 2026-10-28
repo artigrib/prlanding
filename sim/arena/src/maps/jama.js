@@ -44,7 +44,7 @@ export const jama = {
           world.createCollider(RAPIER.ColliderDesc.convexHull(pts).setFriction(0.8).setRestitution(0.05), body);
         }
       },
-      audience: { rows: 3, palette: ['#4a4a46', '#6a6a64', '#3a3a3a', '#8a8a84', '#E8461E', '#2a4bd0', '#d8d8d2'], bench: '#cfcfca' },
+      audience: { rows: 3, palette: ['#4a4a46', '#6a6a64', '#3a3a3a', '#8a8a84', '#E8461E', '#2a4bd0', '#d8d8d2'], bench: '#cfcfca', bg: '#E9E7E2' },
       debris: {
         // loose wooden blocks (left-over spacers) that can be shoved into the pit
         pieces: [

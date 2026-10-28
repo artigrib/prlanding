@@ -29,7 +29,7 @@ export const led = {
       wallStyle: { posts: [...cornerPosts(H), ...[-1, 1].flatMap(s => [[-1.71, s * (H + WALL_T / 2)], [1.71, s * (H + WALL_T / 2)]])], glass: polycarbonate('#e6f2fa', 0.22), rail: '#1F3BFF' },
       stripes: [[3.2, 0, -H + 0.09, 0], [3.2, 0, H - 0.09, 0]],
       spawn: [{ x: -3.6, z: 3.6, yaw: Math.PI * 0.75 }, { x: 3.6, z: -3.6, yaw: -Math.PI * 0.25 }],
-      audience: { rows: 2, palette: ['#c43a2b', '#1F3BFF', '#2a2a2a', '#f2f2ee', '#3a6a4a', '#d9a400'], bench: '#d0dbe2' },
+      audience: { rows: 2, palette: ['#c43a2b', '#1F3BFF', '#2a2a2a', '#f2f2ee', '#3a6a4a', '#d9a400'], bench: '#d0dbe2', bg: '#E6EEF2' },
       debris: {
         // ice blocks: slippery, a bit heavy, great for shoving around
         pieces: [

@@ -23,7 +23,7 @@ export const kladivo = {
       floor: floorRects({ x0: -H, x1: H, z0: -H, z1: H }, [PIT]),
       pits: [PIT],
       walls: boxWalls(H),
-      wallStyle: { posts: cornerPosts(H), glass: polycarbonate('#d6e0e6', 0.24), rail: '#1a1a1a', lining: '#1e1f21', edge: '#cfd8de' },
+      wallStyle: { posts: cornerPosts(H), glass: polycarbonate('#d6e0e6', 0.16), rail: '#1a1a1a', lining: '#1e1f21', edge: '#cfd8de' },
       stripes: [
         [PIT.x1 - PIT.x0, (PIT.x0 + PIT.x1) / 2, PIT.z0 - 0.09, 0],
         [PIT.z1 - PIT.z0, PIT.x1 + 0.09, (PIT.z0 + PIT.z1) / 2, Math.PI / 2]
@@ -34,7 +34,7 @@ export const kladivo = {
         new SawStrip({ x: 2.3, z: 2.4, axis: 'z', len: 3.2, up: 2.6, down: 4.5, offset: 3.6 })
       ],
       spawn: [{ x: 4.1, z: 4.3, yaw: yawTo(4.1, 4.3, -1, -1) }, { x: -4.1, z: -4.3, yaw: yawTo(-4.1, -4.3, 1, 1) }],
-      audience: { rows: 3, palette: ['#2a2a2a', '#3a3a3a', '#4a4a46', '#5a5a55', '#FF5A00', '#1F3BFF'], bench: '#1a1a1a' },
+      audience: { rows: 3, palette: ['#2a2a2a', '#3a3a3a', '#4a4a46', '#5a5a55', '#FF5A00', '#1F3BFF'], bench: '#1a1a1a', bg: '#26272a' },
       debris: {
         // bent steel offcuts
         pieces: [

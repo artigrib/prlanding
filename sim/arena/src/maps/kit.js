@@ -90,7 +90,8 @@ export function stripeTexture(a = INK, b = '#E8461E') {
 export function glowTexture(inner = 'rgba(255,255,255,1)', outer = 'rgba(255,255,255,0)') {
   const [c, g] = canvas(128, 128);
   const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
-  gr.addColorStop(0, inner); gr.addColorStop(0.45, inner.replace(/[\d.]+\)$/, '0.35)')); gr.addColorStop(1, outer);
+  const a = k => inner.replace(/[\d.]+\)$/, k.toFixed(3) + ')');
+  for (let i = 0; i <= 8; i++) { const r = i / 8; gr.addColorStop(r, i === 8 ? outer : a(Math.pow(1 - r, 2.2))); }
   g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
   return tex(c, false);
 }
@@ -284,7 +285,7 @@ export function boxCollider(RAPIER, world, body, x0, x1, y0, y1, z0, z1, fr = GR
 
 // ---------------------------------------------------------------- audience (instanced, animated on the GPU)
 // rows of seated silhouettes on bleachers; `excite` (0..1) makes them jump, decays in frame()
-export function buildAudience(group, { rows = 3, quality = 'high', palette = ['#3a3a3a', '#4a4a46', '#5a5a55', '#2a2a2a', '#E8461E', '#1F3BFF'], bench = '#1c1c1c', sides = true, far = -19, side = 19, y0 = BASE_Y - 1.5, scale = 1 } = {}) {
+export function buildAudience(group, { rows = 3, quality = 'high', palette = ['#3a3a3a', '#4a4a46', '#5a5a55', '#2a2a2a', '#E8461E', '#1F3BFF'], bench = '#1c1c1c', sides = true, far = -19, side = 19, y0 = BASE_Y - 1.5, scale = 1, bg = '#EEEEEB', fade = 0.45 } = {}) {
   const spots = [];
   let s = 777;
   const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
@@ -316,12 +317,12 @@ export function buildAudience(group, { rows = 3, quality = 'high', palette = ['#
       transformed.y += (bob + jump) * smoothstep(0.0, 1.5, position.y);`);
   };
   const im = new THREE.InstancedMesh(person, mat, spots.length);
-  const o = new THREE.Object3D(), col = new THREE.Color();
+  const o = new THREE.Object3D(), col = new THREE.Color(), bgc = new THREE.Color(bg);
   spots.forEach(([x, y, z, sx], i) => {
     o.position.set(x, y, z); o.rotation.set(0, sx ? -sx * Math.PI / 2 : 0, 0);
     const k = 0.9 + rnd() * 0.25; o.scale.set(k, k, k); o.updateMatrix();
     im.setMatrixAt(i, o.matrix);
-    im.setColorAt(i, col.set(palette[Math.floor(rnd() * palette.length)]).multiplyScalar(0.7 + rnd() * 0.3));
+    im.setColorAt(i, col.set(palette[Math.floor(rnd() * palette.length)]).multiplyScalar(0.7 + rnd() * 0.3).lerp(bgc, fade));
   });
   im.frustumCulled = false;
   group.add(im);

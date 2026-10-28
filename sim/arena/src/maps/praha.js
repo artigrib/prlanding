@@ -29,14 +29,14 @@ export const praha = {
       floor: floorRects({ x0: -H, x1: H, z0: -H, z1: H }, [PIT]),
       pits: [],
       walls: boxWalls(H),
-      wallStyle: { posts: cornerPosts(H), glass: polycarbonate('#d8dde0', 0.2), rail: '#0E0E0E', lining: '#0b0b0b', edge: '#ffb38a' },
+      wallStyle: { posts: cornerPosts(H), glass: polycarbonate('#d8dde0', 0.14), rail: '#0E0E0E', lining: '#0b0b0b', edge: '#ffb38a' },
       hazards: () => [
         new PitRelease({ ...PIT, openAt: 60, warnFor: 6, surface: floorMat }),
-        new KillSaw({ x: 3, z: -H, nx: 0, nz: 1 }),
-        new KillSaw({ x: -3, z: H, nx: 0, nz: -1 })
+        new KillSaw({ x: H, z: -2.8, nx: -1, nz: 0 }),
+        new KillSaw({ x: -H, z: 2.8, nx: 1, nz: 0 })
       ],
       spawn: [{ x: -3.8, z: 3.4, yaw: yawTo(-3.8, 3.4, 0, 0) }, { x: 3.8, z: -3.4, yaw: yawTo(3.8, -3.4, 0, 0) }],
-      audience: { rows: 4, palette: ['#1b1b1b', '#242424', '#2e2e2e', '#383838', '#5a2208'], bench: '#0d0d0d' },
+      audience: { rows: 4, palette: ['#1b1b1b', '#242424', '#2e2e2e', '#383838', '#5a2208'], bench: '#0d0d0d', bg: '#0a0a0b', fade: 0.2 },
       debris: {
         pieces: [
           { x: 1.9, z: 2.3, size: [0.1, 0.025, 0.16], color: ORANGE, yaw: 0.5 },
@@ -47,7 +47,7 @@ export const praha = {
       decorate(group, { quality }) {
         const hi = quality !== 'low';
         // floor lettering
-        decal(group, textTexture([{ text: 'PROTO ROBOT', font: '700 140px "Inter Tight", Arial, sans-serif', spacing: 14 }], { color: ORANGE, w: 1024, h: 200 }), 0, -3.3, 7.2, 1.4, 0, { opacity: 0.85 });
+        decal(group, textTexture([{ text: 'PROTO ROBOT', font: '700 120px "Inter Tight", Arial, sans-serif', spacing: 10 }], { color: ORANGE, w: 1024, h: 180 }), 0, -3.3, 7.2, 1.27, 0, { opacity: 0.85 });
         decal(group, textTexture([{ text: 'PRAHA · MEETUP', font: '500 90px "Geist Mono", ui-monospace, monospace', spacing: 10 }], { color: '#F0F0F0', w: 1024, h: 160 }), 0, 3.3, 5.2, 0.8, 0, { opacity: 0.55 });
         // LED strips at the wall foot (outside) – unlit orange = glow
         const led = new THREE.MeshBasicMaterial({ color: ORANGE });
@@ -61,7 +61,7 @@ export const praha = {
           const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), halo); m.rotation.x = -Math.PI / 2; m.position.set(x, BASE_Y + 0.02, z); m.renderOrder = 4; group.add(m);
         }
         // spotlights: light pools on the floor + soft beams from the truss
-        const poolMat = new THREE.MeshBasicMaterial({ map: glowTexture('rgba(255,244,230,1)'), transparent: true, opacity: 0.32, blending: THREE.AdditiveBlending, depthWrite: false });
+        const poolMat = new THREE.MeshBasicMaterial({ map: glowTexture('rgba(255,244,230,1)'), transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false });
         const pools = [];
         const spots = [[-3.2, -3.2], [3.2, 3.2], [3.2, -3.2], [-3.2, 3.2]];
         for (const [x, z] of spots) {
@@ -69,10 +69,10 @@ export const praha = {
         }
         const beams = [];
         if (hi) {
-          const beamGeo = new THREE.CylinderGeometry(0.35, 3.0, 1, 24, 1, true); beamGeo.translate(0, -0.5, 0);
+          const beamGeo = new THREE.CylinderGeometry(0.3, 2.2, 1, 24, 1, true); beamGeo.translate(0, -0.5, 0);
           for (const [x, z] of spots) {
             const top = new THREE.Vector3(x * 1.9, 17, z * 1.9 - 4), bottom = new THREE.Vector3(x, 0, z);
-            const b = new THREE.Mesh(beamGeo, new THREE.MeshBasicMaterial({ color: '#ffe9d6', transparent: true, opacity: 0.045, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+            const b = new THREE.Mesh(beamGeo, new THREE.MeshBasicMaterial({ color: '#ffe9d6', transparent: true, opacity: 0.022, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
             b.position.copy(top); b.scale.y = top.distanceTo(bottom);
             b.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), bottom.clone().sub(top).normalize());
             b.renderOrder = 5; group.add(b); beams.push(b);
@@ -112,7 +112,7 @@ export const praha = {
             for (let i = 0; i < pools.length; i++) {
               const p = pools[i], [x, z] = spots[i];
               p.position.x = x + Math.sin(t * 0.35 + i * 1.7) * 0.9; p.position.z = z + Math.cos(t * 0.29 + i * 2.3) * 0.9;
-              p.material.opacity = 0.27 + 0.06 * Math.sin(t * 1.3 + i);
+              p.material.opacity = 0.19 + 0.04 * Math.sin(t * 1.3 + i);
               if (beams[i]) {
                 const b = beams[i];
                 _d.set(p.position.x - b.position.x, -b.position.y, p.position.z - b.position.z);
