@@ -128,14 +128,15 @@ export class Sts3215 {
     if (this.extraLoad) load = Math.sign(load || 1) * Math.max(Math.abs(load), this.extraLoad);
     const volts = Math.max(0, supplyV - 0.25 * Math.abs(load));
 
-    // thermal model: copper losses ~ load², cooling to ambient (time constant ≈ 50 s)
-    if (dt > 0) this.temp += (1.3 * load * load + this.extraHeat - (this.temp - AMBIENT) * 0.02) * dt;
+    // thermal model: copper losses ~ load² while the motor is driven, slow cooling to ambient
+    // (time constant ≈ 200 s: a plastic-cased servo stays hot for minutes after it trips)
+    if (dt > 0) this.temp += ((torque ? 0.35 * load * load + this.extraHeat : 0) - (this.temp - AMBIENT) * 0.005) * dt;
 
     let err = m[65] & ~(ERR.VOLTAGE);
     const v10 = Math.round(volts * 10);
     if (v10 > m[14] || v10 < m[15]) err |= ERR.VOLTAGE;
     if (this.temp >= m[13]) err |= ERR.OVERHEAT;
-    else if (this.temp < m[13] - 5) err &= ~ERR.OVERHEAT;
+    else if (this.temp < m[13] - 10) err &= ~ERR.OVERHEAT;
     // protection: over-voltage or over-temperature unloads the motor
     if (torque && ((err & ERR.OVERHEAT) || v10 > m[14])) { m[40] = 0; plant.release(i); }
 

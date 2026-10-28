@@ -1,5 +1,5 @@
 // Unit tests for the Feetech protocol layer and the STS3215 emulator.
-// Run from the repo root:  node --test sim/so101/test/
+// Run from the repo root:  node --test sim/so101/test/protocol.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -170,7 +170,7 @@ for (const [fault, code] of [['cable', 'cable'], ['dupid', 'dup-id'], ['supply',
     await S.writeCalibration(bus, S.buildCalibration(offs, mins, maxes));
     await S.enableTorque(bus);
     arm.setFault(fault, true);
-    for (let k = 0; k < 400; k++) arm.update(0.1);                    // 40 s
+    for (let k = 0; k < 400; k++) arm.update(0.1);                    // 40 s (overheating trips after ≈ 22 s)
     const f = await S.diagnose(bus, { variant: '7.4' });
     assert.ok(f.some((x) => x.code === code), JSON.stringify(f.map((x) => x.code)));
     arm.setFault(fault, false);

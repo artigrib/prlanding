@@ -43,7 +43,11 @@ async function wizardSetup(page, base, { shots = false, prefix = '' } = {}) {
   await page.waitForFunction(() => window.__wiz, null, { timeout: 30000 });
   await page.evaluate(() => window.__wiz.ready());
   await page.waitForSelector('#v-connect:not([disabled])');
-  if (shots) await shot(page, prefix + '1-port');
+  if (shots) {
+    await shot(page, prefix + '1-port');
+    ok(await page.isVisible('#r-connect') && !(await page.isVisible('#r-no')), prefix + 'Chromium: real-arm button offered (Web Serial present)');
+    ok(await page.isDisabled('#r-connect'), prefix + 'real-arm button locked until the risk checkbox is ticked');
+  }
   await page.click('#v-connect');
   await page.waitForSelector('.step[data-step="ids"]:not([hidden])');
   // assign IDs one servo at a time (gripper first)
@@ -156,6 +160,7 @@ async function diag(page) {
     if (!ONLY || ONLY === 'phone') {
       const errors = [];
       const page = await newPage(browser, { width: 390, height: 844 }, errors);
+      await page.addInitScript(() => { delete Navigator.prototype.serial; });   // behave like Safari / iOS / Firefox
       await page.goto(srv.url + '/sim/so101/nastaveni/?test=1');
       await page.waitForFunction(() => window.__wiz, null, { timeout: 30000 });
       await page.evaluate(() => window.__wiz.ready());
@@ -163,7 +168,7 @@ async function diag(page) {
       await shot(page, 'p1-port-390');
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);
       ok(!overflow, 'phone: no horizontal scroll');
-      ok(await page.isVisible('#r-no'), 'phone (no Web Serial in this browser context): explanation shown');
+      ok(await page.isVisible('#r-no') && !(await page.isVisible('#r-connect')), 'phone without Web Serial: real-arm button hidden, explanation shown');
       await page.click('#v-connect');
       await page.waitForSelector('.step[data-step="ids"]:not([hidden])');
       await page.click('#id-skip');

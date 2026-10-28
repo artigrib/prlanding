@@ -106,7 +106,9 @@ export async function configureFollower(bus, { maxVelocity = 0 } = {}) {
       await bus.writeReg(m.id, 'Protection_Current', 250);
       await bus.writeReg(m.id, 'Overload_Torque', 25);
     }
-    // extra safety layer of this wizard (not in LeRobot): servo-side speed cap, steps/s (0 = no cap)
+    // extra safety layer of this wizard (not in LeRobot): servo-side speed cap (0 = no cap). Written as
+    // steps/s; the exact unit of Goal_Velocity on STS3215 firmware is NOT verified on hardware — the
+    // browser-side rate limit in the wizard is the primary limit, this one is a backstop.
     await bus.writeReg(m.id, 'Goal_Velocity', maxVelocity);
   }
 }
