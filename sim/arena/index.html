@@ -106,7 +106,7 @@ body.dark-map #msg{color:#fff;text-shadow:0 2px 0 var(--ink),0 0 22px rgba(0,0,0
 #map-status{background:rgba(255,255,255,.85);padding:2px 6px;color:var(--accent-text);font-weight:500}
 #map-status:empty{display:none}
 /* v2: menu, garage, end card, toolbar, replay, pops */
-#start{width:min(420px,calc(100% - 2*var(--pad)))}
+@media (min-width:641px){#start{width:min(420px,calc(100% - 2*var(--pad)))}}
 .opts.four{grid-template-columns:1fr 1fr}
 .seg{display:flex;border:1px solid var(--ink)}
 .seg button{flex:1;min-height:44px;border:0;border-left:1px solid var(--ink);background:#fff;font-size:14px;font-weight:500;cursor:pointer;padding:0 8px}
