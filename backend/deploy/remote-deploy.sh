@@ -348,13 +348,14 @@ tls_state() ( set +eu +o pipefail
   local h cert logs cat fw cid
   cid=$(dc ps -q caddy 2>/dev/null | head -1)
   lg() { docker logs "$cid" 2>&1; }
+  cnt() { lg | awk -v k="$1" 'index(tolower($0),tolower(k)){n++} END{print n+0}'; }
   say "tls caddy container: $([ -n "$cid" ] && echo found || echo missing); log driver: $(docker inspect -f '{{.HostConfig.LogConfig.Type}}' "$cid" 2>/dev/null); started: $(docker inspect -f '{{.State.StartedAt}}' "$cid" 2>/dev/null | cut -c1-16)"
   for h in api mcp relay; do
     cert=no
     dc exec -T caddy sh -c "ls /data/caddy/certificates/*/$h.printedrobotics.cz/$h.printedrobotics.cz.crt" >/dev/null 2>&1 && cert=yes
     [ -f "$ROOT/sites-enabled/$h.caddy" ] && en=yes || en=no
     cat=none
-    l=$(lg | grep -aF "$h.printedrobotics.cz" | grep -aiE 'error|fail|rateLimited|unauthorized' | tail -1)
+    l=$(lg | awk -v h="$h.printedrobotics.cz" 'index($0,h) && (index(tolower($0),"error")||index(tolower($0),"fail")||index($0,"rateLimited")||index($0,"unauthorized")) {x=$0} END{print x}')
     if [ -n "$l" ]; then
       case "$l" in
         *rateLimited*|*"rate limit"*|*429*) cat="rate-limited";;
@@ -368,7 +369,7 @@ tls_state() ( set +eu +o pipefail
     say "tls $h: site enabled: $en; cert present: $cert; last acme error: $cat"
   done
   say "tls: acme dns-01 not used; http-01 only"
-  say "tls log counts: lines $(lg | wc -l), bytes $(lg | wc -c), obtaining $(lg | grep -aci 'obtain'), obtained $(lg | grep -aci 'certificate obtained'), errors $(lg | grep -ac '"level":"error"'), cert dirs $(dc exec -T caddy sh -c 'ls -d /data/caddy/certificates/*/* 2>/dev/null | wc -l')"
+  say "tls log counts: lines $(lg | wc -l), bytes $(lg | wc -c), obtaining $(cnt obtain), obtained $(cnt 'certificate obtained'), errors $(cnt '"level":"error"'), cert dirs $(dc exec -T caddy sh -c 'ls -d /data/caddy/certificates/*/* 2>/dev/null | wc -l')"
   say "tls storage: acme dir entries $(dc exec -T caddy sh -c 'ls /data/caddy/acme/*/ 2>/dev/null | wc -l'), data dirs $(dc exec -T caddy sh -c 'ls /data/caddy 2>/dev/null | tr "\n" " "'), writable $(dc exec -T caddy sh -c 'touch /data/caddy/.w && rm /data/caddy/.w && echo yes || echo no' 2>/dev/null)"
   local cfg
   cfg=$(dc exec -T caddy wget -q -T 3 -O - http://127.0.0.1:12019/config/apps/tls 2>&1)
@@ -379,15 +380,14 @@ tls_state() ( set +eu +o pipefail
   say "tls docker log bytes: $(docker logs "$cid" 2>&1 | wc -c); since 1h lines: $(docker logs --since 1h "$cid" 2>&1 | wc -l)"
   local k n
   for k in info warn error fatal caddyfile invalid listen bind permission address admin autosave started shutdown signal stopped reload config tls acme cert obtain redirect http2 http3 quic buffer user warning 'not found' 'no such' 'read-only' deprecated adapt overwritten; do
-    n=$(lg | grep -aci -- "$k")
+    n=$(cnt "$k")
     [ "$n" -gt 0 ] && say "tls log word [$k]: $n"
   done
   say "tls admin raw response: starts with brace $(printf '%s' "$hc" | head -c1 | grep -c '{'), contains html $(printf '%s' "$hc" | grep -aci '<html'), contains 'error' $(printf '%s' "$hc" | grep -aci error), contains 'wget' $(printf '%s' "$hc" | grep -aci wget)"
-  say "tls shape: log lines starting with brace $(lg | grep -ac '^{'), digit $(lg | grep -ac '^[0-9]'), letter $(lg | grep -ac '^[A-Za-z]'), other $(lg | grep -acv '^[{0-9A-Za-z]'); max line len $(lg | awk '{ if (length($0)>m) m=length($0) } END {print m+0}'); lines with 'msg' $(lg | grep -ac 'msg'); with 'ts' $(lg | grep -ac 'ts')"
-  say "tls shape: admin resp lines $(printf '%s\n' "$hc" | wc -l), starting with brace $(printf '%s\n' "$hc" | grep -ac '^{'), letter $(printf '%s\n' "$hc" | grep -ac '^[A-Za-z]'), digit $(printf '%s\n' "$hc" | grep -ac '^[0-9]'), with 'level' $(printf '%s\n' "$hc" | grep -aci level)"
+  say "tls shape: lines with json msg field $(cnt '"msg"'), with level $(cnt level), with tab $(lg | awk '/	/{n++} END{print n+0}')"
   say "tls admin http: reverse_proxy $(printf '%s' "$hc" | grep -ao 'reverse_proxy' | wc -l), host matchers $(printf '%s' "$hc" | grep -ao '"host"' | wc -l), listen entries $(printf '%s' "$hc" | grep -ao '"listen"' | wc -l)"
   for k in 'rateLimited' 'Timeout during connect' 'Connection refused' 'unauthorized' 'Invalid response' 'no valid A records' 'DNS problem' 'CAA' 'context deadline' 'permission denied' 'read-only'; do
-    n=$(lg | grep -aci -- "$k")
+    n=$(cnt "$k")
     [ "$n" -gt 0 ] && say "tls log category '$k': $n line(s)"
   done
   say "tls: caddy host-network listeners :80 $(ss -ltnH 'sport = :80' | wc -l), :443 $(ss -ltnH 'sport = :443' | wc -l)"
