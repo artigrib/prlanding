@@ -146,7 +146,7 @@ export class Engine {
     const g = c.createGain(); g.gain.value = gain;
     src.connect(g);
     let tail = g;
-    if (pan && c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = pan; g.connect(p); tail = p; }
+    if (Math.abs(pan) > 0.06 && c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = pan; g.connect(p); tail = p; }   // centred: no panner node
     tail.connect(this.bus[bus] || this.bus.sfx);
     src.start(t);
     slot.src = src; slot.g = g; slot.prio = prio; slot.start = t; slot.end = t + buffer.duration / rate + 0.03;
@@ -155,12 +155,14 @@ export class Engine {
   }
 
   // ---- persistent looped voice (motors, ambience). Returns {src, g, p, rate, gain} with smoothing helpers. ----
-  loop(buffer, bus, { pan = true } = {}) {
+  // dest: a shared panner from panner() (several loops of one robot share one pan node)
+  loop(buffer, bus, { pan = true, dest = null } = {}) {
     const c = this.ctx, src = c.createBufferSource(); src.buffer = buffer; src.loop = true;
     const g = c.createGain(); g.gain.value = 0;
     src.connect(g);
     let p = null;
-    if (pan && c.createStereoPanner) { p = c.createStereoPanner(); g.connect(p); p.connect(this.bus[bus]); }
+    if (dest) g.connect(dest.p || dest);
+    else if (pan && c.createStereoPanner) { p = c.createStereoPanner(); g.connect(p); p.connect(this.bus[bus]); }
     else g.connect(this.bus[bus]);
     src.start(this.now(), Math.random() * buffer.duration);
     return { src, g, p, cur: { gain: 0, rate: 1, pan: 0 } };
@@ -171,6 +173,15 @@ export class Engine {
     if (Math.abs(gain - cur.gain) > 0.0015 || (gain === 0 && cur.gain !== 0)) { v.g.gain.setTargetAtTime(gain, t, tc); cur.gain = gain; }
     if (Math.abs(rate - cur.rate) > 0.004) { v.src.playbackRate.setTargetAtTime(rate, t, tc); cur.rate = rate; }
     if (v.p && Math.abs(pan - cur.pan) > 0.02) { v.p.pan.setTargetAtTime(pan, t, 0.08); cur.pan = pan; }
+  }
+
+  // shared stereo panner feeding a bus ({p, cur}); null where StereoPanner is missing (old Safari)
+  panner(bus) {
+    const c = this.ctx; if (!c.createStereoPanner) return null;
+    const p = c.createStereoPanner(); p.connect(this.bus[bus]); return { p, cur: 0 };
+  }
+  steerPan(P, pan, t = this.now()) {
+    if (P && Math.abs(pan - P.cur) > 0.02) { P.p.pan.setTargetAtTime(pan, t, 0.08); P.cur = pan; }
   }
 
   // Float32Array(s) -> AudioBuffer

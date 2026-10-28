@@ -230,21 +230,23 @@ function click(sr, seed) {
   return normalize(x, 0.5);
 }
 
-// tasks run one per idle slice so start-up never hitches; loops first (needed immediately)
+// tasks run one per idle slice so start-up never hitches
 export function bankTasks(sr) {
-  const T = [];
-  T.push(['motor', () => [motorLoop(sr, 11)]], ['hum', () => [humLoop(sr, 12)]], ['whoosh', () => [whooshLoop(sr, 13)]],
-    ['scrape', () => [scrapeLoop(sr, 14)]], ['click', () => [0, 1, 2].map(i => click(sr, 20 + i))],
-    ['beep', () => [beep(sr, 880, 0.3)]], ['go', () => [go(sr)]]);
-  for (let k = 0; k < 3; k++) {
+  const T = [], tier = k => {
     T.push(['spin_' + TIER[k], () => [0, 1, 2].map(i => spinHit(sr, k, 100 + k * 10 + i))]);
     T.push(['bump_' + TIER[k], () => [0, 1].map(i => bump(sr, k, 200 + k * 10 + i))]);
     T.push(['wall_' + TIER[k], () => [0, 1, 2].map(i => wall(sr, k, 300 + k * 10 + i))]);
-  }
-  T.push(['flip', () => [0, 1, 2].map(i => flipper(sr, 400 + i))], ['lift', () => [0, 1].map(i => lift(sr, 410 + i))],
-    ['clamp', () => [0, 1].map(i => clamp(sr, 420 + i))], ['fall', () => [fall(sr, 430)]], ['pit', () => [pitOpen(sr, 440)]],
-    ['bell', () => [bell(sr)]], ['win', () => [jingle(sr, true)]], ['lose', () => [jingle(sr, false)]],
-    ['crowd', () => [{ stereo: crowd(sr, 500) }]], ['crowd2', () => [{ stereo: crowd(sr, 501) }]], ['amb', () => [{ stereo: ambience(sr, 600) }]]);
+  };
+  // order = priority: countdown + motors, then hits, then the rest; crowds last (~0.2 s each)
+  T.push(['beep', () => [beep(sr, 880, 0.3)]], ['go', () => [go(sr)]], ['motor', () => [motorLoop(sr, 11)]],
+    ['hum', () => [humLoop(sr, 12)]], ['whoosh', () => [whooshLoop(sr, 13)]]);
+  tier(1); tier(2); tier(0);
+  T.push(['flip', () => [0, 1, 2].map(i => flipper(sr, 400 + i))], ['clamp', () => [0, 1].map(i => clamp(sr, 420 + i))],
+    ['lift', () => [0, 1].map(i => lift(sr, 410 + i))], ['amb', () => [{ stereo: ambience(sr, 600) }]],
+    ['scrape', () => [scrapeLoop(sr, 14)]], ['click', () => [0, 1, 2].map(i => click(sr, 20 + i))],
+    ['fall', () => [fall(sr, 430)]], ['pit', () => [pitOpen(sr, 440)]], ['bell', () => [bell(sr)]],
+    ['win', () => [jingle(sr, true)]], ['lose', () => [jingle(sr, false)]],
+    ['crowd', () => [{ stereo: crowd(sr, 500) }]], ['crowd2', () => [{ stereo: crowd(sr, 501) }]]);
   return T;
 }
 export const TIERS = TIER;

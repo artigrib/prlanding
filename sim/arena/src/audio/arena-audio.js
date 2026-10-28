@@ -91,13 +91,14 @@ export class ArenaAudio {
   voice(id, spinner) {
     let v = this.robots.get(id);
     if (v && (!spinner || v.hum)) return v;
-    if (!this.bank.motor || (spinner && !this.bank.hum)) return null;
+    if (!this.bank.motor || (spinner && !(this.bank.hum && this.bank.whoosh))) return v || null;   // bank still building
     if (!v) {
-      v = { drive: this.eng.loop(this.bank.motor[0], 'motors'), hum: null, whoosh: null,
+      const P = this.eng.panner('motors');      // one pan node per robot, shared by its loops
+      v = { pan: P, drive: this.eng.loop(this.bank.motor[0], 'motors', { dest: P }), hum: null, whoosh: null,
         x: 0, y: 0, z: 0, vx: 0, vz: 0, t: -1, smooth: 0, load: 0, peakI: 1, dop: 1, r: null };
       this.robots.set(id, v);
     }
-    if (spinner) { v.hum = this.eng.loop(this.bank.hum[0], 'motors'); v.whoosh = this.eng.loop(this.bank.whoosh[0], 'motors'); }
+    if (spinner) { v.hum = this.eng.loop(this.bank.hum[0], 'motors', { dest: v.pan }); v.whoosh = this.eng.loop(this.bank.whoosh[0], 'motors', { dest: v.pan }); }
     return v;
   }
   // level 0..1 (main.js gate: 0 outside the fight), spin 0..1, r = Robot (optional, richer data)
@@ -136,6 +137,7 @@ export class ArenaAudio {
     const on = sp > 0.02 || v.load > 0.15;
     const dg = on ? (0.02 + 0.05 * Math.pow(sp, 0.8) + 0.03 * v.load) * gpos : 0;
     const dr = (0.55 + 0.95 * sp) * (1 - 0.1 * v.load);
+    this.eng.steerPan(v.pan, pan, t);
     this.eng.steer(v.drive, dg, dr, pan, t, 0.05);
     // spinner: hum + whoosh, doppler from radial velocity (scaled units: subtle +-3 %)
     if (v.hum) {
