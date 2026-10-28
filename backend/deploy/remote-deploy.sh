@@ -318,7 +318,29 @@ diagnose() ( set +eu +o pipefail
   say "diag docker: $(docker version -f '{{.Server.Version}}' 2>/dev/null), compose: $(docker compose version --short 2>/dev/null)"
 )
 
+porttest() ( set +eu +o pipefail
+  # Throw-away containers (name prefix printedrobotics-porttest) to see which port bindings work.
+  local n=0 spec net st
+  for spec in "web 127.0.0.1:18081:80" "default 127.0.0.1:18082:80" "default 0.0.0.0:80:80" "web 0.0.0.0:80:80"; do
+    n=$((n + 1)); set -- $spec; net=$1
+    docker rm -f "printedrobotics-porttest$n" >/dev/null 2>&1
+    if [ "$net" = web ]; then
+      docker run -d --name "printedrobotics-porttest$n" --network printedrobotics_web -p "$2" caddy:2-alpine caddy respond --listen :80 ok
+    else
+      docker run -d --name "printedrobotics-porttest$n" -p "$2" caddy:2-alpine caddy respond --listen :80 ok
+    fi
+    sleep 2
+    st=$(docker inspect -f '{{.State.Status}}|{{.State.Error}}' "printedrobotics-porttest$n" 2>&1)
+    say "porttest $n net=$net bind=$(printf '%s' "$2" | sed -E 's/^[0-9.]+:/<ip>:/') -> $(sanitize "$st")"
+    docker rm -f "printedrobotics-porttest$n" >/dev/null 2>&1
+  done
+)
+
 case "$ACTION" in
+  porttest)
+    porttest
+    exit 0
+    ;;
   diag)
     [ -f "$ROOT/release.env" ] || die "no release deployed yet"
     build_env
