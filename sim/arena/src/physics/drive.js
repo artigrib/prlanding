@@ -92,13 +92,16 @@ export class Drive {
       diff = want * 3.2 * hw / v0;
     }
     // feed-forward breakaway (smoothly in): small corrections still turn the robot
-    diff += Math.sign(want) * this.breakaway * Math.min(1, Math.abs(want) / 1.2);
+    diff += Math.sign(want) * this.breakaway * Math.min(1, Math.abs(want) / 1.2) * (1 - 0.35 * Math.abs(throttle));
     if (diff > 1) diff = 1; else if (diff < -1) diff = -1;
-    // steering has priority: throttle gives way so the differential is never clipped
+    // steering has priority, but a hard turn at speed still keeps ~60 % of the throttle (a fast arc,
+    // not a pirouette); whatever is left over is normalised
     let th = throttle * handicap * (throttle < 0 ? 0.9 : 1);
-    const room = 1 - Math.abs(diff);
-    if (th > room) th = room; else if (th < -room) th = -room;
-    this.uL = th - diff; this.uR = th + diff;
+    const keep = Math.max(1 - Math.abs(diff), 0.72 * Math.abs(th));
+    if (th > keep) th = keep; else if (th < -keep) th = -keep;
+    let L = th - diff, R = th + diff;
+    const big = Math.max(1, Math.abs(L), Math.abs(R));
+    this.uL = L / big; this.uR = R / big;
     if (upSign < 0) { const t = this.uL; this.uL = this.uR; this.uR = t; }   // auto-invert: wheels on the other side face the floor
   }
 

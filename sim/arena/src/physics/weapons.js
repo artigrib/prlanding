@@ -47,6 +47,7 @@ export class Spinner {
       }
     }
     this.samples = new Float32Array(pts);
+    this._found = false; this._wallCb = () => { this._found = true; return false; };   // reused query callback
     this.nS = pts.length / 3;
     this.reset();
   }
@@ -105,9 +106,9 @@ export class Spinner {
         if (Math.abs(s.axis[0]) > 0.5 && ly < -s.radius * 0.45) continue;   // vertical blade grazing the floor is not a wall hit
         r.toWorld(this.samples[i * 3] + this.axleL.x, ly + this.axleL.y, this.samples[i * 3 + 2] + this.axleL.z, _p);
         pt.x = _p.x; pt.y = _p.y; pt.z = _p.z;
-        let found = false;
-        r.world.intersectionsWithPoint(pt, () => { found = true; return false; }, r.R.QueryFilterFlags.EXCLUDE_DYNAMIC, r.rayGroups);
-        if (found) { hitP = _p; target = 'wall'; }
+        this._found = false;
+        r.world.intersectionsWithPoint(pt, this._wallCb, r.R.QueryFilterFlags.EXCLUDE_DYNAMIC, r.rayGroups);
+        if (this._found) { hitP = _p; target = 'wall'; }
       }
     }
     if (!hitP) { this.jam = Math.max(0, this.jam - dt); return; }
@@ -310,12 +311,13 @@ export class Arm {
   }
 
   touches(opp) {
-    let hit = false;
+    this._hit = false;
+    if (!this._pairCb) this._pairCb = m => { if (m.numContacts() > 0) this._hit = true; };
     for (const c of opp.colliders) {
-      if (hit) break;
-      this.world.contactPair(this.collider, c, m => { if (m.numContacts() > 0) hit = true; });
+      if (this._hit) break;
+      this.world.contactPair(this.collider, c, this._pairCb);
     }
-    return hit;
+    return this._hit;
   }
 
   // ---- grabber

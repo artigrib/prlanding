@@ -84,10 +84,10 @@ export const BASES = {
   },
   kosa: {
     id: 'kosa', name: 'Kosa – horizontální spinner', short: 'KOSA', weapon: 'spinner', weaponKind: 'horizontal',
-    blurb: 'Nízký podřezávač s dlouhou čepelí', model: null,
+    blurb: 'Nízký podřezávač s dlouhou čepelí', model: null, invertible: true,
     chassis: { half: [0.5, 0.12, 0.4], offset: [0, 0.0, -0.06], friction: 0.35 },
     mounts: [[0.38, -0.18, 1], [-0.38, -0.18, 1], [0.2, 0.26, 0], [-0.2, 0.26, 0]],
-    wheels: [[0.43, -0.18], [-0.43, -0.18]], wheelR: 0.21,
+    wheels: [[0.43, -0.18], [-0.43, -0.18]], wheelR: 0.225,   // wheels stand proud of the lid: drives upside down
     drive: { fStall: 54, motors: 2, vMul: 1.04 }, yawRate: 4.4, gyro: true,
     parts: { frame: 34, electronics: 10, battery: 12, driveMotors: 2 * 9, tyres: 2, weaponMotor: 18, blade: 38, hub: 6 },
     // horizontal spinner: axis = +Y (counter-clockwise from above: the front tip sweeps to the robot's left)
