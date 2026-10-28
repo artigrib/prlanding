@@ -203,22 +203,8 @@
       set('#l-sw2', 'bez vlastního softwaru (RC vysílač)');
     }
     $('#l-repo').href = r.repo; $('#l-docs').href = r.docs;
-    /* safety notes built from what this robot actually contains */
-    (function () {
-      var all = JSON.stringify([r.bom || [], r.specs || [], r.lead || '']);
-      var w = ['Určeno osobám od 14 let; mladší pouze pod dohledem dospělého. Pohyblivé části mohou přiskřípnout prsty.'];
-      if (/LiPo|Li-Pol|Li-ion|akumulátor|baterie/i.test(all)) w.push('Lithiové akumulátory nabíjejte jen vhodnou nabíječkou, pod dohledem a mimo hořlavé předměty; poškozený článek nepoužívejte.');
-      if (/\b(24|22,2|14,8) ?V\b|\d+ ?Nm/.test(all)) w.push('Silné motory: pohybující se rameno může způsobit zranění. Při oživování držte ruce mimo dosah a mějte po ruce vypínač napájení.');
-      if (/pneumat/i.test(all)) w.push('Pneumatické chapadlo pracuje se stlačeným vzduchem – používejte jen schválený zdroj a hadice.');
-      if (/230 ?V|síťov/i.test(all)) w.push('Zdroj připojený k síti 230 V smí zapojovat jen osoba s odpovídající kvalifikací.');
-      if (r.cat === 'combat') {
-        w.push('Bojového robota zapínejte jen v uzavřené aréně nebo s odpojenou zbraní. Nejdřív zapněte vysílač, potom robota; vypínejte v opačném pořadí a před prvním zápasem ověřte failsafe (po vypnutí vysílače se robot musí zastavit).');
-        if (/spinner|rotuj/i.test(all)) w.push('Rotující zbraň může vážně zranit a vymrštit úlomky: mimo arénu ji vždy zajistěte a nikdy ji neroztáčejte v ruce ani na stole.');
-        if (/flipper/i.test(all)) w.push('Flipper se pohybuje prudce: při manipulaci s robotem mějte prsty mimo jeho dráhu.');
-      }
-      w.push('Hardware z této sady napájejte jen zdrojem uvedeným v návodu projektu.');
-      $('#safety').innerHTML = w.map(esc).join('<br>');
-    })();
+    /* safety notes built from what this robot actually contains (shared with tools/build.mjs) */
+    $('#safety').innerHTML = window.PR_SAFETY(r).map(esc).join('<br>');
     set('#sb-name', r.name);
 
     /* back to catalogue: return to the same filter and scroll position */
@@ -248,12 +234,20 @@
       set('#po-consent-t', 'Souhlasím se zpracováním e-mailu za účelem zaslání upozornění na dostupnost.');
     }
     set('#po-title', r.preparing ? 'Upozornění na dostupnost' : 'Nezávazná předobjednávka');
-    if (r.sim) {
-      var sl = document.createElement('a'); sl.className = 'btn btn-o';
-      sl.href = ROOT + (r.sim === 'arena' ? 'sim/arena/?robot=' + r.id : 'sim/' + r.sim + '/');
-      sl.innerHTML = (r.sim === 'arena' ? 'Vyzkoušejte v aréně' : 'Vyzkoušejte v simulaci') + ' <span aria-hidden="true">→</span>';
-      $('#top-cta').parentNode.appendChild(sl);
+    /* browser demo (sim/arena): prerendered by tools/build.mjs; the chosen colour follows the visitor */
+    var SIM = r.sim && (window.PR_SIMS || {})[r.sim], simA = $('#sim-cta'), colorChosen = !!qs('color');
+    function simHref() {
+      var q = [];
+      if (SIM.robotParam) q.push('robot=' + r.id);
+      if (!r.preparing && colorChosen) q.push('color=' + st.color);
+      return ROOT + SIM.path + (q.length ? '?' + q.join('&') : '');
     }
+    if (SIM && !simA) {
+      simA = document.createElement('a'); simA.className = 'sim-cta'; simA.id = 'sim-cta';
+      simA.innerHTML = '<span><b>' + esc(SIM.label) + '</b><small>' + esc(SIM.note) + '</small></span><span aria-hidden="true">→</span>';
+      $('#top-cta').parentNode.appendChild(simA);
+    }
+    if (SIM) simA.href = simHref();
     if (!r.preparing) { var tc = $('#top-cta'); var sd = document.createElement('div'); sd.innerHTML = softForm('price', r.name); tc.parentNode.appendChild(sd.firstChild); }
     $('#po-prep').hidden = true;
 
@@ -294,7 +288,7 @@
       var b = e.target.closest('[data-k]'); if (!b) return;
       st[b.getAttribute('data-k')] = b.getAttribute('data-v');
       renderBuy(); syncUrl();
-      if (b.getAttribute('data-k') === 'color') { renderImg(); if (viewer) viewer.setColor(colorObj().hex); }
+      if (b.getAttribute('data-k') === 'color') { colorChosen = true; renderImg(); if (viewer) viewer.setColor(colorObj().hex); if (SIM) simA.href = simHref(); }
     });
     renderImg(); renderBuy();
     if (fromQuiz) {
@@ -302,7 +296,7 @@
       syncUrl();
     }
 
-    var specs = r.specs.concat([['Náročnost', r.level], ['Software', r.software], ['Náklady na díly dle autora', r.bomCost]]).filter(function (s) { return s[1] && s[1] !== '—'; });
+    var specs = window.PR_SPECS(r);
     set('#specs-title', 'Parametry · ' + specs.length);
     $('#specs').innerHTML = specs.map(function (s) { return '<div><dt>' + esc(s[0]) + '</dt><dd>' + esc(s[1]) + '</dd></div>'; }).join('');
     var FAQ = [
@@ -483,7 +477,7 @@
   if (page === 'quiz') {
     var Q = [
       ['Stavěli jste už něco podobného?', 'Podle zkušenosti zvolíme náročnost.', [['none', 'Ještě nikdy', 'Šroubovák zvládnu, pájku ne'], ['some', 'Něco málo', '3D tisk, Arduino, Raspberry Pi'], ['pro', 'Ano, pravidelně', 'ROS, Python, elektronika']]],
-      ['Co od robota čekáte?', 'Cíl rozhoduje víc než cena.', [['ai', 'Učit se AI a robotiku', 'Trénovat modely, LeRobot'], ['school', 'Do školy nebo kroužku', 'Výuka pod vedením dospělého, 14+'], ['walk', 'Chci, aby chodil', 'Nohy místo kol'], ['rover', 'Rover jako na Marsu', 'Šest kol, terén venku'], ['lab', 'Výzkum, laboratoř', 'Přesnost, ROS 2']]],
+      ['Co od robota čekáte?', 'Cíl rozhoduje víc než cena.', [['ai', 'Učit se AI a robotiku', 'Trénovat modely, LeRobot'], ['school', 'Do školy nebo kroužku', 'Výuka pod vedením dospělého, 14+'], ['walk', 'Chci, aby chodil', 'Nohy místo kol'], ['rover', 'Rover jako na Marsu', 'Šest kol, terén venku'], ['lab', 'Výzkum, laboratoř', 'Přesnost, ROS 2'], ['fight', 'Souboje robotů', 'Bojový robot do 150 g, zápasy v aréně']]],
       ['Jak velký projekt chcete?', 'Orientačně podle rozsahu a ceny dílů.', [['small', 'Malý', 'Víkend, nižší rozpočet'], ['mid', 'Střední', 'Několik večerů'], ['big', 'Velký', 'Vlajková loď, vyšší rozpočet']]]
     ];
     var REASONS = {
@@ -503,7 +497,7 @@
       bhl: ['Open-source humanoid v dětské velikosti', 'I převodovky pohonů se tisknou z PLA', 'Chodí díky RL politice přenesené ze simulace'],
       osr: ['Robustní rover z hliníku podle marsovských vozítek', 'Open-source hardware s certifikací OSHWA', 'Rocker-bogie a natáčení všech rohových kol'],
       svrn: ['Modulární robot pro první soutěže do 150 g', 'Pohon 4×4 a moduly flipper nebo chapadlo', 'Bez rotující zbraně – bezpečný pro první zápasy'],
-      vert150: ['Klasický vertikální spinner v kategorii 150 g', 'Běžné díly: BE1806, Malenki Nano, motory N20', 'Jen pro uzavřenou arénu a zkušené stavitele'],
+      vert150: ['Klasický vertikální spinner v kategorii 150 g', 'Běžné díly: BE1806, Malenki Nano, motory N20', 'Jen pro uzavřenou arénu; vyžaduje zkušenost s LiPo a RC'],
       stackchan: ['Nejroztomilejší open-source robot na stůl', 'Programování v JavaScriptu i blocích v prohlížeči', 'Jen dvě serva a pár šroubků — ideální první stavba']
     };
     // first pick per goal × experience × size; every available kit wins at least once
@@ -512,9 +506,11 @@
       school: { none: { small: 'stackchan', mid: 'otto', big: 'otto' }, some: { small: 'otto', mid: 'so101', big: 'so101' }, pro: { small: 'so101', mid: 'spot', big: 'spot' } },
       walk:   { none: { small: 'otto', mid: 'otto', big: 'spot' }, some: { small: 'spot', mid: 'spot', big: 'duck' }, pro: { small: 'duck', mid: 'duck', big: 'bhl' } },
       rover:  { none: 'exomy', some: { small: 'exomy', mid: 'exomy', big: 'sawppy' }, pro: { small: 'sawppy', mid: 'sawppy', big: 'osr' } },
-      lab:    { none: 'so101', some: { small: 'hand', mid: 'so101', big: 'so102' }, pro: { small: 'hand', mid: 'thor', big: 'parol6' } }
+      lab:    { none: 'so101', some: { small: 'hand', mid: 'so101', big: 'so102' }, pro: { small: 'hand', mid: 'thor', big: 'parol6' } },
+      // the only combat kit on sale; the spinner (vert150, preparing) follows as an alternative
+      fight:  { none: 'svrn', some: 'svrn', pro: 'svrn' }
     };
-    var FAMILY = { ai: ['so101', 'lekiwi', 'so102', 'aira', 'xle', 'hand'], school: ['stackchan', 'otto', 'so101', 'spot'], walk: ['otto', 'spot', 'duck', 'bhl'], rover: ['exomy', 'sawppy', 'osr', 'lekiwi'], lab: ['so101', 'so102', 'hand', 'thor', 'parol6'] };
+    var FAMILY = { ai: ['so101', 'lekiwi', 'so102', 'aira', 'xle', 'hand'], school: ['stackchan', 'otto', 'so101', 'spot'], walk: ['otto', 'spot', 'duck', 'bhl'], rover: ['exomy', 'sawppy', 'osr', 'lekiwi'], lab: ['so101', 'so102', 'hand', 'thor', 'parol6'], fight: ['svrn', 'vert150', 'otto'] };
     function pick(a) {
       var exp = a[0], goal = a[1], size = a[2], m = MATRIX[goal][exp];
       var first = typeof m === 'string' ? m : m[size];
@@ -537,7 +533,7 @@
         root.innerHTML = '<div class="g" style="padding-top:24px;row-gap:12px"><div class="a1 mono">Otázka ' + (step + 1) + ' ze 3</div><div class="a4 progress" aria-hidden="true">' + [0, 1, 2].map(function (i) { return '<i class="' + (i <= step ? 'on' : '') + '"></i>'; }).join('') + '</div></div>' +
           '<div class="g" style="margin-top:clamp(24px,6vw,96px);row-gap:24px"><div class="a1 big-num hide-s" aria-hidden="true">0' + (step + 1) + '</div><div class="a4" style="display:flex;flex-direction:column;gap:28px">' +
           '<div><h1 class="h2" style="font-size:clamp(28px,4.4vw,64px)" tabindex="-1" id="q-h">' + q[0] + '</h1><p class="lead muted" style="margin-top:8px">' + q[1] + '</p></div>' +
-          '<div class="q-opts" role="group" aria-labelledby="q-h">' + q[2].map(function (o, i) { return '<button type="button" class="q-opt" data-a="' + o[0] + '" aria-pressed="' + (ans[step] === o[0]) + '"><span class="mono">' + 'ABCDE'[i] + '</span><b>' + o[1] + '</b><span>' + o[2] + '</span></button>'; }).join('') + '</div>' +
+          '<div class="q-opts" role="group" aria-labelledby="q-h">' + q[2].map(function (o, i) { return '<button type="button" class="q-opt" data-a="' + o[0] + '" aria-pressed="' + (ans[step] === o[0]) + '"><span class="mono">' + 'ABCDEF'[i] + '</span><b>' + o[1] + '</b><span>' + o[2] + '</span></button>'; }).join('') + '</div>' +
           (step || editing ? '<div style="border-top:1px solid var(--line);padding-top:12px"><button type="button" id="back" class="linkbtn">' + (editing ? '← Zpět na výsledek' : '← Zpět') + '</button></div>' : '') + '</div></div>';
         if (step || editing) $('#q-h').focus();
       } else {

@@ -16,7 +16,7 @@
 <meta property="og:locale" content="cs_CZ">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" as="image" href="../../img/aira_white.jpg" fetchpriority="high">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Stavebnice pro AIRA","description":"Tisknutelná ruka se šesti osami a chapadlem (7 DoF), postavená pro učení robotů. Follower pohání sedm motorů Damiao na sběrnici CAN — J8009P v základně a rameni, J4340P v lokti a zápěstí, J4310 v zápěstí a chapadle — s impedančním řízením MIT a špičkovým momentem až 35 Nm. Leader ruku se servy Dynamixel XL330 vedete rukou. Software je plugin pro LeRobot, takže teleoperace, nahrávání ukázek i trénink politik ACT, Diffusion Policy nebo PI0 fungují hned. Konstrukce se tiskne z PLA-CF, měkké prsty z TPU; na zápěstí lze připevnit kameru RealSense D405.","category":"Robotická ruka","image":"https://printedrobotics.cz/img/aira_white.jpg","url":"https://printedrobotics.cz/sada/aira/","brand":{"@type":"Brand","name":"printedrobotics.cz"},"isBasedOn":"https://github.com/robertorobotics/Nextis-AIRA-3D","additionalProperty":[{"@type":"PropertyValue","name":"Stupně volnosti","value":"6 os + chapadlo"},{"@type":"PropertyValue","name":"Pohon","value":"Damiao J8009P, J4340P, J4310 (CAN)"},{"@type":"PropertyValue","name":"Moment","value":"až 20 / 35 Nm (základna)"},{"@type":"PropertyValue","name":"Řízení","value":"USB-CAN, impedanční řízení MIT"},{"@type":"PropertyValue","name":"Leader","value":"7× Dynamixel XL330-M077"},{"@type":"PropertyValue","name":"Napájení","value":"24 V (follower), 5 V (leader)"},{"@type":"PropertyValue","name":"Kamera","value":"Intel RealSense D405 (volitelně)"},{"@type":"PropertyValue","name":"Tisk","value":"PLA-CF (kalená tryska), prsty TPU; vrstva 0,2 mm"},{"@type":"PropertyValue","name":"Doba tisku","value":"—"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Stavebnice pro AIRA","description":"Tisknutelná ruka se šesti osami a chapadlem (7 DoF), postavená pro učení robotů. Follower pohání sedm motorů Damiao na sběrnici CAN — J8009P v základně a rameni, J4340P v lokti a zápěstí, J4310 v zápěstí a chapadle — s impedančním řízením MIT a špičkovým momentem až 35 Nm. Leader ruku se servy Dynamixel XL330 vedete rukou. Software je plugin pro LeRobot, takže teleoperace, nahrávání ukázek i trénink politik ACT, Diffusion Policy nebo PI0 fungují hned. Konstrukce se tiskne z PLA-CF, měkké prsty z TPU; na zápěstí lze připevnit kameru RealSense D405.","category":"Robotická ruka","image":"https://printedrobotics.cz/img/aira_white.jpg","url":"https://printedrobotics.cz/sada/aira/","brand":{"@type":"Brand","name":"printedrobotics.cz"},"isBasedOn":"https://github.com/robertorobotics/Nextis-AIRA-3D","additionalProperty":[{"@type":"PropertyValue","name":"Stupně volnosti","value":"6 os + chapadlo"},{"@type":"PropertyValue","name":"Pohon","value":"Damiao J8009P, J4340P, J4310 (CAN)"},{"@type":"PropertyValue","name":"Moment","value":"až 20 / 35 Nm (základna)"},{"@type":"PropertyValue","name":"Řízení","value":"USB-CAN, impedanční řízení MIT"},{"@type":"PropertyValue","name":"Leader","value":"7× Dynamixel XL330-M077"},{"@type":"PropertyValue","name":"Napájení","value":"24 V (follower), 5 V (leader)"},{"@type":"PropertyValue","name":"Kamera","value":"Intel RealSense D405 (volitelně)"},{"@type":"PropertyValue","name":"Tisk","value":"PLA-CF (kalená tryska), prsty TPU; vrstva 0,2 mm"},{"@type":"PropertyValue","name":"Náročnost","value":"Pokročilý"},{"@type":"PropertyValue","name":"Software","value":"LeRobot (Python), plugin lerobot-robot-aira"},{"@type":"PropertyValue","name":"Náklady na díly dle autora","value":"≈ 1 650 USD (follower), ≈ 1 850 USD (pár)"}]}</script>
 <meta name="theme-color" content="#FFFFFF">
 <meta property="og:type" content="product">
 <meta property="og:site_name" content="printedrobotics.cz">
@@ -39,7 +39,7 @@
 </header>
 
 <nav class="wrap crumb" aria-label="Drobečková navigace">
-<div class="g mono"><div class="a1"><a href="../../#katalog" id="crumb-back">← Katalog</a> <span class="muted" style="display:none" id="crumb-sep"></span></div><div class="a4 hide-s">Katalog / <span id="crumb-cat"></span> / <span id="crumb-name" style="color:var(--ink)"></span></div></div>
+<div class="g mono"><div class="a1"><a href="../../#katalog" id="crumb-back">← Katalog</a> <span class="muted" style="display:none" id="crumb-sep"></span></div><div class="a4 hide-s">Katalog / <span id="crumb-cat">Ruce a dlaně</span> / <span id="crumb-name" style="color:var(--ink)">AIRA</span></div></div>
 </nav>
 
 <main>
@@ -51,7 +51,7 @@
 <button type="button" class="vtab" data-view="photo" aria-pressed="true">Obrázek</button>
 <button type="button" class="vtab" data-view="3d" aria-pressed="false">3D model</button>
 </div>
-<div class="tile" id="p-tile"></div>
+<div class="tile" id="p-tile"><img src="../../img/aira_white.jpg" alt="Šestiosá tisknutelná robotická ruka AIRA s chapadlem a motory Damiao" fetchpriority="high" width="1200" height="900"></div>
 <div class="tile v3d" id="v3d" hidden><span class="v3d-load mono" id="v3d-msg">Načítáme 3D model…</span></div>
 <div class="v3d-bar" id="v3d-bar" hidden>
 <button type="button" class="btn btn-o" id="v3d-toggle">Rozložit <span aria-hidden="true">↔</span></button>
@@ -59,16 +59,16 @@
 <button type="button" class="btn btn-o" id="v3d-play">Sestavení <span aria-hidden="true">▶</span></button>
 <p class="mono" id="v3d-hint" style="margin:0;grid-column:1/-1">Táhněte pro otočení · dva prsty nebo kolečko pro přiblížení</p>
 </div>
-<figcaption class="mono" style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap"><span id="p-cap"></span><span id="p-credit"></span></figcaption>
+<figcaption class="mono" style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap"><span id="p-cap">Obr. 1 — AIRA</span><span id="p-credit">Vizualizace z modelu Nextis (Apache-2.0)</span></figcaption>
 </figure>
 </div>
 
 <div class="buy">
 <div style="display:flex;flex-direction:column;gap:10px">
-<div class="mono" style="display:flex;justify-content:space-between;gap:12px"><span id="p-no"></span><span id="p-hw"></span></div>
+<div class="mono" style="display:flex;justify-content:space-between;gap:12px"><span id="p-no">N° 12 — Robotická ruka</span><span id="p-hw">Apache-2.0</span></div>
 <div class="muted" style="font-size:17px">Stavebnice pro</div>
 <h1 class="p-name" id="p-name">AIRA</h1>
-<div class="mono" id="p-author"></div>
+<div class="mono" id="p-author">Open-source design: Nextis (Roberto De la Cruz González)</div>
 <p class="ink2" style="margin:6px 0 0;font-size:17px;line-height:1.5" id="p-lead">Tisknutelná ruka se šesti osami a chapadlem (7 DoF), postavená pro učení robotů. Follower pohání sedm motorů Damiao na sběrnici CAN — J8009P v základně a rameni, J4340P v lokti a zápěstí, J4310 v zápěstí a chapadle — s impedančním řízením MIT a špičkovým momentem až 35 Nm. Leader ruku se servy Dynamixel XL330 vedete rukou. Software je plugin pro LeRobot, takže teleoperace, nahrávání ukázek i trénink politik ACT, Diffusion Policy nebo PI0 fungují hned. Konstrukce se tiskne z PLA-CF, měkké prsty z TPU; na zápěstí lze připevnit kameru RealSense D405.</p>
 </div>
 <div style="display:flex;flex-direction:column;gap:12px">
@@ -135,8 +135,8 @@
 
 <section id="parametry" class="wrap section">
 <details class="acc">
-<summary class="g rule"><span class="a1 mono" role="heading" aria-level="2">03 — Parametry</span><span class="a4" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="h2" id="specs-title">Parametry</span><span class="acc-ico" aria-hidden="true">+</span></span></summary>
-<div class="g" style="margin-top:24px"><div class="a1 hide-s"></div><dl class="a4 specs" id="specs"><div><dt>Stupně volnosti</dt><dd>6 os + chapadlo</dd></div><div><dt>Pohon</dt><dd>Damiao J8009P, J4340P, J4310 (CAN)</dd></div><div><dt>Moment</dt><dd>až 20 / 35 Nm (základna)</dd></div><div><dt>Řízení</dt><dd>USB-CAN, impedanční řízení MIT</dd></div><div><dt>Leader</dt><dd>7× Dynamixel XL330-M077</dd></div><div><dt>Napájení</dt><dd>24 V (follower), 5 V (leader)</dd></div><div><dt>Kamera</dt><dd>Intel RealSense D405 (volitelně)</dd></div><div><dt>Tisk</dt><dd>PLA-CF (kalená tryska), prsty TPU; vrstva 0,2 mm</dd></div><div><dt>Doba tisku</dt><dd>—</dd></div></dl></div>
+<summary class="g rule"><span class="a1 mono" role="heading" aria-level="2">03 — Parametry</span><span class="a4" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="h2" id="specs-title">Parametry · 11</span><span class="acc-ico" aria-hidden="true">+</span></span></summary>
+<div class="g" style="margin-top:24px"><div class="a1 hide-s"></div><dl class="a4 specs" id="specs"><div><dt>Stupně volnosti</dt><dd>6 os + chapadlo</dd></div><div><dt>Pohon</dt><dd>Damiao J8009P, J4340P, J4310 (CAN)</dd></div><div><dt>Moment</dt><dd>až 20 / 35 Nm (základna)</dd></div><div><dt>Řízení</dt><dd>USB-CAN, impedanční řízení MIT</dd></div><div><dt>Leader</dt><dd>7× Dynamixel XL330-M077</dd></div><div><dt>Napájení</dt><dd>24 V (follower), 5 V (leader)</dd></div><div><dt>Kamera</dt><dd>Intel RealSense D405 (volitelně)</dd></div><div><dt>Tisk</dt><dd>PLA-CF (kalená tryska), prsty TPU; vrstva 0,2 mm</dd></div><div><dt>Náročnost</dt><dd>Pokročilý</dd></div><div><dt>Software</dt><dd>LeRobot (Python), plugin lerobot-robot-aira</dd></div><div><dt>Náklady na díly dle autora</dt><dd>≈ 1 650 USD (follower), ≈ 1 850 USD (pár)</dd></div></dl></div>
 </details>
 </section>
 
@@ -163,17 +163,17 @@
 <div class="g" style="margin-top:24px;row-gap:24px">
 <div class="a1 hide-s"></div>
 <div class="a4s ink2" style="display:flex;flex-direction:column;gap:14px">
-<p style="margin:0">Tato sada vychází z otevřeného projektu <span id="l-name">AIRA</span>, jehož autorem je <span id="l-author">Nextis (Roberto De la Cruz González)</span>. Konstrukční soubory jsou zveřejněny pod licencí <span id="l-hw"></span>, software pod licencí <span id="l-sw"></span>.</p>
-<p style="margin:0">printedrobotics.cz vyrábí tištěné díly a kompletuje sadu podle kusovníku projektu <span id="l-name2"></span>. Autoři projektu s námi nejsou spojeni a tento produkt neschválili.</p>
-<div style="display:flex;flex-wrap:wrap;gap:8px"><a class="btn btn-o" id="l-repo" href="#" rel="noopener" style="min-height:44px;font-size:15px">Zdrojové soubory ↗</a><a class="btn btn-o" id="l-docs" href="#" rel="noopener" style="min-height:44px;font-size:15px">Návod projektu ↗</a></div>
+<p style="margin:0">Tato sada vychází z otevřeného projektu <span id="l-name">AIRA</span>, jehož autorem je <span id="l-author">Nextis (Roberto De la Cruz González)</span>. Konstrukční soubory jsou zveřejněny pod licencí <span id="l-hw">Apache-2.0</span>, software pod licencí <span id="l-sw">Apache-2.0</span>.</p>
+<p style="margin:0">printedrobotics.cz vyrábí tištěné díly a kompletuje sadu podle kusovníku projektu <span id="l-name2">AIRA</span>. Autoři projektu s námi nejsou spojeni a tento produkt neschválili.</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px"><a class="btn btn-o" id="l-repo" href="https://github.com/robertorobotics/Nextis-AIRA-3D" rel="noopener" style="min-height:44px;font-size:15px">Zdrojové soubory ↗</a><a class="btn btn-o" id="l-docs" href="https://github.com/robertorobotics/Nextis-AIRA-3D/blob/main/hardware/ASSEMBLY.md" rel="noopener" style="min-height:44px;font-size:15px">Návod projektu ↗</a></div>
 </div>
 <dl class="a10" style="margin:0;font-size:15px">
-<div style="border-top:1px solid var(--line);padding:10px 0"><dt class="mono">Licence hardwaru</dt><dd style="margin:0" id="l-hw2"></dd></div>
-<div style="border-top:1px solid var(--line);padding:10px 0"><dt class="mono">Licence softwaru</dt><dd style="margin:0" id="l-sw2"></dd></div>
+<div style="border-top:1px solid var(--line);padding:10px 0"><dt class="mono">Licence hardwaru</dt><dd style="margin:0" id="l-hw2">Apache-2.0</dd></div>
+<div style="border-top:1px solid var(--line);padding:10px 0"><dt class="mono">Licence softwaru</dt><dd style="margin:0" id="l-sw2">Apache-2.0</dd></div>
 </dl>
 <div class="a1 hide-s"></div>
 <div class="a4 panel">
-<div><span class="mono">Bezpečnostní upozornění</span><p style="font-weight:500;margin-top:8px">Není hračka. Obsahuje malé díly — nebezpečí spolknutí.</p><p class="ink2" style="margin-top:8px" id="safety">Určeno osobám od 14 let; mladší pouze pod dohledem dospělého. Pohyblivé části mohou přiskřípnout prsty.</p></div>
+<div><span class="mono">Bezpečnostní upozornění</span><p style="font-weight:500;margin-top:8px">Není hračka. Obsahuje malé díly — nebezpečí spolknutí.</p><p class="ink2" style="margin-top:8px" id="safety">Určeno osobám od 14 let; mladší pouze pod dohledem dospělého. Pohyblivé části mohou přiskřípnout prsty.<br>Silné motory: pohybující se rameno může způsobit zranění. Při oživování držte ruce mimo dosah a mějte po ruce vypínač napájení.<br>Hardware z této sady napájejte jen zdrojem uvedeným v návodu projektu.</p></div>
 <div><span class="mono">Výrobce sady</span><p class="ink2" style="margin-top:8px">printedrobotics.cz, Praha. Úplné údaje o výrobci a prohlášení o shodě uvedeme před zahájením prodeje.</p></div>
 </div>
 </div>

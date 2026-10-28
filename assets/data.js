@@ -169,7 +169,7 @@ window.PR_ROBOTS = [
     related: ['otto', 'so101', 'hand'] },
   { id: 'svrn', glb: true, render: true, sim: 'arena', credit: 'Vizualizace z modelu Shoverobotics (CC BY 4.0)', name: 'Project SVRN', type: 'Bojový robot 150 g', cat: 'combat', level: 'Začátečník', hw: 'CC BY 4.0', sw: '—',
     author: 'Shoverobotics (Jordan Gell)', alt: 'Malý bojový robot Project SVRN s pohonem 4×4 a klínem',
-    short: 'Modulární bojový robot do 150 g: pusher s pohonem 4×4, k tomu flipper nebo chapadlo.',
+    short: 'Modulární bojový robot do 150 g: tlačný robot (pusher) s pohonem 4×4, k tomu flipper nebo chapadlo.',
     lead: 'Modulární platforma pro soutěže antweight do 150 g, navržená pro nováčky. Základ je tlačný robot s pohonem všech čtyř kol, který lze osadit klínem, flipperem nebo chapadlem. Řídí ho Malenki Nano – přijímač a regulátory na jedné destičce – a ovládá se běžným vysílačem FlySky. Bez rotující zbraně, takže se hodí na první zápasy v České lize bojových robotů.',
     bomCost: '—', printTime: '—', software: 'bez programování (RC vysílač)',
     repo: 'https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai', docs: 'https://forum.bristolbotbuilders.com/t/project-svrn-modular-3d-printed-robot-files/472',
@@ -178,7 +178,7 @@ window.PR_ROBOTS = [
     specs: [['Hmotnostní třída', '150 g (UK antweight, US fairyweight)'], ['Půdorys', 'v limitu CCRL 15 × 15 cm'], ['Pohon', '4× N10, 4×4'], ['Zbraň', 'klín, flipper nebo chapadlo (moduly)'], ['Varianty', '4 motory, nebo 2 motory s řemenem'], ['Řízení', 'Malenki Nano, FlySky AFHDS 2A'], ['Napájení', 'LiPo 2S'], ['Tisk', 'PLA, PC nebo PA12; boční pancíř a držáky z TPU'], ['Doba tisku', '—']],
     related: ['vert150', 'otto', 'exomy'] },
 
-  { id: 'vert150', glb: true, render: true, sim: 'arena', credit: 'Vizualizace z modelu TheBlackfish, remix „150g vert“ od Muffin578 (CC BY-SA 4.0)', preparing: true, name: 'Vertikální spinner 150 g', type: 'Bojový robot 150 g', cat: 'combat', level: 'Střední', hw: 'CC BY-SA 4.0 (ověřujeme)', sw: '—',
+  { id: 'vert150', glb: true, render: true, sim: 'arena', credit: 'Vizualizace z modelu TheBlackfish, remix „150g vert“ od Muffin578 (CC BY-SA 4.0)', preparing: true, name: 'Vertikální spinner 150 g', type: 'Bojový robot 150 g', cat: 'combat', level: 'Střední', hw: 'CC BY-SA 4.0, nebo BY-NC-SA (ověřujeme s autory)', sw: '—',
     author: 'TheBlackfish (remix „150g vert“ od Muffin578)', alt: 'Malý bojový robot s vertikálním rotujícím ostřím',
     short: 'Dvoukolový robot do 150 g s vertikálním rotujícím ostřím. Jen pro uzavřenou arénu.',
     lead: 'Dvoukolový bojový robot do 150 g s vertikálním spinnerem poháněným střídavým motorem BE1806. Pohon zajišťují dva převodové motory N20 přes Malenki Nano, zbraň vlastní regulátor ZTW Mantis Slim. Ostří se tiskne, tělo z PETG za zhruba dvě hodiny. Rotující zbraň je nebezpečná – zapínat jen v uzavřené aréně a s funkčním failsafe.',
@@ -189,6 +189,33 @@ window.PR_ROBOTS = [
     specs: [['Hmotnostní třída', '150 g (UK antweight, US fairyweight)'], ['Půdorys', 'v limitu CCRL 15 × 15 cm'], ['Pohon', '2× N20, dvě kola'], ['Zbraň', 'vertikální spinner, BE1806'], ['Řízení', 'Malenki Nano + ZTW Mantis Slim 15A'], ['Napájení', 'LiPo 2S'], ['Tisk', 'PETG, tištěné ostří'], ['Doba tisku', '≈ 2,1 h (54 g)'], ['Bezpečnost', 'jen v uzavřené aréně, failsafe povinný']],
     related: ['svrn', 'otto', 'sawppy'] }
 ];
+// Browser demos linked from product pages (r.sim). Sizes = measured transfer of a first visit
+// (gzip for code; meshes/models counted as served), re-measure when sim/** changes.
+window.PR_SIMS = {
+  arena: { path: 'sim/arena/', robotParam: true, label: 'Vyzkoušejte v aréně', note: 'Hra v prohlížeči · zdarma · ≈\u00A01,3\u00A0MB' },
+  so101: { path: 'sim/so101/', label: 'Vyzkoušejte v simulaci', note: 'Simulace v prohlížeči · zdarma · ≈\u00A04–5\u00A0MB' }
+};
+// Safety notes built from what a robot actually contains (used by app.js and tools/build.mjs).
+window.PR_SAFETY = function (r) {
+  var all = JSON.stringify([r.bom || [], r.specs || [], r.lead || '']);
+  var w = ['Určeno osobám od 14 let; mladší pouze pod dohledem dospělého. Pohyblivé části mohou přiskřípnout prsty.'];
+  if (/LiPo|Li-Pol|Li-ion|akumulátor|baterie/i.test(all)) w.push('Lithiové akumulátory nabíjejte jen vhodnou nabíječkou, pod dohledem a mimo hořlavé předměty; poškozený článek nepoužívejte.');
+  if (/\b(24|22,2|14,8) ?V\b|\d+ ?Nm/.test(all)) w.push('Silné motory: pohybující se rameno může způsobit zranění. Při oživování držte ruce mimo dosah a mějte po ruce vypínač napájení.');
+  if (/pneumat/i.test(all)) w.push('Pneumatické chapadlo pracuje se stlačeným vzduchem – používejte jen schválený zdroj a hadice.');
+  if (/230 ?V|síťov/i.test(all)) w.push('Zdroj připojený k síti 230 V smí zapojovat jen osoba s odpovídající kvalifikací.');
+  if (r.cat === 'combat') {
+    w.push('Bojového robota zapínejte jen v uzavřené aréně nebo s odpojenou zbraní. Nejdřív zapněte vysílač, potom robota; vypínejte v opačném pořadí a před prvním zápasem ověřte failsafe (po vypnutí vysílače se robot musí zastavit).');
+    if (/spinner|rotuj/i.test(all)) w.push('Rotující zbraň může vážně zranit a vymrštit úlomky: mimo arénu ji vždy zajistěte a nikdy ji neroztáčejte v ruce ani na stole.');
+    if (/flipper/i.test(all)) w.push('Flipper se pohybuje prudce: při manipulaci s robotem mějte prsty mimo jeho dráhu.');
+  }
+  w.push('Hardware z této sady napájejte jen zdrojem uvedeným v návodu projektu.');
+  return w;
+};
+// Parameters shown on the product page and in JSON-LD; unknown values ('—' or empty) are left out.
+window.PR_SPECS = function (r) {
+  return r.specs.concat([['Náročnost', r.level], ['Software', r.software], ['Náklady na díly dle autora', r.bomCost]])
+    .filter(function (s) { return s[1] && String(s[1]).trim() !== '—'; });
+};
 window.PR_LICENSES = [
   ['Apache-2.0', 'y', 'Ano', 'Kopie licence, uvedení autora, označení změn'],
   ['MIT', 'y', 'Ano', 'Kopie licence a copyright autora'],
