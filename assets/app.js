@@ -197,6 +197,11 @@
     set('#p-credit', r.credit || (r.render ? 'Vizualizace z CAD projektu' : ''));
     set('#p-cap', 'Obr. 1 — ' + r.name);
     set('#l-name', r.name); set('#l-name2', r.name); set('#l-author', r.author); set('#l-hw', r.hw); set('#l-sw', r.sw); set('#l-hw2', r.hw); set('#l-sw2', r.sw);
+    if (r.sw === '—') {
+      var lsp = $('#l-sw') && $('#l-sw').parentNode;
+      if (lsp) lsp.innerHTML = lsp.innerHTML.replace(/, software pod licencí <span id="l-sw">[^<]*<\/span>/, ' (vlastní software nepotřebuje, ovládá se RC vysílačem)');
+      set('#l-sw2', 'bez vlastního softwaru (RC vysílač)');
+    }
     $('#l-repo').href = r.repo; $('#l-docs').href = r.docs;
     /* safety notes built from what this robot actually contains */
     (function () {
@@ -206,6 +211,11 @@
       if (/\b(24|22,2|14,8) ?V\b|\d+ ?Nm/.test(all)) w.push('Silné motory: pohybující se rameno může způsobit zranění. Při oživování držte ruce mimo dosah a mějte po ruce vypínač napájení.');
       if (/pneumat/i.test(all)) w.push('Pneumatické chapadlo pracuje se stlačeným vzduchem – používejte jen schválený zdroj a hadice.');
       if (/230 ?V|síťov/i.test(all)) w.push('Zdroj připojený k síti 230 V smí zapojovat jen osoba s odpovídající kvalifikací.');
+      if (r.cat === 'combat') {
+        w.push('Bojového robota zapínejte jen v uzavřené aréně nebo s odpojenou zbraní. Nejdřív zapněte vysílač, potom robota; vypínejte v opačném pořadí a před prvním zápasem ověřte failsafe (po vypnutí vysílače se robot musí zastavit).');
+        if (/spinner|rotuj/i.test(all)) w.push('Rotující zbraň může vážně zranit a vymrštit úlomky: mimo arénu ji vždy zajistěte a nikdy ji neroztáčejte v ruce ani na stole.');
+        if (/flipper/i.test(all)) w.push('Flipper se pohybuje prudce: při manipulaci s robotem mějte prsty mimo jeho dráhu.');
+      }
       w.push('Hardware z této sady napájejte jen zdrojem uvedeným v návodu projektu.');
       $('#safety').innerHTML = w.map(esc).join('<br>');
     })();
@@ -299,7 +309,7 @@
       ['Zvládnu sestavení bez zkušeností?', 'Náročnost této sady: ' + r.level + '. Díly jsou roztříděné po krocích a návod vede krok za krokem. Pokud si nejste jistí, zvolte Sadu s oživením — elektroniku nastavíme za vás.'],
       ['Jak funguje předobjednávka?', 'Předobjednávka je nezávazná. Ozveme se e-mailem s cenou a termínem; platíte až po potvrzení objednávky.'],
       ['Je to originální produkt autorů projektu?', 'Ne. Sadu vyrábíme podle otevřené dokumentace projektu ' + r.name + ' (' + r.author + ', licence ' + r.hw + '). Autoři s námi nejsou spojeni a produkt neschválili.'],
-      ['Jaký software budu potřebovat?', r.software + '. Software je open-source a zdarma; odkaz na návod projektu najdete v sekci Licence a bezpečnost.'],
+      ['Jaký software budu potřebovat?', r.cat === 'combat' ? 'Žádný. Robot se ovládá RC vysílačem FlySky; přijímač Malenki Nano s ním jen spárujete, programovat nic nemusíte. Návod projektu najdete v sekci Licence a bezpečnost.' : r.software + '. Software je open-source a zdarma; odkaz na návod projektu najdete v sekci Licence a bezpečnost.'],
       ['Je sada vhodná pro děti?', 'Není to hračka. Obsahuje malé díly a elektroniku a je určena osobám od 14 let; mladší pouze pod dohledem dospělého, například ve škole nebo kroužku.'],
       ['Objednáváme pro školu nebo kroužek. Jde to na fakturu?', 'Ano. Do formuláře napište počet sad a IČO, cenu za více kusů a fakturu na školu pošleme spolu s potvrzením.']
     ];
