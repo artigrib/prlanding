@@ -1,0 +1,61 @@
+# Read-only report about the VPS (OS, disk, memory, Docker, open ports, web server).
+# Runs only on pushes to the `backend` branch that touch this file, or by hand (workflow_dispatch).
+# Needs repository secrets: VPS_HOST, VPS_USER, VPS_SSH_KEY and optionally VPS_PORT (default 22).
+# The key never leaves GitHub; nothing is changed on the server.
+name: VPS report
+on:
+  push:
+    branches: [backend]
+    paths: ['.github/workflows/vps-report.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency: vps-report
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check secrets are set
+        env:
+          H: ${{ secrets.VPS_HOST }}
+          U: ${{ secrets.VPS_USER }}
+          K: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          missing=""
+          [ -n "$H" ] || missing="$missing VPS_HOST"
+          [ -n "$U" ] || missing="$missing VPS_USER"
+          [ -n "$K" ] || missing="$missing VPS_SSH_KEY"
+          if [ -n "$missing" ]; then echo "::error::Missing secrets:$missing"; exit 1; fi
+      - name: Set up SSH
+        env:
+          KEY: ${{ secrets.VPS_SSH_KEY }}
+          HOST: ${{ secrets.VPS_HOST }}
+          PORT: ${{ secrets.VPS_PORT }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${PORT:-22}" -T 10 "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
+      - name: Collect read-only report
+        env:
+          HOST: ${{ secrets.VPS_HOST }}
+          USER_: ${{ secrets.VPS_USER }}
+          PORT: ${{ secrets.VPS_PORT }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "${PORT:-22}" -o BatchMode=yes -o ConnectTimeout=15 "$USER_@$HOST" 'bash -s' > report.txt 2>&1 <<'REMOTE' || true
+          sec(){ echo; echo "## $1"; }
+          sec "System";   . /etc/os-release 2>/dev/null; echo "$PRETTY_NAME"; uname -srm; uptime -p 2>/dev/null
+          sec "CPU / RAM"; nproc; free -h
+          sec "Disk";     df -h -x tmpfs -x devtmpfs -x overlay 2>/dev/null
+          sec "Docker";   (docker --version && docker ps --format '{{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}') 2>&1 | head -40
+          sec "Listening ports"; (ss -tlnp 2>/dev/null || netstat -tlnp 2>/dev/null) | head -40
+          sec "Web servers"; for s in nginx caddy apache2 httpd traefik; do command -v $s >/dev/null && echo "$s: $(systemctl is-active $s 2>/dev/null || echo installed)"; done
+          sec "Runtimes";  for b in node python3 uv git; do command -v $b >/dev/null && echo "$b $($b --version 2>&1 | head -1)"; done
+          sec "Firewall";  (ufw status 2>/dev/null || echo "ufw not available") | head -20
+          sec "Home dirs"; ls -1 ~ 2>/dev/null | head -40
+          REMOTE
+          { echo '```'; cat report.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          cat report.txt
+      - name: Remove key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
