@@ -1,0 +1,13 @@
+3D models (GLB) in this folder are derived from open-source projects and are
+published under the licence of their source project:
+
+svrn.glb     – Project SVRN by Shoverobotics (Printables 1272536), CC BY 4.0.
+               https://www.printables.com/model/1272536
+               Converted from the author's STEP assembly, simplified and recoloured.
+vert150.glb  – "Vertical Spinner Battlebot – Antweight (150 g)" by TheBlackfish
+               (Printables 1146226), a remix of "150g vert" by Muffin578.
+               CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
+               This derivative (assembled pose, stand-in motor and wheels,
+               recolouring) is shared under the same licence, CC BY-SA 4.0.
+
+Models of the other robots: see the credit line on each robot's page.

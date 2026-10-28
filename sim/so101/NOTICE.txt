@@ -1,0 +1,28 @@
+SO-101 simulation — printedrobotics.cz
+=====================================
+
+This folder bundles third-party components. All are used under their licences;
+copies of the licence texts are included next to each component.
+
+1) SO-101 robot model (model/)
+   Source:  MuJoCo Menagerie, robotstudio_so101
+            https://github.com/google-deepmind/mujoco_menagerie/tree/main/robotstudio_so101
+   Origin:  The Robot Studio SO-ARM100 / SO101 (https://github.com/TheRobotStudio/SO-ARM100)
+   Licence: Apache License 2.0 (model/LICENSE)
+   Changes made by printedrobotics.cz:
+     - STL meshes simplified (≈ 430k -> ≈ 120k triangles) and converted to MuJoCo .msh;
+       mesh files renamed from .stl to .msh in so101.xml accordingly.
+     - Unused mesh asset moving_jaw_so101_gripper_v1 removed from so101.xml.
+     - scene.xml is new (table, cube, bowl, home keyframe); it replaces Menagerie's scene.xml.
+     - The wrist camera mount is kept in physics but not drawn in the browser.
+
+2) MuJoCo WebAssembly bindings (vendor/mujoco/)
+   Source:  npm package @mujoco/mujoco 3.17.0, Google DeepMind
+            https://github.com/google-deepmind/mujoco
+   Licence: Apache License 2.0 (vendor/mujoco/LICENSE)
+   Unmodified (mujoco.js, mujoco.wasm).
+
+3) three.js (vendor/three/)
+   Source:  npm package three 0.160.0 (build/three.module.min.js, examples/jsm/controls/OrbitControls.js)
+   Licence: MIT (vendor/three/LICENSE)
+   Unmodified.

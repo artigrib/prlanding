@@ -6,9 +6,9 @@ window.PR_COLORS = [
   { id: 'orange', name: 'Oranžová', hex: '#E8461E' },
   { id: 'blue', name: 'Modrá', hex: '#1F3BFF' }
 ];
-window.PR_CATS = { arm: 'Ruce a dlaně', mobile: 'Mobilní', legged: 'Kráčející', desk: 'Stolní' };
+window.PR_CATS = { arm: 'Ruce a dlaně', mobile: 'Mobilní', legged: 'Kráčející', desk: 'Stolní', combat: 'Bojoví roboti' };
 window.PR_ROBOTS = [
-  { id: 'so101', glb: true, name: 'SO-101', type: 'Robotická ruka', cat: 'arm', level: 'Začátečník', hw: 'Apache-2.0', sw: 'Apache-2.0',
+  { id: 'so101', glb: true, sim: 'so101', name: 'SO-101', type: 'Robotická ruka', cat: 'arm', level: 'Začátečník', hw: 'Apache-2.0', sw: 'Apache-2.0',
     author: 'The Robot Studio a Hugging Face', render: true, alt: 'Robotická ruka SO-101',
     short: 'Ruka s pěti osami a chapadlem pro AI a teleoperaci s knihovnou LeRobot. Pár ovládací + výkonná ruka.',
     lead: 'Ruka s pěti osami a chapadlem pro učení robotů a teleoperaci. Ovládací ruku (leader) vedete vlastní rukou, výkonná ruka (follower) pohyb opakuje – a s knihovnou LeRobot se úlohu naučí sama.',
@@ -166,7 +166,28 @@ window.PR_ROBOTS = [
     card: [['Osy', '2 (otáčení + náklon)'], ['Řízení', 'M5Stack (ESP32)']],
     bom: [['Modul M5Stack Core (Basic/Gray/Go/Fire)', '1×'], ['Mikroservo SG90 (nebo sériové RS30X / SCS0009)', '2×'], ['Deska Stack-chan pro serva', '1×'], ['Akumulátor Li-Pol 3,7 V s konektorem PH 2pin', '1×'], ['Šrouby M2 × 4 mm', '4×'], ['Šrouby M2 × 8 mm', '2×'], ['Šrouby M3 × 15 mm (volitelně)', '2×']],
     specs: [['Stupně volnosti', '2 (otáčení + náklon hlavy)'], ['Pohon', '2× SG90, RS30X nebo SCS0009'], ['Řízení', 'M5Stack Core / Core2 / CoreS3'], ['Tištěné díly', 'skořepina, nožky, držák serv, zadní kryt baterie'], ['Napájení', 'akumulátor 3,7 V nebo externích 5 V']],
-    related: ['otto', 'so101', 'hand'] }
+    related: ['otto', 'so101', 'hand'] },
+  { id: 'svrn', glb: true, render: true, sim: 'arena', credit: 'Vizualizace z modelu Shoverobotics (CC BY 4.0)', name: 'Project SVRN', type: 'Bojový robot 150 g', cat: 'combat', level: 'Začátečník', hw: 'CC BY 4.0', sw: '—',
+    author: 'Shoverobotics (Jordan Gell)', alt: 'Malý bojový robot Project SVRN s pohonem 4×4 a klínem',
+    short: 'Modulární bojový robot do 150 g: pusher s pohonem 4×4, k tomu flipper nebo chapadlo.',
+    lead: 'Modulární platforma pro soutěže antweight do 150 g, navržená pro nováčky. Základ je tlačný robot s pohonem všech čtyř kol, který lze osadit klínem, flipperem nebo chapadlem. Řídí ho Malenki Nano – přijímač a regulátory na jedné destičce – a ovládá se běžným vysílačem FlySky. Bez rotující zbraně, takže se hodí na první zápasy v České lize bojových robotů.',
+    bomCost: '—', printTime: '—', software: 'bez programování (RC vysílač)',
+    repo: 'https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai', docs: 'https://forum.bristolbotbuilders.com/t/project-svrn-modular-3d-printed-robot-files/472',
+    card: [['Hmotnost', 'do 150 g'], ['Pohon', '4× N10']],
+    bom: [['Převodový motor N10', '4×'], ['Malenki Nano (přijímač + regulátory)', '1×'], ['Akumulátor LiPo 2S', '1×'], ['Vypínač', '1×'], ['Kolo', '4×'], ['Servo KingMax C507 (modul flipper)', '1×'], ['Vysílač FlySky (AFHDS 2A), např. FS-i6X', '1×'], ['Šrouby a matice', 'dle návodu']],
+    specs: [['Hmotnostní třída', '150 g (UK antweight, US fairyweight)'], ['Půdorys', 'v limitu CCRL 15 × 15 cm'], ['Pohon', '4× N10, 4×4'], ['Zbraň', 'klín, flipper nebo chapadlo (moduly)'], ['Varianty', '4 motory, nebo 2 motory s řemenem'], ['Řízení', 'Malenki Nano, FlySky AFHDS 2A'], ['Napájení', 'LiPo 2S'], ['Tisk', 'PLA, PC nebo PA12; boční pancíř a držáky z TPU'], ['Doba tisku', '—']],
+    related: ['vert150', 'otto', 'exomy'] },
+
+  { id: 'vert150', glb: true, render: true, sim: 'arena', credit: 'Vizualizace z modelu TheBlackfish, remix „150g vert“ od Muffin578 (CC BY-SA 4.0)', preparing: true, name: 'Vertikální spinner 150 g', type: 'Bojový robot 150 g', cat: 'combat', level: 'Střední', hw: 'CC BY-SA 4.0 (ověřujeme)', sw: '—',
+    author: 'TheBlackfish (remix „150g vert“ od Muffin578)', alt: 'Malý bojový robot s vertikálním rotujícím ostřím',
+    short: 'Dvoukolový robot do 150 g s vertikálním rotujícím ostřím. Jen pro uzavřenou arénu.',
+    lead: 'Dvoukolový bojový robot do 150 g s vertikálním spinnerem poháněným střídavým motorem BE1806. Pohon zajišťují dva převodové motory N20 přes Malenki Nano, zbraň vlastní regulátor ZTW Mantis Slim. Ostří se tiskne, tělo z PETG za zhruba dvě hodiny. Rotující zbraň je nebezpečná – zapínat jen v uzavřené aréně a s funkčním failsafe.',
+    bomCost: '—', printTime: '≈ 2,1 h', software: 'bez programování (RC vysílač)',
+    repo: 'https://www.printables.com/model/1146226-vertical-spinner-battlebot-antweight-150-g', docs: 'https://www.printables.com/model/1146226-vertical-spinner-battlebot-antweight-150-g',
+    card: [['Hmotnost', 'do 150 g'], ['Zbraň', 'vertikální spinner']],
+    bom: [['Převodový motor N20 (nebo N10)', '2×'], ['Malenki Nano (přijímač + regulátory)', '1×'], ['Střídavý motor BE1806 (zbraň)', '1×'], ['Regulátor ZTW Mantis Slim 15A (zbraň)', '1×'], ['Akumulátor LiPo 2S', '1×'], ['Vypínač', '1×'], ['Kolo Pololu', '2×'], ['Vysílač FlySky (AFHDS 2A), např. FS-i6X', '1×'], ['Filament PETG', '≈ 54 g']],
+    specs: [['Hmotnostní třída', '150 g (UK antweight, US fairyweight)'], ['Půdorys', 'v limitu CCRL 15 × 15 cm'], ['Pohon', '2× N20, dvě kola'], ['Zbraň', 'vertikální spinner, BE1806'], ['Řízení', 'Malenki Nano + ZTW Mantis Slim 15A'], ['Napájení', 'LiPo 2S'], ['Tisk', 'PETG, tištěné ostří'], ['Doba tisku', '≈ 2,1 h (54 g)'], ['Bezpečnost', 'jen v uzavřené aréně, failsafe povinný']],
+    related: ['svrn', 'otto', 'sawppy'] }
 ];
 window.PR_LICENSES = [
   ['Apache-2.0', 'y', 'Ano', 'Kopie licence, uvedení autora, označení změn'],
