@@ -209,7 +209,33 @@ export class Kin {
     const p = this.fk(q);
     err = Math.hypot(target[0] - p[0], target[1] - p[1], target[2] - p[2]);
     const r = this.result;
-    r.err = err; r.pitchErr = Math.abs(e2); r.reachable = err < 0.005; r.iters = it;
+    r.err = err; r.pitchErr = Math.abs(e2); r.reachable = err < 0.005; r.iters = it; r.pitch = pitch;
+    return r;
+  }
+
+  /**
+   * Position first, orientation as good as possible: try the preferred pitch, then gradually flatter
+   * (and finally no orientation constraint), keep the first solution that reaches the target.
+   * Writes the best solution into q. Returns this.result (with .pitch = the pitch that was used).
+   */
+  solveAuto(q, target, pitch = Math.PI / 2, opts) {
+    const seed = this._seed || (this._seed = new Float64Array(6));
+    const best = this._best || (this._best = new Float64Array(6));
+    seed.set(q);
+    let bestErr = Infinity, bestPitch = pitch, bestPE = 0;
+    const tryOne = (p, from) => {
+      q.set(from);
+      const r = this.solve(q, target, p, opts);
+      if (r.err < bestErr - 1e-5) { bestErr = r.err; best.set(q); bestPitch = p; bestPE = r.pitchErr; }
+      return r.reachable && (p == null || r.pitchErr < 0.03);
+    };
+    let ok = tryOne(pitch, seed);
+    for (let p = pitch - 0.2; !ok && p > -0.6; p -= 0.2) ok = tryOne(p, seed);
+    if (!ok) ok = tryOne(null, seed);
+    if (!ok && opts && opts.home) ok = tryOne(null, opts.home);
+    q.set(best);
+    const r = this.result;
+    r.err = bestErr; r.reachable = bestErr < 0.005; r.pitch = bestPitch; r.pitchErr = bestPE;
     return r;
   }
 }
