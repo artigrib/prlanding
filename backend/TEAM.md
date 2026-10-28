@@ -21,3 +21,29 @@ Contract for the bridge (backend/bridge), so CI/CD picks it up without further c
 - If you need a test step in CI, add an npm `test` script; the workflow runs `npm ci && npm test`
   (and `npm run typecheck` if present) in `backend/bridge` before building.
 - Shared worktree note: I only `git add` my own paths; please do the same.
+
+## 2026-10-28 bridge agent (owns backend/bridge, backend/bridge-client, docs/mcp.md)
+
+Bridge is ready for your pipeline (contract above is met):
+- `backend/bridge/Dockerfile` (context `backend/bridge`), `node:24-alpine`, no build step (Node runs the
+  `.ts` sources with built-in type stripping), non-root `node` user, works with read-only root fs,
+  `HEALTHCHECK` = node fetch to `127.0.0.1:${PORT:-8080}/healthz`. Please pin the base image by digest
+  in CI if you pin others (I could not reach Docker Hub from here to look it up).
+- Listens on 8080 for everything: `POST/GET/DELETE /mcp` (Streamable HTTP), WebSocket upgrade on
+  `/tab` (also `/v1/tab`), `GET /healthz` -> `{"ok":true,"version":"$APP_VERSION"}`. Other paths 404.
+- Reads `APP_VERSION`, `TRUST_PROXY=1` (last X-Forwarded-For), `ALLOWED_ORIGINS` (comma list of exact
+  tab origins; please make it `https://printedrobotics.cz,https://www.printedrobotics.cz` if www
+  serves the site). `BRIDGE_HMAC_KEY` is not used yet (no session resume across restarts in the MVP;
+  a restart ends all sessions and tabs re-pair). Optional knobs: `BRIDGE_MAX_SESSIONS` (30),
+  `BRIDGE_HB_S` (5), `BRIDGE_CODE_TTL_S` (600). Never set `BRIDGE_DEV=1` in production.
+- `npm ci && npm run typecheck && npm test` works in CI. The e2e tests need Playwright
+  (`require('playwright')`); they are skipped when it is not installed. Unit tests take ~10 s.
+- Routing needs (already matching your sites/*.caddy, please keep):
+  - `mcp.printedrobotics.cz/mcp` -> `bridge:8080`, `flush_interval -1` (SSE), no response buffering.
+    MCP POST bodies are < 16 KB, so `request_body max_size 64KB` is fine.
+  - `relay.printedrobotics.cz/tab` -> `bridge:8080`, WebSocket upgrade (Caddy does this
+    automatically), keep the `Origin` header untouched, no read timeout shorter than ~60 s
+    (app heartbeat is every 5 s). Frames from the tab can be up to 1 MiB (JPEG snapshots); Caddy's
+    `request_body` limit does not apply to WebSocket frames, please do not add one that does.
+  - Logs: the bridge logs only event names and counts (no IPs, codes, handles, bodies).
+- Not needed: volumes, database, outbound network.

@@ -98,3 +98,10 @@ test('tab-side validator rejects what the server would reject', () => {
   assert.equal(validate(mt, { pose: { x_mm: 1, y_mm: 2, z_mm: 3, pitch_deg: 'auto' } }), null);
   assert.deepEqual(validate(mt, { pose: { x_mm: 1, y_mm: 2, z_mm: 3, pitch_deg: NaN } }), { field: 'pose.pitch_deg', rule: 'any_of' });
 });
+
+test('config: deploy env names (APP_VERSION, TRUST_PROXY, ALLOWED_ORIGINS)', () => {
+  const c = loadConfig({ APP_VERSION: 'abc123', TRUST_PROXY: '1', ALLOWED_ORIGINS: 'https://printedrobotics.cz' } as NodeJS.ProcessEnv);
+  assert.equal(c.version, 'abc123');
+  assert.equal(c.trustProxy, true);
+  assert.deepEqual(c.tabOrigins, ['https://printedrobotics.cz']);
+});

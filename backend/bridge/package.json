@@ -4,12 +4,13 @@
   "private": true,
   "description": "MCP server (Streamable HTTP, /mcp) + WebSocket relay (/tab) that lets MCP clients drive the printedrobotics.cz SO-101 browser simulation",
   "type": "module",
-  "engines": { "node": ">=22.18" },
+  "engines": {
+    "node": ">=22.18"
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "start": "node dist/main.js",
+    "start": "node src/main.ts",
     "dev": "BRIDGE_DEV=1 node src/main.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "schemas": "node scripts/export-schemas.ts",
     "test": "node --test --test-concurrency=1 test/*.test.ts",
     "test:unit": "node --test test/unit-*.test.ts",

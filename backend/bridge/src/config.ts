@@ -55,15 +55,16 @@ const list = (env: NodeJS.ProcessEnv, k: string, d: string[]): string[] =>
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env, over: Partial<Config> = {}): Config {
   const dev = env.BRIDGE_DEV === '1';
-  const tabOrigins = list(env, 'BRIDGE_TAB_ORIGINS', ['https://printedrobotics.cz', 'https://www.printedrobotics.cz']);
+  // ALLOWED_ORIGINS / TRUST_PROXY / APP_VERSION are the names the deploy compose file sets
+  const tabOrigins = list(env, env.BRIDGE_TAB_ORIGINS ? 'BRIDGE_TAB_ORIGINS' : 'ALLOWED_ORIGINS', ['https://printedrobotics.cz', 'https://www.printedrobotics.cz']);
   return {
     port: num(env, 'PORT', 8080),
     host: env.HOST || '0.0.0.0',
     tabOrigins,
     dev,
     mcpOriginHosts: list(env, 'BRIDGE_MCP_ORIGIN_HOSTS', ['printedrobotics.cz', 'www.printedrobotics.cz', 'mcp.printedrobotics.cz', 'claude.ai']),
-    trustProxy: env.BRIDGE_TRUST_PROXY === '1',
-    version: env.BRIDGE_VERSION || 'dev',
+    trustProxy: (env.BRIDGE_TRUST_PROXY ?? env.TRUST_PROXY) === '1',
+    version: env.BRIDGE_VERSION || env.APP_VERSION || 'dev',
 
     codeTtlMs: num(env, 'BRIDGE_CODE_TTL_S', 600) * 1000,
     codeMaxFails: 5,
