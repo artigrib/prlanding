@@ -32,9 +32,9 @@ const MODES = [
   { id: 'training', name: 'Tréninková hala', blurb: 'Bez časového limitu' }
 ];
 const LADDER = [
-  { name: 'Kancelářská sponka', level: 'easy', prefer: 'svrn', color: 'grey' },
+  { name: 'Kancelářská sponka', level: 'easy', prefer: 'klepeto', color: 'grey' },
   { name: 'Bzučák', level: 'normal', prefer: 'vert150', color: 'blue' },
-  { name: 'Ocelová Máňa', level: 'hard', prefer: 'svrn', color: 'black' }
+  { name: 'Ocelová Máňa', level: 'hard', prefer: 'kosa', color: 'black' }
 ];
 const ROUND = 120, FLIP_LIMIT = 10, DT = 1 / 120;
 const MODEL_URL = id => `../../models/${id}.glb`;
@@ -139,7 +139,19 @@ try {
   fail('Váš prohlížeč nepodporuje 3D grafiku (WebGL), takže arénu nespustíme. Robota si můžete prohlédnout na stránce sady.');
   throw e;
 }
-renderer.setPixelRatio(Math.min(devicePixelRatio || 1, touch ? 2 : 1.75));
+let pixelRatio = Math.min(devicePixelRatio || 1, touch ? 1.75 : 1.75);
+renderer.setPixelRatio(pixelRatio);
+// adaptive resolution: if frames stay slow (mid phones), step the pixel ratio down
+const perf = { ema: 1 / 60, slow: 0 };
+function adaptQuality(wall) {
+  if (hook.halt || wall <= 0 || wall > 0.2) return;
+  perf.ema += (wall - perf.ema) * 0.05;
+  perf.slow = perf.ema > 1 / 30 ? perf.slow + wall : 0;
+  if (perf.slow > 2 && pixelRatio > 1) {
+    pixelRatio = Math.max(1, pixelRatio - 0.25); perf.slow = 0; perf.ema = 1 / 45;
+    renderer.setPixelRatio(pixelRatio); layout();
+  }
+}
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.NeutralToneMapping;
 renderer.shadowMap.enabled = true;
@@ -275,6 +287,7 @@ function disposeRobot(r) {
   });
   r.printMat && r.printMat.dispose();
 }
+let quickOpp = null;
 function oppSetup() {
   if (S.mode === 'duo') return { id: S.p2robot, hex: S.p2robot === S.robot && S.color === 'blue' ? colorHex('orange') : S.color === 'blue' ? colorHex('orange') : colorHex('blue'), level: null, name: ROBOTS[S.p2robot].name };
   if (S.mode === 'ladder') {
@@ -283,7 +296,11 @@ function oppSetup() {
     let c = L.color === S.color ? 'white' : L.color;
     return { id, hex: colorHex(c), level: L.level, name: L.name };
   }
-  const id = robotIds.find(r => r !== S.robot) || S.robot;
+  if (!quickOpp || quickOpp === S.robot || !own(ROBOTS, quickOpp)) {
+    const others = robotIds.filter(r => r !== S.robot);
+    quickOpp = others.length ? others[Math.floor(Math.random() * others.length)] : S.robot;
+  }
+  const id = quickOpp;
   const hex = S.color === 'orange' ? '#1F3BFF' : S.color === 'black' ? '#9A9A94' : '#2A2A2A';
   return { id, hex, level: S.mode === 'training' ? 'dummy' : S.level, name: ROBOTS[id].name };
 }
@@ -684,8 +701,9 @@ const _menuSpin = 0.25;
 function frame(now) {
   requestAnimationFrame(frame);
   const wall = Math.min(0.25, Math.max(0, (now - last) / 1000)); last = now;
-  if (document.hidden || ctxLost) return;
+  if (document.hidden || ctxLost || hook.halt) return;
   let dt = Math.min(0.05, wall);
+  adaptQuality(wall);
   const duo = S.mode === 'duo';
   const i1 = input.read(duo ? 1 : 0), i2 = duo ? input.read(2) : null;
   cmd1.throttle = i1.throttle; cmd1.turn = i1.turn; cmd1.fire = cmd1.fire || i1.fire;
@@ -765,7 +783,8 @@ function toMenu() {
   replay.stop();
   game.state = 'menu';
   if (world) removeBodies();
-  makeRobots();
+  quickOpp = null;
+  makeRobots(); hudNames();
   rig.set('tv');
   showScreen('menu');
   renderMenu();
@@ -1012,7 +1031,7 @@ try {
 
 // debug / test hook, only with ?debug (headless tests drive the simulation directly)
 const hook = {
-  noRender: false,
+  noRender: false, halt: DEBUG && params.has('halt'),
   sim(sec, th = 0, tu = 0, fire = false) {
     const c = { throttle: th, turn: tu, fire }, c2 = { throttle: 0, turn: 0, fire: false };
     for (let i = 0; i < Math.round(sec / DT); i++) {
