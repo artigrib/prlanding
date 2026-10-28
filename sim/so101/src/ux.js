@@ -16,11 +16,30 @@ import { Explode } from './ui/explode.js';
 import { HiDetail } from './ui/hidetail.js';
 import { store } from './ui/store.js';
 
-export async function install(app, env) {
+export async function install(page, env) {
+  // core.js layout (servo-emulator branch): the page (MissionPage) owns sliders/demo/HUD, page.sim (ArmSim)
+  // owns physics + rendering. The UX layer talks to one "app" facade that routes to whichever owns a member.
+  const app = page.sim ? hostFor(page) : page;
   const ux = new UX(app, env);
-  app.ux = ux;
+  page.ux = ux;
+  if (page.sim) page.sim.onRender = (dt) => ux.render(dt);   // [ux-hook:render] in core.js loop()
   ux.start();
   return ux;
+}
+
+const PAGE_FIRST = new Set(['reset', 'setCtrl', 'refreshSliders', 'stopDemo', 'tickDemo', 'startDemo', 'hudText', 'hudOk', 'ux']);
+function hostFor(page) {
+  const sim = page.sim;
+  return new Proxy({}, {
+    get(_, k) {
+      if (k === 'sim') return sim;
+      if (k === 'goHome') return () => { sim.goHome(); page.refreshSliders(); };
+      const owner = PAGE_FIRST.has(k) || (k in page && !(k in sim)) ? page : sim;
+      const v = owner[k];
+      return typeof v === 'function' ? v.bind(owner) : v;
+    },
+    set(_, k, v) { if (PAGE_FIRST.has(k) || (k in page && !(k in sim))) page[k] = v; else sim[k] = v; return true; }
+  });
 }
 
 const PREVIEW_S = 0.6;     // path preview before the arm starts moving
@@ -374,7 +393,7 @@ class UX {
   // ================= test hooks (window.__sim with ?test=1) =================
   extendApi(api) {
     const app = this.app, ts = this.m.opt.timestep;
-    api.advance = (sec) => {
+    api.advance = app.sim ? (sec) => { app.sim.advance(sec, 1 / 60); this.extras.sync(); } : (sec) => {
       const n = Math.round(sec / ts);
       for (let i = 0; i < n; i++) {
         if (i % 4 === 0) this.pre(ts * 4);

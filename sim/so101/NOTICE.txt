@@ -33,7 +33,30 @@ copies of the licence texts are included next to each component.
    Licence: MIT (vendor/three/LICENSE)
    Unmodified.
 
-4) meshoptimizer decoder (vendor/three/libs/meshopt_decoder.module.js)
+4) Feetech servo control tables and setup procedure (lib/feetech.js, lib/so101-setup.js,
+   lib/sts3215-emu.js, used by the setup wizard in nastaveni/)
+   Source:  LeRobot v0.6.1, Hugging Face — https://github.com/huggingface/lerobot/tree/v0.6.1
+            src/lerobot/motors/feetech/tables.py   (STS/SMS control table addresses and sizes,
+                                                    sign-magnitude bits, baud-rate codes,
+                                                    STS3215 model number and resolution)
+            src/lerobot/motors/feetech/feetech.py  (find single motor, configure_motors,
+                                                    torque enable/disable with Lock, half-turn homing)
+            src/lerobot/motors/motors_bus.py       (setup_motor, reset_calibration,
+                                                    set_half_turn_homings, record_ranges_of_motion,
+                                                    _normalize/_unnormalize)
+            src/lerobot/robots/so_follower/        (motor IDs, setup order, calibration flow,
+                                                    P/I/D and gripper torque settings)
+   Copyright 2024 The HuggingFace Inc. team.
+   Licence: Apache License 2.0 (same text as model/LICENSE; http://www.apache.org/licenses/LICENSE-2.0)
+   Changes made by printedrobotics.cz: the register table and the listed procedures were re-implemented
+     in JavaScript (subset of registers; Czech messages); nothing is copied verbatim beyond register
+     names, addresses and constants.
+   The packet format (header, length, checksum, instruction codes, error bits, sync read/write layout)
+   follows Feetech's scservo_sdk 1.0.0 (PyPI feetech-servo-sdk, The Unlicense), which LeRobot uses.
+   The STS3215 behaviour in lib/sts3215-emu.js (factory values, thermal and voltage behaviour) is an
+   approximation written by printedrobotics.cz, not Feetech's firmware.
+
+5) meshoptimizer decoder (vendor/three/libs/meshopt_decoder.module.js)
    Source:  as shipped in npm package three 0.160.0 (examples/jsm/libs/), from
             https://github.com/zeux/meshoptimizer, Copyright (C) 2016-2022 Arseny Kapoulkine
    Licence: MIT (stated at the top of the file)

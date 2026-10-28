@@ -5,17 +5,24 @@ merge with the `servo-emulator` branch stays easy. Search for `[ux-hook:` (app.j
 
 ## Hook points
 
+Since the merge of `servo-emulator`, physics/rendering live in `core.js` (`ArmSim`) and the mission page in
+`app.js` (`MissionPage`). The UX layer gets one facade (`hostFor()` in src/ux.js, a Proxy) that routes each member
+to the page (sliders, demo, HUD, reset) or to the sim (model, data, three.js scene, camera).
+
 | File | Marker | What it does |
 |---|---|---|
-| app.js `main()` | `[ux-hook:install]` | `import('./src/ux.js').install(app, {THREE, mj, TEST})` in try/catch. If the UX layer fails, the plain slider sim still runs (`app.ux = null`). |
+| app.js `main()` | `[ux-hook:install]` | `import('./src/ux.js').install(page, {THREE, mj, TEST})` in try/catch. If the UX layer fails, the plain slider sim still runs. |
+| app.js `MissionPage` ctor | `[ux-hook:pre]` | `sim.onFrame`: `ux.pre(dt)` (planner / IK controller / replay write `d.ctrl`) before the demo tick. |
+| app.js `MissionPage` ctor | `[ux-hook:check]` | `sim.onAfter`: mission logic of the UX layer replaces `sim.check()` + `hud()`. |
 | app.js `reset()` | `[ux-hook:reset]` | `this.ux.onReset()` – mission layout, controller sync, path cleanup. |
-| app.js `startDemo()` | `[ux-hook:demo]` | "Ukázat řešení" runs the planner solution of the current mission (`return true` = handled). |
-| app.js `loop()` | `[ux-hook:pre]` | before physics: planner / IK controller / replay write `d.ctrl`. |
-| app.js `loop()` | `[ux-hook:check]` | mission logic replaces `app.check()` when the UX layer is present. |
-| app.js `loop()` | `[ux-hook:render]` | UX renders (main view + wrist PiP, gizmo, confetti…) instead of `renderer.render`. |
+| app.js `startDemo()` | `[ux-hook:demo]` | "Ukázat řešení" runs the planner solution of the current mission. |
 | app.js `api()` | `[ux-hook:api]` | `ux.extendApi(api)` adds test hooks to `window.__sim` (?test=1). |
+| core.js `loop()` | `[ux-hook:render]` | `sim.onRender(dt)` (set by the UX layer) draws main view + wrist PiP; default is `renderer.render`. |
 | index.html head | `[ux]` | `src/ux.css` |
 | index.html panel | `[ux]` | `<div id="ux-mode">` before `#joints`, `<div id="ux-teach">` after `.row-b` |
+
+The setup wizard (`nastaveni/`) uses core.js without the UX layer; the extra scene bodies are parked off-table
+there and invisible (group 3), so it is unaffected.
 
 Everything else (stage toolbar, wrist-cam frame, toasts, dialogs, onboarding) is created by JS inside `.stage`
 / `body`. Existing ids (`#joints`, `#home`, `#reset`, `#demo`, `#win`, `#hud`, `.mission h1`) are reused, not renamed.
