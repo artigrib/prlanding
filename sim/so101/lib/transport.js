@@ -10,8 +10,12 @@
 //   await t.close()
 //   t.kind                      'serial' | 'virtual'
 //   t.ondisconnect              optional callback (cable unplugged)
+//   await t.forceClose()        (serial) tear the port down with every step time-bounded
 
 export const DEFAULT_BAUD = 1_000_000;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+/** Resolve after `p` settles or `ms` elapse, whichever is first; never rejects. */
+const bounded = (p, ms) => Promise.race([Promise.resolve(p).catch(() => {}), sleep(ms)]);
 
 class ByteQueue {
   constructor() { this.chunks = []; this.waiters = []; }
@@ -67,7 +71,10 @@ export const hasWebSerial = () => typeof navigator !== 'undefined' && 'serial' i
  * 8N1, 1 Mbaud for STS3215 factory settings.
  */
 export class SerialTransport {
-  constructor() { this.kind = 'serial'; this.q = new ByteQueue(); this.port = null; this.baud = DEFAULT_BAUD; this.ondisconnect = null; }
+  constructor({ writeTimeoutMs = 250 } = {}) {
+    this.kind = 'serial'; this.q = new ByteQueue(); this.port = null; this.baud = DEFAULT_BAUD; this.ondisconnect = null;
+    this.writeTimeoutMs = writeTimeoutMs; this.failed = false;
+  }
   get label() {
     const i = this.port && this.port.getInfo ? this.port.getInfo() : {};
     return 'USB sériový port' + (i.usbVendorId ? ` · VID ${i.usbVendorId.toString(16).padStart(4, '0')} PID ${(i.usbProductId || 0).toString(16).padStart(4, '0')}` : '');
@@ -83,7 +90,10 @@ export class SerialTransport {
   async open(baud = DEFAULT_BAUD) {
     if (!this.port) await this.requestPort();
     this.baud = baud;
-    await this.port.open({ baudRate: baud, dataBits: 8, stopBits: 1, parity: 'none', bufferSize: 4096, flowControl: 'none' });
+    const opts = { baudRate: baud, dataBits: 8, stopBits: 1, parity: 'none', bufferSize: 4096, flowControl: 'none' };
+    // Chrome sometimes refuses open() right after close() ("port is already open"): retry once
+    try { await this.port.open(opts); } catch (e) { await sleep(150); await this.port.open(opts); }
+    this.failed = false;
     this.writer = this.port.writable.getWriter();
     this.reading = this._readLoop();
   }
@@ -107,11 +117,31 @@ export class SerialTransport {
     }
   }
   drain() { this.q.clear(); }
+  /**
+   * Write with a deadline. A USB bridge that stops draining (driver hiccup, half-unplugged cable)
+   * would otherwise block forever; after a timeout the transport is marked failed and every further
+   * write fails immediately, so the caller can close the port and tell the user.
+   */
   async write(bytes) {
-    if (!this.writer) throw new Error('port is closed');
-    await this.writer.write(Uint8Array.from(bytes));
+    if (!this.writer || this.failed) throw Object.assign(new Error('port is closed'), { code: 'closed' });
+    let t;
+    try {
+      await Promise.race([this.writer.write(Uint8Array.from(bytes)), new Promise((_, rej) => {
+        t = setTimeout(() => { this.failed = true; rej(Object.assign(new Error('write timeout'), { code: 'timeout' })); }, this.writeTimeoutMs);
+      })]);
+    } finally { clearTimeout(t); }
   }
   read(timeoutMs) { return this.q.read(timeoutMs); }
+  /** Tear down even if the stream is wedged: every step bounded to 300 ms. */
+  async forceClose() {
+    this.failed = true; this.closing = true;
+    const w = this.writer; this.writer = null;
+    await bounded(w && w.abort(), 300);
+    await bounded(this.reader && this.reader.cancel(), 300);
+    await bounded(this.port && this.port.close(), 300);
+    this.closing = false;
+    this.q.clear();
+  }
   async setBaudRate(b) {
     if (b === this.baud && this.writer) return;
     await this.close(true);

@@ -4,7 +4,8 @@
 
 import { JOINTS, DEMO, DemoPlayer, ArmSim, loadSim, hasWebGL, COLORS } from '../core.js';
 import { FeetechBus, hex, ERR, decodeSM, fromBytes } from '../lib/feetech.js';
-import { VirtualArm, VARIANTS } from '../lib/sts3215-emu.js';
+import { VirtualArm } from '../lib/sts3215-emu.js';
+import { VARIANTS } from '../lib/variants.js';
 import { VirtualTransport, SerialTransport, hasWebSerial } from '../lib/transport.js';
 import * as S from '../lib/so101-setup.js';
 
@@ -24,7 +25,11 @@ const st = {
   calPhase: 'a', offsets: null, mins: {}, maxes: {}, cal: null,
   torque: false, stopped: false, busy: false,
   targets: null, cmd: null, sent: null, demo: null, speed: 30,
-  live: {}, pollOn: false
+  live: {}, pollOn: false,
+  stopGen: 0,          // incremented by every STOP; long operations abort when it changes
+  lost: false,         // port gone or wedged: nothing can be sent any more
+  units: null,         // Goal_Velocity unit per servo (°/s), from configureFollower
+  prep: null           // promise: torque off + configure, started when calibration opens
 };
 let sim = null, arm = null, transport = null, bus = null;
 
@@ -56,6 +61,11 @@ simReady.then(() => { $('v-connect').disabled = false; }).catch((e) => {
 // ---------- steps ----------
 const STEPS = ['port', 'ids', 'cal', 'test'];
 function show(step) {
+  if (st.step === 'test' && step !== 'test' && st.torque) {
+    // never cut torque silently: the arm is released and can drop
+    if (st.mode === 'real' && !confirm('Moment se vypne a ruka se uvolní – může klesnout. Přidržte ji rukou. Pokračovat?')) return;
+    torqueOff();
+  }
   st.step = step;
   if (STEPS.indexOf(step) > STEPS.indexOf(st.reached)) st.reached = step;
   document.querySelectorAll('.step').forEach((s) => { s.hidden = s.dataset.step !== step; });
@@ -88,6 +98,12 @@ async function task(fn, msgEl) {
   } finally { setBusy(false); }
 }
 const msg = (el, text, kind = '') => { el.textContent = text; el.className = 'msg' + (kind ? ' ' + kind : ''); if (text) say(text); };
+/** Stage banner for safety-relevant state (role=alert). kind: 'err' | 'warn'; null text hides it. */
+function alertBox(text, kind = 'err') {
+  const a = $('alert');
+  if (!text) { a.hidden = true; a.textContent = ''; return; }
+  a.textContent = text; a.className = 'alert ' + kind; a.hidden = false;
+}
 
 // ---------- connect ----------
 document.querySelectorAll('input[name=variant]').forEach((r) => r.addEventListener('change', () => { st.variant = r.value; renderFaults(); }));
@@ -120,7 +136,7 @@ $('r-connect').addEventListener('click', () => task(async () => {
     return;
   }
   transport = t;
-  t.ondisconnect = () => { st.torque = false; st.stopped = true; msg($('t-msg'), 'USB kabel se odpojil. Moment je vypnutý (servo bez řízení drží poslední cíl, vypněte napájení).', 'err'); updateTorqueUi(); };
+  t.ondisconnect = () => lost('USB kabel se odpojil – moment NEJDE vypnout, serva drží poslední cíl. Vypněte napájení serv.');
   connected('real');
 }, $('port-msg')));
 
@@ -139,6 +155,7 @@ function connected(mode) {
   startPoll();
   if (mode === 'real') {
     $('t-home').innerHTML = 'Do středu <span aria-hidden="true">⌂</span>';
+    $('t-home').title = 'Všech šest kloubů najednou pojede do středu kalibrovaného rozsahu (rychlostním limitem).';
     // no WebGL: drive the goal stream from our own frame loop
     simReady.catch(() => {
       let last = performance.now();
@@ -229,14 +246,21 @@ function refreshHand() {
   handSliders.forEach((s, i) => { const v = sim.ctrl(i); if (document.activeElement !== s.input) s.input.value = v; s.out.textContent = Math.round(v * RAD) + '°'; });
 }
 
-async function enterCal() {
+function enterCal() {
   buildHand();
   $('cal-a').hidden = st.calPhase !== 'a';
   $('cal-b').hidden = st.calPhase !== 'b';
-  // calibration runs with torque off (so_follower.calibrate: bus.disable_torque())
-  st.demo = null; st.targets = null; st.torque = false; updateTorqueUi();
-  try { await S.disableTorque(bus); } catch (e) { console.error(e); }
+  // Calibration runs with torque off (so_follower.calibrate: bus.disable_torque()). Like LeRobot
+  // (connect -> configure -> calibrate) the servos are configured first: this also clears Phase bit 4
+  // so positions stay in 0..4095 before any limits are recorded.
+  st.demo = null; st.targets = null;
+  st.prep = (async () => {
+    const r = await S.configureFollower(bus, cfgOpts());
+    st.units = r.units; st.torque = false; updateTorqueUi();
+  })();
+  st.prep.catch((e) => { console.error(e); alertBox('Příprava serv se nepovedla: ' + e.message + ' Zkontrolujte kabely a zkuste krok znovu.', 'err'); });
 }
+const cfgOpts = () => ({ real: st.mode === 'real', speedDegS: st.mode === 'real' ? st.speed : 0 });
 
 // LeRobot "middle of the range": joints centred, gripper half open
 const MID = [0, 0, 0, 0, 0, (GRIP[0] + GRIP[1]) / 2];
@@ -244,6 +268,7 @@ $('cal-mid-help').addEventListener('click', () => { st.sweep = { k: 0, t: 0, fro
 
 $('cal-mid').addEventListener('click', () => task(async () => {
   st.sweep = null;
+  await st.prep;
   st.offsets = await S.setHalfTurnHomings(bus);
   st.mins = {}; st.maxes = {};
   st.calPhase = 'b'; $('cal-a').hidden = true; $('cal-b').hidden = false;
@@ -330,17 +355,41 @@ const homeTargets = () => st.mode === 'real' ? S.MOTORS.map((m, i) => clampT(i, 
 const clampT = (i, v) => { const s = testSliders[i]; return Math.min(s.hi, Math.max(s.lo, v)); };
 
 $('t-torque').addEventListener('click', () => task(async () => {
-  if (st.torque) { await S.disableTorque(bus); st.torque = false; st.demo = null; updateTorqueUi(); msg($('t-msg'), 'Moment vypnutý.'); return; }
-  const vmax = st.mode === 'real' ? Math.round(st.speed * 4096 / 360) : 0;
-  await S.configureFollower(bus, { maxVelocity: vmax });
-  const goals = await S.enableTorque(bus);
-  // start exactly where the arm is
-  st.targets = S.MOTORS.map((m) => clampT(S.MOTORS.indexOf(m), S.normalize(m.name, st.cal[m.name], goals.get(m.id))));
-  st.cmd = st.targets.slice(); st.sent = null;
-  st.torque = true; st.stopped = false;
+  if (st.torque) {
+    if (st.mode === 'real' && !confirm('Vypnutí momentu ruku uvolní – může klesnout. Držíte ji?')) return;
+    return torqueOff();
+  }
+  const gen = st.stopGen, abort = () => st.stopGen !== gen || st.lost;
+  try {
+    const cfg = await S.configureFollower(bus, { ...cfgOpts(), abort });
+    st.units = cfg.units;
+    const goals = await S.enableTorque(bus, S.IDS, { abort });
+    if (abort()) throw new S.SetupError('aborted', '');
+    // Start exactly where the arm is. cmd (what is sent) begins at the *unclamped* present position;
+    // the rate limiter then walks it into the allowed range, so nothing jumps over the safety margin.
+    st.cmd = S.MOTORS.map((m) => S.normalize(m.name, st.cal[m.name], goals.get(m.id)));
+    st.targets = st.cmd.map((v, i) => clampT(i, v));
+    st.sent = null;
+    st.torque = true; st.stopped = false;
+  } catch (e) {
+    st.torque = false; st.targets = null; updateTorqueUi();
+    if (e.code === 'aborted') { msg($('t-msg'), 'Zapínání momentu přerušil STOP, moment je vypnutý.', 'warn'); return; }
+    throw e;
+  }
   updateTorqueUi();
-  msg($('t-msg'), st.mode === 'real' ? 'Moment zapnutý. Pohybujte pomalu, STOP nebo Esc ho kdykoli vypne.' : 'Moment zapnutý. Posuňte klouby nebo spusťte misi.', 'ok');
+  msg($('t-msg'), st.mode === 'real' ? 'Moment zapnutý. Pohybujte pomalu, STOP nebo Esc ho kdykoli vypne (ruka se pak uvolní).' : 'Moment zapnutý. Posuňte klouby nebo spusťte misi.', 'ok');
 }, $('t-msg')));
+
+/** Normal torque off (not STOP): verified by read-back; the UI follows what the servos report. */
+async function torqueOff() {
+  st.demo = null; st.targets = null;
+  const r = await S.disableTorque(bus);
+  st.torque = !r.ok;                      // not confirmed -> still treat as powered (button offers another try)
+  if (r.ok) { msg($('t-msg'), 'Moment vypnutý (ověřeno čtením). Ruka se uvolnila.'); alertBox(null); }
+  else alertBox(`Servo ${r.unconfirmed.join(', ')} nepotvrdilo vypnutí momentu. Stiskněte STOP, případně vypněte napájení serv.`, 'err');
+  updateTorqueUi();
+  return r;
+}
 
 function updateTorqueUi() {
   $('t-torque').textContent = st.torque ? 'Vypnout moment' : (st.stopped ? 'Znovu zapnout moment' : 'Zapnout moment');
@@ -366,20 +415,52 @@ $('t-reset').addEventListener('click', () => {
 $('again').addEventListener('click', () => { $('win').hidden = true; });
 $('t-speed').addEventListener('input', () => {
   st.speed = +$('t-speed').value; $('t-speed-o').textContent = st.speed + ' °/s';
-  if (st.torque && bus) { const v = Math.round(st.speed * 4096 / 360); bus.syncWriteReg('Goal_Velocity', new Map(S.IDS.map((id) => [id, v]))); }
+  if (bus && st.units && !st.lost) S.setSpeedCap(bus, st.speed, st.units).catch((e) => console.error(e));
 });
 
 // ---------- STOP ----------
-async function stop() {
-  if (!bus) return;
+// STOP is never queued behind other work: S.stopAll first writes a broadcast torque-off straight to
+// the port (bypassing the transaction queue), then verifies every servo by reading Torque_Enable.
+async function stop(reason) {
+  if (!bus || st.lost) return;
+  st.stopGen++;                                  // aborts a torque-on / configure in progress (B1)
   st.demo = null; st.torque = false; st.stopped = true; st.targets = null;
   updateTorqueUi();
-  try { await S.stopAll(bus); } catch (e) { console.error(e); }
-  msg($('t-msg'), 'STOP: moment všech serv je vypnutý.', 'warn');
+  alertBox('STOP: vypínáme moment…', 'warn');
+  let r;
+  try { r = await S.stopAll(bus); } catch (e) { console.error(e); r = { ok: false, unconfirmed: S.IDS.slice(), wire: false }; }
+  st.torque = false; updateTorqueUi();
+  if (r.ok) {
+    alertBox(reason ? reason + ' Moment je vypnutý (ověřeno čtením), ruka se uvolnila.' : null, 'warn');
+    msg($('t-msg'), 'STOP: moment všech serv je vypnutý (ověřeno čtením). Ruka se uvolnila.', 'warn');
+  } else if (!r.wire && st.mode === 'real') {
+    // the port does not take data any more: close it and say what that means
+    try { await transport.forceClose(); } catch (e) {}
+    lost('STOP se NEPODAŘILO odeslat – port neodpovídá, spojení jsme zavřeli. Serva mohou mít zapnutý moment: okamžitě vypněte napájení serv.');
+  } else {
+    alertBox(`STOP neověřen: servo ${r.unconfirmed.join(', ')} nepotvrdilo vypnutí momentu. Vypněte napájení serv.`, 'err');
+    msg($('t-msg'), 'STOP neověřen.', 'err');
+  }
 }
-$('stop').addEventListener('click', stop);
+/** The connection is gone (unplugged or wedged): nothing can be sent. Say so plainly. */
+function lost(text) {
+  st.lost = true; st.pollOn = false; st.torque = false; st.targets = null; st.demo = null; st.stopGen++;
+  updateTorqueUi();
+  $('stop').disabled = true;
+  $('stop').querySelector('.stop-t').textContent = 'nelze odeslat – vypněte napájení';
+  alertBox(text + ' Pro nové připojení obnovte stránku.', 'err');
+  msg($('t-msg'), text, 'err');
+  document.body.classList.add('lost');
+}
+$('stop').addEventListener('click', () => stop());
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && bus) stop(); });
-addEventListener('pagehide', () => { if (st.mode === 'real' && bus) S.stopAll(bus).catch(() => {}); });
+// leaving / hiding the page with a powered real arm: stop (the arm is released, see the beta warning)
+const realPowered = () => st.mode === 'real' && !st.lost && (st.torque || Object.values(st.live).some((l) => l && l.torque === 1));
+addEventListener('beforeunload', (e) => { if (realPowered()) { e.preventDefault(); e.returnValue = ''; } });
+addEventListener('pagehide', () => { if (st.mode === 'real' && bus && !st.lost) stop(); });
+addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && realPowered()) stop('Karta přešla na pozadí, proto jsme stiskli STOP.');
+});
 
 // ---------- per-frame ----------
 const maxRate = () => (st.mode === 'real' ? st.speed : 150);   // °/s (and %/s for the gripper)
@@ -417,7 +498,10 @@ function frame(dt) {
       const key = [...goals.values()].join(',');
       if (key !== st.sent) {
         st.sending = true; lastSend = now;
-        bus.syncWriteReg('Goal_Position', goals).finally(() => { st.sending = false; st.sent = key; });
+        bus.syncWriteReg('Goal_Position', goals)
+          .then(() => { st.sent = key; })
+          .catch((e) => { console.error(e); if (st.mode === 'real') stop('Zápis cíle na port selhal.'); })
+          .finally(() => { st.sending = false; });
       }
     }
   }
@@ -442,7 +526,7 @@ function startPoll() {
   if (st.pollOn) return;
   st.pollOn = true;
   (async () => {
-    while (st.pollOn) {
+    while (st.pollOn && !st.lost) {
       if (st.step !== 'ids' && !st.busy) { try { await pollOnce(); } catch (e) { console.error(e); } }
       else renderReg(true);
       await sleep(st.mode === 'real' ? 100 : 120);
@@ -466,6 +550,11 @@ async function pollOnce() {
       voltage: d[6] / 10, temperature: d[7], status: d[9] | r.error,
       torque: tq.get(id).comm === 'ok' ? tq.get(id).data[0] : null
     };
+  }
+  // UI follows the servos: torque on although we think it is off -> say so (real arm)
+  if (st.mode === 'real' && !st.torque && !st.busy) {
+    const on = S.IDS.filter((id) => st.live[id].torque === 1);
+    if (on.length) alertBox(`Servo ${on.join(', ')} hlásí zapnutý moment. Stiskněte STOP.`, 'err');
   }
   // calibration B: record_ranges_of_motion
   if (st.step === 'cal' && st.calPhase === 'b') {
