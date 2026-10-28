@@ -716,6 +716,10 @@ function frame(now) {
   cmd1.throttle = i1.throttle; cmd1.turn = i1.turn; cmd1.fire = cmd1.fire || i1.fire;
   if (i2) { cmd2.throttle = i2.throttle; cmd2.turn = i2.turn; cmd2.fire = cmd2.fire || i2.fire; }
 
+  if (input.takeStart()) {
+    if (game.state === 'paused') pause(false); else if (game.state === 'fight' || game.state === 'countdown') pause(true);
+    else if (game.state === 'replay') endReplay();
+  }
   const st = game.state;
   if (st === 'replay') {
     if (replay.tick(dt)) endReplay();

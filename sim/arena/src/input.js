@@ -9,6 +9,7 @@ export function createInput(els, isPlaying = () => true) {
   const keys = new Set();
   const fireEdge = [false, false, false];   // per slot: edge from keyboard / touch / pad
   const padFireWas = [];
+  let startWas = false, startEdge = false;     // gamepad Start / Options = pause
   const stick = { x: 0, y: 0, id: null };
 
   // only take over Space / arrows during a match, and never from a focused control
@@ -80,6 +81,7 @@ export function createInput(els, isPlaying = () => true) {
       th += -dz(p.axes[1] || 0); tu += dz(p.axes[0] || 0);
       const b = i => p.buttons[i] && (p.buttons[i].pressed || p.buttons[i].value > 0.5);
       const padFire = b(0) || b(5) || b(7);
+      if (slot !== 2) { const st = b(9); if (st && !startWas) startEdge = true; startWas = st; }
       const key = slot + ':' + idx;
       if (padFire && !padFireWas[key]) fireEdge[slot] = true;
       padFireWas[key] = padFire;
@@ -99,6 +101,7 @@ export function createInput(els, isPlaying = () => true) {
 
   return {
     read, override, keys, split,
+    takeStart() { const s = startEdge; startEdge = false; return s; },
     pressFire(slot = 0) { fireEdge[slot] = true; if (slot === 0) fireEdge[1] = true; },
     reset() { keys.clear(); stickEnd(); fireEdge.fill(false); }
   };
