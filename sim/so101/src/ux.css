@@ -156,8 +156,9 @@
 .ux-exploding .ux-pip,.ux-exploding .ux-penhint{display:none}
 @media (max-width:860px){
   .ux-explode{left:8px;right:8px;bottom:8px;width:auto;padding:10px 12px;gap:6px;max-height:58%}
-  .ux-ex-leg{font-size:13px}
-  .ux-ex-note{display:none}
+  .ux-ex-leg{font-size:12.5px;gap:3px}
+  .ux-ex-note,.ux-ex-hover{display:none}
+  .ux-ex-top .mono{font-size:12px}
   .ux-explode .jn{grid-template-columns:auto 1fr auto;column-gap:10px}
   .ux-explode .jn input{grid-column:auto;height:28px}
   .ux-ex-b .btn{min-height:42px;font-size:13.5px}

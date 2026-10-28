@@ -50,7 +50,7 @@ export const MISSIONS = [
       c.s.hold = 0;
       if (cube[2] > 0.03) return { text: 'Výborně! Přeneste ji nad misku a pusťte' };
       if (Math.hypot(c.tip[0] - cube[0], c.tip[1] - cube[1], c.tip[2] - cube[2]) < 0.035) return { text: 'Teď sevřete chapadlo' };
-      return { text: c.smart ? 'Táhněte modrou kouli ke kostce, nebo na kostku klikněte' : 'Natočte ruku ke kostce a sjeďte k ní' };
+      return { text: c.smart ? 'Klikněte na kostku, nebo táhněte modrou kouli' : 'Natočte ruku ke kostce a sjeďte k ní' };
     },
     solve: (ctl, w) => pickPlace(ctl, w, 'cube', bowlDrop(w, 'bowl'))
   },

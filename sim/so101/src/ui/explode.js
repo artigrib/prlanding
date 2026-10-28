@@ -140,7 +140,9 @@ export class Explode {
   }
 
   /** per frame, after app.sync() wrote the assembled poses into mesh.matrix */
-  tick(dt) {
+  tick() {
+    // wall-clock step: animations keep their speed even when frames are slow
+    const now = performance.now(), dt = Math.min(0.25, (now - (this.lastT || now)) / 1000); this.lastT = now;
     if (!this.on && this.amount <= 0.0005 && !this.play) return;
     if (this.play) {
       const P = this.play, dur = this.ux.reduced ? 0.01 : 0.9;

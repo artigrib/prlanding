@@ -63,7 +63,7 @@ export class Cameras {
     }
     if (this.ux.reduced) { cam.position.copy(this.to.p); c.target.copy(this.to.t); c.update(); this.tw = null; return; }
     cam.position.copy(this.from.p); c.target.copy(this.from.t);
-    this.tw = { t: 0 };
+    this.tw = { t0: performance.now() };
   }
 
   /** Frame the arm (exploded view). */
@@ -92,7 +92,7 @@ export class Cameras {
 
   tick(dt) {
     if (this.tw) {
-      const k = this.tw.t = Math.min(1, this.tw.t + dt / 0.7), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      const k = Math.min(1, (performance.now() - this.tw.t0) / 700), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
       const cam = this.app.camera, c = this.app.controls;
       cam.position.lerpVectors(this.from.p, this.to.p, e);
       c.target.lerpVectors(this.from.t, this.to.t, e);
