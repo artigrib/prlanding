@@ -113,7 +113,12 @@ test('demo layout: objects compile into the SO-101 scene, settle, and each can b
   const inst = await Promise.all(layout.map((l) => L.instance(l.id, { pos: l.pos, quat: l.quat })));
   const { mj, m } = await mujocoWithScene(inst);
   const body = (n) => mj.mj_name2id(m, mj.mjtObj.mjOBJ_BODY.value, n);
-  assert.equal(m.nq, 6 + 7 + 7 * inst.length);   // arm + cube + objects
+  // the scene itself may gain free bodies (missions add cubes/balls): compare against the bare scene
+  mj.FS.writeFile('/m/scene_bare.xml', scene);
+  const bare = mj.MjModel.from_xml_path('/m/scene_bare.xml');
+  assert.equal(m.nq, bare.nq + 7 * inst.length);
+  assert.equal(m.nkey, bare.nkey);
+  bare.delete();
   for (const o of (await L.manifest()).objects) {
     const b = body(o.body);
     assert.ok(b >= 0);
