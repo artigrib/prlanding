@@ -31,7 +31,7 @@ export class HiDetail {
     this.apply(); return Promise.resolve();
   }
 
-  start() { if (this.quality === 'high') this.load().then(() => this.apply()).catch((e) => console.warn('hi-detail', e)); }
+  start() { if (this.quality === 'high' && this.ux.panel && !this.loaded) this.ux.panel.showQuality('high', false, true); if (this.quality === 'high') this.load().then(() => this.apply()).catch((e) => console.warn('hi-detail', e)); }
 
   load() {
     if (this.loading) return this.loading;

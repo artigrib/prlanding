@@ -22,9 +22,24 @@ export async function install(page, env) {
   const app = page.sim ? hostFor(page) : page;
   const ux = new UX(app, env);
   page.ux = ux;
+  patchSliders(page);
   if (page.sim) page.sim.onRender = (dt) => ux.render(dt);   // [ux-hook:render] in core.js loop()
   ux.start();
   return ux;
+}
+
+// joint sliders: readable values for screen readers and a visible "(doraz)" at the joint limit (P2-5, P2-9)
+function patchSliders(page) {
+  if (!page.sliders || !page.refreshSlider) return;
+  const orig = page.refreshSlider.bind(page);
+  page.refreshSlider = (i) => {
+    orig(i);
+    const sl = page.sliders[i], v = +sl.input.value, lim = !sl.grip && (v <= sl.lo + 1e-3 || v >= sl.hi - 1e-3);
+    if (lim) sl.out.textContent += ' (doraz)';
+    sl.out.classList.toggle('ux-lim', lim);
+    sl.input.setAttribute('aria-valuetext', sl.out.textContent.replace('°', ' stupňů'));
+  };
+  page.refreshSliders();
 }
 
 const PAGE_FIRST = new Set(['reset', 'setCtrl', 'refreshSliders', 'stopDemo', 'tickDemo', 'startDemo', 'hudText', 'hudOk', 'ux']);
@@ -89,6 +104,10 @@ class UX {
     this.hudEl.removeAttribute('role'); this.hudEl.removeAttribute('aria-live');
     this.srEl = document.getElementById('sr');
     const c = app.renderer.domElement;
+    c.tabIndex = 0;
+    const desc = document.createElement('p'); desc.id = 'ux-c-desc'; desc.className = 'sr-only';
+    desc.textContent = 'Šipky posouvají cíl ruky, PageUp a PageDown mění výšku, mezerník otevře a zavře chapadlo, otazník ukáže všechny zkratky.';
+    c.parentNode.appendChild(desc); c.setAttribute('aria-describedby', desc.id);
     c.setAttribute('aria-label', 'Robotická ruka SO-101 na stole s předměty mise. Ovládání: modrá koule (chytrý pohyb), klik na předmět, šipky a mezerník, nebo posuvníky kloubů v režimu Klouby.');
   }
 
@@ -102,6 +121,12 @@ class UX {
     this.panel.showView('orbit');
     if (!this.touch && !this.TEST && matchMedia('(min-width:861px)').matches && store.get('wrist', false)) this.setWrist(true);
     this.app.reset();          // applies the mission layout through onReset()
+    if (this.runner.m.look) this.cameras.set('orbit', this.runner.m.look);
+    this.teach.load();         // the demonstration from the last visit, if any
+    if (this.touch && !this.TEST && !store.get('tip-orbit', false)) {
+      store.set('tip-orbit', true);
+      setTimeout(() => this.panel.toast('Jedním prstem otáčíte pohled, dvěma přibližujete'), 2500);
+    }
     // high-detail meshes after the first frames (lazy, does not block the start)
     const idle = window.requestIdleCallback || ((f) => setTimeout(f, 300));
     idle(() => this.hd.start(), { timeout: 1500 });
@@ -126,11 +151,13 @@ class UX {
     if (fell) this.panel.toast(`Spadlo to ze stolu – ${w.o[fell].acc} jsme vrátili zpět`);
     this.ctl.actualTip(ctx.tip);
     ctx.gripOpen = c[act[5]] > 0.5;
-    ctx.smart = this.mode === 'smart';
+    ctx.smart = this.mode === 'smart'; ctx.touch = this.touch;
     this.extras.inkAt(ctx.tip);
     const res = r.tick(dt);
     // HUD (live region: write only on change)
     let text = res.text;
+    if (this.teach.replaying) text = this.touch ? 'Přehrávám ukázku – zastavíte ji tlačítkem Stop' : 'Přehrávám ukázku – Esc ji zastaví';
+    else if (this.mode === 'smart' && this.ctl.active && !this.ctl.reachable && !this.ctl.busy()) text = 'Mimo dosah – zkuste cíl blíž k ruce';
     if (this.app.won) text = 'Mise splněna';
     if (text !== this.app.hudText) { this.hudEl.textContent = text; this.app.hudText = text; this.announce(text); }
     const ok = !!res.ok || this.app.won;
@@ -163,20 +190,29 @@ class UX {
     if (!this.replayResetting) this.teach.stopReplay();
     this.runner.setup();
     this.extras.onLayout(this.runner.m);
+    // pick-and-place missions start with the gripper open: the first move is "go down and close" (P0-3)
+    if (this.runner.m.openStart) {
+      const a = this.app.act[5], m = this.m;
+      this.d.ctrl[a] = GRIP_OPEN; this.d.qpos[m.jnt_qposadr[m.actuator_trnid[2 * a]]] = GRIP_OPEN;
+      this.mj.mj_forward(m, this.d);
+    }
     this.ctl.syncFromCtrl();
+    this.confetti.clear();
     this.gizmo.clearPath();
     this.cameras.stopCinematic();
     this.panel.showMission(this.runner.m, this.progress[this.runner.m.id]);
     this.held = null;
-    if (this.teach.recording) this.teach.stopRec();
+    if (this.teach.recording && !this.recResetting) { this.teach.stopRec(); this.panel.toast('Nahrávání zastaveno (mise začala znovu)'); }
+    this.panel.showTips(this.runner.m);
   }
 
   startDemo() {
     this.teach.stopReplay();
     const rec = this.teach.recording;
-    this.app.reset();
+    this.recResetting = true; this.app.reset(); this.recResetting = false;
     if (rec) this.teach.startRec();     // recording the planner's solution is a valid demonstration
     this.runner.start();
+    this.runner.assisted = true;        // the robot solved it: no stars / record for the visitor (P1-4)
     const plan = this.runner.m.solve(this.ctl, this.world);
     this.preview(plan, true);
     this.panel.toast('Ruka plánuje řešení…');
@@ -205,7 +241,17 @@ class UX {
     this.runner.select(id); store.set('mission', id);
     this.teach.stopReplay();
     this.app.reset();
-    this.cameras.set('orbit');
+    this.cameras.set('orbit', this.runner.m.look);
+  }
+
+  /** Target from user input (drag / keys): the table is the floor, say so once per gesture (P1-8). */
+  userSetTarget(x, y, z) {
+    const FLOOR = 0.009;
+    if (z < FLOOR) {
+      z = FLOOR;
+      if (!this.floorNoted) { this.floorNoted = true; this.panel.toast('Níž to nejde, tam je stůl'); this.sound.blip(140, 0.06, 'square', 0.05); }
+    } else if (z > FLOOR + 0.01) this.floorNoted = false;
+    this.ctl.setTarget(x, y, z);
   }
   nextMission() {
     const k = MISSIONS.findIndex((m) => m.id === this.runner.m.id);
@@ -231,7 +277,13 @@ class UX {
   cycleView() { const v = this.cameras.cycle(); this.panel.showView(v); }
   setWrist(on) { this.cameras.setWrist(on); this.panel.showWrist(on); store.set('wrist', on); }
   setSound(on) { this.sound.set(on); this.panel.showSound(on); if (on) this.sound.blip(660, 0.08); }
-  toggleExplode() { const on = this.explode.toggle(); this.panel.showExplode(on); }
+  toggleExplode() {
+    const on = this.explode.toggle(); this.panel.showExplode(on);
+    // the parts are the scene now: mission objects, confetti and the HUD step aside (P1-6)
+    this.extras.setObjectsVisible(!on);
+    if (on) this.confetti.clear();
+    return on;
+  }
 
   toggleRec() {
     const t = this.teach;
@@ -253,7 +305,13 @@ class UX {
 
   // called by the gizmo
   onUserMove(kind) { this.runner.start(); this.pending = null; this.onboarding.notify(kind); if (this.teach.replaying) this.teach.stopReplay(); }
-  onDragEnd(kind) { this.onboarding.notify('dragend-' + kind); }
+  onDragEnd(kind) {
+    this.onboarding.notify('dragend-' + kind);
+    if (!this.touch && !store.get('tip-keys', false) && !this.onboarding.active()) {
+      store.set('tip-keys', true);
+      this.panel.toast('Tip: šipky posouvají cíl, mezerník ovládá chapadlo, ? ukáže zkratky');
+    }
+  }
 
   pickables() {
     const L = this.pickList; L.length = 0;
@@ -305,7 +363,7 @@ class UX {
         return;
       }
     }
-    if (plan) { this.preview(plan); this.onboarding.notify('plan'); }
+    if (plan && this.preview(plan)) this.onboarding.notify('plan-' + plan.kind);
   }
 
   /** Pen tool stroke (MuJoCo xy points) → the tip follows it. */
@@ -336,9 +394,11 @@ class UX {
     const app = this.app, res = this.runner.result, m = this.runner.m;
     app.won = true;
     const best = this.progress[m.id];
-    const isNew = !best || res.stars > best.stars || (res.stars === best.stars && res.time < best.time);
-    if (!this.teach.replaying && isNew) { this.progress[m.id] = { stars: Math.max(res.stars, best ? best.stars : 0), time: Math.min(res.time, best ? best.time : Infinity) }; store.set('progress', this.progress); }
-    this.panel.showWin(m, res, best, isNew && !this.teach.replaying);
+    const own = !this.teach.replaying && !this.runner.assisted;
+    const isNew = own && (!best || res.stars > best.stars || (res.stars === best.stars && res.time < best.time));
+    if (isNew) { this.progress[m.id] = { stars: Math.max(res.stars, best ? best.stars : 0), time: Math.min(res.time, best ? best.time : Infinity) }; store.set('progress', this.progress); }
+    this.panel.showWin(m, res, best, isNew, own ? null : (this.runner.assisted ? 'assisted' : 'replay'));
+    this.onboarding.notify('won');
     this.panel.showMission(m, this.progress[m.id]);
     document.getElementById('win').hidden = false;
     document.getElementById('win-h').focus({ preventScroll: true });
@@ -372,7 +432,7 @@ class UX {
         const fx = tg2.x - cam.position.x, fy = -(tg2.z - cam.position.z), L = Math.hypot(fx, fy) || 1;
         const ux = fx / L, uy = fy / L;           // forward in MuJoCo xy
         const t = this.ctl.target;
-        this.ctl.setTarget(t[0] + ux * dy + uy * dx, t[1] + uy * dy - ux * dx, t[2] + dz);
+        this.userSetTarget(t[0] + ux * dy + uy * dx, t[1] + uy * dy - ux * dx, t[2] + dz);
         this.onUserMove('key');
       };
       let used = true;
@@ -385,7 +445,7 @@ class UX {
         case 'PageDown': case 'e': case 'E': move(0, 0, -step); break;
         case 'a': case 'A': this.setRoll(this.ctl.roll + 0.1); break;
         case 'd': case 'D': this.setRoll(this.ctl.roll - 0.1); break;
-        case ' ': this.toggleGrip(); break;
+        case ' ': case 'g': case 'G': this.toggleGrip(); break;
         case 'm': case 'M': this.setMode(this.mode === 'smart' ? 'joints' : 'smart'); break;
         case 'p': case 'P': this.togglePen(); break;
         case 'c': case 'C': this.cycleView(); break;

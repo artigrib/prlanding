@@ -106,6 +106,35 @@ async function touchDrag(page, from, to, steps = 8) {
     const g1 = await S(p, () => window.__sim.state().ctrl[5]);
     ok(Math.abs(g1 - g0) > 0.5, `Space toggles the gripper (${g0.toFixed(2)} -> ${g1.toFixed(2)})`);
 
+    // ---- usability P0 regressions ----
+    // P0-3: pick-and-place missions start with the gripper open; HUD coaches from the gripper state
+    await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.5));
+    ok((await S(p, () => window.__sim.state().ctrl[5])) > 1, 'P0-3: mission 01 starts with the gripper open');
+    await S(p, () => { const u = window.__sim._ux, c = u.world.pos('cube', [0, 0, 0]); u.ctl.begin(); u.ctl.setGrip(false); u.ctl.setTarget(c[0], c[1], c[2] + 0.035); });
+    await S(p, () => window.__sim.advance(3));
+    let hud = (await ux(p)).hud;
+    ok(/Otevřete chapadlo/.test(hud), 'P0-3: closed gripper above the cube → "Otevřete chapadlo…" (' + hud + ')');
+    await S(p, () => window.__sim._ux.ctl.setGrip(true)); await S(p, () => window.__sim.advance(1));
+    hud = (await ux(p)).hud;
+    ok(/Sjeďte dolů/.test(hud), 'P0-3: open gripper above the cube → "Sjeďte dolů…" (' + hud + ')');
+    // P0-1: the gizmo hovers 3.5 cm above the cube; a click on the cube must pick it, not start a drag
+    await S(p, () => window.__sim._ux.gizmo.sync(0.016));
+    a = await S(p, () => window.__sim.screen('cube'));
+    const under = await S(p, ([x, y]) => window.__sim._ux.gizmo.hitHandle({ clientX: x, clientY: y }), [a.x, a.y]);
+    await p.mouse.click(a.x, a.y);
+    ok((await ux(p)).busy, `P0-1: click on the cube under the gizmo (handle there: ${under || 'none'}) starts a pick`);
+    const tP0 = await advanceUntil(p, () => window.__sim.ux().held === 'cube' && !window.__sim.ux().busy, 14, 1);
+    ok(tP0 > 0, 'P0-1: … and the cube is picked');
+    // P0-1: a real drag on the ball (> 6 px) still moves the target
+    a = await S(p, () => { window.__sim._ux.gizmo.sync(0.016); return window.__sim.screen('target'); });
+    const tg0 = (await ux(p)).target;
+    await p.mouse.move(a.x, a.y); await p.mouse.down(); await p.mouse.move(a.x + 3, a.y + 2);
+    ok(!(await S(p, () => !!window.__sim._ux.gizmo.drag)), 'P0-1: < 6 px is still a tap, no drag yet');
+    for (let i = 1; i <= 5; i++) await p.mouse.move(a.x + 12 * i, a.y);
+    await p.mouse.up();
+    const tg1 = (await ux(p)).target;
+    ok(Math.hypot(tg1[0] - tg0[0], tg1[1] - tg0[1]) > 0.01, 'P0-1: drag > 6 px moves the target');
+
     // click-to-pick: click the cube, then the bowl
     await S(p, () => window.__sim.reset());
     a = await S(p, () => window.__sim.screen('cube'));
@@ -173,8 +202,30 @@ async function touchDrag(page, from, to, steps = 8) {
     const o = await open(browser, base + '?test=1&onboard=1&detail=low', { width: 1280, height: 800 });
     await o.waitForTimeout(1500);
     ok(await S(o, () => !document.querySelector('.ux-coach').hidden), 'onboarding is shown');
+    await S(o, () => window.__sim._ux.onboarding.tick());
+    const cover = await S(o, () => { const u = window.__sim._ux, r = document.querySelector('.ux-coach').getBoundingClientRect();
+      const inside = (n) => { const q = u.gizmo.project(n === 'target' ? u.gizmo.tip : u.world.pos(n, [0, 0, 0]), {}); return q.x > r.left - 20 && q.x < r.right + 20 && q.y > r.top - 20 && q.y < r.bottom + 20; };
+      return ['cube', 'bowl', 'target'].filter(inside); });
+    ok(cover.length === 0, 'P0-2: desktop guide bubble covers no object of interest (' + cover.join(',') + ')');
+    // guided first task: click cube → click bowl → won → "Teď ručně"
+    a = await S(o, () => window.__sim.screen('cube')); await o.mouse.click(a.x, a.y);
+    await advanceUntil(o, () => window.__sim.ux().held === 'cube' && !window.__sim.ux().busy, 14, 1);
+    a = await S(o, () => window.__sim.screen('bowl')); await o.mouse.click(a.x, a.y);
+    await advanceUntil(o, () => window.__sim.ux().won, 16, 1);
+    await o.waitForTimeout(3200);
+    const step = await S(o, () => document.getElementById('ux-coach-h').textContent);
+    ok(/Teď ručně/.test(step), 'guided first task advances to the hands-on step after the win (' + step + ')');
     await shot(o, 'desk-10-onboarding');
     await o.close();
+
+    // ---------------- phone onboarding (P0-2) ----------------
+    const po = await open(browser, base + '?test=1&onboard=1&detail=low', { width: 390, height: 844 }, true);
+    await po.waitForTimeout(1500);
+    const pr = await S(po, () => { const c = document.querySelector('.ux-coach'), r = c.getBoundingClientRect(), st = document.querySelector('.stage').getBoundingClientRect();
+      return { inUnder: !!c.closest('.ux-under'), top: r.top, stageBottom: st.bottom, visible: !c.hidden }; });
+    ok(pr.visible && pr.inUnder && pr.top >= pr.stageBottom - 1, 'P0-2: phone guide is a strip under the stage, not over it ' + JSON.stringify(pr));
+    await shot(po, 'phone-00-onboarding');
+    await po.close();
 
     // ---------------- phone ----------------
     const ph = await open(browser, base + '?test=1&mise=bowl&detail=low', { width: 390, height: 844 }, true);

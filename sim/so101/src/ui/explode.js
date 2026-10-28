@@ -95,7 +95,7 @@ export class Explode {
     st.appendChild(this.tip);
     this.range = el.querySelector('#ux-ex-r');
     this.range.addEventListener('input', () => { this.stopPlay(); this.want = this.amount = +this.range.value / 100; this.showAmount(); });
-    el.querySelector('.ux-x').addEventListener('click', () => { this.toggle(); this.ux.panel.showExplode(false); });
+    el.querySelector('.ux-x').addEventListener('click', () => this.ux.toggleExplode());
     el.querySelector('#ux-ex-play').addEventListener('click', () => (this.play ? this.stopPlay() : this.startPlay()));
     this.hoverEl = el.querySelector('.ux-ex-hover');
     this.stepEl = el.querySelector('#ux-ex-step');
@@ -109,13 +109,16 @@ export class Explode {
       ux.ctl.cancel(); ux.pending = null; ux.teach.stopReplay();
       DISPLAY_POSE.forEach((v, i) => ux.app.setCtrl(i, v));
       ux.gizmo.enabled = false;
-      this.want = 0.8; this.el.hidden = false;
+      this.want = 0.8; this.el.hidden = false; this.framed = false;
       ux.panel.stage.classList.add('ux-exploding');
+      // phones: the card goes to the top of the panel, the stage keeps only the parts (P1-6)
+      if (matchMedia('(max-width:860px)').matches) { const pn = document.querySelector('.panel'); pn.insertBefore(this.el, pn.firstChild); this.el.classList.add('inpanel'); }
       ux.cameras.frameArm();
     } else {
       this.stopPlay(); this.want = 0; this.el.hidden = true; this.tip.hidden = true; this.unhover();
       ux.gizmo.enabled = true; ux.ctl.syncFromCtrl();
       ux.panel.stage.classList.remove('ux-exploding');
+      if (this.el.classList.contains('inpanel')) { ux.panel.stage.appendChild(this.el); this.el.classList.remove('inpanel'); }
     }
     return this.on;
   }
@@ -162,6 +165,15 @@ export class Explode {
       if (this.on && document.activeElement !== this.range) this.showAmount();
     }
     this.offsets();
+    // once the parts have spread out, frame all of them (bounding sphere of the part centres)
+    if (this.on && !this.framed && !this.play && Math.abs(this.want - this.amount) < 0.01) {
+      this.framed = true;
+      let cx = 0, cy = 0, cz = 0; const P = this.parts;
+      for (const p of P) { cx += p.c[0] + p.off[0]; cy += p.c[1] + p.off[1]; cz += p.c[2] + p.off[2]; }
+      cx /= P.length; cy /= P.length; cz /= P.length;
+      let r = 0; for (const p of P) r = Math.max(r, Math.hypot(p.c[0] + p.off[0] - cx, p.c[1] + p.off[1] - cy, p.c[2] + p.off[2] - cz));
+      this.ux.cameras.frameSphere([cx, cy, cz], r + 0.04);
+    }
   }
 
   offsets() {

@@ -1,6 +1,10 @@
 // "Učení ukázkou": record a demonstration (joint trajectory), replay / loop it, export as LeRobot-like JSON.
 
+import { store } from './store.js';
+import { MISSIONS } from '../missions.js';
+
 const FPS = 30, MAX_S = 180;
+const SNAP_KEYS = ['qpos', 'qvel', 'ctrl', 'act', 'mpos', 'mquat'];
 const NAMES = ['shoulder_pan', 'shoulder_lift', 'elbow_flex', 'wrist_flex', 'wrist_roll', 'gripper'];
 
 export class Teach {
@@ -42,7 +46,75 @@ export class Teach {
     if (!this.recording) return;
     this.recording = false;
     if (this.demo && this.demo.t.length < 5) this.demo = null;   // too short to be useful
+    this.restored = false;
+    this.persist();
     this.changed();
+  }
+
+  // ---------- keep / edit / share a demonstration (P1-5) ----------
+  /** Save the demonstration in localStorage so it survives a reload. */
+  persist() {
+    if (!this.demo) { store.set('demo', null); return; }
+    const D = this.demo, r = (v) => Math.round(v * 1e5) / 1e5;
+    const snap = {}; for (const k of SNAP_KEYS) snap[k] = D.snap[k] ? Array.from(D.snap[k], r) : null;
+    snap.time = D.snap.time;
+    store.set('demo', { v: 1, mission: D.mission.id, t: D.t.map(r), obs: D.obs.map((a) => a.map(r)), act: D.act.map((a) => a.map(r)), snap });
+  }
+  /** Restore the saved demonstration (if any) on start. */
+  load() {
+    const j = store.get('demo', null);
+    if (!j || j.v !== 1 || !j.t || j.t.length < 5) return false;
+    const mission = MISSIONS.find((m) => m.id === j.mission); if (!mission) return false;
+    const snap = { time: j.snap.time };
+    for (const k of SNAP_KEYS) snap[k] = j.snap[k] ? Float64Array.from(j.snap[k]) : null;
+    if (snap.qpos.length !== this.d.qpos.length || snap.mpos.length !== this.d.mocap_pos.length) return false;   // older scene
+    this.demo = { t: j.t, obs: j.obs, act: j.act, snap, mission, t0: 0, next: 0 };
+    this.restored = true;
+    this.changed();
+    return true;
+  }
+  clear() { this.stopReplay(); this.demo = null; this.restored = false; this.persist(); this.changed(); }
+  /** Cut the idle part at the start and at the end. Returns the number of removed frames. */
+  trim() {
+    const D = this.demo; if (!D) return 0;
+    const n = D.t.length, mv = (i) => { let s = 0; for (let j = 0; j < 6; j++) s += Math.abs(D.act[i][j] - D.act[i - 1][j]); return s > 0.004; };
+    let a = 1; while (a < n && !mv(a)) a++;
+    let b = n - 1; while (b > a && !mv(b)) b--;
+    if (a >= n) return 0;
+    const from = Math.max(0, a - 4), to = Math.min(n - 1, b + 15);   // keep ~0.5 s after the last motion (settling)
+    const removed = n - (to - from + 1);
+    if (!removed) return 0;
+    const t0 = D.t[from];
+    D.t = D.t.slice(from, to + 1).map((t) => t - t0); D.obs = D.obs.slice(from, to + 1); D.act = D.act.slice(from, to + 1);
+    this.persist(); this.changed();
+    return removed;
+  }
+  /** Import the JSON from download() (also from another computer). Returns the number of frames. */
+  importJSON(j) {
+    const ep = j && j.episodes && j.episodes[0];
+    if (!ep || !Array.isArray(ep.frames) || ep.frames.length < 5 || j.fps !== FPS) throw new Error('not a demo');
+    const [glo, ghi] = this.ux.ctl.kin.c.range[5];
+    const back = (v) => v.map((x, i) => (i === 5 ? glo + x / 100 * (ghi - glo) : x * Math.PI / 180));
+    const pr = j.printedrobotics || {};
+    const mission = MISSIONS.find((m) => m.id === pr.mission) || this.ux.runner.m;
+    const D = { t: [], obs: [], act: [], mission, t0: 0, next: 0 };
+    for (const f of ep.frames) { D.t.push(+f.timestamp); D.obs.push(back(f['observation.state'])); D.act.push(back(f.action)); }
+    if (this.recording) this.stopRec();
+    this.stopReplay();
+    if (pr.snapshot && pr.snapshot.qpos && pr.snapshot.qpos.length === this.d.qpos.length) {
+      D.snap = { time: pr.snapshot.time || 0 };
+      for (const k of SNAP_KEYS) D.snap[k] = pr.snapshot[k] ? Float64Array.from(pr.snapshot[k]) : null;
+    } else {
+      // no scene snapshot: the mission's start scene with the arm at the first recorded pose
+      this.ux.beginReplayReset({ mission });
+      const act = this.app.act, m = this.m;
+      for (let i = 0; i < 6; i++) { this.d.qpos[m.jnt_qposadr[m.actuator_trnid[2 * act[i]]]] = D.obs[0][i]; this.d.ctrl[act[i]] = D.act[0][i]; }
+      this.ux.mj.mj_forward(m, this.d);
+      D.snap = this.snapshot();
+    }
+    this.demo = D; this.restored = false;
+    this.persist(); this.changed();
+    return D.t.length;
   }
 
   /** Called after physics each frame. */
@@ -111,6 +183,11 @@ export class Teach {
         timestamp: { dtype: 'float32', shape: [1] },
         frame_index: { dtype: 'int64', shape: [1] },
         episode_index: { dtype: 'int64', shape: [1] }
+      },
+      printedrobotics: {
+        mission: D.mission.id,
+        note: 'Výchozí stav scény pro přehrání v simulátoru (qpos, qvel, ctrl, mocap); LeRobot tuto část ignoruje.',
+        snapshot: Object.fromEntries(SNAP_KEYS.map((k) => [k, D.snap[k] ? Array.from(D.snap[k]) : null]).concat([['time', D.snap.time]]))
       },
       episodes: [{
         episode_index: 0, task: D.mission.title, length: D.t.length,

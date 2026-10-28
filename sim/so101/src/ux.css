@@ -163,3 +163,47 @@
   .ux-explode .jn input{grid-column:auto;height:28px}
   .ux-ex-b .btn{min-height:42px;font-size:13.5px}
 }
+
+/* ---------- usability round 1 ---------- */
+.ux-hintbtn{margin-left:6px;border:1px solid var(--accent);background:var(--accent);color:var(--ink);font:600 13px/1 var(--sans);padding:6px 10px;cursor:pointer;min-height:32px;animation:ux-pulse 1.6s ease-in-out infinite}
+.ux-hintbtn:hover{background:var(--accent-d)}
+@keyframes ux-pulse{50%{box-shadow:0 0 0 5px rgba(232,70,30,.25)}}
+#ux-mode .row-b{margin-top:12px}
+.ux-under{display:none}
+.ux-exlink{align-self:flex-start;margin-top:4px}
+.ux-setup{display:flex;flex-direction:column;gap:8px}
+.ux-setup>.mono{border-top:1px solid var(--ink);padding-top:12px}
+.ux-setup .mono-s{margin:0}
+.ux-teach2 .btn{font-size:14.5px;justify-content:center}
+/* panel skeleton while loading (sliders appear after the engine is ready) */
+.joints[disabled]:not(:has(.jn)){min-height:200px;background:repeating-linear-gradient(transparent 0 26px,var(--stone) 26px 30px,transparent 30px 52px)}
+/* win dialog above the toolbar and the confetti; no focus ring on the programmatic focus target */
+.win{z-index:8}
+#win-h:focus{outline:none}
+/* exploded view: the parts are the scene */
+.ux-exploding .hud,.ux-exploding .ux-tools .ux-tb:not(#ux-parts),.ux-exploding .hint,.ux-exploding .ux-recb{display:none!important}
+.ux-explode.inpanel{position:static;width:auto;max-height:none;box-shadow:6px 6px 0 var(--accent);margin-bottom:4px}
+/* onboarding strip (phones) */
+.ux-coach.strip{position:static;width:auto;box-shadow:none;border-width:1px 0 0;padding:10px 16px 12px;gap:4px;transform:none!important}
+.ux-coach.strip h3{font-size:17px}
+.ux-coach.strip .ux-coach-t{font-size:14px}
+.ux-coach.strip .ux-coach-b .btn{min-height:40px}
+
+@media (max-width:860px){
+  .stage{min-height:max(300px,52vh)}
+  .ux-under{display:block;position:sticky;top:max(300px,52svh);z-index:3;background:#fff;border-bottom:1px solid var(--ink)}
+  .ux-under .hud{position:static;max-width:none;border:0;border-bottom:1px solid var(--line);padding:8px 12px;font-size:14px}
+  .ux-qrow{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px;padding:8px 10px}
+  .ux-qrow .btn{min-height:48px;padding:0 10px;font-size:14.5px;justify-content:center;gap:6px}
+  .ux-qrow .btn[aria-pressed=true]{background:var(--ink);color:#fff}
+  .ux-hintbtn{display:none}
+  .ux-toast{top:12px}
+  .ux-recb{top:12px}
+  .win-b{flex-wrap:wrap}
+  .win-b .btn{flex:1 1 40%}
+  .win-b #cta{flex:1 1 100%}
+}
+@media (max-width:480px){.win{padding:16px}.win-b .btn{font-size:14.5px}}
+.jn output.ux-lim{color:var(--accent-text);font-weight:500}
+#c:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.ux-tb svg{width:20px;height:20px}

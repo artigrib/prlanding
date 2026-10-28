@@ -48,8 +48,9 @@ export class Gizmo {
     // invisible, larger hit proxies (touch friendly)
     const inv = new T.MeshBasicMaterial({ visible: false });
     this.hMove = new T.Mesh(new T.SphereGeometry(0.02, 12, 8), inv);
-    this.hUp = new T.Mesh(new T.CylinderGeometry(0.012, 0.012, 0.03, 8), inv); this.hUp.rotation.x = Math.PI / 2; this.hUp.position.z = 0.036;
-    this.hDown = this.hUp.clone(); this.hDown.position.z = -0.036;
+    this.hUp = new T.Mesh(new T.CylinderGeometry(0.009, 0.009, 0.03, 8), inv); this.hUp.rotation.x = Math.PI / 2; this.hUp.position.z = 0.036;
+    // the lower arrow usually sits right over the object the user wants to click: keep its hit area tight
+    this.hDown = new T.Mesh(new T.CylinderGeometry(0.007, 0.007, 0.022, 8), inv); this.hDown.rotation.x = Math.PI / 2; this.hDown.position.z = -0.04;
     this.hRing = new T.Mesh(new T.TorusGeometry(0.03, 0.007, 6, 32), inv);
     root.add(this.hMove, this.hUp, this.hDown, this.hRing);
     this.handles = [this.hMove, this.hUp, this.hDown, this.hRing];
@@ -235,8 +236,9 @@ export class Gizmo {
     this.setRay(e);
     this.root.updateMatrixWorld();
     const h = this.ray.intersectObjects(this.handles, false);
-    if (!h.length) return null;
+    if (!h.length) { this.handleDist = Infinity; return null; }
     const o = h[0].object;
+    this.handleDist = h[0].distance;
     return o === this.hMove ? 'move' : o === this.hRing ? 'roll' : 'height';
   }
   // MuJoCo-frame point where the current ray meets a three.js plane
@@ -251,6 +253,11 @@ export class Gizmo {
   onDown(e) {
     if (e.target !== this.canvas) return;
     this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (this.pend && e.pointerId !== this.pend.id) {
+      // a second finger while pressing a handle: it is a drag (and a twist), not a tap
+      const P = this.pend; this.pend = null;
+      this.startDrag(P.kind, { pointerId: P.id, clientX: P.x, clientY: P.y });
+    }
     if (this.drag) {
       // second finger while dragging: twist = wrist rotation
       if (e.pointerType === 'touch' && this.pointers.size === 2) {
@@ -263,7 +270,16 @@ export class Gizmo {
     const ux = this.ux;
     if (ux.mode === 'smart') {
       const kind = this.hitHandle(e);
-      if (kind) { this.startDrag(kind, e); e.stopPropagation(); e.preventDefault(); return; }
+      if (kind) {
+        // tap = pick, drag = move: the drag only starts after the pointer travelled > 6 px, so a tap on an
+        // object behind / under a handle still picks it (P0-1). A closer object wins outright.
+        const hd = this.handleDist, pk = this.pickAt(e), pd = pk ? this.pickDist : Infinity;
+        if (!(pk && pk.name !== 'table' && pd < hd - 0.002)) {
+          this.pend = { kind, id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), pick: pk && pk.name !== 'table' ? pk : null };
+          try { this.canvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+          e.stopPropagation(); e.preventDefault(); return;
+        }
+      }
       if (ux.penTool) {
         const p = this.tablePoint(e);
         if (p) { this.startStroke(e, p); e.stopPropagation(); e.preventDefault(); return; }
@@ -320,6 +336,13 @@ export class Gizmo {
 
   onMove(e) {
     if (this.pointers.has(e.pointerId)) this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const P = this.pend;
+    if (P && e.pointerId === P.id) {
+      e.stopPropagation(); e.preventDefault();
+      if (Math.hypot(e.clientX - P.x, e.clientY - P.y) <= 6) return;
+      this.pend = null;
+      this.startDrag(P.kind, { pointerId: P.id, clientX: P.x, clientY: P.y });   // plane/offset from the press point
+    }
     const D = this.drag;
     if (D) {
       e.stopPropagation(); e.preventDefault();
@@ -333,10 +356,10 @@ export class Gizmo {
       if (D.kind === 'move') {
         this.plane.copy(D.plane);
         const p = this.tip;
-        if (this.rayPlane(p)) ctl.setTarget(p[0] + this.off[0], p[1] + this.off[1], D.vertical ? p[2] + this.off[2] : t[2]);
+        if (this.rayPlane(p)) this.ux.userSetTarget(p[0] + this.off[0], p[1] + this.off[1], D.vertical ? p[2] + this.off[2] : t[2]);
       } else if (D.kind === 'height') {
         const s = this.lineParam(t);
-        ctl.setTarget(t[0], t[1], D.z0 + (s - D.s0));
+        this.ux.userSetTarget(t[0], t[1], D.z0 + (s - D.s0));
       } else {
         this.plane.copy(D.plane);
         const p = this.tip;
@@ -363,6 +386,12 @@ export class Gizmo {
 
   onUp(e, cancelled) {
     this.pointers.delete(e.pointerId);
+    const P = this.pend;
+    if (P && e.pointerId === P.id) {
+      this.pend = null; e.stopPropagation();
+      if (!cancelled && P.pick) this.ux.onPick(P.pick.name, P.pick.point);
+      return;
+    }
     const D = this.drag;
     if (D) {
       e.stopPropagation();
@@ -399,6 +428,7 @@ export class Gizmo {
     if (!h.length) return null;
     let o = h[0].object; while (o && !o.userData.pick) o = o.parent;
     if (!o) return null;
+    this.pickDist = h[0].distance;
     this.app.world.worldToLocal(this.v3.copy(h[0].point));
     return { name: o.userData.pick, point: [this.v3.x, this.v3.y, this.v3.z] };
   }

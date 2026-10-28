@@ -133,6 +133,12 @@ export class Extras {
     this.clearInk();
   }
 
+  /** Hide / show the mission objects (exploded view). */
+  setObjectsVisible(on) {
+    if (!on) { this.hiddenSet = []; for (const m of [...Object.values(this.meshes), this.ux.cubeMesh, this.paper, this.pen, this.ink]) if (m && m.visible) { m.visible = false; this.hiddenSet.push(m); } }
+    else if (this.hiddenSet) { for (const m of this.hiddenSet) m.visible = true; this.hiddenSet = null; }
+  }
+
   clearInk() { this.inkN = 0; this.hasLast = false; this.inkGeo.setDrawRange(0, 0); }
 
   sync() {

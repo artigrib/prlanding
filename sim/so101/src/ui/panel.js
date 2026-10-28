@@ -25,6 +25,45 @@ export class Panel {
     this.stageUI();
     this.winUI();
     this.helpUI();
+    this.flowsUI();
+  }
+
+  // ---------- usability round 1: reachable help, phone action row, layout ----------
+  flowsUI() {
+    const ux = this.ux;
+    // "Poradit" in the HUD: appears after 20 s without success (P1-1)
+    this.hintBtn = h(`<button type="button" class="ux-hintbtn" id="ux-hint" hidden>Poradit <span aria-hidden="true">▶</span></button>`);
+    $('hud').appendChild(this.hintBtn);
+    this.hintBtn.addEventListener('click', () => ux.startDemo());
+    // Domů / Znovu / Ukázat řešení right under the mode switch (was below the fold)
+    const rowb = document.querySelector('.row-b'), mode = $('ux-mode');
+    if (rowb && mode) mode.insertBefore(rowb, this.smart);
+    // phone: HUD strip + action row under the stage, sticky with it (P1-3)
+    const under = this.under = h(`<div class="ux-under">
+      <div class="ux-qrow">
+        <button type="button" class="btn btn-o" id="ux-qgrip">Otevřít chapadlo</button>
+        <button type="button" class="btn btn-o" id="ux-qhome">Domů <span aria-hidden="true">⌂</span></button>
+        <button type="button" class="btn btn-o" id="ux-qhint">Poradit <span aria-hidden="true">▶</span></button>
+      </div></div>`);
+    this.stage.parentNode.insertBefore(under, this.stage.nextSibling);
+    $('ux-qgrip').addEventListener('click', () => ux.toggleGrip());
+    $('ux-qhome').addEventListener('click', () => { ux.ctl.cancel(); ux.pending = null; ux.app.goHome(); ux.ctl.syncFromCtrl(); });
+    $('ux-qhint').addEventListener('click', () => ux.startDemo());
+    const mq = matchMedia('(max-width:860px)'), hud = $('hud');
+    const place = () => { if (mq.matches) under.insertBefore(hud, under.firstChild); else if (hud.parentNode !== this.stage) this.stage.appendChild(hud); };
+    place(); mq.addEventListener ? mq.addEventListener('change', place) : mq.addListener(place);
+    // maker path: exploded view from the panel (P1-6) and the servo setup link higher up (P2-12)
+    const mbox = document.querySelector('.mission');
+    const ex = h(`<button type="button" class="ux-link ux-exlink" id="ux-exlink">Z čeho se SO-101 skládá <span aria-hidden="true">→</span></button>`);
+    mbox.appendChild(ex);
+    ex.addEventListener('click', () => { if (!ux.explode.on) ux.toggleExplode(); if (mq.matches) scrollTo({ top: 0, behavior: ux.reduced ? 'auto' : 'smooth' }); });
+    const setup = document.querySelector('.panel a[href="nastaveni/"]'), teach = $('ux-teach');
+    if (setup && teach) {
+      const wrap = h(`<div class="ux-setup"><p class="mono">Skutečná ruka</p></div>`);
+      teach.parentNode.insertBefore(wrap, teach.nextSibling);
+      wrap.appendChild(setup);
+      wrap.appendChild(h(`<p class="mono-s muted">ID serv · kalibrace · test · diagnostika – nanečisto, bez hardwaru</p>`));
+    }
   }
 
   // ---------- mission header + picker ----------
@@ -123,6 +162,14 @@ export class Panel {
     pitch.addEventListener('input', () => this.ux.setPitch(+pitch.value * Math.PI / 180));
   }
 
+  /** last smart-move tip follows the mission (P2-1); "Klepněte" on touch */
+  showTips(m) {
+    const li = this.smart.querySelector('.ux-tips li:last-child span');
+    let t = m.tip || '';
+    if (this.ux.touch) t = t.replace(/Klikněte/g, 'Klepněte').replace(/myší nebo prstem/g, 'prstem');
+    if (li && li.innerHTML !== t) li.innerHTML = t;
+  }
+
   showMode(mode) {
     for (const b of this.seg) b.setAttribute('aria-checked', String(b.dataset.mode === mode));
     this.smart.hidden = mode !== 'smart';
@@ -132,6 +179,7 @@ export class Panel {
   showGrip(open) {
     this.gripBtn.firstChild.textContent = open ? 'Zavřít chapadlo ' : 'Otevřít chapadlo ';
     this.gripBtn.setAttribute('aria-pressed', String(!open));
+    const q = $('ux-qgrip'); if (q) { q.textContent = open ? 'Zavřít chapadlo' : 'Otevřít chapadlo'; q.setAttribute('aria-pressed', String(!open)); }
   }
   showPen(on) { this.penBtn.setAttribute('aria-pressed', String(on)); this.stage.classList.toggle('ux-pen-on', on); }
   showRoll(r) {
@@ -151,12 +199,27 @@ export class Panel {
         <button type="button" class="btn btn-o" id="ux-play" disabled data-tip="Přehrát ukázku (L)">Přehrát <span aria-hidden="true">▶</span></button>
         <button type="button" class="btn btn-o" id="ux-loop" aria-pressed="false" disabled data-tip="Přehrávat dokola">Smyčka <span aria-hidden="true">↻</span></button>
       </div>
+      <div class="ux-row3 ux-teach2">
+        <button type="button" class="btn btn-o" id="ux-trim" disabled data-tip="Odstraní klid na začátku a konci">Oříznout</button>
+        <button type="button" class="btn btn-o" id="ux-del" disabled>Smazat</button>
+        <button type="button" class="btn btn-o" id="ux-import" data-tip="Ukázku od učitele nebo z jiného počítače">Nahrát <span aria-hidden="true">↑</span></button>
+      </div>
+      <input type="file" id="ux-import-f" accept="application/json,.json" hidden>
       <button type="button" class="ux-link" id="ux-export" disabled>Stáhnout ukázku jako JSON (formát podobný LeRobot) <span aria-hidden="true">⤓</span></button>
       <p class="mono-s muted" id="ux-teach-s" aria-live="polite">Zatím žádná ukázka.</p>
     </section>`));
     $('ux-rec').addEventListener('click', () => this.ux.toggleRec());
     $('ux-play').addEventListener('click', () => this.ux.togglePlay());
     $('ux-loop').addEventListener('click', () => { const t = this.ux.teach; t.loop = !t.loop; this.showTeach(t); });
+    $('ux-trim').addEventListener('click', () => { const n = this.ux.teach.trim(); this.toast(n ? `Oříznuto ${n} snímků klidu` : 'Není co oříznout'); });
+    $('ux-del').addEventListener('click', () => { this.ux.teach.clear(); this.toast('Ukázka smazána'); });
+    $('ux-import').addEventListener('click', () => $('ux-import-f').click());
+    $('ux-import-f').addEventListener('change', async (e) => {
+      const f = e.target.files && e.target.files[0]; e.target.value = '';
+      if (!f) return;
+      try { const n = this.ux.teach.importJSON(JSON.parse(await f.text())); this.toast(`Ukázka nahrána (${n} snímků). Přehrajte si ji.`); }
+      catch (err) { this.toast('Tohle není ukázka ze simulátoru SO-101', 'err'); }
+    });
     $('ux-export').addEventListener('click', () => { const j = this.ux.teach.download(); if (j) this.toast(`Staženo: ${j.episodes[0].length} snímků po 1/30 s`); });
   }
   showTeach(t) {
@@ -164,11 +227,13 @@ export class Panel {
     rec.setAttribute('aria-pressed', String(t.recording));
     rec.querySelector('.l').textContent = t.recording ? 'Zastavit' : 'Nahrát';
     play.disabled = !t.demo || t.recording; loop.disabled = !t.demo || t.recording; ex.disabled = !t.demo || t.recording;
+    $('ux-trim').disabled = $('ux-del').disabled = !t.demo || t.recording || t.replaying;
+    $('ux-import').disabled = t.recording;
     play.firstChild.textContent = t.replaying ? 'Stop ' : 'Přehrát ';
     play.querySelector('span').textContent = t.replaying ? '■' : '▶';
     loop.setAttribute('aria-pressed', String(t.loop));
     s.textContent = t.recording ? 'Nahrávám… pohybujte rukou.' : t.replaying ? 'Přehrávám ukázku.'
-      : t.demo ? `Ukázka: ${fmt(t.duration())}, ${t.demo.t.length} snímků (mise ${t.demo.mission.n}).` : 'Zatím žádná ukázka.';
+      : t.demo ? `${t.restored ? 'Ukázka z minula' : 'Ukázka'}: ${fmt(t.duration())}, ${t.demo.t.length} snímků (mise ${t.demo.mission.n}).` : 'Zatím žádná ukázka.';
     this.recBadge.hidden = !t.recording; this.playBar.hidden = !t.replaying;
     this.stage.classList.toggle('ux-replaying', t.replaying);
   }
@@ -178,10 +243,10 @@ export class Panel {
     const st = this.stage;
     const bar = this.toolbar = h(`<div class="ux-tools" role="toolbar" aria-label="Pohled a zvuk">
       <button type="button" class="ux-tb" id="ux-view" data-tip="Přepnout pohled (C)">${I.cam}<span class="ux-tbl" id="ux-view-l">Volný</span></button>
-      <button type="button" class="ux-tb" id="ux-wrist" aria-pressed="false" aria-label="Kamera na zápěstí" data-tip="Kamera na zápěstí (V)">${I.wrist}</button>
-      <button type="button" class="ux-tb" id="ux-parts" aria-pressed="false" aria-label="Rozložený pohled" data-tip="Rozložený pohled – z čeho se skládá (X)">${I.parts}</button>
-      <button type="button" class="ux-tb" id="ux-sound" aria-pressed="false" aria-label="Zvuk" data-tip="Zvuk (S)">${I.snd}</button>
-      <button type="button" class="ux-tb" id="ux-help" aria-label="Klávesové zkratky a nápověda" data-tip="Nápověda (?)">${I.help}</button>
+      <button type="button" class="ux-tb" id="ux-wrist" aria-pressed="false" aria-label="Kamera na zápěstí" data-tip="Kamera na zápěstí (V)">${I.wrist}<span class="ux-tbl">Zápěstí</span></button>
+      <button type="button" class="ux-tb" id="ux-parts" aria-pressed="false" aria-label="Rozložený pohled" data-tip="Rozložený pohled – z čeho se skládá (X)">${I.parts}<span class="ux-tbl">Díly</span></button>
+      <button type="button" class="ux-tb" id="ux-sound" aria-pressed="false" aria-label="Zvuk" data-tip="Zvuk (S)">${I.snd}<span class="ux-tbl">Zvuk</span></button>
+      <button type="button" class="ux-tb" id="ux-help" aria-label="Klávesové zkratky a nápověda" data-tip="Nápověda (?)">${I.help}<span class="ux-tbl">Zkratky</span></button>
     </div>`);
     st.appendChild(bar);
     $('ux-view').addEventListener('click', () => this.ux.cycleView());
@@ -233,8 +298,10 @@ export class Panel {
     if (t.recording) { const rs = Math.floor(ux.app.d.time - t.demo.t0); if (rs !== this.recS) { $('ux-rec-t').textContent = fmt(rs); this.recS = rs; } }
     if (t.replaying) $('ux-play-p').style.width = (t.progress() * 100).toFixed(1) + '%';
     this.showRoll(ux.ctl.active ? ux.ctl.roll : ux.app.d.ctrl[ux.app.act[4]]);
-    const open = ux.app.d.ctrl[ux.app.act[5]] > 0.5;
+    const open = (ux.ctl.active ? ux.ctl.grip : ux.app.d.ctrl[ux.app.act[5]]) > 0.5;
     if (open !== this.gripOpen) { this.gripOpen = open; this.showGrip(open); }
+    const hint = r.time > 20 && !r.won && !ux.ctl.busy() && !ux.pending && !ux.teach.replaying && !ux.explode.on;
+    if (hint === this.hintBtn.hidden) this.hintBtn.hidden = !hint;
   }
 
   // ---------- model detail (quality) ----------
@@ -251,10 +318,10 @@ export class Panel {
     colors.parentNode.insertBefore(el, colors.nextSibling);
     this.qBtns = [...el.querySelectorAll('[data-q]')];
     for (const b of this.qBtns) b.addEventListener('click', () => {
-      const q = b.dataset.q; this.showQuality(q, false, q === 'high');
+      const q = b.dataset.q; this.showQuality(q, false, q === 'high' && !this.ux.hd.loaded);
       this.ux.hd.set(q).catch(() => this.toast('Detailní model se nepodařilo načíst', 'err'));
     });
-    this.showQuality(this.ux.hd.quality, false, this.ux.hd.quality === 'high');
+    this.showQuality(this.ux.hd.quality, false, false);
   }
   showQuality(q, hi, loading) {
     for (const b of this.qBtns) b.setAttribute('aria-checked', String(b.dataset.q === q));
@@ -277,18 +344,32 @@ export class Panel {
     this.winH = $('win-h');
     this.defaultWin = this.winText.textContent;
   }
-  showWin(m, res, best, isNew) {
-    this.winH.textContent = m.id === 'bowl' ? 'Hotovo! Kostka je v misce.' : 'Hotovo! ' + m.short + ' zvládnuto.';
-    const sp = this.winStars.children;
-    for (let i = 0; i < 3; i++) { sp[i].className = i < res.stars ? 'on' : ''; sp[i].style.animationDelay = (0.15 + i * 0.18) + 's'; }
-    this.winStars.setAttribute('aria-label', `${res.stars} ze 3 hvězdiček`);
-    let st = `Čas ${fmt(res.time)}`;
-    if (res.prec) st += ` · přesnost ${(res.prec * 1000).toFixed(1)} mm`;
-    st += ` · ${'★'.repeat(res.stars)}${'☆'.repeat(3 - res.stars)}`;
-    if (isNew) st += ' · nový rekord';
-    else if (best) st += ` · rekord ${fmt(best.time)}`;
-    this.winStats.textContent = st;
-    this.winText.textContent = this.defaultWin;
+  /** by: null = the visitor, 'assisted' = "Ukázat řešení", 'replay' = a recorded demonstration (no stars then). */
+  showWin(m, res, best, isNew, by) {
+    const again = document.getElementById('again');
+    this.winStars.hidden = !!by;
+    if (by) {
+      this.winH.textContent = by === 'assisted' ? 'Tohle zvládla ruka sama.' : 'Ukázka splnila misi.';
+      this.winStats.textContent = `Čas ${fmt(res.time)} · hvězdičky se počítají jen vám`;
+      this.winText.textContent = by === 'assisted' ? 'Řešení ukázala ruka sama – zkuste to teď vy. Stačí kliknout na kostku a pak na misku.'
+        : 'Přesně takhle se skutečná SO-101 učí: z nahraných ukázek. Zkuste misi vyřešit sami.';
+      again.firstChild.textContent = 'Teď to zkuste vy ';
+      again.classList.add('btn-act'); again.classList.remove('btn-o');
+    } else {
+      this.winH.textContent = m.id === 'bowl' ? 'Hotovo! Kostka je v misce.' : 'Hotovo! ' + m.short + ' zvládnuto.';
+      const sp = this.winStars.children;
+      for (let i = 0; i < 3; i++) { sp[i].className = i < res.stars ? 'on' : ''; sp[i].style.animationDelay = (0.15 + i * 0.18) + 's'; }
+      this.winStars.setAttribute('aria-label', `${res.stars} ze 3 hvězdiček`);
+      let st = `Čas ${fmt(res.time)}`;
+      if (res.prec) st += ` · přesnost ${(res.prec * 1000).toFixed(1)} mm`;
+      st += ` · ${'★'.repeat(res.stars)}${'☆'.repeat(3 - res.stars)}`;
+      if (isNew) st += ' · nový rekord';
+      else if (best) st += ` · rekord ${fmt(best.time)}`;
+      this.winStats.textContent = st;
+      this.winText.textContent = res.stars < 3 && m.advice ? m.advice : this.defaultWin;
+      again.firstChild.textContent = 'Zkusit znovu ';
+      again.classList.remove('btn-act'); again.classList.add('btn-o');
+    }
     const last = MISSIONS[MISSIONS.length - 1].id === m.id;
     this.nextBtn.hidden = last;
   }
@@ -302,7 +383,7 @@ export class Panel {
       ['←  →  ↑  ↓', 'posun cíle po stole'],
       ['PgUp / PgDn', 'výška cíle (také Q / E)'],
       ['A / D', 'rotace zápěstí'],
-      ['Mezerník', 'otevřít / zavřít chapadlo'],
+      ['Mezerník / G', 'otevřít / zavřít chapadlo'],
       ['M', 'chytrý pohyb ↔ klouby'],
       ['P', 'pero – nakreslete cestu'],
       ['C', 'přepnout pohled kamery'],

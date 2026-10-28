@@ -26,7 +26,9 @@ if (typeof WebAssembly !== 'object' || !hasWebGL()) {
 async function main() {
   const t0 = performance.now();
   const bar = $('prog');
-  const ctx = await loadSim((f) => { bar.style.width = (f * 100).toFixed(1) + '%'; });
+  const copy = loadingCopy(t0);   // [ux-hook:loading] honest progress text on slow networks
+  const ctx = await loadSim((f) => { bar.style.width = (f * 100).toFixed(1) + '%'; copy(f); });
+  copy.done();
   const sim = new ArmSim(ctx, {
     canvas: $('c'),
     onInteract: () => { $('hint').hidden = true; },
@@ -49,6 +51,27 @@ async function main() {
   if (TEST) { window.__sim = app.api(); window.__sim.loadMs = Math.round(performance.now() - t0); }
   // free WASM heap objects (Embind handles are not garbage-collected)
   addEventListener('pagehide', (e) => { if (!e.persisted) sim.dispose(); });
+}
+
+// ---------- [ux-hook:loading] progress text: size, percent, time left (from the recent rate) ----------
+function loadingCopy(t0) {
+  const sub = $('loader-sub'), MB = 11.6, hist = [];
+  let last = 0;
+  const tick = setInterval(() => upd(last), 1000);
+  function upd(f) {
+    const now = performance.now(), el = (now - t0) / 1000;
+    hist.push([now, f]); while (hist.length > 1 && now - hist[0][0] > 3000) hist.shift();
+    if (el < 3) return;                                   // fast connections never see the numbers
+    const [ta, fa] = hist[0], rate = (f - fa) / Math.max(0.001, (now - ta) / 1000);
+    let txt = `Stahujeme fyzikální engine (${MB.toLocaleString('cs-CZ')} MB)… ${Math.round(f * 100)} %`;
+    if (rate > 0.002 && f < 0.98) { const left = (1 - f) / rate; txt += ` · ještě asi ${left > 90 ? Math.round(left / 60) + ' min' : Math.max(1, Math.round(left / 5) * 5) + ' s'}`; }
+    txt += ' · příště se načte z mezipaměti';
+    if (el > 15) txt += '. Mezitím: v simulaci kliknete na kostku a ruka ji sama vezme.';
+    if (txt !== sub.textContent) sub.textContent = txt;
+  }
+  const fn = (f) => { last = f; upd(f); };
+  fn.done = () => clearInterval(tick);
+  return fn;
 }
 
 class MissionPage {
