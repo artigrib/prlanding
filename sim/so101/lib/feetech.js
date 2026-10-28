@@ -242,6 +242,19 @@ export class FeetechBus {
     });
   }
 
+  /**
+   * Emergency write: goes straight to the transport, NOT through the transaction queue, so a stuck
+   * or slow transaction cannot delay it. Bounded by `timeoutMs`; rejects on timeout. A broadcast
+   * packet slipped between two transactions is harmless (broadcast writes get no reply).
+   */
+  async emergency(bytes, timeoutMs = 200) {
+    this.onPacket && this.onPacket('tx', bytes);
+    let t;
+    try {
+      await Promise.race([this.t.write(bytes), new Promise((_, rej) => { t = setTimeout(() => rej(Object.assign(new Error('write timeout'), { code: 'timeout' })), timeoutMs); })]);
+    } finally { clearTimeout(t); }
+  }
+
   ping(id) { return this._txrx(pingPacket(id), id); }
 
   /** Broadcast ping: every servo answers. Returns {ids: Map(id -> error byte), corrupt: n}. */

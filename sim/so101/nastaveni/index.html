@@ -39,7 +39,8 @@
       <span class="hud-dot" id="hud-dot" aria-hidden="true"></span>
       <span id="hud-text" role="status" aria-live="polite"></span>
     </div>
-    <button type="button" class="stop" id="stop" hidden><span class="stop-k">STOP</span><span class="stop-t">vypnout moment · Esc</span></button>
+    <div class="alert" id="alert" role="alert" hidden></div>
+    <button type="button" class="stop" id="stop" hidden title="Vypne moment všech serv. Ruka se uvolní a může klesnout – přidržte ji."><span class="stop-k">STOP</span><span class="stop-t">vypnout moment · Esc</span></button>
     <p class="real-tag mono" id="real-tag" hidden>Skutečná ruka · beta · napájení mějte na dosah · 3D model ukazuje přečtené polohy</p>
 
     <div class="loader" id="loader">
@@ -96,9 +97,9 @@
         <p class="ink2">Šest emulovaných serv STS3215 na sběrnici, jako by právě přišla v krabici: všechna mají tovární ID 1.</p>
         <button type="button" class="btn btn-act" id="v-connect" disabled>Připojit virtuální ruku <span aria-hidden="true">→</span></button>
       </div>
-      <div class="card card-real">
+      <div class="card card-real" id="real-card" hidden>
         <h3>Skutečná ruka <span class="badge">beta</span></h3>
-        <p class="warn"><b>Beta – vyzkoušejte na vlastní riziko, napájení mějte na dosah.</b> Ruka se může nečekaně pohnout. Ruku upevněte ke stolu, v dosahu nic nemějte a kdykoli stiskněte STOP nebo Esc, případně vytáhněte zdroj.</p>
+        <p class="warn"><b>Beta – vyzkoušejte na vlastní riziko, napájení mějte na dosah.</b> Ruka se může nečekaně pohnout. Ruku upevněte ke stolu, v dosahu nic nemějte a kdykoli stiskněte STOP nebo Esc, případně vytáhněte zdroj. <b>Vypnutí momentu (STOP, Esc, „Vypnout moment“, přechod na kalibraci, přepnutí karty nebo zavření stránky) ruku uvolní – může klesnout, přidržte ji.</b> Když se odpojí USB, moment vypnout nejde: pomůže jen vytažení zdroje serv.</p>
         <div id="r-ok">
           <label class="check"><input type="checkbox" id="r-ack"> Rozumím, napájení mám na dosah</label>
           <button type="button" class="btn btn-o" id="r-connect" disabled>Připojit skutečnou ruku <span aria-hidden="true">→</span></button>
@@ -124,7 +125,7 @@
     <!-- 3 · calibration -->
     <section class="step" data-step="cal" aria-labelledby="h-cal" hidden>
       <h2 id="h-cal">Kalibrace</h2>
-      <p>Kalibrace zjistí, kde má každý kloub střed a krajní polohy. Moment serv je vypnutý, klouby se dají volně otáčet. <span class="virt">Ve virtuální ruce je „rukou“ posuvník u každého kloubu.</span><span class="realonly">Klouby posouvejte rukou.</span></p>
+      <p>Kalibrace zjistí, kde má každý kloub střed a krajní polohy. Moment serv je vypnutý, klouby se dají volně otáčet. <span class="virt">Ve virtuální ruce je „rukou“ posuvník u každého kloubu.</span><span class="realonly">Klouby posouvejte rukou a ruku přidržujte – bez momentu může klesnout.</span></p>
       <div class="card" id="cal-a">
         <h3><span class="n">A</span> Střed rozsahu</h3>
         <p>Natočte všechny klouby doprostřed jejich rozsahu: rameno svisle nahoru, loket v pravém úhlu (předloktí vodorovně dopředu), zápěstí rovně, chapadlo napůl otevřené – jako na obrázku v dokumentaci LeRobot.</p>
@@ -154,7 +155,7 @@
       <div class="card realonly" id="t-limits">
         <label for="t-speed" class="lbl">Rychlostní limit <output id="t-speed-o">30 °/s</output></label>
         <input type="range" id="t-speed" min="10" max="90" step="5" value="30">
-        <p class="note">Rozsah kloubů je omezený na kalibrovaný rozsah minus 3 % na každé straně. Rychlost hlídá prohlížeč i samotné servo (Goal_Velocity).</p>
+        <p class="note">Rozsah kloubů je omezený na kalibrovaný rozsah minus 3 % na každé straně. Rychlost omezuje prohlížeč. Serva navíc dostanou záložní strop rychlosti (registr Goal_Velocity, o čtvrtinu vyšší) a mírnější zrychlení; na skutečných servech jsme tyto hodnoty zatím neověřili.</p>
       </div>
       <fieldset class="joints" id="tj" disabled><legend class="mono">Klouby</legend></fieldset>
       <div class="virt">

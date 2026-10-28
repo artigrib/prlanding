@@ -8,8 +8,8 @@
 // LeRobot: Copyright 2024 The HuggingFace Inc. team, Apache License 2.0 (see ../NOTICE.txt).
 // No DOM here: the wizard and the Node tests both use it.
 
-import { REG, ERR, STS3215_MODEL, BAUD_CODE, SO101_MOTORS, RESOLUTION, decodeReg, fromBytes, decodeSM } from './feetech.js';
-import { VARIANTS } from './sts3215-emu.js';
+import { REG, ERR, STS3215_MODEL, BAUD_CODE, SO101_MOTORS, RESOLUTION, BROADCAST_ID, writePacket, decodeReg, fromBytes, decodeSM } from './feetech.js';
+import { VARIANTS } from './variants.js';
 
 export const MOTORS = SO101_MOTORS;
 export const IDS = MOTORS.map((m) => m.id);
@@ -25,6 +25,8 @@ export class SetupError extends Error {
 }
 
 const isOk = (r) => r && r.comm === 'ok';
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function must(r, message) { if (!isOk(r)) throw new SetupError('comm', message); return r; }
 
 /** feetech._find_single_motor_p0: broadcast ping at each baud rate until exactly one servo answers. */
 export async function findSingleMotor(bus, transport, bauds = [1_000_000, ...Object.keys(BAUD_CODE).map(Number).filter((b) => b !== 1_000_000)]) {
@@ -48,14 +50,18 @@ export async function findSingleMotor(bus, transport, bauds = [1_000_000, ...Obj
 export async function setupMotor(bus, transport, targetId, log = () => {}) {
   const { baud, id } = await findSingleMotor(bus, transport);
   log(`Nalezeno servo: ID ${id}, ${baud.toLocaleString('cs-CZ')} Bd, model ${STS3215_MODEL} (STS3215)`);
-  await bus.writeReg(id, 'Torque_Enable', 0);      // feetech._disable_torque
-  await bus.writeReg(id, 'Lock', 0);               // open EPROM write lock
+  must(await bus.writeReg(id, 'Torque_Enable', 0), 'Vypnutí momentu se nepovedlo.');   // feetech._disable_torque
+  must(await bus.writeReg(id, 'Lock', 0), 'Odemčení EPROM (Lock = 0) se nepovedlo.');
   const w = await bus.writeReg(id, 'ID', targetId);
-  if (!isOk(w)) throw new SetupError('comm', 'Zápis ID se nepovedl.');
-  await bus.writeReg(targetId, 'Baud_Rate', BAUD_CODE[1_000_000]);
+  // The reply normally comes from the old ID (what LeRobot's SDK sees). If firmware answered from the
+  // new ID instead, the reply looks foreign: accept it as long as the servo now answers on the new ID.
+  if (!isOk(w) && id !== targetId && !isOk(await bus.ping(targetId))) throw new SetupError('comm', 'Zápis ID se nepovedl.');
+  must(await bus.writeReg(targetId, 'Baud_Rate', BAUD_CODE[1_000_000]), 'Zápis rychlosti sběrnice se nepovedl.');
   await transport.setBaudRate(1_000_000);
   const p = await bus.ping(targetId);
   if (!isOk(p)) throw new SetupError('verify', `Servo po změně neodpovídá na ID ${targetId}.`);
+  const lock = await bus.readReg(targetId, 'Lock');
+  if (!isOk(lock) || lock.value !== 0) throw new SetupError('lock', 'Zámek EPROM se neotevřel – nové ID by se po vypnutí napájení ztratilo. Zkuste to znovu.');
   log(`ID ${id} → ${targetId} zapsáno a ověřeno`);
   return { from: id, baud };
 }
@@ -66,51 +72,125 @@ export async function scanIds(bus, ids = IDS) {
   return out;
 }
 
-export async function disableTorque(bus, ids = IDS) {
-  for (const id of ids) { await bus.writeReg(id, 'Torque_Enable', 0); await bus.writeReg(id, 'Lock', 0); }
-}
-
-/** Emergency stop: broadcast + sync write torque off, no replies awaited beyond the bus lock. */
-export async function stopAll(bus, ids = IDS) {
-  const off = new Map(ids.map((id) => [id, 0]));
-  await bus.syncWriteReg('Torque_Enable', off);
-  await bus.write(0xFE, REG.Torque_Enable[0], [0]);
+/** Read Torque_Enable of every servo: Map id -> 0 | 1 | null (no answer). */
+export async function readTorque(bus, ids = IDS) {
+  const r = await bus.syncReadReg('Torque_Enable', ids);
+  return new Map(ids.map((id) => [id, isOk(r.get(id)) ? r.get(id).value : null]));
 }
 
 /**
- * Enable torque safely: first make Goal_Position = Present_Position for every servo,
- * so nothing jumps to a stale goal, then Torque_Enable = 1 and Lock = 1 (feetech.enable_torque).
+ * Torque off with read-back: write Torque_Enable = 0, read it back, retry the servos that did not
+ * confirm (up to `retries` times), then open the EPROM lock like feetech.disable_torque.
+ * Returns {ok, unconfirmed: [ids]}.
  */
-export async function enableTorque(bus, ids = IDS) {
-  const pos = await bus.syncReadReg('Present_Position', ids);
-  const goals = new Map();
-  for (const [id, r] of pos) { if (!isOk(r)) throw new SetupError('comm', `Servo ${id} neodpovídá, moment nezapínáme.`); goals.set(id, r.value); }
-  await bus.syncWriteReg('Goal_Position', goals);
-  for (const id of ids) { await bus.writeReg(id, 'Torque_Enable', 1); await bus.writeReg(id, 'Lock', 1); }
-  return goals;
+export async function disableTorque(bus, ids = IDS, { retries = 3 } = {}) {
+  let left = ids.slice();
+  for (let k = 0; k <= retries && left.length; k++) {
+    for (const id of left) await bus.writeReg(id, 'Torque_Enable', 0);
+    const tq = await readTorque(bus, left);
+    left = left.filter((id) => tq.get(id) !== 0);
+  }
+  for (const id of ids) if (!left.includes(id)) await bus.writeReg(id, 'Lock', 0);
+  return { ok: !left.length, unconfirmed: left };
 }
 
-/** so_follower.configure + feetech.configure_motors (with torque disabled). */
-export async function configureFollower(bus, { maxVelocity = 0 } = {}) {
-  await disableTorque(bus);
-  for (const m of MOTORS) {
-    await bus.writeReg(m.id, 'Return_Delay_Time', 0);
-    await bus.writeReg(m.id, 'Maximum_Acceleration', 254);
-    await bus.writeReg(m.id, 'Acceleration', 254);
-    await bus.writeReg(m.id, 'Operating_Mode', 0);           // position mode
-    await bus.writeReg(m.id, 'P_Coefficient', 16);           // config_so_follower.py defaults
-    await bus.writeReg(m.id, 'I_Coefficient', 0);
-    await bus.writeReg(m.id, 'D_Coefficient', 32);
-    if (m.name === 'gripper') {
-      await bus.writeReg(m.id, 'Max_Torque_Limit', 500);     // 50 % torque to avoid burnout
-      await bus.writeReg(m.id, 'Protection_Current', 250);
-      await bus.writeReg(m.id, 'Overload_Torque', 25);
-    }
-    // extra safety layer of this wizard (not in LeRobot): servo-side speed cap (0 = no cap). Written as
-    // steps/s; the exact unit of Goal_Velocity on STS3215 firmware is NOT verified on hardware — the
-    // browser-side rate limit in the wizard is the primary limit, this one is a backstop.
-    await bus.writeReg(m.id, 'Goal_Velocity', maxVelocity);
+/**
+ * Emergency stop.
+ * 1) Broadcast Torque_Enable = 0 straight to the wire, bypassing the transaction queue, three times.
+ * 2) Through the queue: per-servo torque off with read-back (disableTorque), bounded by `timeoutMs`.
+ * Returns {ok, unconfirmed, wire}: `wire` = at least one emergency packet left the host;
+ * `ok` = every servo confirmed torque off by read-back.
+ */
+export async function stopAll(bus, ids = IDS, { timeoutMs = 1500 } = {}) {
+  const pkt = writePacket(BROADCAST_ID, REG.Torque_Enable[0], [0]);
+  let wire = false;
+  for (let k = 0; k < 3; k++) {
+    try { await bus.emergency(pkt); wire = true; } catch (e) { if (!wire && k === 0) break; }  // a hung port won't recover in ms
+    if (k < 2) await sleep(5);
   }
+  const deadline = sleep(timeoutMs).then(() => ({ ok: false, unconfirmed: ids.slice(), timeout: true }));
+  const r = await Promise.race([disableTorque(bus, ids).catch(() => ({ ok: false, unconfirmed: ids.slice() })), deadline]);
+  return { ...r, wire };
+}
+
+/**
+ * Enable torque safely: Goal_Position = Present_Position first (nothing jumps to a stale goal), then
+ * Torque_Enable = 1 and Lock = 1 per servo (feetech.enable_torque), then read back.
+ * `abort()` is checked before every write: STOP pressed meanwhile wins. On abort or any failure all
+ * servos are switched off again (with read-back) before the error is rethrown.
+ */
+export async function enableTorque(bus, ids = IDS, { abort = () => false } = {}) {
+  const check = () => { if (abort()) throw new SetupError('aborted', 'Zapínání momentu přerušil STOP.'); };
+  try {
+    check();
+    const pos = await bus.syncReadReg('Present_Position', ids);
+    const goals = new Map();
+    for (const [id, r] of pos) { if (!isOk(r)) throw new SetupError('comm', `Servo ${id} neodpovídá, moment nezapínáme.`); goals.set(id, r.value); }
+    check();
+    await bus.syncWriteReg('Goal_Position', goals);
+    for (const id of ids) {
+      check(); must(await bus.writeReg(id, 'Torque_Enable', 1), `Servo ${id} nepotvrdilo zapnutí momentu.`);
+      check(); must(await bus.writeReg(id, 'Lock', 1), `Servo ${id} nepotvrdilo zámek.`);
+    }
+    check();
+    const tq = await readTorque(bus, ids);
+    const off = ids.filter((id) => tq.get(id) !== 1);
+    if (off.length) throw new SetupError('verify', `Servo ${off.join(', ')} nemá po zapnutí moment.`);
+    check();
+    return goals;
+  } catch (e) {
+    await disableTorque(bus, ids).catch(() => {});
+    throw e;
+  }
+}
+
+/** Goal_Velocity unit in °/s per Feetech STS memory table: 0.732 rpm, or 0.0146 rpm with Phase bit 2. */
+export const velocityUnitDeg = (phase) => (phase & 0x04 ? 0.0146 : 0.732) * 6;
+
+/**
+ * so_follower.configure + feetech.configure_motors, with torque disabled (verified) and
+ * read-compare-write so repeated calls do not rewrite EPROM. Like LeRobot this also clears Phase
+ * bit 4, so Present_Position stays in 0..4095. Options:
+ *  - real: gentler Acceleration (30 × 8.7 °/s² ≈ 260 °/s²) instead of LeRobot's 254.
+ *  - speedDegS: servo-side Goal_Velocity cap (backstop only, set 25 % above the browser limit;
+ *    unit from Phase bit 2 per Feetech's table, not verified on hardware). 0 = no cap (LeRobot).
+ */
+export async function configureFollower(bus, { real = false, speedDegS = 0, abort = () => false } = {}) {
+  const check = () => { if (abort()) throw new SetupError('aborted', 'Nastavení přerušil STOP.'); };
+  const off = await disableTorque(bus);
+  if (!off.ok) throw new SetupError('verify', `Servo ${off.unconfirmed.join(', ')} nepotvrdilo vypnutí momentu.`);
+  const ensure = async (id, name, value) => {
+    check();
+    const r = must(await bus.readReg(id, name), `Servo ${id}: čtení ${name} se nepovedlo.`);
+    if (r.value !== value) must(await bus.writeReg(id, name, value), `Servo ${id}: zápis ${name} se nepovedl.`);
+  };
+  const units = {};
+  for (const m of MOTORS) {
+    const ph = must(await bus.readReg(m.id, 'Phase'), `Servo ${m.id}: čtení Phase se nepovedlo.`).value;
+    if (ph & 0x10) await ensure(m.id, 'Phase', ph & ~0x10);
+    units[m.id] = velocityUnitDeg(ph);
+    await ensure(m.id, 'Return_Delay_Time', 0);
+    await ensure(m.id, 'Maximum_Acceleration', 254);
+    await ensure(m.id, 'Acceleration', real ? 30 : 254);
+    await ensure(m.id, 'Operating_Mode', 0);           // position mode
+    await ensure(m.id, 'P_Coefficient', 16);           // config_so_follower.py defaults
+    await ensure(m.id, 'I_Coefficient', 0);
+    await ensure(m.id, 'D_Coefficient', 32);
+    if (m.name === 'gripper') {
+      await ensure(m.id, 'Max_Torque_Limit', 500);     // 50 % torque to avoid burnout
+      await ensure(m.id, 'Protection_Current', 250);
+      await ensure(m.id, 'Overload_Torque', 25);
+    }
+  }
+  await setSpeedCap(bus, speedDegS, units);
+  return { units };
+}
+
+/** Goal_Velocity backstop for all servos (RAM register). */
+export async function setSpeedCap(bus, speedDegS, units) {
+  const vals = new Map(MOTORS.map((m) => [m.id, speedDegS > 0 ? Math.min(32767, Math.ceil(speedDegS * 1.25 / units[m.id])) : 0]));
+  await bus.syncWriteReg('Goal_Velocity', vals);
+  return vals;
 }
 
 /** motors_bus.reset_calibration */
@@ -159,6 +239,9 @@ export function buildCalibration(offsets, mins, maxes) {
   }
   const same = MOTORS.filter((m) => cal[m.name].range_min === cal[m.name].range_max).map((m) => m.name);
   if (same.length) throw new SetupError('same-min-max', 'Některé klouby mají stejné minimum a maximum: ' + same.join(', '));
+  // never write limits the servo cannot hold (negative / wrapped positions, offsets beyond ±2047)
+  const bad = MOTORS.filter((m) => { const c = cal[m.name]; return !(Number.isInteger(c.range_min) && Number.isInteger(c.range_max) && c.range_min >= 0 && c.range_min < c.range_max && c.range_max <= MAX_RES && Math.abs(c.homing_offset) <= 2047); }).map((m) => m.name);
+  if (bad.length) throw new SetupError('range', 'Neplatné kalibrační hodnoty (mimo 0–4095): ' + bad.join(', ') + '. Spusťte kalibraci znovu.');
   return cal;
 }
 

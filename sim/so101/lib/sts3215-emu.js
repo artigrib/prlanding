@@ -21,11 +21,8 @@ const K = RESOLUTION / (2 * Math.PI);        // encoder steps per radian
 const mod = (a, n) => ((a % n) + n) % n;
 const AMBIENT = 28;                          // °C
 
-// Servo variants used in SO-101 kits. maxV/minV are the emulated factory voltage limits (0.1 V).
-export const VARIANTS = {
-  '7.4': { label: '7,4 V', nominal: 7.4, supply: 5.0, maxV: 90, minV: 40, okLo: 4.5, okHi: 8.4 },
-  '12': { label: '12 V', nominal: 12, supply: 12.0, maxV: 140, minV: 60, okLo: 10.5, okHi: 13.0 }
-};
+import { VARIANTS } from './variants.js';
+export { VARIANTS };
 
 // Where each servo's horn sits relative to the joint zero (raw encoder value at q = 0).
 // Different per servo, like a real assembly — calibration (homing offset) takes it out.
@@ -99,6 +96,7 @@ export class Sts3215 {
 
   /** Apply a WRITE to the control table. Returns nothing; side effects on torque. */
   write(addr, data, plant) {
+    if (this.dropWrites > 0) { this.dropWrites--; return; }   // test hook: a write lost to bus noise
     const torqueWas = this.mem[40];
     for (let k = 0; k < data.length; k++) {
       const a = addr + k;
@@ -155,7 +153,8 @@ export class Sts3215 {
     // position loop: setpoint ramps to Goal_Position at Goal_Velocity (steps/s, 0 = full speed)
     if (m[40] === 1) {
       const goal = this.clampGoal(decodeSM(fromBytes(m, 42, 2), 15));
-      const vmax = decodeSM(fromBytes(m, 46, 2), 15);
+      // Goal_Velocity unit: 0.732 rpm (= 50 steps/s), or 0.0146 rpm (≈ 1 step/s) when Phase bit 2 is set
+      const vmax = Math.abs(decodeSM(fromBytes(m, 46, 2), 15)) * (m[18] & 0x04 ? 1 : 50);
       if (vmax > 0 && dt > 0) {
         const step = vmax * dt, d = goal - this.setpoint;
         this.setpoint += Math.abs(d) <= step ? d : Math.sign(d) * step;
