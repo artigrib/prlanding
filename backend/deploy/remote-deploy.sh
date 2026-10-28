@@ -300,6 +300,21 @@ diagnose() ( set +eu +o pipefail
     say "diag tcp :$port listeners by process: ${procs:-none}; docker-proxy for :$port -> our containers: $ours, to other/unknown IPs: $others"
   done
   say "diag containers with host port 80 in their mapping (any project): $(docker ps --format '{{.Ports}}' | grep -cE '(0\.0\.0\.0|\[?::\]?):80->' || true), of them ours: $(dc ps --format '{{.Ports}}' 2>/dev/null | grep -cE ':80->' || true)"
+  # Who do the 80/443 docker-proxies forward to? Categories only, never names or addresses.
+  local c info
+  for pid in $(pgrep -x docker-proxy || true); do
+    args=$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null || true)
+    case "$args" in *"-host-port 80 "*|*"-host-port 443 "*) ;; *) continue;; esac
+    cip=$(printf '%s' "$args" | sed -n 's/.*-container-ip \([^ ]*\).*/\1/p')
+    info=""
+    for c in $(docker ps -aq); do
+      if docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' "$c" | grep -qw -- "$cip"; then
+        info="$info [$(docker inspect -f '{{if eq (index .Config.Labels "com.docker.compose.project") "printedrobotics"}}ours{{else}}other{{end}} state={{.State.Status}} restarts={{.RestartCount}} hostports={{range $p, $b := .HostConfig.PortBindings}}{{range $b}}{{.HostPort}},{{end}}{{end}}' "$c" | sed -E 's/hostports=(.*)/hp,\1/' | awk '{h=$NF; w=(h ~ /(^|,)(80|443),/) ? "maps-host-80/443=yes" : "maps-host-80/443=no"; $NF=w; print}')]"
+      fi
+    done
+    say "diag proxy host-port $(printf '%s' "$args" | sed -n 's/.*-host-port \([0-9]*\).*/\1/p') proto $(printf '%s' "$args" | sed -n 's/.*-proto \([a-z]*\).*/\1/p') -> ${info:- no container with that IP}"
+  done
+  say "diag live-restore: $(docker info -f '{{.LiveRestoreEnabled}}' 2>/dev/null); swarm: $(docker info -f '{{.Swarm.LocalNodeState}}' 2>/dev/null)"
   say "diag docker: $(docker version -f '{{.Server.Version}}' 2>/dev/null), compose: $(docker compose version --short 2>/dev/null)"
 )
 
