@@ -1,0 +1,13 @@
+{
+  "name": "pr-arena",
+  "private": true,
+  "description": "Antweight arena prototype for printedrobotics.cz. Sources in src/, bundled output in build/ (committed, no runtime CDN).",
+  "scripts": {
+    "build": "esbuild src/main.js --bundle --format=esm --splitting --minify --target=es2020 --outdir=build --entry-names=arena --chunk-names=[name]-[hash] --legal-comments=external"
+  },
+  "devDependencies": {
+    "@dimforge/rapier3d-compat": "0.19.3",
+    "esbuild": "0.28.2",
+    "three": "0.186.1"
+  }
+}

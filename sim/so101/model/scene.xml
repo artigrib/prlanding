@@ -1,0 +1,33 @@
+<!-- printedrobotics.cz: SO-101 on a table with a cube and a bowl ("Přenes kostku do misky"). -->
+<mujoco model="so101_mission">
+  <include file="so101.xml"/>
+  <option timestep="0.004"/>
+  <worldbody>
+    <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
+    <!-- floor (not drawn) so a dropped cube comes to rest; app.js also respawns it -->
+    <geom name="floor" type="plane" size="2 2 0.1" pos="0 0 -0.75" group="3"/>
+    <!-- table top: upper surface at z = 0 -->
+    <geom name="table" type="box" size="0.40 0.32 0.015" pos="0.14 0 -0.015" rgba="0.93 0.93 0.92 1" friction="0.8 0.005 0.0001"/>
+    <!-- cube -->
+    <body name="cube" pos="0.25 -0.11 0.0125">
+      <freejoint name="cube"/>
+      <geom name="cube" type="box" size="0.0125 0.0125 0.0125" mass="0.015" rgba="0.91 0.27 0.12 1"
+        friction="1.2 0.01 0.001" condim="4" solref="0.01 1"/>
+    </body>
+    <!-- bowl: flat bottom + octagonal wall (collision); rendered as a smooth bowl in the browser -->
+    <body name="bowl" pos="0.20 0.15 0">
+      <geom name="bowl_bottom" type="cylinder" size="0.055 0.002" pos="0 0 0.002" rgba="0.2 0.2 0.2 1" group="3"/>
+      <geom name="bowl_w0" type="box" size="0.003 0.024 0.014" pos="0.058 0 0.014" euler="0 0 0" group="3"/>
+      <geom name="bowl_w1" type="box" size="0.003 0.024 0.014" pos="0.041 0.041 0.014" euler="0 0 0.7854" group="3"/>
+      <geom name="bowl_w2" type="box" size="0.003 0.024 0.014" pos="0 0.058 0.014" euler="0 0 1.5708" group="3"/>
+      <geom name="bowl_w3" type="box" size="0.003 0.024 0.014" pos="-0.041 0.041 0.014" euler="0 0 2.3562" group="3"/>
+      <geom name="bowl_w4" type="box" size="0.003 0.024 0.014" pos="-0.058 0 0.014" euler="0 0 0" group="3"/>
+      <geom name="bowl_w5" type="box" size="0.003 0.024 0.014" pos="-0.041 -0.041 0.014" euler="0 0 0.7854" group="3"/>
+      <geom name="bowl_w6" type="box" size="0.003 0.024 0.014" pos="0 -0.058 0.014" euler="0 0 1.5708" group="3"/>
+      <geom name="bowl_w7" type="box" size="0.003 0.024 0.014" pos="0.041 -0.041 0.014" euler="0 0 2.3562" group="3"/>
+    </body>
+  </worldbody>
+  <keyframe>
+    <key name="home" qpos="0 -1.0 0.6 1.2 0 0.3  0.25 -0.11 0.0125 1 0 0 0" ctrl="0 -1.0 0.6 1.2 0 0.3"/>
+  </keyframe>
+</mujoco>
