@@ -88,3 +88,15 @@ Findings: scratchpad usability report (P0/P1/P2). Changes:
   "Z čeho se SO-101 skládá →" link under the mission.
 - Table floor: targets clamp at 9 mm with a one-off toast; "Mimo dosah" HUD text; joint sliders show "(doraz)" and
   `aria-valuetext`; canvas focusable with a description; toolbar labels; per-mission tip and camera (`tip`, `look`).
+
+### Round 1b (owner requests)
+- **Grab any link** (`src/ui/links.js`): hover/touch highlights the link + ring on its joint axis with the angle;
+  drag rotates only that joint (pointer projected on the rotation plane, clamped, red "doraz" feedback);
+  double-tap a link = that joint home; tap on the jaws = open/close (same command as the button), drag the moving
+  jaw = opening. Order of precedence on press: IK-ball handles → objects (tap = pick) → links → empty space = orbit.
+  Keys 1–6 select a joint (Shift+1–5 = missions), ←/→ rotate, Esc deselects, Tab on the canvas cycles joints.
+- **Drawing mission** (`src/draw.js`): drag on the paper (or the ball) moves the marker in the paper plane at a fixed
+  height; P = pen up/down (phones: the first button under the stage); magnet "Pomoc 0/1/2" toward the template;
+  speed-limited; floor cursor green/orange/red by deviation; steep top-down camera with a "3D pohled" toggle;
+  K = "Nakreslit prstem" (finger trace → planner). Scoring retuned (85 % coverage, 9 mm hit, 3 ★ < 60 s & < 2.5 mm).
+- **Win card** is a 2-column grid that never overflows (tests/win-layout.cjs: tablets, phones, 320–1366 px sweep).

@@ -46,7 +46,8 @@ export class Panel {
         <button type="button" class="btn btn-o" id="ux-qhint">Poradit <span aria-hidden="true">▶</span></button>
       </div></div>`);
     this.stage.parentNode.insertBefore(under, this.stage.nextSibling);
-    $('ux-qgrip').addEventListener('click', () => ux.toggleGrip());
+    // in the drawing mission the gripper holds the marker: this button lifts / lowers the pen instead
+    $('ux-qgrip').addEventListener('click', () => (ux.runner.m.draw ? ux.togglePenUp() : ux.toggleGrip()));
     $('ux-qhome').addEventListener('click', () => { ux.ctl.cancel(); ux.pending = null; ux.app.goHome(); ux.ctl.syncFromCtrl(); });
     $('ux-qhint').addEventListener('click', () => ux.startDemo());
     const mq = matchMedia('(max-width:860px)'), hud = $('hud');
@@ -189,11 +190,13 @@ export class Panel {
     if (this.ux.touch) t = t.replace(/Klikněte/g, 'Klepněte').replace(/myší nebo prstem/g, 'prstem');
     if (li && li.innerHTML !== t) li.innerHTML = t;
     this.drawBox.hidden = !m.draw;
+    if (!m.draw) this.gripOpen = undefined;   // let tick() rewrite the phone button label
     if (m.draw) { this.showDraw(this.ux); $('ux-drawview').textContent = '3D pohled'; }
   }
 
   showDraw(ux) {
-    const d = ux.draw, b = $('ux-penup');
+    const d = ux.draw, b = $('ux-penup'), q = $('ux-qgrip');
+    if (q) { q.textContent = d.penDown ? 'Pero nahoru' : 'Pero dolů'; q.setAttribute('aria-pressed', String(!d.penDown)); }
     b.firstChild.textContent = d.penDown ? 'Pero nahoru ' : 'Pero dolů ';
     b.setAttribute('aria-pressed', String(!d.penDown));
     for (const x of this.drawBox.querySelectorAll('[data-h]')) x.setAttribute('aria-checked', String(+x.dataset.h === d.help));
@@ -208,7 +211,8 @@ export class Panel {
   showGrip(open) {
     this.gripBtn.firstChild.textContent = open ? 'Zavřít chapadlo ' : 'Otevřít chapadlo ';
     this.gripBtn.setAttribute('aria-pressed', String(!open));
-    const q = $('ux-qgrip'); if (q) { q.textContent = open ? 'Zavřít chapadlo' : 'Otevřít chapadlo'; q.setAttribute('aria-pressed', String(!open)); }
+    const q = $('ux-qgrip');
+    if (q && !this.ux.runner.m.draw) { q.textContent = open ? 'Zavřít chapadlo' : 'Otevřít chapadlo'; q.setAttribute('aria-pressed', String(!open)); }
   }
   showPen(on) { this.penBtn.setAttribute('aria-pressed', String(on)); this.stage.classList.toggle('ux-pen-on', on); }
   showRoll(r) {

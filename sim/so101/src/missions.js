@@ -165,8 +165,9 @@ export const MISSIONS = [
     layout: {},
     pen: true,
     tip: 'Táhněte po <b>papíře</b> – fix kreslí. <b>Pero nahoru</b> (P) mezi tahy. Nebo <b>Nakreslit prstem</b> – ruka čáru zopakuje.',
-    // top-down over the paper (three.js coords: x, z_mj, -y_mj)
-    look: { t: [0.215, 0.0, 0.0], p: [0.2151, 0.34, -0.0001], pn: [0.2151, 0.42, -0.0001] },
+    // steep view over the paper from the far side, so the arm (coming from the base) does not hide the tip
+    // (three.js coords: x, z_mj, -y_mj)
+    look: { t: [0.215, 0.0, 0.0], p: [0.43, 0.38, -0.0001], pn: [0.47, 0.46, -0.0001] },
     draw: true,
     targets: {},
     // tuned so a beginner finishes in < 2 min; 3 ★ still needs a precise line

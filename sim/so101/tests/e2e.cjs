@@ -214,7 +214,7 @@ async function touchDrag(page, from, to, steps = 8) {
     {
       await S(p, () => window.__sim.mission('trace')); await p.waitForTimeout(900);
       const top = await S(p, () => { const c = window.__sim._ux.app.camera, t = window.__sim._ux.app.controls.target; const d = c.position.clone().sub(t).normalize(); return d.y; });
-      ok(top > 0.95, 'drawing mission starts with a top-down camera (' + top.toFixed(3) + ')');
+      ok(top > 0.8, 'drawing mission starts with a steep top-down camera (' + top.toFixed(3) + ')');
       const corners = await S(p, () => window.__sim._ux.runner.m && [[0.215, 0.055], [0.2009, 0.0194], [0.1627, 0.017], [0.192, -0.0074], [0.1827, -0.0445]]);
       let zmin = 1, zmax = 0, started = false;
       for (let i = 1; i < corners.length; i++) {
