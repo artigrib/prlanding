@@ -77,7 +77,11 @@ renderer.domElement.addEventListener('webglcontextlost', e => {
 });
 renderer.domElement.addEventListener('webglcontextrestored', () => {
   ctxLost = false; failed = false; ui.fail.hidden = true;
-  if (game.state === 'menu') ui.start.hidden = false; else ui.hud.hidden = false;
+  if (game.state === 'menu') ui.start.hidden = false;
+  else {
+    ui.hud.hidden = false;
+    if (game.state === 'end') ui.end.hidden = false; else document.body.classList.add('playing');
+  }
   layout(); updateCamera(0, true); last = performance.now();
 });
 
