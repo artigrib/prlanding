@@ -32,10 +32,17 @@ jobs:
           KEY: ${{ secrets.VPS_SSH_KEY }}
           HOST: ${{ secrets.VPS_HOST }}
           PORT: ${{ secrets.VPS_PORT }}
+          KNOWN: ${{ secrets.VPS_KNOWN_HOSTS }}
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p "${PORT:-22}" -T 10 "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          # Pinned host key when VPS_KNOWN_HOSTS is set; otherwise trust on first use (see docs/backend.md).
+          if [ -n "$KNOWN" ]; then
+            printf '%s\n' "$KNOWN" > ~/.ssh/known_hosts
+          else
+            ssh-keyscan -p "${PORT:-22}" -T 10 "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
+            echo "::warning::VPS_KNOWN_HOSTS is not set: host key trusted on first use"
+          fi
       - name: Collect read-only report
         # The repo is public, so its Actions logs are public: print only a short, low-sensitivity
         # summary as annotations. No port lists, container names, paths or IPs.
@@ -45,7 +52,7 @@ jobs:
           PORT: ${{ secrets.VPS_PORT }}
         run: |
           set +e
-          out=$(ssh -i ~/.ssh/deploy_key -p "${PORT:-22}" -o BatchMode=yes -o ConnectTimeout=15 "$USER_@$HOST" 'bash -s' 2>/dev/null <<'REMOTE'
+          out=$(ssh -i ~/.ssh/deploy_key -p "${PORT:-22}" -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 "$USER_@$HOST" 'bash -s' 2>/dev/null <<'REMOTE'
           . /etc/os-release 2>/dev/null
           echo "os=$PRETTY_NAME"
           echo "cpu=$(nproc)"
@@ -59,7 +66,7 @@ jobs:
           )
           if [ -z "$out" ]; then
             hk=$(grep -c . ~/.ssh/known_hosts 2>/dev/null || echo 0)
-            err=$(ssh -i ~/.ssh/deploy_key -p "${PORT:-22}" -o BatchMode=yes -o ConnectTimeout=15 "$USER_@$HOST" true 2>&1 | tail -1)
+            err=$(ssh -i ~/.ssh/deploy_key -p "${PORT:-22}" -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 "$USER_@$HOST" true 2>&1 | tail -1)
             case "$err" in
               *"Permission denied"*) why="server reachable, key NOT accepted (not approved yet, or wrong user)";;
               *"timed out"*|*"No route"*|*"refused"*) why="server/port not reachable from GitHub (firewall, wrong host or port)";;
