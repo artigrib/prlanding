@@ -8,7 +8,7 @@
 // Interface (internal to maps/): build(group), attach(RAPIER, world, bodies), reset(),
 // step(dt, robots, t, active), frame(dt), hazardAt(x, z), status?() -> string|null
 import * as THREE from 'three';
-import { ORANGE, INK, stripeTexture, lampMaterial, boxGeo, merge, mesh, glowTexture, GRIP_FRICTION, BASE_Y } from './kit.js';
+import { ORANGE, INK, stripeTexture, plateTexture, worldUV, lampMaterial, boxGeo, merge, mesh, glowTexture, GRIP_FRICTION, BASE_Y } from './kit.js';
 
 const _imp = { x: 0, y: 0, z: 0 }, _av = { x: 0, y: 0, z: 0 }, _q = new THREE.Quaternion(), _ax = new THREE.Vector3();
 const smooth = t => t * t * (3 - 2 * t);
@@ -402,9 +402,9 @@ export class FloorFlipper {
     const g = new THREE.Group(); g.position.set(this.hx, 0, this.hz); group.add(g);
     this.pivot = g;
     const st = stripeTexture(INK, ORANGE);
-    const plate = new THREE.MeshStandardMaterial({ color: '#8c9095', metalness: 0.65, roughness: 0.35 });
+    const plate = new THREE.MeshStandardMaterial({ color: '#c4c8cc', map: plateTexture(), metalness: 0.6, roughness: 0.4 });
     const geo = this.dx ? boxGeo(0, this.len, -0.1, 0, -this.wid / 2, this.wid / 2) : boxGeo(-this.wid / 2, this.wid / 2, -0.1, 0, 0, this.len);
-    const m = mesh(geo, plate, { cast: true });
+    const m = mesh(worldUV(geo, 2), plate, { cast: true });
     if (this.dx < 0 || this.dz < 0) m.scale.set(this.dx < 0 ? -1 : 1, 1, this.dz < 0 ? -1 : 1);
     g.add(m);
     // stripe border on the plate (slightly above it, moves with it)

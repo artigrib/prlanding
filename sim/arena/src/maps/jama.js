@@ -2,7 +2,7 @@
 // with a good hit, over the wall. Daylight workshop with a small crowd.
 import * as THREE from 'three';
 import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
-import { gridTexture, floorRects, boxWalls, cornerPosts, polycarbonate, stripeTexture, mesh, INK, ORANGE, yawTo } from './kit.js';
+import { gridTexture, plyTexture, worldUV, floorRects, boxWalls, cornerPosts, polycarbonate, stripeTexture, mesh, INK, ORANGE, yawTo } from './kit.js';
 import { FloorFlipper } from './hazards.js';
 
 const H = 6;
@@ -57,17 +57,21 @@ export const jama = {
       },
       decorate(group) {
         // ramps: plywood with a stripe on the top edge
-        const ply = new THREE.MeshStandardMaterial({ color: '#d6bb8f', roughness: 0.8 });
+        const ply = new THREE.MeshStandardMaterial({ color: '#ffffff', map: plyTexture(), roughness: 0.8 });
         const st = stripeTexture(INK, ORANGE);
         for (const r of RAMPS) {
-          const g = new ConvexGeometry(rampPoints(r).map(p => new THREE.Vector3(...p)));
+          const g = worldUV(new ConvexGeometry(rampPoints(r).map(p => new THREE.Vector3(...p))), 3);
           group.add(mesh(g, ply, { cast: true }));
           const [x0, x1, , zh, h] = r;
           const edge = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, 0.16), new THREE.MeshStandardMaterial({ map: st, roughness: 0.7 }));
           st.repeat.set((x1 - x0) / 0.6, 1);
           const s = Math.sign(zh);
-          edge.position.set((x0 + x1) / 2, h + 0.003, zh - s * 0.08); edge.rotation.x = -Math.PI / 2;
+          // top edge follows the slope
+          const zl = r[2], slope = Math.atan2(h, Math.abs(zh - zl));
+          edge.position.set((x0 + x1) / 2, h - Math.sin(slope) * 0.08 + 0.004, zh - s * Math.cos(slope) * 0.08);
+          edge.rotation.set(-Math.PI / 2 - s * slope, 0, 0);
           group.add(edge);
+          const foot = edge.clone(); foot.rotation.set(-Math.PI / 2, 0, 0); foot.position.set((x0 + x1) / 2, 0.004, zl - s * 0.1); group.add(foot);
         }
         // pit lights: orange glow at the pit bottom makes the hole read from above
         const glow = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshBasicMaterial({ color: '#5a1d05' }));

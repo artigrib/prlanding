@@ -59,6 +59,21 @@ export function plateTexture() {
   g.strokeStyle = '#4a4c4f'; g.lineWidth = 3; g.strokeRect(0, 0, 256, 256);
   return tex(c);
 }
+// plywood: light birch with soft grain and a few knots
+export function plyTexture() {
+  const [c, g] = canvas(256, 256);
+  g.fillStyle = '#d9bf93'; g.fillRect(0, 0, 256, 256);
+  let s = 2024;
+  const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < 70; i++) {
+    g.strokeStyle = `rgba(${150 + rnd() * 40},${105 + rnd() * 30},${60 + rnd() * 20},${0.12 + rnd() * 0.2})`; g.lineWidth = 0.6 + rnd() * 2;
+    const y = rnd() * 256; g.beginPath(); g.moveTo(0, y);
+    for (let x = 0; x <= 256; x += 32) g.lineTo(x, y + Math.sin(x * 0.03 + i) * 3 + (rnd() - 0.5) * 2);
+    g.stroke();
+  }
+  for (let i = 0; i < 3; i++) { g.fillStyle = 'rgba(120,80,40,0.35)'; g.beginPath(); g.ellipse(rnd() * 256, rnd() * 256, 6 + rnd() * 5, 3 + rnd() * 2, 0, 0, Math.PI * 2); g.fill(); }
+  return tex(c);
+}
 // ice: bluish white with cracks and skate-like scratches
 export function iceTexture() {
   const [c, g] = canvas(256, 256);
