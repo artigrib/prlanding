@@ -4,7 +4,12 @@
 #   diag:     low-sensitivity diagnostics (counts, our network, docker/compose versions).
 # Prints only fixed STATUS/WARN/ERROR lines from remote-deploy.sh as annotations (public logs).
 name: Rollback backend
+# Trigger: Run workflow in the Actions tab (only once this file is on the default branch), or
+# commit a change to backend/deploy/ops-request on branch `backend` whose first word is the action.
 on:
+  push:
+    branches: [backend]
+    paths: ['backend/deploy/ops-request']
   workflow_dispatch:
     inputs:
       action:
@@ -56,21 +61,23 @@ jobs:
       - name: Run on the server
         env:
           U: ${{ secrets.VPS_USER }}
-          ACT: ${{ inputs.action }}
+          ACT_INPUT: ${{ inputs.action }}
         run: |
+          ACT="$ACT_INPUT"
+          [ -n "$ACT" ] || ACT=$(awk 'NR==1{print $1}' backend/deploy/ops-request 2>/dev/null)
           case "$ACT" in status|rollback|diag) ;; *) echo "::error::bad action"; exit 1;; esac
           set +e
           # Use the script from this commit (it does not need the deploy files for these actions).
           out=$(ssh -o StrictHostKeyChecking=$STRICT -l "$U" vps "ACTION=$ACT bash -s" < backend/deploy/remote-deploy.sh 2>/dev/null)
           rc=$?
           set -e
-          printf '%s\n' "$out" | while IFS= read -r l; do
-            case "$l" in
-              "STATUS "*) echo "::notice::${l#STATUS }";;
-              "WARN "*)   echo "::warning::${l#WARN }";;
-              "ERROR "*)  echo "::error::${l#ERROR }";;
-            esac
-          done
+          # GitHub keeps at most 10 annotations per type and step, so lines are grouped.
+          emit() { # emit TYPE PREFIX
+            printf '%s\n' "$out" | sed -n "s/^$2 //p" | awk -v t="$1" '
+              { line = (buf == "" ? $0 : buf " | " $0); if (length(line) > 700) { print "::" t "::" buf; buf = $0 } else buf = line }
+              END { if (buf != "") print "::" t "::" buf }'
+          }
+          emit notice STATUS; emit warning WARN; emit error ERROR
           [ "$rc" = 0 ] || { echo "::error::$ACT failed (exit $rc)"; exit 1; }
       - name: Remove key
         if: always()

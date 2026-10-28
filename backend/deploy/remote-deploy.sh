@@ -79,6 +79,13 @@ check_health() { # check_health EXPECTED_VERSION BRIDGE_ENABLED
 
 bring_up() {
   build_env
+  # A Caddy container left half-started (not attached to our network) is removed first.
+  local cid nets
+  cid=$(dc ps --all -q caddy 2>/dev/null || true)
+  if [ -n "$cid" ]; then
+    nets=$(docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' "$cid" 2>/dev/null || true)
+    case "$nets" in *printedrobotics_web*) ;; *) warn "removing a caddy container that is not on our network"; dc rm -sf caddy || true;; esac
+  fi
   local profiles
   profiles=$(release_var "$ROOT/release.env" COMPOSE_PROFILES)
   local err

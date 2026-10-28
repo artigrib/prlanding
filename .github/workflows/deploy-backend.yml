@@ -15,6 +15,7 @@ on:
       - 'backend/api/**'
       - 'backend/bridge/**'
       - 'backend/deploy/**'
+      - '!backend/deploy/ops-request'
       - '.github/workflows/deploy-backend.yml'
   workflow_dispatch:
 
@@ -239,13 +240,13 @@ jobs:
           rc=$?
           set -e
           # Only the fixed STATUS/WARN/ERROR lines from remote-deploy.sh are shown.
-          printf '%s\n' "$out" | while IFS= read -r l; do
-            case "$l" in
-              "STATUS "*) echo "::notice::${l#STATUS }";;
-              "WARN "*)   echo "::warning::${l#WARN }";;
-              "ERROR "*)  echo "::error::${l#ERROR }";;
-            esac
-          done
+          # GitHub keeps at most 10 annotations per type and step, so lines are grouped.
+          emit() { # emit TYPE PREFIX
+            printf '%s\n' "$out" | sed -n "s/^$2 //p" | awk -v t="$1" '
+              { line = (buf == "" ? $0 : buf " | " $0); if (length(line) > 700) { print "::" t "::" buf; buf = $0 } else buf = line }
+              END { if (buf != "") print "::" t "::" buf }'
+          }
+          emit notice STATUS; emit warning WARN; emit error ERROR
           if [ "$rc" != 0 ]; then echo "::error::remote deploy failed (exit $rc)"; exit 1; fi
 
       - name: External HTTPS check

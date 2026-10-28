@@ -14,10 +14,12 @@ services:
   caddy:
     image: ${CADDY_IMAGE:-caddy:2-alpine}
     restart: unless-stopped
+    # IPv4 only: on vps1 Docker reports [::]:80 as already allocated, and the hostnames have
+    # no AAAA records. Add "[::]:80:80" etc. here once IPv6 is wanted and that is resolved.
     ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+      - "0.0.0.0:443:443/udp"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./sites-enabled:/etc/caddy/sites-enabled:ro
