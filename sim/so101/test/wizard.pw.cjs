@@ -169,21 +169,101 @@ async function diag(page) {
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);
       ok(!overflow, 'phone: no horizontal scroll');
       ok(await page.isVisible('#r-no') && !(await page.isVisible('#r-connect')), 'phone without Web Serial: real-arm button hidden, explanation shown');
+      await page.click('input[name=variant][value="12"]');     // 12 V servos
       await page.click('#v-connect');
       await page.waitForSelector('.step[data-step="ids"]:not([hidden])');
       await page.click('#id-skip');
       await page.waitForSelector('.step[data-step="cal"]:not([hidden])', { timeout: 15000 });
       await page.waitForTimeout(600);
       await shot(page, 'p2-cal-390');
-      await page.click(`input[data-f="heat"]`);
-      await page.evaluate(() => window.__wiz.advance(30));
+      await page.click(`input[data-f="supply"]`);              // 5 V adapter on 12 V servos
+      await page.evaluate(() => window.__wiz.advance(0.5));
       const codes = await diag(page);
-      ok(codes.includes('overheat'), 'phone: overheating detected (' + codes + ')');
+      ok(codes.includes('undervolt'), 'phone: 5 V supply on 12 V servos detected (' + codes + ')');
       await page.locator('#diag').scrollIntoViewIfNeeded();
       await shot(page, 'p3-diag-390');
       const overflow2 = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);
       ok(!overflow2, 'phone: no horizontal scroll after diagnostics');
       ok(!errors.length, 'phone: no console errors ' + errors.join(' | '));
+      await page.context().close();
+    }
+
+    // 5) real-arm code path: SerialTransport over a fake Web Serial port that wraps the emulator
+    //    (no hardware here — this checks our stream handling, torque-on safety and STOP)
+    if (!ONLY || ONLY === 'serial') {
+      const errors = [];
+      const page = await newPage(browser, { width: 1280, height: 800 }, errors);
+      await page.addInitScript(() => {
+        let arm = null;
+        class FakePort {
+          getInfo() { return { usbVendorId: 0x1a86, usbProductId: 0x55d3 }; }
+          async open({ baudRate }) {
+            const self = this; this.baud = baudRate;
+            this.readable = new ReadableStream({ start(c) { self.c = c; } });
+            this.writable = new WritableStream({ write(chunk) { const r = arm.receive(chunk, self.baud); setTimeout(() => r.forEach((x) => self.c.enqueue(x)), 1); } });
+          }
+          async close() { this.readable = null; this.writable = null; }
+        }
+        const port = new FakePort();
+        Object.defineProperty(Navigator.prototype, 'serial', { configurable: true, get: () => ({
+          requestPort: async () => {
+            const { VirtualArm, KinematicPlant } = await import('/sim/so101/lib/sts3215-emu.js');
+            arm = new VirtualArm({ plant: new KinematicPlant([0.1, -0.2, 0.3, 0.1, 0, 0.8]) });
+            arm.servos.forEach((s, i) => { s.saved[5] = i + 1; });          // IDs already assigned
+            arm.setWiring('chain');
+            window.__fake = arm;
+            setInterval(() => arm.update(0.02), 20);
+            return port;
+          },
+          addEventListener() {}, removeEventListener() {}
+        }) });
+      });
+      await page.goto(srv.url + '/sim/so101/nastaveni/?test=1');
+      await page.waitForFunction(() => window.__wiz, null, { timeout: 30000 });
+      await page.check('#r-ack');
+      await page.click('#r-connect');
+      await page.waitForSelector('.step[data-step="ids"]:not([hidden])', { timeout: 10000 });
+      ok(await page.isVisible('#stop'), 'serial: STOP visible once connected');
+      await page.click('#id-skip');
+      await page.waitForSelector('.step[data-step="cal"]:not([hidden])', { timeout: 15000 });
+      ok(!(await page.isVisible('#cal-sweep')) && !(await page.isVisible('#hand')), 'serial: no virtual hand controls for the real arm');
+      await idle(page);
+      await page.evaluate(() => [0, 0, 0, 0, 0, 0.785].forEach((q, i) => window.__fake.plant.hand(i, q)));
+      await page.click('#cal-mid');
+      await page.waitForSelector('#cal-b:not([hidden])');
+      for (const q of [-1.6, 1.6, 0]) {
+        await page.evaluate((q) => [0, 1, 2, 3, 4, 5].forEach((i) => window.__fake.plant.hand(i, i === 5 ? Math.max(-0.17, Math.min(1.74, q)) : q)), q);
+        await page.waitForTimeout(400);
+      }
+      await idle(page);
+      await page.click('#cal-save');
+      await page.waitForSelector('.step[data-step="test"]:not([hidden])', { timeout: 10000 });
+      await idle(page);
+      const before = await page.evaluate(() => window.__fake.servos.map((s) => s.reg('Present_Position')));
+      await page.click('#t-torque');
+      await page.waitForFunction(() => window.__wiz.state().torque, null, { timeout: 10000 });
+      await page.waitForTimeout(500);
+      const after = await page.evaluate(() => window.__fake.servos.map((s) => s.reg('Present_Position')));
+      ok(after.every((p, i) => Math.abs(p - before[i]) <= 2), 'serial: enabling torque does not move the arm (goal = present first)');
+      const vel = await page.evaluate(() => window.__fake.servos.map((s) => s.reg('Goal_Velocity')));
+      ok(vel.every((v) => v === Math.round(30 * 4096 / 360)), 'serial: servo-side speed cap written (' + vel[0] + ')');
+      // ask for a big jump on the base; the browser rate limit (30 °/s) must spread it out
+      await page.evaluate(() => { const i = document.getElementById('t-shoulder_pan'); i.value = i.max; i.dispatchEvent(new Event('input')); });
+      const t0 = await page.evaluate(() => window.__fake.servos[0].reg('Goal_Position'));
+      await page.evaluate(() => window.__wiz.advance(1));      // 1 s of frames (rAF is paused in test mode)
+      await page.waitForTimeout(100);
+      const t1 = await page.evaluate(() => window.__fake.servos[0].reg('Goal_Position'));
+      const deg = Math.abs(t1 - t0) * 360 / 4096;
+      ok(deg > 25 && deg < 35, `serial: goal moves at the 30 °/s limit (${deg.toFixed(1)}° in 1 s)`);
+      const max = await page.evaluate(() => +document.getElementById('t-shoulder_pan').max);
+      const cal = (await state(page)).cal.shoulder_pan;
+      ok(max < (cal.range_max - cal.range_min) / 2 * 360 / 4095, 'serial: slider range is inside the calibrated range (margin)');
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(400);
+      const tq = await page.evaluate(() => window.__fake.servos.map((s) => s.mem[40]));
+      ok(tq.every((v) => v === 0), 'serial: Esc = STOP, torque off on all servos');
+      await shot(page, 'd6-real-beta');
+      ok(!errors.length, 'serial: no console errors ' + errors.join(' | '));
       await page.context().close();
     }
   } finally {
