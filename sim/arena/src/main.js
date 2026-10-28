@@ -239,6 +239,7 @@ function popLabel(p, text, big) {
   const o = pops[popI++ % pops.length];
   o.p.copy(p); o.t = 1; o.el.textContent = text; o.el.classList.toggle('big', !!big); o.el.hidden = false;
 }
+function clearPops() { for (const o of pops) { o.t = 0; o.el.hidden = true; } }
 const _pp = new THREE.Vector3();
 function stepPops(dt) {
   for (const o of pops) {
@@ -655,7 +656,7 @@ function openReplay(kind, back) {
   replayNames = [player, opp].map(r => r.def.short || r.def.name);
   clearTimeout(endTimer);
   game.state = 'replay';
-  sfx.stopMotors();
+  sfx.stopMotors(); clearPops();
   showScreen('replay');
   rui.open({ track, binding: recBind, window: win, title, instant: kind !== 'full', autoClose: back === 'auto', speed, header: replayHeader(), timed: timed() });
   updateCameras(0, true);
@@ -708,7 +709,7 @@ async function playReplayFile(file) {
   ui.pTag.textContent = 'P1'; ui.oTag.textContent = 'P2';
   ui.pSw.style.background = col(rs[0].color); ui.oSw.style.background = col(rs[1].color);
   replaySrc = { kind: 'file', prevMap, header: h };
-  game.state = 'replay';
+  game.state = 'replay'; clearPops();
   showScreen('replay');
   rui.open({ track, binding, title: 'Záznam ze souboru', header: h, timed: h.timed !== false, noSave: false, speed: 1 });
   updateCameras(0, true);
