@@ -75,8 +75,8 @@ bring_up() {
   profiles=$(release_var "$ROOT/release.env" COMPOSE_PROFILES)
   local err
   if ! err=$(COMPOSE_PROFILES="$profiles" dc up -d --remove-orphans --wait --wait-timeout 150 2>&1); then
-    warn "compose up failed: $(sanitize "$(printf '%s\n' "$err" | grep -iE 'error|fail|denied|in use|allocated' | tail -2)")"
-    local p
+    warn "compose up failed: $(sanitize "$(printf '%s\n' "$err" | grep -v '^ *$' | tail -3)")"
+    local p=""
     ss -ltn 2>/dev/null | grep -q ':80 ' && p="$p 80/tcp"
     ss -ltn 2>/dev/null | grep -q ':443 ' && p="$p 443/tcp"
     ss -lun 2>/dev/null | grep -q ':443 ' && p="$p 443/udp"
