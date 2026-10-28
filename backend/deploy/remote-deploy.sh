@@ -77,43 +77,32 @@ check_health() { # check_health EXPECTED_VERSION BRIDGE_ENABLED
   return 0
 }
 
-orphan_proxies() { # PIDs of docker-proxy processes for host port 80/443 whose target IP is no container's
-  local allips pid args cip
-  allips=" $(docker ps -aq | xargs -r docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' 2>/dev/null | tr '\n' ' ') "
+proxies_80_443() { # PIDs of docker-proxy processes listening on host port 80 or 443
+  local pid args
   for pid in $(pgrep -x docker-proxy || true); do
     args=$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null || true)
-    case "$args" in *"-host-port 80 "*|*"-host-port 443 "*) ;; *) continue;; esac
-    cip=$(printf '%s' "$args" | sed -n 's/.*-container-ip \([^ ]*\).*/\1/p')
-    case "$allips" in *" $cip "*) ;; *) echo "$pid";; esac
+    case "$args" in *"-host-port 80 "*|*"-host-port 443 "*) echo "$pid";; esac
   done
 }
 
 fix_stale_ports() {
-  # Earlier failed starts of our Caddy left Docker port bindings for 80/443 behind (docker-proxy
-  # processes forwarding to an IP no container has). Only act when no container of any project
-  # maps host port 80/443, i.e. the bindings can only be our own leftovers.
-  local orphans mapped
-  orphans=$(orphan_proxies | wc -l)
-  [ "$orphans" -gt 0 ] || return 0
-  mapped=$(docker ps --format '{{.Ports}}' | grep -cE ':(80|443)->' || true)
+  # Earlier failed starts of our Caddy left docker-proxy processes holding host ports 80/443
+  # while no container publishes them (Docker 29 then refuses the port as "already allocated").
+  # Only when NO running container of any project binds host port 80/443 are such proxies
+  # leftovers that serve nobody; then stop them. Other containers are never touched.
+  local n mapped
+  n=$(proxies_80_443 | wc -l)
+  [ "$n" -gt 0 ] || return 0
+  mapped=$(docker ps -q | xargs -r docker inspect -f '{{range $p, $b := .HostConfig.PortBindings}}{{range $b}}{{.HostPort}} {{end}}{{end}}' 2>/dev/null | grep -cwE '80|443' || true)
   if [ "$mapped" -gt 0 ]; then
-    warn "host port 80/443 is mapped by a running container; not touching it"
+    warn "a running container publishes host port 80/443; leaving it alone"
     return 0
   fi
-  warn "found $orphans stale port binding(s) for 80/443 from earlier failed starts; cleaning up our project"
+  warn "found $n leftover port-80/443 proxy process(es) without any container; stopping them"
   dc rm -sf caddy || true
-  docker network disconnect -f printedrobotics_web printedrobotics-caddy-1 || true
-  if [ "$(orphan_proxies | wc -l)" -gt 0 ]; then
-    COMPOSE_PROFILES=bridge dc down --remove-orphans || true
-    docker network rm printedrobotics_web || true
-  fi
-  local left; left=$(orphan_proxies | wc -l)
-  if [ "$left" -gt 0 ]; then
-    for pid in $(orphan_proxies); do kill "$pid" || true; done
-    sleep 2
-    left=$(orphan_proxies | wc -l)
-  fi
-  say "stale port bindings after cleanup: $left"
+  for pid in $(proxies_80_443); do kill "$pid" || true; done
+  sleep 2
+  say "leftover port-80/443 proxies after cleanup: $(proxies_80_443 | wc -l)"
 }
 
 bring_up() {
