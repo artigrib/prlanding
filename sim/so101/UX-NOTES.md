@@ -49,7 +49,7 @@ if it *drives* the arm, call `app.ux.ctl.cancel()` first (same as the sliders).
   (idle callback) and swapped in for the decimated `.msh` geometry, which stays the physics/collision mesh.
   Raw STL coordinates are mapped into MuJoCo's processed mesh frame with `mesh_pos` / `mesh_quat`.
   Quality setting "Detail modelu: Vysoký / Úsporný" (localStorage `pr-sim-quality`, `?detail=low|high`);
-  default low on Save-Data / 2G and on touch devices reporting < 6 GB `deviceMemory`.
+  default low on Save-Data / 2G and on touch devices reporting < 6 GB `deviceMemory` or none (iOS/Safari).
   Rebuild with `tools/stl-to-glb.mjs` (instructions in the file header).
 - `src/ui/explode.js` – "Z čeho se SO-101 skládá": exploded view (slider), Czech part names on hover/tap,
   printed vs. bought legend, assembly animation in the order of the LeRobot SO-101 guide (Joint 1 … Gripper),

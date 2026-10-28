@@ -26,6 +26,7 @@ export class Teach {
     d.qpos.set(s.qpos); d.qvel.set(s.qvel); d.ctrl.set(s.ctrl);
     if (s.act && d.act) d.act.set(s.act);
     d.mocap_pos.set(s.mpos); d.mocap_quat.set(s.mquat);
+    try { d.time = s.time; } catch (e) { /* read-only binding: rt0 is taken after restore anyway */ }
     d.qacc_warmstart && d.qacc_warmstart.fill(0);
     this.ux.mj.mj_forward(this.m, d);
   }
@@ -60,11 +61,16 @@ export class Teach {
     if (!this.demo) return false;
     if (this.recording) this.stopRec();
     this.ux.ctl.cancel(); this.app.stopDemo();
-    this.ux.beginReplayReset(this.demo);
-    this.restore(this.demo.snap);
-    this.replaying = true; this.rt0 = this.d.time; this.k = 0;
+    this.restart();
+    this.replaying = true;
     this.changed();
     return true;
+  }
+  /** Scene of the recorded mission first (keyframe reset), then the exact snapshot, then the clock. */
+  restart() {
+    this.ux.beginReplayReset(this.demo);
+    this.restore(this.demo.snap);
+    this.rt0 = this.d.time; this.k = 0;
   }
   stopReplay() { if (!this.replaying) return; this.replaying = false; this.changed(); }
 
@@ -73,7 +79,7 @@ export class Teach {
     if (!this.replaying) return;
     const D = this.demo, t = this.d.time - this.rt0, T = D.t;
     if (t > T[T.length - 1] + 0.6) {
-      if (this.loop) { this.restore(D.snap); this.rt0 = this.d.time; this.k = 0; this.ux.beginReplayReset(D); return; }
+      if (this.loop) { this.restart(); return; }
       this.stopReplay(); return;
     }
     while (this.k < T.length - 2 && T[this.k + 1] < t) this.k++;

@@ -6,7 +6,7 @@ import { store } from './store.js';
 export class Sound {
   constructor(ux) {
     this.ux = ux;
-    this.on = store.get('sound', !ux.touch);
+    this.on = store.get('sound', false);     // opt-in everywhere (toolbar / S)
     this.ctx = null; this.level = 0; this.pitch = 0;
     // the AudioContext may only start after a user gesture
     const unlock = () => { if (this.on) this.ensure(); };

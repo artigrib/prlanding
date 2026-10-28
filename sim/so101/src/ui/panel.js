@@ -49,6 +49,7 @@ export class Panel {
         <p class="mono-s muted">Hvězdičky a nejlepší časy se ukládají jen ve vašem prohlížeči.</p>
       </div></div>`);
     document.body.appendChild(dlg);
+    trapFocus(dlg);
     dlg.querySelector('.ux-x').addEventListener('click', () => this.closePicker());
     dlg.addEventListener('click', (e) => { if (e.target === dlg) this.closePicker(); });
     this.cards = dlg.querySelector('.ux-cards');
@@ -322,6 +323,7 @@ export class Panel {
         <div class="ux-row2"><button type="button" class="btn btn-o" id="ux-tour">Spustit průvodce znovu</button></div>
       </div></div>`);
     document.body.appendChild(dlg);
+    trapFocus(dlg);
     dlg.querySelector('.ux-x').addEventListener('click', () => this.closeHelp());
     dlg.addEventListener('click', (e) => { if (e.target === dlg) this.closeHelp(); });
     $('ux-tour').addEventListener('click', () => { this.closeHelp(); this.ux.onboarding.start(true); });
@@ -330,6 +332,18 @@ export class Panel {
   closeHelp() { this.help.hidden = true; if (this.lastFocus) this.lastFocus.focus({ preventScroll: true }); }
   modalOpen() { return !this.help.hidden || !this.picker.hidden; }
   closeModals() { if (!this.help.hidden) this.closeHelp(); if (!this.picker.hidden) this.closePicker(); }
+}
+
+// keep Tab inside an aria-modal dialog
+function trapFocus(dlg) {
+  dlg.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+    const f = [...dlg.querySelectorAll('button:not([disabled]), a[href], input, [tabindex]:not([tabindex="-1"])')].filter((x) => x.offsetParent !== null);
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
 }
 
 export function fmt(t) { t = Math.max(0, t || 0); const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + String(s).padStart(2, '0'); }

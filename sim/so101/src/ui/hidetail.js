@@ -9,7 +9,8 @@ export function defaultQuality(touch) {
     const c = navigator.connection;
     if (c && (c.saveData || /2g/.test(c.effectiveType || ''))) return 'low';
     const mem = navigator.deviceMemory;
-    if (touch && mem && mem < 6) return 'low';
+    // iOS / Safari expose neither deviceMemory nor connection: treat unknown touch devices as the low tier
+    if (touch && (mem === undefined || mem < 6)) return 'low';
   } catch (e) { /* ignore */ }
   return 'high';
 }
@@ -69,6 +70,8 @@ export class HiDetail {
       }
       this.loaded = true;
     })();
+    // a failed load (network) may be retried by choosing "Vysoký" again
+    this.loading.catch(() => { this.loading = null; this.quality = 'low'; this.apply(); });
     return this.loading;
   }
 

@@ -84,6 +84,12 @@ class UX {
       this.ctl.cancel(); this.teach.stopReplay(); this.pending = null; this.runner.start();
     });
     this.keys();
+    // the visual HUD changes every frame (timer, %, mm): take it out of the live region, announce via #sr
+    this.hudEl = document.getElementById('hud-text');
+    this.hudEl.removeAttribute('role'); this.hudEl.removeAttribute('aria-live');
+    this.srEl = document.getElementById('sr');
+    const c = app.renderer.domElement;
+    c.setAttribute('aria-label', 'Robotická ruka SO-101 na stole s předměty mise. Ovládání: modrá koule (chytrý pohyb), klik na předmět, šipky a mezerník, nebo posuvníky kloubů v režimu Klouby.');
   }
 
   start() {
@@ -126,7 +132,7 @@ class UX {
     // HUD (live region: write only on change)
     let text = res.text;
     if (this.app.won) text = 'Mise splněna';
-    if (text !== this.app.hudText) { document.getElementById('hud-text').textContent = text; this.app.hudText = text; }
+    if (text !== this.app.hudText) { this.hudEl.textContent = text; this.app.hudText = text; this.announce(text); }
     const ok = !!res.ok || this.app.won;
     if (ok !== this.app.hudOk) { document.getElementById('hud').classList.toggle('ok', ok); this.app.hudOk = ok; }
     if (r.won && !this.app.won) this.win();
@@ -175,6 +181,15 @@ class UX {
     this.preview(plan, true);
     this.panel.toast('Ruka plánuje řešení…');
     return true;
+  }
+
+  /** Screen-reader announcements: milestones only (no numbers that change every frame), at most 1 per second. */
+  announce(text) {
+    const now = performance.now();
+    if (/\d/.test(text) && !this.app.won) return;
+    if (text === this.srLast || now - (this.srT || 0) < 1000) return;
+    this.srLast = text; this.srT = now;
+    this.srEl.textContent = text;
   }
 
   // ================= actions =================

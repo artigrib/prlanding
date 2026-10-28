@@ -46,6 +46,7 @@ function readSTL(file) {
 
 await MeshoptEncoder.ready; await MeshoptSimplifier.ready;
 const doc = new Document();
+doc.getRoot().getAsset().copyright = 'SO-101 (The Robot Studio) via MuJoCo Menagerie robotstudio_so101, Apache-2.0; converted by printedrobotics.cz';
 const buf = doc.createBuffer();
 const scene = doc.createScene('so101');
 let tris = 0;
