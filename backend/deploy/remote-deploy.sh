@@ -73,7 +73,22 @@ bring_up() {
   build_env
   local profiles
   profiles=$(release_var "$ROOT/release.env" COMPOSE_PROFILES)
-  COMPOSE_PROFILES="$profiles" dc up -d --remove-orphans --wait --wait-timeout 150
+  local err
+  if ! err=$(COMPOSE_PROFILES="$profiles" dc up -d --remove-orphans --wait --wait-timeout 150 2>&1); then
+    warn "compose up failed: $(sanitize "$(printf '%s\n' "$err" | grep -iE 'error|fail|denied|in use|allocated' | tail -2)")"
+    local p
+    ss -ltn 2>/dev/null | grep -q ':80 ' && p="$p 80/tcp"
+    ss -ltn 2>/dev/null | grep -q ':443 ' && p="$p 443/tcp"
+    ss -lun 2>/dev/null | grep -q ':443 ' && p="$p 443/udp"
+    [ -z "$p" ] || warn "host ports currently listening:$p"
+    return 1
+  fi
+}
+
+sanitize() { # strip addresses, ids and paths from an error line before it reaches the public log
+  printf '%s' "$1" | tr '\n' ' ' \
+    | sed -E 's/[0-9]{1,3}(\.[0-9]{1,3}){3}/<ip>/g; s/\[?[0-9a-fA-F:]{6,}\]?/<id>/g; s#(/[A-Za-z0-9._-]+){2,}#<path>#g' \
+    | cut -c1-240
 }
 
 caddy_reload() {
@@ -157,14 +172,18 @@ pull_images() {
   local token="" tmp ref
   IFS= read -r token || true
   tmp=$(mktemp -d)
-  if [ -n "$token" ] && [ -n "${GHCR_USER:-}" ]; then
-    if ! err=$(printf '%s' "$token" | DOCKER_CONFIG="$tmp" docker login ghcr.io -u "$GHCR_USER" --password-stdin 2>&1); then
-      warn "registry login failed ($(classify_err "$err")); trying anonymous pull"
-    fi
-  else
-    warn "token length ${#token}, user set: $([ -n "${GHCR_USER:-}" ] && echo yes || echo no)"
-  fi
+  # Public packages pull anonymously; otherwise log in with the job's short-lived token
+  # in a throw-away docker config (nothing is stored on the server).
+  local logged_in=0
   for ref in "$API_IMAGE" ${BRIDGE_IMAGE:-}; do
+    if DOCKER_CONFIG="$tmp" docker pull "$ref"; then continue; fi
+    if [ "$logged_in" = 0 ] && [ -n "$token" ] && [ -n "${GHCR_USER:-}" ]; then
+      if err=$(printf '%s' "$token" | DOCKER_CONFIG="$tmp" docker login ghcr.io -u "$GHCR_USER" --password-stdin 2>&1); then
+        logged_in=1
+      else
+        warn "registry login failed ($(classify_err "$err"))"
+      fi
+    fi
     if ! err=$(DOCKER_CONFIG="$tmp" docker pull "$ref" 2>&1); then
       DOCKER_CONFIG="$tmp" docker logout ghcr.io || true; rm -rf "$tmp"
       die "image pull failed ($(classify_err "$err"))"
