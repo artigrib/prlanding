@@ -57,7 +57,7 @@ try {
   if (!(c.getContext('webgl2') || c.getContext('webgl'))) throw new Error('no webgl');
   renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 } catch (e) {
-  fail('Tvůj prohlížeč nepodporuje 3D grafiku (WebGL), takže arénu nespustíme. Robota si můžeš prohlédnout na stránce sady.');
+  fail('Váš prohlížeč nepodporuje 3D grafiku (WebGL), takže arénu nespustíme. Robota si můžete prohlédnout na stránce sady.');
   throw e;
 }
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, touch ? 2 : 1.75));
@@ -73,7 +73,7 @@ renderer.domElement.tabIndex = -1;   // focus target during a match (keys stay w
 let ctxLost = false;
 renderer.domElement.addEventListener('webglcontextlost', e => {
   e.preventDefault(); ctxLost = true;
-  fail('Grafika prohlížeče se zastavila. Zkus stránku načíst znovu.');
+  fail('Grafika prohlížeče se zastavila. Zkuste stránku načíst znovu.');
 });
 renderer.domElement.addEventListener('webglcontextrestored', () => {
   ctxLost = false; failed = false; ui.fail.hidden = true;
@@ -187,7 +187,7 @@ import('@dimforge/rapier3d-compat').then(async mod => {
   buildArenaPhysics(RAPIER, world);
   ready = true;
   ui.go.disabled = false; ui.go.querySelector('span').textContent = 'Start';
-}).catch(e => { console.error(e); fail('Fyzikální engine se nepodařilo načíst. Zkus stránku obnovit.'); });
+}).catch(e => { console.error(e); fail('Fyzikální engine se nepodařilo načíst. Zkuste stránku obnovit.'); });
 
 function attach() {
   for (const r of [player, ai]) if (!r.body) r.attachPhysics(RAPIER, world);
@@ -276,7 +276,7 @@ function endRound(win, why) {
   // a kit that is not on sale yet gets a "let me know" CTA instead of "build it"
   const soon = !!player.def.preparing;
   ui.endKitL.textContent = soon ? 'Stavebnici připravujeme' : 'Stavebnice';
-  ui.ctaL.textContent = soon ? 'Dejte mi vědět' : 'Postav si ho';
+  ui.ctaL.textContent = soon ? 'Dejte mi vědět' : 'Postavte si ho';
   endTimer = setTimeout(() => { ui.end.hidden = false; ui.again.focus(); }, 900);
 }
 
@@ -306,10 +306,10 @@ function physicsStep(cmd) {
     }
   }
   const po = outCheck(player), ao = outCheck(ai);
-  if (ao) return endRound(true, ao === 'pit' ? 'Soupeř skončil v jámě.' : 'Vytlačil jsi soupeře z arény.');
-  if (po) return endRound(false, po === 'pit' ? 'Tvůj robot skončil v jámě.' : 'Tvůj robot vypadl z arény.');
+  if (ao) return endRound(true, ao === 'pit' ? 'Soupeř skončil v jámě.' : 'Vytlačili jste soupeře z arény.');
+  if (po) return endRound(false, po === 'pit' ? 'Váš robot skončil v jámě.' : 'Váš robot vypadl z arény.');
   if (ai.flippedTime >= FLIP_LIMIT) return endRound(true, 'Soupeř se 10 s nemohl pohnout.');
-  if (player.flippedTime >= FLIP_LIMIT) return endRound(false, 'Tvůj robot se 10 s nemohl pohnout.');
+  if (player.flippedTime >= FLIP_LIMIT) return endRound(false, 'Váš robot se 10 s nemohl pohnout.');
 }
 function touching(a, b) {
   let hit = false;
@@ -410,7 +410,7 @@ function hud() {
     if (r.flippedTime > 0.6) {
       const t = `Převrácený ${Math.max(0, Math.ceil(FLIP_LIMIT - r.flippedTime))} s`;
       if (r !== player) return t;
-      return t + (r.def.weapon === 'flipper' ? (touch ? ' · flipper = otočit' : ' · mezerník = otočit') : ' · jeď a rozhoupej se');
+      return t + (r.def.weapon === 'flipper' ? (touch ? ' · flipper = otočit' : ' · mezerník = otočit') : ' · jeďte a rozhoupejte se');
     }
     if (r.inverted) return 'Jede vzhůru nohama';
     if (r.def.weapon === 'spinner') return r.weaponOn ? `Zbraň ${Math.round(r.spin * 100)} %` : 'Zbraň vypnutá';
@@ -518,7 +518,7 @@ try {
   layout(); updateCamera(0, true);
   requestAnimationFrame(frame);
 } catch (e) {
-  fail('Arénu se nepodařilo spustit. Zkus stránku obnovit.');
+  fail('Arénu se nepodařilo spustit. Zkuste stránku obnovit.');
   throw e;
 }
 
