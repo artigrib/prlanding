@@ -274,6 +274,7 @@ $('cal-save').addEventListener('click', () => task(async () => {
   const short = S.MOTORS.filter((m) => m.name !== S.FULL_TURN && cal[m.name].range_max - cal[m.name].range_min < 0.6 * S.EXPECTED_SPAN[m.name]);
   await S.writeCalibration(bus, cal);
   st.cal = cal;
+  testSliders = null;                    // rebuild the test sliders for the new ranges
   const blob = new Blob([S.calibrationJson(cal)], { type: 'application/json' });
   $('cal-dl').href = URL.createObjectURL(blob); $('cal-dl').hidden = false;
   if (short.length) msg($('cal-msg'), `Kalibrace uložena, ale ${short.map((m) => S.jointCs(m.name)).join(', ')} má podezřele malý rozsah. Klidně ji zopakujte.`, 'warn');

@@ -111,7 +111,7 @@ body.m-real .virt{display:none!important}
 .stop:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
 .stop-k{font-size:24px;font-weight:700;letter-spacing:.04em;line-height:1.1}
 .stop-t{font-family:var(--mono);font-size:11px}
-.real-tag{position:absolute;left:16px;bottom:12px;background:#fff;border:1px solid var(--ink);padding:4px 10px;font-size:12px}
+.real-tag{position:absolute;left:16px;bottom:12px;max-width:calc(100% - 32px);background:#fff;border:1px solid var(--ink);padding:4px 10px;font-size:12px}
 .wiz .hud{max-width:calc(100% - 180px)}
 
 @media (max-width:860px){
