@@ -347,14 +347,14 @@ tls_state() ( set +eu +o pipefail
   # Per-host ACME state as fixed strings: cert present + last error category from Caddy's log.
   local h cert logs cat fw cid
   cid=$(dc ps -q caddy 2>/dev/null | head -1)
-  logs=$(docker logs "$cid" 2>&1)
+  lg() { docker logs "$cid" 2>&1; }
   say "tls caddy container: $([ -n "$cid" ] && echo found || echo missing); log driver: $(docker inspect -f '{{.HostConfig.LogConfig.Type}}' "$cid" 2>/dev/null); started: $(docker inspect -f '{{.State.StartedAt}}' "$cid" 2>/dev/null | cut -c1-16)"
   for h in api mcp relay; do
     cert=no
     dc exec -T caddy sh -c "ls /data/caddy/certificates/*/$h.printedrobotics.cz/$h.printedrobotics.cz.crt" >/dev/null 2>&1 && cert=yes
     [ -f "$ROOT/sites-enabled/$h.caddy" ] && en=yes || en=no
     cat=none
-    l=$(printf '%s\n' "$logs" | grep -F "$h.printedrobotics.cz" | grep -iE 'error|fail|rateLimited|unauthorized' | tail -1)
+    l=$(lg | grep -F "$h.printedrobotics.cz" | grep -iE 'error|fail|rateLimited|unauthorized' | tail -1)
     if [ -n "$l" ]; then
       case "$l" in
         *rateLimited*|*"rate limit"*|*429*) cat="rate-limited";;
@@ -368,7 +368,7 @@ tls_state() ( set +eu +o pipefail
     say "tls $h: site enabled: $en; cert present: $cert; last acme error: $cat"
   done
   say "tls: acme dns-01 not used; http-01 only"
-  say "tls log counts: lines $(printf '%s\n' "$logs" | grep -c .), obtaining $(printf '%s\n' "$logs" | grep -ci 'obtain'), obtained $(printf '%s\n' "$logs" | grep -ci 'certificate obtained'), errors $(printf '%s\n' "$logs" | grep -c '"level":"error"'), cert dirs $(dc exec -T caddy sh -c 'ls -d /data/caddy/certificates/*/* 2>/dev/null | wc -l')"
+  say "tls log counts: lines $(lg | grep -c .), obtaining $(lg | grep -ci 'obtain'), obtained $(lg | grep -ci 'certificate obtained'), errors $(lg | grep -c '"level":"error"'), cert dirs $(dc exec -T caddy sh -c 'ls -d /data/caddy/certificates/*/* 2>/dev/null | wc -l')"
   say "tls storage: acme dir entries $(dc exec -T caddy sh -c 'ls /data/caddy/acme/*/ 2>/dev/null | wc -l'), data dirs $(dc exec -T caddy sh -c 'ls /data/caddy 2>/dev/null | tr "\n" " "'), writable $(dc exec -T caddy sh -c 'touch /data/caddy/.w && rm /data/caddy/.w && echo yes || echo no' 2>/dev/null)"
   local cfg
   cfg=$(dc exec -T caddy wget -q -T 3 -O - http://127.0.0.1:12019/config/apps/tls 2>&1)
@@ -379,7 +379,7 @@ tls_state() ( set +eu +o pipefail
   say "tls docker log bytes: $(docker logs "$cid" 2>&1 | wc -c); since 1h lines: $(docker logs --since 1h "$cid" 2>&1 | wc -l)"
   local k n
   for k in 'rateLimited' 'Timeout during connect' 'Connection refused' 'unauthorized' 'Invalid response' 'no valid A records' 'DNS problem' 'CAA' 'context deadline' 'permission denied' 'read-only'; do
-    n=$(printf '%s\n' "$logs" | grep -ci -- "$k")
+    n=$(lg | grep -ci -- "$k")
     [ "$n" -gt 0 ] && say "tls log category '$k': $n line(s)"
   done
   say "tls: caddy host-network listeners :80 $(ss -ltnH 'sport = :80' | wc -l), :443 $(ss -ltnH 'sport = :443' | wc -l)"
