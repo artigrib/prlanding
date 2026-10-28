@@ -1,0 +1,94 @@
+# Docker Compose project "printedrobotics" on vps1 (installed to the deploy root by deploy-backend.yml).
+# Only Caddy publishes ports. Everything else is on the project's own network.
+# Image references come from release.env (written by remote-deploy.sh), secrets from secrets.env
+# (generated on the server, never in GitHub). Never run `docker compose config` in CI logs.
+name: printedrobotics
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  caddy:
+    image: ${CADDY_IMAGE:-caddy:2-alpine}
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./sites-enabled:/etc/caddy/sites-enabled:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 200
+    logging: *logging
+    networks: [web]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8099/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  api:
+    image: ${API_IMAGE:?API_IMAGE not set}
+    restart: unless-stopped
+    environment:
+      APP_VERSION: ${APP_VERSION:-unknown}
+      ALLOWED_ORIGINS: https://printedrobotics.cz
+      TRUST_PROXY: "1"
+      STATS_TOKEN: ${STATS_TOKEN:-}
+    volumes:
+      - api_data:/data
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 192m
+    cpus: 0.5
+    pids_limit: 100
+    logging: *logging
+    networks: [web]
+    # healthcheck is defined in the image (GET /health)
+
+  # Placeholder for backend/bridge (MCP server + WebSocket relay). Started only when the
+  # deploy workflow builds a bridge image (it then sets COMPOSE_PROFILES=bridge).
+  bridge:
+    profiles: [bridge]
+    image: ${BRIDGE_IMAGE:-ghcr.io/artigrib/prlanding-bridge:unset}
+    restart: unless-stopped
+    environment:
+      APP_VERSION: ${APP_VERSION:-unknown}
+      NODE_ENV: production
+      PORT: "8080"
+      ALLOWED_ORIGINS: https://printedrobotics.cz
+      TRUST_PROXY: "1"
+      BRIDGE_HMAC_KEY: ${BRIDGE_HMAC_KEY:-}
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 256m
+    cpus: 1.0
+    pids_limit: 200
+    logging: *logging
+    networks: [web]
+
+networks:
+  web:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
+  api_data:

@@ -1,0 +1,28 @@
+# Caddy for printedrobotics.cz backends. Let's Encrypt only (no ZeroSSL fallback), automatic HTTPS.
+# No access log is configured, so client IPs and headers are never written to disk.
+# Site blocks live in sites/*.caddy; the deploy workflow copies a site into sites-enabled/ only
+# after it has checked that the hostname's DNS A record already points at this server.
+{
+	admin localhost:2019
+	cert_issuer acme
+}
+
+(common) {
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		-Server
+	}
+	request_body {
+		max_size 64KB
+	}
+}
+
+# Internal health endpoint for the container healthcheck (port not published).
+http://:8099 {
+	respond /health "ok" 200
+	respond 404
+}
+
+import sites-enabled/*.caddy

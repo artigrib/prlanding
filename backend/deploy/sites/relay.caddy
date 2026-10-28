@@ -1,0 +1,7 @@
+relay.printedrobotics.cz {
+	import common
+	# WebSocket relay: keep open sockets for a while across config reloads.
+	reverse_proxy bridge:8080 {
+		stream_close_delay 5m
+	}
+}

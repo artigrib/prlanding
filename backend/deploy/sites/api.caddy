@@ -1,0 +1,4 @@
+api.printedrobotics.cz {
+	import common
+	reverse_proxy api:8081
+}

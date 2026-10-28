@@ -1,0 +1,7 @@
+mcp.printedrobotics.cz {
+	import common
+	# Streamable HTTP: flush SSE responses immediately.
+	reverse_proxy bridge:8080 {
+		flush_interval -1
+	}
+}
