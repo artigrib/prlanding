@@ -18,17 +18,22 @@ let playwright: any = null;
 try { playwright = require('playwright'); } catch { /* skipped below */ }
 
 const BACKEND_DIR = fileURLToPath(new URL('../../', import.meta.url));
-const TYPES: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8' };
+const REPO_DIR = fileURLToPath(new URL('../../../', import.meta.url));
+const TYPES: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript', '.css': 'text/css', '.wasm': 'application/wasm', '.xml': 'text/xml', '.json': 'application/json' };
 
 let bridge: Bridge, bridgePort: number, statics: Server, staticPort: number, browser: any;
 
 function serveStatic(): Promise<number> {
   statics = createServer(async (req, res) => {
-    const p = normalize(decodeURIComponent((req.url || '/').split('?')[0]!));
-    const file = join(BACKEND_DIR, p);
-    if (!file.startsWith(BACKEND_DIR) || !p.startsWith('/bridge-client/')) { res.writeHead(404); return res.end(); }
-    try { res.writeHead(200, { 'content-type': TYPES[extname(file)] || 'application/octet-stream' }); res.end(await readFile(file)); }
-    catch { res.writeHead(404); res.end(); }
+    let p = normalize(decodeURIComponent((req.url || '/').split('?')[0]!));
+    if (p.endsWith('/')) p += 'index.html';
+    // /bridge-client/* from backend/, /sim/so101/* and /backend/bridge-client/* from the repo root
+    const file = p.startsWith('/bridge-client/') ? join(BACKEND_DIR, p) : join(REPO_DIR, p);
+    if (!file.startsWith(BACKEND_DIR) && !(file.startsWith(join(REPO_DIR, 'sim/so101')) || file.startsWith(join(REPO_DIR, 'backend/bridge-client')))) { res.writeHead(404); return res.end(); }
+    let body: Buffer;
+    try { body = await readFile(file); } catch { res.writeHead(404); return res.end(); }
+    res.writeHead(200, { 'content-type': TYPES[extname(file)] || 'application/octet-stream' });
+    res.end(body);
   });
   return new Promise((r) => statics.listen(0, '127.0.0.1', () => r((statics.address() as any).port)));
 }
@@ -65,10 +70,10 @@ const call = async (c: Client, name: string, args: Record<string, unknown>): Pro
 
 before(async () => {
   if (!playwright) return;
-  bridge = createBridge(testConfig({ approvalTimeoutMs: 10_000, hbSec: 1 }));
+  bridge = createBridge(testConfig({ approvalTimeoutMs: 10_000, hbSec: 2 }));
   bridgePort = await bridge.listen();
   staticPort = await serveStatic();
-  browser = await playwright.chromium.launch();
+  browser = await playwright.chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 });
 after(async () => {
   if (!playwright) return;
@@ -218,13 +223,66 @@ test('e2e: heartbeat loss stops motion in the tab', { skip: !playwright && 'play
   // simulate a dead relay: freeze the server side of this tab's socket (no pings, no reads)
   for (const ws of (bridge.relay as any).sockets.keys()) (ws as any)._socket.pause();
   const lost = Date.now();
-  await page.waitForFunction(() => (window as any).__bridge.state === 'offline' || (window as any).__bridge.state === 'connecting', null, { timeout: 8000 });
+  await page.waitForFunction(() => (window as any).__bridge.state === 'offline' || (window as any).__bridge.state === 'connecting', null, { timeout: 12_000 });
   const held = await page.evaluate(() => (window as any).__handler.getState());
   assert.equal(held.moving, false, 'motion stopped on link loss');
   assert.ok(held.joints_deg.shoulder_pan < 80);
-  assert.ok(Date.now() - lost < 6000);
+  assert.ok(Date.now() - lost < 9000);
   const r = await long;
   assert.equal(r.isError, true);
+  await page.close();
+  await client.close();
+});
+
+test('e2e: real MuJoCo sim (sim/so101 ?test=1) through the test-hook adapter', { skip: !playwright && 'playwright not installed', timeout: 120_000 }, async (t) => {
+  // SwiftShader frames take 0.25-2.5 s and a snapshot ~10 s here (blocking the page): long heartbeat and snapshot deadline
+  const own = createBridge(testConfig({ approvalTimeoutMs: 10_000, hbSec: 10, snapshotDeadlineMs: 40_000 }));
+  const mainPort = bridgePort;
+  bridgePort = await own.listen();
+  t.after(async () => { bridgePort = mainPort; await own.close(); });
+  const page = await browser.newPage({ viewport: { width: 480, height: 360 } });
+  page.on('pageerror', (e: Error) => console.error('[sim]', e.message));
+  page.on('console', (m: any) => { if (m.type() === 'error') console.error('[sim console]', m.text()); });
+  page.on('response', (r: any) => { if (r.status() >= 400) console.error('[sim http]', r.status(), r.url()); });
+  await page.goto(`http://127.0.0.1:${staticPort}/sim/so101/?test=1`);
+  await page.waitForFunction(() => (window as any).__sim && ((window as any).__sim.ready || (window as any).__sim.error), null, { timeout: 60_000 });
+  const err = await page.evaluate(() => (window as any).__sim.error);
+  assert.equal(err, undefined, 'sim failed to load: ' + err);
+  await page.evaluate(async (relay: string) => {
+    const { mountPanel } = await import('/backend/bridge-client/panel.js');
+    const { createTestHookHandler } = await import('/backend/bridge-client/adapters/so101-testhook.js');
+    const box = document.createElement('div');
+    document.body.append(box);
+    (window as any).__bridge = mountPanel(box, { url: relay, handler: createTestHookHandler((window as any).__sim, { advance: true }) });
+  }, `ws://127.0.0.1:${bridgePort}/tab`);
+  await page.getByTestId('agent-connect').click();
+  await page.getByTestId('agent-code').filter({ hasText: /^[A-Z]{4}-[A-Z]{4}$/ }).waitFor();
+  const client = await mcpClient('modern');
+  const session = await pairWith(client, page);
+
+  const scene = (await call(client, 'get_scene', { session })).structuredContent;
+  const cube = scene.objects.find((o: any) => o.id === 'cube').pose;
+  assert.ok(Math.abs(cube.x_mm - 250) < 2 && Math.abs(cube.y_mm + 110) < 2 && Math.abs(cube.z_mm - 12.5) < 2, JSON.stringify(cube));
+  assert.ok(Math.abs(scene.robot.joints_deg.shoulder_lift - -57.3) < 1);
+
+  const mv = await call(client, 'move_joints', { session, joints_deg: { shoulder_pan: 20, elbow_flex: 50 }, gripper_pct: 60, duration_s: 1 });
+  assert.equal(mv.isError, undefined, JSON.stringify(mv));
+  assert.equal(mv.structuredContent.status, 'completed');
+  assert.ok(Math.abs(mv.structuredContent.final.joints_deg.shoulder_pan - 20) < 1.5, JSON.stringify(mv.structuredContent.final));
+  assert.ok(Math.abs(mv.structuredContent.final.joints_deg.elbow_flex - 50) < 1.5);
+
+  for (const view of ['overview', 'top']) {
+    const snap = await call(client, 'snapshot', { session, view, width: 320 });
+    assert.equal(snap.isError, undefined, JSON.stringify(snap).slice(0, 300));
+    const bytes = Buffer.from(snap.content[0].data, 'base64');
+    assert.deepEqual([...bytes.subarray(0, 3)], [0xff, 0xd8, 0xff]);
+    assert.ok(bytes.length > 3000, `${view} image is not blank (${bytes.length} B)`);
+    await new Promise((r) => setTimeout(r, 1100)); // 1 snapshot/s
+  }
+  assert.equal((await call(client, 'move_to', { session, pose: { x_mm: 200, y_mm: 0, z_mm: 50 } })).structuredContent.error.code, 'NOT_SUPPORTED');
+  const home = await call(client, 'home', { session });
+  assert.equal(home.structuredContent.status, 'completed');
+  assert.ok(Math.abs(home.structuredContent.final.joints_deg.shoulder_pan) < 1.5);
   await page.close();
   await client.close();
 });

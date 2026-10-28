@@ -31,6 +31,7 @@ export interface Config {
   maxFrameBytes: number;
   maxArgsBytes: number;
   maxInflightPerSession: number;
+  snapshotDeadlineMs: number;
   idempotencyTtlMs: number;
   // rate limits
   connectPerMin: number;
@@ -78,6 +79,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, over: Partial<C
     maxFrameBytes: 1024 * 1024,
     maxArgsBytes: 16 * 1024,
     maxInflightPerSession: 4,
+    snapshotDeadlineMs: num(env, 'BRIDGE_SNAPSHOT_DEADLINE_S', 8) * 1000,
     idempotencyTtlMs: 120 * 1000,
     connectPerMin: 20,
     connectFailsPer10Min: 10,

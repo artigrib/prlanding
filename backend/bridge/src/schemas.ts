@@ -198,12 +198,12 @@ export const ANNOTATIONS: Record<ToolName, { readOnlyHint?: boolean; destructive
 };
 
 /** Per-call deadline the server gives the tab (ms). */
-export function deadlineFor(tool: string, args: Record<string, unknown>): number {
+export function deadlineFor(tool: string, args: Record<string, unknown>, snapshotMs = 8_000): number {
   if (MOTION_TOOLS.has(tool)) {
     const d = typeof args.duration_s === 'number' ? args.duration_s : 5;
     return Math.min(30_000, Math.round(d * 1000) + 8_000);
   }
-  if (tool === 'snapshot') return 8_000;
+  if (tool === 'snapshot') return snapshotMs;
   return 5_000;
 }
 

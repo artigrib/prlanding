@@ -341,7 +341,7 @@ export class Registry {
   private dispatch(s: Session, tool: string, args: Record<string, unknown>, signal?: AbortSignal): Promise<TabResult> {
     const room = s.room;
     const id = newId('c_');
-    const deadlineMs = deadlineOf(tool, args);
+    const deadlineMs = deadlineOf(tool, args, this.cfg.snapshotDeadlineMs);
     this.stats.calls++;
     s.inflight++;
     return new Promise<TabResult>((resolve, reject) => {
