@@ -384,7 +384,7 @@ tls_state() ( set +eu +o pipefail
     [ "$n" -gt 0 ] && say "tls log word [$k]: $n"
   done
   local ec
-  for k in ratelimited 'rate limit' 429 'too many' timeout refused unauthorized 'invalid response' dns 'no valid' caa forbidden connection deadline retry policy account registration email zerossl letsencrypt 'rejected' 'urn:ietf' 'challenge' 'authorization' 'http-01' 'tls-alpn' 'dial' 'lookup' 'x509' 'storage' 'lock' 'permission' 'read-only file' 'directory' 'no such file' 'unable' 'cannot' 'invalid' 'order' 'finalize' 'server error' 'internal'; do
+  for k in serverinternal 'error:internal' malformed badnonce rejectedidentifier incorrect secondary validation 'could not' 'http 500' 'http 400' 'http 403' 'http 429' 'http 503' 'status 500' 'maintenance' 'aaaa' ipv6 'ipv4' 'firewall' 'unexpected' 'bad' 'eof' 'reset' 'tls: ' 'handshake' 'unavailable' 'overloaded' 'try again' 'later' ratelimited 'rate limit' 429 'too many' timeout refused unauthorized 'invalid response' dns 'no valid' caa forbidden connection deadline retry policy account registration email zerossl letsencrypt 'rejected' 'urn:ietf' 'challenge' 'authorization' 'http-01' 'tls-alpn' 'dial' 'lookup' 'x509' 'storage' 'lock' 'permission' 'read-only file' 'directory' 'no such file' 'unable' 'cannot' 'invalid' 'order' 'finalize' 'server error' 'internal'; do
     ec=$(lg | awk -v k="$k" 'tolower($0) ~ /error/ && index(tolower($0),tolower(k)){n++} END{print n+0}')
     [ "$ec" -gt 0 ] && say "tls error-line word [$k]: $ec"
   done
