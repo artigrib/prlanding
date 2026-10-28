@@ -11,7 +11,7 @@ import * as THREE from 'three';
 export const SIDES = ['front', 'back', 'left', 'right', 'top', 'bottom'];
 const _l = new THREE.Vector3();
 const IMPACT_DV = 5.2;           // u/s velocity change per step that starts to hurt
-const BLADE_K = 0.3;             // HP per unit of blade energy delivered
+const BLADE_K = 0.38;            // HP per unit of blade energy delivered
 const IMPACT_K = 0.55;
 
 export class Damage {

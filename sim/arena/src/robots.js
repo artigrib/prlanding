@@ -237,6 +237,7 @@ export class Robot {
   }
   spawnDebris(node, side) {
     const R = this.R, d = this.def;
+    this.frame();
     node.userData.lost = true;
     const restore = { parent: node.parent, p: node.position.clone(), q: node.quaternion.clone(), s: node.scale.clone() };
     this.scene.attach(node);
