@@ -16,7 +16,7 @@
 <meta property="og:locale" content="cs_CZ">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" as="image" href="../../img/parol6_white.jpg" fetchpriority="high">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Stavebnice pro PAROL6","description":"Stolní šestiosá ruka, která konstrukcí, řídicím softwarem i ovládáním napodobuje průmyslové roboty. Šest krokových motorů NEMA 17 s přesnými planetovými převodovkami a řemenovými převody, řídicí deska s STM32F446 a drivery TMC5160, napájení 24 V. Dosah 400 mm, nosnost až 1 kg a opakovatelnost 0,08 mm. Ovládá se grafickým PAROL6 Commanderem se simulátorem, z Pythonu nebo přes ROS 2 a MoveIt. Díly se tisknou z PETG.","category":"Průmyslová robotická ruka","image":"https://printedrobotics.cz/img/parol6_white.jpg","url":"https://printedrobotics.cz/sada/parol6/","brand":{"@type":"Brand","name":"printedrobotics.cz"},"isBasedOn":"https://github.com/PCrnjak/PAROL6-Desktop-robot-arm","additionalProperty":[{"@type":"PropertyValue","name":"Stupně volnosti","value":"6"},{"@type":"PropertyValue","name":"Pohon","value":"6× NEMA 17, planetové převodovky a řemeny"},{"@type":"PropertyValue","name":"Řízení","value":"STM32F446, drivery TMC5160"},{"@type":"PropertyValue","name":"Napájení","value":"24 V"},{"@type":"PropertyValue","name":"Dosah","value":"400 mm"},{"@type":"PropertyValue","name":"Nosnost","value":"až 1 kg"},{"@type":"PropertyValue","name":"Opakovatelnost","value":"0,08 mm"},{"@type":"PropertyValue","name":"Hmotnost","value":"≈ 5,5 kg"},{"@type":"PropertyValue","name":"Tisk","value":"PETG, vrstva 0,2 mm"},{"@type":"PropertyValue","name":"Doba tisku","value":"—"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Stavebnice pro PAROL6","description":"Stolní šestiosá ruka, která konstrukcí, řídicím softwarem i ovládáním napodobuje průmyslové roboty. Šest krokových motorů NEMA 17 s přesnými planetovými převodovkami a řemenovými převody, řídicí deska s STM32F446 a drivery TMC5160, napájení 24 V. Dosah 400 mm, nosnost až 1 kg a opakovatelnost 0,08 mm. Ovládá se grafickým PAROL6 Commanderem se simulátorem, z Pythonu nebo přes ROS 2 a MoveIt. Díly se tisknou z PETG.","category":"Průmyslová robotická ruka","image":"https://printedrobotics.cz/img/parol6_white.jpg","url":"https://printedrobotics.cz/sada/parol6/","brand":{"@type":"Brand","name":"printedrobotics.cz"},"isBasedOn":"https://github.com/PCrnjak/PAROL6-Desktop-robot-arm","additionalProperty":[{"@type":"PropertyValue","name":"Stupně volnosti","value":"6"},{"@type":"PropertyValue","name":"Pohon","value":"6× NEMA 17, planetové převodovky a řemeny"},{"@type":"PropertyValue","name":"Řízení","value":"STM32F446, drivery TMC5160"},{"@type":"PropertyValue","name":"Napájení","value":"24 V"},{"@type":"PropertyValue","name":"Dosah","value":"400 mm"},{"@type":"PropertyValue","name":"Nosnost","value":"až 1 kg"},{"@type":"PropertyValue","name":"Opakovatelnost","value":"0,08 mm"},{"@type":"PropertyValue","name":"Hmotnost","value":"≈ 5,5 kg"},{"@type":"PropertyValue","name":"Tisk","value":"PETG, vrstva 0,2 mm"},{"@type":"PropertyValue","name":"Náročnost","value":"Pokročilý"},{"@type":"PropertyValue","name":"Software","value":"PAROL6 Commander, Python API, ROS 2 / MoveIt"}]}</script>
 <meta name="theme-color" content="#FFFFFF">
 <meta property="og:type" content="product">
 <meta property="og:site_name" content="printedrobotics.cz">
@@ -39,7 +39,7 @@
 </header>
 
 <nav class="wrap crumb" aria-label="Drobečková navigace">
-<div class="g mono"><div class="a1"><a href="../../#katalog" id="crumb-back">← Katalog</a> <span class="muted" style="display:none" id="crumb-sep"></span></div><div class="a4 hide-s">Katalog / <span id="crumb-cat"></span> / <span id="crumb-name" style="color:var(--ink)"></span></div></div>
+<div class="g mono"><div class="a1"><a href="../../#katalog" id="crumb-back">← Katalog</a> <span class="muted" style="display:none" id="crumb-sep"></span></div><div class="a4 hide-s">Katalog / <span id="crumb-cat">Ruce a dlaně</span> / <span id="crumb-name" style="color:var(--ink)">PAROL6</span></div></div>
 </nav>
 
 <main>
@@ -51,7 +51,7 @@
 <button type="button" class="vtab" data-view="photo" aria-pressed="true">Obrázek</button>
 <button type="button" class="vtab" data-view="3d" aria-pressed="false">3D model</button>
 </div>
-<div class="tile" id="p-tile"></div>
+<div class="tile" id="p-tile"><img src="../../img/parol6_white.jpg" alt="Šestiosá stolní robotická ruka PAROL6 s krokovými motory" fetchpriority="high" width="1200" height="900"></div>
 <div class="tile v3d" id="v3d" hidden><span class="v3d-load mono" id="v3d-msg">Načítáme 3D model…</span></div>
 <div class="v3d-bar" id="v3d-bar" hidden>
 <button type="button" class="btn btn-o" id="v3d-toggle">Rozložit <span aria-hidden="true">↔</span></button>
@@ -59,16 +59,16 @@
 <button type="button" class="btn btn-o" id="v3d-play">Sestavení <span aria-hidden="true">▶</span></button>
 <p class="mono" id="v3d-hint" style="margin:0;grid-column:1/-1">Táhněte pro otočení · dva prsty nebo kolečko pro přiblížení</p>
 </div>
-<figcaption class="mono" style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap"><span id="p-cap"></span><span id="p-credit"></span></figcaption>
+<figcaption class="mono" style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap"><span id="p-cap">Obr. 1 — PAROL6</span><span id="p-credit">Vizualizace z modelu PAROL6 (GPL-3.0)</span></figcaption>
 </figure>
 </div>
 
 <div class="buy">
 <div style="display:flex;flex-direction:column;gap:10px">
-<div class="mono" style="display:flex;justify-content:space-between;gap:12px"><span id="p-no"></span><span id="p-hw"></span></div>
+<div class="mono" style="display:flex;justify-content:space-between;gap:12px"><span id="p-no">N° 13 — Průmyslová robotická ruka</span><span id="p-hw">GPL-3.0</span></div>
 <div class="muted" style="font-size:17px">Stavebnice pro</div>
 <h1 class="p-name" id="p-name">PAROL6</h1>
-<div class="mono" id="p-author"></div>
+<div class="mono" id="p-author">Open-source design: Petar Crnjak (Source Robotics)</div>
 <p class="ink2" style="margin:6px 0 0;font-size:17px;line-height:1.5" id="p-lead">Stolní šestiosá ruka, která konstrukcí, řídicím softwarem i ovládáním napodobuje průmyslové roboty. Šest krokových motorů NEMA 17 s přesnými planetovými převodovkami a řemenovými převody, řídicí deska s STM32F446 a drivery TMC5160, napájení 24 V. Dosah 400 mm, nosnost až 1 kg a opakovatelnost 0,08 mm. Ovládá se grafickým PAROL6 Commanderem se simulátorem, z Pythonu nebo přes ROS 2 a MoveIt. Díly se tisknou z PETG.</p>
 </div>
 <div style="display:flex;flex-direction:column;gap:12px">
@@ -135,8 +135,8 @@
 
 <section id="parametry" class="wrap section">
 <details class="acc">
-<summary class="g rule"><span class="a1 mono" role="heading" aria-level="2">03 — Parametry</span><span class="a4" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="h2" id="specs-title">Parametry</span><span class="acc-ico" aria-hidden="true">+</span></span></summary>
-<div class="g" style="margin-top:24px"><div class="a1 hide-s"></div><dl class="a4 specs" id="specs"><div><dt>Stupně volnosti</dt><dd>6</dd></div><div><dt>Pohon</dt><dd>6× NEMA 17, planetové převodovky a řemeny</dd></div><div><dt>Řízení</dt><dd>STM32F446, drivery TMC5160</dd></div><div><dt>Napájení</dt><dd>24 V</dd></div><div><dt>Dosah</dt><dd>400 mm</dd></div><div><dt>Nosnost</dt><dd>až 1 kg</dd></div><div><dt>Opakovatelnost</dt><dd>0,08 mm</dd></div><div><dt>Hmotnost</dt><dd>≈ 5,5 kg</dd></div><div><dt>Tisk</dt><dd>PETG, vrstva 0,2 mm</dd></div><div><dt>Doba tisku</dt><dd>—</dd></div></dl></div>
+<summary class="g rule"><span class="a1 mono" role="heading" aria-level="2">03 — Parametry</span><span class="a4" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="h2" id="specs-title">Parametry · 11</span><span class="acc-ico" aria-hidden="true">+</span></span></summary>
+<div class="g" style="margin-top:24px"><div class="a1 hide-s"></div><dl class="a4 specs" id="specs"><div><dt>Stupně volnosti</dt><dd>6</dd></div><div><dt>Pohon</dt><dd>6× NEMA 17, planetové převodovky a řemeny</dd></div><div><dt>Řízení</dt><dd>STM32F446, drivery TMC5160</dd></div><div><dt>Napájení</dt><dd>24 V</dd></div><div><dt>Dosah</dt><dd>400 mm</dd></div><div><dt>Nosnost</dt><dd>až 1 kg</dd></div><div><dt>Opakovatelnost</dt><dd>0,08 mm</dd></div><div><dt>Hmotnost</dt><dd>≈ 5,5 kg</dd></div><div><dt>Tisk</dt><dd>PETG, vrstva 0,2 mm</dd></div><div><dt>Náročnost</dt><dd>Pokročilý</dd></div><div><dt>Software</dt><dd>PAROL6 Commander, Python API, ROS 2 / MoveIt</dd></div></dl></div>
 </details>
 </section>
 
@@ -163,17 +163,17 @@
 <div class="g" style="margin-top:24px;row-gap:24px">
 <div class="a1 hide-s"></div>
 <div class="a4s ink2" style="display:flex;flex-direction:column;gap:14px">
-<p style="margin:0">Tato sada vychází z otevřeného projektu <span id="l-name">PAROL6</span>, jehož autorem je <span id="l-author">Petar Crnjak (Source Robotics)</span>. Konstrukční soubory jsou zveřejněny pod licencí <span id="l-hw"></span>, software pod licencí <span id="l-sw"></span>.</p>
-<p style="margin:0">printedrobotics.cz vyrábí tištěné díly a kompletuje sadu podle kusovníku projektu <span id="l-name2"></span>. Autoři projektu s námi nejsou spojeni a tento produkt neschválili.</p>
-<div style="display:flex;flex-wrap:wrap;gap:8px"><a class="btn btn-o" id="l-repo" href="#" rel="noopener" style="min-height:44px;font-size:15px">Zdrojové soubory ↗</a><a class="btn btn-o" id="l-docs" href="#" rel="noopener" style="min-height:44px;font-size:15px">Návod projektu ↗</a></div>
+<p style="margin:0">Tato sada vychází z otevřeného projektu <span id="l-name">PAROL6</span>, jehož autorem je <span id="l-author">Petar Crnjak (Source Robotics)</span>. Konstrukční soubory jsou zveřejněny pod licencí <span id="l-hw">GPL-3.0</span>, software pod licencí <span id="l-sw">GPL-3.0</span>.</p>
+<p style="margin:0">printedrobotics.cz vyrábí tištěné díly a kompletuje sadu podle kusovníku projektu <span id="l-name2">PAROL6</span>. Autoři projektu s námi nejsou spojeni a tento produkt neschválili.</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px"><a class="btn btn-o" id="l-repo" href="https://github.com/PCrnjak/PAROL6-Desktop-robot-arm" rel="noopener" style="min-height:44px;font-size:15px">Zdrojové soubory ↗</a><a class="btn btn-o" id="l-docs" href="https://source-robotics.github.io/PAROL-docs/" rel="noopener" style="min-height:44px;font-size:15px">Návod projektu ↗</a></div>
 </div>
 <dl class="a10" style="margin:0;font-size:15px">
-<div style="border-top:1px solid var(--line);padding:10px 0"><dt class="mono">Licence hardwaru</dt><dd style="margin:0" id="l-hw2"></dd></div>
-<div style="border-top:1px solid var(--line);padding:10px 0"><dt class="mono">Licence softwaru</dt><dd style="margin:0" id="l-sw2"></dd></div>
+<div style="border-top:1px solid var(--line);padding:10px 0"><dt class="mono">Licence hardwaru</dt><dd style="margin:0" id="l-hw2">GPL-3.0</dd></div>
+<div style="border-top:1px solid var(--line);padding:10px 0"><dt class="mono">Licence softwaru</dt><dd style="margin:0" id="l-sw2">GPL-3.0</dd></div>
 </dl>
 <div class="a1 hide-s"></div>
 <div class="a4 panel">
-<div><span class="mono">Bezpečnostní upozornění</span><p style="font-weight:500;margin-top:8px">Není hračka. Obsahuje malé díly — nebezpečí spolknutí.</p><p class="ink2" style="margin-top:8px" id="safety">Určeno osobám od 14 let; mladší pouze pod dohledem dospělého. Pohyblivé části mohou přiskřípnout prsty.</p></div>
+<div><span class="mono">Bezpečnostní upozornění</span><p style="font-weight:500;margin-top:8px">Není hračka. Obsahuje malé díly — nebezpečí spolknutí.</p><p class="ink2" style="margin-top:8px" id="safety">Určeno osobám od 14 let; mladší pouze pod dohledem dospělého. Pohyblivé části mohou přiskřípnout prsty.<br>Silné motory: pohybující se rameno může způsobit zranění. Při oživování držte ruce mimo dosah a mějte po ruce vypínač napájení.<br>Pneumatické chapadlo pracuje se stlačeným vzduchem – používejte jen schválený zdroj a hadice.<br>Hardware z této sady napájejte jen zdrojem uvedeným v návodu projektu.</p></div>
 <div><span class="mono">Výrobce sady</span><p class="ink2" style="margin-top:8px">printedrobotics.cz, Praha. Úplné údaje o výrobci a prohlášení o shodě uvedeme před zahájením prodeje.</p></div>
 </div>
 </div>
