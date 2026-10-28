@@ -235,7 +235,7 @@ docker compose version >/dev/null || die "docker compose plugin missing"
 install -d -m 750 "$ROOT"
 cd "$ROOT"
 
-diagnose() {
+diagnose() ( set +eu +o pipefail
   # Low-sensitivity facts only: counts, our own network names, our own DNS lookups.
   local id n
   for id in $(dc ps --all -q 2>/dev/null || true); do
@@ -261,7 +261,7 @@ diagnose() {
   done
   say "diag containers with host port 80 in their mapping (any project): $(docker ps --format '{{.Ports}}' | grep -cE '(0\.0\.0\.0|\[?::\]?):80->' || true), of them ours: $(dc ps --format '{{.Ports}}' 2>/dev/null | grep -cE ':80->' || true)"
   say "diag docker: $(docker version -f '{{.Server.Version}}' 2>/dev/null), compose: $(docker compose version --short 2>/dev/null)"
-}
+)
 
 case "$ACTION" in
   diag)
