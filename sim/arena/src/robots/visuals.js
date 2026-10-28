@@ -120,7 +120,7 @@ export function buildPlaceholder(def, printMat) {
     add(new THREE.BoxGeometry(0.06, 0.05, 0.62), printMat, -0.2, 0, 0.3, jaw);
     add(new THREE.BoxGeometry(0.5, 0.05, 0.06), M.steel, 0, 0, 0.6, jaw);
     add(new THREE.BoxGeometry(0.5, 0.14, 0.04), M.steel, 0, -0.07, 0.62, jaw);
-    parts.jaw = jaw; parts.jawOpen = -0.55; jaw.rotation.x = -0.55;
+    parts.jaw = jaw; parts.jawOpen = -0.42; jaw.rotation.x = -0.42;
   } else {
     add(new THREE.BoxGeometry(def.chassis.half[0] * 1.6, def.chassis.half[1] * 2, def.chassis.half[2] * 2), printMat, 0, 0, 0);
   }

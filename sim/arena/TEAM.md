@@ -175,3 +175,10 @@ Units: 1 u = 10 cm, 1 mass unit = 100 g (grams/100), s; gravity 30 u/s² (arcade
 - Draw objects per map (excl. robots): klasika 15, led 18, jama 32, praha 35–40, kladivo ~34; map `step()` < 0.1 ms, `frame()` < 0.07 ms. Crowd is one instanced mesh animated in the vertex shader.
 - Ice works through the fallback (`afterStep` velocities) until PHYSICS sets `robot.usesSurfaceGrip`.
 - Known: crowd silhouettes are only partly in frame with the top-down TV camera (they read better with low/chase cams); fonts for floor lettering fall back to Arial if Google Fonts haven't loaded when the map is built (textures are drawn once).
+
+### PHYSICS — follow-ups (appended)
+- MAPS request done: tyre μ (drive + lateral + skids) is scaled per contact by `hit.collider.friction() / 0.8` (clamped
+  0.05..1.2) and every Robot sets `usesSurfaceGrip = true`, so the maps' ice fallback can switch off.
+- Kosa is now invertible (wheels stand proud of the lid); VERT has a `wedge` slot (vidle / klin / bez).
+- Steering at speed keeps ≥72 % of the throttle in a hard turn (fast arcs, not pirouettes); skid steer still bleeds speed in arcs.
+- Debris wheels are reparented to the scene (not under `robot.parts`), so replays show them only via the robot's missing wheel.
