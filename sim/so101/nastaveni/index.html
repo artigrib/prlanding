@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nastavení serv SO-101 nanečisto – virtuální ruka | printedrobotics.cz</title>
+<meta name="description" content="Vyzkoušejte si nastavení robotické ruky SO-101 ještě předtím, než vám dorazí stavebnice: ID serv, kalibrace, test a hledání závad na virtuální ruce přímo v prohlížeči.">
+<link rel="canonical" href="https://printedrobotics.cz/sim/so101/nastaveni/">
+<meta property="og:title" content="Nastavení SO-101 nanečisto">
+<meta property="og:description" content="Průvodce nastavením serv SO-101 na virtuální ruce: ID, kalibrace, test a diagnostika závad.">
+<meta property="og:url" content="https://printedrobotics.cz/sim/so101/nastaveni/">
+<meta property="og:image" content="https://printedrobotics.cz/img/so101_white.jpg">
+<meta property="og:locale" content="cs_CZ">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E8461E'/%3E%3C/svg%3E">
+<link rel="preload" href="../vendor/mujoco/mujoco.wasm" as="fetch" type="application/wasm" crossorigin>
+<link rel="modulepreload" href="../vendor/three/three.module.min.js">
+<link rel="modulepreload" href="../vendor/mujoco/mujoco.js">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sim.css">
+<link rel="stylesheet" href="wizard.css">
+<script type="importmap">{"imports":{"three":"../vendor/three/three.module.min.js"}}</script>
+</head>
+<body class="wiz">
+<header class="bar">
+  <div class="brand"><i aria-hidden="true"></i><a href="../../../">printedrobotics</a></div>
+  <span class="bar-t mono">SO-101 · nastavení serv nanečisto</span>
+  <a class="pill" href="../../../sada/so101/"><span aria-hidden="true">←</span> Zpět na SO-101</a>
+</header>
+
+<p class="sr-only" id="sr" role="status" aria-live="polite"></p>
+<main class="sim">
+  <section class="stage" aria-label="3D model ruky SO-101">
+    <canvas id="c" aria-label="Robotická ruka SO-101 na stole. Serva s poruchou jsou zvýrazněná."></canvas>
+
+    <div class="hud" id="hud" hidden>
+      <span class="hud-dot" id="hud-dot" aria-hidden="true"></span>
+      <span id="hud-text" role="status" aria-live="polite"></span>
+    </div>
+    <button type="button" class="stop" id="stop" hidden><span class="stop-k">STOP</span><span class="stop-t">vypnout moment · Esc</span></button>
+    <p class="real-tag mono" id="real-tag" hidden>Skutečná ruka · 3D model ukazuje přečtené polohy</p>
+
+    <div class="loader" id="loader">
+      <div class="loader-in">
+        <p class="mono" role="status">Načítáme virtuální ruku…</p>
+        <div class="prog" aria-hidden="true"><b id="prog"></b></div>
+        <p class="mono muted">Fyzikální engine MuJoCo · první načtení trvá pár sekund</p>
+      </div>
+    </div>
+    <div class="fail" id="fail" hidden>
+      <div class="fail-in">
+        <p class="mono">3D model se nespustil</p>
+        <h2>Tenhle prohlížeč virtuální ruku nezvládne.</h2>
+        <p id="fail-msg">Virtuální ruka potřebuje WebAssembly a WebGL. Zkuste aktuální Chrome, Firefox, Safari nebo Edge.</p>
+      </div>
+    </div>
+
+    <div class="win" id="win" hidden role="dialog" aria-modal="false" aria-labelledby="win-h">
+      <p class="mono win-k">Mise splněna</p>
+      <h2 id="win-h" tabindex="-1">Ruka je nastavená a kostka je v misce.</h2>
+      <p>Prošli jste stejné kroky jako se skutečnou SO-101 v LeRobotu: ID serv, kalibraci i test. Až dorazí stavebnice, bude to podruhé.</p>
+      <div class="win-b">
+        <a class="btn btn-act" href="../../../sada/so101/">Stavebnice SO-101 <span aria-hidden="true">→</span></a>
+        <button type="button" class="btn btn-o" id="again">Zavřít</button>
+      </div>
+    </div>
+  </section>
+
+  <aside class="panel" aria-label="Průvodce nastavením">
+    <div class="mission">
+      <p class="mono">Průvodce · podle LeRobot</p>
+      <h1>Nastavte SO-101 nanečisto</h1>
+      <p class="ink2">Projděte si nastavení serv na virtuální ruce, ještě než vám dorazí stavebnice. Stejný kód později mluví se skutečnou rukou přes USB.</p>
+    </div>
+
+    <ol class="steps" id="steps">
+      <li data-s="port"><button type="button"><b>1</b>Port</button></li>
+      <li data-s="ids"><button type="button" disabled><b>2</b>ID serv</button></li>
+      <li data-s="cal"><button type="button" disabled><b>3</b>Kalibrace</button></li>
+      <li data-s="test"><button type="button" disabled><b>4</b>Test</button></li>
+    </ol>
+
+    <!-- 1 · port -->
+    <section class="step" data-step="port" aria-labelledby="h-port">
+      <h2 id="h-port">Najděte port</h2>
+      <p>V LeRobotu port zjistíte příkazem <code>lerobot-find-port</code>: odpojíte USB kabel řídicí desky, stisknete Enter a program vypíše port, který zmizel (Linux <code>/dev/ttyACM0</code>, macOS <code>/dev/tty.usbmodem…</code>, Windows <code>COM3</code>). V prohlížeči port vyberete v systémovém okně.</p>
+      <fieldset class="variant">
+        <legend class="mono">Jaká serva máte</legend>
+        <label class="opt"><input type="radio" name="variant" value="7.4" checked><span><b>Serva 7,4 V, zdroj 5 V</b><small>základní sada SO-101</small></span></label>
+        <label class="opt"><input type="radio" name="variant" value="12"><span><b>Serva 12 V, zdroj 12 V</b><small>silnější varianta followeru</small></span></label>
+      </fieldset>
+      <div class="card">
+        <h3>Virtuální ruka</h3>
+        <p class="ink2">Šest emulovaných serv STS3215 na sběrnici, jako by právě přišla v krabici: všechna mají tovární ID 1.</p>
+        <button type="button" class="btn btn-act" id="v-connect" disabled>Připojit virtuální ruku <span aria-hidden="true">→</span></button>
+      </div>
+      <div class="card card-real">
+        <h3>Skutečná ruka <span class="badge">beta</span></h3>
+        <p class="warn"><b>Beta – vyzkoušejte na vlastní riziko, napájení mějte na dosah.</b> Ruka se může nečekaně pohnout. Ruku upevněte ke stolu, v dosahu nic nemějte a kdykoli stiskněte STOP nebo Esc, případně vytáhněte zdroj.</p>
+        <div id="r-ok">
+          <label class="check"><input type="checkbox" id="r-ack"> Rozumím, napájení mám na dosah</label>
+          <button type="button" class="btn btn-o" id="r-connect" disabled>Připojit skutečnou ruku <span aria-hidden="true">→</span></button>
+        </div>
+        <p class="note" id="r-no" hidden>Váš prohlížeč neumí Web Serial, takže se ke skutečné ruce nepřipojí. Funguje to v Chrome, Edge nebo Opeře na počítači (Windows, macOS, Linux, ChromeOS). Safari, Firefox ani prohlížeče na iPhonu a iPadu Web Serial nepodporují. Virtuální ruka ale funguje všude.</p>
+      </div>
+      <p class="msg" id="port-msg" role="status"></p>
+    </section>
+
+    <!-- 2 · IDs -->
+    <section class="step" data-step="ids" aria-labelledby="h-ids" hidden>
+      <h2 id="h-ids">Nastavte ID serv</h2>
+      <p>Nová serva mají z výroby všechna ID 1, na společné sběrnici by se překřikovala. Každému proto nastavíte vlastní ID – vždy <b>jen jedno servo připojené k desce</b>. Postupujeme jako <code>lerobot-setup-motors</code>: od chapadla (ID 6) k základně (ID 1).</p>
+      <ol class="idlist" id="idlist"></ol>
+      <div class="card now" id="id-now">
+        <p id="id-ask"></p>
+        <button type="button" class="btn btn-act" id="id-go">Servo je připojené – nastavit ID</button>
+        <p class="msg" id="id-msg" role="status"></p>
+      </div>
+      <button type="button" class="link" id="id-skip">Serva už ID 1–6 mají – jen ověřit a pokračovat</button>
+    </section>
+
+    <!-- 3 · calibration -->
+    <section class="step" data-step="cal" aria-labelledby="h-cal" hidden>
+      <h2 id="h-cal">Kalibrace</h2>
+      <p>Kalibrace zjistí, kde má každý kloub střed a krajní polohy. Moment serv je vypnutý, klouby se dají volně otáčet. <span class="virt">Ve virtuální ruce je „rukou“ posuvník u každého kloubu.</span><span class="realonly">Klouby posouvejte rukou.</span></p>
+      <div class="card" id="cal-a">
+        <h3><span class="n">A</span> Střed rozsahu</h3>
+        <p>Natočte všechny klouby doprostřed jejich rozsahu: rameno a loket do pravého úhlu, zápěstí rovně, chapadlo napůl otevřené (jako na obrázku v dokumentaci LeRobot).</p>
+        <button type="button" class="btn btn-o virt" id="cal-mid-help">Nastavit střed za mě</button>
+        <button type="button" class="btn btn-act" id="cal-mid">Ruka je ve středu – zapsat</button>
+      </div>
+      <div class="card" id="cal-b" hidden>
+        <h3><span class="n">B</span> Celý rozsah</h3>
+        <p>Teď postupně projeďte každým kloubem kromě rotace zápěstí <b>od dorazu k dorazu</b>. Tabulka si pamatuje nejmenší a největší polohu, stejně jako <code>record_ranges_of_motion</code> v LeRobotu.</p>
+        <table class="t" id="range-t"><thead><tr><th>Kloub</th><th>Min</th><th>Poloha</th><th>Max</th></tr></thead><tbody></tbody></table>
+        <button type="button" class="btn btn-o virt" id="cal-sweep">Projet klouby za mě</button>
+        <button type="button" class="btn btn-act" id="cal-save">Hotovo – uložit kalibraci</button>
+      </div>
+      <fieldset class="joints virt" id="hand"><legend class="mono">Vaše ruka (moment vypnutý)</legend></fieldset>
+      <p class="msg" id="cal-msg" role="status"></p>
+      <a class="link" id="cal-dl" hidden download="so101_follower.json">Stáhnout kalibraci (JSON pro LeRobot)</a>
+    </section>
+
+    <!-- 4 · test -->
+    <section class="step" data-step="test" aria-labelledby="h-test" hidden>
+      <h2 id="h-test">Test</h2>
+      <p>Zapněte moment a pohybujte rukou posuvníky. Úhly jsou ve stupních od středu kalibrovaného rozsahu, chapadlo v procentech, stejně jako v LeRobotu (<code>use_degrees=True</code>).</p>
+      <div class="row-b">
+        <button type="button" class="btn btn-act" id="t-torque">Zapnout moment</button>
+        <button type="button" class="btn btn-o" id="t-home" disabled>Domů <span aria-hidden="true">⌂</span></button>
+      </div>
+      <div class="card realonly" id="t-limits">
+        <label for="t-speed" class="lbl">Rychlostní limit <output id="t-speed-o">30 °/s</output></label>
+        <input type="range" id="t-speed" min="10" max="90" step="5" value="30">
+        <p class="note">Rozsah kloubů je omezený na kalibrovaný rozsah minus 3 % na každé straně. Rychlost hlídá prohlížeč i samotné servo (Goal_Velocity).</p>
+      </div>
+      <fieldset class="joints" id="tj" disabled><legend class="mono">Klouby</legend></fieldset>
+      <div class="virt">
+        <button type="button" class="btn" id="t-mission" disabled>Spustit misi: kostka do misky <span aria-hidden="true">▶</span></button>
+        <button type="button" class="link" id="t-reset">Vrátit kostku a ruku na začátek</button>
+      </div>
+      <p class="msg" id="t-msg" role="status"></p>
+    </section>
+
+    <!-- live registers -->
+    <section class="box" aria-labelledby="h-reg">
+      <h2 class="mono" id="h-reg">Registry serv <span id="reg-note"></span></h2>
+      <div class="tw"><table class="t reg" id="reg-t">
+        <thead><tr><th>ID</th><th>Kloub</th><th title="Present_Position (56)">Poloha</th><th title="Present_Voltage (62)">Napětí</th><th title="Present_Temperature (63)">Teplota</th><th title="Present_Load (60)">Zátěž</th><th title="Torque_Enable (40)">Moment</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </section>
+
+    <!-- faults + diagnostics -->
+    <section class="box" aria-labelledby="h-diag">
+      <h2 class="mono" id="h-diag">Diagnostika</h2>
+      <div class="faults virt" id="faults">
+        <p class="ink2">Tréninkové poruchy: zapněte jednu, spusťte diagnostiku a zkuste podle ní závadu najít.</p>
+      </div>
+      <button type="button" class="btn btn-o" id="diag-go" disabled>Spustit diagnostiku</button>
+      <ul class="diag" id="diag" aria-live="polite"></ul>
+    </section>
+
+    <details class="box log">
+      <summary class="mono">Komunikace na sběrnici</summary>
+      <pre id="log" aria-label="Poslední pakety"></pre>
+    </details>
+
+    <p class="foot mono-s">Emulace serv Feetech STS3215 podle tabulek registrů z <a href="https://github.com/huggingface/lerobot">LeRobot</a> (Apache-2.0) · fyzika <a href="https://mujoco.org/">MuJoCo</a> · model SO-101 z MuJoCo Menagerie (<a href="../NOTICE.txt">licence a úpravy</a>). Emulace je zjednodušená. <a href="../">Simulace s misí</a></p>
+  </aside>
+</main>
+
+<noscript><p class="nojs">Průvodce potřebuje JavaScript. <a href="../../../sada/so101/">Zpět na SO-101</a></p></noscript>
+<script type="module" src="wizard.js"></script>
+</body>
+</html>
