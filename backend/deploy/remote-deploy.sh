@@ -246,6 +246,20 @@ diagnose() {
   say "diag other containers publishing 80: $(docker ps --filter publish=80 --format '{{.Label "com.docker.compose.project"}}' | grep -vc '^printedrobotics$' || true), 443: $(docker ps --filter publish=443 --format '{{.Label "com.docker.compose.project"}}' | grep -vc '^printedrobotics$' || true)"
   say "diag docker-proxy processes: $(pgrep -c docker-proxy || echo 0); listening tcp :80 sockets: $(ss -ltnH 'sport = :80' 2>/dev/null | wc -l)"
   say "diag caddy resolves api: $(sanitize "$(dc exec -T caddy nslookup api 127.0.0.11 2>&1 | grep -ciE 'address' || true) address line(s)")"
+  local port procs ours others ourips pid args cip
+  ourips=" $(for id in $(dc ps --all -q 2>/dev/null); do docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' "$id" 2>/dev/null; done) "
+  for port in 80 443; do
+    procs=$(ss -ltnpH "sport = :$port" 2>/dev/null | grep -o 'users:(("[^"]*"' | sed 's/users:(("//' | sort | uniq -c | awk '{print $2"x"$1}' | tr '\n' ' ')
+    ours=0; others=0
+    for pid in $(pgrep -x docker-proxy || true); do
+      args=$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null || true)
+      case "$args" in *"-host-port $port "*) ;; *) continue;; esac
+      cip=$(printf '%s' "$args" | sed -n 's/.*-container-ip \([^ ]*\).*/\1/p')
+      case "$ourips" in *" $cip "*) ours=$((ours + 1));; *) others=$((others + 1));; esac
+    done
+    say "diag tcp :$port listeners by process: ${procs:-none}; docker-proxy for :$port -> our containers: $ours, to other/unknown IPs: $others"
+  done
+  say "diag containers with host port 80 in their mapping (any project): $(docker ps --format '{{.Ports}}' | grep -cE '(0\.0\.0\.0|\[?::\]?):80->' || true), of them ours: $(dc ps --format '{{.Ports}}' 2>/dev/null | grep -cE ':80->' || true)"
   say "diag docker: $(docker version -f '{{.Server.Version}}' 2>/dev/null), compose: $(docker compose version --short 2>/dev/null)"
 }
 
