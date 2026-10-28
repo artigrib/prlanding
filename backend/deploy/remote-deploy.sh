@@ -359,6 +359,31 @@ tls_state() ( set +eu +o pipefail
     { if (match($0, /"msg":"[^"]*"/)) { s=substr($0, RSTART+7, RLENGTH-8); if (!(s in ok)) s="(other)"; c[s]++ } }
     { if (match($0, /"challenge_type":"[a-z0-9-]*"/)) ct[substr($0, RSTART+18, RLENGTH-19)]++ }
     END { for (s in c) printf "%s=%d; ", s, c[s]; for (t in ct) printf "challenge %s=%d; ", t, ct[t]; print "" }')"
+  # Which process owns the :80/:443 listening sockets? Yes/no answers only.
+  local fid cp ours pid port hex ino owner
+  fid=$(docker inspect -f '{{.Id}}' "$cid" 2>/dev/null)
+  cp=0; ours=0
+  for pid in $(pgrep -x caddy); do cp=$((cp + 1)); grep -q "$fid" "/proc/$pid/cgroup" 2>/dev/null && ours=$((ours + 1)); done
+  say "tls caddy processes on host: $cp, in our container: $ours; our network mode: $(docker inspect -f '{{.HostConfig.NetworkMode}}' "$cid" 2>/dev/null | sed 's/^container:.*/container/'); whoami root: $([ "$(id -u)" = 0 ] && echo yes || echo no)"
+  for port in 80 443; do
+    hex=$(printf '%04X' "$port")
+    owner=""
+    for ino in $(cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk -v h=":$hex" '$2 ~ h"$" && $4=="0A" {print $10}'); do
+      for pid in $(ls /proc | grep -E '^[0-9]+$'); do
+        if ls -l "/proc/$pid/fd" 2>/dev/null | grep -q "socket:\[$ino\]"; then
+          c=$(tr '\0' ' ' < "/proc/$pid/comm" 2>/dev/null)
+          case "$c" in caddy*) cc=caddy;; docker-proxy*) cc=docker-proxy;; nginx*) cc=nginx;; *) cc=other;; esac
+          grep -q "$fid" "/proc/$pid/cgroup" 2>/dev/null && w=ours || w=not-ours
+          owner="$owner $cc/$w"
+          break
+        fi
+      done
+    done
+    say "tls :$port listening sockets owned by:${owner:- unknown}"
+  done
+  local rr
+  rr=$(timeout 5 bash -c 'exec 3<>/dev/tcp/127.0.0.1/80; printf "GET /.well-known/acme-challenge/probe HTTP/1.1\r\nHost: api.printedrobotics.cz\r\nConnection: close\r\n\r\n" >&3; head -c 300 <&3' 2>/dev/null | head -1 | grep -o ' [0-9][0-9][0-9]')
+  say "tls raw loopback :80 status:${rr:- none}"
   d80=$(iptables -t nat -S 2>/dev/null | grep -- '-j DNAT' | grep -cE -- '--dport 80( |$)' || true)
   say "tls nat DNAT dport 80 rules: $d80; iptables readable: $(iptables -t nat -S >/dev/null 2>&1 && echo yes || echo no)"
   for h in api mcp relay; do
