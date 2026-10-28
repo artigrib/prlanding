@@ -448,7 +448,8 @@ function lost(text) {
   st.lost = true; st.pollOn = false; st.torque = false; st.targets = null; st.demo = null; st.stopGen++;
   updateTorqueUi();
   $('stop').disabled = true;
-  $('stop').querySelector('.stop-t').textContent = 'nelze odeslat – vypněte napájení';
+  $('stop').querySelector('.stop-t').textContent = 'nelze odeslat';
+  renderReg(true);
   alertBox(text + ' Pro nové připojení obnovte stránku.', 'err', true);
   msg($('t-msg'), text, 'err');
   document.body.classList.add('lost');
@@ -581,7 +582,7 @@ async function pollOnce() {
 
 const fmt = (v, d = 1) => v.toFixed(d).replace('.', ',');
 function renderReg(paused) {
-  $('reg-note').textContent = paused ? '· během nastavování ID se nečtou' : '· živě, Sync Read';
+  $('reg-note').textContent = st.lost ? '· spojení ztraceno' : paused ? '· během nastavování ID se nečtou' : '· živě, Sync Read';
   const tb = $('reg-t').tBodies[0];
   const V = VARIANTS[st.variant];
   const SHORT = ['základna', 'rameno', 'loket', 'náklon', 'rotace', 'chapadlo'];
