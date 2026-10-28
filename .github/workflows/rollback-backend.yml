@@ -15,7 +15,7 @@ on:
       action:
         description: What to do
         type: choice
-        options: [status, rollback, diag, porttest]
+        options: [status, rollback, diag, porttest, fixports]
         default: status
 permissions:
   contents: read
@@ -65,7 +65,7 @@ jobs:
         run: |
           ACT="$ACT_INPUT"
           [ -n "$ACT" ] || ACT=$(awk 'NR==1{print $1}' backend/deploy/ops-request 2>/dev/null)
-          case "$ACT" in status|rollback|diag|porttest) ;; *) echo "::error::bad action"; exit 1;; esac
+          case "$ACT" in status|rollback|diag|porttest|fixports) ;; *) echo "::error::bad action"; exit 1;; esac
           set +e
           # Use the script from this commit (it does not need the deploy files for these actions).
           out=$(ssh -o StrictHostKeyChecking=$STRICT -l "$U" vps "ACTION=$ACT bash -s" < backend/deploy/remote-deploy.sh 2>/dev/null)

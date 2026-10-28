@@ -118,6 +118,7 @@ fix_stale_ports() {
 
 bring_up() {
   build_env
+  fixports
   fix_stale_ports
   # A Caddy container left half-started (not attached to our network) is removed first.
   local cid nets
@@ -336,7 +337,36 @@ porttest() ( set +eu +o pipefail
   done
 )
 
+stale_endpoints() ( set +eu +o pipefail
+  # Endpoints in any network whose container no longer exists. Prints "<network-id> <endpoint-name>".
+  local net
+  local ids=" $(docker ps -aq --no-trunc | tr '\n' ' ') "
+  for net in $(docker network ls -q --no-trunc); do
+    docker network inspect -f '{{range $id, $c := .Containers}}{{$id}} {{$c.Name}}{{println}}{{end}}' "$net" 2>/dev/null \
+      | while read -r cid name; do
+          [ -n "$cid" ] || continue
+          case "$ids" in *" $cid "*) ;; *) echo "$net $name";; esac
+        done
+  done
+)
+
+fixports() ( set +eu +o pipefail
+  local total ours net name
+  total=$(stale_endpoints | grep -c . )
+  ours=$(stale_endpoints | awk '$2 ~ /^printedrobotics-/' | grep -c .)
+  say "stale endpoints: total $total, ours $ours"
+  stale_endpoints | awk '$2 ~ /^printedrobotics-/' | while read -r net name; do
+    docker network disconnect -f "$net" "$name" && say "removed our stale endpoint ${name}" || warn "could not remove our stale endpoint ${name}"
+  done
+  say "after cleanup: stale endpoints total $(stale_endpoints | grep -c .), docker-proxy for :80 $(pgrep -a docker-proxy | grep -c -- '-host-port 80 ')"
+)
+
 case "$ACTION" in
+  fixports)
+    fixports
+    porttest
+    exit 0
+    ;;
   porttest)
     porttest
     exit 0
