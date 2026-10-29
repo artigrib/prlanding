@@ -66,6 +66,7 @@ throw `OUT_OF_LIMITS` with `{joint, value_deg, min_deg, max_deg}`.
 | `get_scene` | `getScene({include})` | `{robot: JointState, objects: [{id, kind, pose: {x_mm, y_mm, z_mm}}], mission, safety, limits}` |
 | `move_joints` | `moveJoints({joints_deg, gripper_pct, relative, duration_s}, {signal})` | `MotionResult` |
 | `move_to` | `moveTo({pose, gripper_pct, duration_s}, {signal})` | `MotionResult` + `ik: {joints_deg, pitch_deg_used, position_error_mm}` |
+| `run_trajectory` | `runTrajectory({waypoints}, {signal})` | `MotionResult` + `waypoints`, `segment_durations_s` |
 | `set_gripper` | `setGripper({gripper_pct, effort_pct, duration_s}, {signal})` | `MotionResult` (`"open"` = 70 %, `"close"` = 0 %) |
 | `home` | `home({pose, duration_s}, {signal})` | `MotionResult` |
 | `stop` | `stop()` | `{status: "held", final: JointState}` |

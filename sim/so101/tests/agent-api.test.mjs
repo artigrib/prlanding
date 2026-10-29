@@ -47,7 +47,7 @@ function frame() {
   runner.ctx.gripOpen = d.ctrl[act[5]] > 0.5;
   runner.tick(dt);
 }
-const METHODS = { get_state: 'getState', get_scene: 'getScene', move_joints: 'moveJoints', move_to: 'moveTo', set_gripper: 'setGripper', home: 'home', stop: 'stop', list_missions: 'listMissions', start_mission: 'startMission', check_mission: 'checkMission', reset_scene: 'resetScene' };
+const METHODS = { run_trajectory: 'runTrajectory', get_state: 'getState', get_scene: 'getScene', move_joints: 'moveJoints', move_to: 'moveTo', set_gripper: 'setGripper', home: 'home', stop: 'stop', list_missions: 'listMissions', start_mission: 'startMission', check_mission: 'checkMission', reset_scene: 'resetScene' };
 async function call(tool, args = {}, opts = {}) {
   let done = false, out, err;
   Promise.resolve().then(() => api[METHODS[tool]](args, opts)).then((r) => { out = r; done = true; }, (e) => { err = e; done = true; });
@@ -170,4 +170,88 @@ test('object scene: missions 06-10 start in place (no reload) and their objects 
     assert.ok(objs.length >= 2, id + ': objects ' + objs.length);
     if (id !== 'bowl') assert.ok(objs.some((o) => o.kind === 'object'), id + ' has library objects');
   }
+});
+
+// ---------------- run_trajectory ----------------
+const dance = () => [
+  { joints_deg: { shoulder_pan: 30, wrist_roll: 40 }, gripper_pct: 80, duration_s: 0.6 },
+  { joints_deg: { shoulder_pan: -30, wrist_roll: -40 }, gripper_pct: 20, duration_s: 0.6 },
+  { joints_deg: { shoulder_pan: 30, elbow_flex: 20 }, duration_s: 0.6 },
+  { pose: { x_mm: 220, y_mm: 0, z_mm: 120 }, gripper_pct: 60 },
+  { joints_deg: { shoulder_pan: 0 }, duration_s: 0.5 }
+];
+
+test('run_trajectory: one smooth motion through every waypoint, under the speed cap, ending at the last one', async () => {
+  reset('bowl');
+  // watch the commanded joint speed every frame
+  let vmax = 0, prev = null, wp1 = Infinity;
+  const p = api.runTrajectory({ waypoints: dance() }, {});
+  let done = null; p.then((r) => { done = r; });
+  for (let i = 0; i < 60 * 30 && !done; i++) {
+    await null; if (done) break;
+    frame();
+    const c = Array.from(act.slice(0, 5), (a) => d.ctrl[a]);
+    if (prev) vmax = Math.max(vmax, ...c.map((v, k) => Math.abs(v - prev[k]) / (4 * ts) * 180 / Math.PI));
+    prev = c;
+    wp1 = Math.min(wp1, Math.abs(c[0] * 180 / Math.PI - -30));
+  }
+  assert.ok(done, 'trajectory finished');
+  assert.equal(done.status, 'completed');
+  assert.equal(done.waypoints, 5);
+  assert.ok(vmax <= SPEED_CAP_DPS * 1.02, 'commanded speed ' + vmax.toFixed(1) + ' deg/s');
+  assert.ok(wp1 < 1, 'passed through waypoint 2 (pan -30): ' + wp1.toFixed(2));
+  assert.ok(Math.abs(done.final.joints_deg.shoulder_pan) < 1.5, JSON.stringify(done.final.joints_deg));
+  assert.ok(done.time_stretched_by == null || done.time_stretched_by >= 1);
+  assert.ok(done.planned_duration_s < 8, 'planned ' + done.planned_duration_s);
+});
+
+test('run_trajectory: the whole path is checked first; a bad waypoint is named and nothing moves', async () => {
+  reset('bowl');
+  const before = api.getState().goal_deg;
+  let e = await code(call('run_trajectory', { waypoints: [{ joints_deg: { shoulder_pan: 20 } }, { joints_deg: { elbow_flex: 120 } }] }));
+  assert.equal(e.code, 'OUT_OF_LIMITS'); assert.equal(e.details.waypoint, 1); assert.equal(e.details.joint, 'elbow_flex');
+  e = await code(call('run_trajectory', { waypoints: [{ joints_deg: { shoulder_pan: 20 } }, { pose: { x_mm: 200, y_mm: 0, z_mm: -10 } }] }));
+  assert.equal(e.code, 'WORKSPACE_VIOLATION'); assert.equal(e.details.waypoint, 1);
+  e = await code(call('run_trajectory', { waypoints: [{ joints_deg: { shoulder_lift: 60, elbow_flex: 40, wrist_flex: 60 } }] }));
+  assert.equal(e.code, 'WORKSPACE_VIOLATION'); assert.equal(e.details.waypoint, 0);
+  e = await code(call('run_trajectory', { waypoints: Array(51).fill({ joints_deg: { shoulder_pan: 1 } }) }));
+  assert.equal(e.code, 'INVALID_ARGUMENT');
+  e = await code(call('run_trajectory', { waypoints: Array(8).fill(0).map((_, i) => ({ joints_deg: { shoulder_pan: i % 2 ? 60 : -60 }, duration_s: 9 })) }));
+  assert.equal(e.code, 'INVALID_ARGUMENT'); assert.equal(e.details.reason, 'too_long');
+  assert.deepEqual(api.getState().goal_deg, before);
+});
+
+test('run_trajectory: STOP mid-way and the person taking over end it like any motion', async () => {
+  reset('bowl');
+  let res = null;
+  api.runTrajectory({ waypoints: dance() }, {}).then((r) => { res = r; });
+  for (let i = 0; i < 50; i++) frame();
+  api.setEstop(true); await null; await null;
+  assert.equal(res.status, 'stopped');
+  const held = api.getState().goal_deg;
+  for (let i = 0; i < 30; i++) frame();
+  assert.deepEqual(api.getState().goal_deg, held, 'commanded pose frozen after STOP');
+  assert.equal((await code(call('run_trajectory', { waypoints: dance() }))).code, 'ESTOP_ACTIVE');
+  api.setEstop(false);
+  res = null;
+  const ac = new AbortController();
+  api.runTrajectory({ waypoints: dance() }, { signal: ac.signal }).then((r) => { res = r; });
+  for (let i = 0; i < 30; i++) frame();
+  ac.abort('preempted'); await null; await null;
+  assert.equal(res.status, 'preempted');
+  res = null;
+  api.runTrajectory({ waypoints: dance() }, {}).then((r) => { res = r; });
+  for (let i = 0; i < 30; i++) frame();
+  userBusy = true; frame(); await null; await null; userBusy = false;
+  assert.equal(res.status, 'stopped');
+});
+
+test('"Co říct AI": 8-12 prompts in 4 groups, every prompt and title has an English text', async () => {
+  const { PROMPT_GROUPS, MISSION_PROMPT } = await import('../src/agent/prompts.js');
+  const en = (await import('../src/i18n/en.js')).default.strings;
+  const items = PROMPT_GROUPS.flatMap((g) => g.items);
+  assert.equal(PROMPT_GROUPS.length, 4);
+  assert.ok(items.length >= 8 && items.length <= 12, 'prompts: ' + items.length);
+  for (const k of [...items, ...PROMPT_GROUPS.map((g) => g.title), MISSION_PROMPT]) assert.ok(en[k], 'no English for: ' + k);
+  for (const m of MISSIONS) assert.ok(en[m.title], 'no English mission title: ' + m.title);
 });

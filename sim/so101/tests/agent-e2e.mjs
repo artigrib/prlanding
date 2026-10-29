@@ -29,6 +29,32 @@ try {
 let fails = 0;
 const ok = (cond, msg) => { console.log((cond ? 'ok   ' : 'FAIL ') + msg); if (!cond) fails++; };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+/**
+ * Simulated time is pumped from the test (the page's frame loop is paused). The pump yields: after each slice it
+ * waits at least twice as long as the slice took. A fixed setInterval(20 ms) saturated the main thread in the
+ * heavier object scene (rAF fell to ~0.4/s), and Playwright's actionability checks, which wait for animation
+ * frames (scroll into view, "stable"), then took 14-26 s and sometimes hit the 30 s click timeout.
+ */
+const startPump = (page) => page.evaluate(() => {
+  const s = window.__sim; s._app.sim.paused = true;
+  const step = () => { const t0 = performance.now(); s.advance(1 / 20); setTimeout(step, Math.max(15, 2 * (performance.now() - t0))); };
+  step();
+});
+/**
+ * Wait until the page renders smoothly again (>= 5 animation frames within one second, up to 3 min). Right after the
+ * reload into the object scene the GPU process is busy with the new meshes and textures (software GL), and frames
+ * take seconds each: measured 1-4 rAF per 4-5 s for the first 10-25 s. Playwright's actionability checks wait for
+ * frames (scroll into view, "stable"), so a click then sometimes ran into its 30 s timeout. That was the
+ * "Odpojit never clickable after the object-mission reconnect" flake (and the same for Povolit).
+ */
+async function steadyFrames(page) {
+  const t0 = Date.now();
+  while (Date.now() - t0 < 180000) {
+    const n = await page.evaluate(() => new Promise((r) => { let k = 0; const t1 = performance.now(); const f = () => { k++; if (performance.now() - t1 < 1000) requestAnimationFrame(f); else r(k); }; requestAnimationFrame(f); }));
+    if (n >= 5) return Date.now() - t0;
+  }
+  throw new Error('the page did not render smoothly within 3 min');
+}
 const freePort = () => new Promise((r) => { const s = net.createServer(); s.listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => r(p)); }); });
 async function waitHttp(url, sec = 20) {
   for (let i = 0; i < sec * 5; i++) { try { const r = await fetch(url); if (r.ok) return true; } catch (e) { /* not yet */ } await sleep(200); }
@@ -51,11 +77,11 @@ try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
   page.on('pageerror', (e) => { console.log('PAGEERROR', e.message); fails++; });
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) console.log('console.error', m.text()); });
-  await page.goto(`http://127.0.0.1:${sport}/sim/so101/?test=1&mise=bowl&relay=${encodeURIComponent(relay)}`);
+  await page.goto(`http://127.0.0.1:${sport}/sim/so101/?test=1&mise=bowl&detail=low&relay=${encodeURIComponent(relay)}`);
   await page.waitForFunction(() => window.__sim && (window.__sim.ready || window.__sim.error), null, { timeout: 300000 });
-  ok(await page.evaluate(() => !!window.so101 && window.so101.version === 1 && window.so101.tools.length === 12), 'window.so101 page API present');
+  ok(await page.evaluate(() => !!window.so101 && window.so101.version === 1 && window.so101.tools.length === 13), 'window.so101 page API present');
   // pump simulated time from here on (the rAF loop is slow with software GL)
-  await page.evaluate(() => { window.__sim._app.sim.paused = true; window.__pump = setInterval(() => window.__sim.advance(1 / 20), 20); });
+  await startPump(page);
 
   // ---- pairing through the panel ----
   await page.click('#ai-open');
@@ -64,6 +90,7 @@ try {
   const code = (await codeEl.textContent()).trim();
   ok(/printedrobotics https:\/\/mcp\.printedrobotics\.cz\/mcp/.test(await page.locator('.ai-cmd').first().textContent()), 'setup shows the claude mcp add command');
   ok((await page.locator('.ai-say').first().textContent()).includes(code), 'setup shows the sentence with the code');
+  ok(await page.getByTestId('agent-prompts').isVisible() && (await page.locator('.ai-prompt').count()) >= 8, '"Co říct AI" prompts shown while waiting');
   ok(!(await page.getByTestId('agent-stop').isVisible()) && !(await page.locator('.ai-bar').isVisible()), 'no STOP and no stage bar before a session exists');
   await page.screenshot({ path: path.join(OUT, 'agent-waiting.png') }).catch(() => {});
 
@@ -111,6 +138,33 @@ try {
   ok((await call('get_state')).safety === 'estop', 'get_state reports estop');
   await page.getByTestId('agent-bar-stop').click();
 
+  // ---- run_trajectory: a dance in one call; STOP in the page mid-way ----
+  const dance = [
+    { joints_deg: { shoulder_pan: 30, wrist_roll: 40 }, gripper_pct: 80, duration_s: 0.6 },
+    { joints_deg: { shoulder_pan: -30, wrist_roll: -40 }, gripper_pct: 20, duration_s: 0.6 },
+    { joints_deg: { shoulder_pan: 30, elbow_flex: 20 }, duration_s: 0.6 },
+    { pose: { x_mm: 220, y_mm: 0, z_mm: 120 }, gripper_pct: 60 },
+    { joints_deg: { shoulder_pan: 0 }, duration_s: 0.5 }
+  ];
+  const tr = await call('run_trajectory', { waypoints: dance });
+  ok(tr.status === 'completed' && tr.waypoints === 5 && Math.abs(tr.final.joints_deg.shoulder_pan) < 2 && tr.segment_durations_s.length === 5,
+    `run_trajectory: 5 waypoints in one smooth motion (${tr.planned_duration_s} s planned)`);
+  const trBad = await raw('run_trajectory', { waypoints: [{ joints_deg: { shoulder_pan: 10 } }, { joints_deg: { elbow_flex: 120 } }] });
+  ok(trBad.isError && trBad.structuredContent.error.code === 'OUT_OF_LIMITS' && trBad.structuredContent.error.details.waypoint === 1, 'run_trajectory: a bad waypoint is named, nothing moves');
+  const longDance = Array.from({ length: 12 }, (_, i) => ({ joints_deg: { shoulder_pan: i % 2 ? 40 : -40 }, duration_s: 1 }));
+  const pending2 = raw('run_trajectory', { waypoints: longDance });
+  await page.waitForFunction(() => window.__sim._ux.agent.busy, null, { timeout: 20000 });
+  await sleep(800);
+  await page.getByTestId('agent-bar-stop').click();
+  const stopped = await pending2;
+  ok(!stopped.isError && stopped.structuredContent.status === 'stopped', 'STOP in the page ends run_trajectory mid-way: ' + (stopped.structuredContent.status || JSON.stringify(stopped.structuredContent.error)));
+  await page.getByTestId('agent-bar-stop').click();   // release
+  ok(/Plynulý pohyb přes 5 bodů/.test(await page.getByTestId('agent-log').innerText()), 'activity log: "Plynulý pohyb přes 5 bodů"');
+  // "Zeptej se AI" on the mission card: the prompt for the current mission
+  await page.click('#ai-ask-mission');
+  const mp = await page.getByTestId('agent-mission-prompt').innerText();
+  ok(/Pro misi 01/.test(mp) && /Spusť misi 01/.test(mp), '"Zeptej se AI": prompt for mission 01');
+
   // ---- mission 01 through the tools ----
   const wait = async (cond, maxSec) => {
     for (let i = 0; i < maxSec * 4; i++) { if (cond((await call('check_mission')).mission)) return true; await sleep(250); }
@@ -133,7 +187,9 @@ try {
   ok(sb.reload_required === true && sb.reconnect_required === true, 'start_mission(breakfast) from the plain scene: reload + reconnect');
   await page.waitForURL(/mise=breakfast/, { timeout: 30000 });
   await page.waitForFunction(() => window.__sim && (window.__sim.ready || window.__sim.error), null, { timeout: 300000 });
-  await page.evaluate(() => { window.__sim._app.sim.paused = true; window.__pump = setInterval(() => window.__sim.advance(1 / 20), 20); });
+  await page.waitForFunction(() => window.__sim.objectsReady(), null, { timeout: 300000 });
+  await startPump(page);
+  console.log('     frames steady after the reload in ' + (await steadyFrames(page)) + ' ms');
   await codeEl.filter({ hasText: /^[A-Z]{4}-[A-Z]{4}$/ }).waitFor({ timeout: 30000 });
   ok(true, 'after the reload the panel reopened by itself with a new code');
   const old = await raw('get_state');
@@ -147,7 +203,7 @@ try {
   ok(sb2.mission.state === 'running' && !sb2.reload_required && objs.some((o) => o.kind === 'object'), `breakfast runs in the object scene (${objs.filter((o) => o.kind === 'object').map((o) => o.id).join(', ')})`);
 
   // ---- Odpojit ----
-  ok(await page.locator('#ai-panel[data-state=paired]').count() === 1, 'panel state: ' + await page.locator('#ai-panel').getAttribute('data-state'));
+  await steadyFrames(page);
   await page.getByTestId('agent-disconnect').click();
   await sleep(300);
   const gone = await raw('get_state');

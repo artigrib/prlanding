@@ -129,3 +129,18 @@ test('mission catalogue: the 10 SO-101 sim missions (01-05 plus object missions 
   const tab = openTab(reg, '10.0.0.1', { views: ['overview'], missions: ['bowl', 'line', 'lab', 'nope'] });
   assert.deepEqual(tab.room.caps.missions, ['bowl', 'line', 'lab'], 'unknown ids are dropped, object missions kept');
 });
+
+test('run_trajectory: schema bounds, motion tool with a 70 s deadline, server-side limit check names the waypoint', async () => {
+  const { Inputs, MOTION_TOOLS, deadlineFor, checkLimits, TRAJECTORY_MAX_WAYPOINTS } = await import('../src/schemas.ts');
+  const S = 's_' + 'A'.repeat(22);
+  const wp = { joints_deg: { shoulder_pan: 20 }, gripper_pct: 50, duration_s: 0.5 };
+  assert.ok(Inputs.run_trajectory.safeParse({ session: S, waypoints: [wp, { pose: { x_mm: 200, y_mm: 0, z_mm: 80 } }] }).success);
+  assert.equal(Inputs.run_trajectory.safeParse({ session: S, waypoints: [] }).success, false);
+  assert.equal(Inputs.run_trajectory.safeParse({ session: S, waypoints: Array(TRAJECTORY_MAX_WAYPOINTS + 1).fill(wp) }).success, false);
+  assert.equal(Inputs.run_trajectory.safeParse({ session: S, waypoints: [{ joints_deg: { hip: 3 } }] }).success, false);
+  assert.ok(MOTION_TOOLS.has('run_trajectory'));
+  assert.equal(deadlineFor('run_trajectory', {}), 70_000);
+  assert.deepEqual(checkLimits('run_trajectory', { waypoints: [wp, { joints_deg: { elbow_flex: 120 } }] }),
+    { joint: 'elbow_flex', value_deg: 120, min_deg: -96.8, max_deg: 96.8, waypoint: 1 });
+  assert.equal(checkLimits('run_trajectory', { waypoints: [wp] }), null);
+});

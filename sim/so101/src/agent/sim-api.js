@@ -16,7 +16,8 @@ export const ARM = ['shoulder_pan', 'shoulder_lift', 'elbow_flex', 'wrist_flex',
 export const SPEED_CAP_DPS = 90;           // peak joint speed of any AI motion
 export const GRIP_CAP_PPS = 160;           // gripper, percent per second
 export const WORKSPACE_MM = { x: [-300, 600], y: [-450, 450], z: [-2, 500] };
-export const BODY_FLOOR_MM = -2;           // no arm body origin below the table top
+export const BODY_FLOOR_MM = -2;
+export const TRAJECTORY_MAX_WAYPOINTS = 50, TRAJECTORY_MAX_S = 60;   // same as backend/bridge/src/schemas.ts           // no arm body origin below the table top
 /** Missions the relay's catalogue knows (backend/bridge/src/schemas.ts MISSIONS). The object missions (06–10) run
  *  in the object scene: from the plain scene the page reloads into it, which ends the AI session (new code needed). */
 export const AGENT_MISSIONS = ['bowl', 'stack', 'sort', 'ball', 'trace', 'line', 'breakfast', 'tidy', 'workshop', 'lab'];
@@ -107,23 +108,26 @@ export function createSimApi(env) {
     if (!Number.isFinite(tp)) throw new AgentError('INVALID_ARGUMENT', { joint: 'gripper' });
     if (tp < -1e-6 || tp > 100 + 1e-6) throw new AgentError('OUT_OF_LIMITS', { joint: 'gripper', value_pct: r1(tp), min_pct: 0, max_pct: 100 });
   }
-  /** FK samples along the joint-space min-jerk path: jaw tip inside the box, no arm body below the table. */
-  function checkWorkspace(from, to) {
-    const W = WORKSPACE_MM;
-    for (let s = 1; s <= SAMPLES; s++) {
-      const e = smooth(s / SAMPLES);
-      for (let i = 0; i < 6; i++) _q[i] = from[i] + (to[i] - from[i]) * e;
+  /** FK samples along a path: jaw tip inside the box, no arm body below the table (details.waypoint for trajectories). */
+  function checkWorkspace(path) {
+    const W = WORKSPACE_MM, n = Math.min(2400, Math.max(SAMPLES, Math.ceil(path.T / 0.04)));
+    for (let s = 1; s <= n; s++) {
+      const t = (s / n) * path.T;
+      path.at(t, _q);
       const p = kin.fk(_q), x = p[0] * 1000, y = p[1] * 1000, z = p[2] * 1000;
       const out = x < W.x[0] || x > W.x[1] || y < W.y[0] || y > W.y[1] || z < W.z[0] || z > W.z[1];
       let low = null;
       for (let b = 1; b < kin.nb && low == null; b++) if (kin.xpos[3 * b + 2] * 1000 < BODY_FLOOR_MM) low = b;
       if (out || low != null) {
-        throw new AgentError('WORKSPACE_VIOLATION', {
-          at_fraction: r1(s / SAMPLES), x_mm: r1(x), y_mm: r1(y), z_mm: r1(z), part: low != null ? 'arm' : 'tip',
-          box_x_mm: W.x, box_y_mm: W.y, box_z_mm: W.z
-        });
+        const det = { at_fraction: r1(s / n), x_mm: r1(x), y_mm: r1(y), z_mm: r1(z), part: low != null ? 'arm' : 'tip', box_x_mm: W.x, box_y_mm: W.y, box_z_mm: W.z };
+        if (path.segAt) det.waypoint = path.segAt(t);
+        throw new AgentError('WORKSPACE_VIOLATION', det);
       }
     }
+  }
+  /** Straight joint-space min-jerk move. */
+  function linePath(from, to, T) {
+    return { T, to, at(t, out) { const e = smooth(Math.min(1, t / T)); for (let i = 0; i < 6; i++) out[i] = from[i] + (to[i] - from[i]) * e; return out; } };
   }
   function autoDuration(from, to) {
     let maxD = 0;
@@ -145,22 +149,112 @@ export function createSimApi(env) {
     preflight();
     checkLimits(target);
     const from = currentGoal();
-    checkWorkspace(from, target);
+    const auto = autoDuration(from, target);
+    const path = linePath(from, Float64Array.from(target), duration_s != null ? Math.max(duration_s, auto) : auto);
+    checkWorkspace(path);
+    return runPath(path, duration_s, signal, extra);
+  }
+  /** Execute a checked path (limits, speed cap and workspace already verified). */
+  function runPath(path, duration_s, signal, extra) {
     if (motion) finish('preempted');
     env.takeControl && env.takeControl();
-    const auto = autoDuration(from, target);
-    const T = duration_s != null ? Math.max(duration_s, auto) : auto;
     runner.start();
     runner.assisted = true;          // the AI moved the arm: no stars / records for the visitor
     const id = 'm' + (++seq).toString(36) + Math.random().toString(36).slice(2, 7);
     return new Promise((resolve) => {
-      motion = { id, from, to: Float64Array.from(target), T, t: 0, settle: 0, t0: d.time, duration_s, resolve, extra };
+      motion = { id, path, to: path.to, T: path.T, t: 0, settle: 0, t0: d.time, duration_s, resolve, extra, buf: new Float64Array(6) };
       emit('motion', { id, phase: 'start' });
       if (signal) {
         if (signal.aborted) return finish(signal.reason === 'preempted' ? 'preempted' : 'stopped', id);
         signal.addEventListener('abort', () => finish(signal.reason === 'preempted' ? 'preempted' : 'stopped', id), { once: true });
       }
     });
+  }
+
+  // ---------------- trajectory (run_trajectory) ----------------
+  /**
+   * Waypoints -> one smooth path: monotone piecewise-cubic (Fritsch–Butland) per joint through the waypoints, at rest
+   * at both ends. Monotone segments never overshoot their neighbours, so every sample stays inside the joint limits
+   * the waypoints were checked against. Segment times are stretched until every joint stays under the speed cap.
+   */
+  function trajectoryPath(waypoints) {
+    if (!Array.isArray(waypoints) || waypoints.length < 1 || waypoints.length > TRAJECTORY_MAX_WAYPOINTS) {
+      throw new AgentError('INVALID_ARGUMENT', { field: 'waypoints', min_items: 1, max_items: TRAJECTORY_MAX_WAYPOINTS });
+    }
+    const Q = [currentGoal()];
+    const req = [];
+    waypoints.forEach((w, k) => {
+      try {
+        const prev = Q[Q.length - 1], q = Float64Array.from(prev);
+        if (w.joints_deg && w.pose) throw new AgentError('INVALID_ARGUMENT', { reason: 'joints_deg_and_pose' });
+        if (w.pose) {
+          const roll = w.pose.roll_deg != null ? w.pose.roll_deg / DEG : prev[4];
+          q.set(solveTo(w.pose, roll, prev).q.subarray(0, 5));
+        }
+        if (w.joints_deg) ARM.forEach((j, i) => { if (w.joints_deg[j] != null) q[i] = w.joints_deg[j] / DEG; });
+        if (w.gripper_pct != null) q[5] = radOf(w.gripper_pct);
+        checkLimits(q);
+        Q.push(q); req.push(w.duration_s != null ? w.duration_s : null);
+      } catch (e) {
+        if (e instanceof AgentError) { e.details = { ...(e.details || {}), waypoint: k }; }
+        throw e;
+      }
+    });
+    const n = Q.length - 1, h = new Float64Array(n);
+    const capOf = (i) => (i < 5 ? SPEED_CAP_DPS / DEG : (GRIP_CAP_PPS / 100) * (ghi - glo));    // rad/s
+    for (let k = 0; k < n; k++) {
+      let a = 0;
+      for (let i = 0; i < 6; i++) a = Math.max(a, Math.abs(Q[k + 1][i] - Q[k][i]) / capOf(i));
+      h[k] = Math.max(req[k] != null ? req[k] : 0, a * 1.5, 0.1);
+    }
+    const M = Q.map(() => new Float64Array(6));
+    const tangents = () => {
+      for (let i = 0; i < 6; i++) {
+        M[0][i] = 0; M[n][i] = 0;                  // start and end at rest
+        for (let k = 1; k < n; k++) {
+          const d0 = (Q[k][i] - Q[k - 1][i]) / h[k - 1], d1 = (Q[k + 1][i] - Q[k][i]) / h[k];
+          if (d0 * d1 <= 0) { M[k][i] = 0; continue; }
+          const w1 = 2 * h[k] + h[k - 1], w2 = h[k] + 2 * h[k - 1];
+          M[k][i] = (w1 + w2) / (w1 / d0 + w2 / d1);
+        }
+      }
+    };
+    const segSpeed = (k, i) => {                    // max |dq/dt| on segment k, joint i (sampled)
+      let v = 0;
+      for (let s = 0; s <= 24; s++) {
+        const u = s / 24;
+        const d = (6 * u * u - 6 * u) * Q[k][i] / h[k] + (3 * u * u - 4 * u + 1) * M[k][i] + (-6 * u * u + 6 * u) * Q[k + 1][i] / h[k] + (3 * u * u - 2 * u) * M[k + 1][i];
+        v = Math.max(v, Math.abs(d));
+      }
+      return v;
+    };
+    for (let it = 0; it < 12; it++) {
+      tangents();
+      let ok = true;
+      for (let k = 0; k < n; k++) {
+        let r = 0;
+        for (let i = 0; i < 6; i++) r = Math.max(r, segSpeed(k, i) / capOf(i));
+        if (r > 1.001) { h[k] *= Math.min(r * 1.03, 3); ok = false; }
+      }
+      if (ok) break;
+    }
+    tangents();
+    const tk = new Float64Array(n + 1);
+    for (let k = 0; k < n; k++) tk[k + 1] = tk[k] + h[k];
+    const T = tk[n];
+    if (T > TRAJECTORY_MAX_S + 1e-6) throw new AgentError('INVALID_ARGUMENT', { reason: 'too_long', total_s: r1(T), max_s: TRAJECTORY_MAX_S });
+    const segAt = (t) => { let k = 0; while (k < n - 1 && t > tk[k + 1]) k++; return k; };
+    const requested = req.every((x) => x != null) ? req.reduce((a, b) => a + b, 0) : null;
+    return {
+      T, to: Q[n], segAt, requested, h,
+      at(t, out) {
+        t = Math.max(0, Math.min(T, t));
+        const k = segAt(t), u = (t - tk[k]) / h[k], u2 = u * u, u3 = u2 * u;
+        const h00 = 2 * u3 - 3 * u2 + 1, h10 = u3 - 2 * u2 + u, h01 = -2 * u3 + 3 * u2, h11 = u3 - u2;
+        for (let i = 0; i < 6; i++) out[i] = h00 * Q[k][i] + h10 * h[k] * M[k][i] + h01 * Q[k + 1][i] + h11 * h[k] * M[k + 1][i];
+        return out;
+      }
+    };
   }
 
   function finish(status, onlyId) {
@@ -187,9 +281,9 @@ export function createSimApi(env) {
     if (env.tookOver ? env.tookOver() : env.userBusy && env.userBusy()) return finish('stopped');      // the person took over
     if (env.onTick) env.onTick();
     mo.t += dt;
-    const k = Math.min(1, mo.t / mo.T), e = smooth(k);
-    for (let i = 0; i < 6; i++) d.ctrl[act[i]] = mo.from[i] + (mo.to[i] - mo.from[i]) * e;
-    if (k < 1) return;
+    mo.path.at(mo.t, mo.buf);
+    for (let i = 0; i < 6; i++) d.ctrl[act[i]] = mo.buf[i];
+    if (mo.t < mo.T) return;
     mo.settle += dt;
     let err = 0;
     for (let i = 0; i < 5; i++) err = Math.max(err, Math.abs(qpos(i) - mo.to[i]) * DEG);
@@ -197,7 +291,7 @@ export function createSimApi(env) {
   }
 
   // ---------------- IK ----------------
-  function solveTo(pose, roll) {
+  function solveTo(pose, roll, seed) {
     const p = [pose.x_mm / 1000, pose.y_mm / 1000, pose.z_mm / 1000];
     const W = WORKSPACE_MM;
     if (pose.z_mm < 0) throw new AgentError('WORKSPACE_VIOLATION', { x_mm: pose.x_mm, y_mm: pose.y_mm, z_mm: pose.z_mm, part: 'tip', reason: 'below_table', box_z_mm: W.z });
@@ -206,7 +300,7 @@ export function createSimApi(env) {
     }
     const bp = env.chain.basePos, rh = Math.hypot(p[0] - bp[0], p[1] - bp[1]) * 1000;
     if (rh > 480 || pose.z_mm > 530) throw new AgentError('UNREACHABLE', { horizontal_mm: r1(rh), max_reach_mm: 479, max_z_mm: 526 });
-    const q = currentGoal();
+    const q = seed ? Float64Array.from(seed) : currentGoal();
     q[4] = roll;
     const pitch = pose.pitch_deg == null || pose.pitch_deg === 'auto' ? null : -pose.pitch_deg / DEG;
     let r;
@@ -267,6 +361,12 @@ export function createSimApi(env) {
       const { q, ik } = solveTo(a.pose, roll);
       q[5] = a.gripper_pct != null ? radOf(a.gripper_pct) : goal[5];
       return run(q, a.duration_s, signal, { ik });
+    },
+    runTrajectory(a, { signal } = {}) {
+      preflight();
+      const path = trajectoryPath(a.waypoints);
+      checkWorkspace(path);
+      return runPath(path, path.requested, signal, { waypoints: a.waypoints.length, segment_durations_s: Array.from(path.h, r1) });
     },
     setGripper(a, { signal } = {}) {
       const t = currentGoal();
