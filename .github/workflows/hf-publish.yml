@@ -18,6 +18,7 @@ on:
       - 'models/NOTICE.txt'
       - 'assets/i18n.js'
       - 'backend/bridge-client/*.js'
+      - 'vendor/three/**'
       - 'tools/hf/**'
       - '.github/workflows/hf-publish.yml'
 

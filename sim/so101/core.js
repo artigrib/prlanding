@@ -95,7 +95,7 @@ export async function loadSim(onProgress = () => {}, opts = {}) {
   const paint = () => onProgress(Math.min(1, 0.05 + prog.wasm * 0.7 + prog.mesh * 0.25));
   const [THREE, OC, loadMujoco, wasmBinary, files] = await Promise.all([
     import('three'),
-    import('./vendor/three/OrbitControls.js'),
+    import('three/addons/controls/OrbitControls.js'),
     import('./vendor/mujoco/mujoco.js').then((m) => m.default),
     fetchBytes(new URL('vendor/mujoco/mujoco.wasm', BASE), (g, t) => { prog.wasm = Math.min(1, g / t); paint(); }),
     loadModelFiles((f) => { prog.mesh = f; paint(); })
@@ -239,7 +239,7 @@ export class ArmSim {
     const r = this.renderer = new T.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
     const phone = matchMedia('(max-width:860px)').matches;
     r.setPixelRatio(Math.min(window.devicePixelRatio || 1, phone ? 1.75 : 2));
-    r.shadowMap.enabled = true; r.shadowMap.type = T.PCFSoftShadowMap;
+    r.shadowMap.enabled = true; r.shadowMap.type = T.PCFShadowMap;   // r186: soft PCF (PCFSoftShadowMap was removed)
     r.outputColorSpace = T.SRGBColorSpace;
     r.setClearColor(0x000000, 0); // CSS gradient shows through
 

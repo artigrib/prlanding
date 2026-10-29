@@ -6,7 +6,7 @@ All jobs run in parallel; npm downloads and the Playwright Chromium build are ca
 | Job | Checks |
 | --- | --- |
 | `build-check` | `node tools/build.mjs` leaves the tree unchanged (no forgotten regenerated `sada/*` pages or sitemap). |
-| `arena` | `npm ci && npm run build` in `sim/arena` reproduces the committed `build/`; then `node --test sim/arena/tests/*.test.mjs` (replay codec). |
+| `arena` | `npm ci && npm run build && npm run vendor-three` in `sim/arena` reproduces the committed `sim/arena/build/` and the site's shared `vendor/three/` (three.js for the product pages, the SO-101 sim and the arena); then `node --test sim/arena/tests/*.test.mjs` (replay codec). |
 | `hf-space` | `node tools/hf/build-space.mjs` then `node tools/hf/check-imports.mjs`: every import, script and preload reachable from the Space pages resolves inside `dist-hf/<space>/`. |
 | `so101-unit` | Runs `node --test` on tests under `sim/so101/test*/` (skipped if none exist). |
 | `smoke` | Playwright/Chromium against `python3 -m http.server`: home, catalog filter, product pages (so101, svrn, vert150), `/sim/so101/`, `/sim/arena/?robot=svrn`. Fails on uncaught page errors, console errors and HTTP 4xx/5xx (Google Fonts ignored). Then builds the Spaces and runs `tests/smoke-space.mjs` against `dist-hf/so101-sim` and `dist-hf/arena`, each served at its own root (sim loads, the AI panel modules import). |

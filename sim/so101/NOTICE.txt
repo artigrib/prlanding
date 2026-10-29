@@ -29,11 +29,11 @@ copies of the licence texts are included next to each component.
      sections removed (wabt wasm-strip, reproducible with tools/wasm/vendor-mujoco.mjs); code, data
      and exports are byte-identical to the npm build.
 
-3) three.js (vendor/three/)
-   Source:  npm package three 0.160.0 (build/three.module.min.js, examples/jsm/controls/OrbitControls.js,
-            examples/jsm/loaders/GLTFLoader.js, examples/jsm/utils/BufferGeometryUtils.js)
+3) three.js (the site's shared ../../vendor/three/, loaded through the pages' importmap)
+   Source:  npm package three 0.186.1 (build/three.module.js + three.core.js, examples/jsm/controls/OrbitControls.js,
+            examples/jsm/loaders/GLTFLoader.js, examples/jsm/utils/BufferGeometryUtils.js and their imports)
    Licence: MIT (vendor/three/LICENSE)
-   Unmodified.
+   Unmodified; minified by tools/vendor-three.mjs (vendor/three/NOTICE.txt).
 
 4) Feetech servo control tables and setup procedure (lib/feetech.js, lib/so101-setup.js,
    lib/sts3215-emu.js, used by the setup wizard in nastaveni/)
@@ -58,11 +58,11 @@ copies of the licence texts are included next to each component.
    The STS3215 behaviour in lib/sts3215-emu.js (factory values, thermal and voltage behaviour) is an
    approximation written by printedrobotics.cz, not Feetech's firmware.
 
-5) meshoptimizer decoder (vendor/three/libs/meshopt_decoder.module.js)
-   Source:  as shipped in npm package three 0.160.0 (examples/jsm/libs/), from
-            https://github.com/zeux/meshoptimizer, Copyright (C) 2016-2022 Arseny Kapoulkine
-   Licence: MIT (stated at the top of the file)
-   Unmodified.
+5) meshoptimizer decoder (../../vendor/three/addons/libs/meshopt_decoder.module.js)
+   Source:  as shipped in npm package three 0.186.1 (examples/jsm/libs/), from
+            https://github.com/zeux/meshoptimizer, Copyright (C) 2016-2026 Arseny Kapoulkine
+   Licence: MIT (vendor/three/NOTICE.txt)
+   Unmodified; minified.
 
 6) Objects of missions 06–10 (objects/, src/objects/scene.js)
    "Objekty: NVIDIA SimReady (CC BY 4.0)": M8 nut and bolt, apple, banana, cupcake, plastic spoon and fork,

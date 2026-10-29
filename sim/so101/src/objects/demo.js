@@ -33,9 +33,9 @@ async function main() {
   const lib = new ObjectLibrary();
   const [THREE, OC, GL, MD, loadMujoco, wasm, sceneXml, man, files] = await Promise.all([
     import('three'),
-    import('../../vendor/three/OrbitControls.js'),
-    import('../../vendor/three/loaders/GLTFLoader.js'),
-    import('../../vendor/three/libs/meshopt_decoder.module.js'),
+    import('three/addons/controls/OrbitControls.js'),
+    import('three/addons/loaders/GLTFLoader.js'),
+    import('three/addons/libs/meshopt_decoder.module.js'),
     import('../../vendor/mujoco/mujoco.js').then((m) => m.default),
     bytes(new URL('vendor/mujoco/mujoco.wasm', ROOT)),
     fetch(new URL('model/scene.xml', ROOT)).then((r) => r.text()),

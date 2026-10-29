@@ -37,8 +37,8 @@ export class HiDetail {
     if (this.loading) return this.loading;
     this.loading = (async () => {
       const [{ GLTFLoader }, { MeshoptDecoder }] = await Promise.all([
-        import('../../vendor/three/loaders/GLTFLoader.js'),
-        import('../../vendor/three/libs/meshopt_decoder.module.js')
+        import('three/addons/loaders/GLTFLoader.js'),
+        import('three/addons/libs/meshopt_decoder.module.js')
       ]);
       await MeshoptDecoder.ready;
       const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);

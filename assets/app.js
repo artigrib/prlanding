@@ -207,7 +207,7 @@
         var c = navigator.connection; if (c && (c.saveData || /2g/.test(c.effectiveType || ''))) return;
         warmed = true;
         var base = a.getAttribute('href').split('?')[0].replace(/(objects\.html|nastaveni\/)$/, '');
-        ['vendor/mujoco/mujoco.wasm', 'vendor/mujoco/mujoco.js', 'vendor/three/three.module.min.js'].forEach(function (f) {
+        ['vendor/mujoco/mujoco.wasm', 'vendor/mujoco/mujoco.js', '../../vendor/three/three.module.min.js'].forEach(function (f) {
           var l = document.createElement('link'); l.rel = 'prefetch'; l.href = base + f; if (/\.wasm$/.test(f)) l.as = 'fetch'; document.head.appendChild(l);
         });
       }

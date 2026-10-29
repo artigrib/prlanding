@@ -1,5 +1,5 @@
 // Interactive 3D viewer: orbit, exploded view, assembly animation, live colour.
-// Loaded on demand from app.js (dynamic import), three.js from jsDelivr via the import map.
+// Loaded on demand from app.js (dynamic import), three.js from the site's vendor/three/ via the import map.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -14,7 +14,7 @@ export function mountViewer(host, url, opts) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;   // r186: PCFShadowMap is the soft filter (PCFSoftShadowMap was removed)
   host.appendChild(renderer.domElement);
   renderer.domElement.setAttribute('aria-label', opts.label || '3D model');
   renderer.domElement.setAttribute('role', 'img');
@@ -23,9 +23,11 @@ export function mountViewer(host, url, opts) {
   scene.background = new THREE.Color('#EEEEEB');
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  // r186 RoomEnvironment is brighter than r160's without a renderer argument (point light 900 vs 5); 0.5 matches the old look
+  scene.environmentIntensity = 0.5;
   const key = new THREE.DirectionalLight(0xffffff, 1.25);
   key.position.set(-2, 4, 3); key.castShadow = true;
-  key.shadow.mapSize.set(1024, 1024); key.shadow.radius = 6;
+  key.shadow.mapSize.set(1024, 1024); key.shadow.radius = 3;   // r186 PCFShadowMap blurs by radius (r160 PCFSoftShadowMap ignored it); 3 matches the old shadow
   scene.add(key, new THREE.HemisphereLight(0xffffff, 0xd8d8d2, 0.6));
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.ShadowMaterial({ opacity: 0.12 }));
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
