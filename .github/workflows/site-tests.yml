@@ -83,3 +83,5 @@ jobs:
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:8123/ >/dev/null && break; sleep 1; done
       - name: Smoke test
         run: node tests/smoke.mjs
+      - name: English smoke test
+        run: node tests/smoke-en.mjs

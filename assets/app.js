@@ -39,6 +39,7 @@
     if (!CFG.FORM_ENDPOINT) return Promise.reject(new Error('no-endpoint'));
     var gs = /script\.google\.com/.test(CFG.FORM_ENDPOINT);
     payload._gotcha = (document.querySelector('input[name=_gotcha]') || {}).value || '';
+    if (document.documentElement.lang === 'en') payload.lang = 'en'; // reply in English
     // Google Apps Script cannot answer a CORS preflight, so it gets a "simple" text/plain request
     return fetch(CFG.FORM_ENDPOINT, { method: 'POST', redirect: 'follow',
       headers: gs ? { 'Content-Type': 'text/plain;charset=utf-8' } : { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -242,7 +243,7 @@
       if (typ && typ !== 'all') crumb.href = ROOT + '?typ=' + typ + '#katalog';
       crumb.addEventListener('click', function (e) {
         var ref = document.referrer;
-        if (ref && ref.indexOf(location.origin) === 0 && !/\/sada\/|kviz/.test(ref.replace(location.origin, '')) && history.length > 1) { e.preventDefault(); history.back(); }
+        if (ref && ref.indexOf(location.origin) === 0 && !/\/sada\/|kviz|\/en\/(kit|quiz)\//.test(ref.replace(location.origin, '')) && history.length > 1) { e.preventDefault(); history.back(); }
       });
     }
 
@@ -484,7 +485,7 @@
 
   /* ---------- not found (unknown robot or page) ---------- */
   if (page === 'notfound') {
-    var slug = (qs('r') || (/\/sada\/([^\/?#]+)/.exec(location.pathname) || [])[1] || '').toLowerCase();
+    var slug = (qs('r') || (/\/(?:sada|en\/kit)\/([^\/?#]+)/.exec(location.pathname) || [])[1] || '').toLowerCase();
     // legacy links sada.html?r=<id> → /sada/<id>/ with the rest of the query kept
     if (slug && byId[slug]) {
       var rest = location.search.replace(/[?&]r=[^&]*/, '').replace(/^&/, '?');
@@ -549,7 +550,7 @@
     function cfg(b, a) {
       var q = ['z=kviz'];
       if (b.preparing) return '?' + q.join('&');
-      if (a[0] === 'none' && b.level !== 'Začátečník') q.push('tier=tested');
+      if (a[0] === 'none' && (b._cs || b).level !== 'Začátečník') q.push('tier=tested');
       return '?' + q.join('&');
     }
     var step = 0, ans = [], editing = false;
