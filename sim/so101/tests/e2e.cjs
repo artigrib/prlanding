@@ -205,6 +205,7 @@ async function touchDrag(page, from, to, steps = 8) {
     }
     // tap on the jaws toggles the gripper; the HUD follows
     {
+      await S(p, () => window.__sim.cameraNow('orbit'));   // the orbit test above leaves a frame-rate dependent view
       await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.3));
       await S(p, () => { const u = window.__sim._ux, c = u.world.pos('cube', [0, 0, 0]); u.ctl.begin(); u.ctl.setGrip(false); u.ctl.setTarget(c[0], c[1], c[2] + 0.035); });
       await S(p, () => window.__sim.advance(3));
