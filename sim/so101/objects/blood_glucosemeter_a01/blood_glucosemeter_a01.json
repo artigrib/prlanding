@@ -1,7 +1,7 @@
 {
  "id": "blood_glucosemeter_a01",
- "name_cs": "Blood glucosemeter",
- "name_en": "Blood glucosemeter",
+ "name_cs": "Glukometr",
+ "name_en": "Glucose meter",
  "category": "prop",
  "mass_kg": 0.457439,
  "size_m": [
@@ -66,5 +66,5 @@
    "simready_usd/sm_blood_glucosemeter_a01_01.usd"
   ]
  },
- "name_cs_auto": true
+ "name_source": "auto"
 }

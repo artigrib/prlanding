@@ -1,7 +1,7 @@
 {
  "id": "dishware_mug_c01",
  "name_cs": "Hrnek",
- "name_en": "Dishware mug",
+ "name_en": "Mug",
  "category": "drinking vessel",
  "mass_kg": 1.48843,
  "size_m": [
@@ -62,5 +62,6 @@
    "simready_usd/runnables/physics/mujoco.usd",
    "simready_usd/sm_dishware_mug_c01_01.usda"
   ]
- }
+ },
+ "name_source": "auto"
 }

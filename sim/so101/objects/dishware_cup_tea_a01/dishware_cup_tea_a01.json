@@ -1,7 +1,7 @@
 {
  "id": "dishware_cup_tea_a01",
- "name_cs": "Hrnek",
- "name_en": "Dishware cup tea",
+ "name_cs": "Šálek",
+ "name_en": "Teacup",
  "category": "prop",
  "mass_kg": 1.34827,
  "size_m": [
@@ -64,5 +64,6 @@
    "simready_usd/payloads/materials.usda",
    "simready_usd/sm_dishware_cup_tea_a01_01.usd"
   ]
- }
+ },
+ "name_source": "auto"
 }

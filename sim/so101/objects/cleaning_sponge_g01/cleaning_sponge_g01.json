@@ -1,7 +1,7 @@
 {
  "id": "cleaning_sponge_g01",
  "name_cs": "Houbička",
- "name_en": "Cleaning sponge",
+ "name_en": "Sponge",
  "category": "prop",
  "mass_kg": 0.0203177,
  "size_m": [
@@ -64,5 +64,6 @@
    "simready_usd/payloads/materials.usda",
    "simready_usd/sm_cleaning_sponge_g01_01.usd"
   ]
- }
+ },
+ "name_source": "auto"
 }

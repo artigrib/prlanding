@@ -1,7 +1,7 @@
 {
  "id": "handtool_socket_1_2in_a01",
- "name_cs": "Hand tool socket 1 2in",
- "name_en": "Hand tool socket 1 2in",
+ "name_cs": "Nástrčná hlavice 1/2\"",
+ "name_en": "Socket 1/2\"",
  "category": "prop",
  "mass_kg": 0.257174,
  "size_m": [
@@ -65,5 +65,5 @@
    "simready_usd/sm_handTool_socket_1_2in_a01_01.usd"
   ]
  },
- "name_cs_auto": true
+ "name_source": "auto"
 }

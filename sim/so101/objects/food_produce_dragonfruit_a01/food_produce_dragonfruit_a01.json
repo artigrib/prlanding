@@ -1,7 +1,7 @@
 {
  "id": "food_produce_dragonfruit_a01",
- "name_cs": "Food produce dragon fruit",
- "name_en": "Food produce dragon fruit",
+ "name_cs": "Dračí ovoce",
+ "name_en": "Dragon fruit",
  "category": "prop",
  "mass_kg": 0.34947,
  "size_m": [
@@ -65,5 +65,5 @@
    "simready_usd/sm_food_produce_dragonFruit_a01_01.usd"
   ]
  },
- "name_cs_auto": true
+ "name_source": "auto"
 }

@@ -1,7 +1,7 @@
 {
  "id": "handtool_socket_3_8in_a01",
- "name_cs": "Hand tool socket 3 8in",
- "name_en": "Hand tool socket 3 8in",
+ "name_cs": "Nástrčná hlavice 3/8\"",
+ "name_en": "Socket 3/8\"",
  "category": "prop",
  "mass_kg": 0.243311,
  "size_m": [
@@ -65,5 +65,5 @@
    "simready_usd/sm_handTool_socket_3_8in_a01_01.usd"
   ]
  },
- "name_cs_auto": true
+ "name_source": "auto"
 }

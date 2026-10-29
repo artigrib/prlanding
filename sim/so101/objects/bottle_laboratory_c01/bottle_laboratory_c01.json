@@ -1,7 +1,7 @@
 {
  "id": "bottle_laboratory_c01",
- "name_cs": "Láhev",
- "name_en": "Bottle laboratory",
+ "name_cs": "Láhev laboratorní",
+ "name_en": "Laboratory bottle",
  "category": "prop",
  "mass_kg": 0.109462,
  "size_m": [
@@ -66,5 +66,6 @@
    "simready_usd/payloads/materials.usda",
    "simready_usd/sm_bottle_laboratory_c01_01.usd"
   ]
- }
+ },
+ "name_source": "auto"
 }

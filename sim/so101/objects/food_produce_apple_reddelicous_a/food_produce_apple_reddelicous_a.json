@@ -1,7 +1,7 @@
 {
  "id": "food_produce_apple_reddelicous_a",
- "name_cs": "Jablko",
- "name_en": "Food produce apple red delicous",
+ "name_cs": "Jablko Red Delicious",
+ "name_en": "Red Delicious apple",
  "category": "prop",
  "mass_kg": 0.232845,
  "size_m": [
@@ -64,5 +64,6 @@
    "simready_usd/payloads/materials.usda",
    "simready_usd/sm_food_produce_apple_redDelicous_a01_01.usd"
   ]
- }
+ },
+ "name_source": "auto"
 }

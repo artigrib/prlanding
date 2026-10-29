@@ -1,7 +1,7 @@
 {
  "id": "hardware_bracket_smallcorner_a01",
- "name_cs": "Hardware bracket small corner",
- "name_en": "Hardware bracket small corner",
+ "name_cs": "Úhelník malý rohový",
+ "name_en": "Small corner bracket",
  "category": "stand",
  "mass_kg": 0.00268653,
  "size_m": [
@@ -63,5 +63,5 @@
    "simready_usd/sm_hardware_bracket_smallCorner_a01_01.usda"
   ]
  },
- "name_cs_auto": true
+ "name_source": "auto"
 }

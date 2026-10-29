@@ -1,7 +1,7 @@
 {
  "id": "handtool_screwdriver_slotted_4mm",
- "name_cs": "Šroubovák",
- "name_en": "Hand tool screwdriver slotted 4mm",
+ "name_cs": "Šroubovák plochý 4 mm",
+ "name_en": "Slotted screwdriver 4 mm",
  "category": "prop",
  "mass_kg": 0.0364701,
  "size_m": [
@@ -64,5 +64,6 @@
    "simready_usd/payloads/materials.usda",
    "simready_usd/sm_handTool_screwdriver_slotted_4mm_a01_01.usd"
   ]
- }
+ },
+ "name_source": "auto"
 }

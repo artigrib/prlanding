@@ -1,7 +1,7 @@
 {
  "id": "handtool_screwdriver_torx_t10_a0",
- "name_cs": "Šroubovák",
- "name_en": "Hand tool screwdriver torx",
+ "name_cs": "Šroubovák Torx T10",
+ "name_en": "Torx screwdriver T10",
  "category": "prop",
  "mass_kg": 0.050224,
  "size_m": [
@@ -64,5 +64,6 @@
    "simready_usd/payloads/materials.usda",
    "simready_usd/sm_handTool_screwdriver_torx_t10_a01_01.usd"
   ]
- }
+ },
+ "name_source": "auto"
 }

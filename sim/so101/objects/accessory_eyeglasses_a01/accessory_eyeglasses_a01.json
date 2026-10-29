@@ -1,7 +1,7 @@
 {
  "id": "accessory_eyeglasses_a01",
- "name_cs": "Accessory eyeglasses",
- "name_en": "Accessory eyeglasses",
+ "name_cs": "Brýle",
+ "name_en": "Eyeglasses",
  "category": "prop",
  "mass_kg": 0.175078,
  "size_m": [
@@ -68,5 +68,5 @@
    "simready_usd/sm_accessory_eyeglasses_a01_01.usd"
   ]
  },
- "name_cs_auto": true
+ "name_source": "auto"
 }

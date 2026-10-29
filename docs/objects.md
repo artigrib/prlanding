@@ -31,6 +31,14 @@ mass, full inertia, friction). `manifest.json` lists them; `LICENSES.md` carries
 4. Před sloučením: zkontrolujte licence proti kartě datasetu, prohlédněte předměty v `objects.html`, opravte
    `name_cs`, kde je `name_cs_auto: true`.
 
+Názvy / names: importér odvodí `name_cs` i `name_en` z názvu balíčku přes `tools/assets/names.json`
+(podstatné jméno s rodem + přívlastky, např. `handTool_screwdriver_slotted_4mm_a01` → „Šroubovák plochý 4 mm“ /
+“Slotted screwdriver 4 mm”). Neznámé slovo → oba názvy anglicky, `name_cs_auto: true` a poznámka v reportu; doplňte
+slovo do `names.json` a spusťte `manifest.py --rename-auto`. `manifest.py` generuje
+`sim/so101/src/i18n/objects-en.js` (CZ → EN), takže anglická verze stránky nikdy neukáže český název.
+The import workflow runs all so101 node tests, `tests/smoke.mjs` and `tests/smoke-en.mjs` before opening the PR
+(Actions-created PRs get no CI); a failure opens a draft PR with the failing lines.
+
 Owner setup (once): *Settings → Actions → General → Workflow permissions*: “Read and write” and “Allow GitHub
 Actions to create and approve pull requests” (otherwise the branch is pushed and the PR must be opened by hand).
 Optional secret `HF_TOKEN` (read-only) avoids rate limits. PRs opened by the Action do not trigger `site-tests`

@@ -1,7 +1,7 @@
 {
  "id": "factory_nut_m12_loose",
- "name_cs": "Matice",
- "name_en": "Factory nut loose",
+ "name_cs": "Matice M12",
+ "name_en": "M12 nut",
  "category": "screw",
  "mass_kg": 0.00221419,
  "size_m": [
@@ -62,5 +62,6 @@
    "simready_usd/runnables/physics/mujoco.usd",
    "simready_usd/sm_factory_nut_m12_loose_01.usda"
   ]
- }
+ },
+ "name_source": "auto"
 }

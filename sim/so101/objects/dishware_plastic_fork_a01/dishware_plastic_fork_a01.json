@@ -1,7 +1,7 @@
 {
  "id": "dishware_plastic_fork_a01",
- "name_cs": "Vidlička",
- "name_en": "Dishware plastic fork",
+ "name_cs": "Vidlička plastová",
+ "name_en": "Plastic fork",
  "category": "prop",
  "mass_kg": 0.0158757,
  "size_m": [
@@ -64,5 +64,6 @@
    "simready_usd/payloads/materials.usda",
    "simready_usd/sm_dishware_plastic_fork_a01_01.usd"
   ]
- }
+ },
+ "name_source": "auto"
 }

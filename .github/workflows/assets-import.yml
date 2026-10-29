@@ -110,16 +110,27 @@ jobs:
       - name: Regenerate manifest and licence list
         run: python -I tools/assets/manifest.py 2> "$LOGS/manifest.log" || { echo "::error::manifest failed"; exit 1; }
 
-      - name: Library unit tests (node + MuJoCo WASM)
+      - name: Site tests on the result (all so101 node tests, smoke, English smoke)
         id: nodetest
-        # a failure still opens the PR, as a draft with the test output, so the cause is reviewable
+        # PRs opened by Actions get no CI, so the same checks as site-tests run here. A failure still opens the
+        # PR, as a draft carrying the failing test lines, so the cause is reviewable.
         run: |
-          if node --test sim/so101/test/objects.test.mjs > "$LOGS/node-test.log" 2>&1; then
-            echo "ok=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ok=false" >> "$GITHUB_OUTPUT"
-            echo "::error::object library tests failed (draft PR will carry the test output)"
-          fi
+          ok=true
+          shopt -s nullglob globstar
+          files=(sim/so101/test*/**/*.test.{mjs,js} sim/so101/test*/**/test*.{mjs,js})
+          mapfile -t files < <(printf '%s\n' "${files[@]}" | sort -u | sed '/^$/d')
+          node --test "${files[@]}" > "$LOGS/node-test.log" 2>&1 || ok=false
+          python -I tools/assets/manifest.py --check > "$LOGS/manifest-check.log" 2>&1 || ok=false
+          node tools/build.mjs > "$LOGS/build.log" 2>&1 && git diff --quiet -- . ':!sim/so101/objects' ':!sim/so101/src/i18n/objects-en.js' || ok=false
+          npm install --no-save --no-package-lock playwright@1.56.0 > "$LOGS/playwright.log" 2>&1 \
+            && npx playwright install --with-deps chromium >> "$LOGS/playwright.log" 2>&1 || ok=false
+          python3 -m http.server 8123 > /dev/null 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8123/ > /dev/null && break; sleep 1; done
+          node tests/smoke.mjs > "$LOGS/smoke.log" 2>&1 || ok=false
+          node tests/smoke-en.mjs > "$LOGS/smoke-en.log" 2>&1 || ok=false
+          rm -rf node_modules
+          echo "ok=$ok" >> "$GITHUB_OUTPUT"
+          [ "$ok" = true ] && echo "::notice::site tests passed" || echo "::error::site tests failed (draft PR will carry the failing lines)"
 
       - name: Upload reports
         if: always()
@@ -139,14 +150,14 @@ jobs:
           VALIDATE_OK: ${{ steps.validate.outputs.ok }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          if [ -z "$(git status --porcelain -- sim/so101/objects)" ]; then
+          if [ -z "$(git status --porcelain -- sim/so101/objects sim/so101/src/i18n/objects-en.js)" ]; then
             echo "::notice::nothing new to import (all requested packages excluded or unchanged)"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$BRANCH"
-          git add sim/so101/objects
+          git add sim/so101/objects sim/so101/src/i18n/objects-en.js
           git commit -q -m "objects: import from Hugging Face (run ${GITHUB_RUN_ID})"
           git push -q origin "$BRANCH"
           {
@@ -172,10 +183,12 @@ jobs:
             fi
             if [ "$NODE_OK" != "true" ]; then
               echo
-              echo "## Library unit tests FAILED (do not merge as is)"
+              echo "## Site tests FAILED (do not merge as is)"
               echo
               echo '```'
-              grep -E "^not ok|^# (tests|pass|fail)|assert|Error|still moving|rests on|lifted|reachable|mass" "$LOGS/node-test.log" | head -40
+              grep -E "^not ok|^# (tests|pass|fail)|assert|Error|still moving|rests on|lifted|reachable|mass" "$LOGS/node-test.log" | head -30
+              grep -h -E "^FAIL|^  " "$LOGS/smoke.log" "$LOGS/smoke-en.log" 2>/dev/null | head -30
+              grep -h "OUT OF DATE\|problem" "$LOGS/manifest-check.log" 2>/dev/null | head -5
               echo '```'
             fi
           } > "$LOGS/pr-body.md"

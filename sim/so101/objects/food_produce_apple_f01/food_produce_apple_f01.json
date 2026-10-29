@@ -1,7 +1,7 @@
 {
  "id": "food_produce_apple_f01",
  "name_cs": "Jablko",
- "name_en": "Food produce apple",
+ "name_en": "Apple",
  "category": "prop",
  "mass_kg": 0.172865,
  "size_m": [
@@ -64,5 +64,6 @@
    "simready_usd/payloads/materials.usda",
    "simready_usd/sm_food_produce_apple_f01_01.usd"
   ]
- }
+ },
+ "name_source": "auto"
 }
