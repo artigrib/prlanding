@@ -36,6 +36,12 @@
     for (var i = 0; i < d.patterns.length; i++) {
       var p = d.patterns[i]; if (p[0].test(k)) return k.replace(p[0], p[1]);
     }
+    // "A · B · C": translate the pieces (status lines, summaries, hints)
+    if (k.indexOf(' · ') > 0) {
+      var parts = k.split(' · '), hit = false;
+      parts = parts.map(function (x) { var r = lookup(x); if (r != null) { hit = true; return r; } return x; });
+      if (hit) return parts.join(' · ');
+    }
     return null;
   }
   /* t('Czech', {n: 3}) → English when lang is en; {name} placeholders are filled in either language */
@@ -167,6 +173,17 @@
     (root || document).querySelectorAll('a[href]').forEach(function (a) { var h = langHref(a.getAttribute('href')); if (h !== a.getAttribute('href')) a.setAttribute('href', h); });
   }
 
+  // English pages: links rendered at runtime (app.js, sims) point at the English counterparts
+  function linkFixer() {
+    fixLinks();
+    new MutationObserver(function (ms) {
+      ms.forEach(function (m) {
+        if (m.type === 'attributes') { fixLinks(m.target.parentNode || m.target); return; }
+        m.addedNodes.forEach(function (n) { if (n.nodeType === 1) fixLinks(n.parentNode || n); });
+      });
+    }).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['href'] });
+  }
+
   G.PRI18N = {
     get lang() { return lang; },
     t: t, has: function (s) { return lookup(s) != null; }, addDict: addDict, observe: observe, translate: walk,
@@ -177,7 +194,7 @@
       setLang(detect('site'));
       if (G.PR_I18N_EN) addDict('en', G.PR_I18N_EN);
       wireSwitcher();
-      if (lang === 'en') observe(document.documentElement);
+      if (lang === 'en') { observe(document.documentElement); linkFixer(); }
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', banner); else banner();
     },
     /* sims: PRI18N.initSim(dict) before building UI; returns the language */
@@ -187,9 +204,7 @@
       if (dict) addDict('en', dict);
       if (lang === 'en') {
         observe(document.documentElement);
-        fixLinks();
-        new MutationObserver(function (ms) { ms.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.nodeType === 1) fixLinks(n.parentNode || n); }); }); })
-          .observe(document.documentElement, { childList: true, subtree: true });
+        linkFixer();
         var can = document.querySelector('link[rel="canonical"]');
         if (can && !/[?&]lang=en/.test(can.href)) can.setAttribute('href', can.href.split('?')[0] + '?lang=en');
       }

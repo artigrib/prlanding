@@ -1,0 +1,9 @@
+/* language switcher (in .brand) and the one-time language suggestion banner — see assets/i18n.js */
+.lang-sw{display:inline-flex;align-items:center;gap:2px;margin-left:6px;font-family:var(--mono,ui-monospace,monospace);font-size:12px;color:var(--mute,#5E5E59);white-space:nowrap}
+.lang-sw a,.lang-sw span{display:inline-flex;align-items:center;min-height:44px;min-width:28px;justify-content:center;padding:0 4px;text-decoration:none;color:inherit}
+.lang-sw a:hover{color:var(--accent-text,#B33A16)}
+.lang-sw [aria-current]{color:var(--ink,#0E0E0E);font-weight:500}
+.lang-sw i{font-style:normal;opacity:.5}
+.lang-banner{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:8px 16px;background:var(--sand,#F4F4F1);border-bottom:1px solid var(--line,#DADAD5);font-size:14px;color:var(--ink,#0E0E0E)}
+.lang-banner a{font-weight:500}
+.lang-banner button{margin-left:auto;min-width:44px;min-height:36px;border:0;background:transparent;font-size:16px;cursor:pointer;color:inherit}

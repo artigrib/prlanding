@@ -7,6 +7,9 @@
 <title>Open Source Rover – stavebnice: rover | printedrobotics.cz</title>
 <meta name="description" content="Stavebnice Open Source Rover: vytištěné díly a hardware podle kusovníku v jedné krabici. Velký šestikolový rover z hliníkové stavebnice goBILDA, podle…">
 <link rel="canonical" href="https://printedrobotics.cz/sada/osr/">
+<link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/osr/">
+<link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/osr/">
+<link rel="alternate" hreflang="x-default" href="https://printedrobotics.cz/sada/osr/">
 <meta property="og:title" content="Stavebnice pro Open Source Rover">
 <meta property="og:description" content="Velký šestikolový rover z hliníkové stavebnice goBILDA, podle projektu NASA JPL Open Source Rover.">
 <meta property="og:url" content="https://printedrobotics.cz/sada/osr/">
@@ -14,6 +17,7 @@
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="900">
 <meta property="og:image:alt" content="Šestikolový hliníkový rover podle projektu NASA JPL Open Source Rover">
 <meta property="og:locale" content="cs_CZ">
+<meta property="og:locale:alternate" content="en_GB">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" as="image" href="../../img/osr_white.jpg" fetchpriority="high">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Stavebnice pro Open Source Rover","description":"Šestikolový marsovský rover podle projektu NASA JPL Open Source Rover: hliníková konstrukce, odpružení rocker-bogie a čtyři řízená kola. Raspberry Pi a ROS 2 z něj dělají robustní platformu pro výuku i výzkum v terénu. Na rozdíl od ostatních sad je to hlavně kompletace hardwaru — tiskneme krycí desky těla v barvě dle výběru a hlavu stožáru.","category":"Rover","image":"https://printedrobotics.cz/img/osr_white.jpg","url":"https://printedrobotics.cz/sada/osr/","brand":{"@type":"Brand","name":"printedrobotics.cz"},"isBasedOn":"https://github.com/nasa-jpl/open-source-rover","additionalProperty":[{"@type":"PropertyValue","name":"Kola","value":"6, rocker-bogie s diferenciálem"},{"@type":"PropertyValue","name":"Řízení","value":"4 natáčená kola (Ackermann)"},{"@type":"PropertyValue","name":"Pohon","value":"6× DC motor 223 ot/min + 4× servo"},{"@type":"PropertyValue","name":"Rychlost","value":"až ≈ 1,6 m/s"},{"@type":"PropertyValue","name":"Řídicí jednotka","value":"Raspberry Pi + 3× RoboClaw"},{"@type":"PropertyValue","name":"Napájení","value":"LiPo 4S (14,8 V)"},{"@type":"PropertyValue","name":"Výdrž","value":"≥ 3 h (7,2 Ah)"},{"@type":"PropertyValue","name":"Konstrukce","value":"hliník (goBILDA)"},{"@type":"PropertyValue","name":"Doba stavby","value":"≥ 100 h"},{"@type":"PropertyValue","name":"Náročnost","value":"Pokročilý"},{"@type":"PropertyValue","name":"Software","value":"ROS 2 (Python), Raspberry Pi"},{"@type":"PropertyValue","name":"Náklady na díly dle autora","value":"≈ 1 600 USD"}]}</script>
@@ -25,6 +29,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../assets/site.css">
+<link rel="stylesheet" href="../../assets/i18n.css">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head>
 <body data-page="product" data-robot="osr" data-root="../../" class="has-sbar">
@@ -32,7 +37,7 @@
 
 <header class="site-h" id="site-h">
 <div class="wrap"><div class="hbar">
-<div class="brand"><i aria-hidden="true"></i><a href="../../">printedrobotics</a></div>
+<div class="brand"><i aria-hidden="true"></i><a href="../../">printedrobotics</a><!--lang-sw--><span class="lang-sw"><span aria-current="true" lang="cs" title="Čeština">CZ</span><i aria-hidden="true">/</i><a href="../../en/kit/osr/" hreflang="en" lang="en" data-lang="en" title="English">EN</a></span><!--/lang-sw--></div>
 <nav class="nav" aria-label="Hlavní menu"><a href="../../#katalog">Katalog</a><a href="../../#postup">Jak to funguje</a><a href="#licence">Licence</a></nav>
 <a class="pill" href="../../kviz.html">Najít robota <span aria-hidden="true">→</span></a>
 </div></div>
@@ -217,6 +222,7 @@
 <script src="../../assets/config.js"></script>
 <script src="../../assets/data.js"></script>
 <script src="../../assets/media.js"></script>
+<script src="../../assets/i18n.js" data-auto></script>
 <script src="../../assets/app.js"></script>
 </body>
 </html>

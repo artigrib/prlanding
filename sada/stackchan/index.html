@@ -7,6 +7,9 @@
 <title>Stack-chan – stavebnice | printedrobotics.cz</title>
 <meta name="description" content="Stavebnice Stack-chan: vytištěné díly a hardware podle kusovníku v jedné krabici. Malý stolní společník: displej s tváří, dvě serva a hlava, která se…">
 <link rel="canonical" href="https://printedrobotics.cz/sada/stackchan/">
+<link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/stackchan/">
+<link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/stackchan/">
+<link rel="alternate" hreflang="x-default" href="https://printedrobotics.cz/sada/stackchan/">
 <meta property="og:title" content="Stavebnice pro Stack-chan">
 <meta property="og:description" content="Malý stolní společník: displej s tváří, dvě serva a hlava, která se otáčí a kývá.">
 <meta property="og:url" content="https://printedrobotics.cz/sada/stackchan/">
@@ -14,6 +17,7 @@
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="900">
 <meta property="og:image:alt" content="Stolní robot Stack-chan s displejem místo obličeje na otočné hlavě">
 <meta property="og:locale" content="cs_CZ">
+<meta property="og:locale:alternate" content="en_GB">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" as="image" href="../../img/stackchan_white.jpg" fetchpriority="high">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Stavebnice pro Stack-chan","description":"Malý stolní společník, kterému obličej kreslí displej modulu M5Stack. Dvě serva otáčejí a naklánějí hlavu, chování se programuje v JavaScriptu nebo blocích přímo v prohlížeči.","category":"Stolní robot-společník","image":"https://printedrobotics.cz/img/stackchan_white.jpg","url":"https://printedrobotics.cz/sada/stackchan/","brand":{"@type":"Brand","name":"printedrobotics.cz"},"isBasedOn":"https://github.com/stack-chan/stack-chan","additionalProperty":[{"@type":"PropertyValue","name":"Stupně volnosti","value":"2 (otáčení + náklon hlavy)"},{"@type":"PropertyValue","name":"Pohon","value":"2× SG90, RS30X nebo SCS0009"},{"@type":"PropertyValue","name":"Řízení","value":"M5Stack Core / Core2 / CoreS3"},{"@type":"PropertyValue","name":"Tištěné díly","value":"skořepina, nožky, držák serv, zadní kryt baterie"},{"@type":"PropertyValue","name":"Napájení","value":"akumulátor 3,7 V nebo externích 5 V"},{"@type":"PropertyValue","name":"Náročnost","value":"Začátečník"},{"@type":"PropertyValue","name":"Software","value":"JavaScript (Moddable), bloky v prohlížeči"}]}</script>
@@ -25,6 +29,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../assets/site.css">
+<link rel="stylesheet" href="../../assets/i18n.css">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head>
 <body data-page="product" data-robot="stackchan" data-root="../../" class="has-sbar">
@@ -32,7 +37,7 @@
 
 <header class="site-h" id="site-h">
 <div class="wrap"><div class="hbar">
-<div class="brand"><i aria-hidden="true"></i><a href="../../">printedrobotics</a></div>
+<div class="brand"><i aria-hidden="true"></i><a href="../../">printedrobotics</a><!--lang-sw--><span class="lang-sw"><span aria-current="true" lang="cs" title="Čeština">CZ</span><i aria-hidden="true">/</i><a href="../../en/kit/stackchan/" hreflang="en" lang="en" data-lang="en" title="English">EN</a></span><!--/lang-sw--></div>
 <nav class="nav" aria-label="Hlavní menu"><a href="../../#katalog">Katalog</a><a href="../../#postup">Jak to funguje</a><a href="#licence">Licence</a></nav>
 <a class="pill" href="../../kviz.html">Najít robota <span aria-hidden="true">→</span></a>
 </div></div>
@@ -217,6 +222,7 @@
 <script src="../../assets/config.js"></script>
 <script src="../../assets/data.js"></script>
 <script src="../../assets/media.js"></script>
+<script src="../../assets/i18n.js" data-auto></script>
 <script src="../../assets/app.js"></script>
 </body>
 </html>

@@ -7,6 +7,9 @@
 <title>SO-ARM 102 – stavebnice: robotická ruka | printedrobotics.cz</title>
 <meta name="description" content="Stavebnice SO-ARM 102: vytištěné díly a hardware podle kusovníku v jedné krabici. Tužší a rychlejší nástupce SO-101. Paralelní chapadlo, díly z PET-CF a…">
 <link rel="canonical" href="https://printedrobotics.cz/sada/so102/">
+<link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/so102/">
+<link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/so102/">
+<link rel="alternate" hreflang="x-default" href="https://printedrobotics.cz/sada/so102/">
 <meta property="og:title" content="Stavebnice pro SO-ARM 102">
 <meta property="og:description" content="Tužší a rychlejší nástupce SO-101. Paralelní chapadlo, díly z PET-CF a stejná kinematika pro LeRobot.">
 <meta property="og:url" content="https://printedrobotics.cz/sada/so102/">
@@ -14,6 +17,7 @@
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="900">
 <meta property="og:image:alt" content="Robotická ruka SO-ARM 102 s paralelním chapadlem">
 <meta property="og:locale" content="cs_CZ">
+<meta property="og:locale:alternate" content="en_GB">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" as="image" href="../../img/so102_white.jpg" fetchpriority="high">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Stavebnice pro SO-ARM 102","description":"Nástupce SO-101 od Robonine se stejným uspořádáním kloubů, takže funguje s datasety a politikami LeRobot. Proti SO-101 má paralelní chapadlo s rozevřením 85 mm a kamerou na zápěstí, topologicky optimalizované díly z PET-CF, silnější serva STS3250 v rameni a lokti a dvojnásobnou nosnost 300 g. Při stejné zátěži se špička prohne o polovinu méně, dosáhne dál (483 mm) a základna se otočí o 352°. Daní je vyšší cena (≈ 340 USD za pár místo ≈ 130 USD za ruku), 12V serva ve followeru a tisk z kompozitního filamentu.","category":"Robotická ruka","image":"https://printedrobotics.cz/img/so102_white.jpg","url":"https://printedrobotics.cz/sada/so102/","brand":{"@type":"Brand","name":"printedrobotics.cz"},"isBasedOn":"https://github.com/roboninecom/SO-ARM-102","additionalProperty":[{"@type":"PropertyValue","name":"Stupně volnosti","value":"5 os + paralelní chapadlo"},{"@type":"PropertyValue","name":"Pohon followeru","value":"2× STS3250, 2× STS3235, 2× STS3215"},{"@type":"PropertyValue","name":"Napájení","value":"follower 12 V, leader 5 V"},{"@type":"PropertyValue","name":"Dosah","value":"483 mm vodorovně"},{"@type":"PropertyValue","name":"Nosnost","value":"300 g (SO-101: 150 g)"},{"@type":"PropertyValue","name":"Průhyb při 300 g","value":"3,4–3,9 mm (SO-101: 7,5 mm)"},{"@type":"PropertyValue","name":"Rotace základny","value":"352° (SO-101: 220°)"},{"@type":"PropertyValue","name":"Chapadlo","value":"paralelní, 0–85 mm, kamera"},{"@type":"PropertyValue","name":"Hluk v 1 m","value":"60 dB (SO-101: 70 dB)"},{"@type":"PropertyValue","name":"Tisk","value":"PET-CF (ramena) + PETG/PETG-CF, vrstva 0,2 mm"},{"@type":"PropertyValue","name":"Doba tisku","value":"≈ 52 h za pár (3MF projekty)"},{"@type":"PropertyValue","name":"Náročnost","value":"Střední"},{"@type":"PropertyValue","name":"Software","value":"LeRobot (Python) + plugin SO-ARM 102"},{"@type":"PropertyValue","name":"Náklady na díly dle autora","value":"≈ 340 USD za pár (≈ 374 USD s filamentem)"}]}</script>
@@ -25,6 +29,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../assets/site.css">
+<link rel="stylesheet" href="../../assets/i18n.css">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head>
 <body data-page="product" data-robot="so102" data-root="../../" class="has-sbar">
@@ -32,7 +37,7 @@
 
 <header class="site-h" id="site-h">
 <div class="wrap"><div class="hbar">
-<div class="brand"><i aria-hidden="true"></i><a href="../../">printedrobotics</a></div>
+<div class="brand"><i aria-hidden="true"></i><a href="../../">printedrobotics</a><!--lang-sw--><span class="lang-sw"><span aria-current="true" lang="cs" title="Čeština">CZ</span><i aria-hidden="true">/</i><a href="../../en/kit/so102/" hreflang="en" lang="en" data-lang="en" title="English">EN</a></span><!--/lang-sw--></div>
 <nav class="nav" aria-label="Hlavní menu"><a href="../../#katalog">Katalog</a><a href="../../#postup">Jak to funguje</a><a href="#licence">Licence</a></nav>
 <a class="pill" href="../../kviz.html">Najít robota <span aria-hidden="true">→</span></a>
 </div></div>
@@ -217,6 +222,7 @@
 <script src="../../assets/config.js"></script>
 <script src="../../assets/data.js"></script>
 <script src="../../assets/media.js"></script>
+<script src="../../assets/i18n.js" data-auto></script>
 <script src="../../assets/app.js"></script>
 </body>
 </html>

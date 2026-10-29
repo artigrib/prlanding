@@ -1,24 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url><loc>https://printedrobotics.cz/</loc></url>
-  <url><loc>https://printedrobotics.cz/kviz.html</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/so101/</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/lekiwi/</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/xle/</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/duck/</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/hand/</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/otto/</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/spot/</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/sawppy/</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/thor/</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/exomy/</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/so102/</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/aira/</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/parol6/</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/bhl/</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/osr/</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/stackchan/</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/svrn/</loc></url>
-  <url><loc>https://printedrobotics.cz/sada/vert150/</loc></url>
+  <url><loc>https://printedrobotics.cz/kviz.html</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/kviz.html"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/quiz/"/></url>
+  <url><loc>https://printedrobotics.cz/en/quiz/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/kviz.html"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/quiz/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/so101/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/so101/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/so101/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/so101/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/so101/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/so101/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/lekiwi/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/lekiwi/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/lekiwi/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/lekiwi/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/lekiwi/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/lekiwi/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/xle/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/xle/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/xle/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/xle/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/xle/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/xle/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/duck/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/duck/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/duck/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/duck/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/duck/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/duck/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/hand/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/hand/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/hand/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/hand/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/hand/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/hand/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/otto/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/otto/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/otto/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/otto/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/otto/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/otto/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/spot/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/spot/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/spot/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/spot/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/spot/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/spot/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/sawppy/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/sawppy/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/sawppy/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/sawppy/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/sawppy/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/sawppy/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/thor/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/thor/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/thor/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/thor/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/thor/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/thor/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/exomy/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/exomy/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/exomy/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/exomy/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/exomy/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/exomy/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/so102/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/so102/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/so102/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/so102/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/so102/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/so102/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/aira/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/aira/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/aira/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/aira/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/aira/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/aira/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/parol6/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/parol6/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/parol6/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/parol6/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/parol6/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/parol6/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/bhl/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/bhl/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/bhl/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/bhl/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/bhl/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/bhl/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/osr/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/osr/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/osr/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/osr/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/osr/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/osr/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/stackchan/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/stackchan/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/stackchan/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/stackchan/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/stackchan/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/stackchan/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/svrn/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/svrn/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/svrn/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/svrn/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/svrn/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/svrn/"/></url>
+  <url><loc>https://printedrobotics.cz/sada/vert150/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/vert150/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/vert150/"/></url>
+  <url><loc>https://printedrobotics.cz/en/kit/vert150/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/vert150/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/vert150/"/></url>
   <url><loc>https://printedrobotics.cz/sim/so101/</loc></url>
 </urlset>

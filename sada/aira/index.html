@@ -7,6 +7,9 @@
 <title>AIRA – stavebnice: robotická ruka | printedrobotics.cz</title>
 <meta name="description" content="Stavebnice AIRA: vytištěné díly a hardware podle kusovníku v jedné krabici. Silná šestiosá ruka s chapadlem pro AI. Motory Damiao na sběrnici CAN, nativní…">
 <link rel="canonical" href="https://printedrobotics.cz/sada/aira/">
+<link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/aira/">
+<link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/aira/">
+<link rel="alternate" hreflang="x-default" href="https://printedrobotics.cz/sada/aira/">
 <meta property="og:title" content="Stavebnice pro AIRA">
 <meta property="og:description" content="Silná šestiosá ruka s chapadlem pro AI. Motory Damiao na sběrnici CAN, nativní plugin pro LeRobot.">
 <meta property="og:url" content="https://printedrobotics.cz/sada/aira/">
@@ -14,6 +17,7 @@
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="900">
 <meta property="og:image:alt" content="Šestiosá tisknutelná robotická ruka AIRA s chapadlem a motory Damiao">
 <meta property="og:locale" content="cs_CZ">
+<meta property="og:locale:alternate" content="en_GB">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" as="image" href="../../img/aira_white.jpg" fetchpriority="high">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Stavebnice pro AIRA","description":"Tisknutelná ruka se šesti osami a chapadlem (7 DoF), postavená pro učení robotů. Follower pohání sedm motorů Damiao na sběrnici CAN — J8009P v základně a rameni, J4340P v lokti a zápěstí, J4310 v zápěstí a chapadle — s impedančním řízením MIT a špičkovým momentem až 35 Nm. Leader ruku se servy Dynamixel XL330 vedete rukou. Software je plugin pro LeRobot, takže teleoperace, nahrávání ukázek i trénink politik ACT, Diffusion Policy nebo PI0 fungují hned. Konstrukce se tiskne z PLA-CF, měkké prsty z TPU; na zápěstí lze připevnit kameru RealSense D405.","category":"Robotická ruka","image":"https://printedrobotics.cz/img/aira_white.jpg","url":"https://printedrobotics.cz/sada/aira/","brand":{"@type":"Brand","name":"printedrobotics.cz"},"isBasedOn":"https://github.com/robertorobotics/Nextis-AIRA-3D","additionalProperty":[{"@type":"PropertyValue","name":"Stupně volnosti","value":"6 os + chapadlo"},{"@type":"PropertyValue","name":"Pohon","value":"Damiao J8009P, J4340P, J4310 (CAN)"},{"@type":"PropertyValue","name":"Moment","value":"až 20 / 35 Nm (základna)"},{"@type":"PropertyValue","name":"Řízení","value":"USB-CAN, impedanční řízení MIT"},{"@type":"PropertyValue","name":"Leader","value":"7× Dynamixel XL330-M077"},{"@type":"PropertyValue","name":"Napájení","value":"24 V (follower), 5 V (leader)"},{"@type":"PropertyValue","name":"Kamera","value":"Intel RealSense D405 (volitelně)"},{"@type":"PropertyValue","name":"Tisk","value":"PLA-CF (kalená tryska), prsty TPU; vrstva 0,2 mm"},{"@type":"PropertyValue","name":"Náročnost","value":"Pokročilý"},{"@type":"PropertyValue","name":"Software","value":"LeRobot (Python), plugin lerobot-robot-aira"},{"@type":"PropertyValue","name":"Náklady na díly dle autora","value":"≈ 1 650 USD (follower), ≈ 1 850 USD (pár)"}]}</script>
@@ -25,6 +29,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../assets/site.css">
+<link rel="stylesheet" href="../../assets/i18n.css">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 </head>
 <body data-page="product" data-robot="aira" data-root="../../" class="has-sbar">
@@ -32,7 +37,7 @@
 
 <header class="site-h" id="site-h">
 <div class="wrap"><div class="hbar">
-<div class="brand"><i aria-hidden="true"></i><a href="../../">printedrobotics</a></div>
+<div class="brand"><i aria-hidden="true"></i><a href="../../">printedrobotics</a><!--lang-sw--><span class="lang-sw"><span aria-current="true" lang="cs" title="Čeština">CZ</span><i aria-hidden="true">/</i><a href="../../en/kit/aira/" hreflang="en" lang="en" data-lang="en" title="English">EN</a></span><!--/lang-sw--></div>
 <nav class="nav" aria-label="Hlavní menu"><a href="../../#katalog">Katalog</a><a href="../../#postup">Jak to funguje</a><a href="#licence">Licence</a></nav>
 <a class="pill" href="../../kviz.html">Najít robota <span aria-hidden="true">→</span></a>
 </div></div>
@@ -217,6 +222,7 @@
 <script src="../../assets/config.js"></script>
 <script src="../../assets/data.js"></script>
 <script src="../../assets/media.js"></script>
+<script src="../../assets/i18n.js" data-auto></script>
 <script src="../../assets/app.js"></script>
 </body>
 </html>
