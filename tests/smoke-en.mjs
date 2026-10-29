@@ -149,7 +149,14 @@ if (!process.env.SKIP_SIMS) {
     const err = await p.evaluate(() => window.__sim.error); if (err) e.push('sim error: ' + err);
     await p.waitForTimeout(2500); await isLang(p, e, 'en'); await noCzech(p, e); await czLink(p, e, '/sim/so101/');
   });
-  await check('sim so101 objects ?lang=en', '/sim/so101/objects.html?lang=en', async (p, e) => { await p.waitForTimeout(4000); await noCzech(p, e); });
+  // wait until the object list is rendered (or the page reports a failure) – a fixed delay made the result depend on
+  // the runner's speed: only a fast runner got far enough to show the (then untranslated) object names
+  await check('sim so101 objects ?lang=en', '/sim/so101/objects.html?lang=en', async (p, e) => {
+    const st = await p.waitForFunction(() => (document.querySelector('#objs li') ? 'list' : !document.getElementById('fail').hidden ? 'fail' : null), null, { timeout: 120000 })
+      .then((h) => h.jsonValue()).catch(() => 'timeout');
+    if (st !== 'list') e.push(`objects page did not render its object list (${st}; loader ${await p.evaluate(() => (document.getElementById('loader').hidden ? 'hidden' : 'visible'))})`);
+    await p.waitForTimeout(300); await noCzech(p, e);
+  });
   await check('sim so101 setup wizard ?lang=en', '/sim/so101/nastaveni/?lang=en', async (p, e) => { await p.waitForTimeout(4000); await noCzech(p, e); });
   await check('arena ?lang=en', '/sim/arena/?robot=svrn&lang=en', async (p, e) => {
     await p.waitForSelector('#pick > *', { timeout: 60000 }); await p.waitForSelector('#maps > *', { timeout: 60000 });

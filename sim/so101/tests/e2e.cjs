@@ -21,6 +21,7 @@ async function open(browser, url, vp, touch) {
   const page = await browser.newPage({ viewport: vp, deviceScaleFactor: 1, hasTouch: !!touch, isMobile: !!touch });
   page.on('pageerror', (e) => { console.log('PAGEERROR', e.message); fails++; });
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) console.log('console.error', m.text()); });
+  page.reqs = []; page.on('request', (r) => page.reqs.push(r.url()));
   await page.goto(url);
   await page.waitForFunction(() => window.__sim && (window.__sim.ready || window.__sim.error), null, { timeout: 300000 });
   const err = await page.evaluate(() => window.__sim.error);
@@ -212,7 +213,7 @@ async function touchDrag(page, from, to, steps = 8) {
       const h0 = (await ux(p)).hud, g0 = await S(p, () => window.__sim._ux.ctl.grip);
       let jp = await S(p, () => window.__sim.linkPoint(5));
       // the jaws can be hidden behind the cube from the default view (frame-rate dependent orbit): try the fixed views
-      for (const v of ['side', 'front']) { if (jp) break; await S(p, (v) => window.__sim.cameraNow(v), v); await p.waitForTimeout(300); jp = await S(p, () => window.__sim.linkPoint(5)); }
+      for (const v of ['side', 'front', 'top', 'orbit']) { if (jp) break; await S(p, () => window.__sim.advance(0.3)); await S(p, (v) => window.__sim.cameraNow(v), v); await p.waitForTimeout(300); jp = await S(p, () => window.__sim.linkPoint(5)); }
       ok(!!jp, 'a visible point on the jaws exists for the tap test');
       await p.mouse.click(jp.x, jp.y);
       await S(p, () => window.__sim.advance(1.2));
@@ -277,7 +278,7 @@ async function touchDrag(page, from, to, steps = 8) {
     await shot(p, 'desk-04-win');
 
     // every mission: automatic solution
-    for (const id of await S(p, () => window.__sim.missions)) {
+    for (const id of await S(p, () => window.__sim.missions.filter((m) => !window.__sim.objectMissions.includes(m)))) {   // object missions: below
       await S(p, (m) => window.__sim.mission(m), id);
       await S(p, () => window.__sim.solve());
       const t = await advanceUntil(p, () => window.__sim.ux().won, 45, 3);
@@ -364,6 +365,54 @@ async function touchDrag(page, from, to, steps = 8) {
       const r = await open(browser, base + '?test=1&real=1&mise=bowl&detail=low', { width: 1280, height: 800 });
       const st = await S(r, () => ({ pull: window.__sim._ux.links.pull(), seg: window.__sim._ux.panel.grabSeg.hidden }));
       ok(!st.pull && st.seg, 'with ?real=1 the physics pull is off and its switch hidden');
+      await r.close();
+    }
+
+    // ---------------- object missions 06–10 (NVIDIA SimReady objects) ----------------
+    ok(!p.reqs.some((u) => /\/so101\/objects\/|objects\/(view|library)\.js/.test(u)), 'mission 01 page fetches no object asset (manifest, MJCF, GLB) and no object loader');
+    {
+      // picking an object mission in the plain scene reloads into the object scene
+      const q = await open(browser, base + '?test=1&mise=trace&detail=low', { width: 1280, height: 800 });
+      await Promise.all([q.waitForURL(/mise=workshop/, { timeout: 60000 }), S(q, () => window.__sim.mission('workshop'))]);
+      await q.waitForFunction(() => /mise=workshop/.test(location.search) && window.__sim && window.__sim.ready && window.__sim.objectScene && window.__sim.objectScene(), null, { timeout: 300000 });
+      ok(await S(q, () => window.__sim.ux().mission === 'workshop'), 'mission picker → object mission reloads into the object scene');
+      // a 3-star record of an object mission can be shared and lands on that mission
+      ok(await S(q, () => !!document.querySelector('.ux-credit') && !document.querySelector('.ux-credit').hidden && /NVIDIA SimReady \(CC BY 4\.0\)/.test(document.querySelector('.ux-credit').textContent)), 'object mission shows the credit "Objekty: NVIDIA SimReady (CC BY 4.0)"');
+      await q.close();
+    }
+    for (const id of ['line', 'breakfast', 'tidy', 'workshop', 'lab']) {
+      const q = await open(browser, base + `?test=1&mise=${id}&detail=low`, { width: 1280, height: 800 });
+      await q.waitForFunction(() => window.__sim.objectsReady(), null, { timeout: 120000 }).catch(() => {});
+      const st = await S(q, () => ({ scene: window.__sim.objectScene(), m: window.__sim.ux().mission, glb: window.__sim.objectsReady(), n: document.querySelector('.mission p.mono').textContent }));
+      ok(st.scene && st.m === id && st.glb, `${id}: object scene, mission and its GLBs loaded (${JSON.stringify(st)})`);
+      if (id === 'line') await shot(q, 'desk-11-line');
+      if (id === 'breakfast') {
+        // click-to-pick with a real object: apple, then the plate
+        await S(q, () => window.__sim.pick('apple'));
+        await advanceUntil(q, () => window.__sim.ux().held === 'apple' && !window.__sim.ux().busy, 20, 1);
+        await S(q, () => window.__sim.pick('plate'));
+        await advanceUntil(q, () => !window.__sim.ux().busy, 20, 1);
+        await S(q, () => window.__sim.advance(1));
+        const h = await S(q, () => window.__sim.ux().hud);
+        ok(/Hotovo 1 z 3/.test(h), 'click the apple, then the plate: the arm puts it on the plate (' + h + ')');
+      }
+      await S(q, () => window.__sim.solve());
+      const t = await advanceUntil(q, () => window.__sim.ux().won, 160, 4);
+      const hud = await S(q, () => window.__sim.ux().hud);
+      ok(t > 0, `${id} (${st.n}): the solution demo completes the mission in ${t} s sim time (${hud})`);
+      if (id === 'lab') {
+        const v = await S(q, () => window.__sim.ux().result);
+        ok(v && v.prec < 0.07, 'lab: the vial stands upright in the rack (tilt ' + (v ? (v.prec * 180 / Math.PI).toFixed(1) : '?') + '°)');
+      }
+      await q.close();
+    }
+    {
+      // record link for an object mission: validated (unknown missions / absurd times are ignored)
+      const q = await open(browser, base + '?test=1&mise=lab&rekord=12.4&detail=low', { width: 1280, height: 800 });
+      ok(await S(q, () => !!document.querySelector('.ux-chal') && window.__sim._ux.challenge.time === 12.4 && window.__sim.ux().mission === 'lab'), 'challenge link works for an object mission');
+      await q.close();
+      const r = await open(browser, base + '?test=1&mise=lab&rekord=0.01&detail=low', { width: 1280, height: 800 });
+      ok(await S(r, () => !document.querySelector('.ux-chal') && window.__sim.ux().mission === 'lab'), 'challenge link with an impossible time is ignored');
       await r.close();
     }
 

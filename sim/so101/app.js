@@ -8,6 +8,23 @@ import { COLORS, JOINTS, DEMO, DemoPlayer, ArmSim, loadSim, hasWebGL } from './c
 const $ = (id) => document.getElementById(id);
 const TEST = new URLSearchParams(location.search).get('test') === '1';  // Playwright hook only
 
+// Object missions (chapters 06–10, src/missions.js `objects: true`) need the object scene. Same start rule as
+// ux.startRoute(): ?mise=, otherwise the stored mission, or the first unfinished one when it is done.
+// Keep both lists in sync with MISSIONS (checked by tests/missions-objects.test.mjs).
+const OBJECT_MISSIONS = ['line', 'breakfast', 'tidy', 'workshop', 'lab'];
+const MISSION_ORDER = ['bowl', 'stack', 'sort', 'ball', 'trace', ...OBJECT_MISSIONS];
+function wantsObjects() {
+  const q = new URLSearchParams(location.search), mise = q.get('mise');
+  if (mise) return OBJECT_MISSIONS.includes(mise);
+  try {
+    const prog = JSON.parse(localStorage.getItem('pr-sim-progress') || '{}') || {};
+    let id = JSON.parse(localStorage.getItem('pr-sim-mission') || '"bowl"');
+    if (Object.keys(prog).length && prog[id]) id = MISSION_ORDER.find((m) => !prog[m]) || id;
+    return OBJECT_MISSIONS.includes(id);
+  } catch (e) { return false; }
+}
+
+
 function fail(msg) {
   $('loader').hidden = true;
   $('fail').hidden = false;
@@ -28,7 +45,7 @@ async function main() {
   const t0 = performance.now();
   const bar = $('prog');
   const copy = loadingCopy(t0);   // [ux-hook:loading] honest progress text on slow networks
-  const ctx = await loadSim((f) => { bar.style.width = (f * 100).toFixed(1) + '%'; copy(f); });
+  const ctx = await loadSim((f) => { bar.style.width = (f * 100).toFixed(1) + '%'; copy(f); }, { objects: wantsObjects() });
   copy.done();
   const sim = new ArmSim(ctx, {
     canvas: $('c'),
@@ -43,7 +60,7 @@ async function main() {
   const app = new MissionPage(sim);
   // [ux-hook:install] optional UX layer (src/ux.js: smart move, missions, replay, cameras, exploded view…).
   // The plain slider sim keeps working if it fails to load.
-  try { await (await import('./src/ux.js')).install(app, { THREE: ctx.THREE, mj: ctx.mj, TEST }); }
+  try { await (await import('./src/ux.js')).install(app, { THREE: ctx.THREE, mj: ctx.mj, TEST, objects: ctx.objects }); }
   catch (e) { console.warn('UX layer disabled:', e); app.ux = null; sim.onRender = null; }
   $('loader').hidden = true;
   $('hud').hidden = false;

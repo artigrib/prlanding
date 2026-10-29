@@ -83,8 +83,10 @@ async function loadModelFiles(onProgress) {
   }));
 }
 
-/** Load MuJoCo + model + three.js. onProgress(fraction 0..1). Returns the ingredients for ArmSim. */
-export async function loadSim(onProgress = () => {}) {
+/** Load MuJoCo + model + three.js. onProgress(fraction 0..1). Returns the ingredients for ArmSim.
+ *  opts.objects: compile the object-mission scene (src/objects/scene.js: library objects + fixtures, ~40 kB of
+ *  MJCF); the plain scene (mission 01) never fetches anything of the object library. */
+export async function loadSim(onProgress = () => {}, opts = {}) {
   // Progress: wasm ~ 70 %, meshes ~ 25 %, rest 5 %. Content-length may be the compressed size, so clamp.
   const prog = { wasm: 0, mesh: 0 };
   const paint = () => onProgress(Math.min(1, 0.05 + prog.wasm * 0.7 + prog.mesh * 0.25));
@@ -98,12 +100,22 @@ export async function loadSim(onProgress = () => {}) {
   const mj = await loadMujoco({ wasmBinary: wasmBinary.buffer, locateFile: (p) => new URL('vendor/mujoco/' + p, BASE).href });
   mj.FS.mkdir('/m'); mj.FS.mkdir('/m/assets');
   for (const [path, bytes] of files) mj.FS.writeFile('/m/' + path, bytes);
-  const model = mj.MjModel.from_xml_path('/m/scene.xml');
+  let scene = '/m/scene.xml', objects = null;
+  if (opts.objects) {
+    const [L, S] = await Promise.all([import('./src/objects/library.js'), import('./src/objects/scene.js')]);
+    const lib = new L.ObjectLibrary();
+    const xml = new TextDecoder().decode(files.find(([p]) => p === 'scene.xml')[1]);
+    const built = await S.objectSceneXml(xml, lib, L);
+    mj.FS.writeFile('/m/scene_objects.xml', built.xml);
+    scene = '/m/scene_objects.xml';
+    objects = { lib, items: built.items, sizes: Object.fromEntries(built.items.map((it) => [it.name, S.itemSize(it)])) };
+  }
+  const model = mj.MjModel.from_xml_path(scene);
   const data = new mj.MjData(model);
   mj.mj_resetDataKeyframe(model, data, 0);
   mj.mj_forward(model, data);
   onProgress(1);
-  return { THREE, OrbitControls: OC.OrbitControls, mj, model, data };
+  return { THREE, OrbitControls: OC.OrbitControls, mj, model, data, objects };
 }
 
 // Non-indexed geometry with "creased" normals: smooth across faces that are within

@@ -3,7 +3,7 @@
 
 import { ArmController, GRIP_OPEN, GRIP_CLOSED } from './controller.js';
 import { World } from './world.js';
-import { MISSIONS, MissionRunner, bowlDrop, pushPlan } from './missions.js';
+import { MISSIONS, MissionRunner, bowlDrop, pushPlan, libPick, libPlace, libTarget, libGrasp } from './missions.js';
 import { Extras } from './ui/extras.js';
 import { Gizmo } from './ui/gizmo.js';
 import { Cameras } from './ui/cameras.js';
@@ -24,6 +24,8 @@ export async function install(page, env) {
   // core.js layout (servo-emulator branch): the page (MissionPage) owns sliders/demo/HUD, page.sim (ArmSim)
   // owns physics + rendering. The UX layer talks to one "app" facade that routes to whichever owns a member.
   const app = page.sim ? hostFor(page) : page;
+  // object missions: their visuals are loaded only with the object scene (mission 01 never fetches them)
+  if (env.objects) env.ObjectView = (await import('./objects/view.js')).ObjectView;
   const ux = new UX(app, env);
   page.ux = ux;
   patchSliders(page);
@@ -64,7 +66,7 @@ function hostFor(page) {
 const PREVIEW_S = 0.6;     // path preview before the arm starts moving
 
 class UX {
-  constructor(app, { THREE, mj, TEST }) {
+  constructor(app, { THREE, mj, TEST, objects, ObjectView }) {
     this.app = app; this.T = THREE; this.mj = mj; this.TEST = TEST;
     this.m = app.m; this.d = app.d;
     this.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -83,6 +85,7 @@ class UX {
     for (const [g, mesh] of app.geoms) if (app.m.geom_type[g] === 6 && app.m.geom_bodyid[g] === 0) { this.tableMesh = mesh; mesh.userData.pick = 'table'; }
 
     this.extras = new Extras(this);
+    if (this.world.lib && objects) { this.world.sizes(objects.sizes); this.objView = new ObjectView(this, objects); }
     this.teach = new Teach(this);
     this.panel = new Panel(this);
     this.gizmo = new Gizmo(this);
@@ -129,6 +132,7 @@ class UX {
 
   start() {
     this.runner.select(this.startRoute(new URLSearchParams(location.search)));
+    if (this.runner.m.objects && !this.world.lib) this.runner.select('bowl');   // app.js loads the object scene when needed
     this.setMode(this.mode, true);
     this.panel.showPitch(this.ctl.pitch);
     this.panel.showSound(this.sound.on);
@@ -219,6 +223,7 @@ class UX {
     if (!this.replayResetting) this.teach.stopReplay();
     this.runner.setup();
     this.extras.onLayout(this.runner.m);
+    if (this.objView) this.objView.onLayout(this.runner.m);
     // pick-and-place missions start with the gripper open: the first move is "go down and close" (P0-3)
     if (this.runner.m.openStart) {
       const a = this.app.act[5], m = this.m;
@@ -271,6 +276,16 @@ class UX {
   }
 
   selectMission(id) {
+    const m = MISSIONS.find((x) => x.id === id);
+    if (m && m.objects && !this.world.lib) {
+      // the object missions run in a scene with the objects compiled in: reload into it (engine from cache)
+      store.set('mission', id);
+      const u = new URL(location.href); u.searchParams.set('mise', id); u.searchParams.delete('rekord');
+      this.panel.toast('Načítám předměty mise…');
+      document.getElementById('loader').hidden = false;
+      setTimeout(() => location.assign(u.href), 50);
+      return;
+    }
     this.runner.select(id); store.set('mission', id);
     this.teach.stopReplay();
     this.app.reset();
@@ -384,6 +399,11 @@ class UX {
     if (!closed) return null;
     for (const e of this.world.active()) {
       if (e.kind !== 'free' || e.name === 'ball') continue;
+      if (e.lib) {
+        const p = this.world.com(e.name, this.tipBuf);
+        if (Math.hypot(p[0] - tip[0], p[1] - tip[1]) < 0.06 && p[2] > (e.restZ || 0) + 0.004 && Math.abs(p[2] - tip[2]) < 0.06) return e.name;
+        continue;
+      }
       const p = this.world.pos(e.name, this.tipBuf);
       if (Math.hypot(p[0] - tip[0], p[1] - tip[1], p[2] - tip[2]) < 0.03) return e.name;
     }
@@ -397,6 +417,23 @@ class UX {
     if (this.mode !== 'smart') this.setMode('smart');
     const w = this.world, ctl = this.ctl, held = this.heldObject();
     let plan = null;
+    const e = w.o[name];
+    if (e && (e.lib || e.fixture) || (name === 'table' && held && w.o[held].lib)) {
+      if (e && e.lib) {
+        if (held === name) { this.panel.toast('Ten už držíte. Klikněte, kam ho položit.'); return; }
+        if (held) { this.panel.toast('Nejdřív položte, co držíte – klikněte na cíl nebo na stůl.'); return; }
+        plan = libPick(ctl, w, name);
+        this.libHeld = { name, pick: plan };
+      } else {
+        if (!held) { this.panel.toast('Nejdřív klikněte na předmět, ruka ho vezme.'); return; }
+        const pick = this.heldPick(held);
+        if (name === 'table') plan = libPlace(ctl, w, pick, [point[0], point[1]], 0.002);
+        else { const t = libTarget(w, this.runner.m, held, name); plan = libPlace(ctl, w, pick, t.xy, t.surface, t.closeYaw); }
+        plan.kind = 'place';
+      }
+      if (plan && this.preview(plan)) this.onboarding.notify('plan-' + plan.kind);
+      return;
+    }
     if (name === 'cube' || name === 'cube_b') {
       if (held === name) { this.panel.toast('Kostku už držíte. Klikněte, kam ji položit.'); return; }
       const p = w.pos(name, [0, 0, 0]);
@@ -419,6 +456,15 @@ class UX {
       }
     }
     if (plan && this.preview(plan)) this.onboarding.notify('plan-' + plan.kind);
+  }
+
+  /** Grasp info of the held library object (from the click that picked it, or measured now after a manual grab). */
+  heldPick(held) {
+    const w = this.world, start = this.ctl.startPoint();
+    if (this.libHeld && this.libHeld.name === held) return { ...this.libHeld.pick, end: start, roll: this.ctl.roll };
+    const tip = this.ctl.actualTip(new Float64Array(3)), c = w.com(held, [0, 0, 0]), g = libGrasp(w, held);
+    const dzc = tip[2] - c[2];
+    return { roll: this.ctl.roll, end: start, dz: tip[2] - g.bottom, ref: () => { const p = w.com(held, [0, 0, 0]); p[2] += dzc; return p; } };
   }
 
   /** Pen tool stroke (MuJoCo xy points) → the tip follows it. */
@@ -599,6 +645,7 @@ class UX {
       app.sync(); this.extras.sync();
     };
     api.missions = MISSIONS.map((m) => m.id);
+    api.objectMissions = MISSIONS.filter((m) => m.objects).map((m) => m.id);
     api.mission = (id) => this.selectMission(id);
     api.solve = () => this.startDemo();
     api.setMode = (m) => this.setMode(m);
@@ -606,9 +653,11 @@ class UX {
     api.screen = (what) => {
       const p = what === 'target' ? (this.ctl.active ? this.ctl.target : this.ctl.actualTip(new Float64Array(3)))
         : what === 'up' ? (() => { const t = this.ctl.active ? this.ctl.target : this.ctl.actualTip(new Float64Array(3)); const s = this.gizmo.root.scale.x; return [t[0], t[1], t[2] + 0.038 * s]; })()
-          : this.world.pos(what, [0, 0, 0]);
+          : this.world.o[what] && this.world.o[what].lib ? this.world.com(what, [0, 0, 0]) : this.world.pos(what, [0, 0, 0]);
       return this.gizmo.project(p, {});
     };
+    api.objectScene = () => !!this.world.lib;
+    api.objectsReady = () => (this.objView ? this.objView.ready() : true);
     api.record = (on) => { if (on !== this.teach.recording) this.toggleRec(); };
     api.replay = (loop) => { this.teach.loop = !!loop; return this.teach.startReplay(); };
     api.exportDemo = () => this.teach.toJSON();
@@ -662,3 +711,4 @@ class UX {
 void GRIP_OPEN; void GRIP_CLOSED;
 
 function fmtT(t) { t = Math.max(0, t || 0); return Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0'); }
+

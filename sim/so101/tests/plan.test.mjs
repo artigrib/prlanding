@@ -34,7 +34,7 @@ function run(sec, stopWhen) {
   return sec;
 }
 
-for (const mis of MISSIONS) {
+for (const mis of MISSIONS.filter((x) => !x.objects)) {   // object missions: tests/missions-objects.test.mjs
   test(`mission "${mis.id}" is solved by its automatic plan`, () => {
     reset(mis.id);
     runner.start();
