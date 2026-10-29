@@ -44,6 +44,10 @@ if it *drives* the arm, call `app.ux.ctl.cancel()` first (same as the sliders).
 - `src/ui/*` – gizmo + ghost + path preview + pen (gizmo.js), cameras + wrist PiP (cameras.js), teach & replay +
   JSON export (teach.js), panel DOM (panel.js), onboarding, sound/haptics (../audio/sound.js, see src/audio/AUDIO.md), confetti (fx.js),
   extra meshes + studio lighting (extras.js), localStorage wrapper (store.js).
+- `src/agent/` – "Připojit AI": agent API on the sim (`sim-api.js`, DOM-free, ticked from `UX.pre` after the
+  controller), `window.so101` + panel entry (`index.js`, installed at the end of `install()`), the panel with
+  pairing / STOP / Odpojit / log (`panel.js`, lazy, uses `backend/bridge-client/agent-bridge.js`). Off with `?real=1`.
+  See docs/mcp.md.
 - `src/ui/hidetail.js` – lazy high-detail visuals: `model/visual/so101_visual.glb` (all 14 original Menagerie
   STLs, 325 020 triangles, meshopt + 14-bit quantization, **0.98 MB**, 0.6 MB gzipped) is loaded after start
   (idle callback) and swapped in for the decimated `.msh` geometry, which stays the physics/collision mesh.
