@@ -298,3 +298,17 @@
 .ai-err .btn{justify-content:center}
 [data-state=retry] .ai-dot{background:var(--accent);animation:ux-blink 1.2s steps(2) infinite}
 [data-state=error] .ai-dot{background:#B3200F}
+.ai-prompts{display:flex;flex-direction:column;gap:8px}
+.ai-prompts[hidden]{display:none}
+.ai-prompts>.mono{border-top:1px solid var(--line);padding-top:10px}
+.ai-plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.ai-plist li{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start}
+.ai-prompt{font-size:14px;line-height:1.4;color:var(--ink);quotes:"„" "“"}
+.ai-pgroup summary{cursor:pointer;font-weight:500;font-size:14.5px;min-height:36px;display:flex;align-items:center}
+.ai-pgroup[open] summary{margin-bottom:4px}
+.ai-mprompt{display:flex;flex-direction:column;gap:6px;background:var(--sand);border:1px solid var(--line);padding:8px 10px}
+.ai-mprompt p{margin:0}
+.ai-mprompt.flash{animation:ai-flash 1.2s ease-out}
+@keyframes ai-flash{0%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion: reduce){.ai-mprompt.flash{animation:none;box-shadow:0 0 0 2px var(--accent)}}
+.ai-askm{display:block;padding:6px 0;min-height:40px}

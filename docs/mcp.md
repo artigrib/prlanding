@@ -30,6 +30,10 @@ While an AI is connected, a bar over the 3D view shows who drives the arm, with 
 (Release STOP). Moving a slider, dragging the arm or pressing Esc also ends the AI's current motion.
 The panel logs every tool call in plain words (for example *Přesun chapadla na x 250, y −110, z 90 mm ✓ 0,8 s*).
 
+The panel also offers **Co říct AI** (What to tell the AI): a dozen ready-made prompts in four groups
+(Začátek, Mise pro AI, Zábava, Učení) with copy buttons, plus a prompt for the current mission. The mission
+card has **Zeptej se AI na tuto misi** (Ask the AI about this mission), which opens the panel at that prompt.
+
 If the relay cannot be reached, the panel says so: it retries twice with a growing pause (each attempt
 gives up after 8 s without an answer) and then shows *Server pro připojení AI teď není dostupný* with
 **Zkusit znovu** (Try again). STOP and the bar over the 3D view appear only once an AI is paired.
@@ -50,6 +54,7 @@ Positions use the robot base frame: x forward, y left, z up, origin at the base 
 | `get_scene` | Robot, objects (cube, bowl) with poses in mm, mission, safety, limits | `include[]` |
 | `move_joints` | Smooth joint move; waits until finished | `joints_deg{…}`, `gripper_pct`, `relative`, `duration_s`, `preempt`, `request_id` |
 | `move_to` | Move the jaw tip to a point (in-page IK) | `pose{x_mm,y_mm,z_mm,pitch_deg,roll_deg}`, `gripper_pct`, `duration_s` |
+| `run_trajectory` | Many waypoints as one smooth motion (a dance, a wave, a shape). The whole path is checked first; a bad waypoint is named in `details.waypoint` and nothing moves | `waypoints[{joints_deg \| pose, gripper_pct, duration_s}]` (1–50, ≤ 60 s in total), `preempt`, `request_id` |
 | `set_gripper` | Open or close the gripper | `gripper_pct` (0–100, `"open"`, `"close"`), `effort_pct` |
 | `home` | Go to the home pose (or `zero`) | `pose`, `duration_s` |
 | `stop` | Stop now and hold the pose. A software stop, not an emergency stop | — |

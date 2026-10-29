@@ -4,6 +4,7 @@
 
 import { createAgentBridge, BridgeError } from '../../../../backend/bridge-client/agent-bridge.js';
 import { MISSIONS } from '../missions.js';
+import { PROMPT_GROUPS, MISSION_PROMPT } from './prompts.js';
 import { t } from '../i18n/index.js';
 
 export const MCP_URL = 'https://mcp.printedrobotics.cz/mcp';
@@ -48,6 +49,10 @@ export function describe(tool, a = {}) {
     case 'move_to': {
       const p = a.pose || {};
       return t('Přesun chapadla na x {x}, y {y}, z {z} mm', { x: n1(p.x_mm), y: n1(p.y_mm), z: n1(p.z_mm) });
+    }
+    case 'run_trajectory': {
+      const n = (a.waypoints || []).length;
+      return t('Plynulý pohyb přes {n} bodů', { n });
     }
     case 'set_gripper':
       return a.gripper_pct === 'open' ? t('Otevřít chapadlo') : a.gripper_pct === 'close' ? t('Zavřít chapadlo') : t('Chapadlo na {p} %', { p: n1(a.gripper_pct) });
@@ -139,6 +144,39 @@ export function mountAgentPanel(root, { api, ux, button, onLink }) {
   showTab(false);
   setup.append(seg, stepsCode, stepsApp);
 
+  // ---------- "Co říct AI": prompt gallery (waiting + paired) ----------
+  const prompts = el('section', 'ai-prompts'); prompts.hidden = true; prompts.setAttribute('data-testid', 'agent-prompts');
+  prompts.setAttribute('aria-labelledby', 'ai-prompts-h');
+  const promptsH = el('p', 'mono', t('Co říct AI')); promptsH.id = 'ai-prompts-h';
+  const promptLi = (text) => {
+    const li = el('li');
+    const q = el('q', 'ai-prompt', text);
+    li.append(q, copyBtn(() => q.textContent));
+    return li;
+  };
+  // this mission (follows the mission picker)
+  const mCard = el('div', 'ai-mprompt'); mCard.setAttribute('data-testid', 'agent-mission-prompt');
+  const mHead = el('p', 'mono-s');
+  const mList = el('ul', 'ai-plist');
+  mCard.append(mHead, mList);
+  prompts.append(promptsH, mCard);
+  PROMPT_GROUPS.forEach((g, gi) => {
+    const det = el('details', 'ai-pgroup'); if (gi === 0) det.open = true;
+    det.append(el('summary', null, t(g.title)));
+    const ul = el('ul', 'ai-plist');
+    for (const text of g.items) ul.append(promptLi(t(text)));
+    det.append(ul); prompts.append(det);
+  });
+  let mFor = null;
+  function missionPrompt() {
+    const m = ux.runner && ux.runner.m;
+    if (!m || m === mFor) return;
+    mFor = m;
+    mHead.textContent = t('Pro misi {n}: {title}', { n: m.n, title: t(m.title) });
+    mList.textContent = '';
+    mList.append(promptLi(t(MISSION_PROMPT, { n: m.n, title: t(m.title) })));
+  }
+
   // ---------- controls + log ----------
   const ctl = el('div', 'ai-ctl');
   const btnStop = el('button', 'btn ai-stop', 'STOP'); btnStop.type = 'button'; btnStop.setAttribute('data-testid', 'agent-stop');
@@ -152,7 +190,7 @@ export function mountAgentPanel(root, { api, ux, button, onLink }) {
   const foot = el('p', 'mono-s muted ai-foot');
   const docs = el('a', null, t('Jak to funguje')); docs.href = DOCS; docs.target = '_blank'; docs.rel = 'noopener';
   foot.append(document.createTextNode(t('Jen simulace: AI nemůže ovládat skutečnou ruku. Server zprávy jen přeposílá a nic neukládá.') + ' '), docs);
-  root.append(status, btnRetryNow, btnConnect, errBox, codeBox, setup, ctl, logBox, foot);
+  root.append(status, btnRetryNow, btnConnect, errBox, codeBox, setup, ctl, prompts, logBox, foot);
 
   // ---------- bar over the 3D view (always visible while an AI link exists) ----------
   const stage = document.querySelector('.stage');
@@ -213,7 +251,7 @@ export function mountAgentPanel(root, { api, ux, button, onLink }) {
 
   // the relay handler: the agent API, errors as BridgeError, arguments into the log
   const handler = {};
-  for (const k of ['info', 'getState', 'getScene', 'moveJoints', 'moveTo', 'setGripper', 'home', 'stop', 'snapshot', 'listMissions', 'startMission', 'checkMission', 'resetScene', 'onLinkLost']) {
+  for (const k of ['info', 'getState', 'getScene', 'moveJoints', 'moveTo', 'runTrajectory', 'setGripper', 'home', 'stop', 'snapshot', 'listMissions', 'startMission', 'checkMission', 'resetScene', 'onLinkLost']) {
     handler[k] = async (args, ctx) => {
       const entry = ctx && ctx.tool ? logArgs(ctx.tool, args || {}) : null;
       try {
@@ -265,6 +303,8 @@ export function mountAgentPanel(root, { api, ux, button, onLink }) {
     }
     root.classList.toggle('estop', est); bar.classList.toggle('estop', est);
     btnNew.hidden = state !== 'waiting';
+    prompts.hidden = !(paired || state === 'waiting' || state === 'pairing');
+    if (!prompts.hidden) missionPrompt();
     sayCode.textContent = sayCode2.textContent = say();
   }
   function clearTimers() { clearTimeout(connTimer); clearTimeout(retryTimer); clearInterval(cdTimer); }
@@ -329,7 +369,7 @@ export function mountAgentPanel(root, { api, ux, button, onLink }) {
         if (ux.onboarding && ux.onboarding.active()) ux.onboarding.finish();
       },
       onUnpaired() { ux.panel.toast(t('AI asistent byl odpojen.')); },
-      onActivity(a) { if (a.phase === 'start') logStart(a.tool); else logEnd(a.tool, a.ok, a.code); }
+      onActivity(a) { if (a.phase === 'start') logStart(a.tool); else { logEnd(a.tool, a.ok, a.code); if (!prompts.hidden) missionPrompt(); } }
     }
   });
 
@@ -364,9 +404,17 @@ export function mountAgentPanel(root, { api, ux, button, onLink }) {
       root.hidden = false; button.setAttribute('aria-expanded', 'true');
       if (state === 'idle') { attempts = 0; start(); }
       render();
-      root.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      root.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     },
-    collapse() { root.hidden = true; button.setAttribute('aria-expanded', 'false'); }
+    collapse() { root.hidden = true; button.setAttribute('aria-expanded', 'false'); },
+    /** "Zeptej se AI" on the mission card: show the prompt for the current mission. */
+    showMissionPrompt() {
+      mFor = null; missionPrompt();
+      if (!prompts.hidden) {
+        mCard.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+        mCard.classList.remove('flash'); void mCard.offsetWidth; mCard.classList.add('flash');
+      }
+    }
   };
   window.__so101Agent = panel;   // tests and debugging (state only; motion goes through window.so101)
   render();

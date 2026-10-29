@@ -12,7 +12,7 @@ export const REAL_ARMED = () => /[?&]real=1\b/.test(location.search);
 
 /** Tool name -> API method (same mapping as backend/bridge-client/agent-bridge.js). */
 export const TOOLS = {
-  get_state: 'getState', get_scene: 'getScene', move_joints: 'moveJoints', move_to: 'moveTo', set_gripper: 'setGripper',
+  get_state: 'getState', get_scene: 'getScene', move_joints: 'moveJoints', move_to: 'moveTo', run_trajectory: 'runTrajectory', set_gripper: 'setGripper',
   home: 'home', stop: 'stop', snapshot: 'snapshot', list_missions: 'listMissions', start_mission: 'startMission',
   check_mission: 'checkMission', reset_scene: 'resetScene'
 };
@@ -103,6 +103,15 @@ export function installAgent(ux, page) {
   const anchor = document.getElementById('ux-teach') || document.querySelector('.row-b');
   anchor.after(mount);
   const btn = mount.querySelector('#ai-open');
+  // "Zeptej se AI" on the mission card: opens the panel at the prompt for the current mission
+  const mbox = document.querySelector('.mission');
+  if (mbox) {
+    const ask = document.createElement('button');
+    ask.type = 'button'; ask.className = 'ux-link ai-askm'; ask.id = 'ai-ask-mission';
+    ask.innerHTML = `${t('Zeptej se AI na tuto misi')} <span aria-hidden="true">✦</span>`;
+    ask.addEventListener('click', () => { openPanel().then(() => loading && loading.then((p) => p && p.showMissionPrompt())); });
+    mbox.appendChild(ask);
+  }
   let loading = null;
   function openPanel() {
     if (!loading) {
