@@ -46,16 +46,16 @@ await check('catalog filter', '/', async p => {
   if (after >= before) throw new Error(`filter did not narrow (${before} -> ${after})`);
 });
 
-// home v2: one-click try. CTAs in the first screen, preview never pulls the sims' engines onto the home page
+// home v2: one-click try (primary) + the parts plan (secondary). CTAs in the first screen, preview never pulls the sims' engines onto the home page
 for (const vp of [{ width: 360, height: 780 }, { width: 1440, height: 900 }]) {
   await check(`home CTAs ${vp.width}px`, '/', async p => {
     await p.setViewportSize(vp);
-    const sim = p.locator('a[data-cta="hero-sim"]'), arena = p.locator('a[data-cta="hero-arena"]');
+    const sim = p.locator('a[data-cta="hero-sim"]'), plan = p.locator('a[data-cta="hero-plan"]');
     const txt = async l => (await l.innerText()).replace(/\s+/g, ' ');  // app.js glues short words with nbsp
     if (!/Vyzkoušejte SO-101 v prohlížeči/.test(await txt(sim))) throw new Error('primary CTA text');
-    if (!/Bojová aréna/.test(await txt(arena))) throw new Error('secondary CTA text');
-    const u1 = await sim.evaluate(a => new URL(a.href).pathname), u2 = await arena.evaluate(a => new URL(a.href).pathname);
-    if (u1 !== '/sim/so101/' || u2 !== '/sim/arena/') throw new Error(`CTA targets ${u1} ${u2}`);
+    if (!/Plán nákupu dílů/.test(await txt(plan))) throw new Error('secondary CTA text');
+    const u1 = await sim.evaluate(a => new URL(a.href).pathname), u2 = await plan.evaluate(a => new URL(a.href).pathname);
+    if (u1 !== '/sim/so101/' || u2 !== '/plan/so101/') throw new Error(`CTA targets ${u1} ${u2}`);
     const box = await sim.boundingBox();
     if (!box || box.y + box.height > vp.height) throw new Error('primary CTA below the first screen');
     if ((await p.locator('a[data-cta="arena"]').getAttribute('href')) !== 'sim/arena/') throw new Error('arena section CTA');

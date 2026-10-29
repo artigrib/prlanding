@@ -51,6 +51,7 @@
 <section id="top" class="wrap hero" aria-labelledby="hero-h">
 <div class="hero-grid">
 <div class="hero-text">
+<!--hero-new--><a class="hero-new" href="../sim/so101/?lang=en" data-cta="hero-new"><span class="hero-new-k">New</span><time datetime="2026-10-29">29. 10. 2026</time><b>Control the simulation with AI</b><span aria-hidden="true">→</span></a><!--/hero-new-->
 <h1 class="hero-h1" id="hero-h">
 <span>Open-source robots.</span>
 <span>First in your browser,</span>
@@ -58,9 +59,9 @@
 </h1>
 <p class="hero-lead">Try the SO-101 robot arm in a physics simulation and combat robots in the arena. Then we print the real robot from the original files, add the hardware and ship it in one box.</p>
 <div class="hero-act">
-<a class="btn btn-act" href="../sim/so101/?lang=en" data-cta="hero-sim">Try the SO-101 in your browser <span aria-hidden="true">→</span></a>
+<span class="hero-cta"><code class="call" aria-hidden="true">sim.try()</code><a class="btn btn-act" href="../sim/so101/?lang=en" data-cta="hero-sim">Try the SO-101 in your browser <span aria-hidden="true">→</span></a></span>
+<span class="hero-cta"><code class="call" aria-hidden="true">plan.parts()</code><a class="btn btn-o" href="../en/plan/so101/" data-cta="hero-plan">Parts buying plan <span aria-hidden="true">→</span></a></span>
 <span class="mono-s hero-note">Free, no sign-up. Works on phones too.</span>
-<a class="hero-link" href="../sim/arena/?lang=en" data-cta="hero-arena">Combat arena <span aria-hidden="true">→</span></a>
 </div>
 </div>
 <figure class="hero-fig">
@@ -78,13 +79,23 @@
 <div class="a1 mono">N° 02 — Try before you buy</div>
 <h2 class="a4 h2" id="vyzk-h" style="max-width:52rem">From simulation to a robot on your desk. You can walk through every step in advance.</h2>
 </div>
+<div class="g">
+<div class="a1 hide-s"></div>
+<ol class="a4 path" aria-label="The path to your own SO-101">
+<li><a href="../sim/so101/?lang=en"><code>sim.try()</code><span>Simulation in your browser</span></a></li>
+<li><a href="../en/plan/so101/"><code>plan.parts()</code><span>Parts buying plan</span></a></li>
+<li><a href="#stavba"><code>build.arm()</code><span>Build with the guide</span></a></li>
+<li><a href="#ai"><code>ai.connect()</code><span>Connect your AI</span></a></li>
+<li><a href="#arena"><code>arena.fight()</code><span>Combat arena</span></a></li>
+</ol>
+</div>
 <div class="g" style="margin-top:clamp(24px,5vw,80px)">
 <div class="a1 hide-s"></div>
 <ol class="a4 steps steps4">
-<li class="step"><span class="mono" style="color:var(--ink)">01</span><h3>Try it</h3><p>Drag the blue ball and the arm follows. Click the cube and the arm picks it up by itself. Mouse or finger, with real physics.</p><a class="step-a" href="../sim/so101/?lang=en">Start the simulation</a></li>
-<li class="step"><span class="mono" style="color:var(--ink)">02</span><h3>Learn</h3><p>Ten missions, from moving a cube to breakfast, a workshop and a lab. Record a motion and the arm repeats it, just like teaching a real SO-101 with LeRobot.</p><a class="step-a" href="../sim/so101/objects.html?lang=en">Objects with physics</a></li>
-<li class="step"><span class="mono" style="color:var(--ink)">03</span><h3>Order</h3><p>We print the parts from the project’s original files and add the hardware from the bill of materials. The pre-order is non-binding; we confirm the price and date by email.</p><span class="step-links"><a class="step-a" href="../en/kit/so101/">SO-101 kit</a><a class="step-a" href="../en/plan/so101/" data-cta="plan">Parts buying plan</a></span></li>
-<li class="step"><span class="mono" style="color:var(--ink)">04</span><h3>Build</h3><p>An exploded view from the original STLs shows every part. Walk through servo IDs, calibration and testing on a virtual arm before the box arrives.</p><a class="step-a" href="../sim/so101/nastaveni/?lang=en">Servo setup dry run</a></li>
+<li class="step"><span class="mono step-k"><span>01</span><code>sim.try()</code></span><h3>Try it</h3><p>Drag the blue ball and the arm follows. Click the cube and the arm picks it up by itself. Mouse or finger, with real physics.</p><a class="step-a" href="../sim/so101/?lang=en">Start the simulation</a></li>
+<li class="step"><span class="mono step-k"><span>02</span><code>sim.learn()</code></span><h3>Learn</h3><p>Ten missions, from moving a cube to breakfast, a workshop and a lab. Record a motion and the arm repeats it, just like teaching a real SO-101 with LeRobot.</p><a class="step-a" href="../sim/so101/objects.html?lang=en">Objects with physics</a></li>
+<li class="step"><span class="mono step-k"><span>03</span><code>plan.parts()</code></span><h3>Order</h3><p>We print the parts from the project’s original files and add the hardware from the bill of materials. The pre-order is non-binding; we confirm the price and date by email.</p><span class="step-links"><a class="step-a" href="../en/kit/so101/">SO-101 kit</a><a class="step-a" href="../en/plan/so101/" data-cta="plan">Parts buying plan</a></span></li>
+<li class="step"><span class="mono step-k"><span>04</span><code>build.arm()</code></span><h3>Build</h3><p>An exploded view from the original STLs shows every part. Walk through servo IDs, calibration and testing on a virtual arm before the box arrives.</p><a class="step-a" href="../sim/so101/nastaveni/?lang=en">Servo setup dry run</a></li>
 </ol>
 </div>
 <div class="g feat-row">
@@ -104,9 +115,35 @@
 </div>
 </section>
 
+<section id="stavba" class="wrap section" aria-labelledby="stavba-h">
+<!--build-tl-->
+<div class="g rule">
+<div class="a1 mono">N° 03 — Building the SO-101</div>
+<h2 class="a4 h2" id="stavba-h" style="max-width:52rem">Seven stages, an estimated 10 to 19 hours of work.</h2>
+</div>
+<div class="g tl-row">
+<div class="tl-main">
+<p class="mono tl-meta"><code>build.arm()</code> · estimate for a pair (leader + follower), parts printed yourself</p>
+<ol class="tl">
+<li><a class="tl-i" href="../en/guides/so101-assembly/#e0"><code class="tl-k">stage_0</code><span class="tl-n"><b>Before you build</b><span>Tools, workspace and a servo check</span></span><span class="tl-h">1–2 h</span><span class="tl-bar" aria-hidden="true"><i style="left:0;width:12.5%"></i><i class="tl-r" style="left:12.5%;width:12.5%"></i></span></a></li>
+<li><a class="tl-i" href="../en/guides/so101-assembly/#e1"><code class="tl-k">stage_1</code><span class="tl-n"><b>Printing</b><span>Printing the parts and removing supports</span></span><span class="tl-h">1.5–3 h<span class="tl-x">+ printer ≈ 16.5 h</span></span><span class="tl-bar" aria-hidden="true"><i style="left:0;width:18.8%"></i><i class="tl-r" style="left:18.8%;width:18.8%"></i></span></a></li>
+<li><a class="tl-i" href="../en/guides/so101-assembly/#e2"><code class="tl-k">stage_2</code><span class="tl-n"><b>Servo IDs</b><span>Every servo gets its own ID, before assembly</span></span><span class="tl-h">1–2 h</span><span class="tl-bar" aria-hidden="true"><i style="left:0;width:12.5%"></i><i class="tl-r" style="left:12.5%;width:12.5%"></i></span></a></li>
+<li><a class="tl-i" href="../en/guides/so101-assembly/#e3"><code class="tl-k">stage_3</code><span class="tl-n"><b>Mechanics</b><span>Joint by joint: base, shoulder, elbow, wrist, gripper</span></span><span class="tl-h">4–8 h</span><span class="tl-bar" aria-hidden="true"><i style="left:0;width:50%"></i><i class="tl-r" style="left:50%;width:50%"></i></span></a></li>
+<li><a class="tl-i" href="../en/guides/so101-assembly/#e4"><code class="tl-k">stage_4</code><span class="tl-n"><b>Electronics</b><span>Servo chain, driver board and power</span></span><span class="tl-h">0.5–1 h</span><span class="tl-bar" aria-hidden="true"><i style="left:0;width:6.3%"></i><i class="tl-r" style="left:6.3%;width:6.3%"></i></span></a></li>
+<li><a class="tl-i" href="../en/guides/so101-assembly/#e5"><code class="tl-k">stage_5</code><span class="tl-n"><b>First motion</b><span>Calibration and teleoperation</span></span><span class="tl-h">1–2 h</span><span class="tl-bar" aria-hidden="true"><i style="left:0;width:12.5%"></i><i class="tl-r" style="left:12.5%;width:12.5%"></i></span></a></li>
+<li><a class="tl-i" href="../en/guides/so101-assembly/#e6"><code class="tl-k">stage_6</code><span class="tl-n"><b>Simulation and reality</b><span>What you can try in the simulation today, and what you can’t</span></span><span class="tl-h">0.5–1 h<span class="tl-x">optional</span></span><span class="tl-bar" aria-hidden="true"><i style="left:0;width:6.3%"></i><i class="tl-r" style="left:6.3%;width:6.3%"></i></span></a></li>
+</ol>
+<p class="tl-sum"><span class="mono">total</span><b>10–19 h of work</b><span class="mono">+ printer ≈ 16.5 h</span></p>
+<a class="btn" href="../en/guides/so101-assembly/" data-cta="build-guide">Open the assembly guide <span aria-hidden="true">→</span></a>
+</div>
+<figure class="ph ph-empty" data-photo="so101-build"><span class="ph-img"><img src="../img/so101_white.jpg" width="1200" height="900" alt="SO-101 robot arm, a render from the project CAD" loading="lazy" decoding="async"><span class="ph-tag">render</span></span><figcaption class="mono">Fig. 3 — SO-101 rendered from the project CAD. A photo from our own build will replace it.</figcaption></figure>
+</div>
+<!--/build-tl-->
+</section>
+
 <section id="ai" class="wrap section" aria-labelledby="ai-h">
 <div class="g rule">
-<div class="a1 mono">N° 03 — Connect your AI</div>
+<div class="a1 mono">N° 04 — Connect your AI</div>
 <h2 class="a4 h2" id="ai-h" style="max-width:52rem">Your Claude can drive the simulated arm.</h2>
 </div>
 <div class="g feat-row feat-row-r">
@@ -129,7 +166,7 @@
 </div>
 <figure class="feat-fig">
 <img src="../assets/media/ai-panel.jpg" width="1110" height="360" alt="SO-101 simulation with the AI control panel: the simulation is controlled by Claude Code, STOP and Disconnect buttons and a log of what the AI does" loading="lazy" decoding="async">
-<figcaption class="mono">Fig. 3 — The Connect AI panel while “Claude Code” controls the simulation (Czech interface shown). Every AI step is logged in the panel.</figcaption>
+<figcaption class="mono">Fig. 4 — The Connect AI panel while “Claude Code” controls the simulation (Czech interface shown). Every AI step is logged in the panel.</figcaption>
 </figure>
 </div>
 </section>
@@ -137,13 +174,13 @@
 <section id="arena" class="band section-band" aria-labelledby="arena-h">
 <div class="wrap">
 <div class="g rule rule-inv">
-<div class="a1 mono">N° 04 — Combat robots</div>
+<div class="a1 mono">N° 05 — Combat robots</div>
 <h2 class="a4 h2" id="arena-h" style="max-width:52rem">Robots up to 150 g. Fight your first match in the arena.</h2>
 </div>
 <div class="g arena-row">
 <figure class="arena-fig">
 <a href="../sim/arena/?lang=en" class="arena-shot" data-cta="arena-shot"><img src="../assets/media/arena.jpg" width="1280" height="720" alt="Combat arena in the browser: the orange Project SVRN flips the blue robot Klepeto into the air" loading="lazy" decoding="async"></a>
-<figcaption class="mono">Fig. 4 — Combat arena in the browser, chase camera. Project SVRN has just flipped Klepeto with its flipper.</figcaption>
+<figcaption class="mono">Fig. 5 — Combat arena in the browser, chase camera. Project SVRN has just flipped Klepeto with its flipper.</figcaption>
 </figure>
 <div class="arena-txt">
 <p class="lead">Physics with mass and friction, several maps, cameras including a TV broadcast view. Quick match, tournament, two players on one keyboard, or practice with no time limit.</p>
@@ -165,7 +202,7 @@
 
 <section id="novinky" class="wrap section" aria-labelledby="nov-h">
 <div class="g rule">
-<div class="a1 mono">N° 05 — What’s new</div>
+<div class="a1 mono">N° 06 — What’s new</div>
 <h2 class="a4 h2" id="nov-h">What we’ve added.</h2>
 </div>
 <div class="g" style="margin-top:clamp(24px,4vw,56px)">
@@ -185,7 +222,7 @@
 
 <section id="pripravujeme" class="wrap section" aria-labelledby="prip-h">
 <div class="g rule">
-<div class="a1 mono">N° 06 — Coming soon</div>
+<div class="a1 mono">N° 07 — Coming soon</div>
 <h2 class="a4 h2" id="prip-h" style="max-width:52rem">What we’re working on. Not available to try yet.</h2>
 </div>
 <div class="g prep-row">
@@ -210,7 +247,7 @@
 
 <section id="katalog" class="wrap section">
 <div class="g rule" style="align-items:start">
-<div class="a1 mono">N° 07 — Catalogue</div>
+<div class="a1 mono">N° 08 — Catalogue</div>
 <h2 class="a4s h2"><span id="robot-count2">18</span> robots. From a first build to research.</h2>
 <div class="a10 filters" id="filters" role="group" aria-label="Filter by type"></div>
 </div>
@@ -240,7 +277,7 @@
 
 <section id="postup" class="wrap section" aria-labelledby="post-h">
 <div class="g rule">
-<div class="a1 mono">N° 08 — How it works</div>
+<div class="a1 mono">N° 09 — How it works</div>
 <h2 class="a4 h2" id="post-h" style="max-width:52rem">Three steps between a GitHub repository and a robot on your desk.</h2>
 </div>
 <div class="g" style="margin-top:clamp(24px,5vw,80px)">
@@ -255,7 +292,7 @@
 
 <section id="skoly" class="wrap section" aria-labelledby="skoly-h">
 <div class="g rule">
-<div class="a1 mono">N° 09 — For schools and guides</div>
+<div class="a1 mono">N° 10 — For schools and guides</div>
 <h2 class="a4 h2" id="skoly-h" style="max-width:52rem">A free robotics lesson, and guides.</h2>
 </div>
 <div class="g" style="margin-top:clamp(24px,4vw,56px)">
@@ -269,7 +306,7 @@
 
 <section id="komunita" class="wrap section" aria-labelledby="proto-h">
 <div class="g rule">
-<div class="a1 mono">N° 10 — Community</div>
+<div class="a1 mono">N° 11 — Community</div>
 <div class="a4 proto">
 <h2 class="h2" id="proto-h">PROTO ROBOT</h2>
 <p class="lead">A Prague meetup on robotics and physical AI: talks, live demos and people who build robots or want to start. The first one took place on 23 October 2026; the next is in the works.</p>
@@ -280,7 +317,7 @@
 
 <section id="licence" class="wrap section">
 <div class="g rule">
-<div class="a1 mono">N° 11 — Licences</div>
+<div class="a1 mono">N° 12 — Licences</div>
 <h2 class="a4s h2">We only sell what the licence allows.</h2>
 <p class="a10 ink2" style="margin:0;font-size:16px">We check the licence of the design files separately from the software licence. Projects with an NC clause are offered only with the authors’ written consent.</p>
 </div>
