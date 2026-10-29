@@ -31,6 +31,8 @@ export const jama = {
       floor: floorRects({ x0: -H, x1: H, z0: -H, z1: H }, [PIT, FL_W, FL_E]),
       pits: [PIT],
       walls: boxWalls(H),
+      // the ramps are meant to throw robots over the wall: no invisible catch above them
+      openTop: RAMPS.map(([x0, x1, , zh]) => ({ x0: x0 - 0.3, x1: x1 + 0.3, z0: zh - 1, z1: zh + 1 })),
       wallStyle: { posts: cornerPosts(H), glass: polycarbonate('#e2e9ee', 0.22) },
       stripes: [
         [2.6, 0, PIT.z0 - 0.09, 0], [2.6, 0, PIT.z1 + 0.09, 0],

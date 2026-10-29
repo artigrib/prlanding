@@ -32,6 +32,7 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line-2);border
 .side.r{align-items:flex-end;text-align:right}
 .who{display:flex;align-items:center;gap:8px;font-weight:500;font-size:15px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .who i{width:12px;height:12px;flex:none;border:1px solid var(--ink)}
+.who span{min-width:0;overflow:hidden;text-overflow:ellipsis}.who em{flex:none}
 .who em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
 .stat{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
 #hud .who,#hud .stat{background:rgba(255,255,255,.84);padding:1px 6px;align-self:flex-start;max-width:100%}
@@ -320,7 +321,7 @@ body.split::after{content:'';position:absolute;background:var(--ink);pointer-eve
 
 <section class="panel" id="end" hidden aria-live="polite" aria-labelledby="end-title">
   <div class="mono" id="end-kicker">Konec zápasu</div>
-  <h1 id="end-title">Výhra</h1>
+  <h1 id="end-title" tabindex="-1">Výhra</h1>
   <p id="end-why"></p>
   <div id="card" hidden></div>
   <div class="mono" id="end-stats"></div>

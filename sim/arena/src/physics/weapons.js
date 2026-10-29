@@ -181,7 +181,7 @@ export class Arm {
     this.reset();
   }
   reset() {
-    this.angle = 0; this.rate = 0; this.target = 0; this.kickT = 0; this.cooldown = 0; this.current = 0;
+    this.angle = 0; this.rate = 0; this.target = 0; this.kickT = 0; this.cooldown = 0; this.current = 0; this.guardT = 0;
     this.health = 1; this.holding = false; this.holdT = 0; this.lifted = false; this.contactT = 0;
     this.releaseJoint();
   }
@@ -275,6 +275,19 @@ export class Arm {
     // equal and opposite on the chassis
     imp.x = -imp.x; imp.y = -imp.y; imp.z = -imp.z;
     r.body.applyTorqueImpulse(imp, true);
+    // a stroke jammed under a low, heavy target (Klepeto's forks) drives the plate's reaction into our
+    // own chassis and tumbled SVRN onto its back. For a short window after firing (while upright) the
+    // chassis' tilt rate is limited; yaw stays free. Not when upside down: then the stroke rolls us back.
+    if (this.kickStart || kicking) this.guardT = 0.4;
+    if (this.guardT > 0) {
+      this.guardT -= dt;
+      if (r.up.y > 0.1) {
+        const w = r.body.angvel(), h = Math.hypot(w.x, w.z), lim = 3.5;
+        if (h > lim) r.body.setAngvel({ x: w.x * lim / h, y: w.y, z: w.z * lim / h }, true);
+        const v = r.body.linvel();
+        if (v.y > 2.5) r.body.setLinvel({ x: v.x, y: 2.5, z: v.z }, true);
+      }
+    }
 
     // ---- launch: the plate is simulated, but Rapier's contact solver under-transfers momentum from a
     // light, fast plate into a heavy robot, so the energy hand-over at first contact is analytic:
@@ -291,9 +304,11 @@ export class Arm {
       _p.copy(opp.pos).add(_v2);
       imp.x = _v1.x; imp.y = _v1.y; imp.z = _v1.z; pt.x = _p.x; pt.y = _p.y; pt.z = _p.z;
       opp.body.applyImpulseAtPoint(imp, pt, true);
-      const pv = this.body.translation();
-      imp.x = -imp.x; imp.y = -imp.y; imp.z = -imp.z; pt.x = pv.x; pt.y = pv.y; pt.z = pv.z;
-      r.body.applyImpulseAtPoint(imp, pt, true);
+      // reaction: the vertical part goes through the wheels / wedge into the floor; only the horizontal
+      // part pushes us back, through the centre of mass. (Applied at the hinge, the downward reaction
+      // pitched a fast-moving SVRN over its front axle when the target was low and heavy.)
+      imp.x = -imp.x * 0.6; imp.y = 0; imp.z = -imp.z * 0.6;
+      r.body.applyImpulse(imp, true);
       r.hits++; r.score += 3;
       if (opp.damage) opp.damage.apply(opp.damage.sideOfLocal(opp.local(_p, _v2)), E * 0.12, r);
       fx.hit(r, _p, 0.6);

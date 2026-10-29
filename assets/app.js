@@ -522,7 +522,7 @@
       // the only combat kit on sale; the spinner (vert150, preparing) follows as an alternative
       fight:  { none: 'svrn', some: 'svrn', pro: 'svrn' }
     };
-    var FAMILY = { ai: ['so101', 'lekiwi', 'so102', 'aira', 'xle', 'hand'], school: ['stackchan', 'otto', 'so101', 'spot'], walk: ['otto', 'spot', 'duck', 'bhl'], rover: ['exomy', 'sawppy', 'osr', 'lekiwi'], lab: ['so101', 'so102', 'hand', 'thor', 'parol6'], fight: ['svrn', 'vert150', 'otto'] };
+    var FAMILY = { ai: ['so101', 'lekiwi', 'so102', 'aira', 'xle', 'hand'], school: ['stackchan', 'otto', 'so101', 'spot'], walk: ['otto', 'spot', 'duck', 'bhl'], rover: ['exomy', 'sawppy', 'osr', 'lekiwi'], lab: ['so101', 'so102', 'hand', 'thor', 'parol6'], fight: ['svrn', 'vert150'] };
     function pick(a) {
       var exp = a[0], goal = a[1], size = a[2], m = MATRIX[goal][exp];
       var first = typeof m === 'string' ? m : m[size];

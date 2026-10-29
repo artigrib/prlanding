@@ -11,7 +11,7 @@ export const REPLAY_CAMS = [
   { id: 'auto', name: 'Režisér' }, { id: 'tv', name: 'TV přenos' }, { id: 'chase', name: 'Za robotem' },
   { id: 'top', name: 'Shora' }, { id: 'fpv', name: 'Z robota' }, { id: 'free', name: 'Volná' }
 ];
-const MARK = Object.freeze({ hit: 'Zásah', flip: 'Převrácení', pit: 'Jáma', out: 'Mimo arénu', ko: 'K.O.', wheel: 'Upadlé kolo' });
+const MARK = Object.freeze({ hit: 'Zásah', flip: 'Převrácení', pit: 'Jáma', out: 'Mimo arénu', ko: 'K.O.', wheel: 'Upadlé kolo', sep: 'Oddělení' });
 const markOf = t => (Object.prototype.hasOwnProperty.call(MARK, t) ? MARK[t] : null);
 const fmt = s => { s = Math.max(0, s); const m = Math.floor(s / 60), x = Math.floor(s % 60); return `${m}:${String(x).padStart(2, '0')}`; };
 const stamp = () => { const d = new Date(), p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`; };
@@ -107,7 +107,7 @@ export function createReplayUI(d) {
   async function startClip() {
     if (!pb || clip) return;
     try {
-      clip = new ClipRecorder(canvas, 30);
+      clip = new ClipRecorder(canvas, d.touch ? 15 : 30);   // phones: lighter encode
       const len = Math.min(10, pb.to - pb.from);
       pb.seek(Math.max(pb.from, pb.to - len)); setSpeed(1); setPlaying(true);
       clip.start();
@@ -123,7 +123,9 @@ export function createReplayUI(d) {
     el.root.classList.remove('clipping');
     try {
       const blob = await c.stop();
-      if (!cancel && blob && blob.size) { download(blob, `klip-${stamp()}.webm`); say(`Klip uložen (${Math.round(blob.size / 1024)} kB).`); }
+      if (cancel) return;
+      if (blob && blob.size) { download(blob, `klip-${stamp()}.webm`); say(`Klip uložen (${Math.round(blob.size / 1024)} kB).`); }
+      else say('Klip je prázdný – obraz se nenahrál. Nechte kartu otevřenou a zkuste to znovu.');
     } catch (e) { say('Klip se nepodařilo uložit.'); }
   }
 

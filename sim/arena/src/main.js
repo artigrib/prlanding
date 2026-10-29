@@ -176,8 +176,10 @@ renderer.domElement.addEventListener('webglcontextlost', e => {
 renderer.domElement.addEventListener('webglcontextrestored', () => {
   ctxLost = false; failed = false; ui.fail.hidden = true;
   const st = game.state;
-  showScreen(st === 'menu' ? 'menu' : st === 'end' ? 'end' : st === 'replay' ? 'replay' : st === 'paused' ? 'pause' : 'play');
   last = performance.now();
+  // a fight never resumes on its own while the player is still reading the error panel
+  if (st === 'fight' || st === 'countdown') { showScreen('play'); pause(true); return; }
+  showScreen(st === 'menu' ? 'menu' : st === 'end' ? 'end' : st === 'replay' ? 'replay' : st === 'paused' ? 'pause' : 'play');
 });
 
 const scene = new THREE.Scene();
@@ -189,7 +191,7 @@ const key = new THREE.DirectionalLight(0xffffff, 1.6);
 key.position.set(-5, 14, 7); key.castShadow = true;
 key.shadow.mapSize.set(touch ? 1024 : 2048, touch ? 1024 : 2048);
 Object.assign(key.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 40 });
-key.shadow.bias = -0.0004; key.shadow.normalBias = 0.02; key.shadow.radius = 4;
+key.shadow.bias = -0.0004; key.shadow.normalBias = 0.05; key.shadow.radius = 4;
 scene.add(key, hemi);
 
 const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 200);
@@ -425,7 +427,7 @@ function replayHeader() {
   };
 }
 const rui = createReplayUI({
-  scene, canvas: renderer.domElement,
+  scene, canvas: renderer.domElement, get touch() { return touch; },
   names: () => replayNames,
   camPose: () => ({ angle: Math.atan2(camera.position.x - orbitC.x, camera.position.z - orbitC.z) }),
   onEvent(e) {
@@ -446,7 +448,7 @@ const timed = () => S.mode !== 'training';
 
 function newStats() {
   stats.clear();
-  for (const r of [player, opp]) stats.set(r, { aggression: 0, control: 0, damage: 0, hits: 0 });
+  for (const r of [player, opp]) stats.set(r, { aggression: 0, control: 0, damage: 0, hits: 0, activity: 0 });
 }
 function placeAtSpawns() {
   map.spawns.slice(0, 2).forEach((s, i) => (i ? opp : player).reset(s.x, s.z, s.yaw));
@@ -463,7 +465,7 @@ function startRound() {
   for (const r of [player, opp]) r.attachPhysics(RAPIER, world);
   placeAtSpawns();
   brain && brain.reset();
-  newStats(); recStart();
+  newStats(); recStart(); pinT = 0;
   Object.assign(game, { state: 'countdown', time: 0, left: ROUND, count: 3.2, acc: 0, result: null, events: [], hitstop: 0, ko: 0, slow: 1, lastBeep: 0, kos: 0 });
   input.reset();
   input.split.on = S.mode === 'duo';
@@ -535,8 +537,11 @@ function showEnd() {
   ui.share.hidden = false; ui.shareMsg.textContent = '';
   ui.again.querySelector('span').textContent = S.mode === 'ladder' && !win ? 'Zkusit znovu' : 'Znovu';
   sfx.jingle(duo ? true : !!win);
-  endTimer = setTimeout(() => { if (game.state !== 'end') return; showScreen('end'); (ui.next.hidden ? ui.again : ui.next).focus(); }, kind === 'ko' ? 200 : 900);
+  endTimer = setTimeout(() => { if (game.state !== 'end') return; showScreen('end'); focusEnd(); }, kind === 'ko' ? 200 : 900);
 }
+// the result heading gets focus, not "Znovu": a fire key still held from the fight (Space / Enter)
+// must not restart the match before the result is read
+function focusEnd() { ui.endTitle.focus({ preventScroll: true }); }
 function renderCard(card) {
   ui.card.hidden = !card;
   if (!card) return;
@@ -568,6 +573,7 @@ function physicsStep(c1, c2) {
   if (game.state === 'fight' || game.state === 'ko') recTick();
   if (!live) return;
   if (S.mode !== 'training') judgeTick();
+  pinTick();
   const po = map.outcome(player.body.translation()), oo = map.outcome(opp.body.translation());
   if (S.mode === 'training') return trainingChecks(po, oo);
   const P = nameOf(player), O = nameOf(opp), duo = S.mode === 'duo';
@@ -598,6 +604,7 @@ function judgeTick() {
     const dx = pb.x - pa.x, dz = pb.z - pa.z, d = Math.hypot(dx, dz) || 1;
     const toward = (v.x * dx + v.z * dz) / d;
     if (d < 4.5 && toward > 0.8) st.aggression += DT;
+    st.activity += Math.min(1, Math.hypot(v.x, v.z) / 2) * DT;    // tie-break only: who kept moving
     if (touchingNow && a.vLong > 0.5 && toward > 0.3) st.aggression += DT * 1.5;
     a.frame();
     const facing = (a.fwd.x * dx + a.fwd.z * dz) / d;
@@ -614,6 +621,22 @@ function touching(a, b) {
     world.contactPair(ca, cb, m => { if (m.numContacts() > 0) hit = true; });
   }
   return hit;
+}
+// pin rule (like real referees): both robots stuck together against a wall for 10 s -> separate them
+const PIN_LIMIT = 10;
+let pinT = 0;
+function pinTick() {
+  const a = player.body.translation(), b = opp.body.translation(), va = player.body.linvel(), vb = opp.body.linvel();
+  const B = map.bounds, nearWall = p => p.x < B.x0 + 1.1 || p.x > B.x1 - 1.1 || p.z < B.z0 + 1.1 || p.z > B.z1 - 1.1;
+  const pinned = Math.hypot(a.x - b.x, a.z - b.z) < 1.7 && (nearWall(a) || nearWall(b)) &&
+    Math.hypot(va.x, va.z) < 0.4 && Math.hypot(vb.x, vb.z) < 0.4 && a.y > -0.3 && b.y > -0.3;
+  pinT = pinned ? pinT + DT : Math.max(0, pinT - DT * 2);
+  if (pinT < PIN_LIMIT) return;
+  pinT = 0;
+  placeAtSpawns(); brain && brain.reset(); selfBrain && selfBrain.reset();
+  recEvent({ type: 'sep', p: rp(a) });
+  flash('Rozhodčí: roboti od sebe!', 1.6);
+  sfx.beep(false);
 }
 let respawnT = 0;
 function trainingChecks(po, oo) {
@@ -714,7 +737,7 @@ function closedReplay(reason) {
   rig.set(camModeFor(), true);
   if (src.back === 'pause') { game.state = 'paused'; showScreen('pause'); $('#resume').focus(); }
   else if (src.back === 'auto') showEnd();
-  else { game.state = 'end'; showScreen('end'); ui.again.focus(); }
+  else { game.state = 'end'; showScreen('end'); focusEnd(); }
   hud();
 }
 function endReplay() { rui.close('user'); }
@@ -848,7 +871,9 @@ function statusOf(r, mine) {
     const left = Math.max(0, Math.ceil(FLIP_LIMIT - r.flippedTime));
     const t = r.up && r.up.y > 0.5 && !r.inverted ? `Nepojízdný ${left} s` : `Převrácený ${left} s`;
     if (!mine) return t;
-    return t + (r.def.weapon === 'flipper' ? (touch ? ' · flipper = otočit' : ' · zbraň = otočit') : ' · jeďte a rozhoupejte se');
+    if (r.def.weapon !== 'flipper') return t + ' · jeďte a rozhoupejte se';
+    const grab = r.def.weaponKind === 'grabber';
+    return t + (touch ? (grab ? ' · kleště = otočit' : ' · flipper = otočit') : ' · zbraň = otočit');
   }
   if (r.inverted) return 'Jede vzhůru nohama';
   if (r.def.weapon === 'spinner') return r.weaponOn ? `Zbraň ${Math.round(r.spin * 100)} %` : 'Zbraň vypnutá';
@@ -906,11 +931,15 @@ function sounds() {
 let last = performance.now();
 const cmd1 = { throttle: 0, turn: 0, fire: false }, cmd2 = { throttle: 0, turn: 0, fire: false };
 const _menuSpin = 0.25;
+const MAX_STEPS = Math.ceil(0.1 / DT);   // physics steps per rendered frame (catch-up cap)
 function frame(now) {
   requestAnimationFrame(frame);
   const wall = Math.min(0.25, Math.max(0, (now - last) / 1000)); last = now;
   if (document.hidden || ctxLost || hook.halt) return;
   let dt = Math.min(0.05, wall);
+  // the simulation may catch up to 0.1 s per frame (10 fps); the match clock runs on simulated time,
+  // so a slow device gets a slower but complete match instead of half the action in the same 2:00
+  const simDt = Math.min(0.1, wall);
   adaptQuality(wall);
   const duo = S.mode === 'duo';
   const i1 = input.read(duo ? 1 : 0), i2 = duo ? input.read(2) : null;
@@ -929,12 +958,11 @@ function frame(now) {
     if (st === 'countdown') { game.count -= dt; if (game.count <= 0) { game.state = 'fight'; game.time = 0; } }
     if (game.hitstop > 0) { game.hitstop -= wall; }
     else {
-      game.acc += dt * (st === 'ko' ? 0.6 : 1);
+      game.acc += simDt * (st === 'ko' ? 0.6 : 1);
       let n = 0;
-      while (game.acc >= DT && n < 6) { physicsStep(cmd1, cmd2); game.acc -= DT; n++; }
-      if (n === 6) game.acc = 0;
+      while (game.acc >= DT && n < MAX_STEPS) { physicsStep(cmd1, cmd2); tickClock(DT); game.acc -= DT; n++; }
+      if (n === MAX_STEPS) game.acc = 0;
     }
-    tickClock(wall);
     if (game.state === 'ko') { game.ko -= wall; if (game.ko <= 0) { game.state = 'end-wait'; afterKo(); } }
     if (respawnT > 0) { respawnT -= wall; if (respawnT <= 0) { placeAtSpawns(); brain && brain.reset(); } }
     if (flashT > 0) { flashT -= wall; if (flashT <= 0) ui.msg.hidden = true; }
@@ -1069,7 +1097,7 @@ function applyChoice(colorOnly) {
 function hudNames() {
   const o = oppSetup();
   const duo = S.mode === 'duo';
-  const narrow = innerWidth < 640, nm = id => (narrow && ROBOTS[id].short) || ROBOTS[id].name;
+  const narrow = innerWidth < 760 || innerHeight < 520, nm = id => (narrow && ROBOTS[id].short) || ROBOTS[id].name;
   ui.pName.textContent = nm(S.robot); ui.oName.textContent = o.name === ROBOTS[o.id].name ? nm(o.id) : o.name;
   ui.pName.title = ROBOTS[S.robot].name; ui.oName.title = o.name;
   ui.pTag.textContent = duo ? 'P1' : 'Vy'; ui.oTag.textContent = duo ? 'P2' : o.level ? LEVELS[o.level].name : 'AI';
@@ -1085,7 +1113,8 @@ function syncUrl() {
   } catch (_) {}
 }
 function applyHint() {
-  const w = ROBOTS[S.robot].weapon === 'flipper' ? 'flipper (i k převrácení zpět)' : 'roztočení zbraně (zap/vyp)';
+  const d = ROBOTS[S.robot];
+  const w = d.weaponKind === 'grabber' ? 'kleště – chytit a pustit (i k převrácení zpět)' : d.weapon === 'flipper' ? 'flipper (i k převrácení zpět)' : 'roztočení zbraně (zap/vyp)';
   ui.hint.innerHTML = touch
     ? `Levý joystick jízda · tlačítko vpravo ${w}`
     : `<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> nebo šipky jízda · <kbd>Mezerník</kbd> ${w} · <kbd>C</kbd> kamera · <kbd>M</kbd> zvuk · <kbd>Esc</kbd> pauza · funguje i gamepad`;
@@ -1096,7 +1125,9 @@ function openGarage() {
   showScreen('garage');
   rig.set('orbit'); rig.orbit.radius = 3.2; rig.orbit.height = 1.6;
   renderGarage();
-  $('#garage-done').focus();
+  // focus without scrolling: on phones the "Hotovo" button sits at the bottom of a scrolled panel
+  $('#garage-done').focus({ preventScroll: true });
+  ui.garage.scrollTop = 0; const gb = $('#garage-body'); if (gb) gb.scrollTop = 0;
 }
 function renderGarage(focusId) {
   const root = $('#garage-body');
@@ -1169,7 +1200,7 @@ const camName = () => S.cam === 'split' ? 'Rozdělená obrazovka' : (CAM_MODES.f
 function renderTools() {
   ui.camBtn.querySelector('span').textContent = camName();
   ui.sndBtn.querySelector('span').textContent = sfx.muted ? 'Zvuk vyp.' : 'Zvuk zap.';
-  ui.sndBtn.setAttribute('aria-pressed', String(!sfx.muted));
+  ui.sndBtn.setAttribute('aria-pressed', String(!!sfx.muted));   // the label says the state; pressed = muted
   ui.resetBtn.hidden = ui.dummyBtn.hidden = S.mode !== 'training';
   ui.dummyBtn.setAttribute('aria-pressed', String(!!(brain && brain.level.id !== 'dummy')));
   $('#shake-opt').checked = S.shake; $('#shake-opt').disabled = reduce;

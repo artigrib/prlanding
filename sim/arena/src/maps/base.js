@@ -2,7 +2,7 @@
 // the object described in TEAM.md "## Interfaces" (map registry).
 import * as THREE from 'three';
 import {
-  BASE_Y, WALL_H, GRIP_FRICTION, buildFloor, buildWalls, buildStripes, buildAudience, makeDebris,
+  BASE_Y, WALL_H, CATCH_H, catchWalls, GRIP_FRICTION, buildFloor, buildWalls, buildStripes, buildAudience, makeDebris,
   staticBody, boxCollider, inRect, disposeGroup, mesh, quadGeo
 } from './kit.js';
 
@@ -96,6 +96,7 @@ export function createRuntime(spec, ctx) {
         boxCollider(RAPIER, world, body, r.x0, r.x1, BASE_Y, 0, r.z0, r.z1, GRIP_FRICTION * (s.grip ?? 1), 0.1);
       }
       for (const r of spec.walls) boxCollider(RAPIER, world, body, r.x0, r.x1, BASE_Y, WALL_H, r.z0, r.z1, 0.25, 0.15);
+      for (const r of catchWalls(spec.walls, spec.openTop)) boxCollider(RAPIER, world, body, r.x0, r.x1, WALL_H, CATCH_H, r.z0, r.z1, 0.2, 0.1);
       boxCollider(RAPIER, world, body, -45, 45, BASE_Y - 1, BASE_Y, -45, 45, GRIP_FRICTION, 0.1);
       if (spec.colliders) spec.colliders(RAPIER, world, body);
       for (const h of hazards) h.attach(RAPIER, world, bodies);
