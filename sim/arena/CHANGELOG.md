@@ -1,5 +1,16 @@
 # Aréna 150 g – changelog
 
+## Klidné výchozí nastavení a konec zápasu bez nákupní výzvy (branch `consortium-a`)
+- **Zvuk je napoprvé vypnutý** (jako v simulaci SO-101), volba se pamatuje (`pr-arena:muted`).
+- **Klidný režim** (start a Pauza, `ui/calm.js`): bez otřesů kamery, hitstopu, zpomalení při K.O. a v záznamech,
+  bez publika, prostředí a znělek, efekty na polovinu, méně jisker, bez vibrací. Sám se zapne s `prefers-reduced-motion`,
+  odkaz `?klid=1` ho zapne a uloží (`?klid=0` vypne). Uložená volba má přednost před nastavením systému.
+- **Konec zápasu:** místo oranžového „Postavte si ho“ po každém zápase jen nenápadný odkaz „Dejte mi vědět, až bude sada“
+  na formulář stránky sady, a to až po 3. vlastní výhře v rychlém zápase, nikdy v turnaji (`ui/endcard.js`, stejné
+  pravidlo jako v SO-101; UCPD příloha I bod 28). Výhry se počítají v `pr-arena:wins`.
+- **Sdílení:** neutrální popis zápasu („Zápas v aréně 150 g …: A vs. B. Výhra K.O. za 0:42.“), bez „Prohra“ a bez „Zkusíte to líp?“.
+- Popisky posuvníků zvuku zůstávají při ztlumení čitelné (kontrast), legenda „Zvuk“ má anglický překlad.
+
 ## SVRN s výměnnými moduly (branch `svrn-rig`)
 - **Nový model `models/svrn.glb`** (260 kB, meshopt): parametrický model podvozku Project SVRN
   (Shoverobotics, CC BY 4.0) z `tools/robots-cad/svrn.py`, místo surového exportu STL dílů bez zbraně a bez rigu.

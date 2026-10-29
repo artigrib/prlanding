@@ -19,6 +19,8 @@ import { Recorder, deserialize, serialize as serializeReplay, isLocalReplayPath 
 import { createBinding, remapBinding, sanitizeHazards } from './replay/scene.js';
 import { garageModel } from './ui/garage.js';
 import { track } from './ui/track.js';
+import { calm, initCalm, setCalm } from './ui/calm.js';
+import { kitLink, countsAsWin } from './ui/endcard.js';
 
 const { ROBOTS, Robot } = RB;
 const GRAVITY = RB.GRAVITY || 30;
@@ -43,7 +45,7 @@ const LADDER = [
 const ROUND = 120, FLIP_LIMIT = 10, DT = 1 / 120;
 const MODEL_URL = id => `../../models/${id}.glb`;
 // only these robots have a kit page; the rest exist only in the game
-const KITS = new Set(['svrn', 'vert150']);
+const KITS = new Set(['svrn', 'vert150']);   // keep in step with ui/endcard.js KIT_ROBOTS
 const KIT_URL = id => (KITS.has(id) ? `../../sada/${id}/` : '../../?typ=combat#katalog');
 
 const $ = s => document.querySelector(s);
@@ -52,6 +54,7 @@ const own = (o, k) => k != null && Object.prototype.hasOwnProperty.call(o, k);
 const robotIds = Object.keys(ROBOTS);
 const colorHex = id => (COLORS.find(c => c.id === id) || COLORS[3]).hex;
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+initCalm({ search: location.search, reduce });   // "Klidný režim": ?klid=1 / prefers-reduced-motion / saved choice
 let touch = matchMedia('(pointer: coarse)').matches;
 document.documentElement.classList.toggle('touch', touch);
 const DEBUG = params.has('debug');
@@ -70,7 +73,9 @@ const S = {
   autoReplay: saved.autoReplay !== false,
   mods: saved.mods && typeof saved.mods === 'object' ? saved.mods : {}
 };
+const shakeOn = () => S.shake && !calm.on && !reduce;
 const saveSettings = () => store.set('settings', { robot: S.robot, color: S.color, p2robot: S.p2robot, mode: S.mode, level: S.level, map: S.map, cam: S.cam, shake: S.shake, autoReplay: S.autoReplay, mods: S.mods });
+let wins = Math.max(0, +store.get('wins', 0) || 0);   // own wins against the AI (the kit link waits for 3)
 let ladder = store.get('ladder', { stage: 0, champion: 0 });
 if (!ladder || typeof ladder.stage !== 'number') ladder = { stage: 0, champion: 0 };
 
@@ -104,10 +109,10 @@ function mapEvent(type, d) {
   const p = { x: d.x || 0, y: d.y || 0.3, z: d.z || 0 };
   if (type === 'hit') {
     emitSparks(p, d.energy || 0.6); sfx.hit(d.energy || 0.6, true, p);
-    if (S.shake) rig.shake(0.2);
+    if (shakeOn()) rig.shake(0.2);
     if (d.robot && (d.robot === player || d.robot === opp)) popLabel(p, 'Nástraha!', true);
     if (game.state === 'fight' || game.state === 'ko') recEvent({ type: 'hit', by: -1, who: d.robot === player ? 0 : d.robot === opp ? 1 : -1, p: rp(p), e: +(d.energy || 0.6).toFixed(2) });
-  } else if (type === 'strike') { sfx.wall(d.energy || 0.6, p); if (S.shake) rig.shake(0.08); }
+  } else if (type === 'strike') { sfx.wall(d.energy || 0.6, p); if (shakeOn()) rig.shake(0.08); }
   else if (type === 'warn') sfx.beep(false);
   else if (type === 'pit-open') { sfx.pitOpen(); flash('Jáma se otevřela!', 1.4); }
 }
@@ -122,7 +127,7 @@ const ui = {
   pName: $('#p-name'), oName: $('#o-name'), pTag: $('#p-tag'), oTag: $('#o-tag'), pStat: $('#p-stat'), oStat: $('#o-stat'), pDmg: $('#p-dmg'), oDmg: $('#o-dmg'),
   pSw: $('#p-sw'), oSw: $('#o-sw'), endTitle: $('#end-title'), endWhy: $('#end-why'), endStats: $('#end-stats'), endKicker: $('#end-kicker'),
   card: $('#card'), next: $('#next'), menuBtn: $('#to-menu'), replayBtn: $('#replay-btn'), share: $('#share'), shareMsg: $('#share-msg'),
-  endKit: $('#end-kit'), endKitL: $('#end-kit-l'), ctaL: $('#cta-l'), hint: $('#hint'), wbtn: $('#fire'), wlabel: $('#fire-l'), fail: $('#fail'),
+  kitRow: $('#kit-row'), ctaL: $('#cta-l'), hint: $('#hint'), wbtn: $('#fire'), wlabel: $('#fire-l'), fail: $('#fail'),
   camBtn: $('#cam-btn'), sndBtn: $('#snd-btn'), pauseBtn: $('#pause-btn'), resetBtn: $('#reset-btn'), dummyBtn: $('#dummy-btn'), tools: $('#tools'),
   pops: $('#pops'), mapStatus: $('#map-status'), replayBar: $('#replay-ui'), skip: $('#skip'), fullBtn: $('#full-btn'), lastBtn: $('#last-btn'), live: $('#live'), garageBtn: $('#garage-btn')
 };
@@ -222,7 +227,7 @@ const sparks = new THREE.Points(sparkGeo, new THREE.PointsMaterial({ color: '#FF
 sparks.frustumCulled = false; scene.add(sparks);
 let sparkI = 0;
 function emitSparks(p, e) {
-  const n = Math.round(10 + 26 * e);
+  const n = Math.round((10 + 26 * e) * (calm.on ? 0.4 : 1));
   for (let i = 0; i < n; i++) {
     const k = sparkI++ % SPARKS;
     sparkPos[k * 3] = p.x; sparkPos[k * 3 + 1] = p.y; sparkPos[k * 3 + 2] = p.z;
@@ -270,12 +275,12 @@ const fx = {
     const victim = by === player ? opp : player;
     emitSparks(p, e);
     if (game.state === 'fight' || game.state === 'ko') recEvent({ type: 'hit', by: by === player ? 0 : 1, p: rp(p), e: +e.toFixed(2) });
-    if (S.shake) { rig.shake(0.12 + 0.25 * e); rigA.shake(0.1 + 0.2 * e); rigB.shake(0.1 + 0.2 * e); }
-    if (e > 0.4) game.hitstop = Math.max(game.hitstop, 0.04 + 0.08 * e);
+    if (shakeOn()) { rig.shake(0.12 + 0.25 * e); rigA.shake(0.1 + 0.2 * e); rigB.shake(0.1 + 0.2 * e); }
+    if (e > 0.4 && !calm.on) game.hitstop = Math.max(game.hitstop, 0.04 + 0.08 * e);
     sfx.hit(e, by.def.weapon === 'spinner', p);
     if (e > 0.75) sfx.crowd(0.6);
-    map && map.raw.excite && map.raw.excite(Math.min(1, 0.3 + e));
-    if (navigator.vibrate && touch && (by === player || victim === player)) try { navigator.vibrate(by === player ? 30 : 60); } catch (_) {}
+    if (!calm.on) map && map.raw.excite && map.raw.excite(Math.min(1, 0.3 + e));
+    if (navigator.vibrate && touch && !calm.on && (by === player || victim === player)) try { navigator.vibrate(by === player ? 30 : 60); } catch (_) {}
     const dmg = Math.round(4 + 16 * e);
     if (game.state === 'fight') {
       victim.dmgTaken = Math.min(100, (victim.dmgTaken || 0) + dmg * 0.6);
@@ -286,7 +291,7 @@ const fx = {
   },
   wall(by, p, e) {
     sfx.wall(Math.min(1, e + 0.2), p); emitSparks(p, e * 0.6);
-    if (S.shake && e > 0.4) rig.shake(0.08 + 0.12 * e);
+    if (shakeOn() && e > 0.4) rig.shake(0.08 + 0.12 * e);
   },
   grab(by) { sfx.grab(by); popLabel(by.root.position, 'Chycen!', false); },
   flip(by) {
@@ -440,7 +445,7 @@ const rui = createReplayUI({
     if (e.type === 'hit' && e.p) {
       emitSparks(e.p, e.e || 0.6);
       if (e.by >= 0) sfx.hit(e.e || 0.6, true, e.p); else sfx.wall(e.e || 0.6, e.p);   // by -1 = hazard
-      if (S.shake) rig.shake(0.06 + 0.12 * (e.e || 0.6));
+      if (shakeOn()) rig.shake(0.06 + 0.12 * (e.e || 0.6));
     }
     else if (e.type === 'fire') sfx.flip();
     else if (e.type === 'flip') sfx.wall(0.5, e.p);
@@ -519,6 +524,7 @@ function showEnd() {
   let title = draw ? 'Remíza' : duo ? (win ? 'Vyhrává hráč 1' : 'Vyhrává hráč 2') : win ? 'Výhra' : 'Prohra';
   let kicker = kind === 'ko' ? 'Konec zápasu · K.O.' : 'Konec zápasu · rozhodnutí rozhodčích';
   ui.next.hidden = true;
+  if (countsAsWin({ mode: S.mode, win })) { wins++; store.set('wins', wins); }
   if (S.mode === 'ladder') {
     const stage = ladder.stage;
     kicker = `Turnaj · zápas ${stage + 1} ze ${LADDER.length}`;
@@ -535,11 +541,10 @@ function showEnd() {
   ui.endWhy.textContent = why;
   renderCard(game.result.card);
   ui.endStats.textContent = `Zásahy ${player.hits} : ${opp.hits}  ·  čas ${fmt(game.result.time)}`;
-  ui.endKit.textContent = player.def.name;
-  ui.cta.href = KIT_URL(player.def.id);
-  const soon = !!player.def.preparing, kit = KITS.has(player.def.id);
-  ui.endKitL.textContent = !kit ? 'Zatím jen ve hře' : soon ? 'Stavebnici připravujeme' : 'Stavebnice';
-  ui.ctaL.textContent = !kit ? 'Bojoví roboti v katalogu' : soon ? 'Dejte mi vědět' : 'Postavte si ho';
+  // kit: a quiet text link only after the 3rd own win, never in a tournament (ui/endcard.js)
+  const kl = kitLink({ mode: S.mode, win, wins, robot: player.def.id });
+  ui.kitRow.hidden = !kl;
+  if (kl) { ui.cta.href = kl.href; ui.ctaL.textContent = kl.label; }
   const tr = rec && rec.length > 30;
   ui.replayBtn.hidden = !(tr && (kind === 'ko' || rec.events.some(e => e.type === 'hit')));
   ui.replayBtn.querySelector('span').textContent = kind === 'ko' ? 'Opakovat K.O.' : 'Opakovat zásah';
@@ -548,7 +553,7 @@ function showEnd() {
   // lost a quick match: offer the next easier AI right here
   ui.easier.hidden = !(S.mode === 'quick' && win === false && S.level !== 'easy');
   ui.again.querySelector('span').textContent = S.mode === 'ladder' && !win ? 'Zkusit znovu' : 'Znovu';
-  sfx.jingle(duo ? true : !!win);
+  sfx.jingle(duo ? true : !!win);       // silent in calm mode
   endTimer = setTimeout(() => { if (game.state !== 'end') return; showScreen('end'); focusEnd(); }, kind === 'ko' ? 200 : 900);
 }
 // the result heading gets focus, not "Znovu": a fire key still held from the fight (Space / Enter)
@@ -717,7 +722,7 @@ function openReplay(kind, back) {
     const h = highlightOf(track), t = h ? h.t : track.t1;
     const ko = h && h.type !== 'hit';
     win = [t - (ko ? 3.4 : 2.6), Math.min(track.t1, t + (ko ? 1.2 : 1.6))];
-    title = ko ? 'Záznam K.O.' : 'Opakovaný zásah'; speed = reduce ? 0.5 : 0.5;
+    title = ko ? 'Záznam K.O.' : 'Opakovaný zásah'; speed = calm.on ? 1 : 0.5;
   } else if (kind === 'last') { win = [track.t1 - 20, track.t1]; title = 'Posledních 20 s'; }
   replaySrc = { kind: 'live', back, saved: recBind.capture(), binding: recBind, robots: [player, opp] };
   replayNames = [player, opp].map(r => r.def.short || r.def.name);
@@ -991,7 +996,7 @@ function frame(now) {
     if (st === 'countdown' && !coachOn) { game.count -= simDt; if (game.count <= 0) { game.state = 'fight'; game.time = 0; } }
     if (game.hitstop > 0) { game.hitstop -= wall; }
     else {
-      game.acc += simDt * (st === 'ko' ? 0.6 : 1);
+      game.acc += simDt * (st === 'ko' && !calm.on ? 0.6 : 1);
       let n = 0;
       while (game.acc >= DT && n < MAX_STEPS) { physicsStep(cmd1, cmd2); tickClock(DT); game.acc -= DT; n++; }
       if (n === MAX_STEPS) game.acc = 0;
@@ -1002,7 +1007,7 @@ function frame(now) {
     player.sync(dt); opp.sync(dt);
     drainEvents();
     hud();
-  } else if (player && !reduce && st === 'menu' && ui.garage.hidden) {
+  } else if (player && !reduce && !calm.on && st === 'menu' && ui.garage.hidden) {
     player.root.rotation.y += dt * _menuSpin; opp.root.rotation.y -= dt * _menuSpin;
   } else if (player && st === 'menu' && !ui.garage.hidden && !reduce) {
     player.root.rotation.y += dt * 0.5;
@@ -1211,8 +1216,10 @@ async function shareResult() {
   if (MAP_LIST.length > 1) u.searchParams.set('map', S.map);
   if (isEn) u.searchParams.set('lang', 'en');
   const opName = opp.displayName || opp.def.name;
-  const verdict = r.win === null ? 'Remíza' : r.win ? (r.kind === 'ko' ? `Výhra K.O. za ${fmt(r.time)}` : 'Výhra na body') : 'Prohra';
-  const text = i18nT(`${verdict}: ${player.def.name} vs. ${opName} v aréně 150 g na printedrobotics.cz. Zkusíte to líp?`);
+  // neutral and descriptive: what happened, never a loss or a dare (players are often 10-16)
+  const verdict = S.mode === 'duo' || r.win === false ? '' : r.win === null ? 'Remíza' : r.kind === 'ko' ? `Výhra K.O. za ${fmt(r.time)}` : 'Výhra na body';
+  const tail = verdict ? ' ' + verdict + '.' : '';
+  const text = i18nT(`Zápas v aréně 150 g na printedrobotics.cz: ${player.def.name} vs. ${opName}.${tail}`);
   try {
     if (navigator.share) { await navigator.share({ title: i18nT('Aréna 150 g'), text, url: u.href }); return; }
   } catch (e) { if (e && e.name === 'AbortError') return; }
@@ -1240,8 +1247,16 @@ function renderTools() {
   ui.sndBtn.setAttribute('aria-pressed', String(!!sfx.muted));   // the label says the state; pressed = muted
   ui.resetBtn.hidden = ui.dummyBtn.hidden = S.mode !== 'training';
   ui.dummyBtn.setAttribute('aria-pressed', String(!!(brain && brain.level.id !== 'dummy')));
-  $('#shake-opt').checked = S.shake; $('#shake-opt').disabled = reduce;
+  $('#shake-opt').checked = shakeOn(); $('#shake-opt').disabled = reduce || calm.on;
   $('#replay-opt').checked = S.autoReplay;
+  for (const c of document.querySelectorAll('.calm-opt')) c.checked = calm.on;
+}
+function applyCalm(on, persist = true) {
+  setCalm(on, persist);
+  rig.reduce = rigA.reduce = rigB.reduce = reduce || calm.on;
+  $('#rp-slowopt').checked = !calm.on;   // automatic slow motion in replays
+  sfx.calmChanged();
+  renderTools();
 }
 function toggleMute() { sfx.setMuted(!sfx.muted); renderTools(); announce(sfx.muted ? 'Zvuk vypnut' : 'Zvuk zapnut'); }
 function announce(t) { ui.live.textContent = t; }
@@ -1313,12 +1328,13 @@ try {
   ui.tools.addEventListener('click', () => { if (game.state === 'fight' || game.state === 'countdown') renderer.domElement.focus({ preventScroll: true }); });
   ui.resetBtn.onclick = trainingReset; ui.dummyBtn.onclick = toggleDummy;
   $('#shake-opt').onchange = e => { S.shake = e.target.checked; saveSettings(); };
+  for (const c of document.querySelectorAll('.calm-opt')) c.onchange = e => { applyCalm(e.target.checked); announce(calm.on ? 'Klidný režim zapnut' : 'Klidný režim vypnut'); };
   $('#replay-opt').onchange = e => { S.autoReplay = e.target.checked; saveSettings(); };
   new ResizeObserver(() => { layout(); updateCameras(0, true); }).observe(ui.start);
   new ResizeObserver(() => { layout(); }).observe(ui.garage);
   setMap(S.map);
   buildMenu();
-  makeRobots(); renderMenu(); hudNames(); renderTools(); syncUrl();
+  makeRobots(); renderMenu(); hudNames(); applyCalm(calm.on, false); syncUrl();
   game.state = 'menu';
   rig.set('tv', true);
   showScreen('menu');
@@ -1348,7 +1364,9 @@ const hook = {
   setMode(m) { S.mode = m; applyChoice(); },
   selfPlay(level) { selfBrain = level ? createBrain(level, map) : null; if (selfBrain && player) player.handicap = LEVELS[level].handicap; },
   setup(o) { if (o.robot) S.robot = o.robot; if (o.opp) quickOpp = o.opp; if (o.level) S.level = o.level; if (o.map && o.map !== S.map) setMap(o.map); S.mode = o.mode || 'quick'; applyChoice(); }, setMap(id) { setMap(id); renderMenu(); }, cycleCam, setLevel(l) { S.level = l; renderMenu(); },
-  skipReplay: () => game.state === 'replay' && endReplay(), garage: openGarage, closeGarage, pause, toMenu, frame(n = 1) { for (let i = 0; i < n; i++) { updateCameras(1 / 60); stepPops(1 / 60); } render(); },
+  skipReplay: () => game.state === 'replay' && endReplay(),
+  finish(win, kind = 'decision') { endRound(win, 'test', kind); return this.sim(0.05); },   // tests: end the fight now
+  get calm() { return calm.on; }, setCalm: applyCalm, get wins() { return wins; }, garage: openGarage, closeGarage, pause, toMenu, frame(n = 1) { for (let i = 0; i < n; i++) { updateCameras(1 / 60); stepPops(1 / 60); } render(); },
   state() {
     const s = r => { const t = r.body ? r.body.translation() : r.root.position; const u = r.up; return { x: +t.x.toFixed(2), y: +t.y.toFixed(2), z: +t.z.toFixed(2), up: u ? +u.y.toFixed(2) : 1, spin: +(r.spin || 0).toFixed(2), hits: r.hits, flipped: +(r.flippedTime || 0).toFixed(1), dmg: Math.round(dmgOf(r)) }; };
     return { state: game.state, left: +game.left.toFixed(1), result: game.result && { win: game.result.win, why: game.result.why, kind: game.result.kind }, player: s(player), ai: s(opp), cam: rig.mode, mode: S.mode, map: S.map };

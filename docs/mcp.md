@@ -31,7 +31,10 @@ While an AI is connected, a bar over the 3D view shows who drives the arm, with 
 The panel logs every tool call in plain words (for example *Přesun chapadla na x 250, y −110, z 90 mm ✓ 0,8 s*).
 
 The panel also offers **Co říct AI** (What to tell the AI): a dozen ready-made prompts in four groups
-(Začátek, Mise pro AI, Zábava, Učení) with copy buttons, plus a prompt for the current mission. The mission
+(Začátek, Mise s AI, Zábava, Učení) with copy buttons, plus a prompt for the current mission. About half
+of them ask the AI to explain, hint or do one step and then let the person try, not to do the task for them.
+Above the code the panel says that Claude is for adults (18+) and that children should ask a parent or
+teacher to connect the AI and stay with them. The mission
 card has **Zeptej se AI na tuto misi** (Ask the AI about this mission), which opens the panel at that prompt.
 
 If the relay cannot be reached, the panel says so: it retries twice with a growing pause (each attempt

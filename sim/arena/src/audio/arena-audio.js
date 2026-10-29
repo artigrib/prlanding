@@ -16,6 +16,7 @@ export class ArenaAudio {
     this.bank = {}; this.tasks = null; this.speed = 1;
     this.robots = new Map();        // id -> voice state
     this.scrape = null; this.amb = null; this._mid = { x: 0, y: 0, z: 0 }; this.ambOn = false; this.ambLevel = 0;
+    this.calmRef = opts.calm || null;   // calm mode ({ on }): no crowd / ambience / jingles, effects at half level
     this.eng.onBuild = () => this.startBank(!!opts.context);
     if (opts.context) this.startBank(true);
   }
@@ -40,13 +41,14 @@ export class ArenaAudio {
   pick(name) { const v = this.bank[name]; return v ? v[(Math.random() * v.length) | 0] : null; }
   tier(e) { return TIERS[e < 0.33 ? 0 : e < 0.7 ? 1 : 2]; }
   at(t) { return t == null ? this.eng.now() : t; }
+  get calm() { return !!(this.calmRef && this.calmRef.on); }
 
   // one-shot with variation, positional gain/pan, cooldown
   shot(name, { key = name, cd = 0.08, e = 1, gain = 1, p = null, bus = 'sfx', prio = 1, rate = 1, vary = 0.05, t } = {}) {
     if (!this.eng.running) return;
     t = this.at(t);
     if (!this.eng.gate(key, cd, e, t)) return;
-    const g = gain * this.L.gain(p) * Math.pow(10, rnd(-1.2, 1.2) / 20);
+    const g = gain * this.L.gain(p) * Math.pow(10, rnd(-1.2, 1.2) / 20) * (this.calm && bus !== 'ui' ? 0.5 : 1);
     const sp = bus === 'ui' ? 1 : Math.max(0.7, Math.min(1.2, this.speed));      // replay slow-mo: pitch down, but not to mud
     this.eng.play(this.pick(name), { bus, gain: g, pan: this.L.pan(p), rate: rate * sp * (1 + rnd(-vary, vary)), when: t, prio });
   }
@@ -56,7 +58,7 @@ export class ArenaAudio {
     e = clamp01(e); t = this.at(t);
     const name = (spinner ? 'spin_' : 'bump_') + this.tier(e);
     this.shot(name, { key: 'hit', cd: 0.07, e, gain: 0.32 + 0.6 * e, p, prio: 3, vary: 0.06, t });
-    if (e > 0.3) this.eng.duck(0.5 * e, t);
+    if (e > 0.3 && !this.calm) this.eng.duck(0.5 * e, t);
   }
   wall(e = 0.4, p = null, t) {
     e = clamp01(e);
@@ -75,10 +77,10 @@ export class ArenaAudio {
   }
   buzzer(t) { this.shot('bell', { cd: 1, gain: 0.36, bus: 'ui', prio: 4, vary: 0, t }); }
   crowd(e = 1, t) {
-    if (!this.ambOn) return;
+    if (!this.ambOn || this.calm) return;
     this.shot('crowd', { key: 'crowd', cd: 2.5, e, gain: 0.07 + 0.12 * clamp01(e), bus: 'amb', prio: 1, vary: 0.04, t });
   }
-  jingle(win = true, t) { this.shot(win ? 'win' : 'lose', { key: 'jingle', cd: 1, gain: 0.32, bus: 'ui', prio: 4, vary: 0, t }); }
+  jingle(win = true, t) { if (!this.calm) this.shot(win ? 'win' : 'lose', { key: 'jingle', cd: 1, gain: 0.32, bus: 'ui', prio: 4, vary: 0, t }); }
   click(t) { this.shot('click', { cd: 0.04, gain: 0.5, bus: 'ui', prio: 0, vary: 0.04, t }); }
 
   // ---- continuous ----
@@ -87,7 +89,7 @@ export class ArenaAudio {
     this.ambOn = on;
     if (!this.eng.running) return;
     if (!this.amb && this.bank.amb) this.amb = this.eng.loop(this.bank.amb[0], 'amb', { pan: false });
-    if (this.amb) this.eng.steer(this.amb, on ? 0.14 : 0, 1, 0, this.at(t), on ? 0.6 : 0.25);
+    if (this.amb) this.eng.steer(this.amb, on && !this.calm ? 0.14 : 0, 1, 0, this.at(t), on ? 0.6 : 0.25);
   }
   voice(id, spinner) {
     let v = this.robots.get(id);

@@ -98,6 +98,9 @@ export function mountAgentPanel(root, { api, ux, button, onLink }) {
   const dot = el('i', 'ai-dot'); dot.setAttribute('aria-hidden', 'true');
   const statusText = el('span', null, '');
   status.append(dot, statusText);
+  // Claude consumer accounts are 18+: a child connects the AI only with a parent or teacher (shown until a session exists)
+  const adult = el('p', 'ink2 ai-adult', t('Claude je pro dospělé (18+). Děti: požádejte rodiče nebo učitele, ať AI připojí a je u toho.'));
+  adult.setAttribute('data-testid', 'agent-adult');
   const btnConnect = el('button', 'btn btn-act ai-connect', t('Získat kód pro připojení')); btnConnect.type = 'button';
   const btnRetryNow = el('button', 'ux-link', t('Zkusit hned')); btnRetryNow.type = 'button'; btnRetryNow.hidden = true;
   const errBox = el('div', 'ai-err'); errBox.hidden = true; errBox.setAttribute('data-testid', 'agent-error');
@@ -191,7 +194,7 @@ export function mountAgentPanel(root, { api, ux, button, onLink }) {
   const foot = el('p', 'mono-s muted ai-foot');
   const docs = el('a', null, t('Jak to funguje')); docs.href = DOCS; docs.target = '_blank'; docs.rel = 'noopener';
   foot.append(document.createTextNode(t('Jen simulace: AI nemůže ovládat skutečnou ruku. Server zprávy jen přeposílá a nic neukládá.') + ' '), docs);
-  root.append(status, btnRetryNow, btnConnect, errBox, codeBox, setup, ctl, prompts, logBox, foot);
+  root.append(status, adult, btnRetryNow, btnConnect, errBox, codeBox, setup, ctl, prompts, logBox, foot);
 
   // ---------- bar over the 3D view (always visible while an AI link exists) ----------
   const stage = document.querySelector('.stage');
@@ -284,6 +287,7 @@ export function mountAgentPanel(root, { api, ux, button, onLink }) {
     const left = Math.max(0, Math.ceil((retryAt - Date.now()) / 1000));
     statusText.textContent = t(STATUS[state], { name: clientName || 'AI', s: left, n: attempts + 1, max: MAX_TRIES }) + (est ? ' · ' + t('STOP je zapnutý') : '');
     btnConnect.hidden = state !== 'idle';
+    adult.hidden = paired;
     errBox.hidden = state !== 'error';
     btnRetryNow.hidden = state !== 'retry';
     codeBox.hidden = setup.hidden = !(state === 'waiting' || state === 'pairing');

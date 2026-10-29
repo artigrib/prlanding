@@ -5,7 +5,7 @@ const CSS = `.snd-set{border:0;margin:0;padding:0;display:grid;gap:8px}
 .snd-row{display:grid;grid-template-columns:7.5em 1fr 3em;align-items:center;gap:10px;font-size:14px}
 .snd-row output{font-family:var(--mono,monospace);font-size:12px;color:var(--ink-2,#3A3A36);text-align:right}
 .snd-row input{width:100%;accent-color:var(--accent,#E8461E);min-height:28px;margin:0}
-.snd-set[data-muted=true] .snd-row{opacity:.45}`;
+.snd-set[data-muted=true] .snd-row input{opacity:.45}`;   // labels stay readable (contrast) while muted
 
 const ROWS = [['master', 'Hlasitost'], ['sfx', 'Efekty'], ['amb', 'Prostředí']];
 
