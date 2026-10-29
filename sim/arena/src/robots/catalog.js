@@ -56,7 +56,7 @@ const ARMOUR = {
 export const BASES = {
   svrn: {
     id: 'svrn', name: 'Project SVRN', short: 'SVRN', weapon: 'flipper', weaponKind: 'flipper',
-    blurb: 'Pohon 4×4, klín a flipper', model: 'svrn',
+    blurb: 'Pohon 4×4, klín a flipper', model: 'svrn', glbNative: true,
     chassis: { half: [0.54, 0.15, 0.45], offset: [0, 0, 0], friction: 0.35 },
     mounts: [[0.4, 0.3, 1], [-0.4, 0.3, 1], [0.4, -0.3, 1], [-0.4, -0.3, 1]],
     wheels: [[0.48, 0.28], [-0.48, 0.28], [0.48, -0.28], [-0.48, -0.28]], wheelR: 0.2,
@@ -68,8 +68,18 @@ export const BASES = {
       hull: (() => { const p = []; for (const s of [-1, 1]) p.push(s * 0.5, -0.01, 0, s * 0.5, -0.27, 0, s * 0.5, -0.375, 0.44, s * 0.5, -0.335, 0.44); return p; })(),
       friction: 0.04, range: 1.25, torque: 120, speed: 22, hold: 12, kick: 0.16, cooldown: 0.9, kickEnergy: 44
     },
-    glbYaw: 0, glbWheels: /^(SV06|SV07)_\d+$/, glbFit: { size: [1.14, 1.351], center: [0, 0.1955] },
-    slots: ['wheels', 'gearing', 'flipper', 'armour', 'gyro']
+    // swappable front modules (Project SVRN is a modular pusher base): flipper, wedge or grabber on the same hinge
+    modules: {
+      klin: {
+        weaponKind: 'wedge',
+        // lower, longer and rigid: same hinge, held at rest (tools/robots-cad/svrn.py KLIN_ROOT / KLIN_TIP)
+        arm: { range: 0.02, torque: 30, hold: 30, kick: 0, kickEnergy: 0, cooldown: 99, friction: 0.25,
+          hull: (() => { const p = []; for (const s of [-1, 1]) p.push(s * 0.52, -0.09, -0.02, s * 0.52, -0.24, -0.02, s * 0.52, -0.375, 0.54, s * 0.52, -0.355, 0.54); return p; })() }
+      },
+      chapadlo: { weaponKind: 'grabber', arm: { friction: 0.6, range: 0.75, torque: 40, speed: 5, hold: 14, kick: 0, cooldown: 0.5, grab: { zone: [0.45, 1.15, 0.5], hold: 5, lift: 0.45, cooldown: 1.6 } } }
+    },
+    glbYaw: 0,
+    slots: ['modul', 'wheels', 'gearing', 'flipper', 'armour', 'gyro']
   },
   vert150: {
     id: 'vert150', name: 'Vertikální spinner 150 g', short: 'VERT', weapon: 'spinner', weaponKind: 'vertical',
@@ -120,9 +130,14 @@ export const BASES = {
 // ---------------------------------------------------------------- modifications
 // slot → options. `g` = grams added (negative saves weight), `fx` = what it changes in buildDef.
 // stats (0..1 deltas) are only for the garage bars; physics comes from fx.
-const SLOT_NAMES = { wedge: 'Klín', wheels: 'Kola', gearing: 'Převody', flipper: 'Flipper', blade: 'Zbraň', clamp: 'Kleště', armour: 'Pancíř', gyro: 'Elektronika' };
+const SLOT_NAMES = { modul: 'Modul', wedge: 'Klín', wheels: 'Kola', gearing: 'Převody', flipper: 'Flipper', blade: 'Zbraň', clamp: 'Kleště', armour: 'Pancíř', gyro: 'Elektronika' };
 export const SLOTS = SLOT_NAMES;
 const OPTIONS = {
+  modul: [
+    { id: 'flipper', name: 'Flipper', desc: 'Kloubová ocelová deska na servu – převrací soupeře', g: 0, default: true },
+    { id: 'klin', name: 'Klín', desc: 'Pevný široký ocelový klín bez serva, −9 g', g: -9 },
+    { id: 'chapadlo', name: 'Chapadlo', desc: 'Vidlice a kleště: chytí, zvedne a odveze, +3 g', g: 3 }
+  ],
   wheels: [
     { id: 'tpu', name: 'TPU pneu', desc: 'Tištěné TPU pneumatiky, dobrý kompromis', g: 0, default: true },
     { id: 'silikon', name: 'Silikonové', desc: 'Lepí se k podlaze, víc trakce na tlačení, +1 g/kolo', g: 1, perWheel: true },
@@ -247,6 +262,8 @@ export function buildDef(baseId, mods) {
   if (base.arm) {
     const a = { ...base.arm, grab: base.arm.grab ? { ...base.arm.grab } : null };
     a.massG = (base.parts.flipperPlate || base.parts.forks || 10);
+    const mod = base.modules && pick.modul && base.modules[pick.modul];
+    if (mod) Object.assign(a, mod.arm, { grab: mod.arm.grab ? { ...mod.arm.grab } : a.grab });
     if (pick.flipper === 'silny') { a.torque *= 1.35; a.kickEnergy *= 1.4; a.cooldown *= 1.45; }
     if (pick.flipper === 'rychly') { a.torque *= 0.85; a.kickEnergy *= 0.8; a.cooldown *= 0.62; }
     if (pick.clamp === 'silny' && a.grab) { a.torque *= 1.3; a.grab.lift *= 1.3; }
@@ -273,6 +290,7 @@ export function buildDef(baseId, mods) {
 
   return deepFreeze({
     ...base,
+    weaponKind: base.modules && pick.modul && base.modules[pick.modul] ? base.modules[pick.modul].weaponKind : base.weaponKind,
     mods: pick, modList, parts, grams, massG: grams, mass, valid: problems.length === 0, problems,
     wedge: base.slots.includes('wedge') ? pick.wedge : null,
     drive, gyro, spinner, arm, hp, armourAbsorb: armour.absorb, stats,

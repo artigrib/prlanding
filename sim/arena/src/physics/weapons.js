@@ -236,7 +236,8 @@ export class Arm {
     this.measure();
     this.cooldown = Math.max(0, this.cooldown - dt);
     const grab = s.grab;
-    if (fire && this.cooldown <= 0) {
+    // a fixed wedge module (no actuator energy, no grab) has nothing to fire
+    if (fire && this.cooldown <= 0 && (grab || s.kickEnergy > 0)) {
       if (grab && r.up.y < 0.35 && !this.holding) {
         // upside down: the forks slam against the floor to roll back over
         this.kickT = 0.2; this.kickStart = true; this.cooldown = 0.9; fx.flip(r); this.kickContact = true; this.lifted = false;

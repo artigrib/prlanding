@@ -18,15 +18,18 @@ This folder (build/) bundles third-party code, and the page displays third-party
    Licence: MIT (full text in section B below)
    Unmodified; bundled and minified with esbuild.
 
-3) Project SVRN 3D model (../../models/svrn.glb, shown in the arena)
-   Author:  Shoverobotics (Jordan Gell)
+3) Project SVRN 3D model (../../models/svrn.glb, shown in the arena and on the kit page)
+   Design:  Project SVRN by Shoverobotics (Jordan Gell)
    Source:  https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai
    Licence: Creative Commons Attribution 4.0 (CC BY 4.0)
             https://creativecommons.org/licenses/by/4.0/
-   Changes made by printedrobotics.cz: parts converted from the author's STEP files,
-   meshes simplified, materials grouped for colour tinting, exported as glTF;
-   in the arena the model is scaled, its wheels are animated and a schematic
-   flipper plate is drawn at its front while the flipper fires.
+   Changes made by printedrobotics.cz: the model is a parametric re-model of the
+   SVRN pusher base (tub, four corner wheels, wedge pods, lid) for the arena, built
+   with build123d (../../tools/robots-cad/svrn.py) and rigged with named parts
+   (frame, wheel_1..4, flipper hinge). The front modules – flipper plate with servo
+   horn and link, fixed wedge, grabber forks with a claw – are our own models after
+   the published modular concept (the original module files were not used); they
+   are shared under the same licence, CC BY 4.0, printedrobotics.cz.
 
 4) Vertical spinner 150 g 3D model (../../models/vert150.glb, shown in the arena)
    Author:  TheBlackfish, remix of "150g vert" by Muffin578

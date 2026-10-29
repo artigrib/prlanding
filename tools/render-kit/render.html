@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="cs"><head><meta charset="utf-8"><title>kit render</title>
+<style>html,body{margin:0;background:#EEEEEA}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"../../sim/arena/node_modules/three/build/three.module.js","three/addons/":"../../sim/arena/node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+// Studio render of a kit model for the catalogue (driven by tools/render-kit/render.mjs).
+// window.renderKit({ model, show, color, w, h, az, el, dist }) -> resolves when the frame is drawn.
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.VSMShadowMap;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#EEEEEA');
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.75;
+const key = new THREE.DirectionalLight(0xffffff, 1.6);
+key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 14; key.shadow.blurSamples = 24; key.shadow.bias = -0.0004;
+scene.add(key, key.target, new THREE.HemisphereLight(0xffffff, 0xdcdcd6, 0.55));
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ opacity: 0.16 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+const camera = new THREE.PerspectiveCamera(24, 4 / 3, 0.05, 100);
+const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
+let root = null, url = null;
+
+window.renderKit = async o => {
+  if (url !== o.model) {
+    if (root) scene.remove(root);
+    root = (await loader.loadAsync(o.model)).scene; url = o.model;
+    scene.add(root);
+  }
+  root.traverse(n => {
+    if (/^opt_/.test(n.name || '')) n.visible = (o.show || []).includes(n.name);
+    if (n.isMesh) {
+      n.castShadow = n.receiveShadow = true;
+      for (const m of [].concat(n.material)) {
+        if (m.name === 'print') { m.color.set(o.color); m.roughness = 0.6; }
+        else if (m.metalness > 0.5 && !m.userData.toned) { m.color.multiplyScalar(0.5); m.roughness = 0.55; m.userData.toned = true; }   // steel, not white plastic
+      }
+    }
+  });
+  // frame the visible model: floor at y = 0, camera on an azimuth / elevation around its centre
+  root.position.set(0, 0, 0); root.updateMatrixWorld(true);
+  const box = new THREE.Box3();
+  root.traverseVisible(n => { if (n.isMesh) box.expandByObject(n); });
+  root.position.y = -box.min.y; root.updateMatrixWorld(true);
+  box.translate(new THREE.Vector3(0, -box.min.y, 0));
+  const c = box.getCenter(new THREE.Vector3()), r = box.getSize(new THREE.Vector3()).length() / 2;
+  c.y = (box.max.y - box.min.y) * 0.35;
+  const az = THREE.MathUtils.degToRad(o.az ?? 35), el = THREE.MathUtils.degToRad(o.el ?? 26), d = r * (o.dist ?? 4.2);
+  camera.position.set(c.x + d * Math.cos(el) * Math.sin(az), c.y + d * Math.sin(el), c.z + d * Math.cos(el) * Math.cos(az));
+  camera.lookAt(c);
+  key.position.set(c.x - r * 3, c.y + r * 7, c.z + r * 4); key.target.position.copy(c);
+  const s = r * 2.2; Object.assign(key.shadow.camera, { left: -s, right: s, top: s, bottom: -s, near: 0.1, far: r * 20 }); key.shadow.camera.updateProjectionMatrix();
+  renderer.setPixelRatio(1); renderer.setSize(o.w, o.h, false);
+  camera.aspect = o.w / o.h; camera.updateProjectionMatrix();
+  renderer.render(scene, camera);
+  if (!o.jpeg) return true;
+  // supersampled frame -> downscaled JPEG (the catalogue size)
+  const out = document.createElement('canvas'); out.width = o.jpeg.w; out.height = o.jpeg.h;
+  const g = out.getContext('2d'); g.imageSmoothingQuality = 'high';
+  g.drawImage(renderer.domElement, 0, 0, o.jpeg.w, o.jpeg.h);
+  return out.toDataURL('image/jpeg', o.jpeg.q || 0.86);
+};
+window.ready = true;
+</script>
+</body></html>

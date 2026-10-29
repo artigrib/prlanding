@@ -115,7 +115,7 @@ window.PR_EN = {
       card: [['Axes', '2 (pan + tilt)'], ['Controller', 'M5Stack (ESP32)']],
       bom: [['M5Stack Core module (Basic/Gray/Go/Fire)', '1×'], ['SG90 micro servo (or serial RS30X / SCS0009)', '2×'], ['Stack-chan servo board', '1×'], ['3.7 V Li-Po battery with PH 2-pin connector', '1×'], ['M2 × 4 mm screws', '4×'], ['M2 × 8 mm screws', '2×'], ['M3 × 15 mm screws (optional)', '2×']],
       specs: [['Degrees of freedom', '2 (head pan + tilt)'], ['Actuators', '2× SG90, RS30X or SCS0009'], ['Controller', 'M5Stack Core / Core2 / CoreS3'], ['Printed parts', 'shell, feet, servo bracket, battery back cover'], ['Power', '3.7 V battery or external 5 V']] },
-    svrn: { credit: 'Render from the Shoverobotics model (CC BY 4.0)', type: '150 g combat robot', alt: 'Project SVRN small combat robot with 4×4 drive and a wedge',
+    svrn: { credit: 'Render after Project SVRN by Shoverobotics (CC BY 4.0), modules by printedrobotics.cz', type: '150 g combat robot', alt: 'Project SVRN small combat robot with 4×4 drive and a wedge',
       short: 'Modular combat robot up to 150 g: a 4×4 pusher, plus a flipper or grabber module.',
       lead: 'Modular platform for 150 g antweight competitions, designed for newcomers. The base is a four-wheel-drive pusher that takes a wedge, flipper or grabber module. It runs on a Malenki Nano – receiver and speed controllers on one board – and is driven with a standard FlySky transmitter. No spinning weapon, so it suits first fights in the Czech combat robot league.',
       software: 'no programming (RC transmitter)',

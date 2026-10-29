@@ -1,5 +1,19 @@
 # Aréna 150 g – changelog
 
+## SVRN s výměnnými moduly (branch `svrn-rig`)
+- **Nový model `models/svrn.glb`** (260 kB, meshopt): parametrický model podvozku Project SVRN
+  (Shoverobotics, CC BY 4.0) z `tools/robots-cad/svrn.py`, místo surového exportu STL dílů bez zbraně a bez rigu.
+  Pojmenované uzly `frame`, `wheel_1..4` (osy kol), `flipper` (kloub), přesně v souřadnicích simulace (`glbNative`),
+  takže kola a zbraň se animují bez regexů a dopasování měřítka.
+- **Moduly vpředu** (naše modely podle modulárního konceptu SVRN, CC BY 4.0): flipper (ocelová deska, závěsy,
+  páka serva), klín (pevný, nižší a delší) a chapadlo (vidlice + kleště). Nový slot garáže **Modul**:
+  Flipper / Klín (−9 g, bez serva, nestřílí) / Chapadlo (+3 g, chytí a odveze jako Klepeto). Fyzika modulu se mění s ním.
+- Flipper je vidět i v klidu a při výstřelu se zvedá (dříve se schematická deska ukazovala jen při výstřelu).
+- 3D náhled na stránce sady ukazuje jen modul flipper (ostatní `opt_*` uzly skrývá).
+- Celý robot: víko (tmavé), tmavé náboje kol, ocelová deska a spojovací materiál zvlášť od tištěného těla (barva tisku jen na tělo).
+- **Nové rendery** `img/svrn_{white,grey,black,orange,blue}.jpg` (hero sady CZ/EN, karta v katalogu, home) z nového modelu
+  přes `tools/render-kit/` (Playwright + three.js, 1200×900) a nový snímek `assets/media/arena.jpg` (SVRN vyhazuje Klepeto).
+
 ## Opravy po QA a první zápas (branch `arena-fixes`)
 - **Přes stěnu už nelétá:** nad 12cm stěnou je neviditelný polykarbonátový „strop“ do 36 cm (`CATCH_H`, `maps/kit.js`),
   výjimkou jsou výjezdy a rampy v Jámě (`spec.openTop`). AI matice Mistr i Střední: Kladivo + Praha 0 / 48 zápasů

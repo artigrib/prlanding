@@ -19,7 +19,7 @@ const Y = new THREE.Vector3(0, 1, 0);
 const _q = new THREE.Quaternion(), _v = new THREE.Vector3(), _w = new THREE.Vector3();
 let groupSeq = 0;
 
-const WEAPON_LABEL = { flipper: 'Flipper', vertical: 'Zbraň', horizontal: 'Zbraň', grabber: 'Kleště' };
+const WEAPON_LABEL = { flipper: 'Flipper', vertical: 'Zbraň', horizontal: 'Zbraň', grabber: 'Kleště', wedge: 'Klín' };
 
 export class Robot {
   // opts.mods: [ 'slot:option', ... ] or { slot: option } — rebuilds the def with those modifications
@@ -269,6 +269,7 @@ export class Robot {
       if (a.lifted) return 'Vidle nahoře';
       return a.cooldown > 0 ? 'Kleště nabíjí' : 'Kleště připraveny';
     }
+    if (k === 'wedge') return 'Klín – tlačte';
     return this.cooldown > 0 ? 'Flipper nabíjí' : 'Flipper připraven';
   }
   // weapon effective zone in robot-local coords (for AI / aim assist)
@@ -291,7 +292,7 @@ export class Robot {
   }
   // what a sensible pilot would press now (AI hook; main/ai decide whether to use it)
   suggestFire(target) {
-    if (!this.weapon) return false;
+    if (!this.weapon || this.def.weaponKind === 'wedge') return false;   // fixed wedge: nothing to fire
     if (this.spinner) return this.spinner.stalled > 0 || !this.spinner.on;
     if (this.up && this.up.y < 0.35 && this.flippedTime > 0.3) return this.cooldown <= 0;
     if (this.arm.holding) return false;                     // keep holding until the clock runs out

@@ -167,7 +167,7 @@ window.PR_ROBOTS = [
     bom: [['Modul M5Stack Core (Basic/Gray/Go/Fire)', '1×'], ['Mikroservo SG90 (nebo sériové RS30X / SCS0009)', '2×'], ['Deska Stack-chan pro serva', '1×'], ['Akumulátor Li-Pol 3,7 V s konektorem PH 2pin', '1×'], ['Šrouby M2 × 4 mm', '4×'], ['Šrouby M2 × 8 mm', '2×'], ['Šrouby M3 × 15 mm (volitelně)', '2×']],
     specs: [['Stupně volnosti', '2 (otáčení + náklon hlavy)'], ['Pohon', '2× SG90, RS30X nebo SCS0009'], ['Řízení', 'M5Stack Core / Core2 / CoreS3'], ['Tištěné díly', 'skořepina, nožky, držák serv, zadní kryt baterie'], ['Napájení', 'akumulátor 3,7 V nebo externích 5 V']],
     related: ['otto', 'so101', 'hand'] },
-  { id: 'svrn', glb: true, render: true, sim: 'arena', credit: 'Vizualizace z modelu Shoverobotics (CC BY 4.0)', name: 'Project SVRN', type: 'Bojový robot 150 g', cat: 'combat', level: 'Začátečník', hw: 'CC BY 4.0', sw: '—',
+  { id: 'svrn', glb: true, glbShow: ['opt_modul_flipper'], render: true, sim: 'arena', credit: 'Vizualizace podle Project SVRN – Shoverobotics (CC BY 4.0), moduly printedrobotics.cz', name: 'Project SVRN', type: 'Bojový robot 150 g', cat: 'combat', level: 'Začátečník', hw: 'CC BY 4.0', sw: '—',
     author: 'Shoverobotics (Jordan Gell)', alt: 'Malý bojový robot Project SVRN s pohonem 4×4 a klínem',
     short: 'Modulární bojový robot do 150 g: tlačný robot (pusher) s pohonem 4×4, k tomu flipper nebo chapadlo.',
     lead: 'Modulární platforma pro soutěže antweight do 150 g, navržená pro nováčky. Základ je tlačný robot s pohonem všech čtyř kol, který lze osadit klínem, flipperem nebo chapadlem. Řídí ho Malenki Nano – přijímač a regulátory na jedné destičce – a ovládá se běžným vysílačem FlySky. Bez rotující zbraně, takže se hodí na první zápasy v České lize bojových robotů.',

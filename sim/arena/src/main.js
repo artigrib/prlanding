@@ -897,7 +897,7 @@ function statusOf(r, mine) {
     const left = Math.max(0, Math.ceil(FLIP_LIMIT - r.flippedTime));
     const t = r.up && r.up.y > 0.5 && !r.inverted ? `Nepojízdný ${left} s` : `Převrácený ${left} s`;
     if (!mine) return t;
-    if (r.def.weapon !== 'flipper') return t + ' · jeďte a rozhoupejte se';
+    if (r.def.weapon !== 'flipper' || r.def.weaponKind === 'wedge') return t + ' · jeďte a rozhoupejte se';
     const grab = r.def.weaponKind === 'grabber';
     return t + (touch ? (grab ? ' · kleště = otočit' : ' · flipper = otočit') : ' · zbraň = otočit');
   }
@@ -1143,8 +1143,8 @@ function syncUrl() {
   } catch (_) {}
 }
 function applyHint() {
-  const d = ROBOTS[S.robot];
-  const w = d.weaponKind === 'grabber' ? 'kleště – chytit a pustit (i k převrácení zpět)' : d.weapon === 'flipper' ? 'flipper (i k převrácení zpět)' : 'roztočení zbraně (zap/vyp)';
+  const d = RB.buildDef(S.robot, modsFor(S.robot));
+  const w = d.weaponKind === 'wedge' ? 'nic (klín bez serva – tlačte)' : d.weaponKind === 'grabber' ? 'kleště – chytit a pustit (i k převrácení zpět)' : d.weapon === 'flipper' ? 'flipper (i k převrácení zpět)' : 'roztočení zbraně (zap/vyp)';
   ui.hint.innerHTML = touch
     ? `Levý joystick jízda · tlačítko vpravo ${w}`
     : `<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> nebo šipky jízda · <kbd>Mezerník</kbd> ${w} · <kbd>C</kbd> kamera · <kbd>M</kbd> zvuk · <kbd>Esc</kbd> pauza · funguje i gamepad`;
