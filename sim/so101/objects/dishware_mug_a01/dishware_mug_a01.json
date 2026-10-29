@@ -1,0 +1,65 @@
+{
+ "id": "dishware_mug_a01",
+ "name_cs": "Hrnek",
+ "name_en": "Dishware mug",
+ "category": "bowl",
+ "mass_kg": 0.1,
+ "size_m": [
+  0.1144,
+  0.0902,
+  0.08
+ ],
+ "friction": 0.3,
+ "license": "CC-BY-4.0",
+ "license_url": "https://creativecommons.org/licenses/by/4.0/",
+ "attribution": "\"Dishware mug\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+ "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/dishware_mug_a01",
+ "files": {
+  "glb": "dishware_mug_a01/dishware_mug_a01.glb",
+  "mjcf": "dishware_mug_a01/dishware_mug_a01.xml"
+ },
+ "body": "obj_dishware_mug_a01",
+ "graspable": false,
+ "source": {
+  "repo": "nvidia/simready-assets",
+  "revision": "a666cb4381ba513b174fb120ed523c1566ba832c",
+  "path": "dishware_mug_a01",
+  "url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/dishware_mug_a01"
+ },
+ "conversion": {
+  "scale": 1.0,
+  "mass_source": "usd:mass",
+  "friction_source": "usd",
+  "hull_source": "usd",
+  "hulls": 1,
+  "hull_vertices": [
+   48
+  ],
+  "hull_volume_cm3": 466.82,
+  "com_m": [
+   -0.00712,
+   -2e-05,
+   0.04197
+  ],
+  "usd_meters_per_unit": 1.0,
+  "usd_up_axis": "Z",
+  "usd_physics_variant": "MuJoCo:Enabled",
+  "mass_note": null,
+  "glb": {
+   "bytes": 249308,
+   "triangles": 6000,
+   "texture": 384,
+   "attempts": 4
+  },
+  "usd_layers": [
+   "simready_usd/payloads/Physics/physics.usda",
+   "simready_usd/payloads/base.usda",
+   "simready_usd/payloads/geometries.usd",
+   "simready_usd/payloads/instances.usda",
+   "simready_usd/payloads/instances_mujoco.usda",
+   "simready_usd/payloads/materials.usda",
+   "simready_usd/runnables/physics/mujoco.usd",
+   "simready_usd/sm_dishware_mug_a01_01.usda"
+  ]
+ }
+}

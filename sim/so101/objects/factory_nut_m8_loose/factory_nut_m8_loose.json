@@ -1,0 +1,65 @@
+{
+ "id": "factory_nut_m8_loose",
+ "name_cs": "Matice M8",
+ "name_en": "Factory nut m8 loose",
+ "category": "screw",
+ "mass_kg": 0.000992802,
+ "size_m": [
+  0.013,
+  0.015,
+  0.0065
+ ],
+ "friction": 0.61,
+ "license": "CC-BY-4.0",
+ "license_url": "https://creativecommons.org/licenses/by/4.0/",
+ "attribution": "\"Factory nut m8 loose\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+ "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/factory_nut_m8_loose",
+ "files": {
+  "glb": "factory_nut_m8_loose/factory_nut_m8_loose.glb",
+  "mjcf": "factory_nut_m8_loose/factory_nut_m8_loose.xml"
+ },
+ "body": "obj_factory_nut_m8_loose",
+ "graspable": true,
+ "source": {
+  "repo": "nvidia/simready-assets",
+  "revision": "a666cb4381ba513b174fb120ed523c1566ba832c",
+  "path": "factory_nut_m8_loose",
+  "url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/factory_nut_m8_loose"
+ },
+ "conversion": {
+  "scale": 1.0,
+  "mass_source": "usd:mass",
+  "friction_source": "usd",
+  "hull_source": "usd",
+  "hulls": 1,
+  "hull_vertices": [
+   20
+  ],
+  "hull_volume_cm3": 0.95,
+  "com_m": [
+   0.0,
+   -0.0,
+   0.00325
+  ],
+  "usd_meters_per_unit": 1.0,
+  "usd_up_axis": "Z",
+  "usd_physics_variant": "MuJoCo:Enabled",
+  "mass_note": null,
+  "glb": {
+   "bytes": 285784,
+   "triangles": 6000,
+   "texture": 384,
+   "attempts": 4
+  },
+  "usd_layers": [
+   "simready_usd/payloads/Physics/physics.usda",
+   "simready_usd/payloads/base.usda",
+   "simready_usd/payloads/geometries.usd",
+   "simready_usd/payloads/instances.usda",
+   "simready_usd/payloads/instances_mujoco.usda",
+   "simready_usd/payloads/materials.usda",
+   "simready_usd/runnables/physics/mujoco.usd",
+   "simready_usd/sm_factory_nut_m8_loose_01.usda"
+  ]
+ }
+}
