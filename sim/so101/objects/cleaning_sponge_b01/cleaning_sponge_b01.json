@@ -1,0 +1,66 @@
+{
+ "id": "cleaning_sponge_b01",
+ "name_cs": "Houbička",
+ "name_en": "Cleaning sponge",
+ "category": "prop",
+ "mass_kg": 0.021,
+ "size_m": [
+  0.0707,
+  0.1006,
+  0.0329
+ ],
+ "friction": 0.55,
+ "license": "CC-BY-4.0",
+ "license_url": "https://creativecommons.org/licenses/by/4.0/",
+ "attribution": "\"Cleaning sponge\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+ "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/cleaning_sponge_b01",
+ "files": {
+  "glb": "cleaning_sponge_b01/cleaning_sponge_b01.glb",
+  "mjcf": "cleaning_sponge_b01/cleaning_sponge_b01.xml"
+ },
+ "body": "obj_cleaning_sponge_b01",
+ "graspable": true,
+ "source": {
+  "repo": "nvidia/simready-assets",
+  "revision": "a666cb4381ba513b174fb120ed523c1566ba832c",
+  "path": "cleaning_sponge_b01",
+  "url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/cleaning_sponge_b01"
+ },
+ "conversion": {
+  "scale": 1.0,
+  "mass_source": "usd:mass",
+  "friction_source": "usd",
+  "hull_source": "usd",
+  "hulls": 1,
+  "hull_vertices": [
+   48
+  ],
+  "hull_volume_cm3": 209.3,
+  "com_m": [
+   -1e-05,
+   0.00057,
+   0.01688
+  ],
+  "usd_meters_per_unit": 1.0,
+  "usd_up_axis": "Z",
+  "usd_physics_variant": "MuJoCo:Enabled",
+  "glb": {
+   "bytes": 282560,
+   "triangles": 6000,
+   "texture": 384,
+   "attempts": 4
+  },
+  "usd_layers": [
+   "simready_usd/payloads/MuJoCo/enabled.usda",
+   "simready_usd/payloads/Newton/disabled.usda",
+   "simready_usd/payloads/PhysX/disabled.usda",
+   "simready_usd/payloads/Physics/physics.usda",
+   "simready_usd/payloads/base.usda",
+   "simready_usd/payloads/geometries.usd",
+   "simready_usd/payloads/instances.usda",
+   "simready_usd/payloads/instances_mujoco.usda",
+   "simready_usd/payloads/materials.usda",
+   "simready_usd/sm_cleaning_sponge_b01_01.usd"
+  ]
+ }
+}
