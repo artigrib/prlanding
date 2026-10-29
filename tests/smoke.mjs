@@ -1,4 +1,5 @@
 // Playwright smoke test. Usage: node tests/smoke.mjs  (needs a server on BASE, default http://127.0.0.1:8123)
+import fs from 'node:fs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
@@ -97,6 +98,62 @@ await check('kit so101 static box + structured data', '/sada/so101/', async p =>
   if (/"(offers|aggregateRating|review|price)"/.test(html)) throw new Error('fake commerce data in JSON-LD');
 });
 
+// purchase plan: configuration, totals, variant guard, local-only ticks, arrival checklist → servo wizard, axe
+const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8');
+await check('plan so101: totals, variant guard, checker, local state', '/plan/so101/', async p => {
+  const offsite = [];
+  p.on('request', r => { const u = new URL(r.url()); if (u.origin !== new URL(BASE).origin && !IGNORE.test(r.url())) offsite.push(r.url()); });
+  await p.waitForSelector('#plan[data-ready="1"]');
+  const total = async () => (await p.locator('[data-testid=plan-total-eur]').innerText()).trim();
+  if (await total() !== '205–223 €') throw new Error('follower total ' + await total());
+  if (!/^\d\d\.\d\d\.20\d\d$/.test(await p.locator('#stamp-date').innerText())) throw new Error('price stamp date');
+  if (!/Pozor na variantu/.test((await p.locator('.plan-warn h2').innerText()).replace(/\s+/g, ' '))) throw new Error('variant warning');
+  await p.check('input[name=robot][value=pair]');
+  if (await total() !== '386–412 €') throw new Error('pair total ' + await total());
+  if (!/OpenELAB[\s\S]*1\/191/.test(await p.locator('#variant-flags').innerText()) || !(await p.locator('#variant-flags .pb-no').count())) throw new Error('OpenELAB C001 not flagged nedoporučujeme');
+  if ((await p.locator('.plan-grp').count()) < 4) throw new Error('supplier groups');
+  if (await p.locator('.plan-grp a[rel~=sponsored]').count()) throw new Error('no link is affiliate/sponsored yet');
+  await p.selectOption('#chk-exp', 'leader:2');
+  await p.fill('#chk-text', 'Feetech STS3215 C001 7.4V 1/191');
+  await p.click('#chk-btn');
+  if ((await p.locator('[data-testid=chk-verdict]').getAttribute('data-verdict')) !== 'inconsistent') throw new Error('checker verdict');
+  // ticks and tracking numbers stay in this browser and survive a reload
+  await p.locator('.plan-line input[type=checkbox]').first().check();
+  await p.fill('#trk-0', 'TEST123');
+  if (await p.locator('#plan-next').isVisible()) throw new Error('next step shown too early');
+  await p.check('#arr-servos'); await p.check('#arr-board');
+  if (!(await p.locator('#plan-next').isVisible())) throw new Error('next step not shown after servos+board');
+  const next = await p.locator('#plan-next a').evaluateAll(as => as.map(a => new URL(a.href).pathname));
+  if (next[0] !== '/sim/so101/nastaveni/' || next[1] !== '/navody/so101-lerobot-prvni-kroky/') throw new Error('next links ' + next);
+  await p.reload(); await p.waitForSelector('#plan[data-ready="1"]');
+  if (!(await p.locator('input[name=robot][value=pair]').isChecked())) throw new Error('config not restored');
+  if (!(await p.locator('.plan-line input[type=checkbox]').first().isChecked()) || (await p.inputValue('#trk-0')) !== 'TEST123') throw new Error('local state not restored');
+  if (offsite.length) throw new Error('off-site requests: ' + offsite.join(', '));
+});
+await check('plan so101 works without storage', '/plan/so101/', async p => {
+  await p.addInitScript(() => { Object.defineProperty(window, 'localStorage', { get() { throw new Error('blocked'); } }); });
+  await p.reload(); await p.waitForSelector('#plan[data-ready="1"]');
+  await p.check('input[name=robot][value=pair]');
+  await p.locator('.plan-line input[type=checkbox]').first().check();
+});
+for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
+  await check(`plan so101 axe ${vp.width}px`, '/plan/so101/', async p => {
+    await p.setViewportSize(vp);
+    await p.waitForSelector('#plan[data-ready="1"]');
+    await p.check('input[name=robot][value=pair]');
+    await p.addScriptTag({ content: AXE });
+    const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
+    const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    if (bad.length) throw new Error('axe: ' + bad.map(v => `${v.id} (${v.nodes.length}) ${v.nodes[0].target}`).join('; '));
+    if ((await p.evaluate(() => document.documentElement.scrollWidth)) > vp.width) throw new Error('horizontal scroll');
+  });
+}
+await check('kit so101 + home link the buying plan, waitlist stays', '/sada/so101/', async p => {
+  if ((await p.locator('#plan-cta').getAttribute('href')) !== '../../plan/so101/') throw new Error('kit plan link');
+  if (!(await p.locator('#predobjednavka form, #predobjednavka').count())) throw new Error('waitlist gone');
+  const home = await (await p.request.get(BASE + '/')).text();
+  if (!/href="plan\/so101\/" data-cta="plan">Plán nákupu dílů</.test(home) || !/href="sada\/so101\/">Sada SO-101</.test(home)) throw new Error('home step 03 links');
+});
 await check('legacy sada.html redirects', '/sada.html?r=svrn', async p => {
   await p.waitForURL(/\/sada\/svrn\/$/);
   await p.goto(BASE + '/sada.html'); await p.waitForURL(/\/#katalog$/);

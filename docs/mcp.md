@@ -63,6 +63,16 @@ Positions use the robot base frame: x forward, y left, z up, origin at the base 
 | `start_mission` | Reset the scene and start a mission | `mission_id` |
 | `check_mission` | Mission state: `idle`, `running`, `success` or `failed` | — |
 | `reset_scene` | Reset the arm and the objects | — |
+| `get_build_plan` | SO-101 parts buying plan: lines grouped by supplier, prices with checked date and status, landed-cost range to CZ, ETA, servo variants per joint, tools, build-time estimate. No `session` needed | `robot` (`follower_12v`/`pair`), `print` (`self`/`service`) |
+| `check_part_variant` | Check a shop listing's text against the servo variant a joint needs: `match`, `likely`, `check_selection`, `mismatch`, `inconsistent` or `unknown`. No `session` needed | `listing_text`, `expected` (`C018`, `leader`, `leader:1`, …) |
+
+### Purchase plan tools (read-only)
+
+`get_build_plan` and `check_part_variant` work without a simulation tab. They return the same plan as
+<https://printedrobotics.cz/plan/so101/>, computed from `data/components/so101.json` (copied into the
+bridge by `node tools/build.mjs`, so a data change needs a backend deploy). We are not a seller: the
+tools never place orders, fill carts, handle payments, open shop pages or read user accounts.
+`check_part_variant` only parses the text it is given. Prices carry their checked date; quote them with it.
 
 Missions: `bowl`, `stack`, `sort`, `ball`, `trace` (01–05) and the object missions `line`, `breakfast`,
 `tidy`, `workshop`, `lab` (06–10). The object missions use a different scene: from the plain scene,
@@ -104,7 +114,7 @@ within 120 s returns the first result and does not move the arm again.
   never codes, session handles, IP addresses, arguments or images. Images pass through and are
   never stored.
 - Claude Code asks before each tool call unless you allow it. You can allow the read-only tools
-  (`get_state`, `get_scene`, `snapshot`, `list_missions`, `check_mission`).
+  (`get_state`, `get_scene`, `snapshot`, `list_missions`, `check_mission`, `get_build_plan`, `check_part_variant`).
 - The Claude consumer apps are for adults (18+). In schools, a teacher runs Claude and pupils
   watch or steer through the simulation.
 

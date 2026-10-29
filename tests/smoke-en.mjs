@@ -19,7 +19,7 @@ const CONTENT_PAGES = [['pro-skoly/', 'en/for-schools/'], ['pro-skoly/pracovni-l
   ['navody/so101-lerobot-prvni-kroky/', 'en/guides/so101-lerobot-first-steps/'], ['navody/bojovi-roboti-150-g/', 'en/guides/combat-robots-150-g/'],
   ['navody/licence-open-source-hardwaru/', 'en/guides/open-source-hardware-licences/'],
   ['navody/so101-sestaveni/', 'en/guides/so101-assembly/'], ['navody/so101-sestaveni/kontrolni-seznam/', 'en/guides/so101-assembly/checklist/'],
-  ['stavba/so101/', 'en/build/so101/']];
+  ['stavba/so101/', 'en/build/so101/'], ['plan/so101/', 'en/plan/so101/']];
 const fail =(name, msg) => { failed++; console.log(`FAIL ${name}\n  ${msg}`); };
 
 /* ---------- 1. static hreflang / sitemap checks ---------- */
@@ -132,6 +132,31 @@ for (const [cs, en] of CONTENT_PAGES) {
     if (bad.length) e.push('links to Czech pages: ' + bad.slice(0, 5).join(', '));
   });
 }
+// purchase plan (English): rendered plan has no Czech, links stay English, axe has no critical/serious issues
+const AXE = fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8');
+for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
+  await check(`en plan so101 ${vp.width}px`, '/en/plan/so101/', async (p, e) => {
+    await p.waitForSelector('#plan[data-ready="1"]');
+    await p.check('input[name=robot][value=pair]');
+    await noCzech(p, e);
+    if (!/^\d+–\d+ €$/.test((await p.locator('[data-testid=plan-total-eur]').innerText()).trim())) e.push('total');
+    if (!/Watch the variant/.test((await p.locator('.plan-warn h2').innerText()).replace(/\s+/g, ' '))) e.push('variant box heading');
+    if (!(await p.locator('.plan-flags .pb-no').count())) e.push('no "not recommended" source shown for the pair');
+    const next = await p.locator('#plan-next a').evaluateAll(as => as.map(a => new URL(a.href).pathname + new URL(a.href).search));
+    if (next[0] !== '/sim/so101/nastaveni/?lang=en' || next[1] !== '/en/guides/so101-lerobot-first-steps/') e.push('next-step links: ' + next.join(', '));
+    await p.addScriptTag({ content: AXE });
+    const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
+    const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    if (bad.length) e.push('axe: ' + bad.map(v => `${v.id} (${v.nodes.length}) ${v.nodes[0].target}`).join('; '));
+    if (vp.width === 390 && (await p.evaluate(() => document.documentElement.scrollWidth)) > 390) e.push('horizontal scroll');
+  }, { viewport: vp });
+}
+await check('en kit so101 links the buying plan', '/en/kit/so101/', async (p, e) => {
+  const h = await p.locator('#plan-cta').getAttribute('href');
+  if (!/en\/plan\/so101\/$/.test(h || '')) e.push('plan link: ' + h);
+  const home = await (await p.request.get(BASE + '/en/')).text();
+  if (!/href="[^"]*en\/plan\/so101\/" data-cta="plan">Parts buying plan</.test(home)) e.push('home step 03 has no plan link');
+});
 await check('en for-schools pilot form messages are English', '/en/for-schools/', async (p, e) => {
   await p.locator('#pilot-form [name=email]').fill('teacher@example.com');
   await p.locator('#pilot-form button[type=submit]').click(); await p.waitForTimeout(300);

@@ -1,0 +1,126 @@
+<!--meta
+{"title":"SO-101 parts buying plan: what to buy and where | printedrobotics.cz",
+ "description":"A parts buying plan for the SO-101 robot arm: suppliers, quantities, prices with VAT and shipping, delivery times, a servo variant check and an arrivals checklist.",
+ "ogTitle":"SO-101 parts buying plan",
+ "ogDesc":"You buy the parts directly from suppliers. We tell you what, where, for how much and how to spot the right servo variant.",
+ "h":"SO-101 parts buying plan",
+ "print":true,
+ "image":"img/so101_white.jpg","imageW":1200,"imageH":900,"imageAlt":"The SO-101 robot arm"}
+-->
+<link rel="stylesheet" href="{root}assets/plan/plan.css">
+<section class="g doc-hero" id="plan" data-lang="en" data-root="{root}">
+<div class="a1 mono">Buying plan · SO-101</div>
+<div class="a4" style="display:flex;flex-direction:column;gap:20px">
+<h1>SO-101 parts buying plan</h1>
+<p class="lead">You buy the parts yourself, directly from suppliers. We tell you what to buy, where, what it costs with shipping, when it arrives and how to spot the right servo variant. We sell nothing and never order for you.</p>
+<p class="plan-stamp" id="plan-stamp">Prices checked as of <span id="stamp-date">—</span></p>
+<noscript><p class="doc-note"><i aria-hidden="true"></i><span>The plan is calculated in your browser. Turn on JavaScript, or see the <a href="{root}data/components/so101.json">price and source data</a>.</span></p></noscript>
+</div>
+</section>
+
+<section class="section" id="konfigurace">
+<div class="g rule">
+<div class="a1 mono">01 — Configuration</div>
+<div class="a4 plan-cfg">
+<form id="plan-form" class="plan-form">
+<fieldset>
+<legend>What are you building</legend>
+<label class="plan-opt"><input type="radio" name="robot" value="follower_12v" checked><span><b>Follower only, 12 V</b><small>The working arm for sim-to-real. No leader (teleoperation) arm.</small></span></label>
+<label class="plan-opt"><input type="radio" name="robot" value="pair"><span><b>Pair: leader + follower</b><small>A 7.4 V leader arm and a 12 V follower. For teleoperation and data collection.</small></span></label>
+</fieldset>
+<fieldset>
+<legend>Printed parts</legend>
+<label class="plan-opt"><input type="radio" name="print" value="self" checked><span><b>I’ll print them myself</b><small>The STL files are freely available. PLA+.</small></span></label>
+<label class="plan-opt"><input type="radio" name="print" value="service"><span><b>Print service</b><small>Upload the STLs and get a quote.</small></span></label>
+</fieldset>
+</form>
+<div class="plan-sum" id="plan-sum" aria-live="polite"></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="varianta">
+<div class="g rule">
+<div class="a1 mono">02 — Servo variant</div>
+<div class="a4">
+<div class="plan-warn" role="note" aria-labelledby="warn-h">
+<h2 id="warn-h">Watch the variant</h2>
+<p>STS3215 servos look the same but differ in voltage and gear ratio. A wrong variant only shows during assembly: the leader is stiff or sags, and a 12 V supply destroys a 7.4 V servo. The gear ratio is only on the label and the listing, and listings can be wrong.</p>
+<div id="variant-table"></div>
+<h3>How to check the variant</h3>
+<ol id="variant-how"></ol>
+<div id="variant-flags"></div>
+<div class="plan-check no-print">
+<h3>Check a listing</h3>
+<p>Paste the title or description of a listing. The check runs only in your browser; nothing is sent anywhere.</p>
+<label for="chk-exp">For which joint</label>
+<select id="chk-exp"></select>
+<label for="chk-text">Listing text</label>
+<textarea id="chk-text" rows="3" placeholder="e.g. Feetech STS3215 C001 7.4V 1/345"></textarea>
+<button type="button" class="btn btn-o" id="chk-btn">Check</button>
+<p id="chk-out" class="plan-chk-out" aria-live="polite"></p>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="section" id="nakup">
+<div class="g rule">
+<div class="a1 mono">03 — Buying plan</div>
+<div class="a4">
+<div class="plan-bar no-print"><button type="button" class="btn btn-o" id="print-btn">Print the plan</button><span class="muted">Ticks are saved only in your browser.</span></div>
+<div id="plan-groups"></div>
+<div id="plan-alt"></div>
+<p class="src">All links are plain links to the shops. None of them is an affiliate link and we get nothing for recommending a shop.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="naradi">
+<div class="g rule">
+<div class="a1 mono">04 — Tools and time</div>
+<div class="a4 prose">
+<h2>Tools you will need</h2>
+<ul id="plan-tools"></ul>
+<h3>Build time estimate</h3>
+<p id="plan-time"></p>
+</div>
+</div>
+</section>
+
+<section class="section" id="dorazilo">
+<div class="g rule">
+<div class="a1 mono">05 — What has arrived</div>
+<div class="a4">
+<p class="ink2 plan-p">Tick what has arrived. You can note tracking numbers next to each shop. They are stored only in your browser; we don’t track parcels and have no access to your shop accounts.</p>
+<ul class="plan-arr" id="plan-arrivals"></ul>
+<div class="plan-track" id="plan-tracking"></div>
+<div class="plan-next" id="plan-next" hidden>
+<b>Servos and board are here. Next step:</b>
+<a class="sim-cta" href="{root}sim/so101/nastaveni/?lang=en"><span><b>1. Servo setup</b><small>IDs and calibration wizard, first as a dry run on the virtual arm</small></span><span aria-hidden="true">→</span></a>
+<a class="sim-cta" href="{root}en/guides/so101-lerobot-first-steps/"><span><b>2. SO-101 and LeRobot guide</b><small>Install, port, calibration and teleoperation</small></span><span aria-hidden="true">→</span></a>
+</div>
+<p class="plan-wait muted" id="plan-wait">Once the servos and the board arrive, the next step appears here: servo setup.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="upozorneni">
+<div class="g rule">
+<div class="a1 mono">06 — Disclaimer</div>
+<div class="a4 prose">
+<h2>We are not the seller</h2>
+<ul>
+<li>You buy the parts directly from the suppliers. The seller is always the shop: you pay it, and it owes you the warranty and the right of withdrawal. We don’t order, don’t pay and can’t see your orders.</li>
+<li>Prices and stock change every week. Each line shows the date it was checked and the source status (verified, carried, unverified, estimate). Check the price at the shop before you order.</li>
+<li>The landed cost is a range: goods incl. VAT, a possible switch to Czech 21 % VAT at EU shops (up to +1.7 %) and our shipping estimate. The exchange rate is a fixed assumption of <span id="fx"></span> CZK/€.</li>
+<li>Always check the servo variant on the listing and on the label. We can’t vouch for a shop’s listing, but we’ll gladly fix an error in the plan.</li>
+<li>No link is an affiliate link. If that ever changes, we’ll say so right next to the link.</li>
+</ul>
+<p class="src">Data: <a href="{root}data/components/so101.json">data/components/so101.json</a> · SO-101 files: <a href="https://github.com/TheRobotStudio/SO-ARM100">TheRobotStudio/SO-ARM100</a> (Apache-2.0).</p>
+<p>Prefer a ready kit? <a href="{root}en/kit/so101/">SO-101 kit</a>: leave your email and we’ll let you know.</p>
+</div>
+</div>
+</section>
+<script type="module" src="{root}assets/plan/plan.js"></script>

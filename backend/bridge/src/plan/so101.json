@@ -1,0 +1,1437 @@
+{
+ "$schema": "./so101.schema.json",
+ "meta": {
+  "robot": "so101",
+  "generated": "2026-10-29",
+  "fx_czk_per_eur": 24.2,
+  "fx_ron_per_eur": 5.09,
+  "fx_note": "Assumption: CNB daily rate not fetched; update before use.",
+  "source": "Component map 2026-10-29 (sources with check date and status). We are not a seller: users buy directly from suppliers.",
+  "status_legend": {
+   "verified": "seen on the source page on the checked date",
+   "carried": "from our 27 Oct BOM sheet, not re-opened",
+   "unverified": "not seen; inferred or page silent",
+   "estimate": "our assumption"
+  },
+  "oss_vat_uplift": 0.017,
+  "affiliate_links": false
+ },
+ "suppliers": {
+  "eckstein": {
+   "name": "Eckstein",
+   "country": "DE",
+   "url": "https://eckstein-shop.de/",
+   "vat": "eu_oss",
+   "shipping_eur": [
+    8,
+    15
+   ],
+   "shipping_status": "estimate"
+  },
+  "openelab": {
+   "name": "OpenELAB",
+   "country": "DE/CN",
+   "url": "https://openelab.io/",
+   "vat": "eu_oss",
+   "shipping_eur": [
+    5,
+    10
+   ],
+   "shipping_status": "estimate",
+   "eta_days_estimate": [
+    5,
+    21
+   ],
+   "eta_note": "Warehouse not stated: China warehouse if EU stock is out."
+  },
+  "alza": {
+   "name": "Alza",
+   "country": "CZ",
+   "url": "https://www.alza.cz/",
+   "vat": "cz",
+   "shipping_eur": [
+    0,
+    3
+   ],
+   "shipping_status": "estimate"
+  },
+  "hornbach": {
+   "name": "Hornbach CZ",
+   "country": "CZ",
+   "url": "https://www.hornbach.cz/",
+   "vat": "cz",
+   "shipping_eur": [
+    0,
+    4
+   ],
+   "shipping_status": "estimate"
+  },
+  "aliexpress": {
+   "name": "AliExpress",
+   "country": "CN",
+   "url": "https://www.aliexpress.com/",
+   "vat": "cn_ioss",
+   "shipping_eur": [
+    0,
+    0
+   ],
+   "duty_eur_per_line": 3,
+   "shipping_status": "estimate"
+  },
+  "sigmanortec": {
+   "name": "Sigmanortec",
+   "country": "RO",
+   "url": "https://sigmanortec.ro/",
+   "vat": "eu_oss",
+   "shipping_eur": [
+    8,
+    15
+   ],
+   "shipping_status": "estimate"
+  },
+  "amazon_fr": {
+   "name": "Amazon.fr",
+   "country": "FR",
+   "url": "https://www.amazon.fr/",
+   "vat": "eu_oss",
+   "shipping_eur": [
+    0,
+    8
+   ],
+   "shipping_status": "estimate",
+   "eta_days_estimate": [
+    3,
+    7
+   ]
+  },
+  "prusa": {
+   "name": "Prusa Center (Praha)",
+   "country": "CZ",
+   "url": "https://www.prusa3d.com/cs/stranka/zakazkovy-3d-tisk-na-miru_240720/",
+   "vat": "cz",
+   "shipping_eur": [
+    4,
+    4
+   ],
+   "shipping_status": "verified",
+   "shipping_note": "99 Kč CZ shipping (verified 2026-10-29)"
+  },
+  "craftcloud": {
+   "name": "Craftcloud",
+   "country": "DE",
+   "url": "https://craftcloud3d.com",
+   "vat": "per_vendor",
+   "shipping_eur": [
+    0,
+    15
+   ],
+   "shipping_status": "estimate"
+  },
+  "none": {
+   "name": "Included with servos",
+   "name_cs": "Součást balení serv",
+   "country": "—",
+   "url": "https://github.com/TheRobotStudio/SO-ARM100",
+   "vat": "none",
+   "shipping_eur": [
+    0,
+    0
+   ],
+   "shipping_status": "verified",
+   "eta_days_estimate": [
+    0,
+    0
+   ]
+  }
+ },
+ "variants": {
+  "codes": {
+   "C001": {
+    "voltage_v": 7.4,
+    "gear_ratio": "1/345",
+    "status": "verified"
+   },
+   "C044": {
+    "voltage_v": 7.4,
+    "gear_ratio": "1/191",
+    "status": "verified"
+   },
+   "C046": {
+    "voltage_v": 7.4,
+    "gear_ratio": "1/147",
+    "status": "verified"
+   },
+   "C018": {
+    "voltage_v": 12,
+    "gear_ratio": "1/345",
+    "status": "verified"
+   },
+   "C047": {
+    "voltage_v": 12,
+    "gear_ratio": "1/345",
+    "status": "unverified"
+   }
+  },
+  "arms": {
+   "follower_12v": {
+    "voltage_v": 12,
+    "joints": [
+     {
+      "joint": 1,
+      "name": "shoulder_pan",
+      "codes": [
+       "C018",
+       "C047"
+      ]
+     },
+     {
+      "joint": 2,
+      "name": "shoulder_lift",
+      "codes": [
+       "C018",
+       "C047"
+      ]
+     },
+     {
+      "joint": 3,
+      "name": "elbow_flex",
+      "codes": [
+       "C018",
+       "C047"
+      ]
+     },
+     {
+      "joint": 4,
+      "name": "wrist_flex",
+      "codes": [
+       "C018",
+       "C047"
+      ]
+     },
+     {
+      "joint": 5,
+      "name": "wrist_roll",
+      "codes": [
+       "C018",
+       "C047"
+      ]
+     },
+     {
+      "joint": 6,
+      "name": "gripper",
+      "codes": [
+       "C018",
+       "C047"
+      ]
+     }
+    ]
+   },
+   "leader": {
+    "voltage_v": 7.4,
+    "joints": [
+     {
+      "joint": 1,
+      "name": "shoulder_pan",
+      "codes": [
+       "C044"
+      ]
+     },
+     {
+      "joint": 2,
+      "name": "shoulder_lift",
+      "codes": [
+       "C001"
+      ]
+     },
+     {
+      "joint": 3,
+      "name": "elbow_flex",
+      "codes": [
+       "C044"
+      ]
+     },
+     {
+      "joint": 4,
+      "name": "wrist_flex",
+      "codes": [
+       "C046"
+      ]
+     },
+     {
+      "joint": 5,
+      "name": "wrist_roll",
+      "codes": [
+       "C046"
+      ]
+     },
+     {
+      "joint": 6,
+      "name": "gripper",
+      "codes": [
+       "C046"
+      ]
+     }
+    ]
+   }
+  },
+  "rules": [
+   "Never mix 12 V and 7.4 V servos on one bus or power supply.",
+   "The gear ratio is printed only on the label and listing; listings can be wrong (OpenELAB shows C001 as 1/191)."
+  ],
+  "rules_cs": [
+   "Nikdy nemíchejte 12V a 7,4V serva na jedné sběrnici ani jednom zdroji.",
+   "Převod je jen na štítku a v inzerátu; inzeráty bývají chybné (OpenELAB uvádí C001 jako 1/191)."
+  ],
+  "how_to_verify": [
+   "On the listing, find the exact code (C018, C001, C044, C046) together with voltage and gear ratio; with a variant selector, check the selected option, not the title.",
+   "When the servos arrive, read the label on every servo before setting IDs and sort them by joint.",
+   "In the servo wizard, the model and voltage are checked before IDs are written."
+  ],
+  "how_to_verify_cs": [
+   "V inzerátu najděte přesný kód (C018, C001, C044, C046) spolu s napětím a převodem; u výběru variant kontrolujte zvolenou možnost, ne nadpis.",
+   "Po doručení přečtěte štítek na každém servu ještě před nastavením ID a roztřiďte je podle kloubů.",
+   "V průvodci nastavením serv se model a napětí kontrolují před zápisem ID."
+  ]
+ },
+ "configs": {
+  "follower_12v": {
+   "name": "Follower only, 12 V",
+   "name_cs": "Jen follower, 12 V",
+   "arms": [
+    "follower_12v"
+   ],
+   "lines": [
+    {
+     "component": "so101.servo.c018",
+     "qty": 6,
+     "source": "eckstein",
+     "arm": "follower_12v"
+    },
+    {
+     "component": "so101.bus_board",
+     "qty": 1,
+     "source": "eckstein"
+    },
+    {
+     "component": "so101.psu_12v",
+     "qty": 1,
+     "source": "eckstein"
+    },
+    {
+     "component": "so101.usb_c",
+     "qty": 1,
+     "source": "alza"
+    },
+    {
+     "component": "so101.clamps",
+     "qty": 2,
+     "source": "hornbach"
+    },
+    {
+     "component": "so101.fasteners",
+     "qty": 1,
+     "source": "none"
+    }
+   ],
+   "print_grams": 350,
+   "print_hours": [
+    7,
+    9
+   ]
+  },
+  "pair": {
+   "name": "Pair: leader + follower (12 V follower)",
+   "name_cs": "Pár: leader + follower (follower 12 V)",
+   "arms": [
+    "follower_12v",
+    "leader"
+   ],
+   "lines": [
+    {
+     "component": "so101.servo.c018",
+     "qty": 6,
+     "source": "eckstein",
+     "arm": "follower_12v"
+    },
+    {
+     "component": "so101.servo.c001",
+     "qty": 1,
+     "source": "eckstein",
+     "arm": "leader"
+    },
+    {
+     "component": "so101.servo.c044",
+     "qty": 2,
+     "source": "openelab",
+     "arm": "leader"
+    },
+    {
+     "component": "so101.servo.c046",
+     "qty": 3,
+     "source": "eckstein",
+     "arm": "leader"
+    },
+    {
+     "component": "so101.bus_board",
+     "qty": 2,
+     "source": "eckstein"
+    },
+    {
+     "component": "so101.psu_12v",
+     "qty": 1,
+     "source": "eckstein"
+    },
+    {
+     "component": "so101.psu_5v",
+     "qty": 1,
+     "source": "eckstein"
+    },
+    {
+     "component": "so101.usb_c",
+     "qty": 2,
+     "source": "alza"
+    },
+    {
+     "component": "so101.clamps",
+     "qty": 4,
+     "source": "hornbach"
+    },
+    {
+     "component": "so101.fasteners",
+     "qty": 1,
+     "source": "none"
+    }
+   ],
+   "print_grams": 700,
+   "print_hours": [
+    15,
+    18
+   ],
+   "alternative": {
+    "component": "so101.bundle.seeed_pro",
+    "source": "aliexpress",
+    "note": "One parcel with the official Seeed mix of servos (lowest wrong-variant risk). Ships from China: 2–4 weeks.",
+    "note_cs": "Jeden balík s oficiální sestavou serv od Seeedu (nejnižší riziko špatné varianty). Posílá se z Číny: 2–4 týdny."
+   }
+  }
+ },
+ "printing": {
+  "self": {
+   "filament_czk_per_kg": 450,
+   "status": "estimate",
+   "note": "PLA+ (README); 0.4 mm nozzle at 0.2 mm layers, 15 % infill, supports.",
+   "note_cs": "PLA+ (README); tryska 0,4 mm, vrstva 0,2 mm, výplň 15 %, podpory.",
+   "stl_url": "https://github.com/TheRobotStudio/SO-ARM100"
+  },
+  "service": {
+   "price_eur_per_arm": [
+    30,
+    75
+   ],
+   "status": "estimate",
+   "eta_days": [
+    5,
+    14
+   ],
+   "sources": [
+    "prusa",
+    "craftcloud"
+   ],
+   "note": "Price not published for this part set: upload the STLs for a quote. Range is our estimate.",
+   "note_cs": "Cena pro tuto sadu dílů není zveřejněná: nahrajte STL a nechte si udělat nabídku. Rozpětí je náš odhad."
+  }
+ },
+ "tools": [
+  {
+   "id": "screwdrivers",
+   "name": "Phillips screwdrivers #0 and #1 (README: highly recommended)",
+   "name_cs": "Křížové šroubováky #0 a #1 (README: velmi doporučeno)",
+   "required": true
+  },
+  {
+   "id": "pc",
+   "name": "Computer with USB and Python 3.10+ (LeRobot)",
+   "name_cs": "Počítač s USB a Pythonem 3.10+ (LeRobot)",
+   "required": true
+  },
+  {
+   "id": "printer",
+   "name": "3D printer, ≥ 220 × 220 mm bed, PLA+",
+   "name_cs": "3D tiskárna s podložkou ≥ 220 × 220 mm, PLA+",
+   "required": true,
+   "only_print": "self"
+  },
+  {
+   "id": "cutters",
+   "name": "Flush cutters and a deburring tool for support removal",
+   "name_cs": "Štípací kleště a odjehlovač na odstranění podpor",
+   "required": false,
+   "only_print": "self"
+  },
+  {
+   "id": "caliper",
+   "name": "Calliper (optional, for checking fits)",
+   "name_cs": "Posuvné měřítko (volitelné, na kontrolu lícování)",
+   "required": false
+  }
+ ],
+ "build_time": {
+  "status": "estimate",
+  "assembly_h_per_arm": [
+   2,
+   3
+  ],
+  "setup_h_per_arm": [
+   0.5,
+   1
+  ],
+  "calibration_h": [
+   0.5,
+   1
+  ]
+ },
+ "arrivals": [
+  {
+   "id": "servos",
+   "name": "Servos (label checked for every one)",
+   "name_cs": "Serva (štítek zkontrolován u každého)",
+   "needed_for_wizard": true
+  },
+  {
+   "id": "board",
+   "name": "Bus servo board(s)",
+   "name_cs": "Řídicí deska (desky) serv",
+   "needed_for_wizard": true
+  },
+  {
+   "id": "psu",
+   "name": "Power supply(ies)",
+   "name_cs": "Napájecí zdroj(e)",
+   "needed_for_wizard": false
+  },
+  {
+   "id": "usb",
+   "name": "USB-C data cable(s)",
+   "name_cs": "Datový kabel (kabely) USB-C",
+   "needed_for_wizard": false
+  },
+  {
+   "id": "clamps",
+   "name": "Clamps",
+   "name_cs": "Svěrky",
+   "needed_for_wizard": false
+  },
+  {
+   "id": "printed",
+   "name": "Printed parts",
+   "name_cs": "Tištěné díly",
+   "needed_for_wizard": false
+  }
+ ],
+ "components": [
+  {
+   "id": "so101.servo.c018",
+   "group": "SO-101",
+   "name": "Feetech STS3215-C018, 12 V, 1/345, 30 kg·cm",
+   "name_cs": "Servo Feetech STS3215-C018, 12 V, 1/345, 30 kg·cm",
+   "role": "Follower joints 1–6 (recommended high-torque follower)",
+   "role_cs": "Follower, klouby 1–6",
+   "specs": {
+    "voltage": "12 V nominal",
+    "gear_ratio": "1/345",
+    "stall_torque": "30 kg·cm (README)",
+    "bus": "TTL half-duplex serial bus, 3-pin, daisy-chain",
+    "encoder": "12-bit magnetic, 360°",
+    "default_id": 1
+   },
+   "constraints": [
+    "Never mix 12 V and 7.4 V servos on one bus/PSU: the 12 V PSU would overdrive 7.4 V servos.",
+    "Needs 12 V ≥5 A PSU (README: '12V 5A+').",
+    "C047 is also sold as a 12 V 1/345 variant; treat C018/C047 as interchangeable only after checking the datasheet (unverified).",
+    "Leader is always 7.4 V (README) – a 12 V set alone cannot build a leader."
+   ],
+   "substitutes": [
+    "so101.servo.c001 ×6 (7.4 V follower, 16.5 kg·cm at 6 V; README calls it sufficient) with a 5 V PSU"
+   ],
+   "sources": [
+    {
+     "id": "eckstein",
+     "supplier": "eckstein",
+     "label": "Eckstein",
+     "country": "DE",
+     "url": "https://eckstein-shop.de/?k=2378&lang=eng",
+     "price": 26.45,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Backorder: 147 expected 2026-11-18",
+     "delivery": "3–4 weeks",
+     "eta_days": [
+      21,
+      28
+     ],
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true
+    },
+    {
+     "id": "openelab",
+     "supplier": "openelab",
+     "label": "OpenELAB (EU tag; China warehouse if out of stock)",
+     "country": "DE/CN",
+     "url": "https://openelab.io/cs/collections/feetech-motor",
+     "price": 26.51,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Not shown",
+     "delivery": "unverified",
+     "eta_days": null,
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true,
+     "note": "Warehouse not stated on listing"
+    },
+    {
+     "id": "aliexpress",
+     "supplier": "aliexpress",
+     "label": "AliExpress (6-pc 12 V set, check listing is C018/C047 1/345)",
+     "country": "CN",
+     "url": "https://www.aliexpress.com/item/1005009214017320.html",
+     "price": 2845.99,
+     "currency": "CZK",
+     "per": 6,
+     "stock": "115 sold",
+     "delivery": "2–3 weeks",
+     "eta_days": [
+      14,
+      21
+     ],
+     "vat_customs": "Non-EU (China) via AliExpress: VAT collected at checkout through IOSS (parcel ≤150 €). Since 1 Jul 2026 an EU flat customs duty of 3 € per tariff line applies to ≤150 € parcels (to Jul 2028); whether AliExpress shows it in the price is unverified. Over 150 €: normal import duty + VAT + carrier clearance fee.",
+     "checked": "2026-10-27",
+     "status": "carried",
+     "recommend": true,
+     "flag": "check_label",
+     "flag_reason": "Multi-variant listing: pick 12 V, 1/345 (C018/C047).",
+     "flag_reason_cs": "Inzerát s více variantami: vyberte 12 V, 1/345 (C018/C047)."
+    }
+   ]
+  },
+  {
+   "id": "so101.servo.c001",
+   "group": "SO-101",
+   "name": "Feetech STS3215-C001, 7.4 V, 1/345, ~19 kg·cm",
+   "name_cs": "Servo Feetech STS3215-C001, 7,4 V, 1/345, ~19 kg·cm",
+   "role": "Leader joint 2 (shoulder lift); follower joints 1–6 in the 7.4 V build",
+   "role_cs": "Leader, kloub 2 (rameno)",
+   "specs": {
+    "voltage": "7.4 V nominal (run from 5 V PSU in SO-101)",
+    "gear_ratio": "1/345",
+    "stall_torque": "16.5 kg·cm at 6 V (README)"
+   },
+   "constraints": [
+    "Gear ratio is printed only on the label/listing – OpenELAB's listing shows C001 as '1/191' (data error seen 2026-10-29); confirm C001 = 1/345 on the label before assembly."
+   ],
+   "substitutes": [
+    "Seeed SO-ARM101 kit bundles (contain the right mix)"
+   ],
+   "sources": [
+    {
+     "id": "eckstein",
+     "supplier": "eckstein",
+     "label": "Eckstein (STS3215 7.4 V 19 kg / 'SO-ARM101' listing; code not shown)",
+     "country": "DE",
+     "url": "https://eckstein-shop.de/?k=2378&lang=eng",
+     "price": 24.35,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Available",
+     "delivery": "1–3 days",
+     "eta_days": [
+      1,
+      3
+     ],
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true,
+     "note": "Variant code not shown on category page – confirm C001",
+     "flag": "variant_not_shown",
+     "flag_reason": "Variant code not shown on the category page: confirm C001 / 1/345 on the product page and the label.",
+     "flag_reason_cs": "Kód varianty není v kategorii vidět: ověřte C001 / 1/345 na stránce produktu a na štítku."
+    },
+    {
+     "id": "openelab",
+     "supplier": "openelab",
+     "label": "OpenELAB",
+     "country": "DE/CN",
+     "url": "https://openelab.io/cs/collections/feetech-motor",
+     "price": 23.57,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Not shown",
+     "delivery": "unverified",
+     "eta_days": null,
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": false,
+     "note": "Listing text says 1/191 – contradicts C001 spec",
+     "flag": "mislabeled",
+     "flag_reason": "Listing text shows C001 as 1/191 (C001 is 1/345). Seen 2026-10-29.",
+     "flag_reason_cs": "Inzerát uvádí C001 jako 1/191 (C001 má 1/345). Zjištěno 29. 10. 2026."
+    },
+    {
+     "id": "sigmanortec",
+     "supplier": "sigmanortec",
+     "label": "Sigmanortec",
+     "country": "RO",
+     "url": "https://sigmanortec.ro/en/servo-smart-serial-sts3215-360-degrees-19kg-12-bit-encoder-74v",
+     "price": 197.29,
+     "currency": "RON",
+     "per": 1,
+     "stock": "In stock (page)",
+     "delivery": "1–2 days RO; CZ unverified",
+     "eta_days": [
+      1,
+      2
+     ],
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true,
+     "note": "≈39 € – expensive; page date stamp looked stale"
+    },
+    {
+     "id": "aliexpress",
+     "supplier": "aliexpress",
+     "label": "AliExpress (choose variant per piece)",
+     "country": "CN",
+     "url": "https://www.aliexpress.com/item/1005009355550327.html",
+     "price": 614.26,
+     "currency": "CZK",
+     "per": 1,
+     "stock": "77 sold",
+     "delivery": "2–3 weeks",
+     "eta_days": [
+      14,
+      21
+     ],
+     "vat_customs": "Non-EU (China) via AliExpress: VAT collected at checkout through IOSS (parcel ≤150 €). Since 1 Jul 2026 an EU flat customs duty of 3 € per tariff line applies to ≤150 € parcels (to Jul 2028); whether AliExpress shows it in the price is unverified. Over 150 €: normal import duty + VAT + carrier clearance fee.",
+     "checked": "2026-10-27",
+     "status": "carried",
+     "recommend": true,
+     "flag": "check_label",
+     "flag_reason": "Variant selector: choose the exact code per piece.",
+     "flag_reason_cs": "Výběr varianty: zvolte přesný kód pro každý kus."
+    }
+   ]
+  },
+  {
+   "id": "so101.servo.c044",
+   "group": "SO-101",
+   "name": "Feetech STS3215-C044, 7.4 V, 1/191",
+   "name_cs": "Servo Feetech STS3215-C044, 7,4 V, 1/191",
+   "role": "Leader joints 1 (base) and 3 (elbow)",
+   "role_cs": "Leader, klouby 1 (základna) a 3 (loket)",
+   "specs": {
+    "voltage": "7.4 V",
+    "gear_ratio": "1/191"
+   },
+   "constraints": [
+    "Per LeRobot docs: J1 1/191, J2 1/345, J3 1/191, J4–J6 1/147. Wrong ratio = leader too stiff or sags."
+   ],
+   "substitutes": [
+    "C001 (stiffer to move by hand – works but worse feel; unverified in practice)"
+   ],
+   "sources": [
+    {
+     "id": "openelab",
+     "supplier": "openelab",
+     "label": "OpenELAB",
+     "country": "DE/CN",
+     "url": "https://openelab.io/cs/collections/feetech-motor",
+     "price": 23.57,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Not shown",
+     "delivery": "unverified",
+     "eta_days": null,
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true,
+     "note": "Only EU listing found for C044",
+     "flag": "check_label",
+     "flag_reason": "Same shop mislabels C001; check that the ratio on the listing and the label matches.",
+     "flag_reason_cs": "Stejný obchod má chybný popis u C001; zkontrolujte převod v inzerátu i na štítku."
+    },
+    {
+     "id": "aliexpress",
+     "supplier": "aliexpress",
+     "label": "AliExpress (variant selector)",
+     "country": "CN",
+     "url": "https://www.aliexpress.com/item/1005009355550327.html",
+     "price": 614.26,
+     "currency": "CZK",
+     "per": 1,
+     "stock": "77 sold",
+     "delivery": "2–3 weeks",
+     "eta_days": [
+      14,
+      21
+     ],
+     "vat_customs": "Non-EU (China) via AliExpress: VAT collected at checkout through IOSS (parcel ≤150 €). Since 1 Jul 2026 an EU flat customs duty of 3 € per tariff line applies to ≤150 € parcels (to Jul 2028); whether AliExpress shows it in the price is unverified. Over 150 €: normal import duty + VAT + carrier clearance fee.",
+     "checked": "2026-10-27",
+     "status": "carried",
+     "recommend": true,
+     "flag": "check_label",
+     "flag_reason": "Variant selector: choose the exact code per piece.",
+     "flag_reason_cs": "Výběr varianty: zvolte přesný kód pro každý kus."
+    }
+   ]
+  },
+  {
+   "id": "so101.servo.c046",
+   "group": "SO-101",
+   "name": "Feetech STS3215-C046, 7.4 V, 1/147",
+   "name_cs": "Servo Feetech STS3215-C046, 7,4 V, 1/147",
+   "role": "Leader joints 4–6 (wrist flex, wrist roll, gripper)",
+   "role_cs": "Leader, klouby 4–6 (zápěstí, rotace, chapadlo)",
+   "specs": {
+    "voltage": "7.4 V",
+    "gear_ratio": "1/147"
+   },
+   "constraints": [],
+   "substitutes": [],
+   "sources": [
+    {
+     "id": "eckstein",
+     "supplier": "eckstein",
+     "label": "Eckstein",
+     "country": "DE",
+     "url": "https://eckstein-shop.de/feetech/servo-sts3215-C046-7-4v-19kg-0-360-magnetencoder_1",
+     "price": 22.35,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Backorder: 32 expected 2026-11-04",
+     "delivery": "7–9 days",
+     "eta_days": [
+      7,
+      9
+     ],
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true
+    },
+    {
+     "id": "openelab",
+     "supplier": "openelab",
+     "label": "OpenELAB",
+     "country": "DE/CN",
+     "url": "https://openelab.io/cs/collections/feetech-motor",
+     "price": 23.57,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Not shown",
+     "delivery": "unverified",
+     "eta_days": null,
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true,
+     "flag": "check_label",
+     "flag_reason": "Same shop mislabels C001; check that the ratio on the listing and the label matches.",
+     "flag_reason_cs": "Stejný obchod má chybný popis u C001; zkontrolujte převod v inzerátu i na štítku."
+    },
+    {
+     "id": "aliexpress",
+     "supplier": "aliexpress",
+     "label": "AliExpress (variant selector)",
+     "country": "CN",
+     "url": "https://www.aliexpress.com/item/1005009355550327.html",
+     "price": 614.26,
+     "currency": "CZK",
+     "per": 1,
+     "stock": "77 sold",
+     "delivery": "2–3 weeks",
+     "eta_days": [
+      14,
+      21
+     ],
+     "vat_customs": "Non-EU (China) via AliExpress: VAT collected at checkout through IOSS (parcel ≤150 €). Since 1 Jul 2026 an EU flat customs duty of 3 € per tariff line applies to ≤150 € parcels (to Jul 2028); whether AliExpress shows it in the price is unverified. Over 150 €: normal import duty + VAT + carrier clearance fee.",
+     "checked": "2026-10-27",
+     "status": "carried",
+     "recommend": true,
+     "flag": "check_label",
+     "flag_reason": "Variant selector: choose the exact code per piece.",
+     "flag_reason_cs": "Výběr varianty: zvolte přesný kód pro každý kus."
+    }
+   ]
+  },
+  {
+   "id": "so101.bus_board",
+   "group": "SO-101",
+   "name": "Bus servo controller (Waveshare Serial Bus Servo Driver Board / Bus Servo Adapter (A), or Feetech FE-URT-1)",
+   "name_cs": "Řídicí deska sběrnice serv (Waveshare Bus Servo Adapter (A) nebo Feetech FE-URT-1)",
+   "role": "USB-C ↔ TTL servo bus + power distribution; one per arm",
+   "role_cs": "USB-C ↔ sběrnice serv, jedna na ruku",
+   "specs": {
+    "interface": "USB-C (CH343/CH9102-class USB-UART; chip unverified)",
+    "jumpers": "Waveshare: both jumpers on 'B' (USB) per LeRobot docs",
+    "power_in": "DC barrel 5.5×2.1 mm (unverified for all variants)"
+   },
+   "constraints": [
+    "Board must be rated for the servo voltage used (12 V follower) – Waveshare board is sold for ST/SC servos incl. 12 V (rating unverified).",
+    "Jumpers on B, otherwise lerobot-find-port finds nothing."
+   ],
+   "substitutes": [
+    "Feetech FE-URT-1",
+    "Seeed 'driver board for LeRobot' (in Seeed kits)"
+   ],
+   "sources": [
+    {
+     "id": "eckstein",
+     "supplier": "eckstein",
+     "label": "Eckstein",
+     "country": "DE",
+     "url": "https://eckstein-shop.de/?k=2378&lang=eng",
+     "price": 5.95,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Backorder: 82 expected 2026-10-30",
+     "delivery": "2–4 days",
+     "eta_days": [
+      2,
+      4
+     ],
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true
+    },
+    {
+     "id": "aliexpress",
+     "supplier": "aliexpress",
+     "label": "AliExpress (FireChip) – Waveshare Bus Servo Adapter (A)",
+     "country": "CN",
+     "url": "https://www.aliexpress.com/item/1005012794471621.html",
+     "price": 206.62,
+     "currency": "CZK",
+     "per": 1,
+     "stock": "147 sold",
+     "delivery": "9–14 Nov",
+     "eta_days": [
+      11,
+      16
+     ],
+     "vat_customs": "Non-EU (China) via AliExpress: VAT collected at checkout through IOSS (parcel ≤150 €). Since 1 Jul 2026 an EU flat customs duty of 3 € per tariff line applies to ≤150 € parcels (to Jul 2028); whether AliExpress shows it in the price is unverified. Over 150 €: normal import duty + VAT + carrier clearance fee.",
+     "checked": "2026-10-27",
+     "status": "carried",
+     "recommend": true
+    },
+    {
+     "id": "amazon_fr",
+     "supplier": "amazon_fr",
+     "label": "Amazon.fr (README EU link)",
+     "country": "FR",
+     "url": "https://github.com/TheRobotStudio/SO-ARM100",
+     "price": 11.4,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "unverified",
+     "delivery": "unverified",
+     "eta_days": null,
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true,
+     "note": "README list price, not checked on Amazon"
+    }
+   ]
+  },
+  {
+   "id": "so101.psu_12v",
+   "group": "SO-101",
+   "name": "Power supply 12 V ≥5 A, EU plug, CE",
+   "name_cs": "Zdroj 12 V ≥5 A, EU zástrčka, CE",
+   "role": "Follower (12 V servos)",
+   "role_cs": "Napájení followeru (12V serva)",
+   "specs": {
+    "output": "12 V DC ≥5 A",
+    "plug": "EU (Type C/F)",
+    "connector": "5.5×2.1 mm barrel (check board)",
+    "marking": "CE required for EU sale"
+   },
+   "constraints": [
+    "Buy CE/GS-marked EU-stock PSUs – uncertified mains adapters are the main electrical-safety risk in the kit."
+   ],
+   "substitutes": [],
+   "sources": [
+    {
+     "id": "eckstein",
+     "supplier": "eckstein",
+     "label": "Eckstein – SENGOOG SG-1205000B68",
+     "country": "DE",
+     "url": "https://eckstein-shop.de/?k=2378&lang=eng",
+     "price": 11.99,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Available",
+     "delivery": "1–3 days",
+     "eta_days": [
+      1,
+      3
+     ],
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true
+    },
+    {
+     "id": "eckstein_gaofande",
+     "supplier": "eckstein",
+     "label": "Eckstein – Gaofande 12 V 5 A",
+     "country": "DE",
+     "url": "https://eckstein-shop.de/?k=2378&lang=eng",
+     "price": 13.99,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Available",
+     "delivery": "1–3 days",
+     "eta_days": [
+      1,
+      3
+     ],
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true
+    }
+   ]
+  },
+  {
+   "id": "so101.psu_5v",
+   "group": "SO-101",
+   "name": "Power supply 5 V ≥4 A, EU plug, CE/GS",
+   "name_cs": "Zdroj 5 V ≥4 A, EU zástrčka, CE/GS",
+   "role": "Leader (and 7.4 V follower)",
+   "role_cs": "Napájení leaderu (7,4V serva)",
+   "specs": {
+    "output": "5 V DC ≥4 A",
+    "plug": "EU"
+   },
+   "constraints": [],
+   "substitutes": [],
+   "sources": [
+    {
+     "id": "eckstein",
+     "supplier": "eckstein",
+     "label": "Eckstein – QITA/BOYAXUAN 5 V 4 A EU",
+     "country": "DE",
+     "url": "https://eckstein-shop.de/?k=2378&lang=eng",
+     "price": 9.99,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Available",
+     "delivery": "1–3 days",
+     "eta_days": [
+      1,
+      3
+     ],
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true
+    },
+    {
+     "id": "eckstein_waveshare",
+     "supplier": "eckstein",
+     "label": "Eckstein – Waveshare 5 V 4 A",
+     "country": "DE",
+     "url": "https://eckstein-shop.de/?k=2378&lang=eng",
+     "price": 9.65,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Backorder: 8 expected 2026-11-13",
+     "delivery": "~3 weeks",
+     "eta_days": [
+      16,
+      21
+     ],
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true
+    }
+   ]
+  },
+  {
+   "id": "so101.usb_c",
+   "group": "SO-101",
+   "name": "USB-A/C → USB-C data cable, ~1 m",
+   "name_cs": "Datový kabel USB-A/C → USB-C, ~1 m",
+   "role": "PC ↔ bus board",
+   "role_cs": "Počítač ↔ řídicí deska",
+   "specs": {},
+   "constraints": [
+    "Must be a DATA cable – charge-only cables are the #1 'port not found' cause."
+   ],
+   "substitutes": [],
+   "sources": [
+    {
+     "id": "alza",
+     "supplier": "alza",
+     "label": "Alza – AlzaPower Core USB-C 3.2 Gen1 1 m",
+     "country": "CZ",
+     "url": "https://www.alza.cz/EN/alzapower-core-usb-c-31-gen1-1m-white-d5472814.htm",
+     "price": 179,
+     "currency": "CZK",
+     "per": 1,
+     "stock": ">10 pcs",
+     "delivery": "1–2 days",
+     "eta_days": [
+      1,
+      2
+     ],
+     "vat_customs": "CZ seller: price incl. 21 % VAT unless seller is a non-VAT payer (then price is final). No customs.",
+     "checked": "2026-10-27",
+     "status": "carried",
+     "recommend": true
+    },
+    {
+     "id": "aliexpress",
+     "supplier": "aliexpress",
+     "label": "AliExpress USB-C cable",
+     "country": "CN",
+     "url": "https://www.aliexpress.com/item/1005009819673094.html",
+     "price": 73.99,
+     "currency": "CZK",
+     "per": 1,
+     "stock": "unverified",
+     "delivery": "2–3 weeks",
+     "eta_days": [
+      14,
+      21
+     ],
+     "vat_customs": "Non-EU (China) via AliExpress: VAT collected at checkout through IOSS (parcel ≤150 €). Since 1 Jul 2026 an EU flat customs duty of 3 € per tariff line applies to ≤150 € parcels (to Jul 2028); whether AliExpress shows it in the price is unverified. Over 150 €: normal import duty + VAT + carrier clearance fee.",
+     "checked": "2026-10-27",
+     "status": "carried",
+     "recommend": true,
+     "note": "Check data-capable variant"
+    }
+   ]
+  },
+  {
+   "id": "so101.clamps",
+   "group": "SO-101",
+   "name": "Table clamps (G/F clamps, 50–200 mm)",
+   "name_cs": "Svěrky ke stolu (50–200 mm)",
+   "role": "Clamp each arm base to the desk",
+   "role_cs": "Přichycení základny ruky ke stolu",
+   "specs": {},
+   "constraints": [],
+   "substitutes": [],
+   "sources": [
+    {
+     "id": "hornbach",
+     "supplier": "hornbach",
+     "label": "Hornbach CZ – set of 2, 50–200 mm",
+     "country": "CZ",
+     "url": "https://www.hornbach.cz/p/kutilske-sverky-sada-50-200-mm-2dilna/7472832/",
+     "price": 179,
+     "currency": "CZK",
+     "per": 2,
+     "stock": "In store / 1–2 days",
+     "delivery": "1–2 days",
+     "eta_days": [
+      1,
+      2
+     ],
+     "vat_customs": "CZ seller: price incl. 21 % VAT unless seller is a non-VAT payer (then price is final). No customs.",
+     "checked": "2026-10-27",
+     "status": "carried",
+     "recommend": true
+    }
+   ],
+   "other_options": [
+    "Any local hardware store (unverified, 2026-10-29)"
+   ]
+  },
+  {
+   "id": "so101.fasteners",
+   "group": "SO-101",
+   "name": "Servo screws and horns",
+   "name_cs": "Šrouby a páky serv",
+   "role": "Assembly",
+   "role_cs": "Součástí balení serv",
+   "specs": {
+    "note": "SO-101 BOM lists no separate fasteners; screws and horns ship with each STS3215 (README). Seeed kit adds 8 screws + 8 pins."
+   },
+   "constraints": [
+    "No bearings in the official SO-101 BOM (the servos carry the joints)."
+   ],
+   "substitutes": [],
+   "sources": [
+    {
+     "id": "none",
+     "supplier": "none",
+     "label": "Included with servos",
+     "country": "—",
+     "url": "https://github.com/TheRobotStudio/SO-ARM100",
+     "price": 0,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "—",
+     "delivery": "—",
+     "eta_days": null,
+     "vat_customs": "—",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true
+    }
+   ]
+  },
+  {
+   "id": "so101.tool.screwdriver",
+   "group": "SO-101",
+   "name": "Phillips screwdrivers #0 and #1",
+   "name_cs": "Křížové šroubováky #0 a #1",
+   "role": "Tool (README: 'highly recommended')",
+   "role_cs": "Nářadí",
+   "specs": {},
+   "constraints": [],
+   "substitutes": [],
+   "sources": [
+    {
+     "id": "amazon_fr",
+     "supplier": "amazon_fr",
+     "label": "README EU reference (Amazon.fr)",
+     "country": "FR",
+     "url": "https://github.com/TheRobotStudio/SO-ARM100",
+     "price": 9,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "unverified",
+     "delivery": "unverified",
+     "eta_days": null,
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true,
+     "note": "README list price"
+    }
+   ]
+  },
+  {
+   "id": "so101.bundle.seeed_pro",
+   "group": "SO-101",
+   "name": "Seeed Studio SO-ARM101 Arm Motor Kit Pro (no printed parts)",
+   "name_cs": "Seeed Studio SO-ARM101 Arm Motor Kit Pro (bez tištěných dílů)",
+   "role": "Bundle replacing all servos + 2 boards + cables + clamps for a pair",
+   "role_cs": "Sada serv, desek a kabelů pro pár",
+   "specs": {
+    "contents": "1× C001, 2× C044, 3× C046 (leader 7.4 V) + 6× STS3215 12 V 1/345 (follower), 2 driver boards, 2 USB-C cables, 4 clamps, 8 screws, 8 pins, power cables/splitters (OpenELAB listing)",
+    "psu": "PSUs included? Listing lists only power cables; FAQ mentions '2 zasilacze' – UNVERIFIED"
+   },
+   "constraints": [
+    "Cheapest checked route for a pair; one parcel; official Seeed composition (lowest wrong-variant risk)."
+   ],
+   "substitutes": [],
+   "sources": [
+    {
+     "id": "aliexpress",
+     "supplier": "aliexpress",
+     "label": "AliExpress – Seeedstudio official store",
+     "country": "CN",
+     "url": "https://www.aliexpress.com/item/1005008883199466.html",
+     "price": 6918.4,
+     "currency": "CZK",
+     "per": 1,
+     "stock": "356 sold",
+     "delivery": "11–23 Nov at check",
+     "eta_days": [
+      13,
+      25
+     ],
+     "vat_customs": "Non-EU (China) via AliExpress: VAT collected at checkout through IOSS (parcel ≤150 €). Since 1 Jul 2026 an EU flat customs duty of 3 € per tariff line applies to ≤150 € parcels (to Jul 2028); whether AliExpress shows it in the price is unverified. Over 150 €: normal import duty + VAT + carrier clearance fee.",
+     "checked": "2026-10-27",
+     "status": "carried",
+     "recommend": true,
+     "note": "Standard (7.4 V follower) kit 6386.72 CZK; Seeed printed-parts variant +931.28 CZK"
+    },
+    {
+     "id": "openelab",
+     "supplier": "openelab",
+     "label": "OpenELAB (EU)",
+     "country": "DE/CN",
+     "url": "https://openelab.io/pl/products/seeed-studio-so-101-pro-servo-motor-kit-lerobot",
+     "price": 325.45,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Sold out (2026-10-29)",
+     "delivery": "China warehouse if OOS",
+     "eta_days": null,
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": false,
+     "note": "Printed skeleton add-on 38.80 €; assembled arm 388.45 €",
+     "flag": "out_of_stock",
+     "flag_reason": "Sold out on 2026-10-29.",
+     "flag_reason_cs": "Vyprodáno k 29. 10. 2026."
+    }
+   ]
+  },
+  {
+   "id": "so101.printed.follower",
+   "group": "SO-101 printed",
+   "name": "SO-101 follower printed parts (base, motor holders, upper/under arm, wrist, jaws, board plate; optional camera mount)",
+   "name_cs": "Tištěné díly followeru",
+   "role": "Structure",
+   "role_cs": "Konstrukce",
+   "specs": {
+    "stl_source": "https://github.com/TheRobotStudio/SO-ARM100 (STL/STEP)",
+    "license": "Apache-2.0 (repo-level licence; no separate hardware licence stated)",
+    "filament": "PLA+ (README); PETG acceptable (estimate)",
+    "settings": "0.4 mm nozzle @0.2 mm or 0.6 mm @0.4 mm, 15 % infill, supports except slopes >45° and horizontal screw holes (README)",
+    "print_time": "≈16.5 h per pair (our data.js; source unverified) → ≈8 h follower (estimate)",
+    "grams": "≈350 g follower incl. supports (estimate: pricing sheet assumes 700 g per pair)",
+    "parts_count": "11 printed bodies + optional camera mount (sim/so101 explode.js)"
+   },
+   "constraints": [],
+   "substitutes": [],
+   "sources": [
+    {
+     "id": "aliexpress_seeed_printed",
+     "supplier": "aliexpress",
+     "label": "Seeed printed parts (AliExpress kit variant)",
+     "country": "CN",
+     "url": "https://www.aliexpress.com/item/1005008883199466.html",
+     "price": 931.28,
+     "currency": "CZK",
+     "per": 2,
+     "stock": "—",
+     "delivery": "with kit",
+     "eta_days": null,
+     "vat_customs": "Non-EU (China) via AliExpress: VAT collected at checkout through IOSS (parcel ≤150 €). Since 1 Jul 2026 an EU flat customs duty of 3 € per tariff line applies to ≤150 € parcels (to Jul 2028); whether AliExpress shows it in the price is unverified. Over 150 €: normal import duty + VAT + carrier clearance fee.",
+     "checked": "2026-10-27",
+     "status": "carried",
+     "recommend": true
+    },
+    {
+     "id": "openelab_printed",
+     "supplier": "openelab",
+     "label": "OpenELAB 3D printed skeleton (pair)",
+     "country": "DE/CN",
+     "url": "https://openelab.io/pl/products/seeed-studio-so-101-pro-servo-motor-kit-lerobot",
+     "price": 38.8,
+     "currency": "EUR",
+     "per": 2,
+     "stock": "unverified",
+     "delivery": "unverified",
+     "eta_days": null,
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true
+    },
+    {
+     "id": "prusa",
+     "supplier": "prusa",
+     "label": "Prusa Center (Praha) – upload STL/3MF, quote via calculator",
+     "country": "CZ",
+     "url": "https://www.prusa3d.com/cs/stranka/zakazkovy-3d-tisk-na-miru_240720/",
+     "price": null,
+     "currency": "CZK",
+     "per": 1,
+     "stock": "—",
+     "delivery": "unverified",
+     "eta_days": null,
+     "vat_customs": "CZ seller: price incl. 21 % VAT unless seller is a non-VAT payer (then price is final). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true,
+     "note": "Price not published for this part set; CZ shipping 99 Kč"
+    },
+    {
+     "id": "craftcloud",
+     "supplier": "craftcloud",
+     "label": "Craftcloud (All3DP) – instant quotes from 150+ services",
+     "country": "DE (marketplace)",
+     "url": "https://craftcloud3d.com",
+     "price": null,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "—",
+     "delivery": "per vendor",
+     "eta_days": null,
+     "vat_customs": "Depends on chosen vendor (EU vendor = EU VAT; non-EU = import)",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true,
+     "note": "No minimum order; quote needs upload"
+    }
+   ]
+  },
+  {
+   "id": "so101.printed.leader",
+   "group": "SO-101 printed",
+   "name": "SO-101 leader printed parts (incl. handle/trigger)",
+   "name_cs": "Tištěné díly leaderu (vč. rukojeti)",
+   "role": "Structure",
+   "role_cs": "Konstrukce",
+   "specs": {
+    "stl_source": "https://github.com/TheRobotStudio/SO-ARM100",
+    "license": "Apache-2.0",
+    "filament": "PLA+",
+    "print_time": "≈8 h (estimate)",
+    "grams": "≈350 g (estimate)"
+   },
+   "constraints": [],
+   "substitutes": [],
+   "sources": [
+    {
+     "id": "prusa",
+     "supplier": "prusa",
+     "label": "Prusa Center (Praha) – upload STL/3MF, quote via calculator",
+     "country": "CZ",
+     "url": "https://www.prusa3d.com/cs/stranka/zakazkovy-3d-tisk-na-miru_240720/",
+     "price": null,
+     "currency": "CZK",
+     "per": 1,
+     "stock": "—",
+     "delivery": "unverified",
+     "eta_days": null,
+     "vat_customs": "CZ seller: price incl. 21 % VAT unless seller is a non-VAT payer (then price is final). No customs.",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true,
+     "note": "Price not published for this part set; CZ shipping 99 Kč"
+    },
+    {
+     "id": "craftcloud",
+     "supplier": "craftcloud",
+     "label": "Craftcloud (All3DP) – instant quotes from 150+ services",
+     "country": "DE (marketplace)",
+     "url": "https://craftcloud3d.com",
+     "price": null,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "—",
+     "delivery": "per vendor",
+     "eta_days": null,
+     "vat_customs": "Depends on chosen vendor (EU vendor = EU VAT; non-EU = import)",
+     "checked": "2026-10-29",
+     "status": "verified",
+     "recommend": true,
+     "note": "No minimum order; quote needs upload"
+    }
+   ],
+   "other_options": [
+    "Same as follower (Seeed/OpenELAB pair sets, Prusa Center, Craftcloud) (unverified, 2026-10-29)"
+   ]
+  }
+ ]
+}

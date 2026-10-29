@@ -86,7 +86,7 @@ after(async () => {
 test('e2e: connect + move_joints + snapshot through the relay', { skip: !playwright && 'playwright not installed' }, async () => {
   const client = await mcpClient();
   const tools = (await client.listTools()).tools.map((t) => t.name);
-  assert.deepEqual(tools, ['connect', 'get_state', 'get_scene', 'move_joints', 'move_to', 'run_trajectory', 'set_gripper', 'home', 'stop', 'snapshot', 'list_missions', 'start_mission', 'check_mission', 'reset_scene']);
+  assert.deepEqual(tools, ['connect', 'get_state', 'get_scene', 'move_joints', 'move_to', 'run_trajectory', 'set_gripper', 'home', 'stop', 'snapshot', 'list_missions', 'start_mission', 'check_mission', 'reset_scene', 'get_build_plan', 'check_part_variant']);
 
   const page = await openSim();
   const session = await pairWith(client, page);
