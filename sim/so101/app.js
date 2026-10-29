@@ -178,7 +178,7 @@ class MissionPage {
     this.sim.reset();
     const hadFocus = $('win').contains(document.activeElement);
     $('win').hidden = true;
-    if (hadFocus) $('demo').focus({ preventScroll: true });
+    if (hadFocus) { const f = [$('demo'), $('reset')].find((b) => b && b.offsetParent); if (f) f.focus({ preventScroll: true }); }
     if (this.ux) this.ux.onReset();  // [ux-hook:reset] mission layout, controller sync
     this.refreshSliders();
   }

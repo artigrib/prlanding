@@ -312,3 +312,100 @@
 @keyframes ai-flash{0%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
 @media (prefers-reduced-motion: reduce){.ai-mprompt.flash{animation:none;box-shadow:0 0 0 2px var(--accent)}}
 .ai-askm{display:block;padding:6px 0;min-height:40px}
+
+/* ---------- panel IA (sim-panel-ia): mission card → one control block → tools; settings popover; phone sheet ---------- */
+.panel{gap:22px;padding-top:20px}
+.ux-sec{display:flex;flex-direction:column;gap:12px}
+.ux-sec>h2.mono,.ux-sechead h2.mono{font-weight:400;margin:0;font-size:13px}
+.ux-ctl,.ux-toolsec{border-top:1px solid var(--ink);padding-top:12px}
+.ux-sechead{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px}
+.ux-sechead .row-b{display:flex;gap:6px}
+.btn.ux-mini{min-height:36px;padding:0 10px;font-size:14px;gap:6px;justify-content:center;font-weight:500}
+@media (pointer:coarse){.btn.ux-mini{min-height:44px}}
+/* mission card */
+.mission{gap:8px}
+.mission h1{margin:0}
+.mission p.ink2{font-size:15px}
+.ux-mtop{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.ux-mrow{margin-top:4px}
+.ux-hintbox{border-left:3px solid var(--ok);background:var(--sand);padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.ux-hintbox>.mono{margin:0}
+.ux-hinttext{margin:0;font-size:15px;color:var(--ink)}
+.ux-solve{align-self:flex-start;padding:6px 0;min-height:40px;font-size:15px;display:inline-flex;gap:8px;align-items:center}
+.ux-mnext{width:100%}
+.ux-credit{margin:0}
+/* control block */
+#ux-mode{gap:12px}
+.ux-hl{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ux-hlt{margin:0;font-size:15px;color:var(--ink-2)}
+.ux-q{flex:none;width:32px;height:32px;border-radius:50%;border:1px solid var(--ink);background:#fff;color:var(--ink);font:600 15px/1 var(--sans);cursor:pointer;padding:0}
+.ux-q:hover{background:var(--sand)}
+.ux-q[aria-expanded=true]{background:var(--ink);color:#fff}
+.ux-tipsbox{background:var(--sand);padding:12px}
+.ux-gripbtn{width:100%}
+.ux-gripbtn[aria-pressed=true]{background:var(--ink)}
+.ux-smart{margin-top:0;gap:12px}
+.ux-draw #ux-pen{width:100%;min-height:48px}
+.ux-fine{border-top:1px solid var(--line);padding-top:4px}
+.ux-fine>summary{cursor:pointer;font-weight:500;font-size:15px;min-height:40px;display:flex;align-items:center;gap:8px;list-style:none}
+.ux-fine>summary::-webkit-details-marker{display:none}
+.ux-fine>summary::before{content:"▸";font-size:12px;color:var(--mute);transition:transform .12s}
+.ux-fine[open]>summary::before{transform:rotate(90deg)}
+.ux-fine[open]{display:flex;flex-direction:column;gap:8px}
+.ux-ctl .joints legend{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;padding:0;margin:0}
+/* tools */
+.ux-tool{display:flex;flex-direction:column;gap:4px}
+.ux-tool .btn{width:100%}
+.ux-toolsub,.ux-tool>.mono-s{margin:0}
+.ux-chev{transition:transform .12s}
+.ux-toolbtn[aria-expanded=true] .ux-chev{transform:rotate(180deg)}
+.ux-teach-body{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.ux-teach-body>.ink2{margin:0;font-size:14.5px}
+.ux-toolsec .ai-box{gap:4px}
+.ux-toolsec .ai-box>*{order:3}
+.ux-toolsec .ai-box>#ai-h{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;padding:0}
+.ux-toolsec .ai-box>#ai-open{order:1;width:100%}
+.ux-toolsec .ai-box>.ai-lead{order:2;font:12px/1.5 var(--mono);color:var(--mute);letter-spacing:.02em}
+.ux-toolsec .ai-box>#ai-panel{margin-top:6px}
+.ux-about{margin-top:6px}
+.ux-about>summary{cursor:pointer;font:12px/1.4 var(--mono);color:var(--mute);min-height:32px;display:flex;align-items:center;text-decoration:underline;text-underline-offset:3px}
+.ux-about>summary::-webkit-details-marker{display:none}
+.ux-about .foot{margin:4px 0 0}
+/* settings popover (stage toolbar ⚙) */
+.ux-tb[aria-expanded=true]{background:var(--ink);color:#fff}
+.ux-pop{position:absolute;right:76px;top:16px;width:300px;max-height:calc(100% - 32px);overflow:auto;background:#fff;border:1px solid var(--ink);box-shadow:6px 6px 0 rgba(14,14,14,.12);padding:12px 16px 16px;display:flex;flex-direction:column;gap:14px;z-index:9}
+.ux-pop .ux-modal-top .ux-x{width:40px;height:40px;margin:-4px -8px -4px 0}
+.ux-pop .colors .mono,.ux-pop .ux-quality>.mono{border-top:0;padding-top:0}
+.ux-setbtn{min-height:44px;justify-content:flex-start;gap:10px;font-size:15px;padding:0 12px}
+.ux-setbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ux-setbtn .kbd{margin-left:auto}
+.ux-sheethead,.ux-tabs{display:none}
+
+@media (max-width:860px){
+  :root{--peek:max(170px,min(290px,calc(42svh - var(--bh) - 4px)))}
+  html,body{overflow:hidden;height:100%}
+  .sim{display:block;height:calc(100svh - var(--bh))}
+  .stage{position:relative;top:auto;z-index:auto;height:calc(100svh - var(--bh) - var(--peek));min-height:0;border-bottom:0}
+  .panel{position:fixed;left:0;right:0;bottom:0;height:var(--peek);z-index:6;border-top:1px solid var(--ink);border-left:0;padding:0 var(--pad) calc(20px + env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;gap:16px;transition:height .22s ease;box-shadow:0 -6px 18px rgba(14,14,14,.08)}
+  .panel[data-snap="1"]{height:62svh}
+  .panel[data-snap="2"]{height:calc(100svh - var(--bh))}
+  .panel.ux-dragging{transition:none}
+  .ux-sheethead{display:block;position:sticky;top:0;z-index:3;background:#fff;margin:0 calc(-1 * var(--pad))}
+  .ux-under{display:block;position:static;top:auto;border-bottom:0}
+  .ux-handle{display:flex;width:100%;height:24px;align-items:center;justify-content:center;border:0;background:#fff;cursor:grab;padding:0;touch-action:none}
+  .ux-handle i{width:44px;height:4px;border-radius:2px;background:var(--line-2);display:block}
+  .ux-under .hud{border-top:0;touch-action:none}
+  .ux-qrow{padding:6px 10px 8px}
+  .ux-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--ink)}
+  .ux-tabs button{min-height:44px;border:0;background:#fff;font:500 15px/1 var(--sans);color:var(--ink-2);cursor:pointer;padding:0 6px}
+  .ux-tabs button[aria-selected=true]{color:var(--ink);box-shadow:inset 0 -3px 0 var(--accent)}
+  .ux-sec>h2.mono,.ux-sechead h2.mono{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .ux-ctl,.ux-toolsec{border-top:0;padding-top:0}
+  .ux-sechead{justify-content:flex-end;min-height:0}
+  /* one action row on phones: no duplicates in the sheet */
+  #home,#ux-grip,#ux-mhint{display:none}
+  .mission h1{font-size:22px}
+  .ux-pop{right:62px;top:10px;left:10px;width:auto;max-height:calc(100% - 20px)}
+}
+.ux-setbtn>span:not(.kbd){flex:1;text-align:left}
+#ux-set .ux-tbl{font-size:8px;letter-spacing:-.03em}
