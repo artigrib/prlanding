@@ -444,7 +444,7 @@ export class Panel {
       ['P', 'kreslení: pero nahoru / dolů'],
       ['1 – 6', 'vybrat kloub (pak ← → otáčí, Esc zruší)'],
       ['Shift + 1 – 5', 'výběr mise'],
-      ['Část ruky', 'tažením otočíte jejím kloubem, dvojklik = výchozí poloha'],
+      ['Část ruky', 'tahem ruku vedete (celá povolí); v režimu Kloub po kloubu otočíte jen tím kloubem, dvojklik = výchozí poloha'],
       ['Čelisti', 'klepnutím otevřete / zavřete chapadlo'],
       ['C', 'přepnout pohled kamery'],
       ['V', 'kamera na zápěstí'],
