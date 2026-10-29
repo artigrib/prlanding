@@ -40,6 +40,7 @@ export const HANDLER_METHODS = Object.freeze({
   get_scene: 'getScene',
   move_joints: 'moveJoints',
   move_to: 'moveTo',
+  run_trajectory: 'runTrajectory',
   set_gripper: 'setGripper',
   home: 'home',
   stop: 'stop',

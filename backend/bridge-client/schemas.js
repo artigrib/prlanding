@@ -39,6 +39,7 @@ export default {
  "motion_tools": [
   "move_joints",
   "move_to",
+  "run_trajectory",
   "set_gripper",
   "home",
   "start_mission",
@@ -200,6 +201,120 @@ export default {
    },
    "required": [
     "pose"
+   ],
+   "additionalProperties": false
+  },
+  "run_trajectory": {
+   "type": "object",
+   "properties": {
+    "waypoints": {
+     "minItems": 1,
+     "maxItems": 50,
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "joints_deg": {
+        "description": "partial joint target; omitted joints keep the previous waypoint's value",
+        "type": "object",
+        "properties": {
+         "shoulder_pan": {
+          "type": "number",
+          "description": "degrees; absolute range -110..110"
+         },
+         "shoulder_lift": {
+          "type": "number",
+          "description": "degrees; absolute range -100..100"
+         },
+         "elbow_flex": {
+          "type": "number",
+          "description": "degrees; absolute range -96.8..96.8"
+         },
+         "wrist_flex": {
+          "type": "number",
+          "description": "degrees; absolute range -95..95"
+         },
+         "wrist_roll": {
+          "type": "number",
+          "description": "degrees; absolute range -157.2..162.8"
+         }
+        },
+        "additionalProperties": false
+       },
+       "pose": {
+        "description": "jaw-tip target in mm (in-page IK); use either joints_deg or pose",
+        "type": "object",
+        "properties": {
+         "x_mm": {
+          "type": "number",
+          "minimum": -600,
+          "maximum": 600
+         },
+         "y_mm": {
+          "type": "number",
+          "minimum": -600,
+          "maximum": 600
+         },
+         "z_mm": {
+          "type": "number",
+          "minimum": -300,
+          "maximum": 600
+         },
+         "pitch_deg": {
+          "description": "approach angle of the jaw vs horizontal, -90 = straight down (about -80 is the steepest reachable); \"auto\" (default) = steepest feasible",
+          "anyOf": [
+           {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+           },
+           {
+            "type": "string",
+            "const": "auto"
+           }
+          ]
+         },
+         "roll_deg": {
+          "description": "wrist_roll in degrees; omit to keep the current roll",
+          "type": "number"
+         }
+        },
+        "required": [
+         "x_mm",
+         "y_mm",
+         "z_mm"
+        ],
+        "additionalProperties": false
+       },
+       "gripper_pct": {
+        "type": "number",
+        "description": "percent open, 0 = closed, 100 = fully open"
+       },
+       "duration_s": {
+        "description": "seconds for the segment that ends at this waypoint; omit or too short = stretched to the speed cap",
+        "type": "number",
+        "minimum": 0.1,
+        "maximum": 20
+       }
+      },
+      "additionalProperties": false
+     },
+     "description": "1-50 waypoints run as one smooth motion (at most 60 s in total)"
+    },
+    "preempt": {
+     "description": "true = interrupt a running motion instead of failing with BUSY",
+     "type": "boolean"
+    },
+    "request_id": {
+     "description": "optional idempotency key: a repeat with the same id within 120 s returns the first result without moving again",
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 64,
+     "pattern": "^[A-Za-z0-9_.:-]+$"
+    }
+   },
+   "required": [
+    "waypoints"
    ],
    "additionalProperties": false
   },

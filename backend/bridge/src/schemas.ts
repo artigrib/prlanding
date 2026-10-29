@@ -100,6 +100,26 @@ export const ArmJointsDeg = z.object({
 
 const GripperPct = z.number().describe('percent open, 0 = closed, 100 = fully open');
 
+const ToolPose = z.object({
+  x_mm: z.number().min(-600).max(600),
+  y_mm: z.number().min(-600).max(600),
+  z_mm: z.number().min(-300).max(600),
+  pitch_deg: z.union([z.number().min(-90).max(90), z.literal('auto')]).optional()
+    .describe('approach angle of the jaw vs horizontal, -90 = straight down (about -80 is the steepest reachable); "auto" (default) = steepest feasible'),
+  roll_deg: z.number().optional().describe('wrist_roll in degrees; omit to keep the current roll')
+}).strict();
+
+/** run_trajectory limits (the tab enforces them again, together with the speed cap and the workspace box). */
+export const TRAJECTORY_MAX_WAYPOINTS = 50;
+export const TRAJECTORY_MAX_S = 60;
+
+const Waypoint = z.object({
+  joints_deg: ArmJointsDeg.optional().describe('partial joint target; omitted joints keep the previous waypoint\'s value'),
+  pose: ToolPose.optional().describe('jaw-tip target in mm (in-page IK); use either joints_deg or pose'),
+  gripper_pct: GripperPct.optional(),
+  duration_s: z.number().min(0.1).max(20).optional().describe('seconds for the segment that ends at this waypoint; omit or too short = stretched to the speed cap')
+}).strict();
+
 export const Inputs = {
   connect: z.object({
     code: z.string().min(1).max(32).describe('the 8-character pairing code shown in the simulation panel, e.g. "BCDF-GHJK"')
@@ -120,16 +140,16 @@ export const Inputs = {
   }).strict(),
   move_to: z.object({
     session: Session,
-    pose: z.object({
-      x_mm: z.number().min(-600).max(600),
-      y_mm: z.number().min(-600).max(600),
-      z_mm: z.number().min(-300).max(600),
-      pitch_deg: z.union([z.number().min(-90).max(90), z.literal('auto')]).optional()
-        .describe('approach angle of the jaw vs horizontal, -90 = straight down (about -80 is the steepest reachable); "auto" (default) = steepest feasible'),
-      roll_deg: z.number().optional().describe('wrist_roll in degrees; omit to keep the current roll')
-    }).strict().describe('target for the jaw tip (site gripperframe) in the base frame, millimetres'),
+    pose: ToolPose.describe('target for the jaw tip (site gripperframe) in the base frame, millimetres'),
     gripper_pct: GripperPct.optional(),
     duration_s: Duration,
+    preempt: Preempt,
+    request_id: RequestId
+  }).strict(),
+  run_trajectory: z.object({
+    session: Session,
+    waypoints: z.array(Waypoint).min(1).max(TRAJECTORY_MAX_WAYPOINTS)
+      .describe(`1-${TRAJECTORY_MAX_WAYPOINTS} waypoints run as one smooth motion (at most ${TRAJECTORY_MAX_S} s in total)`),
     preempt: Preempt,
     request_id: RequestId
   }).strict(),
@@ -168,7 +188,7 @@ export type ToolName = keyof typeof Inputs;
 export const TOOL_NAMES = Object.keys(Inputs) as ToolName[];
 /** Tools forwarded to the tab (everything except connect). */
 export const TAB_TOOLS = TOOL_NAMES.filter((t) => t !== 'connect') as Exclude<ToolName, 'connect'>[];
-export const MOTION_TOOLS: ReadonlySet<string> = new Set(['move_joints', 'move_to', 'set_gripper', 'home', 'start_mission', 'reset_scene']);
+export const MOTION_TOOLS: ReadonlySet<string> = new Set(['move_joints', 'move_to', 'run_trajectory', 'set_gripper', 'home', 'start_mission', 'reset_scene']);
 
 /** Fixed tool descriptions (never built from tab input). Order is stable for prompt caching. */
 export const DESCRIPTIONS: Record<ToolName, string> = {
@@ -177,6 +197,7 @@ export const DESCRIPTIONS: Record<ToolName, string> = {
   get_scene: 'World as structured data: robot state, objects with poses in mm, mission state, safety and limits.',
   move_joints: 'Move arm joints to absolute angles in degrees (or offsets with relative: true) with a smooth profile and wait until done. Out-of-range targets are rejected with OUT_OF_LIMITS, never clamped.',
   move_to: 'Move the jaw tip to a point in millimetres (base frame: x forward, y left, z up) using in-page inverse kinematics, and wait until done.',
+  run_trajectory: 'Run a list of waypoints (joint angles in degrees or jaw-tip points in mm, each with an optional gripper % and segment duration) as ONE smooth motion and wait until done: dances, waves, drawing a shape. The whole path is checked first (joint limits, speed cap, workspace); if any waypoint fails, nothing moves and the error says which (details.waypoint). Up to 50 waypoints and 60 s. stop / STOP in the page end it like any motion.',
   set_gripper: 'Open or close the gripper (percent open, or "open"/"close").',
   home: 'Move the arm to the home pose (or all-zero) and wait until done.',
   stop: 'Stop any motion now and hold the current pose. Always allowed. This is a software stop, not an emergency stop.',
@@ -193,6 +214,7 @@ export const ANNOTATIONS: Record<ToolName, { readOnlyHint?: boolean; destructive
   get_scene: { readOnlyHint: true, openWorldHint: false },
   move_joints: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   move_to: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  run_trajectory: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   set_gripper: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   home: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   stop: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
@@ -205,6 +227,10 @@ export const ANNOTATIONS: Record<ToolName, { readOnlyHint?: boolean; destructive
 
 /** Per-call deadline the server gives the tab (ms). */
 export function deadlineFor(tool: string, args: Record<string, unknown>, snapshotMs = 8_000): number {
+  if (tool === 'run_trajectory') {
+    // the tab stretches segments to the speed cap and refuses more than TRAJECTORY_MAX_S in total
+    return (TRAJECTORY_MAX_S + 10) * 1000;
+  }
   if (MOTION_TOOLS.has(tool)) {
     const d = typeof args.duration_s === 'number' ? args.duration_s : 5;
     return Math.min(30_000, Math.round(d * 1000) + 8_000);
@@ -228,6 +254,13 @@ export function checkLimits(tool: string, args: Record<string, any>): LimitViola
   if (tool === 'move_to' && typeof args.pose?.roll_deg === 'number') {
     const v = args.pose.roll_deg, [lo, hi] = JOINT_LIMITS_DEG.wrist_roll;
     if (v < lo || v > hi) return { joint: 'wrist_roll', value_deg: v, min_deg: lo, max_deg: hi };
+  }
+  if (tool === 'run_trajectory' && Array.isArray(args.waypoints)) {
+    for (const [i, w] of args.waypoints.entries()) {
+      const v = checkLimits('move_joints', { joints_deg: w.joints_deg, gripper_pct: w.gripper_pct })
+        ?? checkLimits('move_to', { pose: w.pose });
+      if (v) return { ...v, waypoint: i } as any;
+    }
   }
   const g = args.gripper_pct;
   if (typeof g === 'number' && !(tool === 'move_joints' && args.relative) && (g < 0 || g > 100)) {

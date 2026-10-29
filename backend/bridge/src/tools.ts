@@ -19,7 +19,7 @@ const INSTRUCTIONS = [
   'Controls the printedrobotics.cz SO-101 robot-arm simulation running in the user\'s browser tab.',
   'Start with connect(code) using the 8-character code the user reads from the simulation panel; the user must click Allow in the tab.',
   'Pass the returned session to every other tool. Units are in field names: degrees (_deg), percent (_pct), millimetres (_mm), seconds (_s).',
-  'Prefer get_state/get_scene (numbers) over snapshot (image). Motions wait until finished. The page enforces all limits; STOP in the page can only be released by the user.'
+  'Prefer get_state/get_scene (numbers) over snapshot (image). Motions wait until finished. For a sequence (a dance, a wave, a shape) use run_trajectory: one call, one smooth motion. The page enforces all limits; STOP in the page can only be released by the user.'
 ].join(' ');
 
 export function errorResult(e: unknown): ToolResult {
