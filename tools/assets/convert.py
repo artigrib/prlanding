@@ -156,7 +156,10 @@ def write_full_glb(asset, xform, path):
         verts = xform(v["vertices"])
         tex = None
         if v["texture"] and v["uv"] is not None:
-            tex = Image.open(v["texture"]).convert("RGBA" if v["base_color"][3] < 1 else "RGB")
+            Image.MAX_IMAGE_PIXELS = 1 << 28   # SimReady albedo maps are up to 8k; refuse anything absurd
+            tex = Image.open(v["texture"])
+            tex.thumbnail((1024, 1024))       # the browser gets <= 512 px anyway; keeps the temp GLB small
+            tex = tex.convert("RGBA" if v["base_color"][3] < 1 else "RGB")
         mat = trimesh.visual.material.PBRMaterial(
             baseColorFactor=[int(round(255 * c)) for c in v["base_color"]] if tex is None else None,
             baseColorTexture=tex, metallicFactor=v["metallic"], roughnessFactor=v["roughness"],
@@ -286,6 +289,9 @@ def convert(src, oid, out_root, *, license_id, license_url=None, scale=1.0, mass
         "hulls": len(hulls), "hull_vertices": [int(len(h.vertices)) for h in hulls],
         "hull_volume_cm3": round(vol * 1e6, 2), "com_m": [round(float(c), 5) for c in com],
         "usd_meters_per_unit": asset["meters_per_unit"], "usd_up_axis": asset["up_axis"],
+        "usd_physics_variant": asset.get("physics_variant"),
+        "mass_note": ("authored mass is exactly 1 kg (a common placeholder) - please check"
+                      if mass_source.startswith("usd:mass") and phys["mass"] == 1.0 else None),
         "glb": glb, "usd_layers": asset["layers"]}}
     write_json(out / f"{oid}.json", record)
     return record

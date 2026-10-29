@@ -31,11 +31,22 @@ NAMES_CS = {k: v for k, v in json.loads((HERE / "names_cs.json").read_text(encod
             if not k.startswith("_")}
 
 
+def tokens(text):
+    """'handTool_hexKey_lShape_a01' -> ['hand', 'tool', 'hex', 'key', 'l', 'shape', 'a01']"""
+    t = re.sub(r"([a-z])([A-Z])", r"\1 \2", str(text))
+    return [x for x in re.split(r"[^a-z0-9]+", t.lower()) if x]
+
+
 def czech_name(text):
-    for tok in re.split(r"[^a-z]+", str(text).lower()):
-        if tok in NAMES_CS:
-            return NAMES_CS[tok]
-    return None
+    toks = tokens(text)
+    name = next((NAMES_CS[t] for t in toks if t in NAMES_CS), None)
+    size = next((t.upper() for t in toks if re.fullmatch(r"m\d{1,2}", t)), None)  # thread size: M4, M8
+    return f"{name} {size}" if name and size else name
+
+
+def english_name(text):
+    toks = [t for t in tokens(text) if not re.fullmatch(r"[a-z]\d\d", t)]  # drop variant codes like a01
+    return " ".join(toks).capitalize() if toks else str(text)
 
 
 def root_metadata(pkg):
@@ -111,7 +122,7 @@ def process(c, out_root, policy):
     if hits and not s.get("brand_review"):
         return {"id": oid, "ok": False, "reason": "possible trademark/brand: " + ", ".join(hits)}
 
-    name_en = s.get("name_en") or md.get("asset_name") or Path(s["path"]).name.replace("_", " ")
+    name_en = s.get("name_en") or english_name(md.get("asset_name") or Path(s["path"]).name)
     name_cs = s.get("name_cs") or czech_name(name_en) or czech_name(s["path"])
     attribution = s.get("attribution") or (
         f"\"{name_en}\" from {c['source'].get('repo', 'unknown source')}"
@@ -140,8 +151,8 @@ def process(c, out_root, policy):
         shutil.rmtree(Path(out_root) / oid, ignore_errors=True)
         return {"id": oid, "ok": False, "reason": "drop test failed: " + "; ".join(v["errors"])}
     return {"id": oid, "ok": True, "license": spdx, "glb_bytes": rec["conversion"]["glb"]["bytes"],
-            "hulls": rec["conversion"]["hulls"], "mass_kg": rec["mass_kg"], "size_m": rec["size_m"],
-            "drop": v["drop"], "path": s.get("path")}
+            "hulls": rec["conversion"]["hulls"], "mass_kg": rec["mass_kg"], "name_cs": rec["name_cs"], "size_m": rec["size_m"],
+            "drop": v["drop"], "path": s.get("path"), "note": rec["conversion"].get("mass_note")}
 
 
 def report_md(results):
@@ -149,11 +160,12 @@ def report_md(results):
     exc = [r for r in results if not r["ok"]]
     lines = ["# Object import report", "", f"Included: {len(inc)} · excluded: {len(exc)}", ""]
     if inc:
-        lines += ["| id | source path | licence | GLB KB | hulls | mass kg | size m | settle s |",
-                  "|---|---|---|---|---|---|---|---|"]
+        lines += ["| id | name_cs | source path | licence | GLB KB | hulls | mass kg | size m | settle s | note |",
+                  "|---|---|---|---|---|---|---|---|---|---|"]
         for r in inc:
-            lines.append(f"| {r['id']} | `{r.get('path')}` | {r['license']} | {r['glb_bytes'] / 1024:.0f} | {r['hulls']} | "
-                         f"{r['mass_kg']} | {' × '.join(str(x) for x in r['size_m'])} | {r['drop']['settle_s']} |")
+            lines.append(f"| {r['id']} | {r.get('name_cs', '')} | `{r.get('path')}` | {r['license']} | "
+                         f"{r['glb_bytes'] / 1024:.0f} | {r['hulls']} | {r['mass_kg']} | "
+                         f"{' × '.join(str(x) for x in r['size_m'])} | {r['drop']['settle_s']} | {r.get('note') or ''} |")
     if exc:
         lines += ["", "## Excluded", "", "| id | reason |", "|---|---|"]
         for r in exc:
@@ -180,6 +192,12 @@ def main():
             results.append(r)
             if not a.quiet:
                 detail(json.dumps(r, ensure_ascii=False))
+    if a.fetch:  # packages that never reached conversion
+        f = json.loads(Path(a.fetch).read_text(encoding="utf-8"))
+        results += [{"id": safe_id(Path(x["path"]).name), "ok": False, "reason": x["reason"], "path": x["path"]}
+                    for x in f.get("skipped", [])]
+        results += [{"id": g, "ok": False, "reason": "no package in the dataset matches this name"}
+                    for g in f.get("unmatched", [])]
     rd = Path(a.report_dir)
     rd.mkdir(parents=True, exist_ok=True)
     write_json(rd / "import-report.json", results)

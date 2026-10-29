@@ -6,8 +6,11 @@ export const DEMO_LAYOUT = [
   { id: 'dino', pos: [0.30, 0.06], yaw: Math.PI / 2 }
 ];
 
-// Spare spots for objects added to the manifest later (filled in order; not pick-tested).
-export const SPARE_SPOTS = [[0.12, 0.10], [0.32, -0.12], [0.10, -0.24], [0.34, 0.16]];
+// Spare spots for objects added to the manifest later (filled in order; not pick-tested). They keep >= 11 cm
+// from the demo objects, the cube, the bowl and each other, so only objects with a small footprint get one.
+export const SPARE_SPOTS = [[0.40, -0.05], [0.42, 0.17], [0.40, -0.22], [0.06, 0.20], [0.02, -0.22], [0.30, 0.25],
+  [-0.12, 0.18], [-0.12, -0.18]];
+export const SPARE_MAX_RADIUS = 0.06;   // m, half the horizontal diagonal of the object's bounding box
 
 export const yawQuat = (yaw) => [Math.cos(yaw / 2), 0, 0, Math.sin(yaw / 2)];
 
@@ -18,6 +21,7 @@ export function layoutFor(manifest, dropHeight = 0.004) {
   let k = 0;
   for (const o of manifest.objects) {
     if (out.some((l) => l.id === o.id) || k >= SPARE_SPOTS.length) continue;
+    if (Math.hypot(o.size_m[0], o.size_m[1]) / 2 > SPARE_MAX_RADIUS) continue;   // too big for a spare spot
     out.push({ id: o.id, pos: [...SPARE_SPOTS[k++], dropHeight], quat: [1, 0, 0, 0] });
   }
   return out;

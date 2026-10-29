@@ -20,11 +20,11 @@ def load_policy(path=None):
     return json.loads(Path(path or HERE / "policy.json").read_text(encoding="utf-8"))
 
 
-def status(msg):
-    """Fixed, content-free status line. In GitHub Actions it becomes a notice annotation.
+def status(msg, level="notice"):
+    """Fixed, content-free status line. In GitHub Actions it becomes a notice/warning/error annotation.
     Callers must never pass asset-derived text here (the import log of a public repo is public)."""
     if os.environ.get("GITHUB_ACTIONS") == "true":
-        print(f"::notice::{msg}", flush=True)
+        print(f"::{level}::{msg}", flush=True)
     else:
         print(msg, file=sys.stderr, flush=True)
 

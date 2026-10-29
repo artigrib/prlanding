@@ -125,6 +125,57 @@ class Policy(unittest.TestCase):
         self.assertIn('<body name="o" pos="1 2 3" quat="1 0 0 0"/>', out)
 
 
+class SimReadyLayout(unittest.TestCase):
+    def test_reader_uses_mujoco_payload(self):
+        from test_fixtures import make_simready_layout
+        from usd_read import diffuse_texture_files, find_root_usd, read_asset
+        with tempfile.TemporaryDirectory() as td:
+            pkg = make_simready_layout(td, "factory_nut_test")
+            self.assertEqual(find_root_usd(pkg).name, "sm_factory_nut_test_01.usda")
+            self.assertEqual(diffuse_texture_files(find_root_usd(pkg), pkg), ["simready_usd/Textures/t_alb.png"])
+            a = read_asset(pkg)
+            self.assertEqual(a["physics_variant"], "MuJoCo:Enabled")
+            self.assertEqual([c["approx"] for c in a["colliders"]], ["convexHull"])
+            self.assertAlmostEqual(a["physics"]["mass"], 0.001, places=6)
+            self.assertAlmostEqual(a["physics"]["static_friction"], 0.61, places=5)
+            self.assertEqual(len(a["visuals"]), 1)
+            self.assertTrue(a["visuals"][0]["texture"].endswith("t_alb.png"))
+            self.assertIsNotNone(a["visuals"][0]["uv"])
+            pkg2 = make_simready_layout(td, "nut_generic", mujoco_override=False)
+            self.assertEqual([c["approx"] for c in read_asset(pkg2)["colliders"]], ["convexDecomposition"])
+
+    def test_phase1_filter(self):
+        from hf_fetch import phase1_files
+        p = "factory_nut_m8_loose"
+        keep = ["com.nvidia.simready.packaging.json", ".metadata/LICENSE.txt",
+                ".metadata/com.nvidia.simready.root_usds.json", "simready_usd/sm_x_01.usda", "simready_usd/sm_x_01.json",
+                "simready_usd/payloads/geometries.usd", "simready_usd/payloads/Physics/physics.usda",
+                "simready_usd/runnables/physics/mujoco.usd"]
+        drop = ["simready_usd/.thumbs/256x256/sm_x_01.usda.png", "simready_usd/Textures/t_alb.png",
+                "simready_usd/source_assets/t_alb.png", "simready_usd/materials/OmniPBR/OmniPBR.mdl",
+                "simready_usd/.simready/validation.json"]
+        got = sorted(f.split("/", 1)[1] for f, _ in phase1_files([(f"{p}/{f}", 1) for f in keep + drop], p))
+        self.assertEqual(got, sorted(keep))
+
+    def test_error_categories(self):
+        from hf_fetch import SizeLimit, category
+
+        class R:
+            def __init__(self, c):
+                self.status_code = c
+
+        class HfHubHTTPError(Exception):
+            def __init__(self, c):
+                self.response = R(c)
+        self.assertEqual(category(HfHubHTTPError(404)), "404 not found")
+        self.assertEqual(category(HfHubHTTPError(401)), "auth required")
+        self.assertEqual(category(HfHubHTTPError(429)), "rate limit")
+        self.assertEqual(category(HfHubHTTPError(503)), "server error")
+        self.assertEqual(category(SizeLimit()), "size limit")
+        self.assertEqual(category(TimeoutError()), "timeout")
+        self.assertEqual(category(ValueError("secret asset text")), "other")
+
+
 class Pipeline(unittest.TestCase):
     def test_import_fetch_result(self):
         with tempfile.TemporaryDirectory() as td:
@@ -176,6 +227,28 @@ class Pipeline(unittest.TestCase):
             self.assertAlmostEqual(float(m.body_mass[1]), 0.12, places=5)
             # solid 5 cm cube: I = m a^2 / 6
             self.assertTrue(np.allclose(m.body_inertia[1], 0.12 * 0.05 ** 2 / 6, rtol=0.02), m.body_inertia[1])
+
+
+    def test_import_simready_layout(self):
+        from test_fixtures import make_simready_layout
+        with tempfile.TemporaryDirectory() as td:
+            ds, out, rep = Path(td) / "ds", Path(td) / "out", Path(td) / "rep"
+            make_simready_layout(ds, "factory_nut_m8_loose")
+            fetch = {"repo": "test/ds", "revision": "0" * 40, "dataset_license": "cc-by-4.0",
+                     "assets": [{"path": "factory_nut_m8_loose", "local_dir": str(ds / "factory_nut_m8_loose")}]}
+            (Path(td) / "fetch.json").write_text(json.dumps(fetch))
+            r = subprocess.run([sys.executable, "-I", str(HERE / "import_assets.py"), "--fetch", str(Path(td) / "fetch.json"),
+                                "--out", str(out), "--report-dir", str(rep), "--quiet"], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr[-800:])
+            res = json.loads((rep / "import-report.json").read_text())[0]
+            self.assertTrue(res["ok"], res)
+            rec = json.loads((out / "factory_nut_m8_loose" / "factory_nut_m8_loose.json").read_text())
+            self.assertEqual(rec["conversion"]["usd_physics_variant"], "MuJoCo:Enabled")
+            self.assertEqual(rec["conversion"]["hulls"], 1)        # MuJoCo payload: convexHull
+            self.assertAlmostEqual(rec["mass_kg"], 0.001, places=6)
+            self.assertEqual(rec["friction"], 0.61)
+            self.assertEqual(rec["name_cs"], "Matice M8")
+            self.assertEqual(rec["license"], "CC-BY-4.0")
 
 
 if __name__ == "__main__":

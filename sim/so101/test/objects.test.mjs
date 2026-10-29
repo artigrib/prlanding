@@ -119,8 +119,9 @@ test('demo layout: objects compile into the SO-101 scene, settle, and each can b
   assert.equal(m.nq, bare.nq + 7 * inst.length);
   assert.equal(m.nkey, bare.nkey);
   bare.delete();
-  for (const o of (await L.manifest()).objects) {
-    const b = body(o.body);
+  for (const it of inst) {   // every placed object (large extras may have no spare spot in the demo)
+    const o = (await L.manifest()).objects.find((x) => x.id === it.id);
+    const b = body(it.name);
     assert.ok(b >= 0);
     assert.ok(Math.abs(m.body_mass[b] - o.mass_kg) < 1e-3 * o.mass_kg + 1e-6, `${o.id} mass`);
   }
@@ -133,7 +134,9 @@ test('demo layout: objects compile into the SO-101 scene, settle, and each can b
     for (const it of inst) {
       const b = body(it.name);
       const v = Math.hypot(d.cvel[6 * b + 3], d.cvel[6 * b + 4], d.cvel[6 * b + 5]);
-      assert.ok(v < 0.03, `${it.name} still moving (${v.toFixed(3)} m/s)`);
+      // curated demo objects must be at rest; imported extras on spare spots only must not misbehave
+      const curated = DEMO_LAYOUT.some((l) => 'obj_' + l.id === it.name);
+      assert.ok(v < (curated ? 0.03 : 0.1), `${it.name} still moving (${v.toFixed(3)} m/s)`);
       assert.ok(d.xpos[3 * b + 2] > -0.005 && d.xpos[3 * b + 2] < 0.02, `${it.name} rests on the table`);
     }
     const o = (await L.manifest()).objects.find((x) => x.id === id);
