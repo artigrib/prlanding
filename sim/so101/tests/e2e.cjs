@@ -206,17 +206,20 @@ async function touchDrag(page, from, to, steps = 8) {
     }
     // tap on the jaws toggles the gripper; the HUD follows
     {
-      await S(p, () => window.__sim.cameraNow('orbit'));   // the orbit test above leaves a frame-rate dependent view
+      // deterministic: the page's own frame loop is paused for this block (simulated time only via advance()), so the
+      // arm pose and the camera do not depend on how many real frames the (slow, software-GL) runner managed
+      await S(p, () => { window.__sim._app.sim.paused = true; });
       await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.3));
       await S(p, () => { const u = window.__sim._ux, c = u.world.pos('cube', [0, 0, 0]); u.ctl.begin(); u.ctl.setGrip(false); u.ctl.setTarget(c[0], c[1], c[2] + 0.035); });
       await S(p, () => window.__sim.advance(3));
       const h0 = (await ux(p)).hud, g0 = await S(p, () => window.__sim._ux.ctl.grip);
-      let jp = await S(p, () => window.__sim.linkPoint(5));
-      // the jaws can be hidden behind the cube from the default view (frame-rate dependent orbit): try the fixed views
-      for (const v of ['side', 'front', 'top', 'orbit']) { if (jp) break; await S(p, () => window.__sim.advance(0.3)); await S(p, (v) => window.__sim.cameraNow(v), v); await p.waitForTimeout(300); jp = await S(p, () => window.__sim.linkPoint(5)); }
+      let jp = null;
+      // fixed camera views in a fixed order; the jaws are hidden behind the cube from some of them
+      for (const v of ['orbit', 'side', 'front', 'top']) { await S(p, (v) => window.__sim.cameraNow(v), v); jp = await S(p, () => window.__sim.linkPoint(5)); if (jp) break; }
       ok(!!jp, 'a visible point on the jaws exists for the tap test');
       await p.mouse.click(jp.x, jp.y);
       await S(p, () => window.__sim.advance(1.2));
+      await S(p, () => { window.__sim._app.sim.paused = false; });
       const h1 = (await ux(p)).hud, g1 = await S(p, () => window.__sim.state().ctrl[5]);
       ok(g0 < 0 && g1 > 1 && /Otevřete/.test(h0) && /Sjeďte dolů/.test(h1), `tap on the jaw opens the gripper (${g0.toFixed(2)} → ${g1.toFixed(2)}); HUD "${h0}" → "${h1}"`);
     }
