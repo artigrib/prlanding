@@ -8,6 +8,7 @@
  "article":true,"date":"2026-10-29",
  "image":"img/so101_white.jpg","imageW":1200,"imageH":900,"imageAlt":"The SO-101 robot arm, rendered from the CAD project"}
 -->
+<!-- {bt:…} times come from data/components/so101.json build_time (shared with /plan/so101/); edit them there -->
 <section class="g doc-hero">
 <div class="a1 mono">Guide · 29 Oct 2026</div>
 <div class="a4" style="display:flex;flex-direction:column;gap:20px">
@@ -25,25 +26,25 @@
 <div class="g rule">
 <div class="a1 mono">Overview</div>
 <div class="a4 prose">
-<h2>Seven stages, an estimated 10 to 19 hours of work</h2>
+<h2>Seven stages, an estimated {bt:total_lo} to {bt:total_hi} hours of work</h2>
 <figure class="doc-fig"><img src="{root}img/so101_white.jpg" alt="The SO-101 robot arm, rendered from the CAD project" width="1200" height="900" loading="lazy"><figcaption>Fig. 1 — SO-101, rendered from the CAD project (not a photo of a build). Open the exploded view of every part on the <a href="{root}en/kit/so101/">SO-101</a> page with the Explode button.</figcaption></figure>
 <p>The order follows the official guide: <b>servo IDs are set before assembly</b>, one servo at a time. Calibration needs the assembled arm, so it is in stage 5.</p>
 <div class="doc-t-wrap" tabindex="0" role="region" aria-label="Build stages and time estimates">
 <table class="doc-t">
 <thead><tr><th scope="col">Stage</th><th scope="col">Time estimate</th><th scope="col">Difficulty</th></tr></thead>
 <tbody>
-<tr><th scope="row"><a href="#e0">0 Before you build</a></th><td>1–2 h</td><td>easy</td></tr>
-<tr><th scope="row"><a href="#e1">1 Printing</a></th><td>≈ 16.5 h printer + 1.5–3 h work</td><td>medium</td></tr>
-<tr><th scope="row"><a href="#e2">2 Servo IDs</a></th><td>1–2 h</td><td>easy</td></tr>
-<tr><th scope="row"><a href="#e3">3 Mechanics</a></th><td>4–8 h per pair</td><td>hard</td></tr>
-<tr><th scope="row"><a href="#e4">4 Electronics</a></th><td>0.5–1 h</td><td>medium</td></tr>
-<tr><th scope="row"><a href="#e5">5 First motion</a></th><td>1–2 h</td><td>medium</td></tr>
-<tr><th scope="row"><a href="#e6">6 Sim and real</a></th><td>0.5–1 h, optional</td><td>easy</td></tr>
-<tr><th scope="row">Total</th><td>≈ 10–19 h work + ≈ 16.5 h printing</td><td></td></tr>
+<tr><th scope="row"><a href="#e0">0 Before you build</a></th><td>{bt:e0} h</td><td>easy</td></tr>
+<tr><th scope="row"><a href="#e1">1 Printing</a></th><td>≈ {bt:print} h printer + {bt:e1} h work</td><td>medium</td></tr>
+<tr><th scope="row"><a href="#e2">2 Servo IDs</a></th><td>{bt:e2} h</td><td>easy</td></tr>
+<tr><th scope="row"><a href="#e3">3 Mechanics</a></th><td>{bt:e3} h per pair</td><td>hard</td></tr>
+<tr><th scope="row"><a href="#e4">4 Electronics</a></th><td>{bt:e4} h</td><td>medium</td></tr>
+<tr><th scope="row"><a href="#e5">5 First motion</a></th><td>{bt:e5} h</td><td>medium</td></tr>
+<tr><th scope="row"><a href="#e6">6 Sim and real</a></th><td>{bt:e6} h, optional</td><td>easy</td></tr>
+<tr><th scope="row">Total</th><td>≈ {bt:total} h work + ≈ {bt:print} h printing</td><td></td></tr>
 </tbody>
 </table>
 </div>
-<p class="src">All times are estimates, not measurements. The ≈ 16.5 h print time per pair comes from our catalogue; the official sources don’t state a print time. With a kit that includes printed parts, skip stage 1.</p>
+<p class="src">All times are estimates, not measurements. The ≈ {bt:print} h print time per pair comes from our catalogue; the official sources don’t state a print time. With a kit that includes printed parts, skip stage 1.</p>
 </div>
 </div>
 </section>
@@ -53,7 +54,7 @@
 <div class="a1 mono">0 — Before you build</div>
 <div class="a4 prose">
 <h2>Tools, workspace and a servo check</h2>
-<p class="stage-meta"><span>Time <b>1–2 h (estimate)</b></span><span>Difficulty <b>easy</b></span></p>
+<p class="stage-meta"><span>Time <b>{bt:e0} h (estimate)</b></span><span>Difficulty <b>easy</b></span></p>
 <h3>Tools and workspace</h3>
 <ul>
 <li>Phillips screwdrivers <b>#0 and #1</b>. The SO-ARM100 repository recommends exactly these for the arm’s screws.<sup><a href="#sources">2</a></sup></li>
@@ -100,7 +101,7 @@
 <div class="a1 mono">1 — Printing</div>
 <div class="a4 prose">
 <h2>Printing the parts and removing supports</h2>
-<p class="stage-meta"><span>Time <b>≈ 16.5 h printer + 1.5–3 h work (estimate)</b></span><span>Difficulty <b>medium</b></span></p>
+<p class="stage-meta"><span>Time <b>≈ {bt:print} h printer + {bt:e1} h work (estimate)</b></span><span>Difficulty <b>medium</b></span></p>
 <p>Recommended settings from the SO-ARM100 repository:<sup><a href="#sources">2</a></sup></p>
 <ul>
 <li>Material <b>PLA+</b>, infill <b>15%</b>.</li>
@@ -131,7 +132,7 @@
 <div class="a1 mono">2 — Servo IDs</div>
 <div class="a4 prose">
 <h2>Every servo gets its own ID, before assembly</h2>
-<p class="stage-meta"><span>Time <b>1–2 h including installing LeRobot (estimate)</b></span><span>Difficulty <b>easy</b></span></p>
+<p class="stage-meta"><span>Time <b>{bt:e2} h including installing LeRobot (estimate)</b></span><span>Difficulty <b>easy</b></span></p>
 <p><b>Dry run:</b> go through the whole process (port, IDs, calibration, test) in the <a href="{root}sim/so101/nastaveni/?lang=en">servo setup dry run</a>. Out of the box the emulated servos all have ID 1, like the real ones, and the wizard can simulate typical faults too.</p>
 <p>Installation from the official guide (Python 3.12):<sup><a href="#sources">3, 1</a></sup></p>
 <pre tabindex="0"><code>conda create -y -n lerobot python=3.12
@@ -170,7 +171,7 @@ pip install -e ".[feetech]"</code></pre>
 <div class="a1 mono">3 — Mechanics</div>
 <div class="a4 prose">
 <h2>Joint by joint: base, shoulder, elbow, wrist, gripper</h2>
-<p class="stage-meta"><span>Time <b>2–4 h per arm, 4–8 h per pair (estimate)</b></span><span>Difficulty <b>hard</b></span></p>
+<p class="stage-meta"><span>Time <b>{bt:e3_arm} h per arm, {bt:e3} h per pair (estimate)</b></span><span>Difficulty <b>hard</b></span></p>
 <p>Steps and screws are from the official guide, which has a short video for each joint.<sup><a href="#sources">1</a></sup> Play an animation in the official order on the <a href="{root}en/kit/so101/">SO-101</a> page with the Assembly button, or in the <a href="{root}sim/so101/?lang=en">simulation</a> under “What the arm is made of”.</p>
 <p><b>General rules.</b> The official guide uses just two screw sizes: <b>M2×6</b> (the smallest) mostly to hold servos and holders, and <b>M3×6</b> for the horns (the servo’s rotating disc) and the parts fixed to them. On servos with two horns only the top one gets a screw; the bottom horn has none.<sup><a href="#sources">1</a></sup></p>
 
@@ -238,7 +239,7 @@ pip install -e ".[feetech]"</code></pre>
 <div class="a1 mono">4 — Electronics</div>
 <div class="a4 prose">
 <h2>Servo chain, driver board and power</h2>
-<p class="stage-meta"><span>Time <b>0.5–1 h (estimate)</b></span><span>Difficulty <b>medium</b></span></p>
+<p class="stage-meta"><span>Time <b>{bt:e4} h (estimate)</b></span><span>Difficulty <b>medium</b></span></p>
 <p>Once the IDs are set, daisy-chain the servos: a 3-pin cable from each servo to the next, and the cable from the first servo (base rotation, ID 1) to the driver board. Then attach the board to the arm’s base.<sup><a href="#sources">1</a></sup> The repository has a printed plate for the Waveshare board (WaveShare_Mounting_Plate).<sup><a href="#sources">2</a></sup></p>
 <p><b>Power:</b> each arm has its own board and its own supply. 7.4 V servos on a 5 V supply, 12 V follower servos on a 12 V supply (5 A or more).<sup><a href="#sources">2</a></sup> Our note: never connect a 12 V supply to an arm with 7.4 V servos; it is above their rated voltage.</p>
 <h3>Checklist</h3>
@@ -262,7 +263,7 @@ pip install -e ".[feetech]"</code></pre>
 <div class="a1 mono">5 — First motion</div>
 <div class="a4 prose">
 <h2>Calibration and teleoperation</h2>
-<p class="stage-meta"><span>Time <b>1–2 h (estimate)</b></span><span>Difficulty <b>medium</b></span></p>
+<p class="stage-meta"><span>Time <b>{bt:e5} h (estimate)</b></span><span>Difficulty <b>medium</b></span></p>
 <p>Clamp the arms to the table. Calibration makes the leader and follower report the same values in the same physical position.<sup><a href="#sources">1</a></sup> Follower:</p>
 <pre tabindex="0"><code># Use the port of your follower arm, and give the arm a unique name with --robot.id
 lerobot-calibrate \
@@ -308,7 +309,7 @@ lerobot-calibrate \
 <div class="a1 mono">6 — Sim and real</div>
 <div class="a4 prose">
 <h2>What you can try in the simulation today, and what you can’t</h2>
-<p class="stage-meta"><span>Time <b>0.5–1 h, optional (estimate)</b></span><span>Difficulty <b>easy</b></span></p>
+<p class="stage-meta"><span>Time <b>{bt:e6} h, optional (estimate)</b></span><span>Difficulty <b>easy</b></span></p>
 <figure class="doc-fig"><img src="{root}assets/media/so101-poster.jpg" alt="The simulated SO-101 robot arm above a cube and a bowl" width="960" height="540" loading="lazy"><figcaption>Fig. 2 — a frame from the in-browser simulation, not from a real arm.</figcaption></figure>
 <div class="doc-t-wrap" tabindex="0" role="region" aria-label="Simulation and the real arm">
 <table class="doc-t">

@@ -8,6 +8,7 @@ import {
   ANNOTATIONS, checkLimits, DESCRIPTIONS, ERROR_TEXT, GRIPPER_LIMITS_PCT, Inputs, JOINT_LIMITS_DEG, MISSIONS, ROBOT,
   TAB_TOOLS, UNITS, type ToolName
 } from './schemas.ts';
+import { registerPlanTools } from './plan-tools.ts';
 
 /** Request-scoped data the HTTP layer knows but the SDK context does not (client IP). */
 export const requestScope = new AsyncLocalStorage<{ ip: string }>();
@@ -114,6 +115,7 @@ export function buildServer(reg: Registry, version: string): McpServer {
       }
     });
   }
+  registerPlanTools(server);   // read-only purchase-plan tools (no session needed)
   return server;
 }
 

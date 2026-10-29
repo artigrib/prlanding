@@ -23,8 +23,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Regenerate product pages and sitemap
+      - name: Regenerate product pages and sitemap (also checks data/components)
         run: node tools/build.mjs
+      - name: Purchase plan unit tests (plan totals, variant checker, data schema)
+        run: node --test tests/*.test.mjs
       - name: Tree must be unchanged
         run: git diff --exit-code && test -z "$(git status --porcelain)"
 

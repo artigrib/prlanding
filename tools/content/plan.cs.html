@@ -1,0 +1,127 @@
+<!--meta
+{"title":"Plán nákupu dílů SO-101: co koupit a kde | printedrobotics.cz",
+ "description":"Plán nákupu dílů pro robotickou ruku SO-101: dodavatelé, počty kusů, ceny s DPH a dopravou, termíny dodání, kontrola variant serv a seznam toho, co už dorazilo.",
+ "ogTitle":"Plán nákupu dílů SO-101",
+ "ogDesc":"Díly koupíte sami přímo u dodavatelů. My vám řekneme co, kde, za kolik a jak poznat správnou variantu serv.",
+ "h":"Plán nákupu dílů SO-101",
+ "print":true,
+ "image":"img/so101_white.jpg","imageW":1200,"imageH":900,"imageAlt":"Robotická ruka SO-101"}
+-->
+<link rel="stylesheet" href="{root}assets/plan/plan.css">
+<section class="g doc-hero" id="plan" data-lang="cs" data-root="{root}">
+<div class="a1 mono">Plán nákupu · SO-101</div>
+<div class="a4" style="display:flex;flex-direction:column;gap:20px">
+<h1>Plán nákupu dílů SO-101</h1>
+<p class="lead">Díly koupíte sami přímo u dodavatelů. My vám řekneme, co koupit, kde, za kolik s dopravou, kdy to dorazí a jak poznat správnou variantu serv. Nic neprodáváme a za vás neobjednáváme.</p>
+<p class="plan-stamp" id="plan-stamp">Ceny ověřeny k <span id="stamp-date">—</span></p>
+<noscript><p class="doc-note"><i aria-hidden="true"></i><span>Plán se počítá v prohlížeči. Zapněte JavaScript, nebo se podívejte do <a href="{root}data/components/so101.json">dat s cenami a zdroji</a>.</span></p></noscript>
+</div>
+</section>
+
+<section class="section" id="konfigurace">
+<div class="g rule">
+<div class="a1 mono">01 — Konfigurace</div>
+<div class="a4 plan-cfg">
+<form id="plan-form" class="plan-form">
+<fieldset>
+<legend>Co stavíte</legend>
+<label class="plan-opt"><input type="radio" name="robot" value="follower_12v" checked><span><b>Jen follower, 12 V</b><small>Výkonná ruka pro sim-to-real. Bez ovládací ruky (leaderu).</small></span></label>
+<label class="plan-opt"><input type="radio" name="robot" value="pair"><span><b>Pár: leader + follower</b><small>Ovládací ruka 7,4 V a výkonná 12 V. Pro teleoperaci a sběr dat.</small></span></label>
+</fieldset>
+<fieldset>
+<legend>Tištěné díly</legend>
+<label class="plan-opt"><input type="radio" name="print" value="self" checked><span><b>Vytisknu si sám</b><small>Soubory STL jsou volně k dispozici, PLA+.</small></span></label>
+<label class="plan-opt"><input type="radio" name="print" value="service"><span><b>Tiskový servis</b><small>Nahrajete STL a necháte si udělat nabídku.</small></span></label>
+</fieldset>
+</form>
+<div class="plan-sum" id="plan-sum" aria-live="polite"></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="varianta">
+<div class="g rule">
+<div class="a1 mono">02 — Varianta serv</div>
+<div class="a4">
+<div class="plan-warn" role="note" aria-labelledby="warn-h">
+<h2 id="warn-h">Pozor na variantu</h2>
+<p>Serva STS3215 vypadají stejně, ale liší se napětím a převodem. Špatná varianta se pozná až při sestavení: leader jde ztuha nebo se propadá, 12V zdroj zničí 7,4V servo. Převod je jen na štítku a v inzerátu a inzeráty bývají chybné.</p>
+<div id="variant-table"></div>
+<h3>Jak variantu ověřit</h3>
+<ol id="variant-how"></ol>
+<div id="variant-flags"></div>
+<div class="plan-check no-print">
+<h3>Zkontrolujte inzerát</h3>
+<p>Vložte název nebo popis inzerátu. Kontrola proběhne jen ve vašem prohlížeči, nic se nikam neposílá.</p>
+<label for="chk-exp">Pro který kloub</label>
+<select id="chk-exp"></select>
+<label for="chk-text">Text inzerátu</label>
+<textarea id="chk-text" rows="3" placeholder="Např. Feetech STS3215 C001 7.4V 1/345"></textarea>
+<button type="button" class="btn btn-o" id="chk-btn">Zkontrolovat</button>
+<p id="chk-out" class="plan-chk-out" aria-live="polite"></p>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="section" id="nakup">
+<div class="g rule">
+<div class="a1 mono">03 — Plán nákupu</div>
+<div class="a4">
+<div class="plan-bar no-print"><button type="button" class="btn btn-o" id="print-btn">Vytisknout plán</button><span class="muted">Zaškrtnutí se ukládá jen ve vašem prohlížeči.</span></div>
+<div id="plan-groups"></div>
+<div id="plan-alt"></div>
+<p class="src">Všechny odkazy jsou obyčejné odkazy na obchody. Žádný z nich není affiliate a za doporučení nic nedostáváme.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="naradi">
+<div class="g rule">
+<div class="a1 mono">04 — Nářadí a čas</div>
+<div class="a4 prose">
+<h2>Co budete potřebovat za nástroje</h2>
+<ul id="plan-tools"></ul>
+<h3 id="cas-stavby">Odhad času stavby</h3>
+<p id="plan-time"></p>
+<ul id="plan-stages"></ul>
+</div>
+</div>
+</section>
+
+<section class="section" id="dorazilo">
+<div class="g rule">
+<div class="a1 mono">05 — Co už dorazilo</div>
+<div class="a4">
+<p class="ink2 plan-p">Odškrtávejte, co přišlo. Čísla zásilek si můžete poznamenat k jednotlivým obchodům. Ukládají se jen ve vašem prohlížeči; zásilky nesledujeme a k vašim účtům u obchodů nemáme přístup.</p>
+<ul class="plan-arr" id="plan-arrivals"></ul>
+<div class="plan-track" id="plan-tracking"></div>
+<div class="plan-next" id="plan-next" hidden>
+<b>Serva a deska jsou doma. Další krok:</b>
+<a class="sim-cta" href="{root}sim/so101/nastaveni/"><span><b>1. Nastavení serv</b><small>Průvodce ID a kalibrací, nejdřív nanečisto na virtuální ruce</small></span><span aria-hidden="true">→</span></a>
+<a class="sim-cta" href="{root}navody/so101-lerobot-prvni-kroky/"><span><b>2. Návod SO-101 a LeRobot</b><small>Instalace, port, kalibrace a teleoperace</small></span><span aria-hidden="true">→</span></a>
+</div>
+<p class="plan-wait muted" id="plan-wait">Až dorazí serva a řídicí deska, ukážeme vám tady další krok: nastavení serv.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="upozorneni">
+<div class="g rule">
+<div class="a1 mono">06 — Upozornění</div>
+<div class="a4 prose">
+<h2>Nejsme prodejce</h2>
+<ul>
+<li>Díly kupujete přímo u dodavatelů. Prodávajícím je vždy daný obchod: u něj platíte, od něj máte záruku a právo na vrácení. My neobjednáváme, neplatíme a nevidíme vaše objednávky.</li>
+<li>Ceny a dostupnost se mění každý týden. U každé položky uvádíme datum ověření a stav zdroje (ověřeno, převzato, neověřeno, odhad). Před objednáním cenu zkontrolujte u obchodu.</li>
+<li>Cena s dopravou je rozpětí: zboží s DPH, u obchodů z EU možné navýšení DPH na českých 21 % (až +1,7 %) a doprava podle našeho odhadu. Kurz je pevný předpoklad <span id="fx"></span> Kč/€.</li>
+<li>Variantu serv vždy ověřte v inzerátu i na štítku. Za chybu v inzerátu obchodu neručíme, ale rádi ji opravíme v plánu.</li>
+<li>Odkazy nejsou affiliate. Kdyby se to někdy změnilo, napíšeme to přímo u odkazu.</li>
+</ul>
+<p class="src">Zdroj dat: <a href="{root}data/components/so101.json">data/components/so101.json</a> · soubory SO-101: <a href="https://github.com/TheRobotStudio/SO-ARM100">TheRobotStudio/SO-ARM100</a> (Apache-2.0).</p>
+<p>Chcete raději hotovou sadu? <a href="{root}sada/so101/">Sada SO-101</a>: nechte nám e-mail a dáme vědět.</p>
+</div>
+</div>
+</section>
+<script type="module" src="{root}assets/plan/plan.js"></script>

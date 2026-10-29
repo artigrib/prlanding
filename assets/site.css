@@ -338,6 +338,8 @@ html:has(body.has-sbar){scroll-padding-bottom:110px}
 ol.steps,ul.soon,ol.news,ul.bots,ul.ticks{list-style:none;margin:0;padding:0}
 .steps4{grid-template-columns:repeat(4,minmax(0,1fr))}
 .step-a{margin-top:auto;display:inline-flex;align-items:center;min-height:44px;font-weight:500;text-underline-offset:4px;align-self:flex-start}
+.step-links{margin-top:auto;display:flex;flex-wrap:wrap;column-gap:20px}
+.step-links .step-a{margin-top:0}
 
 /* combat band: the one dark surface on the page, like the arena's black frame */
 .band{background:var(--ink);color:#fff;margin-top:var(--sec);padding:clamp(28px,4vw,48px) 0 clamp(56px,8vw,120px)}
