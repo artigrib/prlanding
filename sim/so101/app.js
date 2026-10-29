@@ -70,8 +70,22 @@ function loadingCopy(t0) {
     if (el > 15) txt += '. Mezitím: v simulaci kliknete na kostku a ruka ji sama vezme.';
     if (txt !== sub.textContent) sub.textContent = txt;
   }
+  // after 1.5 s: a short loop of the guided first task ("you'll do this in a moment"), poster only on
+  // Save-Data / 2G / reduced motion (it must not compete with the engine download)
+  const loopT = setTimeout(() => {
+    try {
+      const c = navigator.connection, slow = c && (c.saveData || /2g/.test(c.effectiveType || ''));
+      const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const fig = document.createElement('figure'); fig.className = 'loader-loop';
+      const M = '../../assets/media/so101-loop';
+      if (slow || calm) fig.innerHTML = `<img src="../../assets/media/so101-poster.jpg" alt="" width="960" height="540">`;
+      else fig.innerHTML = `<video muted loop autoplay playsinline width="960" height="540" poster="../../assets/media/so101-poster.jpg"><source src="${M}.webm" type="video/webm"><source src="${M}.mp4" type="video/mp4"></video>`;
+      fig.insertAdjacentHTML('beforeend', '<figcaption>Za chvíli to uděláte sami: klepněte na kostku, pak na misku.</figcaption>');
+      sub.parentNode.appendChild(fig);
+    } catch (e) { /* the loop is optional */ }
+  }, 1500);
   const fn = (f) => { last = f; upd(f); };
-  fn.done = () => clearInterval(tick);
+  fn.done = () => { clearInterval(tick); clearTimeout(loopT); const v = document.querySelector('.loader-loop video'); if (v) v.pause(); };
   return fn;
 }
 

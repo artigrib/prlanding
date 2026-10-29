@@ -90,6 +90,8 @@ export class Panel {
       <button type="button" class="ux-link" id="ux-pick-mission" aria-haspopup="dialog">Vybrat misi <span aria-hidden="true">▾</span></button>
     </div>`);
     box.appendChild(row);
+    this.progLine = h(`<p class="mono ux-progline" id="ux-progline"></p>`);
+    box.appendChild(this.progLine);
     this.mStars = row.querySelector('#ux-mstars');
     row.querySelector('button').addEventListener('click', () => this.openPicker());
 
@@ -98,6 +100,7 @@ export class Panel {
         <div class="ux-modal-top"><p class="mono">Mise</p><button type="button" class="ux-x" aria-label="Zavřít">×</button></div>
         <h2 id="ux-picker-h">Vyberte si úkol</h2>
         <div class="ux-cards"></div>
+        <p class="mono ux-progline" id="ux-cards-line"></p>
         <p class="mono-s muted">Hvězdičky a nejlepší časy se ukládají jen ve vašem prohlížeči.</p>
       </div></div>`);
     document.body.appendChild(dlg);
@@ -105,6 +108,7 @@ export class Panel {
     dlg.querySelector('.ux-x').addEventListener('click', () => this.closePicker());
     dlg.addEventListener('click', (e) => { if (e.target === dlg) this.closePicker(); });
     this.cards = dlg.querySelector('.ux-cards');
+    this.cardsLine = dlg.querySelector('#ux-cards-line');
   }
 
   renderCards() {
@@ -121,6 +125,16 @@ export class Panel {
       b.addEventListener('click', () => { this.closePicker(); this.ux.selectMission(m.id); });
       this.cards.appendChild(b);
     }
+    // chapter 06: the real arm (servo setup wizard) – visible from the start, never locked (teachers link it directly)
+    const pr = progressOf(prog);
+    const ch = h(`<a class="ux-card ux-chapter" href="nastaveni/">
+        <span class="mono">Kapitola 06</span>
+        <b>Skutečná ruka</b>
+        <span class="ink2">Nastavení serv nanečisto: ID, kalibrace, test</span>
+        <span class="mono-s muted">${pr.done >= 3 ? 'Odemčeno: zvládli jste 3 mise' : 'Doporučujeme po 3 misích – otevřít můžete hned'}</span>
+      </a>`);
+    this.cards.appendChild(ch);
+    this.cardsLine.textContent = progressText(pr);
   }
   openPicker() {
     this.renderCards(); this.picker.hidden = false; this.lastFocus = document.activeElement;
@@ -136,6 +150,9 @@ export class Panel {
     this.mStars.innerHTML = starStr(s);
     this.mStars.setAttribute('aria-label', s ? `Nejlepší hodnocení ${s} ze 3 hvězdiček` : 'Zatím nesplněno');
     document.title = `${m.title} – SO-101 v simulaci | printedrobotics.cz`;
+    const pr = progressOf(this.ux.progress);
+    const nx = MISSIONS.find((x) => !(this.ux.progress[x.id]) && x.id !== m.id);
+    this.progLine.textContent = progressText(pr) + (nx ? ` · další: ${nx.title}` : '');
   }
 
   // ---------- mode switch + smart controls ----------
@@ -323,6 +340,11 @@ export class Panel {
     this.penHint = h(`<p class="ux-penhint mono-s" hidden>Nakreslete čáru po stole prstem nebo myší – ruka ji zopakuje</p>`);
     st.appendChild(this.penHint);
   }
+  /** friend's record from a challenge link, shown in the HUD until the page is left */
+  showChallenge(t) {
+    if (!this.chal) { this.chal = h(`<span class="ux-chal mono"></span>`); $('hud').appendChild(this.chal); }
+    this.chal.textContent = t;
+  }
   showView(v) { $('ux-view-l').textContent = VIEW_LABELS[v].replace('Volný pohled', 'Volný'); }
   showWrist(on) { $('ux-wrist').setAttribute('aria-pressed', String(on)); this.pip.hidden = !on; this.pipCache = null; }
   showSound(on) { $('ux-sound').setAttribute('aria-pressed', String(on)); $('ux-sound').classList.toggle('muted', !on); }
@@ -395,6 +417,15 @@ export class Panel {
     this.nextBtn = h(`<button type="button" class="btn btn-o" id="ux-next">Další mise <span aria-hidden="true">→</span></button>`);
     win.querySelector('.win-b').appendChild(this.nextBtn);
     this.nextBtn.addEventListener('click', () => this.ux.nextMission());
+    // staged bridge (growth panel B): first win → practice by hand, 2nd → how it is built, 3rd+ → the real arm
+    const wb = win.querySelector('.win-b');
+    this.guideBtn = h(`<button type="button" class="btn btn-o" id="ux-wguide">Teď ručně <span aria-hidden="true">→</span></button>`);
+    this.exBtn = h(`<button type="button" class="btn btn-o" id="ux-wexplode">Z čeho se ruka skládá <span aria-hidden="true">→</span></button>`);
+    this.shareBtn = h(`<button type="button" class="btn btn-o" id="ux-wshare">Sdílet rekord <span aria-hidden="true">↗</span></button>`);
+    for (const b of [this.guideBtn, this.exBtn, this.shareBtn]) { b.hidden = true; wb.appendChild(b); }
+    this.guideBtn.addEventListener('click', () => this.ux.onboarding.afterWin());
+    this.exBtn.addEventListener('click', () => { $('win').hidden = true; if (!this.ux.explode.on) this.ux.toggleExplode(); });
+    this.shareBtn.addEventListener('click', () => this.ux.shareRecord());
     this.winText = win.querySelector('p:not(.mono)');
     this.winH = $('win-h');
     this.defaultWin = this.winText.textContent;
@@ -427,6 +458,31 @@ export class Panel {
     }
     const last = MISSIONS[MISSIONS.length - 1].id === m.id;
     this.nextBtn.hidden = last;
+  }
+
+  /**
+   * Which buttons the win card shows, in order; the first is the primary one.
+   *   by (assisted / replay): "Teď to zkuste vy", Další mise · guided first win: "Teď ručně", Další mise
+   *   own win 2: Další mise, "Z čeho se ruka skládá" · own win 3+: Další mise, "Chci skutečnou SO-101"
+   *   a 3 ★ own win also offers "Sdílet rekord". No purchase button before the 3rd win.
+   */
+  stageWin(m, { by, guided, wins, stars }) {
+    const ids = { cta: $('cta'), again: $('again'), next: this.nextBtn, guide: this.guideBtn, ex: this.exBtn, share: this.shareBtn };
+    const last = MISSIONS[MISSIONS.length - 1].id === m.id;
+    let order;
+    if (by) order = ['again', 'next'];
+    else if (guided) order = ['guide', 'next'];
+    else { order = ['next']; if (wins === 2) order.push('ex'); else if (wins >= 3) order.push('cta'); order.push('again'); if (stars === 3) order.push('share'); }
+    if (last) order = order.filter((k) => k !== 'next');
+    const wb = $('win').querySelector('.win-b');
+    for (const k of Object.keys(ids)) { const b = ids[k]; b.hidden = !order.includes(k); b.classList.remove('ux-primary', 'ux-full', 'btn-act'); if (k !== 'cta') b.classList.add('btn-o'); }
+    order.forEach((k, i) => {
+      const b = ids[k]; wb.appendChild(b);
+      if (i === 0) { b.classList.add('ux-primary', 'btn-act'); b.classList.remove('btn-o'); }
+    });
+    if ((order.length - 1) % 2 === 1) ids[order[order.length - 1]].classList.add('ux-full');   // odd secondary count
+    if (!order.includes('cta')) ids.cta.classList.remove('btn-act'); else if (order[0] !== 'cta') { ids.cta.classList.remove('btn-act'); ids.cta.classList.add('btn-o'); }
+    return order;
   }
 
   // ---------- help ----------
@@ -489,6 +545,13 @@ function trapFocus(dlg) {
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   });
 }
+
+function progressOf(prog) {
+  let done = 0, stars = 0;
+  for (const m of MISSIONS) { const p = prog && prog[m.id]; if (p) { done++; stars += p.stars || 0; } }
+  return { done, stars, n: MISSIONS.length };
+}
+function progressText(pr) { return `${pr.done} / ${pr.n} misí · ${pr.stars} ★ z ${pr.n * 3}`; }
 
 export function fmt(t) { t = Math.max(0, t || 0); const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + String(s).padStart(2, '0'); }
 function starStr(n) { let s = ''; for (let i = 0; i < 3; i++) s += `<i class="${i < n ? 'on' : ''}">★</i>`; return s; }

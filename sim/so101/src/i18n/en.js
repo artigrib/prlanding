@@ -288,9 +288,22 @@ const strings = {
   'Táhněte prstem za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klepnutí na čelisti otevře / zavře chapadlo. Přepínač „Kloub po kloubu“ je v panelu.': 'Pull any part with your finger – the arm gives way and lets you guide it like a real one. Tap the jaws to open / close the gripper. The “Joint by joint” switch is in the panel.',
   'Táhněte myší za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klik na čelisti otevře / zavře chapadlo. „Kloub po kloubu“ v panelu otáčí jen jedním kloubem, klávesy 1–6 vyberou kloub.': 'Pull any part with the mouse – the arm gives way and lets you guide it like a real one. Click the jaws to open / close the gripper. “Joint by joint” in the panel turns just one joint; keys 1–6 select a joint.',
   'tahem ruku vedete (celá povolí); v režimu Kloub po kloubu otočíte jen tím kloubem, dvojklik = výchozí poloha': 'pull to guide the arm (all of it gives way); in Joint by joint mode you turn only that joint, double-click = home position',
+  /* growth: staged win card, challenge, continue, chapter 06, loading loop – so101-onboard */
+  'Chci skutečnou SO-101': 'I want a real SO-101', 'Teď ručně': 'Now by hand', 'Z čeho se ruka skládá': 'What the arm is made of', 'Sdílet rekord': 'Share your record',
+  'Ruka si cestu naplánovala sama. Teď zkuste totéž rukou – za chvíli to budete umět i bez pomoci.': 'The arm planned the path by itself. Now try the same by hand – in a moment you’ll manage without help.',
+  'Kapitola 06': 'Chapter 06', 'Skutečná ruka': 'The real arm', 'Nastavení serv nanečisto: ID, kalibrace, test': 'Servo setup dry run: IDs, calibration, test',
+  'Odemčeno: zvládli jste 3 mise': 'Unlocked: you completed 3 missions', 'Doporučujeme po 3 misích – otevřít můžete hned': 'Recommended after 3 missions – you can open it now',
+  'SO-101 – výzva': 'SO-101 – challenge', 'Odkaz s výzvou je ve schránce': 'The challenge link is in your clipboard', 'Zkopírujte odkaz s výzvou:': 'Copy the challenge link:',
+  'Za chvíli to uděláte sami: klepněte na kostku, pak na misku.': 'In a moment you’ll do this yourself: tap the cube, then the bowl.',
 };
 
 const patterns = [
+  [/^(\d+) \/ (\d+) misí$/, '$1 / $2 missions'], [/^(\d+) ★ z (\d+)$/, '$1 ★ of $2'], [/^další: (.+)$/, (m, a) => `next: ${T(a)}`],
+  [/^Výzva: (.+)$/, 'Challenge: $1'], [/^Výzva od kamaráda: „(.+)“ za (.+)\. Překonáte to\?$/, (m, a, b) => `A friend’s challenge: “${T(a)}” in ${b}. Can you beat it?`],
+  [/^Pokračujete misí (\d+)\. Rekordy máte uložené v tomto prohlížeči\.$/, 'Continuing with mission $1. Your records are saved in this browser.'],
+  [/^Mise „(.+)“ za (.+) a (\d) ★ v simulaci SO-101\. Překonáte to\?$/, (m, a, b, c) => `Mission “${T(a)}” in ${b} with ${c} ★ in the SO-101 simulator. Can you beat it?`],
+  [/^rekord kamaráda (.+) překonán o (\d+) s!$/, 'friend’s record $1 beaten by $2 s!'], [/^rekord kamaráda (.+) zatím platí$/, 'friend’s record $1 still stands'],
+  [/^Hotovo za (.+)! Kostka je v misce\.$/, 'Done in $1! The cube is in the bowl.'],
   [/^(.+) · doraz$/, (m, a) => `${T(a)} · end stop`],
   [/^(\d+)× servo Feetech STS3215$/, '$1× Feetech STS3215 servo'],
   [/^(.+) – SO-101 v simulaci \| printedrobotics\.cz$/, (m, a) => `${T(a)} – SO-101 simulator | printedrobotics.cz`],
@@ -365,6 +378,6 @@ const patterns = [
 ];
 
 // pieces of composed messages, translated as a whole by the patterns above (for tools/i18n-extract.mjs)
-const fragments = ['Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
+const fragments = ['· další: {}', '{} / {} misí · {} ★ z {}', '· rekord kamaráda {} překonán o {} s!', '· rekord kamaráda {} zatím platí', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
 
 export default { strings, patterns, fragments };

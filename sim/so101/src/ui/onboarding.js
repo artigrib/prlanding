@@ -91,7 +91,7 @@ export class Onboarding {
     ux.panel.under.classList.add('ux-coaching');
   }
   finish() {
-    this.i = -1; this.el.hidden = true; this.ring.hidden = true;
+    clearTimeout(this.tmo); this.i = -1; this.el.hidden = true; this.ring.hidden = true;
     this.ux.panel.stage.classList.remove('ux-coaching');
     this.ux.panel.under.classList.remove('ux-coaching');
     store.set('onboarded', true);
@@ -99,15 +99,32 @@ export class Onboarding {
   active() { return this.i >= 0; }
 
   notify(kind) {
-    if (this.i < 0 || !STEPS[this.i].done(kind)) return;
+    if (this.i < 0) return;
+    if (kind === 'won' && !STEPS[this.i].done(kind)) {
+      // a quick visitor can win before the guide's delayed step change: jump to the win step instead of missing it
+      const w = STEPS.findIndex((s) => s.done('won'));
+      if (w < 0 || this.i > w) return;
+      clearTimeout(this.tmo); this.i = w - 1; this.next();
+    }
+    if (!STEPS[this.i].done(kind)) return;
     if (kind === 'won') {
-      // the first success: let it sink in, then put the cube back for the "by hand" part
+      // the first success stays on screen (peak moment): the win card offers "Teď ručně →" (afterWin)
       this.ux.firstWin = this.ux.runner.time;
-      const k = this.i;
-      setTimeout(() => { if (this.i === k) { this.ux.app.reset(); this.next(); } }, this.ux.reduced ? 600 : 2600);
+      this.wonStep = this.i;
+      this.el.hidden = true; this.ring.hidden = true;
       return;
     }
-    setTimeout(() => this.next(), 350);
+    clearTimeout(this.tmo); this.tmo = setTimeout(() => this.next(), 350);
+  }
+
+  /** guided first win: is the win card currently the guide's step? */
+  atWin() { return this.i >= 0 && this.wonStep === this.i; }
+  /** "Teď ručně →" on the first win card: scene back, continue with the hands-on steps */
+  afterWin() {
+    if (!this.atWin()) return;
+    this.wonStep = -1;
+    this.ux.app.reset();
+    this.next();
   }
 
   anchorPoint(a) {

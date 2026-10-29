@@ -192,9 +192,15 @@
       'N° 09 — Licence': 'N° 09 — Licences', 'Prodáváme jen to, co licence dovoluje.': 'We only sell what the licence allows.',
       'Licenci konstrukčních souborů ověřujeme zvlášť od licence softwaru. Projekty s doložkou NC nabízíme jen s písemným souhlasem autorů.': 'We check the licence of the design files separately from the software licence. Projects with an NC clause are offered only with the authors’ written consent.',
       'Vizualizace z otevřených CAD modelů projektů (Sawppy podle modelu Curio, ExoMy podle simulačního modelu ESA). Záznamy na této stránce pocházejí z našich simulací v prohlížeči. Všechny projekty patří svým autorům.': 'Renders from the projects’ open CAD models (Sawppy from the Curio model, ExoMy from ESA’s simulation model). Recordings on this page come from our browser simulations. All projects belong to their authors.',
-      'Novinky': 'News'
+      'Novinky': 'News',
+      'Přicházíte ze simulace.': 'You’re coming from the simulator.',
+      'Kapitola 06: Skutečná ruka': 'Chapter 06: The real arm',
+      'Sada ještě není v prodeji – nechte e-mail a napíšeme vám jako prvním.': 'The kit isn’t on sale yet – leave your email and we’ll write to you first.',
+      'Sada se zatím jen předobjednává: nezávazně, cenu a termín vám napíšeme e-mailem jako prvním.': 'The kit is pre-order only for now: no obligation, we’ll email you the price and date first.'
     },
     patterns: [
+      [/^Vítejte zpět: (\d+) \/ 5 misí, (\d+) ★\.$/, 'Welcome back: $1 / 5 missions, $2 ★.'], [/^Pokračovat misí (\d+)$/, 'Continue with mission $1'],
+      [/^Přicházíte ze simulace: (\d+) (?:mise|misí), (\d+) ★\.$/, function (m, n, s) { return 'You’re coming from the simulator: ' + n + (n === '1' ? ' mission' : ' missions') + ', ' + s + ' ★.'; }],
       [/^(\d+) (sada|sady|sad)$/, function (m, n) { return n + (n === '1' ? ' kit' : ' kits'); }],
       [/^(\d+) položek$/, '$1 items'],
       [/^Parametry · (\d+)$/, 'Specifications · $1'],

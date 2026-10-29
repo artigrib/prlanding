@@ -169,6 +169,34 @@
       }, { rootMargin: '-45% 0px -50% 0px' });
       ['top', 'vyzkousejte', 'arena', 'pripravujeme', 'katalog', 'novinky', 'postup', 'komunita', 'licence'].forEach(function (id) { var el = document.getElementById(id); if (el) io.observe(el); });
     }
+    // [sim bridge] returning visitor: continue where you left off (progress lives in this browser only)
+    (function () {
+      var sp = null; try { sp = JSON.parse(localStorage.getItem('pr-sim-progress') || 'null'); } catch (eP) { sp = null; }
+      var note = $('.hero-note'), cta = $('[data-cta="hero-sim"]');
+      if (!sp || !note || !cta) return;
+      var ORDER = [['bowl', '01'], ['stack', '02'], ['sort', '03'], ['ball', '04'], ['trace', '05']], done = 0, stars = 0, nx = null;
+      ORDER.forEach(function (o) { var p = sp[o[0]]; if (p) { done++; stars += +p.stars || 0; } else if (!nx) nx = o; });
+      if (!done) return;
+      var base = cta.getAttribute('href'), q = base.indexOf('?'), path = q < 0 ? base : base.slice(0, q), lang = q < 0 ? '' : base.slice(q + 1);
+      var go = nx ? path + '?mise=' + nx[0] + (lang ? '&' + lang : '') : path + 'nastaveni/' + (lang ? '?' + lang : '');
+      note.innerHTML = '<span>Vítejte zpět: ' + done + ' / 5 misí, ' + stars + ' ★.</span> <a href="' + go + '">' + (nx ? 'Pokračovat misí ' + nx[1] : 'Kapitola 06: Skutečná ruka') + ' <span aria-hidden="true">→</span></a>';
+    })();
+    // warm the simulator on intent (hover / focus / touch of a sim link): the 11 MB engine starts downloading
+    // into the HTTP cache before the click, the sim then fetches it from there
+    (function () {
+      var warmed = false;
+      function warm(e) {
+        var a = e.target && e.target.closest && e.target.closest('a[href*="sim/so101/"]');
+        if (!a || warmed) return;
+        var c = navigator.connection; if (c && (c.saveData || /2g/.test(c.effectiveType || ''))) return;
+        warmed = true;
+        var base = a.getAttribute('href').split('?')[0].replace(/(objects\.html|nastaveni\/)$/, '');
+        ['vendor/mujoco/mujoco.wasm', 'vendor/mujoco/mujoco.js', 'vendor/three/three.module.min.js'].forEach(function (f) {
+          var l = document.createElement('link'); l.rel = 'prefetch'; l.href = base + f; if (/\.wasm$/.test(f)) l.as = 'fetch'; document.head.appendChild(l);
+        });
+      }
+      ['pointerover', 'focusin', 'touchstart'].forEach(function (ev) { document.addEventListener(ev, warm, { passive: true }); });
+    })();
     // hero preview: a short loop recorded from the real sim (no MuJoCo/three here). Loads only after the page,
     // only when visible, never with reduced motion or Save-Data; the poster image stays underneath.
     var hv = $('.hero-video');
@@ -314,6 +342,17 @@
       var qn = $('#quiz-note'); qn.hidden = false;
       syncUrl();
     }
+    // [sim bridge] arriving from the simulator (?z=sim): honest context above the form. The mission progress is
+    // read from this browser only and never sent anywhere.
+    var fromSim = qs('z') === 'sim';
+    if (fromSim) {
+      var sp = {}; try { sp = JSON.parse(localStorage.getItem('pr-sim-progress') || '{}') || {}; } catch (eS) { sp = {}; }
+      var sk = Object.keys(sp), sst = 0; sk.forEach(function (k) { sst += +(sp[k] && sp[k].stars) || 0; });
+      var sn = document.createElement('p'); sn.className = 'note-bar'; sn.id = 'sim-note';
+      sn.innerHTML = '<i aria-hidden="true"></i><span>' + (sk.length ? '<span>Přicházíte ze simulace: ' + sk.length + ' ' + (sk.length === 1 ? 'mise' : sk.length < 5 ? 'mise' : 'misí') + ', ' + sst + ' ★.</span> ' : '<span>Přicházíte ze simulace.</span> ') +
+        '<span>' + (r.preparing ? 'Sada ještě není v prodeji – nechte e-mail a napíšeme vám jako prvním.' : 'Sada se zatím jen předobjednává: nezávazně, cenu a termín vám napíšeme e-mailem jako prvním.') + '</span></span>';
+      var qn0 = $('#quiz-note'); qn0.parentNode.insertBefore(sn, qn0.nextSibling);
+    }
 
     var specs = window.PR_SPECS(r);
     set('#specs-title', 'Parametry · ' + specs.length);
@@ -420,7 +459,7 @@
       var qty = parseInt(form.qty.value, 10) || 1;
       var payload = { _subject: (r.preparing ? 'Upozornění: ' : 'Předobjednávka: ') + r.name + (qty > 1 ? ' ×' + qty : ''), email: email.value.trim(), note: form.note.value, robot: r.name,
         configuration: r.preparing ? '' : summary(), setup: r.setups ? st.setup : '', tier: st.tier, color: st.color, material: st.material, qty: qty,
-        school: form.school.checked ? 'ano' : '', ico: form.ico.value.trim(), type: r.preparing ? 'notify' : 'preorder', source: fromQuiz ? 'kviz' : 'web', page: location.href };
+        school: form.school.checked ? 'ano' : '', ico: form.ico.value.trim(), type: r.preparing ? 'notify' : 'preorder', source: fromQuiz ? 'kviz' : fromSim ? 'simulace' : 'web', page: location.href };
       btn.disabled = true; msg.hidden = false; msg.textContent = 'Odesíláme…';
       send(payload).then(function () { done(payload); })
         .catch(function (er) { msg.textContent = er && er.message === 'no-endpoint' ? NO_ENDPOINT_MSG : 'Odeslání se nezdařilo. Zkuste to prosím znovu.'; btn.disabled = false; });
