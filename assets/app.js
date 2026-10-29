@@ -94,7 +94,7 @@
   /* soft capture: one e-mail field for visitors not ready to pre-order (price alert / news) */
   function softForm(kind, robot) {
     var t = kind === 'price'
-      ? ['Zatím nevíte?', 'Pošleme vám jeden e-mail s cenou a termínem, až je budeme znát.', 'Poslat cenu']
+      ? ['Zatím nevíte?', 'Pošleme vám jeden e-mail, až budeme znát cenu a termín.', 'Dejte mi vědět']
       : ['Novinky a ceny e-mailem', 'Nové sady a spuštění prodeje. Nejvýš jednou za měsíc, odhlásíte se jedním klikem.', 'Odebírat'];
     return '<form class="soft" novalidate data-soft="' + kind + '"' + (robot ? ' data-robot="' + esc(robot) + '"' : '') + '>' +
       '<b>' + t[0] + '</b><span class="muted">' + t[1] + '</span>' +
@@ -298,20 +298,10 @@
       $('#mats').innerHTML = btns(MATS, 'material', 'opt', function (o) { return o[1] + '<span>' + o[2] + '</span>'; });
       var sum = r.preparing ? r.type + ' · ' + r.level : summary();
       set('#summary', sum); set('#sb-sum', sum);
-      var items = [['Tištěné díly podle STL projektu' + (r.setups ? (pair ? ' — leader i follower' : ' — follower') : ''), pair ? '2 sady' : '1 sada', 'Tisk']];
-      if (st.tier !== 'parts') {
-        if (r.id === 'so101') {
-          items.push(['Servo Feetech STS3215 7,4 V, převod 1/345', pair ? '7×' : '6×', 'Hardware']);
-          if (pair) { items.push(['Servo Feetech STS3215 7,4 V, převod 1/191', '2×', 'Hardware']); items.push(['Servo Feetech STS3215 7,4 V, převod 1/147', '3×', 'Hardware']); }
-          items.push(['Řídicí deska serv', pair ? '2×' : '1×', 'Hardware'], ['Zdroj 5 V', pair ? '2×' : '1×', 'Hardware'], ['Kabel USB-C', '2×', 'Hardware'], ['Svěrky ke stolu', pair ? '4×' : '2×', 'Hardware']);
-        } else { r.bom.forEach(function (b) { if (r.setups && !pair && /leader/i.test(b[0]) && !/follower/i.test(b[0])) return; items.push([b[0], b[1], 'Hardware']); }); }
-        items.push(['Spojovací materiál, roztříděný po krocích', '1 sada', 'Hardware']);
-      }
-      if (st.tier === 'tested') items.push(['Nastavení elektroniky a funkční test', '—', 'Servis']);
-      items.push(['Tištěný návod a bezpečnostní informace', '1×', 'Návod']);
+      var items = window.PR_BOX(r, st.tier, pair);
       set('#box-title', tierName() + ' · ' + items.length + ' položek');
       $('#box').innerHTML = items.map(function (it, i) { return '<li><span class="n">' + (i < 9 ? '0' : '') + (i + 1) + '</span><span>' + esc(it[0]) + '</span><span class="q">' + esc(it[1]) + '</span><span class="t">' + it[2] + '</span></li>'; }).join('');
-      set('#box-note', r.id === 'so101' ? 'Počty dle kusovníku projektu SO-ARM100.' : 'Položky dle kusovníku projektu; přesné počty potvrdíme před expedicí.');
+      set('#box-note', window.PR_BOX_NOTE(r));
     }
     document.addEventListener('click', function (e) {
       var b = e.target.closest('[data-k]'); if (!b) return;
@@ -328,14 +318,7 @@
     var specs = window.PR_SPECS(r);
     set('#specs-title', 'Parametry · ' + specs.length);
     $('#specs').innerHTML = specs.map(function (s) { return '<div><dt>' + esc(s[0]) + '</dt><dd>' + esc(s[1]) + '</dd></div>'; }).join('');
-    var FAQ = [
-      ['Zvládnu sestavení bez zkušeností?', 'Náročnost této sady: ' + r.level + '. Díly jsou roztříděné po krocích a návod vede krok za krokem. Pokud si nejste jistí, zvolte Sadu s oživením — elektroniku nastavíme za vás.'],
-      ['Jak funguje předobjednávka?', 'Předobjednávka je nezávazná. Ozveme se e-mailem s cenou a termínem; platíte až po potvrzení objednávky.'],
-      ['Je to originální produkt autorů projektu?', 'Ne. Sadu vyrábíme podle otevřené dokumentace projektu ' + r.name + ' (' + r.author + ', licence ' + r.hw + '). Autoři s námi nejsou spojeni a produkt neschválili.'],
-      ['Jaký software budu potřebovat?', r.cat === 'combat' ? 'Žádný. Robot se ovládá RC vysílačem FlySky; přijímač Malenki Nano s ním jen spárujete, programovat nic nemusíte. Návod projektu najdete v sekci Licence a bezpečnost.' : r.software + '. Software je open-source a zdarma; odkaz na návod projektu najdete v sekci Licence a bezpečnost.'],
-      ['Je sada vhodná pro děti?', 'Není to hračka. Obsahuje malé díly a elektroniku a je určena osobám od 14 let; mladší pouze pod dohledem dospělého, například ve škole nebo kroužku.'],
-      ['Objednáváme pro školu nebo kroužek. Jde to na fakturu?', 'Ano. Do formuláře napište počet sad a IČO, cenu za více kusů a fakturu na školu pošleme spolu s potvrzením.']
-    ];
+    var FAQ = window.PR_FAQ(r);
     $('#faq-list').innerHTML = FAQ.map(function (f) { return '<details><summary>' + esc(f[0]) + '</summary><p>' + esc(f[1]) + '</p></details>'; }).join('');
     function relHtml(ids) {
       return ids.map(function (id) { var x = byId[id];
