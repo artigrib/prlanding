@@ -11,6 +11,10 @@ export const RELAY_URL = 'wss://relay.printedrobotics.cz/tab';
 export const ADD_CMD = `claude mcp add --transport http printedrobotics ${MCP_URL}`;
 const DOCS = 'https://github.com/artigrib/prlanding/blob/main/docs/mcp.md';
 const LOG_MAX = 40;
+const MAX_TRIES = 3;                 // failed link attempts before the error state
+const BACKOFF_MS = 1500, BACKOFF_CAP_MS = 15000;
+/** No welcome from the relay within this time = the attempt failed. ?ai_timeout= (ms, 500-8000) for tests. */
+const CONNECT_TIMEOUT_MS = Math.max(500, Math.min(8000, +new URLSearchParams(location.search).get('ai_timeout') || 8000));
 
 /** ?relay= is honoured only for a relay on this machine (local development and the end-to-end test). */
 export function relayUrl(search = location.search) {
@@ -89,6 +93,10 @@ export function mountAgentPanel(root, { api, ux, button }) {
   const statusText = el('span', null, '');
   status.append(dot, statusText);
   const btnConnect = el('button', 'btn btn-act ai-connect', t('Získat kód pro připojení')); btnConnect.type = 'button';
+  const btnRetryNow = el('button', 'ux-link', t('Zkusit hned')); btnRetryNow.type = 'button'; btnRetryNow.hidden = true;
+  const errBox = el('div', 'ai-err'); errBox.hidden = true; errBox.setAttribute('data-testid', 'agent-error');
+  const btnRetry = el('button', 'btn btn-act', t('Zkusit znovu')); btnRetry.type = 'button'; btnRetry.setAttribute('data-testid', 'agent-retry');
+  errBox.append(el('p', 'ink2', t('Simulace funguje dál i bez něj. Zkuste to za chvíli; když to nepůjde ani pak, napište nám.')), btnRetry);
 
   // ---------- code ----------
   const codeBox = el('div', 'ai-codebox'); codeBox.hidden = true;
@@ -144,7 +152,7 @@ export function mountAgentPanel(root, { api, ux, button }) {
   const foot = el('p', 'mono-s muted ai-foot');
   const docs = el('a', null, t('Jak to funguje')); docs.href = DOCS; docs.target = '_blank'; docs.rel = 'noopener';
   foot.append(document.createTextNode(t('Jen simulace: AI nemůže ovládat skutečnou ruku. Server zprávy jen přeposílá a nic neukládá.') + ' '), docs);
-  root.append(status, btnConnect, codeBox, setup, ctl, logBox, foot);
+  root.append(status, btnRetryNow, btnConnect, errBox, codeBox, setup, ctl, logBox, foot);
 
   // ---------- bar over the 3D view (always visible while an AI link exists) ----------
   const stage = document.querySelector('.stage');
@@ -216,22 +224,35 @@ export function mountAgentPanel(root, { api, ux, button }) {
   }
 
   // ---------- state ----------
+  // view: idle | connecting | retry | error (the panel's own link handling) or the bridge's waiting | pairing | paired.
+  // The bridge never reconnects by itself (reconnect: false): a failed or silent link is counted here, retried with a
+  // capped backoff, and after MAX_TRIES the panel stops in a clear error state with "Zkusit znovu".
   let state = 'idle', clientName = '', code = null, expTimer = 0, decide = null, askTimer = 0;
+  let wanted = false, failing = false, attempts = 0, connTimer = 0, retryTimer = 0, retryAt = 0, cdTimer = 0;
   const STATUS = {
     idle: 'Nepřipojeno', connecting: 'Připojuji se k serveru…', waiting: 'Čeká na AI asistenta',
-    pairing: 'AI asistent žádá o připojení', paired: 'Simulaci ovládá: {name}', offline: 'Spojení přerušeno, zkouším znovu…'
+    pairing: 'AI asistent žádá o připojení', paired: 'Simulaci ovládá: {name}',
+    retry: 'Server neodpovídá. Zkusím to znovu za {s} s (pokus {n} z {max}).',
+    error: 'Server pro připojení AI teď není dostupný.'
   };
   function render() {
     root.dataset.state = state;
-    const est = api.estop;
-    statusText.textContent = t(STATUS[state], { name: clientName || 'AI' }) + (est ? ' · ' + t('STOP je zapnutý') : '');
+    const est = api.estop, paired = state === 'paired';
+    const left = Math.max(0, Math.ceil((retryAt - Date.now()) / 1000));
+    statusText.textContent = t(STATUS[state], { name: clientName || 'AI', s: left, n: attempts + 1, max: MAX_TRIES }) + (est ? ' · ' + t('STOP je zapnutý') : '');
     btnConnect.hidden = state !== 'idle';
+    errBox.hidden = state !== 'error';
+    btnRetryNow.hidden = state !== 'retry';
     codeBox.hidden = setup.hidden = !(state === 'waiting' || state === 'pairing');
-    ctl.hidden = state === 'idle';
-    logBox.hidden = state === 'idle' && !log.children.length;
-    bar.hidden = state === 'idle';
+    ctl.hidden = state === 'idle' || state === 'error';
+    btnStop.hidden = !(paired || est);                    // STOP only once a session exists (or to release a latched one)
+    btnOff.textContent = paired || state === 'waiting' || state === 'pairing' ? t('Odpojit') : t('Zrušit');
+    ctl.classList.toggle('one', btnStop.hidden);
+    logBox.hidden = !log.children.length && !paired;
+    bar.hidden = !(paired || est);                        // the bar over the 3D view only while an AI drives the arm
     bar.dataset.state = state;
-    barText.textContent = state === 'paired' ? t('AI ovládá ruku: {name}', { name: clientName || 'AI' }) : t(STATUS[state]);
+    barText.textContent = paired ? t('AI ovládá ruku: {name}', { name: clientName || 'AI' }) : t('STOP je zapnutý');
+    barOff.hidden = !paired;
     for (const b of [btnStop, barStop]) {
       b.textContent = est ? t('Uvolnit STOP') : 'STOP';
       b.setAttribute('aria-pressed', String(est));
@@ -239,6 +260,31 @@ export function mountAgentPanel(root, { api, ux, button }) {
     root.classList.toggle('estop', est); bar.classList.toggle('estop', est);
     btnNew.hidden = state !== 'waiting';
     sayCode.textContent = sayCode2.textContent = say();
+  }
+  function clearTimers() { clearTimeout(connTimer); clearTimeout(retryTimer); clearInterval(cdTimer); }
+  function start() {
+    clearTimers();
+    wanted = true; state = 'connecting'; render();
+    connTimer = setTimeout(() => fail('timeout'), CONNECT_TIMEOUT_MS);
+    bridge.connect();
+  }
+  /** The link failed (refused, timed out or dropped): retry with backoff, or stop in the error state. */
+  function fail() {
+    clearTimers();
+    failing = true; bridge.disconnect(); failing = false;
+    code = null; clearInterval(expTimer); closeAsk();
+    attempts++;
+    if (attempts >= MAX_TRIES) { state = 'error'; render(); return; }
+    const delay = Math.min(BACKOFF_CAP_MS, BACKOFF_MS * 2 ** (attempts - 1));
+    retryAt = Date.now() + delay; state = 'retry';
+    retryTimer = setTimeout(start, delay);
+    cdTimer = setInterval(render, 1000);
+    render();
+  }
+  function stopAll() {
+    wanted = false; clearTimers(); attempts = 0;
+    failing = true; bridge.disconnect(); failing = false;
+    code = null; clearInterval(expTimer); state = 'idle'; render();
   }
   function tickExp() {
     if (!code) { codeExp.textContent = ''; return; }
@@ -250,11 +296,18 @@ export function mountAgentPanel(root, { api, ux, button }) {
     url: relayUrl(),
     handler,
     client: { app: 'so101-sim', ver: '1' },
+    reconnect: false,
     ui: {
       onState(s) {
-        state = s.state;
         if (s.clientName) clientName = s.clientName;
-        if (state !== 'pairing') closeAsk();
+        if (s.state !== 'pairing') closeAsk();
+        if (s.state === 'connecting') return;               // the panel shows its own connecting / retry state
+        if (s.state === 'idle' || s.state === 'offline') {   // the link closed: refused, dropped or by us
+          if (failing || !wanted) return;
+          return fail();
+        }
+        clearTimeout(connTimer); attempts = 0;               // the relay answered
+        state = s.state;
         render();
       },
       onCode(c) {
@@ -290,10 +343,12 @@ export function mountAgentPanel(root, { api, ux, button }) {
   const toggleStop = () => { api.setEstop(!api.estop); if (api.estop) ux.panel.toast(t('STOP: AI nemůže hýbat rukou, dokud ho neuvolníte.'), 'err'); };
   btnStop.addEventListener('click', toggleStop);
   barStop.addEventListener('click', toggleStop);
-  const off = () => { api.stop(); bridge.disconnect(); code = null; clearInterval(expTimer); render(); };
+  const off = () => { api.stop(); stopAll(); };
   btnOff.addEventListener('click', off);
   barOff.addEventListener('click', off);
-  btnConnect.addEventListener('click', () => bridge.connect());
+  btnConnect.addEventListener('click', () => { attempts = 0; start(); });
+  btnRetry.addEventListener('click', () => { attempts = 0; start(); });
+  btnRetryNow.addEventListener('click', () => start());
   btnNew.addEventListener('click', () => bridge.rotateCode());
   api.on('estop', render);
 
@@ -301,7 +356,7 @@ export function mountAgentPanel(root, { api, ux, button }) {
     bridge,
     open() {
       root.hidden = false; button.setAttribute('aria-expanded', 'true');
-      if (state === 'idle') bridge.connect();
+      if (state === 'idle') { attempts = 0; start(); }
       render();
       root.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     },

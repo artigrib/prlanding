@@ -30,6 +30,10 @@ While an AI is connected, a bar over the 3D view shows who drives the arm, with 
 (Release STOP). Moving a slider, dragging the arm or pressing Esc also ends the AI's current motion.
 The panel logs every tool call in plain words (for example *Přesun chapadla na x 250, y −110, z 90 mm ✓ 0,8 s*).
 
+If the relay cannot be reached, the panel says so: it retries twice with a growing pause (each attempt
+gives up after 8 s without an answer) and then shows *Server pro připojení AI teď není dostupný* with
+**Zkusit znovu** (Try again). STOP and the bar over the 3D view appear only once an AI is paired.
+
 **Disconnect.** Click **Odpojit** (Disconnect) in the panel or the bar, or close the tab. Claude's next
 call fails with a clear message. To reconnect, read Claude a fresh code.
 

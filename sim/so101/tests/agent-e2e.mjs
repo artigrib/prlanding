@@ -64,6 +64,7 @@ try {
   const code = (await codeEl.textContent()).trim();
   ok(/printedrobotics https:\/\/mcp\.printedrobotics\.cz\/mcp/.test(await page.locator('.ai-cmd').first().textContent()), 'setup shows the claude mcp add command');
   ok((await page.locator('.ai-say').first().textContent()).includes(code), 'setup shows the sentence with the code');
+  ok(!(await page.getByTestId('agent-stop').isVisible()) && !(await page.locator('.ai-bar').isVisible()), 'no STOP and no stage bar before a session exists');
   await page.screenshot({ path: path.join(OUT, 'agent-waiting.png') }).catch(() => {});
 
   const client = new Client({ name: 'agent-e2e', version: '1.0.0' }, { versionNegotiation: { mode: { pin: '2026-07-28' } } });
@@ -146,6 +147,7 @@ try {
   ok(sb2.mission.state === 'running' && !sb2.reload_required && objs.some((o) => o.kind === 'object'), `breakfast runs in the object scene (${objs.filter((o) => o.kind === 'object').map((o) => o.id).join(', ')})`);
 
   // ---- Odpojit ----
+  ok(await page.locator('#ai-panel[data-state=paired]').count() === 1, 'panel state: ' + await page.locator('#ai-panel').getAttribute('data-state'));
   await page.getByTestId('agent-disconnect').click();
   await sleep(300);
   const gone = await raw('get_state');
@@ -163,6 +165,33 @@ try {
   ok(!cz.length && /Connect to the SO-101 simulation, code/.test(enText), 'English panel has no Czech left' + (cz.length ? ': ' + cz.join(' | ') : ''));
   await en.screenshot({ path: path.join(OUT, 'agent-en.png') }).catch(() => {});
   await en.close();
+
+  // ---- relay down: refused port and a silent server -> retries with backoff, then a clear error state ----
+  const silent = net.createServer(() => { /* accept and never answer */ });
+  await new Promise((r) => silent.listen(0, '127.0.0.1', r));
+  const deadPort = await freePort();
+  for (const [what, url] of [['refused', `ws://127.0.0.1:${deadPort}/tab`], ['silent', `ws://127.0.0.1:${silent.address().port}/tab`]]) {
+    const pg = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    await pg.goto(`http://127.0.0.1:${sport}/sim/so101/?test=1&ai_timeout=800&relay=${encodeURIComponent(url)}`);
+    await pg.waitForFunction(() => window.__sim && (window.__sim.ready || window.__sim.error), null, { timeout: 300000 });
+    const t0 = Date.now();
+    await pg.click('#ai-open');
+    await pg.locator('#ai-panel[data-state=retry]').waitFor({ timeout: 15000 });
+    const retryText = await pg.locator('.ai-status').innerText();
+    await pg.getByTestId('agent-error').waitFor({ timeout: 30000 });
+    const secs = (Date.now() - t0) / 1000;
+    const st = await pg.locator('.ai-status').innerText();
+    ok(/Zkusím to znovu za \d+ s \(pokus 2 z 3\)/.test(retryText) && /není dostupný/.test(st) && secs < 20,
+      `relay ${what}: retry state ("${retryText.trim()}"), then the error state after ${secs.toFixed(1)} s`);
+    ok(!(await pg.getByTestId('agent-stop').isVisible()) && !(await pg.locator('.ai-bar').isVisible()) && !(await pg.getByTestId('agent-code').isVisible()),
+      `relay ${what}: no STOP, no stage bar, no code in the error state`);
+    await pg.waitForTimeout(3000);
+    ok(await pg.locator('#ai-panel[data-state=error]').count() === 1, `relay ${what}: the error state stays (no endless loop)`);
+    await pg.getByTestId('agent-retry').click();
+    ok(/connecting|retry/.test(await pg.locator('#ai-panel').getAttribute('data-state')), `relay ${what}: "Zkusit znovu" starts a new attempt`);
+    await pg.close();
+  }
+  silent.close();
 
   // ---- ?real=1: no API, no panel ----
   const real = await browser.newPage();
