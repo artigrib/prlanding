@@ -16,6 +16,7 @@ import { Explode } from './ui/explode.js';
 import { Links } from './ui/links.js';
 import { DrawAssist } from './draw.js';
 import { Grab } from './grab.js';
+import { t as tr } from './i18n/index.js';
 import { HiDetail } from './ui/hidetail.js';
 import { store } from './ui/store.js';
 
@@ -482,11 +483,12 @@ class UX {
   async shareRecord() {
     const r = this.lastRes; if (!r || !r.own) return;
     const m = MISSIONS.find((x) => x.id === r.id);
-    const url = location.origin + location.pathname + `?mise=${r.id}&rekord=${r.time.toFixed(1)}`;
-    const text = `Mise „${m.title}“ za ${fmtT(r.time)} a ${r.stars} ★ v simulaci SO-101. Překonáte to?`;
-    try { if (navigator.share) { await navigator.share({ title: 'SO-101 – výzva', text, url }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+    const lang = new URLSearchParams(location.search).get('lang');
+    const url = location.origin + location.pathname + `?mise=${r.id}&rekord=${r.time.toFixed(1)}` + (lang ? `&lang=${lang}` : '');
+    const text = tr(`Mise „${m.title}“ za ${fmtT(r.time)} a ${r.stars} ★ v simulaci SO-101. Překonáte to?`);   // leaves the page: translate here
+    try { if (navigator.share) { await navigator.share({ title: tr('SO-101 – výzva'), text, url }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
     try { await navigator.clipboard.writeText(text + ' ' + url); this.panel.toast('Odkaz s výzvou je ve schránce'); }
-    catch (e) { window.prompt('Zkopírujte odkaz s výzvou:', url); }
+    catch (e) { window.prompt(tr('Zkopírujte odkaz s výzvou:'), url); }
   }
 
   /** start: a challenge link, or continue where the visitor left off */

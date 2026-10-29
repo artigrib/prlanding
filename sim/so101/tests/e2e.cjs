@@ -364,6 +364,16 @@ async function touchDrag(page, from, to, steps = 8) {
       await r.close();
     }
 
+    // ---------------- challenge landing + chapter 06 ----------------
+    {
+      const c = await open(browser, base + '?test=1&mise=stack&rekord=27.3&detail=low', { width: 1280, height: 800 });
+      const st = await S(c, () => ({ chip: !!document.querySelector('.ux-chal'), m: window.__sim._ux.runner.m.id, ch: window.__sim._ux.challenge && window.__sim._ux.challenge.time,
+        cards: (window.__sim._ux.panel.openPicker ? window.__sim._ux.panel.openPicker() : null, !!document.querySelector('#ux-picker a.ux-chapter[href="nastaveni/"]')) }));
+      ok(st.chip && st.m === 'stack' && Math.abs(st.ch - 27.3) < 1e-6, 'challenge link ?mise=&rekord= lands on the mission with a challenge chip (' + JSON.stringify(st) + ')');
+      ok(st.cards, 'mission picker offers chapter 06 "Skutečná ruka" → setup wizard');
+      await c.close();
+    }
+
     // ---------------- onboarding (first visit) ----------------
     const o = await open(browser, base + '?test=1&onboard=1&detail=low', { width: 1280, height: 800 });
     await o.waitForTimeout(1500);
@@ -378,7 +388,12 @@ async function touchDrag(page, from, to, steps = 8) {
     await advanceUntil(o, () => window.__sim.ux().held === 'cube' && !window.__sim.ux().busy, 14, 1);
     a = await S(o, () => window.__sim.screen('bowl')); await o.mouse.click(a.x, a.y);
     await advanceUntil(o, () => window.__sim.ux().won, 16, 1);
-    await o.waitForTimeout(3200);
+    await o.waitForTimeout(600);
+    const stay = await S(o, () => ({ win: !document.getElementById('win').hidden, guide: !!document.getElementById('ux-wguide') && !document.getElementById('ux-wguide').hidden,
+      cta: (() => { const c = document.getElementById('cta'); return !!c && c.offsetParent !== null; })(), coach: document.getElementById('ux-coach-h').textContent }));
+    ok(stay.win && stay.guide && !stay.cta, 'first (guided) win card stays, offers "Teď ručně", no purchase CTA (' + JSON.stringify(stay) + ')');
+    await o.click('#ux-wguide');
+    await o.waitForTimeout(400);
     const step = await S(o, () => document.getElementById('ux-coach-h').textContent);
     ok(/Teď ručně/.test(step), 'guided first task advances to the hands-on step after the win (' + step + ')');
     await shot(o, 'desk-10-onboarding');
