@@ -243,7 +243,12 @@ try {
       await sleep(500);
       ok(await ev('window.__sim._app.sim.d.time') > d0, 'visible again: the rAF loop runs');
       await client.close();
-    } finally { ws.close(); ch.kill(); fs.rmSync(prof, { recursive: true, force: true }); }
+    } finally {
+      ws.close();
+      // wait for Chromium to exit before deleting its profile (it still writes there while shutting down)
+      await new Promise((r) => { if (ch.exitCode !== null || ch.signalCode !== null) return r(); ch.once('exit', r); ch.kill(); setTimeout(r, 10000); });
+      fs.rmSync(prof, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+    }
   }
 } catch (e) {
   console.log('FAIL', e.stack || e); fails++;
