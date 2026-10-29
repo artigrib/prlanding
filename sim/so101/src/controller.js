@@ -161,7 +161,7 @@ export class ArmController {
   }
 
   /** Place whatever is held at p (x, y = centre, z = height where the held object's centre should end). */
-  planPlace(p, from, rollIn, heldPos) {
+  planPlace(p, from, rollIn, heldPos, maxOff = 0.03) {
     const s = from || this.startPoint();
     const hover = Math.max(p[2] + HOVER, 0.09);
     const lift = Math.max(s[2], hover);
@@ -180,7 +180,7 @@ export class ArmController {
       plan.steps.splice(1, 3, { k: 'dyn', fn: (c) => {
         const o = heldPos(), t = c.actualTip(c._p);
         let ox = t[0] - o[0], oy = t[1] - o[1], oz = t[2] - o[2];
-        if (Math.hypot(ox, oy, oz) > 0.03) { ox = oy = oz = 0; }
+        if (Math.hypot(ox, oy, oz) > maxOff) { ox = oy = oz = 0; }
         const h = [c.target[0], c.target[1], c.target[2]];
         return tail([p[0] + ox, p[1] + oy, p[2] + 0.004 + oz], h);
       } });
@@ -250,6 +250,8 @@ export class ArmController {
       this.pitch = st.pitch != null ? st.pitch : Math.PI / 2;
     } else if (st.k === 'grip') {
       this.grip = st.open ? GRIP_OPEN : GRIP_CLOSED;
+      // gentle release (light library parts): open only a little past where the jaw is now
+      if (st.open && st.partial) this.grip = Math.min(GRIP_OPEN, this.d.qpos[this.m.jnt_qposadr[this.m.actuator_trnid[2 * this.act[5]]]] + st.partial);
       this.emit('grip', st.open);
     } else if (st.k === 'dyn') {
       // re-plan at execution time (closed loop, e.g. re-aiming a push); fn returns steps or null

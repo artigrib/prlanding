@@ -51,7 +51,8 @@ function box(name, size, pos, rgba, euler) {
 function bin(name, hx, hy, h, rgba) {   // open box, inside hx × hy (half), wall height h
   const t = 0.002;
   return [
-    box(name + '_f', [hx + 2 * t, hy + 2 * t, 0.0015], [0, 0, 0.0015], rgba),
+    // floor: drawn only (contype 0) – parts rest on the table; a 3 mm collision plate let thin parts sink into it
+    box(name + '_f', [hx + 2 * t, hy + 2 * t, 0.0008], [0, 0, 0.0008], rgba).replace('group="3"', 'group="3" contype="0" conaffinity="0"'),
     box(name + '_w0', [t, hy + 2 * t, h / 2], [hx + t, 0, h / 2], rgba),
     box(name + '_w1', [t, hy + 2 * t, h / 2], [-hx - t, 0, h / 2], rgba),
     box(name + '_w2', [hx, t, h / 2], [0, hy + t, h / 2], rgba),
@@ -133,25 +134,46 @@ const BANANA = [
   [-0.039, 0.0250, 0.015, 0.0005, 0.031], [-0.031, 0.0450, 0.013, 0.001, 0.029], [-0.019, 0.0610, 0.010, 0.004, 0.027],
   [-0.006, 0.0730, 0.007, 0.007, 0.022]
 ];
-export const COLLISION = {
-  food_produce_banana_a01: (body) => {
-    const meshes = [], geoms = [];
-    for (let i = 1; i < BANANA.length; i++) {
-      const [ax, ay, ah, az0, az1] = BANANA[i - 1], [bx, by, bh, bz0, bz1] = BANANA[i];
-      const L = Math.hypot(bx - ax, by - ay), nx = -(by - ay) / L, ny = (bx - ax) / L;   // left normal
-      const v = [];
-      for (const [x, y, hw, z0, z1] of [[ax, ay, ah, az0, az1], [bx, by, bh, bz0, bz1]]) {
-        for (const sgn of [-1, 1]) for (const z of [z0, z1]) v.push(x + sgn * hw * nx, y + sgn * hw * ny, z);
-      }
-      meshes.push(`<mesh name="${body}_s${i}" vertex="${v.map((q) => +q.toFixed(5)).join(' ')}"/>`);
-      geoms.push(`<geom name="${body}_s${i}" type="mesh" mesh="${body}_s${i}" friction="0.65 0.01 0.001" condim="4" solref="0.01 1" group="3"/>`);
-    }
-    return { meshes: meshes.join('\n'), geoms: geoms.join('\n') };
+// Thin cutlery: its single hull has slanted sides that act as a wedge – the jaws squeeze a 16 g spoon out. The
+// replacement is a chain of slices along the length, cut from the object's own hull vertices (true arch shape,
+// vertical sides). Rows as above, computed from the MJCF.
+function slicesFromHull(text, n = 9) {
+  const v = /vertex="([^"]*)"/.exec(text)[1].trim().split(/\s+/).map(Number), P = [];
+  for (let i = 0; i < v.length; i += 3) P.push(v.slice(i, i + 3));
+  const x0 = Math.min(...P.map((p) => p[0])), x1 = Math.max(...P.map((p) => p[0])), rows = [];
+  for (let k = 0; k <= n; k++) {
+    const x = x0 + (x1 - x0) * k / n, near = P.filter((p) => Math.abs(p[0] - x) <= (x1 - x0) / n * 0.75);
+    if (!near.length) continue;
+    const ys = near.map((p) => p[1]), zs = near.map((p) => p[2]);
+    const yc = (Math.min(...ys) + Math.max(...ys)) / 2, hw = Math.max(0.0025, (Math.max(...ys) - Math.min(...ys)) / 2);
+    let z0 = Math.min(...zs), z1 = Math.max(...zs);
+    if (z1 - z0 < 0.0025) { const zc = (z0 + z1) / 2; z0 = zc - 0.00125; z1 = zc + 0.00125; }
+    rows.push([x, yc, hw, Math.max(0, z0), z1]);
   }
+  return rows;
+}
+function chain(rows, body, fr) {
+  const meshes = [], geoms = [];
+  for (let i = 1; i < rows.length; i++) {
+    const [ax, ay, ah, az0, az1] = rows[i - 1], [bx, by, bh, bz0, bz1] = rows[i];
+    const L = Math.hypot(bx - ax, by - ay), nx = -(by - ay) / L, ny = (bx - ax) / L;   // left normal
+    const v = [];
+    for (const [x, y, hw, z0, z1] of [[ax, ay, ah, az0, az1], [bx, by, bh, bz0, bz1]]) {
+      for (const sgn of [-1, 1]) for (const z of [z0, z1]) v.push(x + sgn * hw * nx, y + sgn * hw * ny, z);
+    }
+    meshes.push(`<mesh name="${body}_s${i}" vertex="${v.map((q) => +q.toFixed(5)).join(' ')}"/>`);
+    geoms.push(`<geom name="${body}_s${i}" type="mesh" mesh="${body}_s${i}" friction="${fr} 0.01 0.001" condim="4" solref="0.01 1" group="3"/>`);
+  }
+  return { meshes: meshes.join('\n'), geoms: geoms.join('\n') };
+}
+export const COLLISION = {
+  dishware_plastic_spoon_a01: (body, text) => chain(slicesFromHull(text), body, 0.4),
+  dishware_plastic_fork_a01: (body, text) => chain(slicesFromHull(text), body, 0.4),
+  food_produce_banana_a01: (body) => chain(BANANA, body, 0.65)
 };
 function applyCollision(entry, text) {
   const f = COLLISION[entry.id]; if (!f) return text;
-  const { meshes, geoms } = f(entry.body);
+  const { meshes, geoms } = f(entry.body, text);
   return text.replace(/<asset>[\s\S]*?<\/asset>/, `<asset>\n${meshes}\n</asset>`).replace(/<geom\b[^>]*\/>/g, '').replace(/(<inertial\b[^>]*\/>)/, `$1\n${geoms}`);
 }
 

@@ -60,11 +60,12 @@ export class World {
     const b = this.o[name].body, x = this.d.xipos; out = out || this.p;
     out[0] = x[3 * b]; out[1] = x[3 * b + 1]; out[2] = x[3 * b + 2]; return out;
   }
-  /** World-frame collision vertices of a body's mesh geoms (flat array x, y, z, …). */
+  /** World-frame collision vertices of a body's mesh geoms: one flat array (x, y, z, …) per convex geom. */
   points(name) {
-    const m = this.m, d = this.d, b = this.o[name].body, out = [];
+    const m = this.m, d = this.d, b = this.o[name].body, all = [];
     for (let g = m.body_geomadr[b], n = g + m.body_geomnum[b]; g < n; g++) {
-      if (m.geom_type[g] !== 7) continue;
+      if (m.geom_type[g] !== 7 || m.geom_contype[g] === 0) continue;
+      const out = []; all.push(out);
       const id = m.geom_dataid[g], V = m.mesh_vert, a = m.mesh_vertadr[id], k = m.mesh_vertnum[id];
       const P = d.geom_xpos, M = d.geom_xmat, p = 3 * g, r = 9 * g;
       for (let i = a; i < a + k; i++) {
@@ -72,7 +73,7 @@ export class World {
         out.push(P[p] + M[r] * x + M[r + 1] * y + M[r + 2] * z, P[p + 1] + M[r + 3] * x + M[r + 4] * y + M[r + 5] * z, P[p + 2] + M[r + 6] * x + M[r + 7] * y + M[r + 8] * z);
       }
     }
-    return out;
+    return all;
   }
   /** Unit vector of body axis k (0 x, 1 y, 2 z) in world. */
   axis(name, k, out) {
@@ -124,6 +125,7 @@ export class World {
     }
     this.activeList = Object.values(this.o).filter((e) => e.active);
     this.mj.mj_forward(this.m, this.d);
+    for (const e of this.activeList) if (e.lib) e.restZ = this.d.xipos[3 * e.body + 2];
   }
 
   /** Objects that fell off the table go back to their layout spot. Returns the name or null. */
