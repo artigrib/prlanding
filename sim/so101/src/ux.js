@@ -645,6 +645,7 @@ class UX {
       app.sync(); this.extras.sync();
     };
     api.missions = MISSIONS.map((m) => m.id);
+    api.objectMissions = MISSIONS.filter((m) => m.objects).map((m) => m.id);
     api.mission = (id) => this.selectMission(id);
     api.solve = () => this.startDemo();
     api.setMode = (m) => this.setMode(m);

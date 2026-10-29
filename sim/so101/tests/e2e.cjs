@@ -213,7 +213,7 @@ async function touchDrag(page, from, to, steps = 8) {
       const h0 = (await ux(p)).hud, g0 = await S(p, () => window.__sim._ux.ctl.grip);
       let jp = await S(p, () => window.__sim.linkPoint(5));
       // the jaws can be hidden behind the cube from the default view (frame-rate dependent orbit): try the fixed views
-      for (const v of ['side', 'front']) { if (jp) break; await S(p, (v) => window.__sim.cameraNow(v), v); await p.waitForTimeout(300); jp = await S(p, () => window.__sim.linkPoint(5)); }
+      for (const v of ['side', 'front', 'top', 'orbit']) { if (jp) break; await S(p, () => window.__sim.advance(0.3)); await S(p, (v) => window.__sim.cameraNow(v), v); await p.waitForTimeout(300); jp = await S(p, () => window.__sim.linkPoint(5)); }
       ok(!!jp, 'a visible point on the jaws exists for the tap test');
       await p.mouse.click(jp.x, jp.y);
       await S(p, () => window.__sim.advance(1.2));
@@ -278,7 +278,7 @@ async function touchDrag(page, from, to, steps = 8) {
     await shot(p, 'desk-04-win');
 
     // every mission: automatic solution
-    for (const id of await S(p, () => window.__sim.missions)) {
+    for (const id of await S(p, () => window.__sim.missions.filter((m) => !window.__sim.objectMissions.includes(m)))) {   // object missions: below
       await S(p, (m) => window.__sim.mission(m), id);
       await S(p, () => window.__sim.solve());
       const t = await advanceUntil(p, () => window.__sim.ux().won, 45, 3);
@@ -369,7 +369,7 @@ async function touchDrag(page, from, to, steps = 8) {
     }
 
     // ---------------- object missions 06–10 (NVIDIA SimReady objects) ----------------
-    ok(!p.reqs.some((u) => /\/objects\/|objects\/view\.js/.test(u)), 'mission 01 page fetches nothing of the object library');
+    ok(!p.reqs.some((u) => /\/so101\/objects\/|objects\/(view|library)\.js/.test(u)), 'mission 01 page fetches no object asset (manifest, MJCF, GLB) and no object loader');
     {
       // picking an object mission in the plain scene reloads into the object scene
       const q = await open(browser, base + '?test=1&mise=trace&detail=low', { width: 1280, height: 800 });
@@ -386,6 +386,16 @@ async function touchDrag(page, from, to, steps = 8) {
       const st = await S(q, () => ({ scene: window.__sim.objectScene(), m: window.__sim.ux().mission, glb: window.__sim.objectsReady(), n: document.querySelector('.mission p.mono').textContent }));
       ok(st.scene && st.m === id && st.glb, `${id}: object scene, mission and its GLBs loaded (${JSON.stringify(st)})`);
       if (id === 'line') await shot(q, 'desk-11-line');
+      if (id === 'breakfast') {
+        // click-to-pick with a real object: apple, then the plate
+        await S(q, () => window.__sim.pick('apple'));
+        await advanceUntil(q, () => window.__sim.ux().held === 'apple' && !window.__sim.ux().busy, 20, 1);
+        await S(q, () => window.__sim.pick('plate'));
+        await advanceUntil(q, () => !window.__sim.ux().busy, 20, 1);
+        await S(q, () => window.__sim.advance(1));
+        const h = await S(q, () => window.__sim.ux().hud);
+        ok(/Hotovo 1 z 3/.test(h), 'click the apple, then the plate: the arm puts it on the plate (' + h + ')');
+      }
       await S(q, () => window.__sim.solve());
       const t = await advanceUntil(q, () => window.__sim.ux().won, 160, 4);
       const hud = await S(q, () => window.__sim.ux().hud);
