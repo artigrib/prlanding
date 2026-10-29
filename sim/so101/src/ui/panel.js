@@ -321,7 +321,7 @@ export class Panel {
   stageUI() {
     const st = this.stage;
     const bar = this.toolbar = h(`<div class="ux-tools" role="toolbar" aria-label="Pohled a zvuk">
-      <button type="button" class="ux-tb" id="ux-view" data-tip="Přepnout pohled (C)">${I.cam}<span class="ux-tbl" id="ux-view-l">Volný</span></button>
+      <button type="button" class="ux-tb" id="ux-view" aria-label="Přepnout pohled (C)" data-tip="Přepnout pohled (C)">${I.cam}<span class="ux-tbl" id="ux-view-l">Volný</span></button>
       <button type="button" class="ux-tb" id="ux-wrist" aria-pressed="false" aria-label="Kamera na zápěstí" data-tip="Kamera na zápěstí (V)">${I.wrist}<span class="ux-tbl">Zápěstí</span></button>
       <button type="button" class="ux-tb" id="ux-parts" aria-pressed="false" aria-label="Rozložený pohled" data-tip="Rozložený pohled – z čeho se skládá (X)">${I.parts}<span class="ux-tbl">Díly</span></button>
       <button type="button" class="ux-tb" id="ux-sound" aria-pressed="false" aria-label="Zvuk" data-tip="Zvuk (S)">${I.snd}<span class="ux-tbl">Zvuk</span></button>
