@@ -113,6 +113,15 @@ await check('sim so101', '/sim/so101/?test=1', async p => {
   await p.waitForFunction(() => window.__sim, null, { timeout: 90000 });
   const err = await p.evaluate(() => window.__sim.error);
   if (err) throw new Error('sim error: ' + err);
+  await p.waitForFunction(() => window.__sim.ready, null, { timeout: 90000 });
+  // "Připojit AI": page API + entry button (the relay connects only when the panel is opened)
+  if (!(await p.evaluate(() => !!window.so101 && window.so101.version === 1))) throw new Error('window.so101 missing');
+  if ((await p.locator('#ai-open').count()) !== 1) throw new Error('"Připojit AI" button missing');
+});
+
+await check('sim so101 ?real=1 has no AI panel', '/sim/so101/?test=1&real=1', async p => {
+  await p.waitForFunction(() => window.__sim && (window.__sim.ready || window.__sim.error), null, { timeout: 90000 });
+  if (await p.evaluate(() => !!window.so101 || !!document.getElementById('ai-open'))) throw new Error('AI panel / window.so101 present with ?real=1');
 });
 
 await check('arena svrn', '/sim/arena/?robot=svrn', async p => {

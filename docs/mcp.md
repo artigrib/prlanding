@@ -11,20 +11,26 @@ Status: MVP, simulation only. No tool can move a real robot arm.
 1. Add the server once:
 
    ```sh
-   claude mcp add --transport http so101 https://mcp.printedrobotics.cz/mcp
+   claude mcp add --transport http printedrobotics https://mcp.printedrobotics.cz/mcp
    ```
 
    No login or API key is needed. Other MCP clients use the same URL as a "remote MCP server"
-   (claude.ai: *Settings → Connectors → Add custom connector*, no authentication).
-2. Open the simulation at <https://printedrobotics.cz/sim/so101/> and click **Připojit AI asistenta**
-   (Connect AI). The panel shows an 8-character code, for example `BCDF-GHJK`.
+   (Claude desktop and web: *Settings → Connectors → Add custom connector*, no authentication).
+2. Open the simulation at <https://printedrobotics.cz/sim/so101/> and click **Připojit AI**
+   (Connect AI) in the side panel. The panel shows an 8-character code, for example `BCDF-GHJK`,
+   and the same setup steps with copy buttons.
 3. Tell Claude: *"Connect to the SO-101 simulation, code BCDF-GHJK."*
 4. The tab asks whether *Claude Code wants to control this simulation*. Click **Povolit** (Allow).
 
 Then ask in plain words, for example *"Pick up the cube and put it in the bowl"* or
 *"Turn the base 30° to the left and show me a picture."*
 
-**Disconnect.** Click **Odpojit AI** (Disconnect AI) in the panel, or close the tab. Claude's next
+While an AI is connected, a bar over the 3D view shows who drives the arm, with **STOP** and
+**Odpojit** (Disconnect). STOP latches: the AI cannot move the arm until you click **Uvolnit STOP**
+(Release STOP). Moving a slider, dragging the arm or pressing Esc also ends the AI's current motion.
+The panel logs every tool call in plain words (for example *Přesun chapadla na x 250, y −110, z 90 mm ✓ 0,8 s*).
+
+**Disconnect.** Click **Odpojit** (Disconnect) in the panel or the bar, or close the tab. Claude's next
 call fails with a clear message. To reconnect, read Claude a fresh code.
 
 ## Tools
@@ -103,6 +109,18 @@ within 120 s returns the first result and does not move the arm again.
 
 ## For developers
 
+- The simulation side is `sim/so101/src/agent/`: `sim-api.js` implements the tools on the MuJoCo sim
+  (DOM-free: in-page IK from `kin.js`, min-jerk motions on simulated time, limits, a 90°/s speed cap,
+  a workspace box for the jaw tip and the arm, STOP), `index.js` exposes it as `window.so101`
+  (`so101.call('move_to', {pose: {x_mm: 250, y_mm: 0, z_mm: 80}})`, `so101.estop(true)`, …) and adds the
+  panel entry, `panel.js` is the panel (loaded on demand). With `?real=1` (real hardware armed) none of
+  this is installed. `?relay=ws://127.0.0.1:PORT/tab` points the panel at a local relay (localhost only).
+  The tab also reports `tool.jaw_yaw_deg` (heading of the jaws' closing axis) so an agent can line the
+  jaws up with a cube's `yaw_deg` through `roll_deg`.
+- Tests: `node --test sim/so101/tests/agent-api.test.mjs` (the API against MuJoCo in node, mission 01
+  solved through the tools) and `node sim/so101/tests/agent-e2e.mjs` (local relay from `backend/bridge`,
+  headless tab paired through the panel, tools over the official MCP client SDK, mission 01 over MCP;
+  run `npm ci` in `backend/bridge` first).
 - Server code is in `backend/bridge` (Node 24 + TypeScript, official MCP SDK v2,
   `@modelcontextprotocol/server` 2.4.0). It serves `/mcp`, `/tab` and `/healthz` on one port. The
   browser module is in `backend/bridge-client`. Its `README.md` describes the handler interface
