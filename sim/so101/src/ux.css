@@ -289,3 +289,9 @@
 .ai-bar.estop .ai-bar-stop{background:#fff;color:#B3200F;letter-spacing:0}
 .ai-bar.estop{border-color:#B3200F}
 @media (max-width:560px){.ai-bar{bottom:8px;left:8px;right:8px;transform:none;max-width:none}.ai-bar-t{flex:1}}
+.ai-ctl.one{grid-template-columns:1fr}
+.ai-err{display:flex;flex-direction:column;gap:10px}
+.ai-err p{margin:0;font-size:14.5px}
+.ai-err .btn{justify-content:center}
+[data-state=retry] .ai-dot{background:var(--accent);animation:ux-blink 1.2s steps(2) infinite}
+[data-state=error] .ai-dot{background:#B3200F}

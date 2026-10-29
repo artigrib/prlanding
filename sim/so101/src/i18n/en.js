@@ -345,7 +345,10 @@ const strings = {
   'Šroub M8': 'M8 bolt', 'Matice M8': 'M8 nut', 'Muffin': 'Cupcake', 'Kobliha': 'Donut',
   'Jablko': 'Apple', 'Banán': 'Banana', 'Šroubovák': 'Phillips screwdriver',
   /* "Připojit AI" panel (src/agent/) */
-  'Ovládání přes AI': 'AI control', 'Načítám předměty mise. Potom dejte AI nový kód.': 'Loading the mission objects. Then give the AI a new code.', 'Připojit AI': 'Connect AI',
+  'Ovládání přes AI': 'AI control', 'Zrušit': 'Cancel', 'Zkusit hned': 'Try now',
+  'Server neodpovídá. Zkusím to znovu za {s} s (pokus {n} z {max}).': 'The server isn’t answering. Trying again in {s} s (attempt {n} of {max}).',
+  'Server pro připojení AI teď není dostupný.': 'The AI connection server isn’t available right now.',
+  'Simulace funguje dál i bez něj. Zkuste to za chvíli; když to nepůjde ani pak, napište nám.': 'The simulation keeps working without it. Try again in a while; if it still doesn’t work, let us know.', 'Načítám předměty mise. Potom dejte AI nový kód.': 'Loading the mission objects. Then give the AI a new code.', 'Připojit AI': 'Connect AI',
   'Nechte svého Clauda (nebo jiného AI asistenta s MCP) ovládat tuto simulovanou ruku.': 'Let your own Claude (or another AI assistant with MCP) drive this simulated arm.',
   'Panel AI se nepodařilo načíst. Zkuste to znovu.': 'The AI panel failed to load. Try again.',
   'Získat kód pro připojení': 'Get a pairing code', 'Kód pro připojení': 'Pairing code', 'Nový kód': 'New code',
