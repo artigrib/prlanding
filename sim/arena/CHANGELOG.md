@@ -1,5 +1,26 @@
 # Aréna 150 g – changelog
 
+## Záznamy zápasů (branch `arena-replays`)
+- **Nahrávání** (`src/replay/codec.js`, `src/replay/scene.js`): každý zápas se zaznamenává 30× za sekundu – poloha a natočení
+  obou robotů, kola (i upadlá), zbraň / flipper / čelist, roztočení, HP, převrácení, zásahy, stav nástrah a volné trosky.
+  Kvantováno, delta + run-length + varint po 5s blocích, kruhový buffer (zápas + 60 s, trénink 5 min).
+  3 minuty ≈ 50 kB v souboru, < 100 kB v paměti. Události: zásah, převrácení, jáma, mimo arénu, K.O., upadlé kolo.
+- **Přehrávač** (`src/replay/player.js`, `src/ui/replay.js`): přehrává snímky, ne fyziku. Play/pauza, časová osa
+  s značkami událostí, skok na předchozí/další zásah, rychlost 0,25×–2×, automatické zpomalení u velkých zásahů,
+  kamery Režisér (automatická TV režie), TV, za robotem, shora, z robota a volná orbita (tažení, kolečko, pinch).
+  Klávesy: mezerník, ←/→, `,` `.`, C, F, 1–4, Esc. Velká dotyková tlačítka, na telefonu přes celou šířku.
+- **Kde:** „Opakovat K.O. / Opakovat zásah“ (automaticky po K.O.) a „Celý zápas“ na konci, „Záznam posledních 20 s“ v pauze.
+- **Soubor .prreplay** (gzip JSON) – „Uložit záznam“ a v menu „Přehrát uložený záznam“; aréna a roboti se postaví z hlavičky.
+  Háček pro sdílené odkazy: `replayHooks.upload` (tlačítko „Sdílet odkaz“ se ukáže, až bude backend) a `?replay=<cesta>`.
+- **Klip 10 s** – WebM přes MediaRecorder ke stažení; skryto, když to prohlížeč neumí.
+- **Bezpečný import:** soubor se celý ověří dřív, než se cokoli změní – prázdné / děravé bloky, limity kanálů, bloků
+  a událostí, rozbalení gzipu max. 64 MB (ochrana proti „gzip bombě“), nástrahy jen s povolenými klíči, události jen se
+  známými poli, žádné `__proto__`. Chyby jsou vždy česky; když se přehrávač nepodaří otevřít, hra se vrátí do menu
+  (Esc funguje vždy). `?replay=` přijme jen relativní cestu na stejném původu. Zavření záznamu ze souboru vrací kola
+  a nástrahy do původního stavu; obnovení WebGL kontextu respektuje záznam a pauzu.
+- Testy: `node tests/replay-codec.test.mjs` (round trip, rozpočet velikosti, ring buffer) a `tests/replay-e2e.cjs`
+  (Playwright: menu → zápas → konec → záznam, shoda poloh po uložení/načtení < 2 mm, 3 min < 300 kB, klip).
+
 ## Modely robotů (branch `arena-models`)
 - **Kosa a Klepeto mají vlastní 3D modely** (`models/kosa.glb` 211 kB, `models/klepeto.glb` 241 kB, meshopt):
   původní parametrické návrhy v build123d (`tools/robots-cad/`), CC BY 4.0. Tištěná vana se zkosenými hranami,

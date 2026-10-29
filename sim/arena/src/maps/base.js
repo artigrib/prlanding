@@ -84,6 +84,7 @@ export function createRuntime(spec, ctx) {
     pits: spec.pits || [],
     env,
     hazards,
+    debris,
     get time() { return time; },
 
     attachPhysics(RAPIER, w) {

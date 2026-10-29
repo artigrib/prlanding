@@ -398,6 +398,26 @@ export function makeDebris(group, pieces, { density = 0.6, friction = 0.6, rough
       }
       im.instanceMatrix.needsUpdate = true;
     },
+    // replays: pose piece i directly (no physics), and re-sync every piece from its body afterwards
+    count: pieces.length,
+    setPose(i, x, y, z, qx, qy, qz, qw) {
+      m.compose(v.set(x, y, z), q.set(qx, qy, qz, qw).normalize(), sc.set(...pieces[i].size));
+      im.setMatrixAt(i, m); im.instanceMatrix.needsUpdate = true;
+    },
+    getPose(i, out) {
+      const b = bodies[i];
+      if (b) { const t = b.translation(), r = b.rotation(); out[0] = t.x; out[1] = t.y; out[2] = t.z; out[3] = r.x; out[4] = r.y; out[5] = r.z; out[6] = r.w; return out; }
+      const p = pieces[i]; q.setFromAxisAngle(UP, p.yaw || 0);
+      out[0] = p.x; out[1] = p.y ?? p.size[1]; out[2] = p.z; out[3] = q.x; out[4] = q.y; out[5] = q.z; out[6] = q.w; return out;
+    },
+    syncAll() {
+      for (let i = 0; i < bodies.length; i++) {
+        const t = bodies[i].translation(), r = bodies[i].rotation();
+        m.compose(v.set(t.x, t.y, t.z), q.set(r.x, r.y, r.z, r.w), sc.set(...pieces[i].size));
+        im.setMatrixAt(i, m);
+      }
+      im.instanceMatrix.needsUpdate = true;
+    },
     bodies
   };
 }
