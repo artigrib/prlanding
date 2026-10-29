@@ -136,7 +136,7 @@ class SimReadyLayout(unittest.TestCase):
             a = read_asset(pkg)
             self.assertEqual(a["physics_variant"], "MuJoCo:Enabled")
             self.assertEqual([c["approx"] for c in a["colliders"]], ["convexHull"])
-            self.assertAlmostEqual(a["physics"]["mass"], 0.001, places=6)
+            self.assertAlmostEqual(a["physics"]["mass"], 0.00099280186, places=9)
             self.assertAlmostEqual(a["physics"]["static_friction"], 0.61, places=5)
             self.assertEqual(len(a["visuals"]), 1)
             self.assertTrue(a["visuals"][0]["texture"].endswith("t_alb.png"))
@@ -245,7 +245,11 @@ class Pipeline(unittest.TestCase):
             rec = json.loads((out / "factory_nut_m8_loose" / "factory_nut_m8_loose.json").read_text())
             self.assertEqual(rec["conversion"]["usd_physics_variant"], "MuJoCo:Enabled")
             self.assertEqual(rec["conversion"]["hulls"], 1)        # MuJoCo payload: convexHull
-            self.assertAlmostEqual(rec["mass_kg"], 0.001, places=6)
+            import mujoco
+            mm = mujoco.MjModel.from_xml_path(str(out / "factory_nut_m8_loose" / "factory_nut_m8_loose.xml"))
+            # manifest mass must match the MJCF to << 0.1 % even for ~1 g parts (node test compares them)
+            self.assertLess(abs(rec["mass_kg"] - mm.body_mass[1]) / mm.body_mass[1], 1e-4)
+            self.assertAlmostEqual(rec["mass_kg"], 0.00099280186, places=9)
             self.assertEqual(rec["friction"], 0.61)
             self.assertEqual(rec["name_cs"], "Matice M8")
             self.assertEqual(rec["license"], "CC-BY-4.0")

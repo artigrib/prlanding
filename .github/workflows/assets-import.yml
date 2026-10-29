@@ -106,7 +106,15 @@ jobs:
         run: python -I tools/assets/manifest.py 2> "$LOGS/manifest.log" || { echo "::error::manifest failed"; exit 1; }
 
       - name: Library unit tests (node + MuJoCo WASM)
-        run: node --test sim/so101/test/objects.test.mjs > "$LOGS/node-test.log" 2>&1 || { echo "::error::object library tests failed"; exit 1; }
+        id: nodetest
+        # a failure still opens the PR, as a draft with the test output, so the cause is reviewable
+        run: |
+          if node --test sim/so101/test/objects.test.mjs > "$LOGS/node-test.log" 2>&1; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::error::object library tests failed (draft PR will carry the test output)"
+          fi
 
       - name: Upload reports
         if: always()
@@ -121,6 +129,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           BRANCH: assets/import-${{ github.run_id }}
+          TESTS_OK: ${{ steps.nodetest.outputs.ok }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           if [ -z "$(git status --porcelain -- sim/so101/objects)" ]; then
@@ -140,8 +149,18 @@ jobs:
             echo "\`/sim/so101/objects.html\`, and fix \`name_cs\` where \`name_cs_auto\` is set."
             echo
             cat "$LOGS/import-report.md"
+            if [ "$TESTS_OK" != "true" ]; then
+              echo
+              echo "## Library unit tests FAILED (do not merge as is)"
+              echo
+              echo '```'
+              grep -E "^not ok|^# (tests|pass|fail)|assert|Error|still moving|rests on|lifted|reachable|mass" "$LOGS/node-test.log" | head -40
+              echo '```'
+            fi
           } > "$LOGS/pr-body.md"
+          draft=(); [ "$TESTS_OK" = "true" ] || draft=(--draft)
           gh pr create --base main --head "$BRANCH" --title "Objects: import from Hugging Face (run ${GITHUB_RUN_ID})" \
-            --body-file "$LOGS/pr-body.md" > /dev/null \
+            "${draft[@]}" --body-file "$LOGS/pr-body.md" > /dev/null \
             && echo "::notice::pull request opened" \
             || echo "::warning::branch pushed but the PR could not be opened (allow Actions to create PRs, or open it by hand)"
+          [ "$TESTS_OK" = "true" ] || exit 1

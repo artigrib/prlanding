@@ -88,7 +88,7 @@ def Scope "Instances"
         {{
             rel material:binding = </Instances/{n}_mesh_00/VisualMaterials/m_metal>
             uniform token physics:approximation = "convexDecomposition"
-            float physics:mass = 0.001
+            float physics:mass = 0.00099280186
         }}
         def Scope "VisualMaterials"
         {{
