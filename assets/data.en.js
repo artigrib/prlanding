@@ -135,7 +135,7 @@ window.PR_EN = {
   values: { 'Robotická ruka': 'Robot arm', 'Rover': 'Rover', 'LeRobot (Python)': 'LeRobot (Python)', 'Python / Arduino': 'Python / Arduino', 'ROS / Python': 'ROS / Python', 'GRBL, ROS 2': 'GRBL, ROS 2', 'LeRobot, ManiSkill': 'LeRobot, ManiSkill', 'Isaac Lab, MuJoCo (Python)': 'Isaac Lab, MuJoCo (Python)', 'ROS 2 (Python), Raspberry Pi': 'ROS 2 (Python), Raspberry Pi', 'PAROL6 Commander, Python API, ROS 2 / MoveIt': 'PAROL6 Commander, Python API, ROS 2 / MoveIt' },
   sims: {
     arena: { label: 'Try it in the arena', note: 'Browser game · free · ≈ 3.5 MB' },
-    so101: { label: 'Try it in the simulator', note: 'Browser simulation · free · ≈ 12 MB' }
+    so101: { label: 'Try it in the simulator', note: 'Browser simulation · free · ≈ 8.4 MB' }
   },
   licenses: [
     ['Apache-2.0', 'y', 'Yes', 'Copy of the licence, author credit, changes marked'],

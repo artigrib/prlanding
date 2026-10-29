@@ -197,7 +197,7 @@
       var go = nx ? path + '?mise=' + nx[0] + (lang ? '&' + lang : '') : path + 'nastaveni/' + (lang ? '?' + lang : '');
       note.innerHTML = '<span>Vítejte zpět: ' + done + ' / 5 misí, ' + stars + ' ★.</span> <a href="' + go + '">' + (nx ? 'Pokračovat misí ' + nx[1] : 'Kapitola 06: Skutečná ruka') + ' <span aria-hidden="true">→</span></a>';
     })();
-    // warm the simulator on intent (hover / focus / touch of a sim link): the 11 MB engine starts downloading
+    // warm the simulator on intent (hover / focus / touch of a sim link): the 5 MB engine starts downloading
     // into the HTTP cache before the click, the sim then fetches it from there
     (function () {
       var warmed = false;

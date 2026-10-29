@@ -25,7 +25,9 @@ copies of the licence texts are included next to each component.
    Source:  npm package @mujoco/mujoco 3.17.0, Google DeepMind
             https://github.com/google-deepmind/mujoco
    Licence: Apache License 2.0 (vendor/mujoco/LICENSE)
-   Unmodified (mujoco.js, mujoco.wasm).
+   mujoco.js unmodified. Changes made by printedrobotics.cz to mujoco.wasm: debug and name custom
+     sections removed (wabt wasm-strip, reproducible with tools/wasm/vendor-mujoco.mjs); code, data
+     and exports are byte-identical to the npm build.
 
 3) three.js (vendor/three/)
    Source:  npm package three 0.160.0 (build/three.module.min.js, examples/jsm/controls/OrbitControls.js,

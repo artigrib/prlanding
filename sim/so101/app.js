@@ -73,7 +73,7 @@ async function main() {
 
 // ---------- [ux-hook:loading] progress text: size, percent, time left (from the recent rate) ----------
 function loadingCopy(t0) {
-  const sub = $('loader-sub'), MB = 11.6, hist = [];
+  const sub = $('loader-sub'), MB = 5.3, hist = [];
   let last = 0;
   const tick = setInterval(() => upd(last), 1000);
   function upd(f) {
