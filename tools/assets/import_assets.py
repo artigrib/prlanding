@@ -151,8 +151,8 @@ def process(c, out_root, policy):
         shutil.rmtree(Path(out_root) / oid, ignore_errors=True)
         return {"id": oid, "ok": False, "reason": "drop test failed: " + "; ".join(v["errors"])}
     return {"id": oid, "ok": True, "license": spdx, "glb_bytes": rec["conversion"]["glb"]["bytes"],
-            "hulls": rec["conversion"]["hulls"], "mass_kg": rec["mass_kg"], "size_m": rec["size_m"],
-            "drop": v["drop"], "path": s.get("path")}
+            "hulls": rec["conversion"]["hulls"], "mass_kg": rec["mass_kg"], "name_cs": rec["name_cs"], "size_m": rec["size_m"],
+            "drop": v["drop"], "path": s.get("path"), "note": rec["conversion"].get("mass_note")}
 
 
 def report_md(results):
@@ -160,11 +160,12 @@ def report_md(results):
     exc = [r for r in results if not r["ok"]]
     lines = ["# Object import report", "", f"Included: {len(inc)} · excluded: {len(exc)}", ""]
     if inc:
-        lines += ["| id | source path | licence | GLB KB | hulls | mass kg | size m | settle s |",
-                  "|---|---|---|---|---|---|---|---|"]
+        lines += ["| id | name_cs | source path | licence | GLB KB | hulls | mass kg | size m | settle s | note |",
+                  "|---|---|---|---|---|---|---|---|---|---|"]
         for r in inc:
-            lines.append(f"| {r['id']} | `{r.get('path')}` | {r['license']} | {r['glb_bytes'] / 1024:.0f} | {r['hulls']} | "
-                         f"{r['mass_kg']} | {' × '.join(str(x) for x in r['size_m'])} | {r['drop']['settle_s']} |")
+            lines.append(f"| {r['id']} | {r.get('name_cs', '')} | `{r.get('path')}` | {r['license']} | "
+                         f"{r['glb_bytes'] / 1024:.0f} | {r['hulls']} | {r['mass_kg']} | "
+                         f"{' × '.join(str(x) for x in r['size_m'])} | {r['drop']['settle_s']} | {r.get('note') or ''} |")
     if exc:
         lines += ["", "## Excluded", "", "| id | reason |", "|---|---|"]
         for r in exc:

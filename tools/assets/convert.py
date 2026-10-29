@@ -290,6 +290,8 @@ def convert(src, oid, out_root, *, license_id, license_url=None, scale=1.0, mass
         "hull_volume_cm3": round(vol * 1e6, 2), "com_m": [round(float(c), 5) for c in com],
         "usd_meters_per_unit": asset["meters_per_unit"], "usd_up_axis": asset["up_axis"],
         "usd_physics_variant": asset.get("physics_variant"),
+        "mass_note": ("authored mass is exactly 1 kg (a common placeholder) - please check"
+                      if mass_source.startswith("usd:mass") and phys["mass"] == 1.0 else None),
         "glb": glb, "usd_layers": asset["layers"]}}
     write_json(out / f"{oid}.json", record)
     return record
