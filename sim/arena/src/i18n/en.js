@@ -8,7 +8,7 @@ const dec = (s) => String(s).replace(/(\d),(\d)/g, '$1.$2');
 
 const strings = {
   /* shell */
-  'Aréna 150 g': '150 g Arena', 'Aréna pro bojové roboty': 'Combat robot arena', 'Vyzkoušejte v aréně': 'Try it in the arena', '← zpět na sadu': '← back to the kit', 'Zpět na sadu': 'Back to the kit',
+  'Aréna 150 g': '150 g Arena', 'Aréna 150 g – printedrobotics.cz': '150 g Arena – printedrobotics.cz', 'Aréna pro bojové roboty': 'Combat robot arena', 'Vyzkoušejte v aréně': 'Try it in the arena', '← zpět na sadu': '← back to the kit', 'Zpět na sadu': 'Back to the kit',
   'Tento prohlížeč je příliš starý na 3D arénu.': 'This browser is too old for the 3D arena.', 'Aréna se nespustila': 'The arena didn’t start',
   'Aréna potřebuje JavaScript': 'The arena needs JavaScript', 'Zapněte JavaScript, nebo se vraťte na': 'Turn on JavaScript, or go back to',
   'Váš prohlížeč nepodporuje 3D grafiku (WebGL), takže arénu nespustíme. Robota si můžete prohlédnout na stránce sady.': 'Your browser doesn’t support 3D graphics (WebGL), so the arena can’t start. You can still look at the robot on its kit page.',
@@ -62,7 +62,7 @@ const strings = {
   '· jeďte a rozhoupejte se': '· drive and rock yourself over', 'Zbraň vypnutá': 'Weapon off', 'Flipper nabíjí': 'Flipper recharging', 'Flipper připraven': 'Flipper ready',
   'Zbraň zaseknutá – znovu zapnout': 'Weapon stalled – switch it on again', 'Vidle nahoře': 'Forks up', 'Kleště nabíjí': 'Clamp recharging', 'Kleště připraveny': 'Clamp ready',
   'Kolo upadlo!': 'Wheel off!', 'Zbraň ohnutá!': 'Weapon bent!', 'Baterie poškozena!': 'Battery damaged!', 'Elektronika otřesena!': 'Electronics shaken!',
-  'Trénink': 'Practice', 'Zpátky na start': 'Back to the start', 'flipper (i k převrácení zpět)': 'flipper (also to self-right)', 'roztočení zbraně (zap/vyp)': 'spin up the weapon (on/off)',
+  'Trénink': 'Practice', 'Zpátky na start': 'Back to the start', 'flipper (i k převrácení zpět)': 'flipper (also to self-right)', 'flipper (i k převrácení zpět) ·': 'flipper (also to self-right) ·', 'roztočení zbraně (zap/vyp) ·': 'spin up the weapon (on/off) ·', 'roztočení zbraně (zap/vyp)': 'spin up the weapon (on/off)',
   'nebo šipky jízda ·': 'or arrows drive ·', 'kamera': 'camera', 'zvuk': 'sound', 'pauza · funguje i gamepad': 'pause · gamepads work too', 'Mezerník': 'Space',
   'Hlasitost': 'Volume', 'Efekty': 'Effects', 'Prostředí': 'Ambience',
   /* pause, end of match, judges */

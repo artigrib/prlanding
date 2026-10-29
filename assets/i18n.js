@@ -184,11 +184,18 @@
     }).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['href'] });
   }
 
+  // sims: CZ / EN links that keep the current URL and only swap ?lang=
+  function simSwitcher(el) {
+    if (!el) return;
+    var mk = function (l) { var u = new URL(location.href); u.searchParams.set('lang', l); return u.pathname + u.search + u.hash; };
+    el.innerHTML = switcherHtml(lang, { cs: mk('cs'), en: mk('en') });
+  }
+
   G.PRI18N = {
     get lang() { return lang; },
     t: t, has: function (s) { return lookup(s) != null; }, addDict: addDict, observe: observe, translate: walk,
     detect: detect, setLang: setLang, remember: remember, alternates: alternates, switcherHtml: switcherHtml,
-    langHref: langHref, fixLinks: fixLinks, banner: banner, _dicts: dicts,
+    langHref: langHref, fixLinks: fixLinks, banner: banner, simSwitcher: simSwitcher, _dicts: dicts,
     /* site pages: <script src="assets/i18n.js" data-auto> */
     initSite: function () {
       setLang(detect('site'));
@@ -202,6 +209,7 @@
       setLang(detect('sim'));
       if (qsLang()) remember(qsLang());
       if (dict) addDict('en', dict);
+      wireSwitcher();
       if (lang === 'en') {
         observe(document.documentElement);
         linkFixer();

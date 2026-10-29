@@ -1,5 +1,6 @@
 // Shared building blocks for arena maps: canvas textures, merged floor / wall geometry,
 // static colliders, cheap instanced audience, debris. 1 unit = 10 cm, floor top at y = 0.
+import { t as tr } from '../i18n/index.js';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
@@ -141,7 +142,7 @@ export function textTexture(lines, { w = 1024, h = 256, color = '#fff', font = '
   g.fillStyle = color; g.textAlign = align; g.textBaseline = 'middle';
   const list = Array.isArray(lines) ? lines : [lines];
   list.forEach((l, i) => {
-    const f = typeof l === 'object' ? l : { text: l };
+    const f0 = typeof l === 'object' ? l : { text: l }, f = { ...f0, text: tr(f0.text) }; // floor decals are canvas text
     g.font = f.font || font;
     if (f.color) g.fillStyle = f.color; else g.fillStyle = color;
     const x = align === 'center' ? w / 2 : 16;

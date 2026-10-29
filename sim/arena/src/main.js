@@ -1,6 +1,7 @@
 // printedrobotics.cz — antweight arena (three.js + Rapier).
 // Game flow, cameras, HUD, menus and juice live here; robots/physics in robots.js,
 // arenas in arena.js / maps/.
+import './i18n/index.js'; // first: starts the English translation before any UI is built
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
