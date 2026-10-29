@@ -273,7 +273,7 @@ def convert(src, oid, out_root, *, license_id, license_url=None, scale=1.0, mass
         "name_cs": name_cs or name_en or meta.get("asset_name") or oid,
         "name_en": name_en or meta.get("asset_name") or oid,
         "category": category or meta.get("category") or "object",
-        "mass_kg": round(float(mass), 4),
+        "mass_kg": float(f"{mass:.6g}"),   # same precision as the MJCF <inertial mass>; small parts are ~1 g
         "size_m": [round(float(x), 4) for x in size],
         "friction": round(friction, 3),
         "license": license_id,

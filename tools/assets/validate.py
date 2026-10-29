@@ -173,6 +173,15 @@ def table_spots(footprints):
     return batches
 
 
+def fits_table(size_m):
+    """True if an object of this bounding box can be placed on the table next to the robot, bowl and cube."""
+    try:
+        table_spots([0.5 * float(np.hypot(size_m[0], size_m[1]))])
+        return True
+    except ValueError:
+        return False
+
+
 def validate_scene(ids, objects_dir, seconds=3.0):
     """All objects in the real SO-101 scene (catches name clashes, keyframe sizes, robot/bowl contacts).
     Objects are packed onto the table; if they do not all fit, several scenes are checked."""
@@ -185,7 +194,12 @@ def validate_scene(ids, objects_dir, seconds=3.0):
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td) / "model"
         shutil.copytree(model_dir, tmp)
-        for batch in table_spots(foot):
+        try:
+            batches = table_spots(foot)
+        except ValueError:
+            big = [ids[i] for i, r in enumerate(foot) if not fits_table(metas[i]["size_m"])]
+            return {"ok": False, "error": "object(s) too large for the table", "too_large": big}
+        for batch in batches:
             objs = []
             for i, x, y in batch:
                 a, b = split_mjcf((od / ids[i] / f"{ids[i]}.xml").read_text(encoding="utf-8"))
