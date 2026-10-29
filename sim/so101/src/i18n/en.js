@@ -50,7 +50,7 @@ const strings = {
   'Bílá': 'White', 'Šedá': 'Grey', 'Černá': 'Black', 'Oranžová': 'Orange', 'Modrá': 'Blue',
   'Otočení základny': 'Base rotation', 'Rameno': 'Shoulder', 'Loket': 'Elbow', 'Zápěstí – náklon': 'Wrist pitch', 'Zápěstí – rotace': 'Wrist roll', 'Chapadlo': 'Gripper',
   'otočení základny': 'base rotation', 'rameno': 'shoulder', 'loket': 'elbow', 'náklon zápěstí': 'wrist pitch', 'rotace zápěstí': 'wrist roll', 'chapadlo': 'gripper',
-  'základna': 'base', 'náklon': 'pitch', 'rotace': 'roll', 'zavřeno': 'closed', 'stupňů': 'degrees',
+  'doraz': 'end stop', 'základna': 'base', 'náklon': 'pitch', 'rotace': 'roll', 'zavřeno': 'closed', 'stupňů': 'degrees',
   /* world objects */
   'oranžová kostka': 'orange cube', 'modrá kostka': 'blue cube', 'modrá miska': 'blue bowl', 'oranžová miska': 'orange bowl', 'oranžovou kostku': 'the orange cube', 'míček': 'the ball',
   'Kostka spadla ze stolu, vrátili jsme ji zpět': 'The cube fell off the table, we put it back',
@@ -355,4 +355,7 @@ const patterns = [
   [/^Všech 6 serv odpovídá, napětí (.+), teploty i kalibrační rozsahy jsou v normě\.$/, (m, a) => `All 6 servos respond, voltage ${dec(a)}, temperatures and calibration ranges are normal.`]
 ];
 
-export default { strings, patterns };
+// pieces of composed messages, translated as a whole by the patterns above (for tools/i18n-extract.mjs)
+const fragments = ['Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
+
+export default { strings, patterns, fragments };

@@ -150,7 +150,8 @@
       : '<span>Tato stránka je k dispozici i v češtině.</span><a href="' + rel(alt.cs) + '" data-lang="cs">Přepnout do češtiny</a><button type="button" aria-label="Zavřít">✕</button>';
     b.querySelector('button').addEventListener('click', function () { store(BANNER_KEY, '1'); b.remove(); });
     b.querySelector('a').addEventListener('click', function () { store(BANNER_KEY, '1'); });
-    document.body.insertBefore(b, document.body.firstChild);
+    // fixed overlay at the bottom: no layout shift (CLS) when it appears after first paint
+    document.body.appendChild(b);
   }
 
   /* sims: keep ?lang= on internal links, point "back to the site" links at /en/ */
@@ -170,7 +171,8 @@
   }
   function fixLinks(root) {
     if (lang !== 'en') return;
-    (root || document).querySelectorAll('a[href]').forEach(function (a) { var h = langHref(a.getAttribute('href')); if (h !== a.getAttribute('href')) a.setAttribute('href', h); });
+    // language links (switcher, banner) are left alone, they must point at the other language
+    (root || document).querySelectorAll('a[href]:not([data-lang])').forEach(function (a) { var h = langHref(a.getAttribute('href')); if (h !== a.getAttribute('href')) a.setAttribute('href', h); });
   }
 
   // English pages: links rendered at runtime (app.js, sims) point at the English counterparts
@@ -220,8 +222,6 @@
       if (lang === 'en') {
         observe(document.documentElement);
         linkFixer();
-        var can = document.querySelector('link[rel="canonical"]');
-        if (can && !/[?&]lang=en/.test(can.href)) can.setAttribute('href', can.href.split('?')[0] + '?lang=en');
       }
       return lang;
     }

@@ -52,7 +52,8 @@ function translateHtml(html) {
 // `base` is where the source HTML's relative links were written for (defaults to `page`)
 function enLinks(html, page, base = page) {
   const up = '../'.repeat(page.split('/').length - 1);
-  return html.replace(/(\s(?:href|src|data-webm|data-mp4)=")([^"]*)"/g, (m, a, href) => {
+  // the language switcher must keep pointing at the other language: leave it untouched
+  return html.split(/(<!--lang-sw-->[\s\S]*?<!--\/lang-sw-->)/).map((part, i) => i % 2 ? part : part.replace(/(\s(?:href|src|data-webm|data-mp4)=")([^"]*)"/g, (m, a, href) => {
     if (!href || /^(https?:|mailto:|data:|javascript:|#)/.test(href)) return m;
     const u = new URL(href, SITE + base);
     if (u.origin + '/' !== SITE) return m;
@@ -64,7 +65,7 @@ function enLinks(html, page, base = page) {
     else if (p.startsWith('sim/')) { const sp = new URLSearchParams(q); sp.set('lang', 'en'); q = '?' + sp.toString(); }
     else if (base === page) return m;
     return a + ((up + p) || './') + q + u.hash + '"';
-  });
+  })).join('');
 }
 function alternates(csPath, enPath) {
   return [`<link rel="alternate" hreflang="cs" href="${SITE}${csPath}">`, `<link rel="alternate" hreflang="en" href="${SITE}${enPath}">`, `<link rel="alternate" hreflang="x-default" href="${SITE}${csPath}">`].join('\n');

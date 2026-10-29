@@ -72,7 +72,7 @@ const strings = {
   'Konec zápasu · K.O.': 'End of match · K.O.', 'Konec zápasu · rozhodnutí rozhodčích': 'End of match · judges’ decision',
   'Zatím jen ve hře': 'Only in the game so far', 'Stavebnici připravujeme': 'Kit coming soon', 'Bojoví roboti v katalogu': 'Combat robots in the catalogue', 'Dejte mi vědět': 'Notify me',
   'Opakovat K.O.': 'Replay the K.O.', 'Opakovat zásah': 'Replay the hit', 'Další soupeř': 'Next opponent', 'Celý zápas': 'Full match', 'Sdílet výsledek': 'Share the result',
-  'Bodování rozhodčích': 'Judges’ scores', 'Poškození': 'Damage', 'Agrese': 'Aggression', 'Kontrola': 'Control',
+  'Bodování rozhodčích': 'Judges’ scores', 'Celkem': 'Total', 'Poškození': 'Damage', 'Agrese': 'Aggression', 'Kontrola': 'Control',
   'Hráč 1 vytlačil soupeře z arény.': 'Player 1 pushed the opponent out of the arena.', 'Vytlačili jste soupeře z arény.': 'You pushed the opponent out of the arena.',
   'Robot hráče 2 skončil v jámě.': 'Player 2’s robot ended up in the pit.', 'Soupeř skončil v jámě.': 'The opponent ended up in the pit.',
   'Robot hráče 1 skončil v jámě.': 'Player 1’s robot ended up in the pit.', 'Váš robot skončil v jámě.': 'Your robot ended up in the pit.',
@@ -125,4 +125,7 @@ const patterns = [
   [/^Rychlost (.+)×$/, (m, a) => `Speed ${dec(a)}×`], [/^Záznam uložen \((\d+) kB\)\.$/, 'Replay saved ($1 kB).'], [/^Klip uložen \((\d+) kB\)\.$/, 'Clip saved ($1 kB).']
 ];
 
-export default { strings, patterns };
+// composed messages translated whole by the patterns above (for tools/i18n-extract.mjs)
+const fragments = ['{}: {} vs. {} v aréně 150 g na printedrobotics.cz. Zkusíte to líp?'];
+
+export default { strings, patterns, fragments };

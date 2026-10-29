@@ -1,7 +1,7 @@
 // printedrobotics.cz — antweight arena (three.js + Rapier).
 // Game flow, cameras, HUD, menus and juice live here; robots/physics in robots.js,
 // arenas in arena.js / maps/.
-import './i18n/index.js'; // first: starts the English translation before any UI is built
+import { t as i18nT, isEn } from './i18n/index.js'; // first: starts the English translation before any UI is built
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
@@ -1141,11 +1141,12 @@ async function shareResult() {
   for (const k of [...u.searchParams.keys()]) u.searchParams.delete(k);
   u.searchParams.set('robot', S.robot); u.searchParams.set('color', S.color); u.searchParams.set('mode', S.mode);
   if (MAP_LIST.length > 1) u.searchParams.set('map', S.map);
+  if (isEn) u.searchParams.set('lang', 'en');
   const opName = opp.displayName || opp.def.name;
   const verdict = r.win === null ? 'Remíza' : r.win ? (r.kind === 'ko' ? `Výhra K.O. za ${fmt(r.time)}` : 'Výhra na body') : 'Prohra';
-  const text = `${verdict}: ${player.def.name} vs. ${opName} v aréně 150 g na printedrobotics.cz. Zkusíte to líp?`;
+  const text = i18nT(`${verdict}: ${player.def.name} vs. ${opName} v aréně 150 g na printedrobotics.cz. Zkusíte to líp?`);
   try {
-    if (navigator.share) { await navigator.share({ title: 'Aréna 150 g', text, url: u.href }); return; }
+    if (navigator.share) { await navigator.share({ title: i18nT('Aréna 150 g'), text, url: u.href }); return; }
   } catch (e) { if (e && e.name === 'AbortError') return; }
   try { await navigator.clipboard.writeText(`${text} ${u.href}`); ui.shareMsg.textContent = 'Odkaz zkopírován do schránky.'; }
   catch (_) { ui.shareMsg.textContent = u.href; }

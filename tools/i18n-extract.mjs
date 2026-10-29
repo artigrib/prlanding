@@ -67,6 +67,8 @@ function scanHtml(src) {
 const dict = dictFile && dictFile !== '-' ? await loadDict(dictFile) : { strings: {}, patterns: [] };
 const keys = new Set(Object.keys(dict.strings || {}).map(norm));
 const pats = dict.patterns || [];
+// source pieces that are only ever shown inside a longer, pattern-translated sentence
+const frags = new Set((dict.fragments || []).map(norm));
 const has = s => keys.has(s) || pats.some(p => p[0].test(s)) ||
   (s.includes(' · ') && s.split(' · ').every(x => !CZ.test(x) || keys.has(x) || pats.some(p => p[0].test(x))));
 const all = new Map();
@@ -77,7 +79,7 @@ for (const t of targets) for (const f of files(t)) {
     all.get(s).add(f);
   }
 }
-const missing = [...all.keys()].filter(s => !(s.includes('{}') ? pats.some(p => p[0].test(s.replace(/\{\}/g, '1'))) || keys.has(s) : has(s)));
+const missing = [...all.keys()].filter(s => !frags.has(s) && !(s.includes('{}') ? pats.some(p => p[0].test(s.replace(/\{\}/g, '1'))) || keys.has(s) : has(s)));
 if (json) console.log(JSON.stringify([...all].map(([s, f]) => ({ s, files: [...f], ok: !missing.includes(s) })), null, 1));
 else {
   console.log(`${all.size} Czech strings, ${all.size - missing.length} translated, ${missing.length} missing`);

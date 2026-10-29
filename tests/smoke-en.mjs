@@ -92,12 +92,19 @@ async function czechLeft(page, root = 'body') {
   }, [root, CZ.source, OK.source]);
 }
 const noCzech = async (page, errors, root) => { const left = await czechLeft(page, root); if (left.length) errors.push('Czech text left:\n    ' + left.slice(0, 15).join('\n    ')); };
+// the CZ link of the switcher must lead back to the Czech page (path, plus ?lang=cs on sims)
+const czLink = async (page, errors, path) => {
+  const h = await page.locator('.lang-sw a[data-lang="cs"]').first().getAttribute('href').catch(() => null);
+  if (!h) { errors.push('no CZ switcher link'); return; }
+  const u = new URL(h, page.url());
+  if (u.pathname !== path || /lang=en/.test(u.search)) errors.push(`CZ link → ${u.pathname}${u.search}, expected ${path}`);
+};
 const isLang = async (page, errors, l) => { const v = await page.evaluate(() => document.documentElement.lang); if (v !== l) errors.push(`html lang = ${v}, expected ${l}`); };
 
 if (fs.existsSync(path.join(ROOT, 'en/index.html'))) {
   await check('en home', '/en/', async (p, e) => {
     await p.waitForSelector('#cards .card'); await p.waitForTimeout(400);
-    await isLang(p, e, 'en'); await noCzech(p, e);
+    await isLang(p, e, 'en'); await noCzech(p, e); await czLink(p, e, '/');
     const href = await p.locator('#cards .card').first().getAttribute('href');
     if (!/en\/kit\//.test(href)) e.push('catalogue cards do not link to /en/kit/: ' + href);
   });
@@ -105,13 +112,14 @@ if (fs.existsSync(path.join(ROOT, 'en/index.html'))) {
 for (const [vp, size] of [['desktop', { width: 1280, height: 900 }], ['phone', { width: 390, height: 844 }]]) {
   await check('en kit so101 · ' + vp, '/en/kit/so101/', async (p, e) => {
     await p.waitForSelector('#faq-list details'); await p.waitForTimeout(400);
-    await isLang(p, e, 'en'); await noCzech(p, e);
+    await isLang(p, e, 'en'); await noCzech(p, e); await czLink(p, e, '/sada/so101/');
     const rel = await p.locator('#related a').first().getAttribute('href');
     if (!/en\/kit\//.test(rel)) e.push('related links not English: ' + rel);
   }, { viewport: size });
 }
 await check('en kit vert150 (coming soon)', '/en/kit/vert150/', async (p, e) => { await p.waitForSelector('#prep-alt a'); await p.waitForTimeout(300); await noCzech(p, e); });
 await check('en quiz', '/en/quiz/', async (p, e) => {
+  await czLink(p, e, '/kviz.html');
   for (let i = 0; i < 3; i++) { await p.waitForSelector('.q-opt'); await noCzech(p, e, '#quiz'); await p.locator('.q-opt').nth(1).click(); }
   await p.waitForSelector('.res'); await p.waitForTimeout(300); await noCzech(p, e);
   const a = await p.locator('.res a.btn').first().getAttribute('href');
@@ -124,26 +132,36 @@ await check('cs kit stays Czech, no banner for cs browser', '/sada/so101/', asyn
   if (await p.locator('.lang-banner').count()) e.push('banner shown to a Czech browser');
   if (!(await p.locator('.lang-sw a[hreflang="en"]').count())) e.push('no EN switcher link');
 }, { locale: 'cs-CZ' });
-await check('language banner: suggest once, remember dismissal', '/sada/so101/', async (p, e) => {
+await check('language banner: suggest once, no layout shift, remember dismissal', '/sada/so101/', async (p, e) => {
   await p.waitForSelector('.lang-banner a[href*="/en/kit/so101/"]', { timeout: 5000 });
+  await p.waitForTimeout(500);
+  const cls = await p.evaluate(() => window.__cls || 0);
+  if (cls > 0.01) e.push('banner caused layout shift, CLS ' + cls.toFixed(3));
   await p.locator('.lang-banner button').click();
   await p.reload({ waitUntil: 'domcontentloaded' }); await p.waitForTimeout(300);
   if (await p.locator('.lang-banner').count()) e.push('banner came back after dismissal');
   if (p.url().includes('/en/')) e.push('redirected');
-}, { locale: 'en-US' });
+}, { locale: 'en-US', init: () => { window.__cls = 0; new PerformanceObserver(l => { for (const x of l.getEntries()) if (!x.hadRecentInput) window.__cls += x.value; }).observe({ type: 'layout-shift', buffered: true }); } });
 
 if (!process.env.SKIP_SIMS) {
   await check('sim so101 ?lang=en', '/sim/so101/?test=1&lang=en', async (p, e) => {
     await p.waitForFunction(() => window.__sim, null, { timeout: 120000 });
     const err = await p.evaluate(() => window.__sim.error); if (err) e.push('sim error: ' + err);
-    await p.waitForTimeout(2500); await isLang(p, e, 'en'); await noCzech(p, e);
+    await p.waitForTimeout(2500); await isLang(p, e, 'en'); await noCzech(p, e); await czLink(p, e, '/sim/so101/');
   });
   await check('sim so101 objects ?lang=en', '/sim/so101/objects.html?lang=en', async (p, e) => { await p.waitForTimeout(4000); await noCzech(p, e); });
   await check('sim so101 setup wizard ?lang=en', '/sim/so101/nastaveni/?lang=en', async (p, e) => { await p.waitForTimeout(4000); await noCzech(p, e); });
   await check('arena ?lang=en', '/sim/arena/?robot=svrn&lang=en', async (p, e) => {
     await p.waitForSelector('#pick > *', { timeout: 60000 }); await p.waitForSelector('#maps > *', { timeout: 60000 });
-    await p.waitForTimeout(800); await isLang(p, e, 'en'); await noCzech(p, e);
-  });
+    await p.waitForTimeout(800); await isLang(p, e, 'en'); await noCzech(p, e); await czLink(p, e, '/sim/arena/');
+    // choosing CZ wins over a saved English preference
+    await p.locator('.lang-sw a[data-lang="cs"]').click();
+    await p.waitForSelector('#pick > *', { timeout: 60000 }); await isLang(p, e, 'cs');
+    await p.goto(BASE + '/sim/arena/?robot=svrn', { waitUntil: 'domcontentloaded' }); await p.waitForSelector('#pick > *', { timeout: 60000 }); await isLang(p, e, 'cs');
+  }, { init: () => { try { if (!sessionStorage.getItem('x')) { sessionStorage.setItem('x', 1); localStorage.setItem('pr-lang', 'en'); } } catch (x) {} } });
+  await check('arena saved English choice applies without ?lang', '/sim/arena/?robot=svrn', async (p, e) => {
+    await p.waitForSelector('#pick > *', { timeout: 60000 }); await isLang(p, e, 'en');
+  }, { init: () => { try { if (!sessionStorage.getItem('x')) { sessionStorage.setItem('x', 1); localStorage.setItem('pr-lang', 'en'); } } catch (x) {} } });
   await check('arena stays Czech without ?lang', '/sim/arena/?robot=svrn', async (p, e) => {
     await p.waitForSelector('#pick > *', { timeout: 60000 }); await isLang(p, e, 'cs');
     const t = await p.locator('#start-h').innerText(); if (t.trim() !== 'Vyzkoušejte v aréně') e.push('Czech heading changed: ' + t);
