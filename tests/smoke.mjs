@@ -117,6 +117,14 @@ await check('sim so101', '/sim/so101/?test=1', async p => {
   // "Připojit AI": page API + entry button (the relay connects only when the panel is opened)
   if (!(await p.evaluate(() => !!window.so101 && window.so101.version === 1))) throw new Error('window.so101 missing');
   if ((await p.locator('#ai-open').count()) !== 1) throw new Error('"Připojit AI" button missing');
+  // the panel's lazy import chain resolves on a static host serving the repo root (GitHub Pages):
+  // src/agent/panel.js -> /backend/bridge-client/agent-bridge.js -> schemas.js, validate.js (no relay connection)
+  const mods = await p.evaluate(async () => {
+    const panel = await import('/sim/so101/src/agent/panel.js');
+    const bridge = await import('/backend/bridge-client/agent-bridge.js');
+    return [typeof panel.mountAgentPanel, typeof bridge.createAgentBridge, panel.RELAY_URL];
+  });
+  if (mods[0] !== 'function' || mods[1] !== 'function' || mods[2] !== 'wss://relay.printedrobotics.cz/tab') throw new Error('AI panel imports: ' + mods.join(', '));
 });
 
 await check('sim so101 ?real=1 has no AI panel', '/sim/so101/?test=1&real=1', async p => {
