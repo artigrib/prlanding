@@ -41,18 +41,35 @@ export function clientIp(cfg: Config, req: IncomingMessage): string {
   return req.socket.remoteAddress || 'unknown';
 }
 
+/** Clock and interval timer of the relay; tests pass a manual clock so heartbeat checks do not depend on wall-clock time. */
+export interface RelayClock {
+  now(): number;
+  setInterval(fn: () => void, ms: number): { unref?(): unknown };
+  clearInterval(handle: unknown): void;
+}
+const SYSTEM_CLOCK: RelayClock = {
+  now: () => Date.now(),
+  setInterval: (fn, ms) => setInterval(fn, ms),
+  clearInterval: (h) => clearInterval(h as NodeJS.Timeout),
+};
+
+/** The parts of a ws WebSocket the relay uses (tests attach a fake). */
+export type TabSocket = Pick<WebSocket, 'send' | 'close' | 'terminate' | 'on' | 'readyState' | 'OPEN'>;
+
 export class Relay {
   private wss: WebSocketServer;
-  private hb: NodeJS.Timeout;
-  private sockets = new Map<WebSocket, { room: Room | null; last: number; bucket: TokenBucket }>();
+  private hb: unknown;
+  private sockets = new Map<TabSocket, { room: Room | null; last: number; bucket: TokenBucket; silenced: boolean }>();
 
   private cfg: Config;
   private reg: Registry;
-  constructor(cfg: Config, reg: Registry) {
-    this.cfg = cfg; this.reg = reg;
+  private clock: RelayClock;
+  constructor(cfg: Config, reg: Registry, clock: RelayClock = SYSTEM_CLOCK) {
+    this.cfg = cfg; this.reg = reg; this.clock = clock;
     this.wss = new WebSocketServer({ noServer: true, maxPayload: cfg.maxFrameBytes, perMessageDeflate: false, clientTracking: false });
-    this.hb = setInterval(() => this.heartbeat(), cfg.hbSec * 1000);
-    this.hb.unref();
+    const hb = clock.setInterval(() => this.heartbeat(), cfg.hbSec * 1000);
+    hb.unref?.();
+    this.hb = hb;
   }
 
   /** Handle an HTTP upgrade for /tab. */
@@ -65,17 +82,19 @@ export class Relay {
     const ip = clientIp(this.cfg, req);
     const why = this.reg.canAdmit(ip);
     if (why) { log('tab_reject', { why }); return reject(why === 'CAPACITY' ? 503 : 429, why === 'CAPACITY' ? 'Service Unavailable' : 'Too Many Requests'); }
-    this.wss.handleUpgrade(req, socket, head, (ws) => this.onSocket(ws, ip));
+    this.wss.handleUpgrade(req, socket, head, (ws) => this.attach(ws, ip));
   }
 
-  private onSocket(ws: WebSocket, ip: string): void {
-    const st = { room: null as Room | null, last: Date.now(), bucket: new TokenBucket(this.cfg.tabMsgsPerSec, this.cfg.tabMsgsPerSec * 2) };
+  /** Serve one accepted tab socket (public so unit tests can attach a fake socket). */
+  attach(ws: TabSocket, ip: string): void {
+    const st = { room: null as Room | null, last: this.clock.now(), bucket: new TokenBucket(this.cfg.tabMsgsPerSec, this.cfg.tabMsgsPerSec * 2), silenced: false };
     this.sockets.set(ws, st);
     const helloTimer = setTimeout(() => { if (!st.room) ws.close(4000, 'hello expected'); }, HELLO_TIMEOUT_MS);
     const send = (m: Record<string, unknown>) => { if (ws.readyState === ws.OPEN) ws.send(JSON.stringify({ v: 1, ts: Date.now(), ...m })); };
 
     ws.on('message', (data: RawData, isBinary: boolean) => {
-      st.last = Date.now();
+      if (st.silenced) return;   // debugSilence(): behave like a dead link
+      st.last = this.clock.now();
       if (isBinary) return ws.close(1003, 'text frames only');
       if (!st.bucket.take()) return ws.close(4429, 'rate limit');
       let msg: any;
@@ -101,7 +120,7 @@ export class Relay {
   }
 
   private heartbeat(): void {
-    const now = Date.now();
+    const now = this.clock.now();
     const dead = this.cfg.hbSec * this.cfg.hbMissFactor * 1000;
     for (const [ws, st] of this.sockets) {
       if (now - st.last > dead) {
@@ -111,15 +130,24 @@ export class Relay {
         this.sockets.delete(ws);
         continue;
       }
-      if (st.room && ws.readyState === ws.OPEN) ws.send(JSON.stringify({ v: 1, t: 'ping', ts: now }));
+      if (st.room && !st.silenced && ws.readyState === ws.OPEN) ws.send(JSON.stringify({ v: 1, t: 'ping', ts: now }));
     }
     this.reg.sweep();
   }
 
   get size(): number { return this.sockets.size; }
 
+  /**
+   * Test hook: from now on ignore everything the current tabs send and stop pinging them, as if the link had
+   * died silently. The heartbeat then drops them after hbMissFactor intervals. Returns the number of sockets.
+   */
+  debugSilence(): number {
+    for (const st of this.sockets.values()) st.silenced = true;
+    return this.sockets.size;
+  }
+
   close(): void {
-    clearInterval(this.hb);
+    this.clock.clearInterval(this.hb);
     for (const ws of this.sockets.keys()) ws.terminate();
     this.sockets.clear();
     this.wss.close();

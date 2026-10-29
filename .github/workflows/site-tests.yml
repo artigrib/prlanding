@@ -45,6 +45,8 @@ jobs:
       - run: npm run build
       - name: Committed build/ must be reproducible
         run: git diff --exit-code -- build && test -z "$(git status --porcelain -- build)"
+      - name: Arena unit tests (replay codec)
+        run: node --test tests/*.test.mjs
 
   so101-unit:
     runs-on: ubuntu-latest
@@ -73,10 +75,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Install Playwright
-        run: |
-          npm install --no-save --no-package-lock playwright@1.56.0
-          npx playwright install --with-deps chromium
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - uses: ./.github/actions/playwright
       - name: Serve site
         run: |
           python3 -m http.server 8123 >/tmp/http.log 2>&1 &
@@ -85,3 +86,69 @@ jobs:
         run: node tests/smoke.mjs
       - name: English smoke test
         run: node tests/smoke-en.mjs
+
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - pkg: api
+            test: npm test
+          - pkg: bridge
+            test: npm run test:unit
+    name: backend-${{ matrix.pkg }}
+    defaults:
+      run:
+        working-directory: backend/${{ matrix.pkg }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/${{ matrix.pkg }}/package-lock.json
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm run typecheck
+      - run: ${{ matrix.test }}
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [so101, arena-replay, bridge]
+    name: e2e-${{ matrix.suite }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/bridge/package-lock.json
+      - uses: ./.github/actions/playwright
+      - name: so101 sim e2e (software GL; time is advanced through the ?test=1 hooks)
+        if: matrix.suite == 'so101'
+        run: node sim/so101/tests/e2e.cjs "$RUNNER_TEMP/so101-e2e"
+      - name: arena replay e2e
+        if: matrix.suite == 'arena-replay'
+        run: |
+          python3 -m http.server 8792 --bind 127.0.0.1 >/tmp/http.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8792/ >/dev/null && break; sleep 1; done
+          node sim/arena/tests/replay-e2e.cjs http://127.0.0.1:8792
+      - name: bridge e2e (relay + MCP client + Chromium tab, incl. the real sim)
+        if: matrix.suite == 'bridge'
+        working-directory: backend/bridge
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure() && matrix.suite == 'so101'
+        with:
+          name: so101-e2e-screenshots
+          path: ${{ runner.temp }}/so101-e2e
+          retention-days: 7

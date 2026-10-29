@@ -1,0 +1,13 @@
+{
+  "name": "prlanding",
+  "private": true,
+  "description": "printedrobotics.cz static site. Dev tooling only: the pages need no build step or dependencies.",
+  "scripts": {
+    "test:unit": "node --test sim/so101/test/*.test.mjs sim/so101/tests/*.test.mjs sim/arena/tests/*.test.mjs",
+    "test:e2e": "node sim/so101/tests/e2e.cjs && node sim/arena/tests/replay-e2e.cjs http://127.0.0.1:8123",
+    "smoke": "node tests/smoke.mjs && node tests/smoke-en.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.56.0"
+  }
+}
