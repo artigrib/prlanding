@@ -316,6 +316,67 @@ function kitPage(r0, L) {
 }
 for (const r of R) { kitPage(r, 'cs'); kitPage(r, 'en'); }
 
+// home hero: "what's new" strip = the newest item of the home news list (N° Co je nového), so the two never disagree
+function heroNew(html) {
+  const m = /<ol class="a4 news" reversed>\s*<li><time datetime="([^"]+)">([^<]+)<\/time><span><b>([^<]+)<\/b>[\s\S]*?<\/span><a href="([^"]+)">/.exec(html);
+  if (!m) throw new Error('index.html: news list not found for the hero strip');
+  return `<a class="hero-new" href="${m[4]}" data-cta="hero-new"><span class="hero-new-k">Novinka</span><time datetime="${m[1]}">${m[2]}</time><b>${m[3]}</b><span aria-hidden="true">→</span></a>`;
+}
+// real photos: drop assets/photos/<id>.jpg (+ optional <id>.json {w,h,alt_cs,alt_en,cap_cs,cap_en}) and the next build
+// shows it instead of the render. No photo = the render stays, labelled as a render (never a stock or fake photo).
+function photoSlot(id, L, fb) {
+  const f = `assets/photos/${id}.jpg`, j = `assets/photos/${id}.json`;
+  if (fs.existsSync(f)) {
+    const d = fs.existsSync(j) ? JSON.parse(read(j)) : {};
+    return `<figure class="ph" data-photo="${id}"><span class="ph-img"><img src="${f}" width="${d.w || 1200}" height="${d.h || 900}" alt="${esc(d['alt_' + L] || fb.alt)}" loading="lazy" decoding="async"><span class="ph-tag">${L === 'en' ? 'photo' : 'foto'}</span></span>` +
+      `<figcaption class="mono">${fb.no ? esc(fb.no) + ' — ' : ''}${esc(d['cap_' + L] || fb.photoCap)}</figcaption></figure>`;
+  }
+  if (!fb.src) return '';  // no render that would be honest here (e.g. a meetup): the slot stays empty until the photo exists
+  return `<figure class="ph ph-empty" data-photo="${id}"><span class="ph-img"><img src="${fb.src}" width="${fb.w}" height="${fb.h}" alt="${esc(fb.alt)}" loading="lazy" decoding="async"><span class="ph-tag">render</span></span>` +
+    `<figcaption class="mono">${esc(fb.no)} — ${esc(fb.cap)}</figcaption></figure>`;
+}
+// photo slots marked in index.html as <!--photo:<id>--><!--/photo--> (the build timeline adds its own)
+const PHOTO_SLOTS = {
+  meetup: { cs: { alt: 'Setkání PROTO ROBOT v Praze', photoCap: 'Foto — PROTO ROBOT, Praha.' }, en: { alt: 'The PROTO ROBOT meetup in Prague', photoCap: 'Photo — PROTO ROBOT, Prague.' } }
+};
+const fillPhotos = (html, L) => html.replace(/<!--photo:([a-z0-9-]+)-->[\s\S]*?<!--\/photo-->/g, (m, id) => {
+  if (!PHOTO_SLOTS[id]) throw new Error(`index.html: unknown photo slot ${id}`);
+  return `<!--photo:${id}-->${photoSlot(id, L, PHOTO_SLOTS[id][L])}<!--/photo-->`;
+});
+// home: SO-101 build timeline (stage_0 … stage_6) from data/components/so101.json build_time — the same
+// estimates as the plan page and the assembly guide; stage names + one line from the guide's own headings
+function buildTimeline(L) {
+  const en = L === 'en', t = BT[L], src = read(`tools/content/assembly.${L}.html`);
+  const head = (id) => { const m = new RegExp(`<section class="section" id="${id}">[\\s\\S]*?<h2>([^<]+)</h2>`).exec(src); if (!m) throw new Error(`assembly.${L}: no heading for ${id}`); return m[1]; };
+  const intro = expandBt(/<h2>([^<]+)<\/h2>/.exec(src)[1], L, 'assembly intro');
+  const st = buildTime(SO101, 2, 'self').stages, max = Math.max(...st.map(s => s.hours[1]));
+  const pct = h => +(h / max * 100).toFixed(1);
+  const rows = st.map((s, i) => {
+    const extra = [s.id === 'e1' ? (en ? `+ printer ≈ ${t.print} h` : `+ tiskárna ≈ ${t.print} h`) : '', s.optional ? (en ? 'optional' : 'volitelné') : ''].filter(Boolean)
+      .map(x => `<span class="tl-x">${x}</span>`).join('');
+    return `<li><a class="tl-i" href="navody/so101-sestaveni/#${s.id}"><code class="tl-k">stage_${i}</code>` +
+      `<span class="tl-n"><b>${esc(en ? s.name : s.name_cs)}</b><span>${esc(expandBt(head(s.id), L, 'assembly ' + s.id))}</span></span>` +
+      `<span class="tl-h">${t[s.id]} h${extra}</span><span class="tl-bar" aria-hidden="true"><i style="left:0;width:${pct(s.hours[0])}%"></i><i class="tl-r" style="left:${pct(s.hours[0])}%;width:${pct(s.hours[1] - s.hours[0])}%"></i></span></a></li>`;
+  }).join('\n');
+  const fig = photoSlot('so101-build', L, en
+    ? { no: 'Fig. 3', src: 'img/so101_white.jpg', w: 1200, h: 900, alt: 'SO-101 robot arm, a render from the project CAD', cap: 'SO-101 rendered from the project CAD. A photo from our own build will replace it.', photoCap: 'Our SO-101 build.' }
+    : { no: 'Obr. 3', src: 'img/so101_white.jpg', w: 1200, h: 900, alt: 'Robotická ruka SO-101, vizualizace z CAD projektu', cap: 'Vizualizace SO-101 z CAD projektu. Nahradí ji fotka z naší stavby.', photoCap: 'Naše stavba SO-101.' });
+  return `<div class="g rule">
+<div class="a1 mono">N° 03 — ${en ? 'Building the SO-101' : 'Stavba SO-101'}<code class="sec-k">build.arm()</code></div>
+<h2 class="a4 h2" id="stavba-h" style="max-width:52rem">${esc(intro)}.</h2>
+</div>
+<div class="g tl-row">
+<div class="tl-main">
+<p class="mono tl-meta">${en ? 'estimate for a pair (leader + follower), parts printed yourself' : 'odhad pro pár rukou (ovládací + výkonná), díly tisknete sami'}</p>
+<ol class="tl">
+${rows}
+</ol>
+<p class="tl-sum"><span class="mono">${en ? 'total' : 'celkem'}</span><b>${t.total} h ${en ? 'of work' : 'práce'}</b><span class="mono">+ ${en ? 'printer' : 'tiskárna'} ≈ ${t.print} h</span></p>
+<a class="btn" href="navody/so101-sestaveni/" data-cta="build-guide">${en ? 'Open the assembly guide' : 'Otevřít návod ke stavbě'} <span aria-hidden="true">→</span></a>
+</div>
+${fig}
+</div>`;
+}
 // home: catalogue cards in the static HTML (scripts re-render the same cards with filters)
 const cards = R.map((r, i) => `<a class="card" href="sada/${r.id}/"><div class="tile"><span class="tag${r.preparing ? ' tag-p' : ''}">${r.preparing ? 'Připravujeme' : 'Předobjednávka'}</span><img src="img/${r.id}_white.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
   `<span class="card-meta"><span class="mono" style="color:var(--ink)">${no(i)}</span><span class="mono">${esc(r.preparing ? 'Připravujeme' : r.level)}</span></span>` +
@@ -326,6 +387,10 @@ home = home.replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->
   .replace(/<noscript><p>Pro katalog zapněte JavaScript[\s\S]*?<\/noscript>\n?/, '')
   .replace(/id="robot-count">\d+</, `id="robot-count">${R.length}<`).replace(/id="robot-count2">\d+</, `id="robot-count2">${R.length}<`);
 if (!home.includes('<!--/cards-->')) throw new Error('index.html: cards placeholder not found');
+home = home.replace(/<!--hero-new-->[\s\S]*?<!--\/hero-new-->/, `<!--hero-new-->${heroNew(home)}<!--/hero-new-->`)
+  .replace(/<!--build-tl-->[\s\S]*?<!--\/build-tl-->/, `<!--build-tl-->\n${buildTimeline('cs')}\n<!--/build-tl-->`);
+home = fillPhotos(home, 'cs');
+if (!home.includes('<!--/hero-new-->') || !home.includes('<!--/build-tl-->')) throw new Error('index.html: hero-new or build-tl placeholder not found');
 // Czech home gets its hreflang pair + switcher; the English home is rendered from it
 if (home.includes('<!--/cards-->')) {
   home = wireI18n(setAlternates(home, '', 'en/'), 'cs', 'index.html', '', 'en/', '');
@@ -348,6 +413,8 @@ if (home.includes('<!--/cards-->')) {
     .replace('<meta property="og:locale" content="cs_CZ">', '<meta property="og:locale" content="en_GB">')
     .replace(/"description":"Stavebnice open-source robotů: tisk dílů, kompletace hardwaru a doprava po ČR a EU\."/, '"description":"Open-source robot kits: printed parts, hardware assembly and shipping within Czechia and the EU."')
     .replace(/<body data-page="home"/, `<body data-page="home" data-root="${root}"`);
+  en = fillPhotos(en, 'en');
+  en = en.replace(/<!--build-tl-->[\s\S]*?<!--\/build-tl-->/, `<!--build-tl-->\n${buildTimeline('en')}\n<!--/build-tl-->`);
   en = wireI18n(en, 'en', page, '', page, '').replace(/<script src="assets\/data\.js"><\/script>/, m => m + '\n<script src="assets/data.en.js"></script>');
   en = enLinks(translateHtml(en), page, '');
   assertEnglish(en, page);

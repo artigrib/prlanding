@@ -36,8 +36,8 @@
       "Otevřít simulaci": "Open the simulation",
       "Jen simulace: skutečnou ruku AI neovládá. Server zprávy jen přeposílá a nic neukládá. Kdykoli zastavíte tlačítkem STOP.": "Simulation only: the AI cannot control a real arm. Our server only relays messages and stores nothing. Press STOP at any time.",
       "Simulace SO-101 s panelem Ovládání přes AI: Simulaci ovládá Claude Code, tlačítka STOP a Odpojit a záznam toho, co AI dělá": "SO-101 simulation with the AI control panel: the simulation is controlled by Claude Code, STOP and Disconnect buttons and a log of what the AI does",
-      "Obr. 3 — Panel Připojit AI ve stavu „Simulaci ovládá: Claude Code“. Každý krok AI se zapisuje do panelu.": "Fig. 3 — The Connect AI panel while “Claude Code” controls the simulation (Czech interface shown). Every AI step is logged in the panel.",
-      "Obr. 4 — Bojová aréna v prohlížeči, kamera za robotem. Project SVRN právě flipperem vyhodil Klepeto.": "Fig. 4 — Combat arena in the browser, chase camera. Project SVRN has just flipped Klepeto with its flipper.",
+      "Obr. 4 — Panel Připojit AI ve stavu „Simulaci ovládá: Claude Code“. Každý krok AI se zapisuje do panelu.": "Fig. 4 — The Connect AI panel while “Claude Code” controls the simulation (Czech interface shown). Every AI step is logged in the panel.",
+      "Obr. 5 — Bojová aréna v prohlížeči, kamera za robotem. Project SVRN právě flipperem vyhodil Klepeto.": "Fig. 5 — Combat arena in the browser, chase camera. Project SVRN has just flipped Klepeto with its flipper.",
       "Project SVRN má vpředu výměnný modul: flipper, klín nebo chapadlo. Soupeři Kosa a Klepeto mají vlastní původní modely.": "Project SVRN has a swappable front module: flipper, wedge or grabber. Opponents Kosa and Klepeto have their own original models.",
       "Po zápase si zásah přehrajete zpomaleně a zápas uložíte jako soubor nebo krátký klip.": "After the match, replay a hit in slow motion and save the match as a file or a short clip.",
       "První zápas provede krátký průvodce, soupeř Začátečník reaguje pomaleji. Motory, zbraně a zásahy mají vlastní zvuk.": "A short guide walks you through the first match, and the Beginner opponent reacts more slowly. Motors, weapons and hits have their own sound.",
@@ -194,6 +194,9 @@
       'Tisk a kompletace v Praze': 'Printed and assembled in Prague',
       'Open-source roboty.': 'Open-source robots.', 'Nejdřív v prohlížeči,': 'First in your browser,', 'pak na vašem stole.': 'then on your desk.',
       'Robotickou ruku SO-101 si vyzkoušíte ve fyzikální simulaci, bojové roboty v aréně. Skutečného robota vám pak vytiskneme z originálních souborů, doplníme hardware a pošleme v jedné krabici.': 'Try the SO-101 robot arm in a physics simulation and combat robots in the arena. Then we print the real robot from the original files, add the hardware and ship it in one box.',
+      'Novinka': 'New', 'Cesta k vlastní SO-101': 'The path to your own SO-101', 'Simulace v prohlížeči': 'Simulation in your browser', 'Stavba podle návodu': 'Build with the guide', 'Připojte svou AI': 'Connect your AI',
+      'Robotickou ruku SO-101 si vyzkoušíte ve fyzikální simulaci, bojové roboty v aréně. Skutečného robota si pak postavíte: řekneme vám, co koupit a kde, a provedeme vás stavbou.': 'Try the SO-101 robot arm in a physics simulation and combat robots in the arena. Then you build the real robot: we tell you what to buy and where, and walk you through the build.',
+      'Nakupte díly': 'Buy the parts', 'Díly koupíte přímo u dodavatelů podle našeho plánu, s ověřenými cenami a kontrolou variant serv. Hotovou sadu chystáme – dejte nám vědět.': 'You buy the parts directly from suppliers following our plan, with checked prices and a servo variant check. We’re preparing a ready-made kit – let us know.',
       'Vyzkoušejte SO-101 v prohlížeči': 'Try the SO-101 in your browser', 'Bojová aréna': 'Combat arena', 'Zdarma, bez registrace. Funguje i na telefonu.': 'Free, no sign-up. Works on phones too.',
       'Simulovaná robotická ruka SO-101 nad stolem s červenou kostkou a modrou miskou': 'Simulated SO-101 robot arm above a table with a red cube and a blue bowl',
       'Spustit simulaci': 'Start the simulation',
@@ -256,7 +259,7 @@
       [/^Obr\. (\d+) — (.*)$/, 'Fig. $1 — $2'],
       // homepage section labels: the number changes when sections are added, the label does not
       [/^N° (\d+) — (.+)$/, function (m, n, l) {
-        var L = { 'Stavebnice open-source robotů': 'Open-source robot kits', 'Vyzkoušejte, než koupíte': 'Try before you buy', 'Připojte svou AI': 'Connect your AI', 'Bojoví roboti': 'Combat robots', 'Co je nového': 'What’s new', 'Připravujeme': 'Coming soon', 'Katalog': 'Catalogue', 'Jak to funguje': 'How it works', 'Pro školy a návody': 'For schools and guides', 'Komunita': 'Community', 'Licence': 'Licences' }[l];
+        var L = { 'Stavebnice open-source robotů': 'Open-source robot kits', 'Vyzkoušejte, než koupíte': 'Try before you buy', 'Stavba SO-101': 'Building the SO-101', 'Připojte svou AI': 'Connect your AI', 'Bojoví roboti': 'Combat robots', 'Co je nového': 'What’s new', 'Připravujeme': 'Coming soon', 'Katalog': 'Catalogue', 'Jak to funguje': 'How it works', 'Pro školy a návody': 'For schools and guides', 'Komunita': 'Community', 'Licence': 'Licences' }[l];
         return L ? 'N° ' + n + ' — ' + L : m; }],
       [/^Otázka (\d) ze 3$/, 'Question $1 of 3'],
       [/^(\d+) dílů$/, '$1 parts'],
