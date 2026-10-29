@@ -4,7 +4,7 @@
  * honours Global Privacy Control / Do Not Track.
  * Usage:  <script src="/assets/track.js" defer></script>
  *         window.prTrack('sim_start')            // from code
- *         <a href="/sada.html" data-track="sim_cta">  // on click, declaratively
+ *         <a href="/sada/so101/" data-track="sim_cta">  // on click, declaratively
  */
 (function () {
   'use strict';

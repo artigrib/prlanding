@@ -141,10 +141,16 @@ function kitPage(r0, L) {
   const noSw = D.PR_NO_SW(r);
   const prerender = {
     specs: specs.map(x => `<div><dt>${esc(x[0])}</dt><dd>${esc(x[1])}</dd></div>`).join(''),
-    box: [['Tištěné díly podle STL projektu', '1 sada']].concat(r.bom || []).map((b, i) => `<li><span class="n">${String(i + 1).padStart(2, '0')}</span><span>${esc(b[0])}</span><span class="q">${esc(b[1])}</span><span class="t"></span></li>`).join(''),
+    // same list app.js shows for the default configuration (Kompletní sada, pair)
+    box: D.PR_BOX(r, 'kit', !!r.setups).map((b, i) => `<li><span class="n">${String(i + 1).padStart(2, '0')}</span><span>${esc(b[0])}</span><span class="q">${esc(b[1])}</span><span class="t">${esc(b[2])}</span></li>`).join(''),
     related: r.related.map(id => byId[id]).filter(Boolean).map(x => `<a href="${H}sada/${x.id}/"><b>${esc(x.name)}</b><span class="muted" style="font-size:15px">${esc(x.short)}</span></a>`).join('')
   };
   const img = `${SITE}img/${r.id}_white.jpg`;
+  // FAQ: the same questions app.js shows (Czech template + this language's robot data, translated for /en/)
+  const faq = L === 'en' ? D.PR_FAQ(r).map(f => f.map(x => I.PRI18N.t(x))) : D.PR_FAQ(r);
+  if (L === 'en' && faq.some(f => f.some(x => CZ.test(x)))) throw new Error('FAQ not translated: ' + r.id + '\n' + faq.flat().filter(x => CZ.test(x)).join('\n'));
+  const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(f => ({ '@type': 'Question', name: f[0], acceptedAnswer: { '@type': 'Answer', text: f[1] } })) };
+  // Product without offers, prices or ratings: nothing is for sale yet
   const ld = {
     '@context': 'https://schema.org', '@type': 'Product', name: L === 'en' ? `Kit for ${r.name}` : `Stavebnice pro ${r.name}`, description: r.lead, category: r.type,
     image: img, url, brand: { '@type': 'Brand', name: 'printedrobotics.cz' }, isBasedOn: r.repo,
@@ -166,7 +172,8 @@ function kitPage(r0, L) {
     `<meta property="og:locale:alternate" content="${L === 'en' ? 'cs_CZ' : 'en_GB'}">`,
     `<meta name="twitter:card" content="summary_large_image">`,
     `<link rel="preload" as="image" href="${root}img/${r.id}_white.jpg" fetchpriority="high">`,
-    `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`
+    `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`,
+    `<script type="application/ld+json">${JSON.stringify(faqLd).replace(/</g, '\\u003c')}</script>`
   ].join('\n');
 
   let html = tpl
@@ -178,7 +185,9 @@ function kitPage(r0, L) {
     // server-rendered name so the page reads right before scripts run
     .replace('<h1 class="p-name" id="p-name"></h1>', `<h1 class="p-name" id="p-name">${esc(r.name)}</h1>`)
     .replace('<dl class="a4 specs" id="specs"></dl>', `<dl class="a4 specs" id="specs">${prerender.specs}</dl>`)
+    .replace('<div class="faq" id="faq-list"></div>', `<div class="faq" id="faq-list">${faq.map(f => `<details><summary>${esc(f[0])}</summary><p>${esc(f[1])}</p></details>`).join('')}</div>`)
     .replace('<ol class="box" id="box"></ol>', `<ol class="box" id="box">${prerender.box}</ol>`)
+    .replace('<p class="mono" id="box-note" style="margin:16px 0 0"></p>', `<p class="mono" id="box-note" style="margin:16px 0 0">${esc(D.PR_BOX_NOTE(r))}</p>`)
     .replace('<div class="a4 rel" id="related"></div>', `<div class="a4 rel" id="related">${prerender.related}</div>`)
     .replace('<span id="l-name"></span>', `<span id="l-name">${esc(r.name)}</span>`)
     .replace('<span id="l-author"></span>', `<span id="l-author">${esc(r.author)}</span>`)

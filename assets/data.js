@@ -190,11 +190,11 @@ window.PR_ROBOTS = [
     related: ['svrn', 'otto', 'sawppy'] }
 ];
 // Browser demos linked from product pages (r.sim). colorParam: the sim reads ?color= (so101 does not yet).
-// Sizes = measured transfer of a first visit
-// (gzip for code; meshes/models counted as served), re-measure when sim/** changes.
+// Sizes = uncompressed download of a first visit, the same basis as the SO-101 loader's "11,6 MB" engine figure;
+// re-measure when sim/** changes.
 window.PR_SIMS = {
-  arena: { path: 'sim/arena/', robotParam: true, colorParam: true, label: 'Vyzkoušejte v aréně', note: 'Hra v prohlížeči · zdarma · ≈\u00A01,3\u00A0MB' },
-  so101: { path: 'sim/so101/', label: 'Vyzkoušejte v simulaci', note: 'Simulace v prohlížeči · zdarma · ≈\u00A04–\u20605\u00A0MB' }
+  arena: { path: 'sim/arena/', robotParam: true, colorParam: true, label: 'Vyzkoušejte v aréně', note: 'Hra v prohlížeči · zdarma · ≈\u00A03,5\u00A0MB' },
+  so101: { path: 'sim/so101/', label: 'Vyzkoušejte v simulaci', note: 'Simulace v prohlížeči · zdarma · ≈\u00A012\u00A0MB' }
 };
 // Robot without its own software (RC-controlled); same test in app.js and tools/build.mjs.
 window.PR_NO_SW = function (r) { return !r.sw || String(r.sw).trim() === '—'; };
@@ -215,6 +215,35 @@ window.PR_SAFETY = function (r) {
   return w;
 };
 // Parameters shown on the product page and in JSON-LD; unknown values ('—' or empty) are left out.
+// "Obsah krabice": what one tier contains (used by app.js for the live list and tools/build.mjs for the static page).
+// tier: 'parts' | 'kit' | 'tested'; pair: leader + follower (robots with r.setups). Items: [name, qty, kind].
+window.PR_BOX = function (r, tier, pair) {
+  var items = [['Tištěné díly podle STL projektu' + (r.setups ? (pair ? ' — leader i follower' : ' — follower') : ''), pair ? '2 sady' : '1 sada', 'Tisk']];
+  if (tier !== 'parts') {
+    if (r.id === 'so101') {
+      // SO-ARM100 README, bill of materials for SO-101 (pair = follower + leader)
+      items.push(['Servo Feetech STS3215 7,4 V, převod 1/345', pair ? '7×' : '6×', 'Hardware']);
+      if (pair) { items.push(['Servo Feetech STS3215 7,4 V, převod 1/191', '2×', 'Hardware']); items.push(['Servo Feetech STS3215 7,4 V, převod 1/147', '3×', 'Hardware']); }
+      items.push(['Řídicí deska serv', pair ? '2×' : '1×', 'Hardware'], ['Zdroj 5 V', pair ? '2×' : '1×', 'Hardware'], ['Kabel USB-C', '2×', 'Hardware'], ['Svěrky ke stolu', pair ? '4×' : '2×', 'Hardware']);
+    } else { (r.bom || []).forEach(function (b) { if (r.setups && !pair && /leader/i.test(b[0]) && !/follower/i.test(b[0])) return; items.push([b[0], b[1], 'Hardware']); }); }
+    items.push(['Spojovací materiál, roztříděný po krocích', '1 sada', 'Hardware']);
+  }
+  if (tier === 'tested') items.push(['Nastavení elektroniky a funkční test', '—', 'Servis']);
+  items.push(['Tištěný návod a bezpečnostní informace', '1×', 'Návod']);
+  return items;
+};
+window.PR_BOX_NOTE = function (r) { return r.id === 'so101' ? 'Počty dle kusovníku projektu SO-ARM100.' : 'Položky dle kusovníku projektu; přesné počty potvrdíme před expedicí.'; };
+// FAQ of a kit page (app.js renders it, tools/build.mjs pre-renders it and adds it as FAQPage structured data).
+window.PR_FAQ = function (r) {
+  return [
+    ['Zvládnu sestavení bez zkušeností?', 'Náročnost této sady: ' + r.level + '. Díly jsou roztříděné po krocích a návod vede krok za krokem. Pokud si nejste jistí, zvolte Sadu s oživením — elektroniku nastavíme za vás.'],
+    ['Jak funguje předobjednávka?', 'Předobjednávka je nezávazná. Ozveme se e-mailem s cenou a termínem; platíte až po potvrzení objednávky.'],
+    ['Je to originální produkt autorů projektu?', 'Ne. Sadu vyrábíme podle otevřené dokumentace projektu ' + r.name + ' (' + r.author + ', licence ' + r.hw + '). Autoři s námi nejsou spojeni a produkt neschválili.'],
+    ['Jaký software budu potřebovat?', r.cat === 'combat' ? 'Žádný. Robot se ovládá RC vysílačem FlySky; přijímač Malenki Nano s ním jen spárujete, programovat nic nemusíte. Návod projektu najdete v sekci Licence a bezpečnost.' : r.software + '. Software je open-source a zdarma; odkaz na návod projektu najdete v sekci Licence a bezpečnost.'],
+    ['Je sada vhodná pro děti?', 'Není to hračka. Obsahuje malé díly a elektroniku a je určena osobám od 14 let; mladší pouze pod dohledem dospělého, například ve škole nebo kroužku.'],
+    ['Objednáváme pro školu nebo kroužek. Jde to na fakturu?', 'Ano. Do formuláře napište počet sad a IČO, cenu za více kusů a fakturu na školu pošleme spolu s potvrzením.']
+  ];
+};
 window.PR_SPECS = function (r) {
   return r.specs.concat([['Náročnost', r.level], ['Software', r.software], ['Náklady na díly dle autora', r.bomCost]])
     .filter(function (s) { return s[1] && String(s[1]).trim() !== '—'; });

@@ -88,6 +88,20 @@ await check('waitlist form (no send)', '/', async p => {
   if ((await f.locator('input[type=email]').getAttribute('aria-invalid')) !== 'true') throw new Error('invalid e-mail not flagged');
 });
 
+// kit pages: static box matches the default tier, structured data without fake offers/ratings
+await check('kit so101 static box + structured data', '/sada/so101/', async p => {
+  const html = await (await p.request.get(BASE + '/sada/so101/')).text();
+  if (!/<ol class="box" id="box">[^]*STS3215[^]*<\/ol>/.test(html)) throw new Error('static box lists no servos');
+  const lds = [...html.matchAll(/<script type="application\/ld\+json">([^<]*)<\/script>/g)].map(m => JSON.parse(m[1]));
+  if (!lds.some(l => l['@type'] === 'Product') || !lds.some(l => l['@type'] === 'FAQPage' && l.mainEntity.length >= 3)) throw new Error('Product/FAQPage missing');
+  if (/"(offers|aggregateRating|review|price)"/.test(html)) throw new Error('fake commerce data in JSON-LD');
+});
+
+await check('legacy sada.html redirects', '/sada.html?r=svrn', async p => {
+  await p.waitForURL(/\/sada\/svrn\/$/);
+  await p.goto(BASE + '/sada.html'); await p.waitForURL(/\/#katalog$/);
+});
+
 for (const id of ['so101', 'svrn', 'vert150']) {
   await check('product ' + id, `/sada/${id}/`, async p => {
     await p.waitForSelector('h1');
