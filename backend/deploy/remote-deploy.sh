@@ -417,6 +417,8 @@ tls_state() ( set +eu +o pipefail
   say "tls docker firewall backend: $(docker info -f '{{.FirewallBackend.Driver}}' 2>/dev/null | tr -cd 'a-z+-' || echo unknown); nft binary: $(command -v nft >/dev/null && echo yes || echo no)"
   local aip
   aip=$(getent ahostsv4 api.printedrobotics.cz | awk 'NR==1{print $1}')
+  local sip; sip=$(printf '%s' "${SSH_CONNECTION:-}" | awk '{print $3}')
+  say "tls ssh: arrived on address equal to A record: $([ -n "$sip" ] && [ "$sip" = "$aip" ] && echo yes || echo no); ssh address on local interface: $(ip -o addr 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | grep -qxF "$sip" && echo yes || echo no); ssh address is private: $(printf '%s' "$sip" | grep -qE '^(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)' && echo yes || echo no); A record resolves on server same as public DNS: see runner"
   say "tls public address: A record address configured on a local interface: $(ip -o -4 addr 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | grep -qxF "$aip" && echo yes || echo no); host default route via private gateway: $(ip -4 route show default 2>/dev/null | awk '{print $3}' | grep -qE '^(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.|100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.)' && echo yes || echo no); container virtualization: $(systemd-detect-virt -c 2>/dev/null || echo unknown); vm virtualization: $(systemd-detect-virt -v 2>/dev/null || echo unknown)"
   for port in 80 443; do
     hex=$(printf '%04X' "$port")
