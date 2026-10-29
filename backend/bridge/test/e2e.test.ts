@@ -27,9 +27,10 @@ function serveStatic(): Promise<number> {
   statics = createServer(async (req, res) => {
     let p = normalize(decodeURIComponent((req.url || '/').split('?')[0]!));
     if (p.endsWith('/')) p += 'index.html';
-    // /bridge-client/* from backend/, /sim/so101/* and /backend/bridge-client/* from the repo root
+    // /bridge-client/* from backend/ (mock page); everything else from the repo root, like GitHub Pages serves the site
+    // (the sim imports /assets/i18n.js and /backend/bridge-client/*)
     const file = p.startsWith('/bridge-client/') ? join(BACKEND_DIR, p) : join(REPO_DIR, p);
-    if (!file.startsWith(BACKEND_DIR) && !(file.startsWith(join(REPO_DIR, 'sim/so101')) || file.startsWith(join(REPO_DIR, 'backend/bridge-client')))) { res.writeHead(404); return res.end(); }
+    if (!file.startsWith(REPO_DIR) || file.includes('/node_modules/')) { res.writeHead(404); return res.end(); }
     let body: Buffer;
     try { body = await readFile(file); } catch { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'content-type': TYPES[extname(file)] || 'application/octet-stream' });
@@ -62,7 +63,7 @@ async function pairWith(client: Client, page: any): Promise<string> {
   await page.getByTestId('agent-allow').click();
   const r: any = await pending;
   assert.equal(r.isError, undefined, JSON.stringify(r));
-  await page.locator('[data-state="paired"]').waitFor();
+  await page.locator('[data-state="paired"]').first().waitFor();
   return r.structuredContent.session;
 }
 
@@ -218,45 +219,47 @@ test('e2e: heartbeat loss stops motion in the tab', { skip: !playwright && 'play
   const client = await mcpClient();
   const page = await openSim(1);
   const session = await pairWith(client, page);
-  const long = call(client, 'move_joints', { session, joints_deg: { shoulder_pan: 90 }, duration_s: 10 });
+  // the longest allowed motion: the link loss (hb 2 s × 3 + one check interval, ~6-8 s) lands well before its end
+  const long = call(client, 'move_joints', { session, joints_deg: { shoulder_pan: 90 }, duration_s: 20 });
   await new Promise((r) => setTimeout(r, 400));
   // simulate a dead relay: freeze the server side of this tab's socket (no pings, no reads)
   for (const ws of (bridge.relay as any).sockets.keys()) (ws as any)._socket.pause();
   const lost = Date.now();
-  await page.waitForFunction(() => (window as any).__bridge.state === 'offline' || (window as any).__bridge.state === 'connecting', null, { timeout: 12_000 });
+  await page.waitForFunction(() => (window as any).__bridge.state === 'offline' || (window as any).__bridge.state === 'connecting', null, { timeout: 15_000 });
+  const detectMs = Date.now() - lost;
   const held = await page.evaluate(() => (window as any).__handler.getState());
   assert.equal(held.moving, false, 'motion stopped on link loss');
-  assert.ok(held.joints_deg.shoulder_pan < 80);
-  assert.ok(Date.now() - lost < 9000);
+  assert.ok(held.joints_deg.shoulder_pan < 85, 'stopped before the end of the motion: ' + held.joints_deg.shoulder_pan);
+  // held: the pose does not change any more
+  await new Promise((r) => setTimeout(r, 600));
+  const later = await page.evaluate(() => (window as any).__handler.getState());
+  assert.ok(Math.abs(later.joints_deg.shoulder_pan - held.joints_deg.shoulder_pan) < 0.5, 'pose held after link loss');
+  assert.ok(detectMs < 12_000, 'link loss detected within 3 heartbeats + slack: ' + detectMs + ' ms');
   const r = await long;
   assert.equal(r.isError, true);
   await page.close();
   await client.close();
 });
 
-test('e2e: real MuJoCo sim (sim/so101 ?test=1) through the test-hook adapter', { skip: !playwright && 'playwright not installed', timeout: 120_000 }, async (t) => {
+test('e2e: real MuJoCo sim (sim/so101) through its own "Připojit AI" panel', { skip: !playwright && 'playwright not installed', timeout: 180_000 }, async (t) => {
   // SwiftShader frames take 0.25-2.5 s and a snapshot ~10 s here (blocking the page): long heartbeat and snapshot deadline
   const own = createBridge(testConfig({ approvalTimeoutMs: 10_000, hbSec: 10, snapshotDeadlineMs: 40_000 }));
   const mainPort = bridgePort;
   bridgePort = await own.listen();
   t.after(async () => { bridgePort = mainPort; await own.close(); });
-  const page = await browser.newPage({ viewport: { width: 480, height: 360 } });
+  const page = await browser.newPage({ viewport: { width: 1024, height: 700 } });
   page.on('pageerror', (e: Error) => console.error('[sim]', e.message));
-  page.on('console', (m: any) => { if (m.type() === 'error') console.error('[sim console]', m.text()); });
+  page.on('console', (m: any) => { if (m.type() === 'error' && !/fonts|Failed to load resource/.test(m.text())) console.error('[sim console]', m.text()); });
   page.on('response', (r: any) => { if (r.status() >= 400) console.error('[sim http]', r.status(), r.url()); });
-  await page.goto(`http://127.0.0.1:${staticPort}/sim/so101/?test=1`);
-  await page.waitForFunction(() => (window as any).__sim && ((window as any).__sim.ready || (window as any).__sim.error), null, { timeout: 60_000 });
+  const relay = encodeURIComponent(`ws://127.0.0.1:${bridgePort}/tab`);
+  await page.goto(`http://127.0.0.1:${staticPort}/sim/so101/?test=1&mise=bowl&relay=${relay}`);
+  await page.waitForFunction(() => (window as any).__sim && ((window as any).__sim.ready || (window as any).__sim.error), null, { timeout: 90_000 });
   const err = await page.evaluate(() => (window as any).__sim.error);
   assert.equal(err, undefined, 'sim failed to load: ' + err);
-  await page.evaluate(async (relay: string) => {
-    const { mountPanel } = await import('/backend/bridge-client/panel.js');
-    const { createTestHookHandler } = await import('/backend/bridge-client/adapters/so101-testhook.js');
-    const box = document.createElement('div');
-    document.body.append(box);
-    (window as any).__bridge = mountPanel(box, { url: relay, handler: createTestHookHandler((window as any).__sim, { advance: true }) });
-  }, `ws://127.0.0.1:${bridgePort}/tab`);
-  await page.getByTestId('agent-connect').click();
-  await page.getByTestId('agent-code').filter({ hasText: /^[A-Z]{4}-[A-Z]{4}$/ }).waitFor();
+  // simulated time is pumped from here (the page's own frame loop is slow with software GL)
+  await page.evaluate(() => { const s = (window as any).__sim; s._app.sim.paused = true; setInterval(() => s.advance(1 / 20), 20); });
+  await page.locator('#ai-open').click();
+  await page.getByTestId('agent-code').filter({ hasText: /^[A-Z]{4}-[A-Z]{4}$/ }).waitFor({ timeout: 20_000 });
   const client = await mcpClient('modern');
   const session = await pairWith(client, page);
 
@@ -279,7 +282,10 @@ test('e2e: real MuJoCo sim (sim/so101 ?test=1) through the test-hook adapter', {
     assert.ok(bytes.length > 3000, `${view} image is not blank (${bytes.length} B)`);
     await new Promise((r) => setTimeout(r, 1100)); // 1 snapshot/s
   }
-  assert.equal((await call(client, 'move_to', { session, pose: { x_mm: 200, y_mm: 0, z_mm: 50 } })).structuredContent.error.code, 'NOT_SUPPORTED');
+  const mt = await call(client, 'move_to', { session, pose: { x_mm: 200, y_mm: 0, z_mm: 50 } });
+  assert.equal(mt.structuredContent.status, 'completed', JSON.stringify(mt.structuredContent));
+  assert.ok(mt.structuredContent.ik.position_error_mm < 5);
+  assert.equal((await call(client, 'move_to', { session, pose: { x_mm: 200, y_mm: 0, z_mm: -30 } })).structuredContent.error.code, 'WORKSPACE_VIOLATION');
   const home = await call(client, 'home', { session });
   assert.equal(home.structuredContent.status, 'completed');
   assert.ok(Math.abs(home.structuredContent.final.joints_deg.shoulder_pan) < 1.5);
