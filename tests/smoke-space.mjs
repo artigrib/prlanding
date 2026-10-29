@@ -11,7 +11,10 @@ const freePort = () => new Promise((r) => { const s = net.createServer(); s.list
 async function serve(dir) {
   const port = await freePort();
   const proc = spawn('python3', ['-m', 'http.server', String(port), '--bind', '127.0.0.1'], { cwd: dir, stdio: 'ignore' });
-  for (let i = 0; i < 50; i++) { try { await fetch(`http://127.0.0.1:${port}/`); break; } catch { await new Promise((r) => setTimeout(r, 100)); } }
+  // wait until the server answers (python can take seconds to start on a loaded machine)
+  let up = false;
+  for (let i = 0; i < 300 && !up; i++) { try { up = (await fetch(`http://127.0.0.1:${port}/`)).ok; } catch { await new Promise((r) => setTimeout(r, 100)); } }
+  if (!up) { proc.kill(); throw new Error(`static server for ${dir} did not start`); }
   return { base: `http://127.0.0.1:${port}`, stop: () => proc.kill() };
 }
 
@@ -20,10 +23,11 @@ let failed = 0;
 async function check(name, dir, path, fn) {
   const srv = await serve(dir);
   const page = await browser.newPage();
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());   // no external requests: 'load' never waits on them
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
   page.on('response', (r) => { if (r.status() >= 400 && r.url().startsWith(srv.base)) errors.push(`HTTP ${r.status()} ${r.url().slice(srv.base.length)}`); });
-  try { await page.goto(srv.base + path, { waitUntil: 'load', timeout: 30000 }); await fn(page); }
+  try { await page.goto(srv.base + path, { waitUntil: 'load', timeout: 60000 }); await fn(page); }
   catch (e) { errors.push('failed: ' + e.message.split('\n')[0]); }
   if (errors.length) { failed++; console.log(`FAIL ${name}\n  ` + errors.join('\n  ')); } else console.log(`ok   ${name}`);
   await page.close(); srv.stop();
