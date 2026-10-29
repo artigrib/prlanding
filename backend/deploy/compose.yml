@@ -1,0 +1,80 @@
+# Docker Compose project "printedrobotics" on vps1 (installed to the deploy root by deploy-backend.yml).
+# api and bridge sit on the external network printedrobotics_web (reached there by the external edge
+# proxy) and are published on 127.0.0.1 only (deploy health checks). See docs/backend.md.
+# Image references come from release.env (written by remote-deploy.sh), secrets from secrets.env
+# (generated on the server, never in GitHub). Never run `docker compose config` in CI logs.
+name: printedrobotics
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  # No Caddy here: the public hostnames are served by another project's edge proxy (attached to
+  # printedrobotics_web). Our stack must never bind host ports 80/443 and never use host networking;
+  # remote-deploy.sh refuses to start a compose file that does.
+  api:
+    image: ${API_IMAGE:?API_IMAGE not set}
+    # Fixed name: an external edge proxy on printedrobotics_web reaches it as printedrobotics-api-1:8081.
+    container_name: printedrobotics-api-1
+    restart: unless-stopped
+    environment:
+      APP_VERSION: ${APP_VERSION:-unknown}
+      ALLOWED_ORIGINS: https://printedrobotics.cz
+      TRUST_PROXY: "1"
+      STATS_TOKEN: ${STATS_TOKEN:-}
+    ports:
+      - "127.0.0.1:18181:8081"
+    volumes:
+      - api_data:/data
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 192m
+    cpus: 0.5
+    pids_limit: 100
+    logging: *logging
+    networks: [web]
+    # healthcheck is defined in the image (GET /health)
+
+  # Placeholder for backend/bridge (MCP server + WebSocket relay). Started only when the
+  # deploy workflow builds a bridge image (it then sets COMPOSE_PROFILES=bridge).
+  bridge:
+    profiles: [bridge]
+    image: ${BRIDGE_IMAGE:-ghcr.io/artigrib/prlanding-bridge:unset}
+    # Fixed name: an external edge proxy reaches it as printedrobotics-bridge-1:8080 (/mcp, /tab, /healthz).
+    container_name: printedrobotics-bridge-1
+    restart: unless-stopped
+    environment:
+      APP_VERSION: ${APP_VERSION:-unknown}
+      NODE_ENV: production
+      PORT: "8080"
+      ALLOWED_ORIGINS: https://printedrobotics.cz
+      TRUST_PROXY: "1"
+      BRIDGE_HMAC_KEY: ${BRIDGE_HMAC_KEY:-}
+    ports:
+      - "127.0.0.1:18180:8080"
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 256m
+    cpus: 1.0
+    pids_limit: 200
+    logging: *logging
+    networks: [web]
+
+networks:
+  # Stable, externally managed network. remote-deploy.sh creates it once if missing; compose never
+  # creates, removes or recreates it (no `compose down` anywhere), so other projects' containers
+  # attached to it (e.g. an external edge proxy) survive our deploys and rollbacks.
+  # api and bridge trust X-Forwarded-For only from peers in this network's subnet (and loopback).
+  web:
+    name: printedrobotics_web
+    external: true
+
+volumes:
+  api_data:

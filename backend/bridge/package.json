@@ -1,0 +1,31 @@
+{
+  "name": "@printedrobotics/so101-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MCP server (Streamable HTTP, /mcp) + WebSocket relay (/tab) that lets MCP clients drive the printedrobotics.cz SO-101 browser simulation",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "start": "node src/main.ts",
+    "dev": "BRIDGE_DEV=1 node src/main.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "schemas": "node scripts/export-schemas.ts",
+    "test": "node --test --test-concurrency=1 test/*.test.ts",
+    "test:unit": "node --test test/unit-*.test.ts",
+    "test:e2e": "node --test test/e2e.test.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/node": "2.1.2",
+    "@modelcontextprotocol/server": "2.4.0",
+    "ws": "8.22.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.4.0",
+    "@types/node": "^24.19.2",
+    "@types/ws": "^8.18.2",
+    "typescript": "7.0.2"
+  }
+}

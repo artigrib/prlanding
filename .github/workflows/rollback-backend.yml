@@ -1,0 +1,84 @@
+# Manual rollback / status for the printedrobotics backend on vps1.
+#   rollback: switch to the previous release (images kept on the server) and health-check it.
+#   status:   show the current release and the state of our own containers.
+#   fixports: remove stale network endpoints of our own containers.
+# Prints only fixed STATUS/WARN/ERROR lines from remote-deploy.sh as annotations (public logs).
+name: Rollback backend
+# Trigger: Run workflow in the Actions tab (only once this file is on the default branch), or
+# commit a change to backend/deploy/ops-request on branch `backend` whose first word is the action.
+on:
+  push:
+    branches: [backend]
+    paths: ['backend/deploy/ops-request']
+  workflow_dispatch:
+    inputs:
+      action:
+        description: What to do
+        type: choice
+        options: [status, rollback, fixports]
+        default: status
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up SSH (pinned host key when VPS_KNOWN_HOSTS is set)
+        env:
+          KEY: ${{ secrets.VPS_SSH_KEY }}
+          HOST: ${{ secrets.VPS_HOST }}
+          PORT: ${{ secrets.VPS_PORT }}
+          KNOWN: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          if [ -n "$KNOWN" ]; then
+            printf '%s\n' "$KNOWN" > ~/.ssh/known_hosts; echo "STRICT=yes" >> "$GITHUB_ENV"
+          else
+            ssh-keyscan -p "${PORT:-22}" -T 10 "$HOST" > ~/.ssh/known_hosts 2>/dev/null || true
+            echo "STRICT=accept-new" >> "$GITHUB_ENV"
+            echo "::warning::VPS_KNOWN_HOSTS is not set: host key trusted on first use"
+          fi
+          cat > ~/.ssh/config <<EOF
+          Host vps
+            HostName $HOST
+            Port ${PORT:-22}
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            BatchMode yes
+            ConnectTimeout 15
+            LogLevel ERROR
+          EOF
+          chmod 600 ~/.ssh/config
+      - name: Run on the server
+        env:
+          U: ${{ secrets.VPS_USER }}
+          ACT_INPUT: ${{ inputs.action }}
+        run: |
+          ACT="$ACT_INPUT"
+          [ -n "$ACT" ] || ACT=$(awk 'NR==1{print $1}' backend/deploy/ops-request 2>/dev/null)
+          case "$ACT" in status|rollback|fixports) ;; *) echo "::error::bad action"; exit 1;; esac
+          set +e
+          # Use the script from this commit (it does not need the deploy files for these actions).
+          out=$(ssh -o StrictHostKeyChecking=$STRICT -l "$U" vps "ACTION=$ACT bash -s" < backend/deploy/remote-deploy.sh 2>/dev/null)
+          rc=$?
+          set -e
+          # GitHub keeps at most 10 annotations per type and step, so lines are grouped.
+          emit() { # emit TYPE PREFIX
+            printf '%s\n' "$out" | sed -n "s/^$2 //p" | awk -v t="$1" '
+              { line = (buf == "" ? $0 : buf " | " $0); if (length(line) > 700) { print "::" t "::" buf; buf = $0 } else buf = line }
+              END { if (buf != "") print "::" t "::" buf }'
+          }
+          emit notice STATUS; emit warning WARN; emit error ERROR
+          [ "$rc" = 0 ] || { echo "::error::$ACT failed (exit $rc)"; exit 1; }
+      - name: Remove key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key ~/.ssh/config

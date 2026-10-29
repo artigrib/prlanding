@@ -1,0 +1,264 @@
+# Build, push and deploy the printedrobotics.cz backend (api + optional bridge; TLS is terminated by an external edge proxy) to vps1.
+#
+#   test   -> unit tests, typecheck, compose validation
+#   build  -> images to GHCR (ghcr.io/artigrib/prlanding-api, -bridge), tagged with the commit sha
+#   deploy -> DNS gate for HTTPS sites, pinned SSH, remote-deploy.sh (disk guard, pull by digest,
+#             compose up --wait, internal health check, automatic rollback), external HTTPS check
+#
+# The repo is PUBLIC, so Actions logs are public: steps print only fixed ::notice:: / ::warning:: /
+# ::error:: lines. Never print secrets, IPs, server paths or anything about other containers.
+name: Deploy backend
+on:
+  push:
+    branches: [backend]
+    paths:
+      - 'backend/api/**'
+      - 'backend/bridge/**'
+      - 'backend/deploy/**'
+      - '!backend/deploy/ops-request'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  IMAGE_PREFIX: ghcr.io/artigrib/prlanding-
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      bridge: ${{ steps.bridge.outputs.enabled }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: api - install, typecheck, test
+        working-directory: backend/api
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run typecheck
+          npm test
+      - name: Is the bridge ready to deploy?
+        id: bridge
+        run: |
+          if [ -f backend/bridge/Dockerfile ]; then
+            echo "enabled=1" >> "$GITHUB_OUTPUT"; echo "::notice::bridge: Dockerfile present, will build and deploy"
+          else
+            echo "enabled=0" >> "$GITHUB_OUTPUT"; echo "::notice::bridge: no Dockerfile yet, skipped"
+          fi
+      - name: bridge - install, typecheck, test
+        if: steps.bridge.outputs.enabled == '1'
+        working-directory: backend/bridge
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          if npm run | grep -q '^  typecheck'; then npm run typecheck; fi
+          if npm run | grep -q '^  test'; then npm test; fi
+      - name: Validate compose file and deploy script
+        run: |
+          d=backend/deploy
+          API_IMAGE=example.invalid/api:test docker compose -f "$d/compose.yml" config -q \
+            || { echo "::error::compose.yml is invalid"; exit 1; }
+          COMPOSE_PROFILES=bridge API_IMAGE=example.invalid/api:test docker compose -f "$d/compose.yml" config -q
+          bash -n backend/deploy/remote-deploy.sh
+          echo "::notice::compose.yml and remote-deploy.sh are valid"
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      api: ${{ steps.api.outputs.digest }}
+      bridge: ${{ steps.bridge.outputs.digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push api
+        id: api
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: backend/api
+          push: true
+          provenance: false
+          build-args: APP_VERSION=${{ github.sha }}
+          tags: ${{ env.IMAGE_PREFIX }}api:${{ github.sha }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+      - name: Build and push bridge
+        id: bridge
+        if: needs.test.outputs.bridge == '1'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: backend/bridge
+          push: true
+          provenance: false
+          build-args: APP_VERSION=${{ github.sha }}
+          tags: ${{ env.IMAGE_PREFIX }}bridge:${{ github.sha }}
+          cache-from: type=gha,scope=bridge
+          cache-to: type=gha,scope=bridge,mode=max
+      - name: Summary
+        run: echo "::notice::images pushed to GHCR for ${GITHUB_SHA::12}"
+
+  deploy:
+    needs: [test, build]
+    if: github.ref == 'refs/heads/backend'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check secrets are set
+        env:
+          H: ${{ secrets.VPS_HOST }}
+          U: ${{ secrets.VPS_USER }}
+          K: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          missing=""
+          [ -n "$H" ] || missing="$missing VPS_HOST"
+          [ -n "$U" ] || missing="$missing VPS_USER"
+          [ -n "$K" ] || missing="$missing VPS_SSH_KEY"
+          if [ -n "$missing" ]; then echo "::error::Missing secrets:$missing"; exit 1; fi
+
+      - name: DNS gate for HTTPS sites
+        id: dns
+        env:
+          HOST: ${{ secrets.VPS_HOST }}
+          BRIDGE: ${{ needs.test.outputs.bridge }}
+        run: |
+          # Compare in the shell only; never print addresses.
+          vps=$(getent ahostsv4 "$HOST" | awk 'NR==1{print $1}')
+          [ -n "$vps" ] && echo "::add-mask::$vps"
+          ready=""; pending=""
+          for s in api mcp relay; do
+            name="$s.printedrobotics.cz"
+            a=$(dig +short A "$name" @1.1.1.1 2>/dev/null | grep -E '^[0-9.]+$' | sort -u)
+            [ -n "$a" ] || a=$(dig +short A "$name" @8.8.8.8 2>/dev/null | grep -E '^[0-9.]+$' | sort -u)
+            if [ -n "$vps" ] && [ "$a" = "$vps" ]; then
+              if [ "$s" != api ] && [ "$BRIDGE" != 1 ]; then
+                pending="$pending $s(DNS ok, waiting for bridge image)"
+              else
+                ready="$ready $s"
+              fi
+              aaaa=$(dig +short AAAA "$name" @1.1.1.1 2>/dev/null | grep -c : || true)
+              [ "$aaaa" = 0 ] || echo "::warning::$name has an AAAA record; make sure it points at the VPS too, or remove it"
+            else
+              pending="$pending $s"
+            fi
+          done
+          echo "sites=${ready# }" >> "$GITHUB_OUTPUT"
+          echo "::notice::HTTPS enabled for:${ready:- (none)}"
+          [ -z "$pending" ] || echo "::warning::HTTPS pending (A record does not point at the VPS yet):$pending"
+
+      - name: Set up SSH (pinned host key when VPS_KNOWN_HOSTS is set)
+        env:
+          KEY: ${{ secrets.VPS_SSH_KEY }}
+          HOST: ${{ secrets.VPS_HOST }}
+          PORT: ${{ secrets.VPS_PORT }}
+          KNOWN: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          if [ -n "$KNOWN" ]; then
+            printf '%s\n' "$KNOWN" > ~/.ssh/known_hosts
+            echo "STRICT=yes" >> "$GITHUB_ENV"
+            echo "::notice::SSH host key pinned (VPS_KNOWN_HOSTS)"
+          else
+            ssh-keyscan -p "${PORT:-22}" -T 10 "$HOST" > ~/.ssh/known_hosts 2>/dev/null || true
+            # Public fingerprints only (no host, no port), for the owner to verify and pin.
+            ssh-keygen -lf ~/.ssh/known_hosts -E sha256 2>/dev/null | awk '{print $NF" "$2}' | sort -u | while read -r t fp; do
+              echo "::notice::Host key fingerprint $t $fp"
+            done
+            echo "::warning::VPS_KNOWN_HOSTS is not set: host key trusted on first use. Verify the fingerprints above and save the secret (see docs/backend.md)."
+            echo "STRICT=accept-new" >> "$GITHUB_ENV"
+          fi
+          cat > ~/.ssh/config <<EOF
+          Host vps
+            HostName $HOST
+            Port ${PORT:-22}
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            BatchMode yes
+            ConnectTimeout 15
+            ServerAliveInterval 15
+            LogLevel ERROR
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Upload deploy files
+        env:
+          U: ${{ secrets.VPS_USER }}
+        run: |
+          tar -C backend/deploy -czf - . | ssh -o StrictHostKeyChecking=$STRICT -l "$U" vps \
+            'umask 077; mkdir -p /opt/printedrobotics && rm -rf /opt/printedrobotics/incoming && mkdir -p /opt/printedrobotics/incoming && tar -xzf - -C /opt/printedrobotics/incoming' \
+            >/dev/null 2>&1 || { echo "::error::Could not upload deploy files (SSH failed)"; exit 1; }
+          echo "::notice::deploy files uploaded"
+
+      - name: Deploy on the server
+        env:
+          U: ${{ secrets.VPS_USER }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          API_DIGEST: ${{ needs.build.outputs.api }}
+          BRIDGE_DIGEST: ${{ needs.build.outputs.bridge }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          api="${IMAGE_PREFIX}api@${API_DIGEST}"
+          bridge=""; [ -n "$BRIDGE_DIGEST" ] && bridge="${IMAGE_PREFIX}bridge@${BRIDGE_DIGEST}"
+          set +e
+          out=$(printf '%s\n' "$TOKEN" | ssh -o StrictHostKeyChecking=$STRICT -l "$U" vps \
+            "ACTION=deploy API_IMAGE='$api' BRIDGE_IMAGE='$bridge' APP_VERSION='$GITHUB_SHA' GHCR_USER='$ACTOR' bash /opt/printedrobotics/incoming/remote-deploy.sh" 2>/dev/null)
+          rc=$?
+          set -e
+          # Only the fixed STATUS/WARN/ERROR lines from remote-deploy.sh are shown.
+          # GitHub keeps at most 10 annotations per type and step, so lines are grouped.
+          emit() { # emit TYPE PREFIX
+            printf '%s\n' "$out" | sed -n "s/^$2 //p" | awk -v t="$1" '
+              { line = (buf == "" ? $0 : buf " | " $0); if (length(line) > 700) { print "::" t "::" buf; buf = $0 } else buf = line }
+              END { if (buf != "") print "::" t "::" buf }'
+          }
+          emit notice STATUS; emit warning WARN; emit error ERROR
+          if [ "$rc" != 0 ]; then echo "::error::remote deploy failed (exit $rc)"; exit 1; fi
+
+      - name: External HTTPS check
+        if: steps.dns.outputs.sites != ''
+        env:
+          SITES: ${{ steps.dns.outputs.sites }}
+        run: |
+          for s in $SITES; do
+            path=/healthz; [ "$s" = api ] && path=/health
+            ok=0
+            for i in $(seq 1 20); do
+              if curl -fsS --max-time 5 "https://$s.printedrobotics.cz$path" 2>/dev/null | grep -q '"ok":true'; then ok=1; break; fi
+              sleep 6
+            done
+            if [ "$ok" = 1 ]; then echo "::notice::https://$s.printedrobotics.cz$path OK"
+            else echo "::warning::https://$s.printedrobotics.cz$path not OK yet (certificate issuance or firewall?)"; fi
+          done
+
+      - name: Remove key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key ~/.ssh/config
