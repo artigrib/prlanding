@@ -409,3 +409,17 @@
 }
 .ux-setbtn>span:not(.kbd){flex:1;text-align:left}
 #ux-set .ux-tbl{font-size:8px;letter-spacing:-.03em}
+/* buttons that flip between white and black (aria-pressed) switch at once: a background transition caught
+   mid-way on a busy frame (win: confetti + camera) showed black text on black */
+.btn[aria-pressed],.ux-qrow .btn{transition:none}
+.ux-hintnext{display:flex;flex-wrap:wrap;gap:4px 16px}
+/* phones: compact win strip at the top of the sheet (result in the 3D view stays visible) */
+@media (max-width:860px){
+  .win.strip{position:static;left:auto;top:auto;transform:none;width:auto;max-width:none;max-height:none;box-shadow:none;border-width:1px 0 0;border-color:var(--line);padding:10px 12px 12px;gap:6px;animation:none;z-index:auto;overflow:visible}
+  .win.strip .win-k,.win.strip>p:not(.mono){display:none}
+  .win.strip h2{font-size:18px}
+  .win.strip .ux-winstars{font-size:20px;gap:3px}
+  .win.strip .win-b{margin-top:2px}
+  .win.strip .win-b .btn{min-height:44px}
+  .ux-under:has(.win.strip:not([hidden])) .ux-qrow,.ux-under:has(.win.strip:not([hidden])) .hud{display:none}
+}

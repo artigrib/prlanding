@@ -36,6 +36,8 @@ export async function install(page, env) {
   // "Připojit AI": the agent API (window.so101) + panel; never with ?real=1 (see src/agent/index.js)
   try { (await import('./agent/index.js')).installAgent(ux, page); } catch (e) { console.warn('AI panel disabled:', e); }
   ux.panel.mountAI();   // the AI entry is a row of the panel's "Nástroje" (tools) block
+  // count the AI's motions since the last reset: the win card credits "Vyřešila to AI v N krocích"
+  if (ux.agent && ux.agent.on) ux.agent.on('motion', (e) => { if (e.phase === 'start') ux.aiSteps = (ux.aiSteps || 0) + 1; });
   return ux;
 }
 
@@ -230,6 +232,7 @@ class UX {
 
   onReset() {
     this.ctl.cancel(); this.pending = null;
+    this.aiSteps = 0;
     if (!this.replayResetting) this.teach.stopReplay();
     this.runner.setup();
     this.extras.onLayout(this.runner.m);
@@ -521,7 +524,7 @@ class UX {
     const isNew = own && (!best || res.stars > best.stars || (res.stars === best.stars && res.time < best.time));
     if (own) { this.wins = (store.get('wins', 0) || 0) + 1; store.set('wins', this.wins); }
     if (isNew) { this.progress[m.id] = { stars: Math.max(res.stars, best ? best.stars : 0), time: Math.min(res.time, best ? best.time : Infinity) }; store.set('progress', this.progress); }
-    const by = own ? null : (this.runner.assisted ? 'assisted' : 'replay');
+    const by = own ? null : (this.runner.assisted ? (this.aiSteps > 0 ? 'ai' : 'assisted') : 'replay');
     this.panel.showWin(m, res, best, isNew, by);
     this.onboarding.notify('won');
     const guided = this.onboarding.atWin();

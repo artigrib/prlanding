@@ -17,6 +17,13 @@ const I = {
   gear: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.8"/><circle cx="12" cy="12" r="6.6"/><path d="M12 2.6v2.8M12 18.6v2.8M2.6 12h2.8M18.6 12h2.8M5.4 5.4l2 2M16.6 16.6l2 2M5.4 18.6l2-2M16.6 7.4l2-2"/></svg>'
 };
 
+// Hint ladder rungs (UI only; the logic of more rungs comes later). A rung with `text` is shown in the hint
+// box; a rung with `run` is offered as the next action inside that box.
+const HINT_STEPS = [
+  { id: 'tip', text: (m) => m.tip },
+  { id: 'solution', run: 'solve' }
+];
+
 // Panel IA (sim-panel-ia): 1. mission card (goal, stars, hint ladder Poradit → Ukázat řešení, Další mise),
 // 2. one control block (Táhnout ruku | Klouby, gripper, Domů / Znovu, one-line help + "?"),
 // 3. tools (Učit ukázkou, Připojit AI, Skutečná ruka), settings in a ⚙ popover on the stage toolbar.
@@ -43,7 +50,7 @@ export class Panel {
   flowsUI() {
     const ux = this.ux;
     // HUD nudge after 20 s without success: the next step of the hint ladder (desktop; phones have the action row)
-    this.hintBtn = h(`<button type="button" class="ux-hintbtn" id="ux-hint" hidden>Poradit <span aria-hidden="true">▶</span></button>`);
+    this.hintBtn = h(`<button type="button" class="ux-hintbtn" id="ux-hint" hidden>Poradit <span aria-hidden="true">?</span></button>`);
     $('hud').appendChild(this.hintBtn);
     this.hintBtn.addEventListener('click', () => this.hint());
     // phones: top of the bottom sheet = handle, status line (HUD), guide strip, the one action row
@@ -52,7 +59,7 @@ export class Panel {
       <div class="ux-qrow">
         <button type="button" class="btn btn-o" id="ux-qgrip">Otevřít chapadlo</button>
         <button type="button" class="btn btn-o" id="ux-qhome">Domů <span aria-hidden="true">⌂</span></button>
-        <button type="button" class="btn btn-o" id="ux-qhint"><span class="l">Poradit</span> <span aria-hidden="true">?</span></button>
+        <button type="button" class="btn btn-o" id="ux-qhint" aria-controls="ux-hintbox">Poradit <span aria-hidden="true">?</span></button>
       </div></div>`);
     this.sheetHead = h(`<div class="ux-sheethead"></div>`);
     this.sheetHead.appendChild(under);
@@ -62,7 +69,13 @@ export class Panel {
     $('ux-qhome').addEventListener('click', () => this.goHome());
     $('ux-qhint').addEventListener('click', () => this.hint());
     const hud = $('hud');
-    const place = () => { if (this.mq.matches) under.insertBefore(hud, under.querySelector('.ux-qrow')); else if (hud.parentNode !== this.stage) this.stage.appendChild(hud); };
+    // phones: the win card is a compact strip at the top of the sheet, so the result (cube in the bowl) stays visible
+    const win = $('win');
+    const place = () => {
+      const q = under.querySelector('.ux-qrow');
+      if (this.mq.matches) { under.insertBefore(hud, q); under.insertBefore(win, q); win.classList.add('strip'); }
+      else { if (hud.parentNode !== this.stage) this.stage.appendChild(hud); if (win.parentNode !== this.stage) this.stage.appendChild(win); win.classList.remove('strip'); }
+    };
     place(); this.mq.addEventListener ? this.mq.addEventListener('change', place) : this.mq.addListener(place);
   }
 
@@ -144,28 +157,29 @@ export class Panel {
 
   goHome() { const ux = this.ux; ux.ctl.cancel(); ux.pending = null; ux.app.goHome(); ux.ctl.syncFromCtrl(); }
 
-  /** Hint ladder: 1st "Poradit" shows the mission's tip, the next step offers "Ukázat řešení" (the arm solves it). */
+  /**
+   * Hint ladder. "Poradit" (mission card, phone action row, HUD nudge) only ever opens the ladder; it never
+   * runs the solution, so a double tap cannot jump to the answer. The next step is offered inside the hint
+   * box only. HINT_STEPS is the ladder (wave B adds: strategy text → ghost subgoal → partial demo → solution).
+   */
   hint() {
-    if (this.hintLevel >= 1) { this.ux.startDemo(); return; }
-    this.hintLevel = 1;
+    if (this.ux.app.won) return;
+    if (this.hintLevel < 1) this.hintLevel = 1;
     this.showHint();
     // after the DOM translation (?lang=en) has run on the new text
     setTimeout(() => this.toast(this.hintText.textContent, null, 7000), 0);
-    if (this.mq.matches) this.selectTab('mission');
+    if (this.mq.matches) { this.selectTab('mission'); if (this.snap < 1) this.setSnap(1); }
   }
   showHint() {
-    const m = this.ux.runner.m, lv = this.hintLevel, won = !!this.ux.app.won;
-    let tip = m.tip || '';
-    if (this.ux.touch) tip = tip.replace(/Klikněte/g, 'Klepněte').replace(/myší nebo prstem/g, 'prstem');
-    if (lv && this.hintText.innerHTML !== tip) this.hintText.innerHTML = tip;
+    const m = this.ux.runner.m, lv = this.hintLevel, won = !!this.ux.app.won, cur = HINT_STEPS[lv - 1];
+    if (lv && cur && cur.text) {
+      let tip = cur.text(m) || '';
+      if (this.ux.touch) tip = tip.replace(/Klikněte/g, 'Klepněte').replace(/myší nebo prstem/g, 'prstem');
+      if (this.hintText.innerHTML !== tip) this.hintText.innerHTML = tip;
+    }
     this.hintBox.hidden = !lv || won;
+    this.hintStepEl.textContent = `Nápověda ${lv} / ${HINT_STEPS.length}`;
     $('ux-mhint').hidden = !!lv || won;
-    const solve = lv >= 1;
-    const q = $('ux-qhint');
-    q.querySelector('.l').textContent = solve ? 'Řešení' : 'Poradit';
-    q.lastChild.textContent = solve ? '▶' : '?';
-    if (solve) q.setAttribute('aria-label', 'Ukázat řešení'); else q.removeAttribute('aria-label');
-    this.hintBtn.firstChild.textContent = solve ? 'Ukázat řešení ' : 'Poradit ';
   }
 
   // ---------- mission header + picker ----------
@@ -186,13 +200,15 @@ export class Panel {
     box.appendChild(row);
     // hint ladder: the tip first, "Ukázat řešení" only after it (never the primary action)
     const hb = this.hintBox = h(`<div class="ux-hintbox" id="ux-hintbox" hidden>
-      <p class="mono">Nápověda</p><p class="ux-hinttext" aria-live="polite"></p></div>`);
+      <p class="mono" id="ux-hintstep"></p><p class="ux-hinttext" aria-live="polite"></p><div class="ux-hintnext"></div></div>`);
     box.appendChild(hb);
     this.hintText = hb.querySelector('.ux-hinttext');
+    this.hintStepEl = hb.querySelector('#ux-hintstep');
+    // the last rung: "Ukázat řešení" (#demo keeps its id and its app.js click handler)
     const demo = $('demo');
     demo.classList.remove('btn'); demo.classList.add('ux-link', 'ux-solve');
     demo.title = 'Ruka úlohu vyřeší sama – bez hvězdiček';
-    hb.appendChild(demo);
+    hb.querySelector('.ux-hintnext').appendChild(demo);
     row.querySelector('#ux-mhint').addEventListener('click', () => this.hint());
     // after a win: the primary action of the card is the next mission
     this.mNext = h(`<button type="button" class="btn btn-act ux-mnext" id="ux-mnext" hidden>Další mise <span aria-hidden="true">→</span></button>`);
@@ -606,7 +622,9 @@ export class Panel {
     this.guideBtn = h(`<button type="button" class="btn btn-o" id="ux-wguide">Teď ručně <span aria-hidden="true">→</span></button>`);
     this.exBtn = h(`<button type="button" class="btn btn-o" id="ux-wexplode">Z čeho se ruka skládá <span aria-hidden="true">→</span></button>`);
     this.shareBtn = h(`<button type="button" class="btn btn-o" id="ux-wshare">Sdílet rekord <span aria-hidden="true">↗</span></button>`);
-    for (const b of [this.guideBtn, this.exBtn, this.shareBtn]) { b.hidden = true; wb.appendChild(b); }
+    this.aiLogBtn = h(`<button type="button" class="btn btn-o" id="ux-wailog">Záznam AI <span aria-hidden="true">→</span></button>`);
+    for (const b of [this.guideBtn, this.exBtn, this.shareBtn, this.aiLogBtn]) { b.hidden = true; wb.appendChild(b); }
+    this.aiLogBtn.addEventListener('click', () => this.openAILog());
     this.guideBtn.addEventListener('click', () => this.ux.onboarding.afterWin());
     this.exBtn.addEventListener('click', () => { $('win').hidden = true; if (!this.ux.explode.on) this.ux.toggleExplode(); });
     this.shareBtn.addEventListener('click', () => this.ux.shareRecord());
@@ -620,9 +638,12 @@ export class Panel {
     if (this.mq.matches) { this.selectTab('mission'); this.setSnap(0); }   // the win card sits right above the sheet
     this.winStars.hidden = !!by;
     if (by) {
-      this.winH.textContent = by === 'assisted' ? 'Tohle zvládla ruka sama.' : 'Ukázka splnila misi.';
+      const n = this.ux.aiSteps || 0;
+      this.winH.textContent = by === 'ai' ? `Vyřešila to AI v ${n} ${n === 1 ? 'kroku' : 'krocích'} — zkusíte to sami?`
+        : by === 'assisted' ? 'Tohle zvládla ruka sama.' : 'Ukázka splnila misi.';
       this.winStats.textContent = `Čas ${fmt(res.time)} · hvězdičky se počítají jen vám`;
-      this.winText.textContent = by === 'assisted' ? 'Řešení ukázala ruka sama – zkuste to teď vy. Stačí kliknout na kostku a pak na misku.'
+      this.winText.textContent = by === 'ai' ? 'V záznamu AI uvidíte každý její krok. Pak zkuste misi vyřešit sami.'
+        : by === 'assisted' ? 'Řešení ukázala ruka sama – zkuste to teď vy. Stačí kliknout na kostku a pak na misku.'
         : 'Přesně takhle se skutečná SO-101 učí: z nahraných ukázek. Zkuste misi vyřešit sami.';
       again.firstChild.textContent = 'Teď to zkuste vy ';
       again.classList.add('btn-act'); again.classList.remove('btn-o');
@@ -653,10 +674,11 @@ export class Panel {
    *   a 3 ★ own win also offers "Sdílet rekord". No purchase button before the 3rd win.
    */
   stageWin(m, { by, guided, wins, stars }) {
-    const ids = { cta: $('cta'), again: $('again'), next: this.nextBtn, guide: this.guideBtn, ex: this.exBtn, share: this.shareBtn };
+    const ids = { cta: $('cta'), again: $('again'), next: this.nextBtn, guide: this.guideBtn, ex: this.exBtn, share: this.shareBtn, ailog: this.aiLogBtn };
     const last = MISSIONS[MISSIONS.length - 1].id === m.id;
     let order;
-    if (by) order = ['again', 'next'];
+    if (by === 'ai') order = ['again', 'ailog', 'next'];
+    else if (by) order = ['again', 'next'];
     else if (guided) order = ['guide', 'next'];
     else { order = ['next']; if (wins === 2) order.push('ex'); else if (wins >= 3) order.push('cta'); order.push('again'); if (stars === 3) order.push('share'); }
     if (last) order = order.filter((k) => k !== 'next');
@@ -669,6 +691,13 @@ export class Panel {
     if ((order.length - 1) % 2 === 1) ids[order[order.length - 1]].classList.add('ux-full');   // odd secondary count
     if (!order.includes('cta')) ids.cta.classList.remove('btn-act'); else if (order[0] !== 'cta') { ids.cta.classList.remove('btn-act'); ids.cta.classList.add('btn-o'); }
     return order;
+  }
+
+  /** "Záznam AI" on the win card: open the "Připojit AI" panel (its own log is inside) and show the log */
+  openAILog() {
+    if (this.mq.matches) { this.selectTab('tools'); this.setSnap(2); }
+    const so = window.so101, go = () => { const l = document.querySelector('.ai-logbox'); if (l) { l.scrollIntoView({ block: 'nearest' }); const o = $('ai-open'); if (o) o.focus({ preventScroll: true }); } };
+    if (so && so.openPanel) Promise.resolve(so.openPanel()).then(go, go); else go();
   }
 
   // ---------- help ----------

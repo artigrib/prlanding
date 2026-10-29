@@ -305,6 +305,7 @@ const strings = {
   'Táhněte prstem za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klepnutí na čelisti otevře / zavře chapadlo. Režim „Klouby“ v panelu otáčí jen jedním kloubem.': 'Pull any part with your finger – the arm gives way and lets you guide it like a real one. Tap the jaws to open / close the gripper. Joints mode in the panel turns just one joint.',
   'Táhněte myší za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klik na čelisti otevře / zavře chapadlo. Režim „Klouby“ v panelu otáčí jen jedním kloubem, klávesy 1–6 vyberou kloub.': 'Pull any part with the mouse – the arm gives way and lets you guide it like a real one. Click the jaws to open / close the gripper. Joints mode in the panel turns just one joint; keys 1–6 select a joint.',
   'Klepněte na': 'Tap', '– ruka ji sama vezme. Pak klepněte na': '– the arm picks it up by itself. Then tap',
+  'Záznam AI': 'AI log', 'V záznamu AI uvidíte každý její krok. Pak zkuste misi vyřešit sami.': 'The AI log shows each of its steps. Then try the mission yourself.',
   /* physics pull ("Tahem") – so101-grab */
   'Uchopení části ruky': 'Grabbing a part of the arm', 'Tahem': 'Pull', 'Kloub po kloubu': 'Joint by joint',
   'Ruka povolí a celá se nechá vést – jako skutečná': 'The arm gives way and the whole of it follows – like a real one',
@@ -464,6 +465,8 @@ Object.assign(strings, {
 });
 
 const patterns = [
+  [/^Vyřešila to AI v (\d+) (?:kroku|krocích) — zkusíte to sami\?$/, (m, a) => `The AI solved it in ${a} step${a === '1' ? '' : 's'} — want to try it yourself?`],
+  [/^Nápověda (\d+) \/ (\d+)$/, 'Hint $1 / $2'],
   [/^(\d+) \/ (\d+) misí$/, '$1 / $2 missions'], [/^(\d+) ★ z (\d+)$/, '$1 ★ of $2'], [/^další: (.+)$/, (m, a) => `next: ${T(a)}`],
   [/^Sdílený čas: (.+)$/, 'Shared time: $1'], [/^Sdílená mise: „(.+)“, hotovo za (.+)\. Zkuste ji po svém\.$/, (m, a, b) => `Shared mission: “${T(a)}”, done in ${b}. Try it your own way.`],
   [/^Pokračujete misí (\d+)\. Rekordy máte uložené v tomto prohlížeči\.$/, 'Continuing with mission $1. Your records are saved in this browser.'],
