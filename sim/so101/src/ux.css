@@ -441,5 +441,9 @@
   .ux-under,.ux-sheethead{display:none}
   .hud{left:10px;top:10px;font-size:13px;padding:5px 10px}
   .mission h1{font-size:20px}
-  .win{top:auto;bottom:8px;max-height:calc(100% - 16px)}
+  /* the win card sits at the top: the result (cube in the bowl) stays visible below it */
+  .win{top:8px;bottom:auto;max-height:calc(100% - 16px);padding:12px 16px;gap:6px}
+  .win .win-k{display:none}
+  .win h2{font-size:19px}
+  .ux-winstars{font-size:22px}
 }
