@@ -274,7 +274,7 @@ function kitPage(r0, L) {
 for (const r of R) { kitPage(r, 'cs'); kitPage(r, 'en'); }
 
 // home: catalogue cards in the static HTML (scripts re-render the same cards with filters)
-const cards = R.map((r, i) => `<a class="card" href="sada/${r.id}/"><div class="tile"><span class="tag">${r.preparing ? 'Připravujeme' : 'Předobjednávka'}</span><img src="img/${r.id}_white.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
+const cards = R.map((r, i) => `<a class="card" href="sada/${r.id}/"><div class="tile"><span class="tag${r.preparing ? ' tag-p' : ''}">${r.preparing ? 'Připravujeme' : 'Předobjednávka'}</span><img src="img/${r.id}_white.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
   `<span class="card-meta"><span class="mono" style="color:var(--ink)">${no(i)}</span><span class="mono">${esc(r.preparing ? 'Připravujeme' : r.level)}</span></span>` +
   `<span><h3>${esc(r.name)}</h3><span class="type">${esc(r.type)}</span></span><span class="spec1">${r.card.map(c => esc(c[1])).join(' · ')}</span>` +
   `<p class="desc">${esc(r.short)}</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>`).join('\n');
@@ -286,7 +286,7 @@ if (!home.includes('<!--/cards-->')) throw new Error('index.html: cards placehol
 // Czech home gets its hreflang pair + switcher; the English home is rendered from it
 if (home.includes('<!--/cards-->')) {
   home = wireI18n(setAlternates(home, '', 'en/'), 'cs', 'index.html', '', 'en/', '');
-  const enCards = W.en.PR_ROBOTS.map((r, i) => `<a class="card" href="sada/${r.id}/"><div class="tile"><span class="tag">${r.preparing ? 'Připravujeme' : 'Předobjednávka'}</span><img src="img/${r.id}_white.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
+  const enCards = W.en.PR_ROBOTS.map((r, i) => `<a class="card" href="sada/${r.id}/"><div class="tile"><span class="tag${r.preparing ? ' tag-p' : ''}">${r.preparing ? 'Připravujeme' : 'Předobjednávka'}</span><img src="img/${r.id}_white.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
     `<span class="card-meta"><span class="mono" style="color:var(--ink)">${no(i)}</span><span class="mono">${esc(r.preparing ? 'Připravujeme' : r.level)}</span></span>` +
     `<span><h3>${esc(r.name)}</h3><span class="type">${esc(r.type)}</span></span><span class="spec1">${r.card.map(c => esc(c[1])).join(' · ')}</span>` +
     `<p class="desc">${esc(r.short)}</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>`).join('\n');
