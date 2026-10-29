@@ -1,5 +1,5 @@
 // Catalogue renders of a kit model in the five print colours: img/<id>_<colour>.jpg (1200×900).
-// Usage (repo root served on BASE, sim/arena/node_modules installed for three.js):
+// Usage (repo root served on BASE; three.js from the site's vendor/three/):
 //   python3 -m http.server 8123 &  node tools/render-kit/render.mjs svrn [show=opt_modul_flipper] [az=35] [el=26]
 // Needs Playwright (require('playwright') / NODE_PATH). Headless SwiftShader is fine (it is slow, not wrong).
 import fs from 'node:fs';
