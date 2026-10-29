@@ -555,6 +555,11 @@ class UX {
     api.replay = (loop) => { this.teach.loop = !!loop; return this.teach.startReplay(); };
     api.exportDemo = () => this.teach.toJSON();
     api.camera = (v) => { this.cameras.set(v); this.panel.showView(v); };
+    api.cameraNow = (v) => {   // tests: jump without the tween (slow software frames)
+      const c = this.cameras; c.set(v); c.tw = null;
+      this.app.camera.position.copy(c.to.p); this.app.controls.target.copy(c.to.t); this.app.controls.update();
+      this.app.camera.updateMatrixWorld(); this.panel.showView(v);
+    };
     api.wrist = (on) => this.setWrist(on);
     api.ux = () => ({
       mission: this.runner.m.id, won: this.runner.won, result: this.runner.result, hud: this.app.hudText,
