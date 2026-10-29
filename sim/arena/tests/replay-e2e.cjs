@@ -44,6 +44,12 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); };
   await p.evaluate(() => window.__arena.frame()); await shot('r2-end');
   const btns = await p.evaluate(() => ({ hit: !document.getElementById('replay-btn').hidden, full: !document.getElementById('full-btn').hidden }));
   assert(btns.full, 'full replay button');
+  // "Celý zápas" from the end screen, then back to the end screen
+  await p.click('#full-btn');
+  await p.waitForSelector('#replay-ui:not([hidden])', { timeout: 10000 });
+  assert(await p.evaluate(() => window.__arena.rui.active && !document.getElementById('rp-save').hidden), 'full replay open with save');
+  await p.click('#skip');
+  await p.waitForSelector('#end:not([hidden])', { timeout: 10000 });
 
   // serialise, then compare the decoded file against live probe positions
   const bytes = await p.evaluate(() => window.__arena.exportReplay());
@@ -75,26 +81,17 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); };
   assert(st.state === 'menu', 'file replay closes to menu: ' + st.state);
 
   // ---------------------------------------------------------------- full-match replay UI: cameras, speeds, scrub
-  await p.evaluate(() => { const a = window.__arena; a.setup({ robot: 'klepeto', opp: 'vert150', level: 'normal', mode: 'quick' }); a.start(); a.selfPlay('normal'); });
-  await p.waitForTimeout(1200);
+  // training never ends on its own, so this always takes the same path: fight -> pause -> "last 20 s"
+  await p.evaluate(() => { const a = window.__arena; a.setup({ robot: 'klepeto', opp: 'vert150', mode: 'training' }); a.start(); a.selfPlay('normal'); });
+  await p.waitForTimeout(1000);
   st = await run(3.6);
-  for (let i = 0; i < 25 && st.state === 'fight'; i++) st = await run(1);
-  // whichever way the match went, open a replay: from the pause menu while fighting, else "Celý zápas" on the end screen
-  st = await p.evaluate(() => window.__arena.state());
-  // 'ko' is the short slow-motion beat before the end screen / auto replay: let it finish
-  for (let i = 0; i < 20 && st.state === 'ko'; i++) { st = await run(0.5); await p.waitForTimeout(150); st = await p.evaluate(() => window.__arena.state()); }
-  if (st.state === 'replay') { await p.evaluate(() => window.__arena.skipReplay()); await p.waitForTimeout(300); st = await p.evaluate(() => window.__arena.state()); }
-  let from;
-  if (st.state === 'fight') {
-    await p.evaluate(() => window.__arena.pause(true));
-    await p.waitForSelector('#last-btn:not([hidden])', { timeout: 5000 });
-    await p.click('#last-btn'); from = 'paused';
-  } else {
-    assert(st.state === 'end', 'end screen: ' + st.state);
-    await p.waitForSelector('#full-btn:not([hidden])', { timeout: 5000 });
-    await p.click('#full-btn'); from = 'end';
-  }
-  await p.waitForSelector('#replay-ui:not([hidden])', { timeout: 5000 });
+  for (let i = 0; i < 25; i++) st = await run(1);
+  assert(st.state === 'fight', 'training still running: ' + st.state);
+  await p.evaluate(() => window.__arena.pause(true));
+  await p.waitForSelector('#last-btn:not([hidden])', { timeout: 10000 });
+  await p.click('#last-btn');
+  const from = 'paused';
+  await p.waitForSelector('#replay-ui:not([hidden])', { timeout: 10000 });
   assert((await p.evaluate(() => window.__arena.state().state)) === 'replay', 'replay opened from ' + from);
   for (const cam of ['Režisér', 'TV přenos', 'Za robotem', 'Shora', 'Z robota', 'Volná']) {
     const now = await p.evaluate(() => document.querySelector('#rp-cam span').textContent);
@@ -102,7 +99,8 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); };
     await p.evaluate(() => { const a = window.__arena; for (let i = 0; i < 20; i++) { a.rui.tick(1 / 30); a.frame(); } });
     if (SHOTS) await shot('r4-cam-' + (await p.evaluate(() => window.__arena.rui.cam)));
   }
-  await p.waitForSelector('#rp-save:not([hidden])', { state: 'visible', timeout: 5000 });
+  const ui2 = await p.evaluate(() => ({ st: window.__arena.state().state, active: window.__arena.rui.active, bar: !document.getElementById('replay-ui').hidden, save: !document.getElementById('rp-save').hidden }));
+  assert(ui2.st === 'replay' && ui2.active && ui2.bar && ui2.save, 'replay still open with save after camera cycle: ' + JSON.stringify(ui2));
   const [dl] = await Promise.all([p.waitForEvent('download', { timeout: 20000 }), p.click('#rp-save')]);
   assert(/\.prreplay$/.test(dl.suggestedFilename()), 'save downloads a .prreplay: ' + dl.suggestedFilename());
   if (await p.evaluate(() => !document.getElementById('rp-clip').hidden)) {
