@@ -125,7 +125,7 @@
     }
     m.textContent = 'Odesíláme…';
     // waitlist (home, "Připravujeme"): same sender and sheet, its own type and the chosen interests
-    var want = [].map.call(f.querySelectorAll('input[name=want]:checked'), function (x) { return x.value; }).join(',');
+    var want = [].map.call(f.querySelectorAll('input[name=want]:checked, input[type=hidden][name=want]'), function (x) { return x.value; }).join(',');
     if (kind === 'waitlist' && !want) { m.textContent = 'Vyberte, co chcete připojit.'; f.querySelector('input[name=want]').focus(); return; }
     var subj = kind === 'price' ? 'Cena na e-mail: ' : kind === 'waitlist' ? 'Čekací listina: ' : 'Novinky: ';
     send({ _subject: subj + (kind === 'waitlist' ? want : robot || 'web'), type: kind === 'price' || kind === 'waitlist' ? kind : 'news', robot: kind === 'waitlist' ? want : robot, email: em.value.trim(), page: location.href, source: page === 'quiz' ? 'kviz' : 'web' })
@@ -133,6 +133,15 @@
       .catch(function (er) { m.textContent = er && er.message === 'no-endpoint' ? NO_ENDPOINT_MSG : 'Odeslání se nezdařilo. Zkuste to prosím znovu.'; });
   });
   (function () { var ft = document.querySelector('.site-f'); if (ft && !ft.querySelector('form.soft')) { var d = document.createElement('div'); d.className = 'soft-foot'; d.innerHTML = softForm('news'); ft.insertBefore(d, ft.firstChild); } })();
+
+  /* copy buttons next to code (shown only when the clipboard API exists) */
+  if (navigator.clipboard) document.querySelectorAll('[data-copy]').forEach(function (b) {
+    var src = document.getElementById(b.getAttribute('data-copy')); if (!src) return;
+    var label = b.textContent; b.hidden = false;
+    b.addEventListener('click', function () {
+      navigator.clipboard.writeText(src.textContent.trim()).then(function () { b.textContent = 'Zkopírováno'; setTimeout(function () { b.textContent = label; }, 2000); }, function () {});
+    });
+  });
 
   var page = document.body.getAttribute('data-page');
 
