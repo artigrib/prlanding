@@ -52,7 +52,7 @@ export class Onboarding {
     this.ring = document.createElement('div'); this.ring.className = 'ux-coach-ring'; this.ring.hidden = true;
     this.ring.setAttribute('aria-hidden', 'true');
     ux.panel.stage.appendChild(this.ring);
-    this.mq = matchMedia('(max-width:860px)');
+    this.mq = ux.panel.mq || matchMedia('(max-width:860px)');   // strip only where the panel is a bottom sheet
     this.place();
     (this.mq.addEventListener ? this.mq.addEventListener('change', () => this.place()) : this.mq.addListener(() => this.place()));
     el.querySelector('[data-a=skip]').addEventListener('click', () => this.finish());

@@ -34,7 +34,8 @@ export class Panel {
     this.ux = ux;
     this.stage = document.querySelector('.stage');
     this.panelEl = document.querySelector('.panel');
-    this.mq = matchMedia('(max-width:860px)');
+    // the bottom sheet: phones in portrait; landscape phones (≤ 500 px high) keep the side panel
+    this.mq = matchMedia('(max-width:860px) and (min-height:501px)');
     this.hintLevel = 0;
     this.missionUI();
     this.modeUI();
@@ -86,6 +87,9 @@ export class Panel {
       .map(([k, l, lab]) => ({ k, l, lab, el: $('ux-sec-' + k) })).filter((s) => s.el);
     const tabs = this.tabsEl = h(`<div class="ux-tabs" role="tablist" aria-label="Panel simulace">${secs.map((s) =>
       `<button type="button" role="tab" id="ux-tab-${s.k}" aria-controls="ux-sec-${s.k}" aria-selected="false" tabindex="-1">${s.l}</button>`).join('')}</div>`);
+    // phones: number, stars and the h1 move into a compact head above the tabs (always visible)
+    this.mHead = h(`<div class="mission ux-mhead"></div>`);
+    this.sheetHead.appendChild(this.mHead);
     this.sheetHead.appendChild(tabs);
     this.tab = 'mission'; this.snap = 0;
     const btns = [...tabs.querySelectorAll('[role=tab]')];
@@ -126,6 +130,8 @@ export class Panel {
         if (on) { s.el.setAttribute('role', 'tabpanel'); s.el.setAttribute('aria-labelledby', 'ux-tab-' + s.k); s.el.hidden = s.k !== this.tab; }
         else { s.el.removeAttribute('role'); s.el.setAttribute('aria-labelledby', s.lab); s.el.hidden = false; }
       }
+      if (on) { this.mHead.append(this.mTop, this.mTitle); }
+      else if (this.mTop.parentNode === this.mHead) { this.mBox.prepend(this.mTop, this.mTitle); }
       if (!on) { pn.style.height = ''; delete pn.dataset.snap; } else this.setSnap(this.snap);
     };
     // touching the 3D scene puts the sheet back down: the scene is the main thing
@@ -188,7 +194,7 @@ export class Panel {
     this.mNum = box.querySelector('p.mono');
     this.mTitle = box.querySelector('h1');
     this.mDesc = box.querySelector('p.ink2');
-    const top = h(`<div class="ux-mtop"></div>`);
+    const top = this.mTop = h(`<div class="ux-mtop"></div>`);
     box.insertBefore(top, this.mNum);
     top.appendChild(this.mNum);
     this.mStars = h(`<span class="ux-stars" id="ux-mstars" role="img" aria-label="Zatím nesplněno"></span>`);
@@ -487,6 +493,9 @@ export class Panel {
     if (!box || !teach) return;
     if (box.previousElementSibling !== teach) teach.after(box);
     box.classList.add('ux-tool');
+    // the agent's "Zeptej se AI na tuto misi" link belongs to the mission card's action row (not the phone head)
+    const ask = $('ai-ask-mission'), row = this.mBox.querySelector('.ux-mrow');
+    if (ask && row) row.after(ask);
   }
 
   // ---------- stage overlays ----------
