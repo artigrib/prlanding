@@ -1,0 +1,14 @@
+{
+  "name": "prlanding-wasm-tools",
+  "private": true,
+  "description": "Reproducible vendoring of the MuJoCo wasm (sim/so101/vendor/mujoco): upstream npm build with custom (debug/name) sections stripped by wabt's wasm-strip.",
+  "type": "module",
+  "scripts": {
+    "vendor": "node vendor-mujoco.mjs",
+    "check": "node vendor-mujoco.mjs --check"
+  },
+  "devDependencies": {
+    "@mujoco/mujoco": "3.17.0",
+    "wabt": "1.0.39"
+  }
+}

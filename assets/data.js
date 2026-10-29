@@ -190,11 +190,12 @@ window.PR_ROBOTS = [
     related: ['svrn', 'otto', 'sawppy'] }
 ];
 // Browser demos linked from product pages (r.sim). colorParam: the sim reads ?color= (so101 does not yet).
-// Sizes = uncompressed download of a first visit, the same basis as the SO-101 loader's "11,6 MB" engine figure;
+// Sizes = uncompressed bytes of a first visit (all responses until the sim is idle, Chromium, empty cache);
+// so101 measured 8 400 906 B after the MuJoCo wasm strip (tools/wasm). The loader shows the engine part only (5,3 MB).
 // re-measure when sim/** changes.
 window.PR_SIMS = {
   arena: { path: 'sim/arena/', robotParam: true, colorParam: true, label: 'Vyzkoušejte v aréně', note: 'Hra v prohlížeči · zdarma · ≈\u00A03,5\u00A0MB' },
-  so101: { path: 'sim/so101/', label: 'Vyzkoušejte v simulaci', note: 'Simulace v prohlížeči · zdarma · ≈\u00A012\u00A0MB' }
+  so101: { path: 'sim/so101/', label: 'Vyzkoušejte v simulaci', note: 'Simulace v prohlížeči · zdarma · ≈\u00A08,4\u00A0MB' }
 };
 // Robot without its own software (RC-controlled); same test in app.js and tools/build.mjs.
 window.PR_NO_SW = function (r) { return !r.sw || String(r.sw).trim() === '—'; };

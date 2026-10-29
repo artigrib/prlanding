@@ -48,6 +48,23 @@ jobs:
       - name: Arena unit tests (replay codec)
         run: node --test tests/*.test.mjs
 
+  mujoco-vendor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: tools/wasm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tools/wasm/package-lock.json
+      - run: npm ci
+      - name: Committed sim/so101/vendor/mujoco must equal the stripped npm build
+        run: npm run check
+
   so101-unit:
     runs-on: ubuntu-latest
     timeout-minutes: 10
