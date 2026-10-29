@@ -1,0 +1,146 @@
+// Agent API (src/agent/sim-api.js) against MuJoCo in node: units, limits, workspace, speed cap, STOP,
+// the person taking over, and mission 01 solved only through the tools (tests/agent-script.mjs).
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { loadScene } from './mj-node.mjs';
+import { chainFromModel } from '../src/kin.js';
+import { World } from '../src/world.js';
+import { MISSIONS, MissionRunner } from '../src/missions.js';
+import { createSimApi, AgentError, SPEED_CAP_DPS } from '../src/agent/sim-api.js';
+import { solveBowl } from './agent-script.mjs';
+
+const { mj, m, d } = await loadScene();
+const act = ['shoulder_pan', 'shoulder_lift', 'elbow_flex', 'wrist_flex', 'wrist_roll', 'gripper']
+  .map((n) => mj.mj_name2id(m, mj.mjtObj.mjOBJ_ACTUATOR.value, n));
+const world = new World(mj, m, d);
+const runner = new MissionRunner(world);
+const ts = m.opt.timestep;
+let userBusy = false;
+const tipSite = mj.mj_name2id(m, mj.mjtObj.mjOBJ_SITE.value, 'gripperframe');
+
+function reset(id = runner.m.id) {
+  mj.mj_resetDataKeyframe(m, d, 0);
+  runner.select(id); runner.setup();
+  if (runner.m.openStart) d.ctrl[act[5]] = 1.2;
+  mj.mj_forward(m, d);
+}
+const api = createSimApi({
+  mj, m, d, act, chain: chainFromModel(mj, m), world, runner, missions: MISSIONS,
+  userBusy: () => userBusy, takeControl() {}, afterMotion() {},
+  selectMission: (id) => reset(id), resetScene: () => reset(),
+  heldObject() {
+    if (d.ctrl[act[5]] > 0.4) return null;
+    const t = d.site_xpos.subarray(3 * tipSite, 3 * tipSite + 3), p = world.pos('cube', [0, 0, 0]);
+    return Math.hypot(p[0] - t[0], p[1] - t[1], p[2] - t[2]) < 0.03 ? 'cube' : null;
+  },
+  snapshot: async () => ({ dataUrl: 'data:image/jpeg;base64,AAAA' })
+});
+
+// like the page: one frame = tick + 4 physics steps + mission check
+function frame() {
+  const dt = 4 * ts;
+  api.tick(dt);
+  for (let k = 0; k < 4; k++) mj.mj_step(m, d);
+  const t = d.site_xpos; runner.ctx.tip.set(t.subarray(3 * tipSite, 3 * tipSite + 3));
+  runner.ctx.gripOpen = d.ctrl[act[5]] > 0.5;
+  runner.tick(dt);
+}
+const METHODS = { get_state: 'getState', get_scene: 'getScene', move_joints: 'moveJoints', move_to: 'moveTo', set_gripper: 'setGripper', home: 'home', stop: 'stop', list_missions: 'listMissions', start_mission: 'startMission', check_mission: 'checkMission', reset_scene: 'resetScene' };
+async function call(tool, args = {}, opts = {}) {
+  let done = false, out, err;
+  Promise.resolve().then(() => api[METHODS[tool]](args, opts)).then((r) => { out = r; done = true; }, (e) => { err = e; done = true; });
+  for (let i = 0; i < 60 * 60 && !done; i++) { await null; if (!done) frame(); }
+  if (err) throw err;
+  assert.ok(done, tool + ' did not finish');
+  return out;
+}
+async function wait(cond, maxSec) {
+  for (let i = 0; i < maxSec * 60; i++) { if (cond(api.checkMission().mission)) return true; frame(); }
+  return cond(api.checkMission().mission);
+}
+const code = async (p) => { try { await p; return null; } catch (e) { assert.ok(e instanceof AgentError, String(e)); return e; } };
+
+test('state in API units; move_joints is smooth, speed-capped and reaches the goal', async () => {
+  reset('bowl');
+  const s = api.getState();
+  assert.ok(Math.abs(s.joints_deg.shoulder_lift - -57.3) < 1, JSON.stringify(s.joints_deg));
+  assert.equal(s.mission.id, 'bowl');
+  assert.ok(s.tool.z_mm > 50 && s.tool.pitch_deg < 0);
+  const r = await call('move_joints', { joints_deg: { shoulder_pan: 60 }, duration_s: 0.2 });
+  assert.equal(r.status, 'completed');
+  assert.ok(Math.abs(r.final.joints_deg.shoulder_pan - 60) < 1.5);
+  assert.ok(r.time_stretched_by > 1, 'too-fast request is stretched to the speed cap');
+  assert.ok(r.planned_duration_s >= (60 / SPEED_CAP_DPS) * 1.875 - 0.05);
+});
+
+test('limits and workspace are enforced in the page: nothing moves', async () => {
+  reset('bowl');
+  const before = api.getState().goal_deg;
+  let e = await code(call('move_joints', { joints_deg: { shoulder_pan: 130 } }));
+  assert.equal(e.code, 'OUT_OF_LIMITS'); assert.deepEqual(e.details, { joint: 'shoulder_pan', value_deg: 130, min_deg: -110, max_deg: 110 });
+  e = await code(call('move_joints', { gripper_pct: 120 }));
+  assert.equal(e.code, 'OUT_OF_LIMITS');
+  e = await code(call('move_to', { pose: { x_mm: 200, y_mm: 0, z_mm: -20 } }));
+  assert.equal(e.code, 'WORKSPACE_VIOLATION');
+  e = await code(call('move_to', { pose: { x_mm: 520, y_mm: 0, z_mm: 20 } }));
+  assert.equal(e.code, 'UNREACHABLE');
+  // a joint move that would swing the jaw into the table
+  e = await code(call('move_joints', { joints_deg: { shoulder_lift: 60, elbow_flex: 40, wrist_flex: 60 } }));
+  assert.equal(e && e.code, 'WORKSPACE_VIOLATION');
+  assert.deepEqual(api.getState().goal_deg, before);
+});
+
+test('move_to: IK reaches the point, explicit pitch is honoured or refused', async () => {
+  reset('bowl');
+  const r = await call('move_to', { pose: { x_mm: 200, y_mm: 50, z_mm: 80 } });
+  assert.equal(r.status, 'completed');
+  assert.ok(r.ik.position_error_mm < 5);
+  const t = r.final.tool;
+  assert.ok(Math.hypot(t.x_mm - 200, t.y_mm - 50, t.z_mm - 80) < 8, JSON.stringify(t));
+  const p = await call('move_to', { pose: { x_mm: 220, y_mm: 0, z_mm: 120, pitch_deg: -45 } });
+  assert.ok(Math.abs(p.ik.pitch_deg_used - -45) < 3, 'pitch ' + p.ik.pitch_deg_used);
+  const e = await code(call('move_to', { pose: { x_mm: 400, y_mm: 0, z_mm: 20, pitch_deg: -90 } }));
+  assert.equal(e.code, 'IK_NO_SOLUTION');
+});
+
+test('STOP in the page ends the motion and blocks motion until released; the person takes over', async () => {
+  reset('bowl');
+  const ac = new AbortController();
+  let res = null;
+  api.moveJoints({ joints_deg: { shoulder_pan: -90 }, duration_s: 4 }, { signal: ac.signal }).then((r) => { res = r; });
+  for (let i = 0; i < 40; i++) frame();
+  api.setEstop(true);
+  await null; await null;
+  assert.equal(res.status, 'stopped');
+  assert.ok(res.final.goal_deg.shoulder_pan > -80);
+  assert.equal((await code(call('home'))).code, 'ESTOP_ACTIVE');
+  assert.equal(api.getState().safety, 'estop');
+  api.setEstop(false);
+  // the person grabs the controls
+  res = null;
+  api.moveJoints({ joints_deg: { shoulder_pan: 90 }, duration_s: 4 }, {}).then((r) => { res = r; });
+  for (let i = 0; i < 20; i++) frame();
+  userBusy = true; frame(); await null; await null;
+  assert.equal(res.status, 'stopped');
+  assert.equal((await code(call('home'))).code, 'BUSY');
+  userBusy = false;
+  assert.equal((await call('home')).status, 'completed');
+});
+
+test('missions: list, unknown id, reset', async () => {
+  const l = api.listMissions().missions.map((x) => x.id);
+  assert.deepEqual(l, ['bowl', 'stack', 'sort', 'ball', 'trace']);
+  assert.equal((await code(call('start_mission', { mission_id: 'lab' }))).code, 'UNKNOWN_MISSION');
+  const s = await call('start_mission', { mission_id: 'stack' });
+  assert.equal(s.mission.id, 'stack'); assert.equal(s.mission.state, 'running');
+  assert.equal(api.getScene().objects.filter((o) => o.kind === 'cube').length, 2);
+  assert.ok((await call('reset_scene')).robot);
+});
+
+test('mission 01 is solved only through the agent tools', async () => {
+  const lines = [];
+  const won = await solveBowl(call, { wait, log: (s) => lines.push(s) });
+  const st = api.checkMission().mission;
+  assert.ok(won, `not won: ${JSON.stringify(st)} hud ${runner.last.text}\n${lines.join('\n')}`);
+  console.log('  ' + lines.join('\n  ') + `\n  won after ${st.elapsed_s} s`);
+});
