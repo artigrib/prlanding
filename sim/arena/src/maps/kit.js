@@ -6,6 +6,10 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export const BASE_Y = -2.5;       // floor outside the arena / pit bottom
 export const WALL_H = 1.2;
+// invisible polycarbonate catch above the visible wall (real antweight boxes are closed, ~30 cm+):
+// a flipped robot bounces off it instead of sailing over a 12 cm wall. Maps can leave parts open
+// (spec.openTop rects, e.g. the Jáma ramps), and wall gaps have no wall at all.
+export const CATCH_H = 3.6;
 export const WALL_T = 0.16;
 export const GRIP_FRICTION = 0.8; // collider friction that means "normal grip" (gripAt = friction / 0.8)
 
@@ -490,6 +494,21 @@ export function boxWalls(h, gaps = [], t = WALL_T) {
       segs = segs.flatMap(([a, b]) => (g.a1 <= a || g.a0 >= b) ? [[a, b]] : [[a, g.a0], [g.a1, b]].filter(([p, q]) => q - p > 0.01));
     }
     for (const [a, b] of segs) out.push(sides[s](a, b));
+  }
+  return out;
+}
+// wall rects minus the parts inside any `open` rect (split along the wall's long axis)
+export function catchWalls(walls, open = []) {
+  let out = walls.map(w => ({ ...w }));
+  for (const o of open) {
+    out = out.flatMap(w => {
+      const overlap = w.x0 < o.x1 && w.x1 > o.x0 && w.z0 < o.z1 && w.z1 > o.z0;
+      if (!overlap) return [w];
+      const alongX = w.x1 - w.x0 >= w.z1 - w.z0;
+      const [a, b, c, d] = alongX ? [w.x0, w.x1, o.x0, o.x1] : [w.z0, w.z1, o.z0, o.z1];
+      return [[a, Math.min(b, c)], [Math.max(a, d), b]].filter(([p, q]) => q - p > 0.01)
+        .map(([p, q]) => (alongX ? { ...w, x0: p, x1: q } : { ...w, z0: p, z1: q }));
+    });
   }
   return out;
 }

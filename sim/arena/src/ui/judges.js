@@ -15,7 +15,10 @@ function split(pts, a, b, lean = 0) {
 // a, b: { damage, aggression, control } raw tallies for player / opponent
 export function judge(a, b, rnd = Math.random) {
   // empty categories: the odd point goes to the damage leader, then the aggression leader
-  const lean = a.damage !== b.damage ? (a.damage > b.damage ? 0 : 1) : a.aggression !== b.aggression ? (a.aggression > b.aggression ? 0 : 1) : (rnd() < 0.5 ? 0 : 1);
+  // ... and when even those are level, to the robot that kept moving (activity), only then a coin
+  const act = x => x.activity || 0;
+  const lean = a.damage !== b.damage ? (a.damage > b.damage ? 0 : 1) : a.aggression !== b.aggression ? (a.aggression > b.aggression ? 0 : 1)
+    : Math.abs(act(a) - act(b)) > 1 ? (act(a) > act(b) ? 0 : 1) : (rnd() < 0.5 ? 0 : 1);
   const cats = {}, total = [0, 0];
   for (const c of CATS) { cats[c.id] = split(c.pts, a[c.id], b[c.id], lean); total[0] += cats[c.id][0]; total[1] += cats[c.id][1]; }
   const judges = [], votes = [0, 0];
@@ -34,6 +37,9 @@ export function judge(a, b, rnd = Math.random) {
     const w = s[0] !== s[1] ? (s[0] > s[1] ? 0 : 1) : dmg[0] !== dmg[1] ? (dmg[0] > dmg[1] ? 0 : 1) : -1;
     if (w >= 0) votes[w]++;
   }
-  const winner = votes[0] >= 2 ? 0 : votes[1] >= 2 ? 1 : null;
+  let winner = votes[0] >= 2 ? 0 : votes[1] >= 2 ? 1 : null;
+  // nobody landed a hit or did any damage and neither really attacked: no basis for a win
+  const passive = !(a.hits || b.hits) && !(a.damage > 0.05 || b.damage > 0.05) && a.aggression < 2 && b.aggression < 2;
+  if (passive) winner = null;
   return { cats, total, judges, votes, winner };
 }

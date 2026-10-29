@@ -1,5 +1,23 @@
 # Aréna 150 g – changelog
 
+## Opravy po QA a první zápas (branch `arena-fixes`)
+- **Přes stěnu už nelétá:** nad 12cm stěnou je neviditelný polykarbonátový „strop“ do 36 cm (`CATCH_H`, `maps/kit.js`),
+  výjimkou jsou výjezdy a rampy v Jámě (`spec.openTop`). AI matice Mistr i Střední: Kladivo + Praha 0 / 48 zápasů
+  končí vyletěním (dříve 13 / 48); na Klasice a Ledu jen skrz výjezdy.
+- **Hodiny běží v simulovaném čase:** odpočet zápasu tiká s každým fyzikálním krokem, simulace dohání až 0,1 s za snímek.
+  Na pomalém zařízení (10 fps) zápas trvá déle, ale obsahuje celé 2:00 akce; jáma v Praze se otevře v 1:00 na hodinách.
+- **Patové situace:** AI bez kontaktu 6 s na 3 s zaútočí naplno (Mistr přestane obcházet spinner); pravidlo přišpendlení:
+  10 s u stěny bez pohybu → „Rozhodčí: roboti od sebe!“ a návrat na start; rozhodčí při shodě berou aktivitu a zápas
+  bez zásahů a útoků končí remízou.
+- SVRN se při výstřelu do Klepeta/Kosy už nepřevrací sám (reakce flipperu přes těžiště, omezení náklonu po výstřelu).
+- Garáž se na telefonu otevře nahoře; jméno soupeře v HUD se nezařezává (krátká jména pod 760 px, výpustka);
+  Klepeto má v nápovědě a stavu „kleště“; po obnovení grafiky je zápas pozastavený; na konci zápasu má fokus nadpis
+  (mezerník nespustí hned nový zápas); `aria-pressed` u zvuku = ztlumeno; „1,2 m“; kvíz už nenabízí Otto jako
+  bojového robota; prázdný klip ohlásí chybu, na dotykových zařízeních klip 15 fps; jemnější stíny (normalBias).
+- **První zápas:** krátký průvodce přes odpočet (3 řádky, Enter / Esc / „Přeskočit“, jen jednou), výchozí obtížnost
+  Začátečník (střední úroveň přejmenována na „Střední“), po prohře v rychlém zápase tlačítko „Zkusit lehčího soupeře“
+  a v menu odkaz „↓ Další nastavení“, dokud je spodek panelu schovaný. Vše i v angličtině.
+
 ## Záznamy zápasů (branch `arena-replays`)
 - **Nahrávání** (`src/replay/codec.js`, `src/replay/scene.js`): každý zápas se zaznamenává 30× za sekundu – poloha a natočení
   obou robotů, kola (i upadlá), zbraň / flipper / čelist, roztočení, HP, převrácení, zásahy, stav nástrah a volné trosky.

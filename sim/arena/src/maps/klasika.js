@@ -11,7 +11,7 @@ export const GAP = { x0: -4.5, x1: -1.5 };
 export const klasika = {
   id: 'klasika',
   name: 'CCRL klasika',
-  description: 'Věrná 1,2m aréna jako na soutěžích: jáma v rohu a výjezd ze severní stěny.',
+  description: 'Věrná 1,2 m aréna jako na soutěžích: jáma v rohu a výjezd ze severní stěny.',
   blurb: 'Jáma v rohu a výjezd ve stěně',
   tags: ['jáma', 'výjezd'],
   preview: { floor: '#E9E9E5', accent: '#E8461E', dark: false },

@@ -1,13 +1,13 @@
 // Opponent AI with three personalities.
 //  Začátečník – slow reactions, sloppy aim, forgets the weapon, never plans a push.
-//  Pokročilý  – leads the target, uses the weapon sensibly, unsticks itself.
+//  Střední    – leads the target, uses the weapon sensibly, unsticks itself.
 //  Mistr      – flanks around the weapon side, pushes toward the nearest hazard,
 //               self-rights instantly and backs off to spin up.
 import * as THREE from 'three';
 
 export const LEVELS = {
   easy:   { id: 'easy', name: 'Začátečník', blurb: 'Pomalé reakce, učí se jezdit', handicap: 0.74, react: [0.22, 0.14], aimErr: 0.35, lead: 0, fireP: 0.12, selfRight: 2.2, flank: false, herd: false, spinUpAt: 2.5 },
-  normal: { id: 'normal', name: 'Pokročilý', blurb: 'Míří, tlačí a používá zbraň', handicap: 0.88, react: [0.09, 0.06], aimErr: 0.08, lead: 0.25, fireP: 0.35, selfRight: 0.7, flank: false, herd: false, spinUpAt: 0.6 },
+  normal: { id: 'normal', name: 'Střední', blurb: 'Míří, tlačí a používá zbraň', handicap: 0.88, react: [0.09, 0.06], aimErr: 0.08, lead: 0.25, fireP: 0.35, selfRight: 0.7, flank: false, herd: false, spinUpAt: 0.6 },
   hard:   { id: 'hard', name: 'Mistr', blurb: 'Obchází zbraň a tlačí do jámy', handicap: 1.0, react: [0.04, 0.03], aimErr: 0, lead: 0.4, fireP: 0.9, selfRight: 0.15, flank: true, herd: true, wary: true, spinUpAt: 0.2 },
   dummy:  { id: 'dummy', name: 'Figurína', blurb: 'Stojí a čeká', handicap: 1, react: [0.3, 0.1], aimErr: 0, lead: 0, fireP: 0, selfRight: 0.5, flank: false, herd: false, spinUpAt: 1e9, idle: true }
 };
@@ -17,14 +17,20 @@ const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
 
 export function createBrain(levelId, map) {
   const L = LEVELS[levelId] || LEVELS.normal;
-  const s = { t: 0, stuck: 0, backing: 0, backTurn: 1, err: 0, errT: 0, wander: 0 };
+  const s = { t: 0, stuck: 0, backing: 0, backTurn: 1, err: 0, errT: 0, wander: 0, calm: 0, commit: 0 };
   const cmd = { throttle: 0, turn: 0, fire: false };
   return {
     level: L,
-    reset() { Object.assign(s, { t: 0, stuck: 0, backing: 0, err: 0, errT: 0 }); },
+    reset() { Object.assign(s, { t: 0, stuck: 0, backing: 0, err: 0, errT: 0, calm: 0, commit: 0 }); },
     think(ai, op, dt, time) {
       const me = ai.frame(), o = op.frame();
       s.t -= dt; s.errT -= dt;
+      // standoff breaker: no contact for 6 s -> commit to a straight attack for 3 s (no flanking, no backing off)
+      const gap = Math.hypot(o.pos.x - me.pos.x, o.pos.z - me.pos.z);
+      if (gap < 1.2) s.calm = 0; else s.calm += dt;
+      if (s.commit > 0) s.commit -= dt;
+      else if (s.calm > 6 && !L.idle) { s.commit = 3; s.calm = 0; }
+      const committed = s.commit > 0;
       cmd.fire = false;
       const flipper = ai.def.weapon === 'flipper', spinner = ai.def.weapon === 'spinner';
       if (spinner && !ai.weaponOn && time > L.spinUpAt) cmd.fire = true;
@@ -57,7 +63,7 @@ export function createBrain(levelId, map) {
       const pv = op.body.linvel();
       _t.set(o.pos.x + pv.x * L.lead, 0, o.pos.z + pv.z * L.lead);
       const dist = Math.hypot(o.pos.x - me.pos.x, o.pos.z - me.pos.z);
-      if (L.flank && dist > 1.8 && op.def.weapon === 'spinner' && (op.spin || 0) > 0.5) {
+      if (L.flank && !committed && dist > 1.8 && op.def.weapon === 'spinner' && (op.spin || 0) > 0.5) {
         // avoid the opponent's weapon face: aim at a point beside / behind it
         const ofx = o.fwd.x, ofz = o.fwd.z, n = Math.hypot(ofx, ofz) || 1;
         const tox = (me.pos.x - o.pos.x) / (dist || 1), toz = (me.pos.z - o.pos.z) / (dist || 1);
@@ -90,7 +96,7 @@ export function createBrain(levelId, map) {
         if (map.hazardAt(o.pos.x, o.pos.z)) { cmd.fire = true; s.backing = 0.5; s.backTurn = 0; }
       }
       // wary (master): never get pinned between the opponent and a pit – slip sideways out of the line
-      if (L.wary && !holding && map.hazards && map.hazards.length) {
+      if (L.wary && !committed && !holding && map.hazards && map.hazards.length) {
         for (const h of map.hazards) {
           const hx = h.x - me.pos.x, hz = h.z - me.pos.z, hd = Math.hypot(hx, hz);
           if (hd > 2.8 || hd < 1e-3) continue;
@@ -105,12 +111,12 @@ export function createBrain(levelId, map) {
       }
       if (s.errT <= 0) { s.err = (Math.random() - 0.5) * 2 * L.aimErr; s.errT = 0.6 + Math.random(); }
       // spinner with a slow blade keeps its distance while it spins up (master only)
-      let retreat = L.flank && spinner && ai.weaponOn && ai.spin < 0.55 && dist < 2.5;
+      let retreat = !committed && L.flank && spinner && ai.weaponOn && ai.spin < 0.55 && dist < 2.5;
       const heading = Math.atan2(me.fwd.x, me.fwd.z);
       const want = Math.atan2(_t.x - me.pos.x, _t.z - me.pos.z) + s.err;
       const a = wrap(want - heading);
       cmd.turn = THREE.MathUtils.clamp(-a * 2.4, -1, 1);
-      cmd.throttle = Math.cos(a) > 0.6 ? 0.9 : Math.cos(a) > 0 ? 0.45 : 0.1;
+      cmd.throttle = Math.cos(a) > 0.6 ? (committed ? 1 : 0.9) : Math.cos(a) > 0 ? 0.45 : 0.1;
       if (retreat) { cmd.throttle = -0.6; }
       if (levelId === 'easy' && Math.random() < 0.08) cmd.throttle *= 0.3;   // hesitates
       // keep out of hazards ourselves (look ahead along our velocity)

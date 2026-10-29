@@ -94,7 +94,7 @@ const strings = {
   'Záznam je po rozbalení příliš velký.': 'The replay is too large when unpacked.', 'Soubor je příliš velký.': 'The file is too large.', 'Tento prohlížeč neumí rozbalit záznam.': 'This browser can’t unpack the replay.',
   /* maps (names, descriptions, floor decals) */
   'Klasická aréna': 'Classic arena', 'CCRL klasika': 'CCRL classic', 'Jáma v rohu a výjezd ve stěně': 'Corner pit and a wall exit',
-  'Věrná 1,2m aréna jako na soutěžích: jáma v rohu a výjezd ze severní stěny.': 'A faithful 1.2 m arena like at competitions: a pit in the corner and an exit in the north wall.',
+  'Věrná 1,2 m aréna jako na soutěžích: jáma v rohu a výjezd ze severní stěny.': 'A faithful 1.2 m arena like at competitions: a pit in the corner and an exit in the north wall.',
   'Jáma a rampy': 'Pit and ramps', 'Jáma, podlahové flippery a rampy': 'Pit, floor flippers and ramps',
   'Jáma uprostřed, dva podlahové flippery a rampy u stěn. Dobrým zásahem soupeře vyhodíte přes stěnu.': 'A pit in the middle, two floor flippers and ramps along the walls. A good hit throws your opponent over the wall.',
   'Kladivo': 'Hammer', 'Kladivo, pily z podlahy a jáma': 'Hammer, floor saws and a pit',
@@ -103,6 +103,15 @@ const strings = {
   'Kluziště: uprostřed led, po okraji gumový pás. Roboti kloužou a nesou setrvačnost, ve dvou stěnách jsou výjezdy.': 'An ice rink: ice in the middle, a rubber strip around the edge. Robots slide and carry momentum; two walls have exits.',
   'PROTO ROBOT Praha': 'PROTO ROBOT Prague', 'Noční finále: pily a jáma od 1:00': 'Night final: saws, and a pit from 1:00',
   'Noční finále pražského meetupu: reflektory, publikum, pily ve stěnách a jáma uprostřed, která se otevře v polovině zápasu.': 'The night final of the Prague meetup: spotlights, a crowd, saws in the walls and a pit in the middle that opens halfway through the match.',
+  /* arena-fixes */
+  'Střední': 'Intermediate', 'Zkusit lehčího soupeře': 'Try an easier opponent', '↓ Další nastavení: garáž, barva, aréna': '↓ More settings: garage, colour, arena',
+  'První zápas': 'First match', 'Jak na to': 'How to play', 'Rozumím, jedeme!': 'Got it, let’s go!', 'Přeskočit': 'Skip',
+  'Jízda:': 'Drive:', 'nebo šipky. Zbraň:': 'or arrows. Weapon:', 'Jízda: levý joystick. Zbraň: tlačítko vpravo.': 'Drive: left stick. Weapon: right button.',
+  'Vyhrajete, když soupeře vytlačíte z arény nebo do jámy, nebo ho převrátíte na 10 s.': 'You win by pushing the opponent out of the arena or into the pit, or by flipping them for 10 s.',
+  'Jinak po 2 minutách rozhodují rozhodčí: útočte a zasahujte.': 'Otherwise the judges decide after 2 minutes: attack and land hits.',
+  'Rozhodčí: roboti od sebe!': 'Referee: robots apart!', '· kleště = otočit': '· clamp = self-right', 'Oddělení': 'Separation',
+  'kleště – chytit a pustit (i k převrácení zpět)': 'clamp – grab and release (also to self-right)', 'kleště – chytit a pustit (i k převrácení zpět) ·': 'clamp – grab and release (also to self-right) ·',
+  'Klip je prázdný – obraz se nenahrál. Nechte kartu otevřenou a zkuste to znovu.': 'The clip is empty – no picture was recorded. Keep the tab open and try again.',
   'jáma': 'pit', 'JÁMA': 'PIT', 'výjezd': 'exit', 'výjezdy': 'exits', 'jáma od 1:00': 'pit from 1:00'
 };
 

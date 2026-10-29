@@ -202,7 +202,7 @@ export const LIMITS = { channels: 2000, chunks: 2000, events: 5000, inflated: 64
 export class ReplayError extends Error {}
 const bad = m => new ReplayError(m || 'Poškozený záznam.');
 const FORBIDDEN = new Set(['__proto__', 'constructor', 'prototype']);
-const EV_TYPES = new Set(['hit', 'fire', 'flip', 'pit', 'out', 'ko', 'wheel']);
+const EV_TYPES = new Set(['hit', 'fire', 'flip', 'pit', 'out', 'ko', 'wheel', 'sep']);
 const num = (x, lo, hi) => typeof x === 'number' && Number.isFinite(x) && x >= lo && x <= hi;
 // events: copy only known fields (the file is untrusted)
 function cleanEvent(e) {
