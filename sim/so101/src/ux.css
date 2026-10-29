@@ -447,3 +447,10 @@
   .win h2{font-size:19px}
   .ux-winstars{font-size:22px}
 }
+/* mastery badges (✋ drag, ⚙ joints, ✓ done without stars) and the hint ladder's offer */
+.ux-badges{display:inline-flex;gap:4px;margin-left:8px;font-size:15px;line-height:1;font-weight:400}
+.ux-badge{font-weight:400;color:var(--ink)}
+.ux-badge.ux-done{color:var(--ok)}
+.ux-hintnow{display:inline-block;margin-top:6px;color:var(--ink-2)}
+.ux-qrow .btn.ux-offer{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
+#ux-shift-note{margin:0;font-size:14px;color:var(--ink);border-left:3px solid var(--accent);padding:6px 10px;background:var(--sand)}

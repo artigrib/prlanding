@@ -218,8 +218,33 @@ export class Teach {
     if (t > MAX_S) this.stopRec();
   }
 
-  startReplay() {
+  /**
+   * "Posunout kostku a přehrát znovu": the same recorded actions, but the mission's object lies a few cm
+   * elsewhere, so the replay (open loop, like a single LeRobot demonstration) visibly misses.
+   */
+  startShiftedReplay() {
     if (!this.demo) return false;
+    const DIRS = [[-0.04, 0], [0, 0.04], [0.04, 0], [0, -0.04]];
+    this.shiftN = ((this.shiftN || 0) + 1) % DIRS.length;
+    this.shift = DIRS[this.shiftN];
+    this.shiftResult = null;
+    if (this.startReplay(true)) return true;
+    this.shift = null; return false;
+  }
+  /** move the demo mission's first object by this.shift (after the snapshot was restored) */
+  applyShift() {
+    const w = this.ux.world, m = this.demo.mission;
+    const name = Object.keys(m.targets || {}).find((n) => (m.targets[n] === 'pick' || m.targets[n] === 'push') && w.o[n] && w.o[n].kind === 'free' && w.o[n].active);
+    if (!name) { this.shift = null; return; }
+    const p = w.pos(name, [0, 0, 0]), e = w.o[name];
+    w.place(name, p[0] + this.shift[0], p[1] + this.shift[1], e.lib ? null : p[2], w.yaw(name));
+    this.shiftObj = name;
+    this.ux.mj.mj_forward(this.m, this.d);
+  }
+
+  startReplay(keepShift) {
+    if (!this.demo) return false;
+    if (!keepShift) { this.shift = null; this.shiftResult = null; }
     if (this.recording) this.stopRec();
     this.ux.ctl.cancel(); this.app.stopDemo();
     try { this.restart(); }
@@ -237,6 +262,7 @@ export class Teach {
   restart() {
     this.ux.beginReplayReset(this.demo);
     this.restore(this.demo.snap);
+    if (this.shift) this.applyShift();
     this.rt0 = this.d.time; this.k = 0;
   }
   stopReplay() { if (!this.replaying) return; this.replaying = false; this.changed(); }
@@ -247,6 +273,7 @@ export class Teach {
     const D = this.demo, t = this.d.time - this.rt0, T = D.t;
     if (t > T[T.length - 1] + 0.6) {
       if (this.loop) { this.restart(); return; }
+      if (this.shift) { this.shiftResult = this.ux.runner.won ? 'hit' : 'miss'; this.shift = null; }
       this.stopReplay(); return;
     }
     while (this.k < T.length - 2 && T[this.k + 1] < t) this.k++;

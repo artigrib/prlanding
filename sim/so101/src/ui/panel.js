@@ -17,11 +17,15 @@ const I = {
   gear: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.8"/><circle cx="12" cy="12" r="6.6"/><path d="M12 2.6v2.8M12 18.6v2.8M2.6 12h2.8M18.6 12h2.8M5.4 5.4l2 2M16.6 16.6l2 2M5.4 18.6l2-2M16.6 7.4l2-2"/></svg>'
 };
 
-// Hint ladder rungs (UI only; the logic of more rungs comes later). A rung with `text` is shown in the hint
-// box; a rung with `run` is offered as the next action inside that box.
+// Hint ladder (4 rungs). The hint box shows the current rung's text and offers the next rung as its only action:
+//   1 strategy (the mission's manual strategy + the HUD's next step) → 2 ghost path of the next subgoal →
+//   3 partial demo (the arm reaches and grasps, the player finishes; counts as autopilot) →
+//   4 full solution (#demo, marks the run assisted). "Poradit" only ever opens / refreshes rung 1+.
 const HINT_STEPS = [
-  { id: 'tip', text: (m) => m.tip },
-  { id: 'solution', run: 'solve' }
+  { id: 'strategy' },
+  { id: 'ghost', text: 'Modrá čára ukazuje cestu k dalšímu cíli. Projeďte ji sami.', next: 'Ukázat cestu k dalšímu cíli' },
+  { id: 'partial', text: 'Ruka předmět uchopí a zvedne – dokončete to vy. Mise se pak počítá jako splněná, bez hvězdiček.', next: 'Ruka začne, vy dokončíte' },
+  { id: 'solution', next: 'Ukázat řešení' }
 ];
 
 // Panel IA (sim-panel-ia): 1. mission card (goal, stars, hint ladder Poradit → Ukázat řešení, Další mise),
@@ -170,22 +174,54 @@ export class Panel {
    */
   hint() {
     if (this.ux.app.won) return;
+    this.offered = false;
     if (this.hintLevel < 1) this.hintLevel = 1;
-    this.showHint();
-    // after the DOM translation (?lang=en) has run on the new text
-    setTimeout(() => this.toast(this.hintText.textContent, null, 7000), 0);
+    this.showHint(true);
+    // phones: the sheet opens on the hint box; desktops also get the tip as a toast over the scene
+    // (after the DOM translation of ?lang=en has run on the new text)
     if (this.mq.matches) { this.selectTab('mission'); if (this.snap < 1) this.setSnap(1); }
+    else setTimeout(() => this.toast(this.hintText.innerText.replace(/\s*\n+\s*/g, ' ').trim(), null, 7000), 0);
   }
-  showHint() {
-    const m = this.ux.runner.m, lv = this.hintLevel, won = !!this.ux.app.won, cur = HINT_STEPS[lv - 1];
-    if (lv && cur && cur.text) {
-      let tip = cur.text(m) || '';
-      if (this.ux.touch) tip = tip.replace(/Klikněte/g, 'Klepněte').replace(/myší nebo prstem/g, 'prstem');
-      if (this.hintText.innerHTML !== tip) this.hintText.innerHTML = tip;
+  /** the next rung, from the button inside the hint box (rung 4 is #demo with its own handler) */
+  hintNext() {
+    const n = this.hintLevel + 1, st = HINT_STEPS[n - 1];
+    if (!st || st.id === 'solution') return;
+    this.hintLevel = n;
+    const ok = st.id === 'ghost' ? this.ux.hintGhost() : this.ux.hintPartial();
+    if (!ok) this.toast('Teď to nejde ukázat – zkuste Znovu (R).', 'err');
+    this.showHint(true);
+  }
+  /** Stuck (no progress / failed grasps): show "Poradit" on the stage, never open the ladder by itself. */
+  offerHint(reason) {
+    if (this.ux.app.won || this.offered) return;
+    this.offered = true;
+    $('ux-qhint').classList.add('ux-offer');
+    this.toast(reason === 'grasp' ? 'Chapadlo se zavřelo naprázdno. Poradit vám ukáže postup.' : 'Nevíte, jak dál? Poradit vám dá tip.', null, 4000);
+  }
+  showHint(fresh) {
+    const ux = this.ux, m = ux.runner.m, lv = this.hintLevel, won = !!ux.app.won, cur = HINT_STEPS[lv - 1];
+    if (!lv) $('ux-qhint').classList.toggle('ux-offer', !!this.offered && !won);
+    if (lv && cur && fresh) {
+      let html;
+      if (cur.id === 'strategy') {
+        let now = ux.runner.last && ux.runner.last.text || '';
+        if (ux.touch) now = now.replace(/Klikněte/g, 'Klepněte');
+        html = `<span>${m.strategy || ''}</span>` + (now ? `<br><span class="ux-hintnow"><b>Teď:</b> <span>${now}</span></span>` : '');
+      } else {
+        const grasp = Object.values(m.targets || {}).includes('pick');
+        html = `<span>${cur.id === 'partial' && !grasp ? 'Ruka se postaví na začátek – dokončete to vy. Mise se pak počítá jako splněná, bez hvězdiček.' : cur.text}</span>`;
+      }
+      if (this.hintText.innerHTML !== html) this.hintText.innerHTML = html;
+      $('ux-qhint').classList.remove('ux-offer');
     }
     this.hintBox.hidden = !lv || won;
     this.hintStepEl.textContent = `Nápověda ${lv} / ${HINT_STEPS.length}`;
-    $('ux-mhint').hidden = !!lv || won;
+    const nx = HINT_STEPS[lv];
+    const nb = this.hintNextBtn, demo = $('demo');
+    nb.hidden = !nx || nx.id === 'solution';
+    if (nx && nx.id !== 'solution') nb.firstChild.textContent = nx.next + ' ';
+    demo.hidden = !nx || nx.id !== 'solution';
+    $('ux-mhint').hidden = won;
   }
 
   // ---------- mission header + picker ----------
@@ -214,7 +250,9 @@ export class Panel {
     const demo = $('demo');
     demo.classList.remove('btn'); demo.classList.add('ux-link', 'ux-solve');
     demo.title = 'Ruka úlohu vyřeší sama – bez hvězdiček';
-    hb.querySelector('.ux-hintnext').appendChild(demo);
+    this.hintNextBtn = h(`<button type="button" class="ux-link ux-solve" id="ux-hintnext">Další krok <span aria-hidden="true">→</span></button>`);
+    this.hintNextBtn.addEventListener('click', () => this.hintNext());
+    hb.querySelector('.ux-hintnext').append(this.hintNextBtn, demo);
     row.querySelector('#ux-mhint').addEventListener('click', () => this.hint());
     // after a win: the primary action of the card is the next mission
     this.mNext = h(`<button type="button" class="btn btn-act ux-mnext" id="ux-mnext" hidden>Další mise <span aria-hidden="true">→</span></button>`);
@@ -246,8 +284,8 @@ export class Panel {
       const b = h(`<button type="button" class="ux-card${m.id === this.ux.runner.m.id ? ' cur' : ''}">
         <span class="mono">Mise ${m.n}</span>
         <b>${m.title}</b>
-        <span class="ux-stars">${starStr(p ? p.stars : 0)}</span>
-        <span class="mono-s muted">${p ? 'nejlepší čas ' + fmt(p.time) : m.starsHint}</span>
+        <span class="ux-stars">${starStr(p ? p.stars : 0)}${badgeStr(p)}</span>
+        <span class="mono-s muted">${!p ? m.starsHint : p.stars && p.time != null ? 'nejlepší čas ' + fmt(p.time) : 'Splněno · hvězdičky za ruční přenesení'}</span>
       </button>`);
       b.addEventListener('click', () => { this.closePicker(); this.ux.selectMission(m.id); });
       this.cards.appendChild(b);
@@ -281,11 +319,12 @@ export class Panel {
     this.credit.hidden = !m.objects;
     if (m.objects) this.credit.firstChild.textContent = m.credit || 'Objekty: NVIDIA SimReady (CC BY 4.0)';
     const s = prog ? prog.stars : 0;
-    this.mStars.innerHTML = starStr(s);
-    this.mStars.setAttribute('aria-label', s ? `Nejlepší hodnocení ${s} ze 3 hvězdiček` : 'Zatím nesplněno');
+    this.mStars.innerHTML = starStr(s) + badgeStr(prog, true);
+    this.mStars.setAttribute('aria-label', s ? `Nejlepší hodnocení ${s} ze 3 hvězdiček` : prog ? 'Splněno, zatím bez hvězdiček' : 'Zatím nesplněno');
     document.title = `${m.title} – SO-101 v simulaci | printedrobotics.cz`;
     // hint ladder starts again with every mission; a win swaps "Poradit" for "Další mise →"
     if (m.id !== this.hintFor) { this.hintFor = m.id; this.hintLevel = 0; }
+    this.offered = false;
     const won = !!this.ux.app.won, last = MISSIONS[MISSIONS.length - 1].id === m.id;
     this.mNext.hidden = !won || last;
     this.showHint();
@@ -440,12 +479,15 @@ export class Panel {
       <input type="file" id="ux-import-f" accept="application/json,.json" hidden>
       <button type="button" class="ux-link" id="ux-share" disabled>Sdílet ukázku odkazem (třeba studentům) <span aria-hidden="true">🔗</span></button>
       <button type="button" class="ux-link" id="ux-export" disabled>Stáhnout ukázku jako JSON (formát podobný LeRobot) <span aria-hidden="true">⤓</span></button>
+      <button type="button" class="btn btn-o" id="ux-shift" disabled data-tip="Stejné pohyby, předmět o 4 cm jinde">Posunout kostku a přehrát znovu <span aria-hidden="true">↔</span></button>
+      <p id="ux-shift-note" hidden></p>
       <p class="mono-s muted" id="ux-teach-s" aria-live="polite">Zatím žádná ukázka.</p>
       </div>
     </section>`));
     $('ux-teach-b').addEventListener('click', () => this.openTeach($('ux-teach-body').hidden));
     $('ux-rec').addEventListener('click', () => this.ux.toggleRec());
     $('ux-play').addEventListener('click', () => this.ux.togglePlay());
+    $('ux-shift').addEventListener('click', () => { if (this.ux.teach.startShiftedReplay()) this.toast('Předmět leží o 4 cm jinde. Trefí se ruka?', null, 3500); });
     $('ux-loop').addEventListener('click', () => { const t = this.ux.teach; t.loop = !t.loop; this.showTeach(t); });
     $('ux-trim').addEventListener('click', () => { const n = this.ux.teach.trim(); this.toast(n ? `Oříznuto ${n} snímků klidu` : 'Není co oříznout'); });
     $('ux-del').addEventListener('click', () => { this.ux.teach.clear(); this.toast('Ukázka smazána'); });
@@ -471,6 +513,12 @@ export class Panel {
     play.disabled = !t.demo || t.recording; loop.disabled = !t.demo || t.recording; ex.disabled = !t.demo || t.recording;
     $('ux-trim').disabled = $('ux-del').disabled = !t.demo || t.recording || t.replaying;
     $('ux-share').disabled = !t.demo || t.recording;
+    $('ux-shift').disabled = !t.demo || t.recording || t.replaying;
+    const sn = $('ux-shift-note');
+    sn.hidden = !t.shiftResult || t.replaying;
+    if (t.shiftResult) sn.textContent = t.shiftResult === 'miss'
+      ? 'Ruka zopakovala přesně stejné pohyby, ale předmět ležel jinde – a minula. Proto se skutečná SO-101 učí z desítek ukázek z různých míst.'
+      : 'Tentokrát to ještě vyšlo. Zkuste posun znovu – pokaždé leží předmět jinde.';
     $('ux-import').disabled = t.recording;
     play.firstChild.textContent = t.replaying ? 'Stop ' : 'Přehrát ';
     play.querySelector('span').textContent = t.replaying ? '■' : '▶';
@@ -586,7 +634,7 @@ export class Panel {
     this.showRoll(ux.ctl.active ? ux.ctl.roll : ux.app.d.ctrl[ux.app.act[4]]);
     const open = (ux.ctl.active ? ux.ctl.grip : ux.app.d.ctrl[ux.app.act[5]]) > 0.5;
     if (open !== this.gripOpen) { this.gripOpen = open; this.showGrip(open); }
-    const hint = r.time > 20 && !r.won && !ux.ctl.busy() && !ux.pending && !ux.teach.replaying && !ux.explode.on;
+    const hint = !!this.offered && !r.won && !ux.ctl.busy() && !ux.pending && !ux.teach.replaying && !ux.explode.on;
     if (hint === this.hintBtn.hidden) this.hintBtn.hidden = !hint;
   }
 
@@ -656,6 +704,14 @@ export class Panel {
         : 'Přesně takhle se skutečná SO-101 učí: z nahraných ukázek. Zkuste misi vyřešit sami.';
       again.firstChild.textContent = 'Teď to zkuste vy ';
       again.classList.add('btn-act'); again.classList.remove('btn-o');
+    } else if (res.kind === 'auto') {
+      // the autopilot (click-to-grab or a hint rung) carried it: done, unlocks the next mission, no stars
+      this.winStars.hidden = true;
+      this.winH.textContent = m.id === 'bowl' ? 'Splněno! Kostka je v misce.' : 'Splněno! ' + m.short + '.';
+      this.winStats.textContent = `Čas ${fmt(res.time)} · hvězdičky jsou za ruční přenesení`;
+      this.winText.textContent = 'Přenášela ruka podle vašeho kliknutí. Hvězdičky a odznak ✋ získáte, když předmět přenesete sami koulí, odznak ⚙ v režimu Klouby.';
+      again.firstChild.textContent = 'Zkusit ručně ';
+      again.classList.remove('btn-act'); again.classList.add('btn-o');
     } else {
       this.winH.textContent = m.id === 'bowl' ? 'Hotovo! Kostka je v misce.' : 'Hotovo! ' + m.short + ' zvládnuto.';
       const sp = this.winStars.children;
@@ -665,8 +721,10 @@ export class Panel {
       if (res.prec && m.precText) st += ` · ${m.precText(res.prec)}`;
       else if (res.prec) st += ` · přesnost ${(res.prec * 1000).toFixed(1)} mm`;
       st += ` · ${'★'.repeat(res.stars)}${'☆'.repeat(3 - res.stars)}`;
+      if (res.badges && res.badges.drag) st += ' · ✋ ručně';
+      if (res.badges && res.badges.joints) st += ' · ⚙ klouby';
       if (isNew) st += ' · nový rekord';
-      else if (best) st += ` · rekord ${fmt(best.time)}`;
+      else if (best && best.stars && best.time != null) st += ` · rekord ${fmt(best.time)}`;
       this.winStats.textContent = st;
       this.winText.textContent = res.stars < 3 && m.advice ? m.advice : this.defaultWin;
       again.firstChild.textContent = 'Zkusit znovu ';
@@ -778,4 +836,13 @@ function progressOf(prog) {
 function progressText(pr) { return `${pr.done} / ${pr.n} misí · ${pr.stars} ★ z ${pr.n * 3}`; }
 
 export function fmt(t) { t = Math.max(0, t || 0); const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + String(s).padStart(2, '0'); }
+/** mastery badges: ✋ won by hand in Táhnout ruku, ⚙ won in Klouby (src/mastery.js) */
+function badgeStr(p, big) {
+  if (!p) return '';
+  let s = '';
+  if (p.drag) s += `<b class="ux-badge" title="Zvládnuto ručně – Táhnout ruku">✋</b>`;
+  if (p.joints) s += `<b class="ux-badge" title="Zvládnuto v režimu Klouby">⚙</b>`;
+  if (!p.stars) s += `<b class="ux-badge ux-done" title="Splněno">✓</b>`;
+  return s ? `<span class="ux-badges${big ? ' big' : ''}">${s}</span>` : '';
+}
 function starStr(n) { let s = ''; for (let i = 0; i < 3; i++) s += `<i class="${i < n ? 'on' : ''}">★</i>`; return s; }
