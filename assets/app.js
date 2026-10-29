@@ -109,8 +109,21 @@
     e.preventDefault();
     var em = f.querySelector('input[type=email]'), m = f.querySelector('.soft-msg');
     if (!validEmailStr(em.value)) { em.setAttribute('aria-invalid', 'true'); m.textContent = 'Zkontrolujte prosím e-mailovou adresu.'; em.focus(); return; }
-    em.removeAttribute('aria-invalid'); m.textContent = 'Odesíláme…';
+    em.removeAttribute('aria-invalid');
     var kind = f.getAttribute('data-soft'), robot = f.getAttribute('data-robot') || '';
+    // school pilot (/pro-skoly/): same sender and sheet, type "school"; the page is bilingual, so are its messages
+    if (kind === 'school') {
+      var EN = document.documentElement.lang === 'en', val = function (n) { var x = f.querySelector('[name=' + n + ']'); return x ? x.value.trim() : ''; };
+      var sch = f.querySelector('[name=school]');
+      if (!val('school')) { sch.setAttribute('aria-invalid', 'true'); m.textContent = EN ? 'Please fill in the school or club.' : 'Vyplňte prosím školu nebo kroužek.'; sch.focus(); return; }
+      sch.removeAttribute('aria-invalid'); m.textContent = EN ? 'Sending…' : 'Odesíláme…';
+      var note = [val('role') && 'Role: ' + val('role'), val('pupils') && (EN ? 'Students: ' : 'Žáci: ') + val('pupils'), val('note')].filter(Boolean).join('\n');
+      send({ _subject: 'Škola – pilot: ' + val('school'), type: 'school', robot: 'pilot', school: val('school'), note: note, email: em.value.trim(), page: location.href, source: 'pro-skoly' })
+        .then(function () { f.innerHTML = '<b>' + (EN ? 'Thank you.' : 'Děkujeme.') + '</b><span class="muted">' + (EN ? 'We’ll reply to ' : 'Ozveme se na ') + esc(em.value.trim()) + (EN ? ' and agree on the next steps.' : ' a domluvíme další postup.') + '</span>'; })
+        .catch(function (er) { m.textContent = er && er.message === 'no-endpoint' ? NO_ENDPOINT_MSG : (EN ? 'Sending failed. Please try again.' : 'Odeslání se nezdařilo. Zkuste to prosím znovu.'); });
+      return;
+    }
+    m.textContent = 'Odesíláme…';
     // waitlist (home, "Připravujeme"): same sender and sheet, its own type and the chosen interests
     var want = [].map.call(f.querySelectorAll('input[name=want]:checked'), function (x) { return x.value; }).join(',');
     if (kind === 'waitlist' && !want) { m.textContent = 'Vyberte, co chcete připojit.'; f.querySelector('input[name=want]').focus(); return; }
@@ -122,6 +135,9 @@
   (function () { var ft = document.querySelector('.site-f'); if (ft && !ft.querySelector('form.soft')) { var d = document.createElement('div'); d.className = 'soft-foot'; d.innerHTML = softForm('news'); ft.insertBefore(d, ft.firstChild); } })();
 
   var page = document.body.getAttribute('data-page');
+
+  /* printable pages (worksheet): a button opens the print dialog (save as PDF from there) */
+  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-print]'); if (b) { e.preventDefault(); window.print(); } });
 
   /* ---------- home ---------- */
   if (page === 'home') {

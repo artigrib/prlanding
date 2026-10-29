@@ -1,0 +1,144 @@
+<!--meta
+{"title":"SO-101 a LeRobot: první kroky česky | printedrobotics.cz",
+ "description":"Jak rozběhnout robotickou ruku SO-101 s knihovnou LeRobot: instalace, port, ID serv, kalibrace a teleoperace. S odkazy na oficiální návod a nácvikem na virtuální ruce.",
+ "ogTitle":"SO-101 a LeRobot: první kroky",
+ "ogDesc":"Instalace, ID serv, kalibrace a teleoperace podle oficiálního návodu LeRobot. Každý krok si nejdřív vyzkoušíte na virtuální ruce v prohlížeči.",
+ "h":"SO-101 a LeRobot",
+ "crumb":[["Návody","navody"]],
+ "article":true,"date":"2026-10-29",
+ "image":"assets/media/so101-poster.jpg","imageW":960,"imageH":540,"imageAlt":"Robotická ruka SO-101 v simulaci nad kostkou a miskou"}
+-->
+<section class="g doc-hero">
+<div class="a1 mono">Návod · 29. 10. 2026</div>
+<div class="a4" style="display:flex;flex-direction:column;gap:20px">
+<h1>SO-101 a LeRobot: první kroky</h1>
+<p class="lead">SO-101 je otevřená robotická ruka od The Robot Studio a Hugging Face. LeRobot je knihovna v Pythonu, se kterou ji nastavíte, ovládáte a učíte úlohy z ukázek. Tento návod shrnuje oficiální postup a ke každému kroku přidává nácvik na virtuální ruce.</p>
+<p class="doc-note"><i aria-hidden="true"></i><span>Řídí se oficiální dokumentace LeRobot. Příkazy se mezi verzemi knihovny mění; tady uvádíme stav k 29. 10. 2026. Když se něco liší, platí <a href="https://huggingface.co/docs/lerobot/so101">aktuální návod na huggingface.co</a>.</span></p>
+<ol class="toc" aria-label="Obsah">
+<li><a href="#co-potrebujete">Co potřebujete</a></li><li><a href="#instalace">Instalace</a></li><li><a href="#port">Port</a></li><li><a href="#id">ID serv</a></li><li><a href="#kalibrace">Kalibrace</a></li><li><a href="#teleoperace">Teleoperace</a></li><li><a href="#uceni">Učení z ukázek</a></li><li><a href="#zdroje">Zdroje</a></li>
+</ol>
+</div>
+</section>
+
+<section class="section" id="co-potrebujete">
+<div class="g rule">
+<div class="a1 mono">01 — Co potřebujete</div>
+<div class="a4 prose">
+<h2>Dvě ruce, šest serv v každé</h2>
+<p>Sestava má dvě ruce. <b>Ovládací ruku (leader)</b> vedete vlastní rukou, <b>výkonná ruka (follower)</b> pohyb opakuje. Obě mají šest serv Feetech STS3215. Follower má všechna serva s převodem 1:345, leader má na jednotlivých kloubech různé převody (1:191, 1:345 a 1:147), aby šel lehce vést rukou. Přesnou tabulku najdete v oficiálním návodu.<sup><a href="#zdroje">1</a></sup></p>
+<p>Dále potřebujete řídicí desku serv pro každou ruku, USB kabely, napájecí zdroj podle varianty serv a počítač s Pythonem. Kompletní kusovník a soubory k tisku jsou v repozitáři projektu.<sup><a href="#zdroje">2</a></sup></p>
+<p><b>Ještě před nákupem</b> si ruku vyzkoušejte v <a href="{root}sim/so101/">simulaci SO-101</a>. Uvidíte, jak se klouby hýbou a co ruka zvládne.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="instalace">
+<div class="g rule">
+<div class="a1 mono">02 — Instalace</div>
+<div class="a4 prose">
+<h2>Python 3.12 a LeRobot</h2>
+<p>Oficiální návod doporučuje Python 3.12 v prostředí conda (přes Miniforge); fungují i <code>uv</code> nebo <code>venv</code>.<sup><a href="#zdroje">3</a></sup> Pro SO-101 se instaluje i podpora serv Feetech:<sup><a href="#zdroje">1</a></sup></p>
+<pre><code>conda create -y -n lerobot python=3.12
+conda activate lerobot
+conda install ffmpeg -c conda-forge
+git clone https://github.com/huggingface/lerobot.git
+cd lerobot
+pip install -e ".[feetech]"</code></pre>
+<p class="src">Balíček <code>ffmpeg</code> je podle návodu potřeba ke čtení videa v datasetech; na některých platformách ho lze vynechat. Podrobnosti v instalačním návodu.<sup><a href="#zdroje">3</a></sup></p>
+</div>
+</div>
+</section>
+
+<section class="section" id="port">
+<div class="g rule">
+<div class="a1 mono">03 — Port</div>
+<div class="a4 prose">
+<h2>Najděte port každé ruky</h2>
+<p>Příkaz <code>lerobot-find-port</code> vás vyzve k odpojení USB kabelu a vypíše port, který zmizel. Na Linuxu vypadá jako <code>/dev/ttyACM0</code>, na macOS <code>/dev/tty.usbmodem…</code>, na Windows <code>COM3</code>. Zopakujte pro obě ruce.</p>
+<p><b>Nanečisto:</b> <a href="{root}sim/so101/nastaveni/">Nastavení serv nanečisto</a>, krok 1. Virtuální ruka se připojí bez kabelu.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="id">
+<div class="g rule">
+<div class="a1 mono">04 — ID serv</div>
+<div class="a4 prose">
+<h2>Každé servo dostane vlastní ID</h2>
+<p>Nová serva mají z výroby stejné ID, na společné sběrnici by se překřikovala. Příkaz <code>lerobot-setup-motors</code> vás provede nastavením: vždy je k desce připojené <b>jen jedno servo</b>, začíná se chapadlem (ID 6) a končí základnou (ID 1).<sup><a href="#zdroje">1</a></sup></p>
+<pre><code>lerobot-setup-motors \
+    --robot.type=so101_follower \
+    --robot.port=/dev/ttyACM0</code></pre>
+<p>Pro ovládací ruku stejně, jen s <code>--teleop.type=so101_leader</code> a <code>--teleop.port=…</code>.</p>
+<p><b>Nanečisto:</b> průvodce, krok 2. Šest emulovaných serv STS3215 má po „vybalení“ všechna ID 1, stejně jako skutečná.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="kalibrace">
+<div class="g rule">
+<div class="a1 mono">05 — Kalibrace</div>
+<div class="a4 prose">
+<h2>Střed a rozsah každého kloubu</h2>
+<p>Příkaz <code>lerobot-calibrate</code> nejdřív zapíše střed rozsahu (všechny klouby doprostřed, jak ukazuje obrázek v návodu), pak projedete každým kloubem od dorazu k dorazu.<sup><a href="#zdroje">1</a></sup> Ruce dejte stálá jména v <code>--robot.id</code> a <code>--teleop.id</code>: podle nich LeRobot ukládá kalibraci a stejné ID pak používáte při teleoperaci i nahrávání.<sup><a href="#zdroje">4</a></sup></p>
+<pre><code>lerobot-calibrate \
+    --robot.type=so101_follower \
+    --robot.port=/dev/ttyACM0 \
+    --robot.id=moje_vykonna_ruka</code></pre>
+<p><b>Nanečisto:</b> průvodce, krok 3. Kalibraci virtuální ruky si můžete stáhnout jako JSON a prohlédnout si, co LeRobot ukládá. Skutečnou ruku je ale potřeba zkalibrovat znovu.</p>
+<p><b>Pozor:</b> při kalibraci je moment serv vypnutý a ruka může klesnout. Přidržte ji.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="teleoperace">
+<div class="g rule">
+<div class="a1 mono">06 — Teleoperace</div>
+<div class="a4 prose">
+<h2>Výkonná ruka opakuje ovládací</h2>
+<pre><code>lerobot-teleoperate \
+    --robot.type=so101_follower \
+    --robot.port=/dev/ttyACM0 \
+    --robot.id=moje_vykonna_ruka \
+    --teleop.type=so101_leader \
+    --teleop.port=/dev/ttyACM1 \
+    --teleop.id=moje_ovladaci_ruka</code></pre>
+<p>Pokud kalibrace chybí, příkaz ji podle návodu spustí sám.<sup><a href="#zdroje">4</a></sup></p>
+<p><b>Bezpečnost:</b> ruku upevněte ke stolu, v jejím dosahu nic nemějte a napájení mějte na dosah. Sady jsou určené osobám od 14 let, mladším jen pod dohledem dospělého.</p>
+<p><b>Nanečisto:</b> průvodce, krok 4 (test posuvníky). Ve stejném průvodci je i připojení skutečné ruky přes Web Serial v Chrome nebo Edge na počítači. Je ve verzi beta: používáte ho na vlastní riziko.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="uceni">
+<div class="g rule">
+<div class="a1 mono">07 — Učení z ukázek</div>
+<div class="a4 prose">
+<h2>Nahrát, natrénovat, spustit</h2>
+<p>Další kroky popisuje návod „Getting started with real-world robots“: <code>lerobot-record</code> nahrává ukázky (pohyby kloubů a záběry kamer) do datasetu, <code>lerobot-train</code> z nich trénuje model, například ACT. Návod doporučuje začít aspoň s 50 ukázkami, z toho asi 10 pro každou polohu předmětu, a mít kamery pevně na místě.<sup><a href="#zdroje">4</a></sup> Trénink podle návodu trvá několik hodin a počítá s grafickou kartou (nebo Apple silicon).</p>
+<p><b>Princip si můžete vyzkoušet v simulaci:</b> sekce Učení ukázkou nahraje váš pohyb a ruka ho zopakuje. Ukázky jde převést na dataset ve formátu LeRobot na stránce <a href="{root}sim/so101/lerobot.html">Export do LeRobot</a>. Jsou to ale jen polohy kloubů bez kamerových záznamů a ze zjednodušené simulace. K natrénování modelu pro skutečnou ruku nestačí; poslouží k pochopení formátu dat.</p>
+<p class="src">Exportovaný dataset má formát v2.1. Zda ho přečte nejnovější verze LeRobotu bez převodu, jsme zatím neověřili.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="dal">
+<div class="g rule">
+<div class="a1 mono">Dál</div>
+<div class="a4 prose">
+<p>Ruku si vyzkoušejte v <a href="{root}sim/so101/">simulaci</a>, nastavení serv v <a href="{root}sim/so101/nastaveni/">průvodci nanečisto</a>. Stavebnici SO-101 najdete na stránce <a href="{root}sada/so101/">SO-101</a>. Vyrábíme ji podle otevřené dokumentace projektu; autoři s námi nejsou spojeni.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="zdroje">
+<div class="g rule">
+<div class="a1 mono">Zdroje</div>
+<ol class="a4 prose src">
+<li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/so101">LeRobot – SO-101</a> (sestavení, ID serv, kalibrace, převody serv).</li>
+<li>The Robot Studio: <a href="https://github.com/TheRobotStudio/SO-ARM100">SO-ARM100 na GitHubu</a> (kusovník, soubory k tisku, licence Apache-2.0).</li>
+<li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/installation">LeRobot – Installation</a>.</li>
+<li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/il_robots">LeRobot – Getting started with real-world robots</a> (teleoperace, nahrávání, trénink).</li>
+</ol>
+</div>
+</section>

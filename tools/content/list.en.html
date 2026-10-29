@@ -1,0 +1,74 @@
+<!--meta
+{"title":"Worksheet: a robot arm in simulation | printedrobotics.cz",
+ "description":"Printable worksheet for a 45-minute robotics lesson with the SO-101 simulation: joints and angles, an algorithm, learning from demonstration and an exit ticket.",
+ "ogTitle":"Worksheet: How does a robot know where to reach?",
+ "h":"Worksheet",
+ "crumb":[["For schools","skoly"]],
+ "print":true,
+ "image":"assets/media/so101-poster.jpg","imageW":960,"imageH":540,"imageAlt":"The simulated SO-101 robot arm above a cube and a bowl"}
+-->
+<section class="g doc-hero">
+<div class="a1 mono no-print">Worksheet · 45-minute lesson</div>
+<div class="a4 prose" style="max-width:52rem">
+<p class="no-print doc-note"><i aria-hidden="true"></i><span>Print on A4 or save as PDF from the print dialog. The site header and links won’t be printed. The lesson plan is on the <a href="{root}en/for-schools/#lesson">For schools</a> page.</span></p>
+<p class="no-print"><button type="button" class="btn btn-o" data-print>Print or save as PDF <span aria-hidden="true">⎙</span></button></p>
+<div class="ws-head" aria-label="Header"><span>Name</span><span>Class</span><span>Date</span></div>
+<h1 style="margin:8px 0 0;font-weight:500;font-size:clamp(28px,4vw,44px);line-height:1.1;letter-spacing:-.03em">How does a robot know where to reach?</h1>
+<p class="src">Simulation: printedrobotics.cz/sim/so101/?lang=en · free, no sign-up</p>
+
+<div class="ws-box">
+<b>Task 1 · Mission 01 “Move the cube into the bowl” in Smart move mode</b>
+<table class="doc-t ws-t"><thead><tr><th scope="col">Attempt</th><th scope="col">Time</th><th scope="col">Stars (circle)</th></tr></thead>
+<tbody><tr><td>1.</td><td></td><td>☆ ☆ ☆</td></tr><tr><td>2.</td><td></td><td>☆ ☆ ☆</td></tr></tbody></table>
+</div>
+
+<div class="ws-box">
+<b>Task 2 · The same mission in Joints mode (key M)</b>
+<span>Grasp the cube using only the sliders. Write down the joint angles with the gripper just above the cube.</span>
+<table class="doc-t ws-t"><thead><tr><th scope="col">Joint</th><th scope="col">Angle</th><th scope="col">What does the joint do?</th></tr></thead>
+<tbody>
+<tr><td>Base rotation</td><td>°</td><td></td></tr>
+<tr><td>Shoulder</td><td>°</td><td></td></tr>
+<tr><td>Elbow</td><td>°</td><td></td></tr>
+<tr><td>Wrist pitch</td><td>°</td><td></td></tr>
+<tr><td>Wrist roll</td><td>°</td><td></td></tr>
+<tr><td>Gripper</td><td>%</td><td></td></tr>
+</tbody></table>
+<span>Why is joint-by-joint control harder than smart move?</span>
+<span class="ws-line"></span><span class="ws-line"></span>
+</div>
+
+<div class="ws-box">
+<b>Task 3 · An algorithm for mission 03 “Sort the colours”</b>
+<span>In pairs, write the steps the arm follows to put the orange cube in the orange bowl and the blue cube in the blue bowl. Then test them in the simulation.</span>
+<span class="ws-line">1.</span><span class="ws-line">2.</span><span class="ws-line">3.</span><span class="ws-line">4.</span><span class="ws-line">5.</span><span class="ws-line">6.</span><span class="ws-line">7.</span><span class="ws-line">8.</span>
+<span>Did the steps work first time? yes / no. What did you fix?</span>
+<span class="ws-line"></span>
+</div>
+
+<div class="ws-box">
+<b>Task 4 · Learning from demonstration</b>
+<span>In the Learning from demonstration panel, record your solution to mission 01 (Record) and play it back (Play).</span>
+<span>The recording always replays the same joint angles. What would happen if the cube were 5 cm away from where it was? Why?</span>
+<span class="ws-line"></span><span class="ws-line"></span>
+</div>
+
+<div class="ws-box">
+<b>Task 5 · Exit ticket</b>
+<span>How does a robot know where to reach? Answer in two or three sentences.</span>
+<span class="ws-line"></span><span class="ws-line"></span><span class="ws-line"></span>
+<span>One thing I learned today:</span>
+<span class="ws-line"></span>
+</div>
+
+<div class="ws-box no-print" style="border-color:var(--line-2)">
+<b>For teachers: answer guide</b>
+<ul>
+<li>Task 2: base rotation turns the whole arm left and right; shoulder and elbow raise and extend the arm; wrist pitch points the gripper down; wrist roll turns the jaws. The angles depend on where the cube is; any pose from which the cube can be grasped is correct.</li>
+<li>Task 2: smart move changes several joints at once so the gripper reaches the chosen point (inverse kinematics). Joint by joint, the student has to “calculate” it themselves.</li>
+<li>Task 3: a good algorithm opens the gripper before going down to the cube, closes it, lifts, moves above the bowl, releases, and repeats for the second cube. An excellent one handles a mistake (the cube dropped → grasp again).</li>
+<li>Task 4: the arm would go down where the cube was during recording and miss it. That is why real robots learn from many demonstrations with the object in different places.</li>
+</ul>
+</div>
+</div>
+</section>

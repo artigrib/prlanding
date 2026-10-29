@@ -1,0 +1,106 @@
+<!--meta
+{"title":"Jak začít s bojovými roboty 150 g | printedrobotics.cz",
+ "description":"Bojoví roboti v kategorii antweight do 150 g: pravidla České ligy bojových robotů, bezpečnost, LiPo, failsafe a proč začít tlačným robotem. Nejdřív zkuste arénu v prohlížeči.",
+ "ogTitle":"Jak začít s bojovými roboty 150 g",
+ "ogDesc":"Pravidla kategorie antweight, bezpečnost, failsafe a první robot. Zápas si nejdřív odehrajete v aréně v prohlížeči.",
+ "h":"Bojoví roboti 150 g",
+ "crumb":[["Návody","navody"]],
+ "article":true,"date":"2026-10-29",
+ "image":"assets/media/arena.jpg","imageW":1280,"imageH":720,"imageAlt":"Bojová aréna v prohlížeči: oranžový Project SVRN vyhodil flipperem modrého robota"}
+-->
+<section class="g doc-hero">
+<div class="a1 mono">Návod · 29. 10. 2026</div>
+<div class="a4" style="display:flex;flex-direction:column;gap:20px">
+<h1>Jak začít s bojovými roboty 150 g</h1>
+<p class="lead">Kategorie do 150 g se v Británii jmenuje antweight, v USA fairyweight. Roboti jsou malí, levní na opravu a vejdou se do krabice od bot. V Česku se v ní soutěží v turnajích České ligy bojových robotů.</p>
+<p class="doc-note"><i aria-hidden="true"></i><span>Pravidla se mění. Shrnutí níže vychází z pravidel zveřejněných k 29. 10. 2026. Před turnajem si vždy přečtěte <a href="https://www.flsbattlebots.cz/pravidla/antweight">aktuální znění</a> a v nejasnostech se zeptejte pořadatele.</span></p>
+<ol class="toc" aria-label="Obsah">
+<li><a href="#arena">Nejdřív aréna</a></li><li><a href="#pravidla">Pravidla</a></li><li><a href="#prvni-robot">První robot</a></li><li><a href="#bezpecnost">Bezpečnost</a></li><li><a href="#postup">Postup</a></li><li><a href="#zdroje">Zdroje</a></li>
+</ol>
+</div>
+</section>
+
+<section class="section" id="arena">
+<div class="g rule">
+<div class="a1 mono">01 — Nejdřív aréna</div>
+<div class="a4 prose">
+<h2>Zápas si odehrajte v prohlížeči</h2>
+<p>V naší <a href="{root}sim/arena/">aréně 150 g</a> vyzkoušíte, jak se tlačný robot, flipper nebo spinner chovají v zápase. V garáži měníte kola, převody a zbraně a hmotnost se hlídá do 150 g. Je to zjednodušená simulace, ale rychle ukáže, proč záleží na trakci a nízkém těžišti.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="pravidla">
+<div class="g rule">
+<div class="a1 mono">02 — Pravidla</div>
+<div class="a4 prose">
+<h2>Co říkají pravidla kategorie antweight</h2>
+<p>Například turnaj Česká liga bojových robotů vol. 4 (28. 6. 2026, TechTower Plzeň) pořádalo FLS Battlebots ve spolupráci se SIT Port Plzeň, a to jen v kategorii antweight.<sup><a href="#zdroje">1</a></sup> Z pravidel této kategorie:<sup><a href="#zdroje">2</a></sup></p>
+<ul>
+<li><b>Hmotnost:</b> 150 g. Roboti bez kol, pásů a jiných valivých mechanismů smějí mít 225 g, kráčející roboti s nohama o aspoň dvou stupních volnosti 300 g.</li>
+<li><b>Rozměr:</b> robot se musí vejít do čtverce 15 × 15 cm, výška není omezená.</li>
+<li><b>Failsafe je povinný:</b> po vypnutí vysílače nebo ztrátě signálu musí robot zastavit veškerý pohyb včetně zbraně.</li>
+<li><b>Vypínač:</b> robot musí jít vypnout zvenku (vypínač, vyjímatelná propojka nebo konektor baterie) s jasně označenou polohou.</li>
+<li><b>Baterie:</b> nejvýš 24 V. Nabíjení nesmí zůstat bez dozoru a probíhá u nehořlavé nádoby nebo v ochranném vaku na LiPo.</li>
+<li><b>Zbraně:</b> zakázané jsou mimo jiné sítě a lepidla, kapaliny, elektrické a rušicí zbraně, výbušniny a volně létající projektily. Nebezpečné pohyblivé zbraně musí mít mimo arénu spolehlivou mechanickou pojistku.</li>
+<li><b>Zápas:</b> standardně 3 minuty. Prohrává robot, který spadne z arény, nebo ten, který nemůže pokračovat; robot bez pohybu dostane desetisekundové odpočítávání.</li>
+</ul>
+<p class="src">Je to zkrácené shrnutí, ne náhrada pravidel. Závazné je znění na stránkách pořadatele.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="prvni-robot">
+<div class="g rule">
+<div class="a1 mono">03 — První robot</div>
+<div class="a4 prose">
+<h2>Proč začít tlačným robotem</h2>
+<p>Tlačný robot (pusher) nemá rotující zbraň. Zápas vyhrává trakcí a řízením: vytlačí soupeře z arény nebo ho přitlačí ke stěně. Je to nejbezpečnější a nejlevnější začátek a naučíte se na něm to podstatné: hmotnostní rozpočet, zapojení elektroniky, failsafe a řízení.</p>
+<p>Příklad takového robota je <a href="{root}sada/svrn/">Project SVRN</a> od Shoverobotics (licence CC BY 4.0): tlačný robot s pohonem 4×4 a čtyřmi motory N10, k němu klín, flipper nebo chapadlo. Řídí ho Malenki Nano (přijímač a regulátory na jedné destičce), ovládá se vysílačem FlySky a napájí akumulátor LiPo 2S. Původní soubory a návod najdete na <a href="https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai">Printables</a>. Naši stavebnici vyrábíme podle nich; autor s námi není spojen.</p>
+<p><b>Spinnery až později.</b> Rotující zbraň může vážně zranit a vymrštit úlomky. Stavějte ji, až budete mít za sebou první zápasy, a zapínejte ji jen v uzavřené aréně.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="bezpecnost">
+<div class="g rule">
+<div class="a1 mono">04 — Bezpečnost</div>
+<div class="a4 prose">
+<h2>Pět pravidel na doma i do dílny</h2>
+<ol>
+<li>Robota zapínejte jen v uzavřené aréně nebo s odpojenou zbraní. Nejdřív zapněte vysílač, potom robota; vypínejte v opačném pořadí.</li>
+<li>Před prvním zápasem ověřte failsafe: vypněte vysílač a robot se musí zastavit.</li>
+<li>Akumulátory LiPo nabíjejte jen vhodnou nabíječkou, pod dohledem, mimo hořlavé předměty a ideálně v ochranném vaku. Poškozený nebo nafouklý článek nepoužívejte.</li>
+<li>Flipper se pohybuje prudce. Při manipulaci mějte prsty mimo jeho dráhu.</li>
+<li>Stavebnice jsou určené osobám od 14 let, mladším jen pod dohledem dospělého.</li>
+</ol>
+</div>
+</div>
+</section>
+
+<section class="section" id="postup">
+<div class="g rule">
+<div class="a1 mono">05 — Postup</div>
+<div class="a4 prose">
+<h2>Od prohlížeče k prvnímu turnaji</h2>
+<ol>
+<li>Odehrajte pár zápasů v <a href="{root}sim/arena/">aréně</a>, třeba v tréninkové hale bez časového limitu.</li>
+<li>Přečtěte si <a href="https://www.flsbattlebots.cz/pravidla/antweight">pravidla kategorie antweight</a>.</li>
+<li>Postavte tlačného robota a zvažte ho. Rezervu pár gramů si nechte na opravy.</li>
+<li>Vyzkoušejte failsafe, vypínač a rozměr 15 × 15 cm.</li>
+<li>Sledujte <a href="https://www.flsbattlebots.cz/turnaje/ceska-liga-bojovych-robotu-vol-4">turnaje na stránkách pořadatele</a> a přihlaste se.</li>
+</ol>
+</div>
+</div>
+</section>
+
+<section class="section" id="zdroje">
+<div class="g rule">
+<div class="a1 mono">Zdroje</div>
+<ol class="a4 prose src">
+<li>FLS Battlebots: <a href="https://www.flsbattlebots.cz/turnaje/ceska-liga-bojovych-robotu-vol-4">Česká liga bojových robotů vol. 4</a> (pořadatel, datum a místo turnaje).</li>
+<li>FLS Battlebots: <a href="https://www.flsbattlebots.cz/pravidla/antweight">Pravidla – Antweight</a> (stav k 29. 10. 2026).</li>
+<li>Shoverobotics: <a href="https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai">Project SVRN na Printables</a>.</li>
+</ol>
+</div>
+</section>

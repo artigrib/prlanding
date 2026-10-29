@@ -34,6 +34,17 @@ const ROOT = '../../';
 const no = i => String(i + 1).padStart(2, '0');
 const clip = (t, n) => t.length <= n ? t : t.slice(0, t.lastIndexOf(' ', n - 1)).replace(/[,;:–-]$/, '') + '…';
 
+/* ---------- content pages (schools, guides): written per language in tools/content/<id>.<cs|en>.html ---------- */
+const CONTENT = [
+  { id: 'skoly', cs: 'pro-skoly/', en: 'en/for-schools/', nav: 'skoly' },
+  { id: 'list', cs: 'pro-skoly/pracovni-list/', en: 'en/for-schools/worksheet/', nav: 'skoly' },
+  { id: 'navody', cs: 'navody/', en: 'en/guides/', nav: 'navody' },
+  { id: 'lerobot', cs: 'navody/so101-lerobot-prvni-kroky/', en: 'en/guides/so101-lerobot-first-steps/', nav: 'navody' },
+  { id: 'combat', cs: 'navody/bojovi-roboti-150-g/', en: 'en/guides/combat-robots-150-g/', nav: 'navody' },
+  { id: 'licence', cs: 'navody/licence-open-source-hardwaru/', en: 'en/guides/open-source-hardware-licences/', nav: 'navody' }
+];
+const CONTENT_EN = Object.fromEntries(CONTENT.map(c => [c.cs, c.en]));
+
 /* ---------- i18n helpers ---------- */
 const PATH = { kit: (L, id) => L === 'en' ? `en/kit/${id}/` : `sada/${id}/`, quiz: L => L === 'en' ? 'en/quiz/' : 'kviz.html', home: L => L === 'en' ? 'en/' : '' };
 // translate visible text and a few attributes of a whole HTML document (scripts and styles untouched)
@@ -63,6 +74,7 @@ function enLinks(html, page, base = page) {
     else if (p === '' || p === 'index.html') p = 'en/';
     else if (p === 'kviz.html') p = 'en/quiz/';
     else if (p.startsWith('sim/')) { const sp = new URLSearchParams(q); sp.set('lang', 'en'); q = '?' + sp.toString(); }
+    else if (CONTENT_EN[p]) p = CONTENT_EN[p];
     else if (base === page) return m;
     return a + ((up + p) || './') + q + u.hash + '"';
   })).join('');
@@ -313,11 +325,114 @@ fs.writeFileSync('index.html', home);
   writePage(page + 'index.html', p);
 }
 
+/* ---------- content pages: one source per language, wrapped in the site shell here ----------
+   Source = <!--meta {json}--> + the page body. In the body {root} is the path to the site root.
+   <!--kits:licence--> expands to the catalogue grouped by hardware licence (from data.js / data.en.js).
+   Questions inside <div class="faq" id="faq"> become FAQPage JSON-LD, so the markup and the data can't drift. */
+const stripTags = s => unesc(String(s).replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim();
+function kitsByLicence(L) {
+  const D = W[L], groups = {};
+  for (const r of D.PR_ROBOTS) (groups[r.hw] = groups[r.hw] || []).push(r);
+  const kit = id => (L === 'en' ? `en/kit/${id}/` : `sada/${id}/`);
+  return '<dl class="doc-lic">' + Object.keys(groups).map(hw => `<div><dt>${esc(hw)}</dt><dd>${groups[hw].map(r => `<a href="{root}${kit(r.id)}">${esc(r.name)}</a> <span class="muted">(${esc(r.author)})</span>`).join(', ')}</dd></div>`).join('') + '</dl>';
+}
+function contentPage(c, L) {
+  const src = read(`tools/content/${c.id}.${L}.html`);
+  const mm = /^<!--meta\s*([\s\S]*?)-->\n?/.exec(src);
+  if (!mm) throw new Error(`tools/content/${c.id}.${L}.html: missing <!--meta {...}--> header`);
+  const meta = JSON.parse(mm[1]);
+  const page = c[L], url = SITE + page, root = '../'.repeat(page.split('/').length - 1);
+  const en = L === 'en', home = en ? 'en/' : '';
+  let body = src.slice(mm[0].length).replace('<!--kits:licence-->', () => kitsByLicence(L)).replace(/\{root\}/g, root);
+  // FAQPage from the visible questions
+  const faqBlock = /<div class="faq" id="faq">([\s\S]*?)<\/div><!--\/faq-->/.exec(body);
+  const faq = faqBlock ? [...faqBlock[1].matchAll(/<details><summary>([\s\S]*?)<\/summary>([\s\S]*?)<\/details>/g)].map(m => [stripTags(m[1]), stripTags(m[2])]) : [];
+  if (faqBlock && faq.length < 2) throw new Error(page + ': FAQ block without questions');
+  const img = SITE + meta.image;
+  const org = { '@type': 'Organization', name: 'printedrobotics.cz', url: SITE };
+  const crumbs = [[en ? 'Home' : 'Úvod', home], ...(meta.crumb || []).map(([n, id]) => [n, CONTENT.find(x => x.id === id)[L]]), [meta.h || meta.ogTitle, page]];
+  const lds = [
+    meta.article
+      ? { '@context': 'https://schema.org', '@type': 'Article', headline: meta.ogTitle, description: meta.description, inLanguage: L, url, mainEntityOfPage: url, image: img, datePublished: meta.date, dateModified: meta.modified || meta.date, author: org, publisher: org }
+      : { '@context': 'https://schema.org', '@type': 'WebPage', name: meta.ogTitle, description: meta.description, inLanguage: L, url, image: img, publisher: org },
+    { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: crumbs.map(([n, p], i) => ({ '@type': 'ListItem', position: i + 1, name: n, item: SITE + p })) }
+  ];
+  if (faq.length) lds.push({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(f => ({ '@type': 'Question', name: f[0], acceptedAnswer: { '@type': 'Answer', text: f[1] } })) });
+  const NAV = en
+    ? [['sim/so101/?lang=en', 'Simulation'], ['en/for-schools/', 'For schools', 'skoly'], ['en/guides/', 'Guides', 'navody'], ['en/#katalog', 'Kits']]
+    : [['sim/so101/', 'Simulace'], ['pro-skoly/', 'Pro školy', 'skoly'], ['navody/', 'Návody', 'navody'], ['#katalog', 'Katalog']];
+  const nav = NAV.map(([h, t, k]) => `<a href="${h === '#katalog' ? (root || './') + h : root + h}"${k === c.nav ? ' aria-current="page"' : ''}>${t}</a>`).join('');
+  const crumbHtml = crumbs.slice(0, -1).map(([n, p]) => `<a href="${(root + p) || './'}">${esc(n)}</a><span aria-hidden="true">/</span>`).join('') + `<span style="color:var(--ink)">${esc(crumbs.at(-1)[0])}</span>`;
+  const html = `<!doctype html>
+<!-- generated by tools/build.mjs from tools/content/${c.id}.${L}.html — edit that file, not this one -->
+<html lang="${L}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>${esc(meta.title)}</title>
+<meta name="description" content="${esc(meta.description)}">
+<link rel="canonical" href="${url}">
+${alternates(c.cs, c.en)}
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#FFFFFF">
+<meta property="og:type" content="${meta.article ? 'article' : 'website'}">
+<meta property="og:site_name" content="printedrobotics.cz">
+<meta property="og:title" content="${esc(meta.ogTitle)}">
+<meta property="og:description" content="${esc(meta.ogDesc || meta.description)}">
+<meta property="og:url" content="${url}">
+<meta property="og:image" content="${img}">
+<meta property="og:image:width" content="${meta.imageW}"><meta property="og:image:height" content="${meta.imageH}">
+<meta property="og:image:alt" content="${esc(meta.imageAlt)}">
+<meta property="og:locale" content="${en ? 'en_GB' : 'cs_CZ'}">
+<meta property="og:locale:alternate" content="${en ? 'cs_CZ' : 'en_GB'}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E8461E'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="${root}assets/site.css">
+<link rel="stylesheet" href="${root}assets/i18n.css">
+${lds.map(l => `<script type="application/ld+json">${JSON.stringify(l).replace(/</g, '\\u003c')}</script>`).join('\n')}
+</head>
+<body data-page="content" data-root="${root}"${meta.print ? ' class="printable"' : ''}>
+<a class="sr-only skip" href="#obsah">${en ? 'Skip to content' : 'Přejít na obsah'}</a>
+<header class="site-h" id="site-h">
+<div class="wrap"><div class="hbar">
+<div class="brand"><i aria-hidden="true"></i><a href="${(root + home) || './'}">printedrobotics</a>${switcher(L, page, c.cs, c.en)}</div>
+<nav class="nav" aria-label="${en ? 'Main menu' : 'Hlavní menu'}">${nav}</nav>
+<a class="pill" href="${root}${en ? 'en/quiz/' : 'kviz.html'}">${en ? 'Find a robot' : 'Najít robota'} <span aria-hidden="true">→</span></a>
+</div></div>
+</header>
+<nav class="wrap crumb doc-crumb" aria-label="${en ? 'Breadcrumb' : 'Drobečková navigace'}">${crumbHtml}</nav>
+<main id="obsah" class="wrap doc">
+${body.trim()}
+</main>
+<footer class="wrap site-f">
+<div class="g">
+<div class="a1" style="color:var(--ink)">printedrobotics.cz</div>
+<div class="a4s">${en ? 'Prague' : 'Praha'} · <a href="${root}${en ? 'en/for-schools/' : 'pro-skoly/'}">${en ? 'For schools' : 'Pro školy'}</a> · <a href="${root}${en ? 'en/guides/' : 'navody/'}">${en ? 'Guides' : 'Návody'}</a> <span id="footer-contact"></span></div>
+<div class="a10">${en ? 'All projects belong to their authors. Simulation footage is labelled as such.' : 'Všechny projekty patří svým autorům. Záznamy ze simulace jsou tak označené.'}</div>
+</div>
+</footer>
+<input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" class="sr-only">
+<script src="${root}assets/config.js"></script>
+<script src="${root}assets/data.js"></script>
+${en ? `<script src="${root}assets/data.en.js"></script>\n<script src="${root}assets/i18n.en.js"></script>\n` : ''}<script src="${root}assets/i18n.js" data-auto></script>
+<script src="${root}assets/app.js"></script>
+</body>
+</html>
+`;
+  if (/\{root\}|<!--kits:/.test(html)) throw new Error(page + ': unexpanded placeholder');
+  if (en) assertEnglish(html, page);
+  writePage(page + 'index.html', html);
+}
+for (const c of CONTENT) { contentPage(c, 'cs'); contentPage(c, 'en'); }
+
 // sitemap with hreflang pairs; sim/so101 is an indexable landing page, sim/arena is noindex
-const pairs = [['', fs.existsSync('en/index.html') ? 'en/' : null], ['kviz.html', 'en/quiz/'], ...R.map(r => [PATH.kit('cs', r.id), PATH.kit('en', r.id)]), ['sim/so101/', read('sim/so101/index.html').includes('hreflang="en"') ? 'sim/so101/?lang=en' : null]];
+const pairs = [['', fs.existsSync('en/index.html') ? 'en/' : null], ['kviz.html', 'en/quiz/'], ...R.map(r => [PATH.kit('cs', r.id), PATH.kit('en', r.id)]), ...CONTENT.map(c => [c.cs, c.en]), ['sim/so101/', read('sim/so101/index.html').includes('hreflang="en"') ? 'sim/so101/?lang=en' : null]];
 const loc = (u, alt) => `  <url><loc>${SITE}${u}</loc>${alt ? `<xhtml:link rel="alternate" hreflang="cs" href="${SITE}${alt[0]}"/><xhtml:link rel="alternate" hreflang="en" href="${SITE}${alt[1]}"/>` : ''}</url>`;
 const urls = [];
 for (const [cs, en] of pairs) { urls.push(loc(cs, en && [cs, en])); if (en) urls.push(loc(en, [cs, en])); }
 fs.writeFileSync('sitemap.xml', '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n' +
   urls.join('\n') + '\n</urlset>\n');
-console.log('built', R.length, 'kits × 2 languages, en/quiz, en/licence (draft, noindex)');
+console.log('built', R.length, 'kits × 2 languages,', CONTENT.length, 'content pages × 2, en/quiz, en/licence (draft, noindex)');

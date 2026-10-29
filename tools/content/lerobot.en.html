@@ -1,0 +1,144 @@
+<!--meta
+{"title":"SO-101 and LeRobot: first steps | printedrobotics.cz",
+ "description":"Getting the SO-101 robot arm running with LeRobot: installation, port, servo IDs, calibration and teleoperation. Linked to the official guide, with practice on a virtual arm.",
+ "ogTitle":"SO-101 and LeRobot: first steps",
+ "ogDesc":"Installation, servo IDs, calibration and teleoperation following the official LeRobot guide. Practise every step on a virtual arm in your browser first.",
+ "h":"SO-101 and LeRobot",
+ "crumb":[["Guides","navody"]],
+ "article":true,"date":"2026-10-29",
+ "image":"assets/media/so101-poster.jpg","imageW":960,"imageH":540,"imageAlt":"The simulated SO-101 robot arm above a cube and a bowl"}
+-->
+<section class="g doc-hero">
+<div class="a1 mono">Guide · 29 Oct 2026</div>
+<div class="a4" style="display:flex;flex-direction:column;gap:20px">
+<h1>SO-101 and LeRobot: first steps</h1>
+<p class="lead">The SO-101 is an open robot arm by The Robot Studio and Hugging Face. LeRobot is the Python library you use to set it up, control it and teach it tasks from demonstrations. This guide summarises the official procedure and adds a virtual-arm practice run to every step.</p>
+<p class="doc-note"><i aria-hidden="true"></i><span>The official LeRobot documentation is authoritative. Commands change between library versions; this page reflects them as of 29 October 2026. Where anything differs, follow the <a href="https://huggingface.co/docs/lerobot/so101">current guide on huggingface.co</a>.</span></p>
+<ol class="toc" aria-label="Contents">
+<li><a href="#you-need">What you need</a></li><li><a href="#install">Installation</a></li><li><a href="#port">Port</a></li><li><a href="#ids">Servo IDs</a></li><li><a href="#calibration">Calibration</a></li><li><a href="#teleop">Teleoperation</a></li><li><a href="#learning">Learning from demos</a></li><li><a href="#sources">Sources</a></li>
+</ol>
+</div>
+</section>
+
+<section class="section" id="you-need">
+<div class="g rule">
+<div class="a1 mono">01 — What you need</div>
+<div class="a4 prose">
+<h2>Two arms, six servos each</h2>
+<p>The setup has two arms. You guide the <b>leader arm</b> with your own hand and the <b>follower arm</b> repeats the movement. Both use six Feetech STS3215 servos. The follower uses 1:345 gearing throughout; the leader has different ratios on different joints (1:191, 1:345 and 1:147) so it is easy to move by hand. The exact table is in the official guide.<sup><a href="#sources">1</a></sup></p>
+<p>You also need a servo driver board for each arm, USB cables, a power supply that matches your servo variant, and a computer with Python. The full bill of materials and print files are in the project repository.<sup><a href="#sources">2</a></sup></p>
+<p><b>Before you buy anything</b>, try the arm in the <a href="{root}sim/so101/?lang=en">SO-101 simulation</a>. You’ll see how the joints move and what the arm can do.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="install">
+<div class="g rule">
+<div class="a1 mono">02 — Installation</div>
+<div class="a4 prose">
+<h2>Python 3.12 and LeRobot</h2>
+<p>The official guide recommends Python 3.12 in a conda environment (via Miniforge); <code>uv</code> or <code>venv</code> also work.<sup><a href="#sources">3</a></sup> For the SO-101 you also install Feetech servo support:<sup><a href="#sources">1</a></sup></p>
+<pre><code>conda create -y -n lerobot python=3.12
+conda activate lerobot
+conda install ffmpeg -c conda-forge
+git clone https://github.com/huggingface/lerobot.git
+cd lerobot
+pip install -e ".[feetech]"</code></pre>
+<p class="src">According to the guide, <code>ffmpeg</code> is needed to decode video in datasets and can be skipped on some platforms. Details are in the installation guide.<sup><a href="#sources">3</a></sup></p>
+</div>
+</div>
+</section>
+
+<section class="section" id="port">
+<div class="g rule">
+<div class="a1 mono">03 — Port</div>
+<div class="a4 prose">
+<h2>Find each arm’s port</h2>
+<p><code>lerobot-find-port</code> asks you to unplug the USB cable and prints the port that disappeared. On Linux it looks like <code>/dev/ttyACM0</code>, on macOS <code>/dev/tty.usbmodem…</code>, on Windows <code>COM3</code>. Repeat for both arms.</p>
+<p><b>Dry run:</b> <a href="{root}sim/so101/nastaveni/?lang=en">dry-run servo setup</a>, step 1. The virtual arm connects without a cable.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="ids">
+<div class="g rule">
+<div class="a1 mono">04 — Servo IDs</div>
+<div class="a4 prose">
+<h2>Each servo gets its own ID</h2>
+<p>New servos all ship with the same ID, so on a shared bus they would talk over each other. <code>lerobot-setup-motors</code> walks you through it: <b>only one servo</b> is connected to the board at a time, starting with the gripper (ID 6) and ending with the base (ID 1).<sup><a href="#sources">1</a></sup></p>
+<pre><code>lerobot-setup-motors \
+    --robot.type=so101_follower \
+    --robot.port=/dev/ttyACM0</code></pre>
+<p>The leader arm is the same, with <code>--teleop.type=so101_leader</code> and <code>--teleop.port=…</code>.</p>
+<p><b>Dry run:</b> the wizard, step 2. The six emulated STS3215 servos all have ID 1 “out of the box”, just like real ones.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="calibration">
+<div class="g rule">
+<div class="a1 mono">05 — Calibration</div>
+<div class="a4 prose">
+<h2>The centre and range of every joint</h2>
+<p><code>lerobot-calibrate</code> first records the middle of the range (all joints centred, as in the picture in the guide), then you move each joint from stop to stop.<sup><a href="#sources">1</a></sup> Give the arms fixed names in <code>--robot.id</code> and <code>--teleop.id</code>: LeRobot stores the calibration under that ID, and you use the same ID for teleoperation and recording.<sup><a href="#sources">4</a></sup></p>
+<pre><code>lerobot-calibrate \
+    --robot.type=so101_follower \
+    --robot.port=/dev/ttyACM0 \
+    --robot.id=my_follower_arm</code></pre>
+<p><b>Dry run:</b> the wizard, step 3. You can download the virtual arm’s calibration as JSON and see what LeRobot stores. A real arm has to be calibrated on its own, though.</p>
+<p><b>Careful:</b> during calibration servo torque is off and the arm can drop. Hold it.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="teleop">
+<div class="g rule">
+<div class="a1 mono">06 — Teleoperation</div>
+<div class="a4 prose">
+<h2>The follower repeats the leader</h2>
+<pre><code>lerobot-teleoperate \
+    --robot.type=so101_follower \
+    --robot.port=/dev/ttyACM0 \
+    --robot.id=my_follower_arm \
+    --teleop.type=so101_leader \
+    --teleop.port=/dev/ttyACM1 \
+    --teleop.id=my_leader_arm</code></pre>
+<p>If a calibration is missing, the command runs it first, according to the guide.<sup><a href="#sources">4</a></sup></p>
+<p><b>Safety:</b> clamp the arm to the table, keep its reach clear and keep the power supply within reach. Kits are for ages 14 and up, younger children only under adult supervision.</p>
+<p><b>Dry run:</b> the wizard, step 4 (testing with sliders). The same wizard can also connect a real arm over Web Serial in desktop Chrome or Edge. It is in beta: use it at your own risk.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="learning">
+<div class="g rule">
+<div class="a1 mono">07 — Learning from demos</div>
+<div class="a4 prose">
+<h2>Record, train, run</h2>
+<p>The next steps are in the guide “Getting started with real-world robots”: <code>lerobot-record</code> records demonstrations (joint movements and camera footage) into a dataset, and <code>lerobot-train</code> trains a model from them, for example ACT. The guide recommends starting with at least 50 episodes, about 10 per object position, with the cameras fixed in place.<sup><a href="#sources">4</a></sup> According to the guide, training takes several hours and expects a GPU (or Apple silicon).</p>
+<p><b>You can try the principle in the simulation:</b> the Learning from demonstration panel records your movement and the arm repeats it. The recordings can be converted into a LeRobot-format dataset on the <a href="{root}sim/so101/lerobot.html?lang=en">LeRobot export</a> page. They are joint positions only, with no camera footage, from a simplified simulation. They are not enough to train a model for a real arm; they help you understand the data format.</p>
+<p class="src">The exported dataset uses format v2.1. We have not yet checked whether the latest LeRobot reads it without conversion.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="next">
+<div class="g rule">
+<div class="a1 mono">Next</div>
+<div class="a4 prose">
+<p>Try the arm in the <a href="{root}sim/so101/?lang=en">simulation</a> and the servo setup in the <a href="{root}sim/so101/nastaveni/?lang=en">dry-run wizard</a>. The SO-101 kit is on the <a href="{root}en/kit/so101/">SO-101</a> page. We make it from the project’s open documentation; the authors are not affiliated with us.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="sources">
+<div class="g rule">
+<div class="a1 mono">Sources</div>
+<ol class="a4 prose src">
+<li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/so101">LeRobot – SO-101</a> (assembly, servo IDs, calibration, servo gear ratios).</li>
+<li>The Robot Studio: <a href="https://github.com/TheRobotStudio/SO-ARM100">SO-ARM100 on GitHub</a> (bill of materials, print files, Apache-2.0 licence).</li>
+<li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/installation">LeRobot – Installation</a>.</li>
+<li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/il_robots">LeRobot – Getting started with real-world robots</a> (teleoperation, recording, training).</li>
+</ol>
+</div>
+</section>

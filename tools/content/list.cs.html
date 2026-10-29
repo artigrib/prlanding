@@ -1,0 +1,74 @@
+<!--meta
+{"title":"Pracovní list: robotická ruka v simulaci | printedrobotics.cz",
+ "description":"Pracovní list k tisku pro 45minutovou hodinu robotiky se simulací SO-101: klouby a úhly, algoritmus, učení ukázkou a výstupní lístek.",
+ "ogTitle":"Pracovní list: Jak robot ví, kam sáhnout?",
+ "h":"Pracovní list",
+ "crumb":[["Pro školy","skoly"]],
+ "print":true,
+ "image":"assets/media/so101-poster.jpg","imageW":960,"imageH":540,"imageAlt":"Robotická ruka SO-101 v simulaci nad kostkou a miskou"}
+-->
+<section class="g doc-hero">
+<div class="a1 mono no-print">Pracovní list · hodina 45 min</div>
+<div class="a4 prose" style="max-width:52rem">
+<p class="no-print doc-note"><i aria-hidden="true"></i><span>Vytiskněte na A4 nebo uložte jako PDF v dialogu tisku. Hlavička a odkazy webu se nevytisknou. Metodiku najdete na stránce <a href="{root}pro-skoly/#hodina">Pro školy</a>.</span></p>
+<p class="no-print"><button type="button" class="btn btn-o" data-print>Vytisknout nebo uložit jako PDF <span aria-hidden="true">⎙</span></button></p>
+<div class="ws-head" aria-label="Hlavička"><span>Jméno</span><span>Třída</span><span>Datum</span></div>
+<h1 style="margin:8px 0 0;font-weight:500;font-size:clamp(28px,4vw,44px);line-height:1.1;letter-spacing:-.03em">Jak robot ví, kam sáhnout?</h1>
+<p class="src">Simulace: printedrobotics.cz/sim/so101 · zdarma, bez registrace</p>
+
+<div class="ws-box">
+<b>Úloha 1 · Mise 01 „Přeneste kostku do misky“ v režimu Chytrý pohyb</b>
+<table class="doc-t ws-t"><thead><tr><th scope="col">Pokus</th><th scope="col">Čas</th><th scope="col">Hvězdy (zakroužkujte)</th></tr></thead>
+<tbody><tr><td>1.</td><td></td><td>☆ ☆ ☆</td></tr><tr><td>2.</td><td></td><td>☆ ☆ ☆</td></tr></tbody></table>
+</div>
+
+<div class="ws-box">
+<b>Úloha 2 · Stejná mise v režimu Klouby (klávesa M)</b>
+<span>Uchopte kostku jen posuvníky. Zapište úhly kloubů, když je chapadlo těsně nad kostkou.</span>
+<table class="doc-t ws-t"><thead><tr><th scope="col">Kloub</th><th scope="col">Úhel</th><th scope="col">Co kloub dělá?</th></tr></thead>
+<tbody>
+<tr><td>Otočení základny</td><td>°</td><td></td></tr>
+<tr><td>Rameno</td><td>°</td><td></td></tr>
+<tr><td>Loket</td><td>°</td><td></td></tr>
+<tr><td>Zápěstí – náklon</td><td>°</td><td></td></tr>
+<tr><td>Zápěstí – rotace</td><td>°</td><td></td></tr>
+<tr><td>Chapadlo</td><td>%</td><td></td></tr>
+</tbody></table>
+<span>Proč je ovládání po kloubech těžší než chytrý pohyb?</span>
+<span class="ws-line"></span><span class="ws-line"></span>
+</div>
+
+<div class="ws-box">
+<b>Úloha 3 · Algoritmus pro misi 03 „Roztřiďte barvy“</b>
+<span>Ve dvojici napište kroky, podle kterých ruka dá oranžovou kostku do oranžové misky a modrou do modré. Pak je vyzkoušejte v simulaci.</span>
+<span class="ws-line">1.</span><span class="ws-line">2.</span><span class="ws-line">3.</span><span class="ws-line">4.</span><span class="ws-line">5.</span><span class="ws-line">6.</span><span class="ws-line">7.</span><span class="ws-line">8.</span>
+<span>Fungovaly kroky napoprvé? ano / ne. Co jste opravili?</span>
+<span class="ws-line"></span>
+</div>
+
+<div class="ws-box">
+<b>Úloha 4 · Učení ukázkou</b>
+<span>V sekci Učení ukázkou nahrajte své řešení mise 01 (Nahrát) a nechte ho přehrát (Přehrát).</span>
+<span>Ukázka přehrává pořád stejné úhly kloubů. Co by se stalo, kdyby kostka ležela o 5 cm jinde? Proč?</span>
+<span class="ws-line"></span><span class="ws-line"></span>
+</div>
+
+<div class="ws-box">
+<b>Úloha 5 · Výstupní lístek</b>
+<span>Jak robot ví, kam sáhnout? Odpovězte dvěma až třemi větami.</span>
+<span class="ws-line"></span><span class="ws-line"></span><span class="ws-line"></span>
+<span>Jedna věc, kterou jsem se dnes naučil(a):</span>
+<span class="ws-line"></span>
+</div>
+
+<div class="ws-box no-print" style="border-color:var(--line-2)">
+<b>Pro učitele: vodítka k odpovědím</b>
+<ul>
+<li>Úloha 2: otočení základny točí celou rukou doleva a doprava; rameno a loket zvedají a natahují ruku; náklon zápěstí míří chapadlem dolů; rotace zápěstí natáčí čelisti. Úhly se liší podle polohy kostky, správná je každá poloha, ve které jde kostku uchopit.</li>
+<li>Úloha 2: chytrý pohyb mění několik kloubů najednou, aby se chapadlo dostalo do zadaného bodu (inverzní kinematika). Po kloubech to musí žák „spočítat“ sám.</li>
+<li>Úloha 3: dobrý algoritmus obsahuje otevření chapadla před sjetím ke kostce, sevření, zvednutí, přesun nad misku, puštění a totéž pro druhou kostku. Výborné řešení počítá s chybou (kostka vypadla → zopakuj uchopení).</li>
+<li>Úloha 4: ruka by sjela na místo, kde kostka byla při nahrávání, a minula by ji. Proto se skutečné roboty učí z mnoha ukázek s různými polohami předmětu.</li>
+</ul>
+</div>
+</div>
+</section>

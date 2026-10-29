@@ -109,6 +109,53 @@ for (const id of ['so101', 'svrn', 'vert150']) {
   });
 }
 
+// content pages: schools + guides. Structured data matches the page, no prices, nav link from every header
+const ldOf = html => [...html.matchAll(/<script type="application\/ld\+json">([^<]*)<\/script>/g)].map(m => JSON.parse(m[1]));
+await check('pro-skoly: lesson, missions, FAQ, nav', '/pro-skoly/', async p => {
+  const html = await (await p.request.get(BASE + '/pro-skoly/')).text();
+  const faq = ldOf(html).find(l => l['@type'] === 'FAQPage');
+  if (!faq || faq.mainEntity.length !== await p.locator('#faq details').count()) throw new Error('FAQPage JSON-LD does not match the visible questions');
+  if (/"(offers|price|aggregateRating|review)"|\d\s?Kč/.test(html)) throw new Error('prices on the schools page');
+  const missions = await p.locator('a[href*="sim/so101/?mise="]').evaluateAll(as => [...new Set(as.map(a => new URL(a.href).searchParams.get('mise')))]);
+  for (const id of ['bowl', 'stack', 'sort', 'ball', 'trace', 'line', 'breakfast', 'tidy', 'workshop', 'lab']) if (!missions.includes(id)) throw new Error('mission link missing: ' + id);
+  if (/trida=1/.test(html)) throw new Error('links a class mode that does not exist');
+  if ((await p.locator('.nav a[aria-current="page"]').innerText()).replace(/\s+/g, ' ').trim() !== 'Pro školy') throw new Error('nav: Pro školy not current');
+  if (!(await p.locator('a[href="pro-skoly/pracovni-list/"], a[href$="/pracovni-list/"]').count())) throw new Error('no worksheet link');
+});
+await check('pro-skoly: pilot form validates and sends type=school', '/pro-skoly/', async p => {
+  let sent = null;
+  await p.route(/script\.google\.com|formspree/, r => { sent = JSON.parse(r.request().postData() || '{}'); r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }); });
+  const f = p.locator('#pilot-form');
+  await f.locator('[name=email]').fill('ucitel@example.cz');
+  await f.locator('button[type=submit]').click();
+  await p.waitForFunction(() => /školu nebo kroužek/.test(document.querySelector('#pilot-form .soft-msg').textContent));
+  if (sent) throw new Error('sent without a school');
+  await f.locator('[name=school]').fill('ZŠ Test'); await f.locator('[name=pupils]').fill('8. ročník, 20 žáků');
+  await f.locator('button[type=submit]').click();
+  await p.waitForFunction(() => /Děkujeme/.test(document.querySelector('#pilot-form').textContent), null, { timeout: 10000 });
+  if (!sent || sent.type !== 'school' || sent.school !== 'ZŠ Test' || !/20 žáků/.test(sent.note)) throw new Error('payload ' + JSON.stringify(sent));
+});
+await check('worksheet prints without site chrome', '/pro-skoly/pracovni-list/', async p => {
+  if ((await p.locator('.ws-box').count()) < 5) throw new Error('worksheet tasks missing');
+  await p.emulateMedia({ media: 'print' });
+  for (const sel of ['.site-h', '.site-f', '[data-print]']) if (await p.locator(sel).first().isVisible()) throw new Error(sel + ' visible in print');
+});
+for (const [path, nSrc] of [['/navody/', 0], ['/navody/so101-lerobot-prvni-kroky/', 3], ['/navody/bojovi-roboti-150-g/', 2], ['/navody/licence-open-source-hardwaru/', 4]]) {
+  await check('guide ' + path, path, async p => {
+    const html = await (await p.request.get(BASE + path)).text();
+    if (!(await p.locator('h1').innerText()).trim()) throw new Error('empty h1');
+    const lds = ldOf(html);
+    if (nSrc && !lds.some(l => l['@type'] === 'Article' && l.datePublished)) throw new Error('Article JSON-LD missing');
+    if (!lds.some(l => l['@type'] === 'BreadcrumbList')) throw new Error('BreadcrumbList missing');
+    if ((await p.locator('#zdroje a[href^="https://"]').count()) < nSrc) throw new Error('too few cited sources');
+    if (/Kassow|investor/i.test(html)) throw new Error('forbidden mention');
+  });
+}
+await check('home nav links the schools page', '/', async p => {
+  const a = p.locator('.nav a[href="pro-skoly/"]');
+  if (!(await a.count())) throw new Error('no Pro školy in the home nav');
+});
+
 await check('sim so101', '/sim/so101/?test=1', async p => {
   await p.waitForFunction(() => window.__sim, null, { timeout: 90000 });
   const err = await p.evaluate(() => window.__sim.error);
