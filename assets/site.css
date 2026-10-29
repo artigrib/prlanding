@@ -723,3 +723,8 @@ code.call,.path code,.step-k code,.tl-k,.tl-meta code{font-family:var(--mono);fo
   .tl-bar{grid-column:2}
   .tl-main .btn{width:100%}
 }
+/* section slugs: the label stays the text, the call is the accent under it */
+.sec-k{display:block;margin-top:6px;font-family:var(--mono);font-size:13px;color:var(--ink);background:none;padding:0}
+.band .sec-k{color:#fff}
+.proto .ph{position:static;margin-top:28px;max-width:44rem}
+@media (max-width:860px){.sec-k{display:inline;margin:0 0 0 10px}}
