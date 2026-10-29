@@ -107,6 +107,13 @@ export class Grab {
     }
   }
 
+  /** Hard reset (scene reset): forces off, servos back to full stiffness immediately. */
+  reset() {
+    if (this.active) { const X = this.d.xfrc_applied, o = 6 * this.body; for (let k = 0; k < 6; k++) X[o + k] = 0; }
+    for (let i = 0; i < this.act.length; i++) { this.gain(i, 1); this.d.qfrc_applied[this.dadr[i]] = 0; }
+    this.active = false; this.body = -1; this.force = 0; this.blend = 1;
+  }
+
   /** Let go: the current pose becomes the servo reference, forces off, stiffness blends back. */
   release() {
     if (!this.active) return;

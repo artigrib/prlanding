@@ -109,7 +109,7 @@ export class Gizmo {
   /** Per frame, after physics. */
   sync(dt) {
     const ctl = this.ctl, smart = this.ux.mode === 'smart' && this.enabled;
-    this.root.visible = this.drop.visible = this.foot.visible = smart && !this.ux.teach.replaying;
+    this.root.visible = this.drop.visible = this.foot.visible = smart && !this.ux.teach.replaying && !this.ux.grab.active;
     let p;
     if (ctl.active) p = ctl.target;
     else { p = ctl.actualTip(this.tip); }

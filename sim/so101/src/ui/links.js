@@ -53,6 +53,15 @@ export class Links {
     this.home = ux.ctl.home;
     this.range = ux.ctl.kin.c.range.map((r, i) => (i === 5 ? r : r));
     const cr = this.m.actuator_ctrlrange; this.lim = app.act.map((a) => [cr[2 * a], cr[2 * a + 1]]);
+    // pull mode visuals: spring line + cursor dot (MuJoCo frame, in app.world)
+    this.mode = store.get('grab-mode', 'pull') === 'joint' ? 'joint' : 'pull';
+    this.realArmed = /[?&]real=1\b/.test(location.search);    // real hardware armed: no physics pulling
+    this.springMat = new T.MeshBasicMaterial({ color: 0x1f3bff, transparent: true, opacity: 0.85, depthTest: false });
+    this.spring = new T.Mesh(new T.CylinderGeometry(0.0012, 0.0012, 1, 8), this.springMat);
+    this.cursor = new T.Mesh(new T.SphereGeometry(0.0045, 12, 8), this.springMat);
+    this.spring.renderOrder = 6; this.cursor.renderOrder = 6; this.spring.visible = false; this.cursor.visible = false;
+    app.world.add(this.spring, this.cursor);
+    this.yAxis = new T.Vector3(0, 1, 0); this.gp = new Float64Array(3);
   }
 
   isJaw(part) { return JAW_BODIES.has(part.bname); }
@@ -75,7 +84,7 @@ export class Links {
     }
     const h = this.ray.intersectObjects(this.proxies, false);
     if (!h.length) return null;
-    return { part: this.byMesh.get(h[0].object), dist: h[0].distance };
+    return { part: this.byMesh.get(h[0].object), dist: h[0].distance, point: h[0].point.clone() };
   }
 
   // ---------- joint frame ----------
@@ -139,13 +148,16 @@ export class Links {
   hover(e) {
     const h = this.hit(e);
     if (!h) { if (!this.drag && this.sel < 0) this.clear(); return false; }
-    this.light(h.part); this.showRing(h.part.j); this.showLabel(h.part.j, e.clientX, e.clientY);
+    this.light(h.part);
+    if (this.pull()) { this.showRing(-1); this.showPullLabel(e.clientX, e.clientY); }
+    else { this.showRing(h.part.j); this.showLabel(h.part.j, e.clientX, e.clientY); }
     if (JAW_BODIES.has(h.part.bname)) this.jawHint();
     return true;
   }
   down(e, h) {
-    this.pend = { id: e.pointerId, x: e.clientX, y: e.clientY, part: h.part };
-    this.light(h.part); this.showRing(h.part.j); this.showLabel(h.part.j, e.clientX, e.clientY);
+    this.pend = { id: e.pointerId, x: e.clientX, y: e.clientY, part: h.part, point: h.point };
+    this.light(h.part);
+    if (this.pull()) this.showPullLabel(e.clientX, e.clientY); else { this.showRing(h.part.j); this.showLabel(h.part.j, e.clientX, e.clientY); }
     if (JAW_BODIES.has(h.part.bname)) this.jawHint();
     return true;
   }
@@ -158,6 +170,16 @@ export class Links {
     }
     const D = this.drag;
     if (!D || e.pointerId !== D.id) return false;
+    if (D.pull) {
+      // cursor on a camera-facing plane through the grab point → spring target
+      this.setRay(e);
+      if (this.ray.ray.intersectPlane(this.plane, this.hit3)) {
+        this.v.copy(this.hit3); this.app.world.worldToLocal(this.v);
+        this.ux.grab.setTarget(this.v.x, this.v.y, Math.max(0.004, this.v.z));
+      }
+      this.showPullLabel(e.clientX, e.clientY);
+      return true;
+    }
     let delta;
     this.setRay(e);
     if (D.edge) delta = ((e.clientX - D.x) - (e.clientY - D.y)) * 0.008;
@@ -190,17 +212,19 @@ export class Links {
     const D = this.drag;
     if (D && e.pointerId === D.id) {
       this.drag = null;
+      if (D.pull) this.endPull();
       this.ux.onboarding.notify('link');
       setTimeout(() => { if (!this.drag && !this.pend && this.sel < 0) this.clear(); }, 900);
       return true;
     }
     return false;
   }
-  cancelPress() { this.pend = null; this.drag = null; this.clear(); }
+  cancelPress() { if (this.drag && this.drag.pull) this.endPull(); this.pend = null; this.drag = null; this.clear(); }
 
   startDrag(P) {
     const ux = this.ux, j = P.part.j;
     ux.ctl.cancel(); ux.pending = null; ux.app.stopDemo(); ux.runner.start();
+    if (this.pull() && P.point) { this.startPull(P); return; }
     // the controller's commanded grip / joint follow the hand from here on
     this.frame(j);
     this.setRay({ clientX: P.x, clientY: P.y });
@@ -212,6 +236,52 @@ export class Links {
       else D.edge = true;
     }
     if (ux.mode === 'smart') ux.ctl.syncFromCtrl();
+  }
+
+  // ---------- pull mode (physics grab, default) ----------
+  /** 'pull' (whole chain gives way, default) or 'joint' (one joint at a time). Never pull with ?real=1 armed. */
+  pull() { return this.mode === 'pull' && !this.realArmed; }
+  setMode(m) { this.mode = m === 'joint' ? 'joint' : 'pull'; store.set('grab-mode', this.mode); }
+  startPull(P) {
+    const ux = this.ux, W = this.app.world;
+    W.updateMatrixWorld();
+    this.v.copy(P.point); W.worldToLocal(this.v);
+    ux.grab.start(P.part.body, this.v.x, this.v.y, this.v.z);
+    // camera-facing plane through the grab point
+    this.plane.setFromNormalAndCoplanarPoint(this.app.camera.getWorldDirection(this.v2).negate(), P.point);
+    this.drag = { id: P.id, pull: true, part: P.part, x: P.x, y: P.y, stopNoted: false };
+    this.spring.visible = true;
+    this.ux.onboarding.notify('link');
+  }
+  endPull() {
+    const ux = this.ux;
+    ux.grab.release();
+    this.spring.visible = false;
+    if (ux.mode === 'smart') ux.ctl.syncFromCtrl();
+  }
+  showPullLabel(x, y) {
+    const st = this.ux.panel.stage.getBoundingClientRect(), g = this.ux.grab;
+    const lim = g.active && g.atLimit >= 0, t = lim ? `${NAMES[g.atLimit]} · doraz` : (g.active ? 'Táhněte – ruka povolí' : 'Uchopte a táhněte');
+    if (this.label.textContent !== t) this.label.textContent = t;
+    this.label.classList.toggle('stop', lim);
+    this.label.hidden = false;
+    this.label.style.transform = `translate(${Math.round(Math.min(x - st.left + 16, st.width - 200))}px, ${Math.round(Math.max(8, y - st.top - 40))}px)`;
+  }
+  /** per frame: spring line from the grab point to the cursor; colour / thickness = force */
+  tickPull() {
+    const g = this.ux.grab, D = this.drag;
+    if (!g.active || !D || !D.pull) return;
+    const p = g.point(this.gp), t = g.target, S = this.spring;
+    const dx = t[0] - p[0], dy = t[1] - p[1], dz = t[2] - p[2], L = Math.hypot(dx, dy, dz) || 1e-6;
+    const f = Math.min(1, g.force / 12);
+    S.position.set((p[0] + t[0]) / 2, (p[1] + t[1]) / 2, (p[2] + t[2]) / 2);
+    this.v2.set(dx / L, dy / L, dz / L); S.quaternion.setFromUnitVectors(this.yAxis, this.v2);
+    S.scale.set(0.6 + 1.6 * f, L, 0.6 + 1.6 * f);
+    this.springMat.color.setRGB(0.12 + 0.85 * f, 0.23 + 0.05 * f, 1 - 0.9 * f);   // blue → red with force
+    this.cursor.position.set(t[0], t[1], t[2]); this.cursor.visible = true;
+    const lim = g.atLimit >= 0;
+    if (lim && !D.stopNoted) { D.stopNoted = true; this.ux.sound.blip(160, 0.06, 'square', 0.05); this.ux.sound.vibrate([12, 30, 12]); this.light(D.part, true); }
+    if (!lim && D.stopNoted) { D.stopNoted = false; this.light(D.part, false); }
   }
 
   tap(part, e) {
@@ -265,5 +335,8 @@ export class Links {
     return true;
   }
   /** keep the ring on the moving joint */
-  tick() { if (this.sel >= 0 && !this.drag) this.showRing(this.sel, null, false); }
+  tick() {
+    if (this.sel >= 0 && !this.drag) this.showRing(this.sel, null, false);
+    if (this.drag && this.drag.pull) this.tickPull(); else if (this.cursor.visible) { this.cursor.visible = false; this.spring.visible = false; }
+  }
 }

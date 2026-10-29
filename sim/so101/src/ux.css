@@ -226,3 +226,9 @@
 .ux-jlabel.stop{border-left-color:#ff2a1a;background:#B3200F}
 .ux-check{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:start;font-size:14.5px;color:var(--ink-2);cursor:pointer}
 .ux-check input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--ink)}
+/* teach buttons: icon + label centred, never wider than their cell at any panel width */
+.ux-row3 .btn,.ux-teach2 .btn{justify-content:center;gap:6px;padding:0 8px;text-align:center}
+.ux-row3 .btn>span,.ux-row2 .btn>span{flex:none}
+#ux-rec{white-space:nowrap}
+.ux-grabmode{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.ux-grabmode .mono{margin:0}

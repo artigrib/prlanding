@@ -15,6 +15,7 @@ import { Onboarding } from './ui/onboarding.js';
 import { Explode } from './ui/explode.js';
 import { Links } from './ui/links.js';
 import { DrawAssist } from './draw.js';
+import { Grab } from './grab.js';
 import { HiDetail } from './ui/hidetail.js';
 import { store } from './ui/store.js';
 
@@ -90,7 +91,10 @@ class UX {
     for (const n of ['cube_b', 'ball', 'bowl', 'bowl2', 'goal']) this.extras.meshes[n].userData.pick = n;
     this.explode = new Explode(this);
     this.hd = new HiDetail(this);
+    this.grab = new Grab(mj, app.m, app.d, app.act);   // physics pull of any link (before Links)
     this.links = new Links(this);
+    this.panel.showGrabMode(this.links.mode);
+    if (this.links.realArmed) this.panel.grabSeg.hidden = true;
     this.draw = new DrawAssist(); this.draw.help = store.get('draw-help', 1);
     this.panel.qualityUI();
     this.pickList = [];
@@ -157,6 +161,7 @@ class UX {
       if (this.pending.t <= 0) { const p = this.pending.plan; this.pending = null; this.ctl.run(p); }
     }
     this.teach.pre();
+    this.grab.apply(dt);       // pull spring + compliant servos while a link is held, stiffness blend after release
     // drawing mission: the marker follows the (magnet-assisted, speed-limited) pointer in the paper plane
     if (this.draw.active && this.drawMode() && !this.ctl.busy() && !this.teach.replaying) {
       const t = this.draw.step(dt);
@@ -222,6 +227,8 @@ class UX {
     this.ctl.syncFromCtrl();
     this.confetti.clear();
     this.draw.active = false; this.draw.penDown = true;
+    if (this.links.drag || this.links.pend) this.links.cancelPress();
+    this.grab.reset();
     this.links.deselect();
     this.gizmo.clearPath();
     this.cameras.stopCinematic();
@@ -570,6 +577,8 @@ class UX {
       objects: Object.fromEntries(this.world.active().map((e) => [e.name, Array.from(this.world.pos(e.name, [0, 0, 0]))])),
       explode: this.explode ? this.explode.amount : null, hiDetail: this.hiDetail || false
     });
+    api.grabMode = (m) => { this.links.setMode(m); this.panel.showGrabMode(this.links.mode); };
+    api.grabState = () => ({ active: this.grab.active, force: this.grab.force, atLimit: this.grab.atLimit, blend: this.grab.blend, mode: this.links.mode });
     api.drawPoint = (x, y) => this.drawPoint(x, y);
     api.penUp = () => this.togglePenUp();
     api.drawHelp = (h) => this.setDrawHelp(h);

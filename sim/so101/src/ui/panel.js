@@ -39,6 +39,17 @@ export class Panel {
     // Domů / Znovu / Ukázat řešení right under the mode switch (was below the fold)
     const rowb = document.querySelector('.row-b'), mode = $('ux-mode');
     if (rowb && mode) mode.insertBefore(rowb, this.smart);
+    // how grabbing a part of the arm behaves: physics pull (default) or one joint at a time
+    const gm = this.grabSeg = h(`<div class="ux-grabmode">
+      <p class="mono" id="ux-grab-l">Uchopení části ruky</p>
+      <div class="ux-seg ux-seg-s" role="radiogroup" aria-labelledby="ux-grab-l">
+        <button type="button" role="radio" data-g="pull" data-tip="Ruka povolí a celá se nechá vést – jako skutečná">Tahem</button>
+        <button type="button" role="radio" data-g="joint" data-tip="Otáčí se jen uchopeným kloubem">Kloub po kloubu</button>
+      </div></div>`);
+    if (mode) mode.insertBefore(gm, this.smart);
+    for (const b of gm.querySelectorAll('[data-g]')) b.addEventListener('click', () => { ux.links.setMode(b.dataset.g); this.showGrabMode(ux.links.mode); });
+    this.showGrabMode(ux.links ? ux.links.mode : 'pull');
+    if (ux.links && ux.links.realArmed) gm.hidden = true;
     // phone: HUD strip + action row under the stage, sticky with it (P1-3)
     const under = this.under = h(`<div class="ux-under">
       <div class="ux-qrow">
@@ -194,6 +205,8 @@ export class Panel {
     if (!m.draw) this.gripOpen = undefined;   // let tick() rewrite the phone button label
     if (m.draw) { this.showDraw(this.ux); $('ux-drawview').textContent = '3D pohled'; }
   }
+
+  showGrabMode(m) { if (this.grabSeg) for (const b of this.grabSeg.querySelectorAll('[data-g]')) b.setAttribute('aria-checked', String(b.dataset.g === m)); }
 
   showDraw(ux) {
     const d = ux.draw, b = $('ux-penup'), q = $('ux-qgrip');
