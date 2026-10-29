@@ -83,3 +83,75 @@ test('share link: #ukazka= hash round-trips the demonstration', async () => {
   for (let i = 0; i < n; i += 9) for (let k = 0; k < 6; k++) assert.ok(Math.abs(teach.demo.act[i][k] - a0[i][k]) < 2e-4);
   console.log('  share link length', url.length, 'chars for', n, 'frames');
 });
+
+// ---------- malformed input (shared link, imported file, localStorage) ----------
+async function hashOf(obj) {
+  const gz = await new Response(new Blob([JSON.stringify(obj)]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
+  let bin = ''; const u8 = new Uint8Array(gz); for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
+  return '#ukazka=' + btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function goodPayload() {
+  const n = 10, row = [0, -1, 0.6, 1.2, 0, 0.3];
+  const s = { qpos: Array.from(d.qpos), qvel: Array.from(d.qvel), ctrl: Array.from(d.ctrl), act: d.act && d.act.length ? Array.from(d.act) : null,
+    mpos: Array.from(d.mocap_pos), mquat: Array.from(d.mocap_quat), time: 0 };
+  return { v: 1, m: 'bowl', t: Array.from({ length: n }, (_, i) => i / 30), a: Array.from({ length: n }, () => row.slice()), o: Array.from({ length: n }, () => row.slice()), s };
+}
+const cases = {
+  'qvel null': (p) => { p.s.qvel = null; },
+  'qvel longer than the model': (p) => { p.s.qvel.push(0, 0, 0); },
+  'qpos with a string': (p) => { p.s.qpos[3] = 'x'; },
+  'qpos with NaN (null)': (p) => { p.s.qpos[2] = null; },
+  'mquat missing': (p) => { delete p.s.mquat; },
+  'action row too short': (p) => { p.a[4] = [0, 1, 2]; },
+  'action row with strings': (p) => { p.a[2] = ['a', 'b', 'c', 'd', 'e', 'f']; },
+  'observation row not an array': (p) => { p.o[1] = 'hello'; },
+  't not monotonic': (p) => { p.t[5] = 0.01; },
+  't with Infinity (null)': (p) => { p.t[3] = null; },
+  'frame counts differ': (p) => { p.a.pop(); },
+  'unknown mission': (p) => { p.m = 'nope'; }
+};
+
+test('shared link: every malformed payload is rejected without throwing; a valid one loads', async () => {
+  globalThis.location = { origin: 'https://x', pathname: '/sim/so101/', search: '', hash: '' };
+  for (const [name, spoil] of Object.entries(cases)) {
+    const p = goodPayload(); spoil(p);
+    globalThis.location.hash = await hashOf(p);
+    teach.demo = null;
+    const n = await teach.loadFromHash();
+    assert.equal(n, 0, name);
+    assert.equal(teach.demo, null, name + ': nothing loaded');
+  }
+  globalThis.location.hash = '#ukazka=' + 'A'.repeat(500001);
+  assert.equal(await teach.loadFromHash(), 0, 'oversized hash');
+  // gzip bomb: 6 MB of spaces compresses to a few kB
+  globalThis.location.hash = await hashOf({ pad: ' '.repeat(6 * 1024 * 1024) });
+  assert.equal(await teach.loadFromHash(), 0, 'decompressed size cap');
+  globalThis.location.hash = await hashOf(goodPayload());
+  assert.equal(await teach.loadFromHash(), 10, 'valid payload');
+  assert.ok(teach.startReplay(), 'valid payload replays');
+  teach.stopReplay();
+});
+
+test('imported JSON: partial / malformed snapshot or frames are rejected', () => {
+  const good = () => JSON.parse(JSON.stringify(teach.toJSON()));
+  const spoils = {
+    'partial snapshot (qvel null)': (j) => { j.printedrobotics.snapshot.qvel = null; },
+    'snapshot qpos too short': (j) => { j.printedrobotics.snapshot.qpos.length = 3; },
+    'frame with short action': (j) => { j.episodes[0].frames[2].action = [1, 2]; },
+    'timestamp not a number': (j) => { j.episodes[0].frames[3].timestamp = 'soon'; },
+    'timestamps going back': (j) => { j.episodes[0].frames[4].timestamp = -1; }
+  };
+  for (const [name, spoil] of Object.entries(spoils)) {
+    const j = good(); spoil(j);
+    assert.throws(() => teach.importJSON(j), name);
+  }
+  assert.ok(teach.importJSON(good()) >= 5, 'valid file imports');
+});
+
+test('a corrupted demonstration in memory does not throw from startReplay', () => {
+  teach.demo.snap.qvel = null;                     // e.g. a future bug elsewhere
+  ux.panel = { toast() { this.msg = arguments[0]; } };
+  assert.doesNotThrow(() => assert.equal(teach.startReplay(), false));
+  assert.equal(teach.demo, null);
+  assert.ok(/poškozená/.test(ux.panel.msg));
+});

@@ -107,6 +107,7 @@ class UX {
     document.getElementById('joints').addEventListener('input', () => {
       this.ctl.cancel(); this.teach.stopReplay(); this.pending = null; this.runner.start();
     });
+    this.keysOn = store.get('keys-on', true) !== false;
     this.keys();
     // the visual HUD changes every frame (timer, %, mm): take it out of the live region, announce via #sr
     this.hudEl = document.getElementById('hud-text');
@@ -133,7 +134,7 @@ class UX {
     if (this.runner.m.look) this.cameras.set('orbit', this.runner.m.look);
     this.teach.load();         // the demonstration from the last visit, if any
     this.teach.loadFromHash().then((n) => {   // a shared link (#ukazka=…) wins over the stored one
-      if (!n) return;
+      if (!n) { if (this.teach.rejected) this.panel.toast('Odkaz s ukázkou je poškozený nebo příliš velký – nic jsme nenahráli', 'err'); return; }
       this.selectMission(this.teach.demo.mission.id);
       this.panel.toast('Máte sdílenou ukázku – spusťte ji tlačítkem Přehrát v sekci Učení ukázkou');
     });
@@ -469,6 +470,8 @@ class UX {
       }
       if (this.panel.modalOpen()) return;
       if (k === ' ' && tag === 'BUTTON') return;   // let a focused button handle Space
+      // WCAG 2.1.4: single-character shortcuts can be switched off; then they only work while the 3D view has focus
+      if (k.length === 1 && !this.keysOn && tg !== this.app.renderer.domElement) return;
       // Tab on the focused canvas cycles the joints 1…6, then leaves the canvas (no focus trap)
       if (k === 'Tab' && tg === this.app.renderer.domElement) {
         const n = this.links.sel + (e.shiftKey ? -1 : 1);

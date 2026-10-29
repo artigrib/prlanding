@@ -224,3 +224,5 @@
 .ux-draw .mono,.ux-draw .mono-s{margin:0}
 .ux-jlabel{position:absolute;left:0;top:0;pointer-events:none;background:var(--ink);color:#fff;padding:6px 10px;font:500 13.5px/1.2 var(--sans);white-space:nowrap;z-index:6;border-left:4px solid var(--ok)}
 .ux-jlabel.stop{border-left-color:#ff2a1a;background:#B3200F}
+.ux-check{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:start;font-size:14.5px;color:var(--ink-2);cursor:pointer}
+.ux-check input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--ink)}

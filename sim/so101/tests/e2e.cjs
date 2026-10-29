@@ -183,6 +183,35 @@ async function touchDrag(page, from, to, steps = 8) {
       ok(g0 < 0 && g1 > 1 && /Otevřete/.test(h0) && /Sjeďte dolů/.test(h1), `tap on the jaw opens the gripper (${g0.toFixed(2)} → ${g1.toFixed(2)}); HUD "${h0}" → "${h1}"`);
     }
 
+    // tap on the IK ball where jaw geometry lies under it → gripper toggles (drag would still move the ball)
+    {
+      await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.5));
+      const t = await S(p, () => { window.__sim._ux.gizmo.sync(0.016); return window.__sim.screen('target'); });
+      let spot = null;
+      for (const [dx, dy] of [[0, 0], [0, 4], [0, -4], [4, 0], [-4, 0], [0, 8], [6, 6], [-6, 6]]) {
+        const r = await S(p, ([x, y]) => { const u = window.__sim._ux, e = { clientX: x, clientY: y }; const h = u.links.hit(e); return { handle: u.gizmo.hitHandle(e), jaw: !!(h && u.links.isJaw(h.part)) }; }, [t.x + dx, t.y + dy]);
+        if (r.handle && r.jaw) { spot = { x: t.x + dx, y: t.y + dy }; break; }
+      }
+      if (spot) {
+        const g0 = await S(p, () => window.__sim.state().ctrl[5]);
+        await p.mouse.click(spot.x, spot.y); await S(p, () => window.__sim.advance(1.2));
+        const g1 = await S(p, () => window.__sim.state().ctrl[5]);
+        ok(Math.abs(g1 - g0) > 0.5, `tap on the ball over the jaws toggles the gripper (${g0.toFixed(2)} → ${g1.toFixed(2)})`);
+      } else console.log('note: no spot with the ball over jaw geometry in this view');
+    }
+    // WCAG 2.1.4: single-key shortcuts can be turned off (then only with the 3D view focused)
+    {
+      await S(p, () => { window.__sim._ux.keysOn = false; document.activeElement && document.activeElement.blur(); });
+      const g0 = await S(p, () => window.__sim._ux.ctl.grip);
+      await p.keyboard.press('g');
+      const g1 = await S(p, () => window.__sim._ux.ctl.grip);
+      await S(p, () => document.getElementById('c').focus());
+      await p.keyboard.press('g');
+      const g2 = await S(p, () => window.__sim._ux.ctl.grip);
+      ok(g1 === g0 && g2 !== g1, 'shortcuts off: "g" ignored on the page, works with the 3D view focused');
+      await S(p, () => { window.__sim._ux.keysOn = true; });
+    }
+
     // click-to-pick: click the cube, then the bowl
     await S(p, () => window.__sim.reset());
     a = await S(p, () => window.__sim.screen('cube'));

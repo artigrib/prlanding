@@ -261,7 +261,7 @@ export class Gizmo {
   horizPlane(z) { this.plane.set(this.v.set(0, 1, 0), -z); }   // MuJoCo z = three y
 
   onDown(e) {
-    if (e.target !== this.canvas) return;
+    if (e.target !== this.canvas || this.forwarding) return;
     this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (this.pend && e.pointerId !== this.pend.id) {
       // a second finger while pressing a handle: it is a drag (and a twist), not a tap
@@ -269,7 +269,19 @@ export class Gizmo {
       this.startDrag(P.kind, { pointerId: P.id, clientX: P.x, clientY: P.y });
     }
     const lk = this.ux.links;
-    if ((lk.pend || lk.drag) && e.pointerType === 'touch') { lk.cancelPress(); return; }   // two fingers = camera
+    if ((lk.pend || lk.drag) && e.pointerType === 'touch') {
+      // two fingers = camera: hand the first finger over to OrbitControls too, so pinch-zoom works
+      const id = (lk.pend || lk.drag).id, f = this.pointers.get(id);
+      lk.cancelPress();
+      if (f) {
+        this.forwarding = true;
+        try {
+          this.canvas.dispatchEvent(new PointerEvent('pointerdown', { pointerId: id, pointerType: 'touch', isPrimary: true,
+            clientX: f.x, clientY: f.y, button: 0, buttons: 1, bubbles: true, cancelable: true }));
+        } finally { this.forwarding = false; }
+      }
+      return;   // this (second) pointerdown continues to OrbitControls
+    }
     if (this.drawing && e.pointerId !== this.drawing.id) { this.drawing = null; return; }
     if (this.drag) {
       // second finger while dragging: twist = wrist rotation
@@ -288,7 +300,9 @@ export class Gizmo {
         // object behind / under a handle still picks it (P0-1). A closer object wins outright.
         const hd = this.handleDist, pk = this.pickAt(e), pd = pk ? this.pickDist : Infinity;
         if (!(pk && pk.name !== 'table' && pd < hd - 0.002)) {
-          this.pend = { kind, id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), pick: pk && pk.name !== 'table' ? pk : null };
+          // the ball sits at the fingertips: a TAP on jaw geometry under it toggles the gripper (a drag still moves the ball)
+          const lh = lk.enabled() ? lk.hit(e) : null, jaw = !!(lh && lk.isJaw(lh.part));
+          this.pend = { kind, id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), pick: pk && pk.name !== 'table' ? pk : null, jaw };
           try { this.canvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
           e.stopPropagation(); e.preventDefault(); return;
         }
@@ -437,6 +451,7 @@ export class Gizmo {
     if (P && e.pointerId === P.id) {
       this.pend = null; e.stopPropagation();
       if (!cancelled && P.pick) this.ux.onPick(P.pick.name, P.pick.point);
+      else if (!cancelled && P.jaw) this.ux.toggleGrip();
       return;
     }
     const D = this.drag;

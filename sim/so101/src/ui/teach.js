@@ -5,6 +5,8 @@ import { MISSIONS } from '../missions.js';
 
 const FPS = 30, MAX_S = 180;
 const SNAP_KEYS = ['qpos', 'qvel', 'ctrl', 'act', 'mpos', 'mquat'];
+const MAX_FRAMES = MAX_S * FPS + 60;
+const MAX_HASH = 400000, MAX_JSON = 4 * 1024 * 1024;     // shared links: base64 chars / decompressed bytes
 const NAMES = ['shoulder_pan', 'shoulder_lift', 'elbow_flex', 'wrist_flex', 'wrist_roll', 'gripper'];
 
 export class Teach {
@@ -35,6 +37,46 @@ export class Teach {
     this.ux.mj.mj_forward(this.m, d);
   }
 
+  // ---------- validation of everything that comes from outside (link, file, localStorage) ----------
+  /** Snapshot from plain data: every array present, exact model length, all finite. Returns typed snap or null. */
+  validSnap(s) {
+    if (!s || typeof s !== 'object') return null;
+    const d = this.d, want = { qpos: d.qpos.length, qvel: d.qvel.length, ctrl: d.ctrl.length, act: d.act ? d.act.length : 0, mpos: d.mocap_pos.length, mquat: d.mocap_quat.length };
+    const out = { time: 0 };
+    for (const k of SNAP_KEYS) {
+      const v = s[k], n = want[k];
+      if (n === 0 && (v == null || (v.length === 0))) { out[k] = null; continue; }
+      if (!v || typeof v.length !== 'number' || v.length !== n) return null;
+      const a = new Float64Array(n);
+      for (let i = 0; i < n; i++) { const x = v[i]; if (typeof x !== 'number' || !Number.isFinite(x)) return null; a[i] = x; }
+      out[k] = a;
+    }
+    if (s.time != null) { if (typeof s.time !== 'number' || !Number.isFinite(s.time) || s.time < 0) return null; out.time = s.time; }
+    return out;
+  }
+  /** Frames: same count, 5…MAX_FRAMES, t finite and non-decreasing, rows of 6 finite numbers (actions clamped). */
+  validFrames(t, act, obs) {
+    if (!Array.isArray(t) || !Array.isArray(act) || !Array.isArray(obs)) return null;
+    const n = t.length;
+    if (n < 5 || n > MAX_FRAMES || act.length !== n || obs.length !== n) return null;
+    const cr = this.m.actuator_ctrlrange, A = this.app.act, T = new Array(n), AC = new Array(n), OB = new Array(n);
+    let prev = 0;
+    for (let i = 0; i < n; i++) {
+      const ti = t[i];
+      if (typeof ti !== 'number' || !Number.isFinite(ti) || ti < prev || ti > MAX_S + 5) return null;
+      T[i] = prev = ti;
+      const a = act[i], o = obs[i];
+      if (!Array.isArray(a) || !Array.isArray(o) || a.length !== 6 || o.length !== 6) return null;
+      const ra = new Array(6), ro = new Array(6);
+      for (let k = 0; k < 6; k++) {
+        if (typeof a[k] !== 'number' || !Number.isFinite(a[k]) || typeof o[k] !== 'number' || !Number.isFinite(o[k])) return null;
+        ra[k] = Math.min(cr[2 * A[k] + 1], Math.max(cr[2 * A[k]], a[k])); ro[k] = o[k];
+      }
+      AC[i] = ra; OB[i] = ro;
+    }
+    return { t: T, act: AC, obs: OB };
+  }
+
   startRec() {
     if (this.replaying) this.stopReplay();
     this.recording = true;
@@ -63,12 +105,10 @@ export class Teach {
   /** Restore the saved demonstration (if any) on start. */
   load() {
     const j = store.get('demo', null);
-    if (!j || j.v !== 1 || !j.t || j.t.length < 5) return false;
-    const mission = MISSIONS.find((m) => m.id === j.mission); if (!mission) return false;
-    const snap = { time: j.snap.time };
-    for (const k of SNAP_KEYS) snap[k] = j.snap[k] ? Float64Array.from(j.snap[k]) : null;
-    if (snap.qpos.length !== this.d.qpos.length || snap.mpos.length !== this.d.mocap_pos.length) return false;   // older scene
-    this.demo = { t: j.t, obs: j.obs, act: j.act, snap, mission, t0: 0, next: 0 };
+    if (!j || j.v !== 1) return false;
+    const mission = MISSIONS.find((m) => m.id === j.mission), snap = this.validSnap(j.snap), fr = this.validFrames(j.t, j.act, j.obs);
+    if (!mission || !snap || !fr) { store.set('demo', null); return false; }   // older scene or damaged: forget it
+    this.demo = { t: fr.t, obs: fr.obs, act: fr.act, snap, mission, t0: 0, next: 0 };
     this.restored = true;
     this.changed();
     return true;
@@ -104,18 +144,30 @@ export class Teach {
   async loadFromHash() {
     const m = /#ukazka=([A-Za-z0-9_-]+)/.exec(location.hash);
     if (!m || typeof DecompressionStream === 'undefined') return 0;
+    // the link is consumed once: a reload must not re-import it over later work
+    try { if (typeof history !== 'undefined') history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* ignore */ }
+    if (m[1].length > MAX_HASH) { this.rejected = 'too-big'; return 0; }
     try {
       const bin = atob(m[1].replace(/-/g, '+').replace(/_/g, '/')), u8 = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-      const txt = await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
-      const j = JSON.parse(txt), mission = MISSIONS.find((x) => x.id === j.m);
-      if (!mission || !j.t || j.t.length < 5 || j.s.qpos.length !== this.d.qpos.length) return 0;
-      const snap = { time: 0 }; for (const k of SNAP_KEYS) snap[k] = j.s[k] ? Float64Array.from(j.s[k]) : null;
-      this.demo = { t: j.t, obs: j.o, act: j.a, snap, mission, t0: 0, next: 0 };
+      // decompress with a size cap (a tiny gzip can expand enormously)
+      const reader = new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip')).getReader(), parts = [];
+      let size = 0;
+      for (;;) {
+        const { done, value } = await reader.read(); if (done) break;
+        size += value.length;
+        if (size > MAX_JSON) { reader.cancel().catch(() => {}); this.rejected = 'too-big'; return 0; }
+        parts.push(value);
+      }
+      const all = new Uint8Array(size); let o = 0; for (const p of parts) { all.set(p, o); o += p.length; }
+      const j = JSON.parse(new TextDecoder().decode(all));
+      const mission = j && MISSIONS.find((x) => x.id === j.m), snap = j && this.validSnap(j.s), fr = j && this.validFrames(j.t, j.a, j.o);
+      if (!mission || !snap || !fr) { this.rejected = 'invalid'; return 0; }
+      this.demo = { t: fr.t, obs: fr.obs, act: fr.act, snap, mission, t0: 0, next: 0 };
       this.restored = false; this.shared = true;
       this.persist(); this.changed();
-      return j.t.length;
-    } catch (e) { return 0; }
+      return fr.t.length;
+    } catch (e) { this.rejected = 'invalid'; return 0; }
   }
 
   /** Import the JSON from download() (also from another computer). Returns the number of frames. */
@@ -126,13 +178,19 @@ export class Teach {
     const back = (v) => v.map((x, i) => (i === 5 ? glo + x / 100 * (ghi - glo) : x * Math.PI / 180));
     const pr = j.printedrobotics || {};
     const mission = MISSIONS.find((m) => m.id === pr.mission) || this.ux.runner.m;
-    const D = { t: [], obs: [], act: [], mission, t0: 0, next: 0 };
-    for (const f of ep.frames) { D.t.push(+f.timestamp); D.obs.push(back(f['observation.state'])); D.act.push(back(f.action)); }
+    if (ep.frames.length > MAX_FRAMES) throw new Error('too long');
+    const row = (v) => { if (!Array.isArray(v) || v.length !== 6) throw new Error('bad row'); return back(v); };
+    const t = [], obs = [], act = [];
+    for (const f of ep.frames) { if (!f || typeof f !== 'object') throw new Error('bad frame'); t.push(f.timestamp); obs.push(row(f['observation.state'])); act.push(row(f.action)); }
+    const fr = this.validFrames(t, act, obs);
+    if (!fr) throw new Error('bad frames');
+    let snap = null;
+    if (pr.snapshot != null) { snap = this.validSnap(pr.snapshot); if (!snap) throw new Error('bad snapshot'); }   // partial = reject
+    const D = { t: fr.t, obs: fr.obs, act: fr.act, mission, t0: 0, next: 0 };
     if (this.recording) this.stopRec();
     this.stopReplay();
-    if (pr.snapshot && pr.snapshot.qpos && pr.snapshot.qpos.length === this.d.qpos.length) {
-      D.snap = { time: pr.snapshot.time || 0 };
-      for (const k of SNAP_KEYS) D.snap[k] = pr.snapshot[k] ? Float64Array.from(pr.snapshot[k]) : null;
+    if (snap) {
+      D.snap = snap;
     } else {
       // no scene snapshot: the mission's start scene with the arm at the first recorded pose
       this.ux.beginReplayReset({ mission });
@@ -162,7 +220,13 @@ export class Teach {
     if (!this.demo) return false;
     if (this.recording) this.stopRec();
     this.ux.ctl.cancel(); this.app.stopDemo();
-    this.restart();
+    try { this.restart(); }
+    catch (e) {
+      // never throw into the UI: a damaged demonstration is dropped with a message
+      this.demo = null; this.persist(); this.changed();
+      if (this.ux.panel) this.ux.panel.toast('Ukázku nejde přehrát – je poškozená, smazali jsme ji', 'err');
+      return false;
+    }
     this.replaying = true;
     this.changed();
     return true;

@@ -3,6 +3,7 @@
 
 import { MISSIONS } from '../missions.js';
 import { VIEW_LABELS } from './cameras.js';
+import { store } from './store.js';
 
 const $ = (id) => document.getElementById(id);
 const h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
@@ -446,12 +447,16 @@ export class Panel {
         <div class="ux-modal-top"><p class="mono">Nápověda</p><button type="button" class="ux-x" aria-label="Zavřít">×</button></div>
         <h2 id="ux-help-h">Ovládání a zkratky</h2>
         <dl class="ux-keys">${keys.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
+        <label class="ux-check"><input type="checkbox" id="ux-keys-on"> Zkratky jednou klávesou (písmena, číslice, mezerník) fungují kdekoli na stránce. Vypnuté fungují jen se zaměřenou 3D scénou.</label>
         <div class="ux-row2"><button type="button" class="btn btn-o" id="ux-tour">Spustit průvodce znovu</button></div>
       </div></div>`);
     document.body.appendChild(dlg);
     trapFocus(dlg);
     dlg.querySelector('.ux-x').addEventListener('click', () => this.closeHelp());
     dlg.addEventListener('click', (e) => { if (e.target === dlg) this.closeHelp(); });
+    const ko = $('ux-keys-on');
+    ko.checked = this.ux.keysOn;
+    ko.addEventListener('change', () => { this.ux.keysOn = ko.checked; store.set('keys-on', ko.checked); });
     $('ux-tour').addEventListener('click', () => { this.closeHelp(); this.ux.onboarding.start(true); });
   }
   openHelp() { this.lastFocus = document.activeElement; this.help.hidden = false; this.help.querySelector('.ux-x').focus(); }

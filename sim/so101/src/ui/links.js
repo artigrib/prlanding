@@ -55,6 +55,7 @@ export class Links {
     const cr = this.m.actuator_ctrlrange; this.lim = app.act.map((a) => [cr[2 * a], cr[2 * a + 1]]);
   }
 
+  isJaw(part) { return JAW_BODIES.has(part.bname); }
   enabled() { const ux = this.ux; return !ux.explode.on && !ux.teach.replaying && !ux.penTool; }
 
   // ---------- picking ----------
