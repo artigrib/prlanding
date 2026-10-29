@@ -160,6 +160,9 @@ const strings = {
   'Čelisti': 'Jaws', 'klepnutím otevřete / zavřete chapadlo': 'tap to open / close the gripper', 'přepnout pohled kamery': 'switch camera view', 'kamera na zápěstí': 'wrist camera',
   'rozložený pohled': 'exploded view', 'nahrát / přehrát ukázku': 'record / play a demo', 'ruka domů': 'arm home', 'začít misi znovu': 'restart the mission', 'zrušit pohyb, zavřít okno': 'cancel the move, close the window',
   'Zavřít': 'Close', 'Skutečná ruka': 'Real arm', 'Kostka': 'Cube', 'Miska': 'Bowl', 'Koule': 'Ball', 'Výška': 'Height', 'Rychlost': 'Speed', 'Kamera': 'Camera', 'Pohled': 'View',
+  'Zkratky jednou klávesou (písmena, číslice, mezerník) fungují kdekoli na stránce. Vypnuté fungují jen se zaměřenou 3D scénou.': 'Single-key shortcuts (letters, digits, space) work anywhere on the page. When off, they work only while the 3D scene has focus.',
+  'Ukázku nejde přehrát – je poškozená, smazali jsme ji': 'The demo can’t be played – it’s damaged, so we deleted it',
+  'Odkaz s ukázkou je poškozený nebo příliš velký – nic jsme nenahráli': 'The demo link is damaged or too large – nothing was loaded',
   /* teach (JSON export notes) */
   'Ukázkový formát inspirovaný datasety LeRobot (sloupce observation.state a action po snímcích).': 'Example format inspired by LeRobot datasets (observation.state and action columns per frame).',
   'Slouží k pochopení principu, není to přímo načitatelný LeRobot dataset (ten používá Parquet a videa z kamer).': 'Meant for understanding the idea; it isn’t a directly loadable LeRobot dataset (those use Parquet and camera videos).',

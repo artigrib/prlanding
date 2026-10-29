@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  <url><loc>https://printedrobotics.cz/</loc></url>
+  <url><loc>https://printedrobotics.cz/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/"/></url>
+  <url><loc>https://printedrobotics.cz/en/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/"/></url>
   <url><loc>https://printedrobotics.cz/kviz.html</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/kviz.html"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/quiz/"/></url>
   <url><loc>https://printedrobotics.cz/en/quiz/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/kviz.html"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/quiz/"/></url>
   <url><loc>https://printedrobotics.cz/sada/so101/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/so101/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/so101/"/></url>
@@ -39,5 +40,6 @@
   <url><loc>https://printedrobotics.cz/en/kit/svrn/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/svrn/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/svrn/"/></url>
   <url><loc>https://printedrobotics.cz/sada/vert150/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/vert150/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/vert150/"/></url>
   <url><loc>https://printedrobotics.cz/en/kit/vert150/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sada/vert150/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/kit/vert150/"/></url>
-  <url><loc>https://printedrobotics.cz/sim/so101/</loc></url>
+  <url><loc>https://printedrobotics.cz/sim/so101/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sim/so101/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/sim/so101/?lang=en"/></url>
+  <url><loc>https://printedrobotics.cz/sim/so101/?lang=en</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sim/so101/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/sim/so101/?lang=en"/></url>
 </urlset>

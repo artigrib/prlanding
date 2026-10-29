@@ -6,6 +6,9 @@
 <title>printedrobotics.cz — vyzkoušejte robota v prohlížeči, pak si ho postavte</title>
 <meta name="description" content="Robotickou ruku SO-101 si vyzkoušíte ve fyzikální simulaci přímo v prohlížeči, bojové roboty v aréně. Pak vám díly vytiskneme, doplníme hardware podle kusovníku a pošleme v jedné krabici.">
 <link rel="canonical" href="https://printedrobotics.cz/">
+<link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/">
+<link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/">
+<link rel="alternate" hreflang="x-default" href="https://printedrobotics.cz/">
 <meta name="robots" content="index,follow">
 <meta name="geo.placename" content="Prague"><meta name="geo.region" content="CZ">
 <meta name="theme-color" content="#FFFFFF">
@@ -24,6 +27,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/i18n.css">
 <link rel="preload" as="image" href="assets/media/so101-poster.jpg" fetchpriority="high">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"Organization","name":"printedrobotics.cz","url":"https://printedrobotics.cz/",
@@ -36,7 +40,7 @@
 
 <header class="site-h" id="site-h">
 <div class="wrap"><div class="hbar">
-<div class="brand"><i aria-hidden="true"></i><a href="./">printedrobotics</a></div>
+<div class="brand"><i aria-hidden="true"></i><a href="./">printedrobotics</a><!--lang-sw--><span class="lang-sw"><span aria-current="true" lang="cs" title="Čeština">CZ</span><span class="sep" aria-hidden="true">/</span><a href="en/" hreflang="en" lang="en" data-lang="en" title="English">EN</a></span><!--/lang-sw--></div>
 <nav class="nav" aria-label="Hlavní menu"><a href="#vyzkousejte" data-sec="vyzkousejte">Simulace</a><a href="#arena" data-sec="arena">Aréna</a><a href="#novinky" data-sec="novinky">Novinky</a><a href="#katalog" data-sec="katalog">Katalog</a><a href="#licence" data-sec="licence">Licence</a></nav>
 <a class="pill" href="kviz.html">Najít robota <span aria-hidden="true">→</span></a>
 </div></div>
@@ -240,6 +244,7 @@
 
 <script src="assets/config.js"></script>
 <script src="assets/data.js"></script>
+<script src="assets/i18n.js" data-auto></script>
 <script src="assets/app.js"></script>
 </body>
 </html>

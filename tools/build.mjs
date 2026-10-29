@@ -240,7 +240,7 @@ home = home.replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->
   .replace(/id="robot-count">\d+</, `id="robot-count">${R.length}<`).replace(/id="robot-count2">\d+</, `id="robot-count2">${R.length}<`);
 if (!home.includes('<!--/cards-->')) throw new Error('index.html: cards placeholder not found');
 // Czech home gets its hreflang pair + switcher; the English home is rendered from it
-if (home.includes('<!--/cards-->') && home.includes('id="vyzkousejte"')) { // TEMP gate until home v2 (PR #8) is on main
+if (home.includes('<!--/cards-->')) {
   home = wireI18n(setAlternates(home, '', 'en/'), 'cs', 'index.html', '', 'en/', '');
   const enCards = W.en.PR_ROBOTS.map((r, i) => `<a class="card" href="sada/${r.id}/"><div class="tile"><span class="tag">${r.preparing ? 'Připravujeme' : 'Předobjednávka'}</span><img src="img/${r.id}_white.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
     `<span class="card-meta"><span class="mono" style="color:var(--ink)">${no(i)}</span><span class="mono">${esc(r.preparing ? 'Připravujeme' : r.level)}</span></span>` +
