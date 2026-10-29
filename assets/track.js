@@ -2,7 +2,16 @@
  * "Povolit analytiku"; DNT/GPC = declined. Docs, API and events: docs/analytics/events.md */
 (function (w, d) {
   'use strict';
+  // Site-wide switch. false = no banner, no footer link, no storage, no requests (calls are no-ops).
+  // Turn on only together with the operator's details on /soukromi/ (docs/analytics/events.md).
+  var ANALYTICS_ENABLED = false;
   if (w.prTrack) return;
+  if (!ANALYTICS_ENABLED) {
+    var noop = function () {};
+    noop.consent = function () { return ''; }; noop.open = noop.flush = function () {};
+    w.prTrack = noop; w.prTrackQ = { push: noop };
+    return;
+  }
   var nav = w.navigator || {}, KEY = 'pr-consent', AID = 'pr-aid', SID = 'pr-sid';
   var URL_ = w.PR_TRACK_URL || (/(^|\.)printedrobotics\.cz$/.test(location.hostname) ? 'https://api.printedrobotics.cz/e' : '');
   var dnt = nav.globalPrivacyControl === true || nav.doNotTrack === '1' || w.doNotTrack === '1';

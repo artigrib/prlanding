@@ -10,6 +10,26 @@ Source of truth for what may be collected: [`analytics/schema.json`](../../analy
 invalid properties are dropped. `backend/api/src/schema.json` is a copy (the api's Docker build
 context); a unit test fails when they differ.
 
+## Ships dark: `ANALYTICS_ENABLED`
+
+`assets/track.js` starts with `var ANALYTICS_ENABLED = false;`. While it is `false` the whole client is
+inert on every page (site, sims, arena): no banner, no "Nastavení soukromí" footer link, nothing in
+localStorage/sessionStorage, no requests; `prTrack(...)` calls are no-ops. The privacy pages
+`/soukromi/` and `/en/privacy/` are built but `noindex,nofollow`, not in the sitemap and not linked;
+the operator's missing details are HTML comments (`<!-- TODO (provozovatel) ... -->`) in
+`tools/content/soukromi.{cs,en}.html`. The api `/e` endpoint deploys and simply idles.
+
+To switch on (GDPR: the controller must be identified before anything is collected):
+1. Fill every `TODO (provozovatel)` comment in `tools/content/soukromi.cs.html` / `.en.html` as
+   visible text (operator name/IČO/address/contact, server provider, Amplitude retention).
+2. In `tools/build.mjs` remove `draft: true` from the `soukromi` entry (indexable + sitemap), run
+   `node tools/build.mjs`.
+3. Set `var ANALYTICS_ENABLED = true;` in `assets/track.js`.
+4. Add the Amplitude secret (below) and deploy the backend.
+
+`tests/analytics-e2e.mjs` checks both states: the committed file (flag off → no banner, no storage,
+zero requests) and the same file served with the flag flipped (all behaviour below).
+
 ## Consent
 
 | | |

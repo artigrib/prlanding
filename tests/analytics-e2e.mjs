@@ -57,13 +57,18 @@ async function waitFor(pred, ms = 30000) {
 const has = (ev, name, f = () => true) => ev.some((e) => e.event === name && f(e));
 
 const browser = await chromium.launch({ args: ARGS });
-async function ctx({ vp = { width: 1440, height: 900 }, dnt = false } = {}) {
+// The committed track.js ships dark (ANALYTICS_ENABLED = false); "flag on" tests serve it with the flag flipped.
+const TRACK = fs.readFileSync(path.join(ROOT, 'assets/track.js'), 'utf8');
+const TRACK_ON = TRACK.replace('var ANALYTICS_ENABLED = false;', 'var ANALYTICS_ENABLED = true;');
+if (TRACK_ON === TRACK) throw new Error('ANALYTICS_ENABLED flag not found in assets/track.js');
+async function ctx({ vp = { width: 1440, height: 900 }, dnt = false, enabled = true } = {}) {
   const c = await browser.newContext({ viewport: vp, deviceScaleFactor: 1, hasTouch: vp.width < 600, isMobile: vp.width < 600 });
   await c.addInitScript(([url, dnt]) => {
     window.PR_TRACK_URL = url;
     if (dnt) Object.defineProperty(Navigator.prototype, 'globalPrivacyControl', { get: () => true });
   }, [API, dnt]);
   await c.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  if (enabled) await c.route(/\/assets\/track\.js(\?|$)/, (r) => r.fulfill({ status: 200, contentType: 'text/javascript', body: TRACK_ON }));
   await c.route(/script\.google\.com/, (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }));
   c.hits = [];
   c.on('request', (r) => { if (r.url().startsWith(API)) { c.hits.push(r.url()); if (process.env.DEBUG) console.log('  /e', r.postData()); } });
@@ -77,6 +82,24 @@ async function page(c, url) {
   return p;
 }
 const banner = (p) => p.locator('section.prc');
+
+// ---------------------------------------------------------------- 0. flag off (as committed): dark
+{
+  const c = await ctx({ enabled: false });
+  const p = await page(c, '/');
+  await sleep(2000);
+  ok((await banner(p).count()) === 0, 'flag off: no banner');
+  ok((await p.locator('[data-pr-consent].prc-f').count()) === 0, 'flag off: no "Nastavení soukromí" footer link');
+  await p.evaluate(() => { window.prTrack('cta_click', { id: 'x' }); window.prTrack.consent('granted'); window.prTrack.flush(); });
+  ok((await p.evaluate(() => Object.keys(localStorage).filter((k) => /^pr-(consent|aid|sid)$/.test(k)).length + Object.keys(sessionStorage).filter((k) => k === 'pr-sid').length)) === 0, 'flag off: nothing in localStorage/sessionStorage');
+  await p.goto(SITE + '/sim/so101/', { waitUntil: 'load' });
+  await sleep(3000);
+  ok((await banner(p).count()) === 0, 'flag off: no banner on the sim');
+  await p.close({ runBeforeUnload: true });
+  await sleep(500);
+  ok(c.hits.length === 0, `flag off -> zero requests to /e (got ${c.hits.length})`);
+  await c.close();
+}
 
 // ---------------------------------------------------------------- 1. no decision: nothing is sent
 {

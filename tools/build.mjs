@@ -42,7 +42,8 @@ const CONTENT = [
   { id: 'lerobot', cs: 'navody/so101-lerobot-prvni-kroky/', en: 'en/guides/so101-lerobot-first-steps/', nav: 'navody' },
   { id: 'combat', cs: 'navody/bojovi-roboti-150-g/', en: 'en/guides/combat-robots-150-g/', nav: 'navody' },
   { id: 'licence', cs: 'navody/licence-open-source-hardwaru/', en: 'en/guides/open-source-hardware-licences/', nav: 'navody' },
-  { id: 'soukromi', cs: 'soukromi/', en: 'en/privacy/', nav: null }
+  // draft: noindex and kept out of the sitemap until analytics is switched on (assets/track.js ANALYTICS_ENABLED)
+  { id: 'soukromi', cs: 'soukromi/', en: 'en/privacy/', nav: null, draft: true }
 ];
 const CONTENT_EN = Object.fromEntries(CONTENT.map(c => [c.cs, c.en]));
 
@@ -394,7 +395,7 @@ function contentPage(c, L) {
 <meta name="description" content="${esc(meta.description)}">
 <link rel="canonical" href="${url}">
 ${alternates(c.cs, c.en)}
-<meta name="robots" content="index,follow">
+<meta name="robots" content="${c.draft ? 'noindex,nofollow' : 'index,follow'}">
 <meta name="theme-color" content="#FFFFFF">
 <meta property="og:type" content="${meta.article ? 'article' : 'website'}">
 <meta property="og:site_name" content="printedrobotics.cz">
@@ -450,7 +451,7 @@ ${en ? `<script src="${root}assets/data.en.js"></script>\n<script src="${root}as
 for (const c of CONTENT) { contentPage(c, 'cs'); contentPage(c, 'en'); }
 
 // sitemap with hreflang pairs; sim/so101 is an indexable landing page, sim/arena is noindex
-const pairs = [['', fs.existsSync('en/index.html') ? 'en/' : null], ['kviz.html', 'en/quiz/'], ...R.map(r => [PATH.kit('cs', r.id), PATH.kit('en', r.id)]), ...CONTENT.map(c => [c.cs, c.en]), ['sim/so101/', read('sim/so101/index.html').includes('hreflang="en"') ? 'sim/so101/?lang=en' : null]];
+const pairs = [['', fs.existsSync('en/index.html') ? 'en/' : null], ['kviz.html', 'en/quiz/'], ...R.map(r => [PATH.kit('cs', r.id), PATH.kit('en', r.id)]), ...CONTENT.filter(c => !c.draft).map(c => [c.cs, c.en]), ['sim/so101/', read('sim/so101/index.html').includes('hreflang="en"') ? 'sim/so101/?lang=en' : null]];
 const loc = (u, alt) => `  <url><loc>${SITE}${u}</loc>${alt ? `<xhtml:link rel="alternate" hreflang="cs" href="${SITE}${alt[0]}"/><xhtml:link rel="alternate" hreflang="en" href="${SITE}${alt[1]}"/>` : ''}</url>`;
 const urls = [];
 for (const [cs, en] of pairs) { urls.push(loc(cs, en && [cs, en])); if (en) urls.push(loc(en, [cs, en])); }
