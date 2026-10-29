@@ -126,7 +126,7 @@ export class Recorder {
 export class Track {
   constructor(layout, chunks, events = [], header = {}) {
     this.layout = layout; this.ch = layout.length; this.header = header;
-    this.index = Object.fromEntries(layout.map(([n], i) => [n, i]));
+    this.index = Object.assign(Object.create(null), Object.fromEntries(layout.map(([n], i) => [n, i])));
     this.inv = Float64Array.from(layout, l => 1 / l[1]);
     this.chunks = chunks.slice().sort((a, b) => a.k - b.k);
     this.start = this.chunks.length ? this.chunks[0].k : 0;
@@ -197,17 +197,55 @@ export function toJSON(track, header = {}) {
     chunks: track.chunks.map(c => ({ k: c.k, n: c.n, d: b64.enc(c.d) }))
   };
 }
+// limits for imported files (a 3-minute match is ~200 channels and ~36 chunks)
+export const LIMITS = { channels: 2000, chunks: 2000, events: 5000, inflated: 64 * 1024 * 1024, file: 20 * 1024 * 1024 };
+export class ReplayError extends Error {}
+const bad = m => new ReplayError(m || 'Poškozený záznam.');
+const FORBIDDEN = new Set(['__proto__', 'constructor', 'prototype']);
+const EV_TYPES = new Set(['hit', 'fire', 'flip', 'pit', 'out', 'ko', 'wheel']);
+const num = (x, lo, hi) => typeof x === 'number' && Number.isFinite(x) && x >= lo && x <= hi;
+// events: copy only known fields (the file is untrusted)
+function cleanEvent(e) {
+  if (!e || typeof e !== 'object' || !num(e.t, 0, 1e6) || !EV_TYPES.has(e.type)) return null;
+  const o = { t: e.t, type: e.type };
+  if (num(e.by, -1, 1)) o.by = e.by | 0;
+  if (num(e.who, -1, 1)) o.who = e.who | 0;
+  if (num(e.e, 0, 10)) o.e = e.e;
+  if (e.p && num(e.p.x, -1e3, 1e3) && num(e.p.z, -1e3, 1e3)) o.p = { x: e.p.x, y: num(e.p.y, -1e3, 1e3) ? e.p.y : 0, z: e.p.z };
+  return o;
+}
 export function fromJSON(o) {
-  if (!o || o.format !== FORMAT) throw new Error('Soubor není záznam z arény.');
-  if (o.v > VERSION) throw new Error('Záznam je z novější verze arény.');
-  if (o.hz !== HZ) throw new Error('Nepodporovaná frekvence záznamu.');
-  if (!Array.isArray(o.layout) || !Array.isArray(o.chunks)) throw new Error('Poškozený záznam.');
-  const layout = o.layout.map(([n, q]) => [String(n), +q || 1]);
-  const chunks = o.chunks.map(c => ({ k: c.k | 0, n: Math.min(CHUNK * 4, c.n | 0), d: b64.dec(String(c.d)) }));
-  const events = (o.events || []).filter(e => e && typeof e.t === 'number' && typeof e.type === 'string').slice(0, 5000);
-  const tr = new Track(layout, chunks, events, o.header || {});
+  if (!o || typeof o !== 'object' || o.format !== FORMAT) throw bad('Soubor není záznam z arény.');
+  if (!num(o.v, 1, 1e6)) throw bad();
+  if (o.v > VERSION) throw bad('Záznam je z novější verze arény.');
+  if (o.hz !== HZ) throw bad('Nepodporovaná frekvence záznamu.');
+  if (!Array.isArray(o.layout) || !Array.isArray(o.chunks)) throw bad();
+  if (!o.layout.length || o.layout.length > LIMITS.channels) throw bad();
+  if (!o.chunks.length) throw bad('Záznam je prázdný.');
+  if (o.chunks.length > LIMITS.chunks) throw bad('Záznam je příliš dlouhý.');
+  if (o.events != null && (!Array.isArray(o.events) || o.events.length > LIMITS.events)) throw bad();
+  const names = new Set();
+  const layout = o.layout.map(l => {
+    if (!Array.isArray(l) || typeof l[0] !== 'string' || !/^[\w.]{1,40}$/.test(l[0]) || FORBIDDEN.has(l[0]) || names.has(l[0])) throw bad();
+    if (!num(l[1], 1e-6, 1e6)) throw bad();
+    names.add(l[0]);
+    return [l[0], l[1]];
+  });
+  // chunks: 1..CHUNK ticks each, contiguous, ascending
+  let next = null;
+  const chunks = o.chunks.map(c => {
+    if (!c || typeof c !== 'object' || !Number.isInteger(c.k) || !Number.isInteger(c.n) || c.k < 0 || c.n < 1 || c.n > CHUNK || typeof c.d !== 'string') throw bad();
+    if (next != null && c.k !== next) throw bad();
+    next = c.k + c.n;
+    let d;
+    try { d = b64.dec(c.d); } catch (_) { throw bad(); }
+    return { k: c.k, n: c.n, d };
+  });
+  const events = (o.events || []).map(cleanEvent).filter(Boolean);
+  const header = o.header && typeof o.header === 'object' && !Array.isArray(o.header) ? o.header : {};
+  const tr = new Track(layout, chunks, events, header);
   // validate every chunk once (throws on garbage instead of failing mid-playback)
-  for (const c of tr.chunks) decodeChunk(c.d, c.n, tr.ch);
+  for (const c of tr.chunks) { try { decodeChunk(c.d, c.n, tr.ch); } catch (_) { throw bad(); } }
   return tr;
 }
 
@@ -217,23 +255,45 @@ export async function gzip(u8) {
   const s = new Blob([u8]).stream().pipeThrough(new CompressionStream('gzip'));
   return new Uint8Array(await new Response(s).arrayBuffer());
 }
-export async function gunzip(u8) {
-  const s = new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'));
-  return new Uint8Array(await new Response(s).arrayBuffer());
+// inflate with a hard cap on the output size (gzip bombs)
+export async function gunzip(u8, max = LIMITS.inflated) {
+  const rd = new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip')).getReader();
+  const parts = []; let n = 0;
+  for (;;) {
+    const { done, value } = await rd.read();
+    if (done) break;
+    n += value.length;
+    if (n > max) { rd.cancel().catch(() => {}); throw bad('Záznam je po rozbalení příliš velký.'); }
+    parts.push(value);
+  }
+  const out = new Uint8Array(n); let o = 0;
+  for (const p of parts) { out.set(p, o); o += p.length; }
+  return out;
 }
 // -> Uint8Array (gzip when the browser can, plain JSON otherwise)
 export async function serialize(track, header) {
   const json = new TextEncoder().encode(JSON.stringify(toJSON(track, header)));
   return (await gzip(json)) || json;
 }
-export async function deserialize(u8) {
-  if (!(u8 instanceof Uint8Array)) u8 = new Uint8Array(u8);
-  if (u8.length > 20 * 1024 * 1024) throw new Error('Soubor je příliš velký.');
-  if (u8[0] === 0x1f && u8[1] === 0x8b) {
-    if (typeof DecompressionStream === 'undefined') throw new Error('Tento prohlížeč neumí rozbalit záznam.');
-    u8 = await gunzip(u8);
+export async function deserialize(u8, limits = LIMITS) {
+  try {
+    if (!(u8 instanceof Uint8Array)) u8 = new Uint8Array(u8);
+    if (u8.length > limits.file) throw bad('Soubor je příliš velký.');
+    if (u8[0] === 0x1f && u8[1] === 0x8b) {
+      if (typeof DecompressionStream === 'undefined') throw bad('Tento prohlížeč neumí rozbalit záznam.');
+      try { u8 = await gunzip(u8, limits.inflated); } catch (e) { throw e instanceof ReplayError ? e : bad(); }
+    }
+    let o;
+    try { o = JSON.parse(new TextDecoder().decode(u8)); } catch (_) { throw bad('Soubor není záznam z arény.'); }
+    return fromJSON(o);
+  } catch (e) {
+    // never surface raw engine errors (RangeError, …) to the Czech UI
+    throw e instanceof ReplayError ? e : bad();
   }
-  let o;
-  try { o = JSON.parse(new TextDecoder().decode(u8)); } catch (_) { throw new Error('Soubor není záznam z arény.'); }
-  return fromJSON(o);
+}
+
+// ?replay=<path> hook: same-origin relative paths only (no scheme, no //host, no backslash, no '..')
+export function isLocalReplayPath(p, base) {
+  if (typeof p !== 'string' || !p || p.length > 200 || p.startsWith('//') || p.includes('..') || !/^\/?[\w\-./]+$/.test(p)) return false;
+  try { const b = new URL(base); return new URL(p, b).origin === b.origin; } catch (_) { return false; }
 }

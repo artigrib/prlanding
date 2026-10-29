@@ -17,12 +17,13 @@ export class ClipRecorder {
     const stream = this.canvas.captureStream(this.fps);
     this.parts = [];
     const bps = Math.min(6e6, Math.max(1.5e6, this.canvas.width * this.canvas.height * 2));
-    this.rec = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: bps });
+    try { this.rec = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: bps }); } catch (_) { stream.getTracks().forEach(t => t.stop()); throw new Error('Nahrávání videa tento prohlížeč neumí.'); }
     this.rec.ondataavailable = e => { if (e.data && e.data.size) this.parts.push(e.data); };
     this.done = new Promise((res, rej) => {
       this.rec.onstop = () => { stream.getTracks().forEach(t => t.stop()); res(new Blob(this.parts, { type: 'video/webm' })); };
-      this.rec.onerror = e => rej(e.error || new Error('Nahrávání selhalo.'));
+      this.rec.onerror = e => { stream.getTracks().forEach(t => t.stop()); this.rec = null; rej(new Error('Nahrávání klipu selhalo.')); };
     });
+    this.done.catch(() => {});        // a failure is reported by stop(), never as an unhandled rejection
     this.rec.start(250);
   }
   stop() {

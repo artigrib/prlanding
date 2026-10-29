@@ -14,8 +14,8 @@ import { sfx } from './audio/sfx.js';
 import { store } from './ui/store.js';
 import { judge, CATS } from './ui/judges.js';
 import { createReplayUI } from './ui/replay.js';
-import { Recorder, deserialize, serialize as serializeReplay } from './replay/codec.js';
-import { createBinding, remapBinding } from './replay/scene.js';
+import { Recorder, deserialize, serialize as serializeReplay, isLocalReplayPath } from './replay/codec.js';
+import { createBinding, remapBinding, sanitizeHazards } from './replay/scene.js';
 import { garageModel } from './ui/garage.js';
 
 const { ROBOTS, Robot } = RB;
@@ -172,7 +172,8 @@ renderer.domElement.addEventListener('webglcontextlost', e => {
 });
 renderer.domElement.addEventListener('webglcontextrestored', () => {
   ctxLost = false; failed = false; ui.fail.hidden = true;
-  showScreen(game.state === 'menu' ? 'menu' : game.state === 'end' ? 'end' : 'play');
+  const st = game.state;
+  showScreen(st === 'menu' ? 'menu' : st === 'end' ? 'end' : st === 'replay' ? 'replay' : st === 'paused' ? 'pause' : 'play');
   last = performance.now();
 });
 
@@ -658,9 +659,26 @@ function openReplay(kind, back) {
   game.state = 'replay';
   sfx.stopMotors(); clearPops();
   showScreen('replay');
-  rui.open({ track, binding: recBind, window: win, title, instant: kind !== 'full', autoClose: back === 'auto', speed, header: replayHeader(), timed: timed() });
+  try {
+    rui.open({ track, binding: recBind, window: win, title, instant: kind !== 'full', autoClose: back === 'auto', speed, header: replayHeader(), timed: timed() });
+  } catch (e) { console.error(e); return replayFailed(); }
   updateCameras(0, true);
   ui.skip.focus({ preventScroll: true });
+}
+// rui.open threw (state is 'replay' but nothing plays): go back where we came from, with a Czech message
+const REPLAY_FAIL = 'Záznam se nepodařilo přehrát.';
+function replayFailed(text = REPLAY_FAIL) {
+  const src = replaySrc;
+  if (!src || src.kind === 'file') {
+    replaySrc = null;
+    try { if (src && src.binding) src.binding.restore(src.saved, scene); } catch (_) { /* ignore */ }
+    if (src && src.prevMap && src.prevMap !== S.map) setMap(src.prevMap);
+    toMenu();
+    $('#load-msg').textContent = text;
+    return;
+  }
+  closedReplay('user');
+  if (game.state === 'end') ui.shareMsg.textContent = text; else flash(text, 2);
 }
 function highlightOf(track) {
   const ev = track.events;
@@ -675,7 +693,12 @@ function closedReplay(reason) {
   const src = replaySrc; replaySrc = null;
   rig.orbit.auto = true;
   if (!src) return;
-  if (src.kind === 'file') { if (reason !== 'silent') { if (src.prevMap && src.prevMap !== S.map) setMap(src.prevMap); toMenu(); } return; }
+  if (src.kind === 'file') {
+    // wheels back on the imported robots, hazards back to their pre-replay state
+    try { src.binding.restore(src.saved, scene); } catch (_) { /* ignore */ }
+    if (reason !== 'silent') { if (src.prevMap && src.prevMap !== S.map) setMap(src.prevMap); toMenu(); }
+    return;
+  }
   src.binding.restore(src.saved, scene);
   if (reason === 'silent') return;
   rig.set(camModeFor(), true);
@@ -694,30 +717,41 @@ async function playReplayFile(file) {
   try { track = await deserialize(new Uint8Array(await file.arrayBuffer())); } catch (e) { msg.textContent = e.message || 'Soubor se nepodařilo načíst.'; return; }
   const h = track.header || {};
   const rs = Array.isArray(h.robots) ? h.robots.slice(0, 2) : [];
-  if (rs.length !== 2 || !rs.every(r => r && own(ROBOTS, r.id))) { msg.textContent = 'Záznam obsahuje neznámého robota.'; return; }
+  if (rs.length !== 2 || !rs.every(r => r && typeof r === 'object' && typeof r.id === 'string' && own(ROBOTS, r.id))) { msg.textContent = 'Záznam obsahuje neznámého robota.'; return; }
+  // validate everything before the current robots / arena are touched
+  const hzSpec = h.hazards == null ? null : sanitizeHazards(h.hazards);
+  if (h.hazards != null && !hzSpec) { msg.textContent = 'Záznam je poškozený (nástrahy).'; return; }
+  const mods = r => (Array.isArray(r.mods) ? r.mods.slice(0, 16).filter(m => typeof m === 'string' && m.length <= 40) : []);
+  if (game.state === 'replay') quitReplay();
   const prevMap = S.map;
   if (h.map && MAP_LIST.some(m => m.id === h.map) && h.map !== S.map) setMap(h.map);
   if (world) removeBodies();
   disposeRobot(player); disposeRobot(opp);
   const col = c => (/^#[0-9a-f]{6}$/i.test(c || '') ? c : '#9A9A94');
-  player = new Robot(ROBOTS[rs[0].id], col(rs[0].color), scene, { mods: Array.isArray(rs[0].mods) ? rs[0].mods.map(String) : [] });
-  opp = new Robot(ROBOTS[rs[1].id], col(rs[1].color), scene, { mods: Array.isArray(rs[1].mods) ? rs[1].mods.map(String) : [] });
-  loadModel(player); loadModel(opp);
-  const binding = remapBinding(createBinding([player, opp], map.raw, Array.isArray(h.hazards) ? h.hazards : null), track);
+  replaySrc = { kind: 'file', prevMap, header: h };
+  game.state = 'replay'; clearPops();
+  let binding;
+  try {
+    player = new Robot(ROBOTS[rs[0].id], col(rs[0].color), scene, { mods: mods(rs[0]) });
+    opp = new Robot(ROBOTS[rs[1].id], col(rs[1].color), scene, { mods: mods(rs[1]) });
+    loadModel(player); loadModel(opp);
+    binding = remapBinding(createBinding([player, opp], map.raw, hzSpec), track);
+    replaySrc.binding = binding; replaySrc.saved = binding.capture();
+  } catch (e) { console.error(e); return replayFailed(); }
   replayNames = rs.map(r => ROBOTS[r.id].short || ROBOTS[r.id].name);
   ui.pName.textContent = String(rs[0].name || ROBOTS[rs[0].id].name).slice(0, 60); ui.oName.textContent = String(rs[1].name || ROBOTS[rs[1].id].name).slice(0, 60);
   ui.pTag.textContent = 'P1'; ui.oTag.textContent = 'P2';
   ui.pSw.style.background = col(rs[0].color); ui.oSw.style.background = col(rs[1].color);
-  replaySrc = { kind: 'file', prevMap, header: h };
-  game.state = 'replay'; clearPops();
   showScreen('replay');
-  rui.open({ track, binding, title: 'Záznam ze souboru', header: h, timed: h.timed !== false, noSave: false, speed: 1 });
+  try {
+    rui.open({ track, binding, title: 'Záznam ze souboru', header: h, timed: h.timed !== false, noSave: false, speed: 1 });
+  } catch (e) { console.error(e); return replayFailed(); }
   updateCameras(0, true);
 }
 // short-link hook: ?replay=<same-origin path> plays a stored replay (backend can come later)
 async function replayFromUrl() {
   const p = params.get('replay');
-  if (!p || !/^\/?[\w\-./]+$/.test(p) || p.includes('..')) return;
+  if (!isLocalReplayPath(p, location.href)) return;
   try {
     const r = await fetch(p, { credentials: 'same-origin' });
     if (!r.ok) return;
@@ -1141,7 +1175,11 @@ addEventListener('keydown', e => {
   sfx.unlock();
   const inField = e.target && e.target.closest && e.target.closest('input,select,textarea');
   if (inField) return;
-  if (game.state === 'replay') { if (rui.key(e)) e.preventDefault(); return; }
+  if (game.state === 'replay') {
+    if (!rui.active) { if (e.code === 'Escape') { e.preventDefault(); replayFailed(); } return; }
+    if (rui.key(e)) e.preventDefault();
+    return;
+  }
   if (e.code === 'Escape') {
     if (game.state === 'paused') pause(false);
     else if (game.state === 'fight' || game.state === 'countdown') pause(true);

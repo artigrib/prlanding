@@ -4,7 +4,29 @@
 // map rebuilt from the header, no Rapier bodies at all).
 
 const MAXW = 8;                      // wheel nodes per robot that can come off (bit mask + transform)
-const HZ_KEYS = ['theta', 'h', 'y', 't', 'open', 'warned', 'state'];
+export const HZ_KEYS = ['theta', 'h', 'y', 't', 'open', 'warned', 'state'];
+
+// hazard spec from an untrusted file -> a clean copy, or null when anything is off
+export function sanitizeHazards(list, maxHazards = 32) {
+  if (list == null) return [];
+  if (!Array.isArray(list) || list.length > maxHazards) return null;
+  const seen = new Set(), out = [];
+  for (const h of list) {
+    if (!h || typeof h !== 'object' || !Number.isInteger(h.i) || h.i < 0 || h.i >= maxHazards || seen.has(h.i) || !Array.isArray(h.keys) || h.keys.length > HZ_KEYS.length) return null;
+    seen.add(h.i);
+    const ks = new Set(), keys = [];
+    for (const k of h.keys) {
+      if (!k || typeof k !== 'object' || !HZ_KEYS.includes(k.k) || ks.has(k.k) || (k.kind !== 'num' && k.kind !== 'enum')) return null;
+      ks.add(k.k);
+      if (k.kind === 'enum') {
+        if (!Array.isArray(k.table) || k.table.length > 64 || !k.table.every(x => typeof x === 'string' && x.length <= 40)) return null;
+        keys.push({ k: k.k, kind: 'enum', table: k.table.slice() });
+      } else keys.push({ k: k.k, kind: 'num' });
+    }
+    out.push({ i: h.i, keys });
+  }
+  return out;
+}
 
 function robotChannels(i) {
   const p = `r${i}.`, L = [];
@@ -32,7 +54,8 @@ function hazardSpec(hazards) {
 export function createBinding(robots, rawMap, savedHazards) {
   const hazards = rawMap && rawMap.hazards || [];
   const debris = rawMap && rawMap.debris || null;
-  const hz = savedHazards ? savedHazards.map(s => ({ i: s.i, keys: s.keys.map(k => ({ ...k, table: k.table ? k.table.slice() : undefined })) })) : hazardSpec(hazards);
+  let hz = hazardSpec(hazards);
+  if (savedHazards) { hz = sanitizeHazards(savedHazards); if (!hz) throw new Error('replay: bad hazard spec'); }
   const layout = [];
   robots.forEach((r, i) => layout.push(...robotChannels(i)));
   for (const h of hz) for (const k of h.keys) layout.push([`h${h.i}.${k.k}`, k.kind === 'num' ? 1000 : 1]);
@@ -135,7 +158,7 @@ export function createBinding(robots, rawMap, savedHazards) {
         const H = hazards[h.i];
         for (const k of h.keys) {
           const x = v[o++];
-          if (!H) continue;
+          if (!H || !HZ_KEYS.includes(k.k)) continue;
           if (k.kind === 'enum') { const s = k.table[Math.round(x)]; if (s != null) H[k.k] = s; }
           else H[k.k] = typeof H[k.k] === 'boolean' ? x > 0.5 : x;
         }
@@ -159,6 +182,7 @@ export function createBinding(robots, rawMap, savedHazards) {
         const n = hm.node, d = (r.debris || []).find(x => x.node === n);
         if (n.userData.lost && d) { if (n.parent !== scene) scene.add(n); }
         else if (hm.parent && n.parent !== hm.parent) { hm.parent.add(n); n.position.copy(hm.p); n.quaternion.copy(hm.q); n.scale.copy(hm.s); }
+        else if (!hm.parent && n.parent === scene) scene.remove(n);
       }));
       if (saved) hazards.forEach((H, i) => { Object.assign(H, saved.hz[i] || {}); H.applyPose && H.applyPose(true); H.move && H.move(); });
       if (debris && debris.bodies && debris.bodies.length) debris.syncAll();

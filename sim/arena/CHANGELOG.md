@@ -13,6 +13,11 @@
 - **Soubor .prreplay** (gzip JSON) – „Uložit záznam“ a v menu „Přehrát uložený záznam“; aréna a roboti se postaví z hlavičky.
   Háček pro sdílené odkazy: `replayHooks.upload` (tlačítko „Sdílet odkaz“ se ukáže, až bude backend) a `?replay=<cesta>`.
 - **Klip 10 s** – WebM přes MediaRecorder ke stažení; skryto, když to prohlížeč neumí.
+- **Bezpečný import:** soubor se celý ověří dřív, než se cokoli změní – prázdné / děravé bloky, limity kanálů, bloků
+  a událostí, rozbalení gzipu max. 64 MB (ochrana proti „gzip bombě“), nástrahy jen s povolenými klíči, události jen se
+  známými poli, žádné `__proto__`. Chyby jsou vždy česky; když se přehrávač nepodaří otevřít, hra se vrátí do menu
+  (Esc funguje vždy). `?replay=` přijme jen relativní cestu na stejném původu. Zavření záznamu ze souboru vrací kola
+  a nástrahy do původního stavu; obnovení WebGL kontextu respektuje záznam a pauzu.
 - Testy: `node tests/replay-codec.test.mjs` (round trip, rozpočet velikosti, ring buffer) a `tests/replay-e2e.cjs`
   (Playwright: menu → zápas → konec → záznam, shoda poloh po uložení/načtení < 2 mm, 3 min < 300 kB, klip).
 

@@ -11,7 +11,8 @@ export const REPLAY_CAMS = [
   { id: 'auto', name: 'Režisér' }, { id: 'tv', name: 'TV přenos' }, { id: 'chase', name: 'Za robotem' },
   { id: 'top', name: 'Shora' }, { id: 'fpv', name: 'Z robota' }, { id: 'free', name: 'Volná' }
 ];
-const MARK = { hit: 'Zásah', flip: 'Převrácení', pit: 'Jáma', out: 'Mimo arénu', ko: 'K.O.', wheel: 'Upadlé kolo' };
+const MARK = Object.freeze({ hit: 'Zásah', flip: 'Převrácení', pit: 'Jáma', out: 'Mimo arénu', ko: 'K.O.', wheel: 'Upadlé kolo' });
+const markOf = t => (Object.prototype.hasOwnProperty.call(MARK, t) ? MARK[t] : null);
 const fmt = s => { s = Math.max(0, s); const m = Math.floor(s / 60), x = Math.floor(s % 60); return `${m}:${String(x).padStart(2, '0')}`; };
 const stamp = () => { const d = new Date(), p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`; };
 
@@ -95,7 +96,7 @@ export function createReplayUI(d) {
 
   function jump(dir) {
     if (!pb) return;
-    const ev = pb.track.events.filter(e => MARK[e.type] && e.t >= pb.from && e.t <= pb.to);
+    const ev = pb.track.events.filter(e => markOf(e.type) && e.t >= pb.from && e.t <= pb.to);
     const t = pb.t;
     const e = dir > 0 ? ev.find(x => x.t - 1.2 > t + 0.05) : ev.slice().reverse().find(x => x.t - 1.2 < t - 0.6);
     if (e) { pb.seek(Math.max(pb.from, e.t - 1.2)); setPlaying(true); } else if (dir < 0) pb.seek(pb.from);
@@ -130,12 +131,12 @@ export function createReplayUI(d) {
     el.marks.innerHTML = '';
     const span = pb.to - pb.from || 1;
     for (const e of pb.track.events) {
-      if (!MARK[e.type] || e.t < pb.from || e.t > pb.to) continue;
+      if (!markOf(e.type) || e.t < pb.from || e.t > pb.to) continue;
       if (e.type === 'hit' && (e.e || 0) < 0.35) continue;
       const m = document.createElement('i');
       m.className = 'mk ' + e.type + (e.type === 'hit' && e.e >= 0.7 ? ' big' : '');
       m.style.left = (100 * (e.t - pb.from) / span).toFixed(2) + '%';
-      m.title = `${MARK[e.type]} · ${fmt(e.t)}`;
+      m.title = `${markOf(e.type)} · ${fmt(e.t)}`;
       el.marks.appendChild(m);
     }
   }
@@ -149,6 +150,16 @@ export function createReplayUI(d) {
 
   // ---- public API
   function open(o) {
+    closing = false;
+    try { return openInner(o); } catch (e) {
+      // leave nothing half-open: the caller shows the error and navigates away
+      if (pb) pb.playing = false;
+      pb = null; opts = null; el.root.hidden = true;
+      throw e;
+    }
+  }
+  function openInner(o) {
+    if (!o || !o.track || !o.track.chunks || !o.track.chunks.length) throw new Error('replay: empty track');
     opts = o;
     pb = new Playback(o.track, o.binding, d.scene);
     pb.onEvent = e => d.onEvent && d.onEvent(e, pb);
@@ -170,7 +181,6 @@ export function createReplayUI(d) {
     setPlaying(true);
     paint();
     el.root.hidden = false;
-    closing = false;
     return pb;
   }
   function close(reason) {
