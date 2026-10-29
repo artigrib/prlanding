@@ -42,7 +42,7 @@ if it *drives* the arm, call `app.ux.ctl.cancel()` first (same as the sliders).
 - `src/missions.js` – 5 missions (layout, check, stars, automatic solution) + `MissionRunner`. DOM-free.
 - `src/ux.js` – glue: hooks, click-to-pick, keyboard, win flow, test API.
 - `src/ui/*` – gizmo + ghost + path preview + pen (gizmo.js), cameras + wrist PiP (cameras.js), teach & replay +
-  JSON export (teach.js), panel DOM (panel.js), onboarding, sound/haptics (audio.js), confetti (fx.js),
+  JSON export (teach.js), panel DOM (panel.js), onboarding, sound/haptics (../audio/sound.js, see src/audio/AUDIO.md), confetti (fx.js),
   extra meshes + studio lighting (extras.js), localStorage wrapper (store.js).
 - `src/ui/hidetail.js` – lazy high-detail visuals: `model/visual/so101_visual.glb` (all 14 original Menagerie
   STLs, 325 020 triangles, meshopt + 14-bit quantization, **0.98 MB**, 0.6 MB gzipped) is loaded after start
