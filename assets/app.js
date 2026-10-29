@@ -155,7 +155,7 @@
       var list = R.filter(function (r) { return filter === 'all' || r.cat === filter; });
       $('#count').textContent = list.length + (list.length === 1 ? ' sada' : list.length < 5 ? ' sady' : ' sad');
       $('#cards').innerHTML = list.map(function (r) {
-        return '<a class="card" href="' + href(r.id) + '">' + tile(r, 'white', '<span class="tag">' + status(r) + '</span>') +
+        return '<a class="card" href="' + href(r.id) + '">' + tile(r, 'white', '<span class="tag' + (r.preparing ? ' tag-p' : '') + '">' + status(r) + '</span>') +
           '<span class="card-meta"><span class="mono" style="color:var(--ink)">' + no(r) + '</span><span class="mono">' + (r.preparing ? 'Připravujeme' : esc(r.level)) + '</span></span>' +
           '<span><h3>' + esc(r.name) + '</h3><span class="type">' + esc(r.type) + '</span></span>' +
           '<span class="spec1">' + r.card.map(function (s) { return esc(s[1]); }).join(' · ') + '</span>' +

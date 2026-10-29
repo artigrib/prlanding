@@ -14,6 +14,7 @@
       'Přejít k předobjednávce': 'Skip to pre-order', 'Přejít na obsah': 'Skip to content',
       'E-mail': 'Email', 'vas@email.cz': 'you@example.com',
       /* soft forms (app.js) */
+      'Ovládejte simulaci přes AI': 'Control the simulation with AI', 'Claude nebo jiný klient MCP ovládá simulovanou SO-101 ve vaší záložce. V panelu klikněte na Připojit AI a pošlete AI zobrazený kód.': 'Claude or another MCP client controls the simulated SO-101 in your browser tab. Click Connect AI in the panel and give the AI the code it shows.',
       'Zatím nevíte?': 'Not sure yet?', 'Pošleme vám jeden e-mail, až budeme znát cenu a termín.': 'We’ll send you one email once we know the price and date.',
       'Novinky a ceny e-mailem': 'News and prices by email', 'Nové sady a spuštění prodeje. Nejvýš jednou za měsíc, odhlásíte se jedním klikem.': 'New kits and sales launches. At most once a month, unsubscribe with one click.', 'Odebírat': 'Subscribe',
       'Odesláním souhlasíte se zasláním těchto e-mailů. Adresu nikomu nepředáme.': 'By submitting you agree to receive these emails. We never share your address.',
