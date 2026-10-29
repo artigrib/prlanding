@@ -3,7 +3,8 @@
 
 import { ArmController, GRIP_OPEN, GRIP_CLOSED } from './controller.js';
 import { World } from './world.js';
-import { MISSIONS, MissionRunner, bowlDrop, pushPlan, libPick, libPlace, libTarget, libGrasp } from './missions.js';
+import { MISSIONS, MissionRunner, bowlDrop, pushPlan, libPick, libPlace, libTarget, libGrasp, libPickPlace, inZone, autopilotAllowed } from './missions.js';
+import { runOutcome, mergeRecord, migrateProgress, partialPlan, HintCoach, PROGRESS_VERSION } from './mastery.js';
 import { Extras } from './ui/extras.js';
 import { Gizmo } from './ui/gizmo.js';
 import { Cameras } from './ui/cameras.js';
@@ -82,7 +83,11 @@ class UX {
     this.world = new World(mj, app.m, app.d);
     this.ctl = new ArmController(mj, app.m, app.d, app.act);
     this.runner = new MissionRunner(this.world);
-    this.progress = store.get('progress', {}) || {};
+    // saved progress (v2: stars only for a manual carry + badges ✋ ⚙; v1 records stay as they were earned)
+    const pv = store.get('progress-v', 1) || 1;
+    this.progress = migrateProgress(store.get('progress', {}) || {}, pv);
+    if (pv < PROGRESS_VERSION) { store.set('progress', this.progress); store.set('progress-v', PROGRESS_VERSION); }
+    this.coach = new HintCoach();
     this.wins = store.get('wins', 0) || 0;
     this.mode = store.get('mode', 'smart') === 'joints' ? 'joints' : 'smart';
     this.penTool = false;
@@ -122,7 +127,7 @@ class UX {
     this.teach.onChange((t) => this.panel.showTeach(t));
     // joint sliders take over from the controller / replay
     document.getElementById('joints').addEventListener('input', () => {
-      this.ctl.cancel(); this.teach.stopReplay(); this.pending = null; this.runner.start();
+      this.ctl.cancel(); this.teach.stopReplay(); this.pending = null; this.runner.start(); this.runner.manual.joints = true;
     });
     this.keysOn = store.get('keys-on', true) !== false;
     this.keys();
@@ -194,7 +199,7 @@ class UX {
     if (fell) this.panel.toast(`Spadlo to ze stolu – ${w.o[fell].acc} jsme vrátili zpět`);
     this.ctl.actualTip(ctx.tip);
     ctx.gripOpen = c[act[5]] > 0.5;
-    ctx.smart = this.mode === 'smart'; ctx.touch = this.touch;
+    ctx.smart = this.mode === 'smart'; ctx.touch = this.touch; ctx.auto = r.auto;
     this.extras.inkAt(ctx.tip);
     const res = r.tick(dt);
     // HUD (live region: write only on change)
@@ -210,6 +215,10 @@ class UX {
     const held = this.heldObject();
     if (held && held !== this.held && !ctx.gripOpen) this.sound.grasp();
     this.held = held;
+    // stuck? offer the hint ladder on lack of progress / repeated failed grasps (not on a flat timer)
+    const busy = this.ctl.busy() || !!this.pending || this.teach.replaying || !!(this.agent && this.agent.busy);
+    const level = (res.progress || 0) + (held ? 0.5 : 0) + (res.ok ? 0.25 : 0);
+    if (this.coach.tick(dt, { started: r.started, busy, won: r.won, joints: this.mode === 'joints', level, gripOpen: ctx.gripOpen, held })) this.panel.offerHint(this.coach.reason);
     this.teach.sample();
     // servo sound from joint speed
     const v = this.d.qvel; let sp = 0; for (let i = 0; i < 5; i++) sp += Math.abs(v[i]);
@@ -232,6 +241,7 @@ class UX {
 
   onReset() {
     this.ctl.cancel(); this.pending = null;
+    if (this.coach) this.coach.reset();
     this.aiSteps = 0;
     if (!this.replayResetting) this.teach.stopReplay();
     this.runner.setup();
@@ -323,7 +333,7 @@ class UX {
       this.onboarding.notify('draw');
     }
     d.point(x, y);
-    this.runner.start();
+    this.runner.start(); this.markManual();
   }
   togglePenUp() {
     const d = this.draw; d.penDown = !d.penDown;
@@ -362,6 +372,7 @@ class UX {
     this.runner.start();
   }
   togglePen() {
+    if (!this.penTool && !autopilotAllowed(this.runner.m) && !this.runner.m.draw) { this.panel.toast('Cestu prstem lze od mise 04 kreslit jen v kreslicí misi.'); return; }
     this.penTool = !this.penTool;
     if (this.penTool && this.mode !== 'smart') this.setMode('smart');
     this.panel.showPen(this.penTool);
@@ -399,7 +410,9 @@ class UX {
   }
 
   // called by the gizmo
-  onUserMove(kind) { this.runner.start(); this.pending = null; this.onboarding.notify(kind); if (this.teach.replaying) this.teach.stopReplay(); }
+  /** the player moved the arm by hand: Táhnout ruku (drag) or Klouby (joints) */
+  markManual() { this.runner.manual[this.mode === 'joints' ? 'joints' : 'drag'] = true; }
+  onUserMove(kind) { this.runner.start(); this.markManual(); this.pending = null; this.onboarding.notify(kind); if (this.teach.replaying) this.teach.stopReplay(); }
   onDragEnd(kind) {
     this.onboarding.notify('dragend-' + kind);
     if (!this.touch && !store.get('tip-keys', false) && !this.onboarding.active()) {
@@ -439,6 +452,11 @@ class UX {
   onPick(name, point) {
     if (this.explode.on) return;
     if (this.teach.replaying) { this.panel.toast('Probíhá přehrávání ukázky'); return; }
+    // from mission 04 the player carries by hand; the planner stays available as a hint rung (Poradit)
+    if (name !== 'table' && !autopilotAllowed(this.runner.m) && !this.hintRun) {
+      this.panel.toast(this.touch ? 'Od mise 04 přenášíte sami – koulí nebo klouby. Když nevíte, klepněte na Poradit.' : 'Od mise 04 přenášíte sami – koulí nebo klouby. Když nevíte, klikněte na Poradit.');
+      return;
+    }
     if (this.mode !== 'smart') this.setMode('smart');
     const w = this.world, ctl = this.ctl, held = this.heldObject();
     let plan = null;
@@ -459,6 +477,7 @@ class UX {
       if (plan && this.preview(plan)) this.onboarding.notify('plan-' + plan.kind);
       return;
     }
+    if (name === 'table' && held && !autopilotAllowed(this.runner.m)) { this.panel.toast('Položte ho sami: sjeďte dolů a otevřete chapadlo.'); return; }
     if (name === 'cube' || name === 'cube_b') {
       if (held === name) { this.panel.toast('Kostku už držíte. Klikněte, kam ji položit.'); return; }
       const p = w.pos(name, [0, 0, 0]);
@@ -512,19 +531,22 @@ class UX {
     }
     this.ctl.cancel();
     this.pending = { plan, t: this.reduced ? 0.25 : PREVIEW_S };
-    void demo;
+    if (!demo) this.runner.auto = true;   // the planner moves it: "Splněno", no stars (src/mastery.js)
     return true;
   }
 
   win() {
-    const app = this.app, res = this.runner.result, m = this.runner.m;
+    const app = this.app, res = this.runner.result, r = this.runner, m = r.m;
     app.won = true;
     const best = this.progress[m.id];
-    const own = !this.teach.replaying && !this.runner.assisted;
-    const isNew = own && (!best || res.stars > best.stars || (res.stars === best.stars && res.time < best.time));
+    const replay = this.teach.replaying, assisted = r.assisted;
+    const own = !replay && !assisted;
+    const by = own ? null : (assisted ? (this.aiSteps > 0 ? 'ai' : 'assisted') : 'replay');
+    const out = runOutcome(res, { auto: r.auto, assisted, replay, drag: r.manual.drag, joints: r.manual.joints });
+    res.stars = out.stars; res.kind = out.kind; res.badges = out.badges;
+    const { rec, isNew } = mergeRecord(best, out, res.time);
     if (own) { this.wins = (store.get('wins', 0) || 0) + 1; store.set('wins', this.wins); }
-    if (isNew) { this.progress[m.id] = { stars: Math.max(res.stars, best ? best.stars : 0), time: Math.min(res.time, best ? best.time : Infinity) }; store.set('progress', this.progress); }
-    const by = own ? null : (this.runner.assisted ? (this.aiSteps > 0 ? 'ai' : 'assisted') : 'replay');
+    if (own && rec) { this.progress[m.id] = rec; store.set('progress', this.progress); store.set('progress-v', PROGRESS_VERSION); }
     this.panel.showWin(m, res, best, isNew, by);
     this.onboarding.notify('won');
     const guided = this.onboarding.atWin();
@@ -532,8 +554,8 @@ class UX {
       this.panel.winH.textContent = `Hotovo za ${fmtT(res.time)}! Kostka je v misce.`;
       this.panel.winText.textContent = 'Ruka si cestu naplánovala sama. Teď zkuste totéž rukou – za chvíli to budete umět i bez pomoci.';
     }
-    this.lastRes = { id: m.id, time: res.time, stars: res.stars, own };
-    this.panel.stageWin(m, { by, guided, wins: this.wins || 0, stars: own ? res.stars : 0 });
+    this.lastRes = { id: m.id, time: res.time, stars: res.stars, own: own && out.kind === 'manual' };
+    this.panel.stageWin(m, { by, guided, wins: this.wins || 0, stars: own ? res.stars : 0, auto: out.kind === 'auto' });
     // a friend's record (challenge link): how did it go?
     const ch = this.challenge;
     if (own && ch && ch.id === m.id) {
@@ -548,7 +570,35 @@ class UX {
     this.cameras.cinematic();
     if (this.teach.recording) this.panel.toast('Mise splněna. Nahrávání můžete zastavit.');
     try { window.dataLayer && window.dataLayer.push({ event: 'sim_success', robot: 'so101', mission: m.id, stars: res.stars }); } catch (e) { /* ignore */ }
-    track('mission_win', { mission: m.id, stars: res.stars, seconds: Math.round(res.time), assisted: !own });
+    track('mission_win', { mission: m.id, stars: res.stars, seconds: Math.round(res.time), assisted: !own, kind: out.kind });
+  }
+
+  // ================= hint ladder rungs 2 and 3 (src/ui/panel.js) =================
+  /** Plan for the next subgoal from the current state (object missions: the next item not yet in place). */
+  nextPlan() {
+    const m = this.runner.m, w = this.world;
+    if (m.sort) {
+      const n = Object.keys(m.sort).find((k) => !inZone(w, k, m.sort[k]));
+      if (n) { const t = libTarget(w, m, n, m.sort[n]); const [a, b] = libPickPlace(this.ctl, w, n, t.xy, t.surface, t.closeYaw, null, m.grip && m.grip[n] != null ? { z: m.grip[n] } : undefined); return ArmController.chain(a, b); }
+    }
+    return m.solve(this.ctl, w);
+  }
+  /** Rung 2: a ghost path to the next subgoal only (nothing moves). */
+  hintGhost() {
+    let plan; try { plan = partialPlan(this.nextPlan()); } catch (e) { return false; }
+    this.gizmo.showPath(plan, !this.reduced);
+    clearTimeout(this.ghostT); this.ghostT = setTimeout(() => this.gizmo.fadePath(), 6000);
+    return true;
+  }
+  /** Rung 3: the arm does the first part (reach and grasp), the player finishes. Counts as autopilot. */
+  hintPartial() {
+    if (this.teach.replaying) this.teach.stopReplay();
+    if (this.mode !== 'smart') this.setMode('smart');
+    let plan; try { plan = partialPlan(this.nextPlan()); } catch (e) { return false; }
+    this.hintRun = true;
+    const ok = this.preview(plan);
+    this.hintRun = false;
+    return ok;
   }
 
   /** "Sdílet rekord": a link that opens the mission with this time as the target (?mise=&rekord=). */
@@ -733,6 +783,11 @@ class UX {
       }
       return null;
     };
+    // mastery / hint ladder (src/mastery.js, panel hint box)
+    api.hintRung = (n) => { const P = this.panel; if (n <= 1 || P.hintLevel < 1) P.hint(); while (P.hintLevel < Math.min(3, n)) P.hintNext(); if (n >= 4) this.startDemo(); return P.hintLevel; };
+    api.run = () => ({ auto: this.runner.auto, assisted: this.runner.assisted, manual: Object.assign({}, this.runner.manual), offered: !!this.panel.offered, coach: { idle: this.coach.idle, fails: this.coach.fails, offers: this.coach.offers } });
+    api.shiftReplay = () => this.teach.startShiftedReplay();
+    api.shiftResult = () => this.teach.shiftResult || null;
     api.explode = (on) => { if (on !== this.explode.on) this.toggleExplode(); };
     api.assemble = () => this.explode.startPlay();
     api.quality = (q) => this.hd.set(q);

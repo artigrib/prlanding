@@ -280,6 +280,13 @@ async function touchDrag(page, from, to, steps = 8) {
     await p.mouse.click(a.x, a.y);
     const tWin = await advanceUntil(p, () => window.__sim.ux().won, 16, 1);
     ok(tWin > 0, `click on the bowl places the cube, mission won after ${tWin}s`);
+    {
+      // mastery rules: a click-to-grab (autopilot) win is "Splněno" – done, no stars
+      const r = await ux(p);
+      ok(r.result.kind === 'auto' && r.result.stars === 0 && r.progress.bowl && r.progress.bowl.done && !r.progress.bowl.stars,
+        'autopilot win counts as "Splněno" without stars (' + JSON.stringify([r.result.kind, r.result.stars, r.progress.bowl]) + ')');
+      ok(/Splněno/.test(await S(p, () => document.getElementById('win-h').textContent)), 'win card says "Splněno"');
+    }
     await S(p, () => window.__sim.advance(0.4));
     await shot(p, 'desk-04-win');
 
@@ -346,6 +353,12 @@ async function touchDrag(page, from, to, steps = 8) {
     await shot(p, 'desk-06-replay');
     const trp = await advanceUntil(p, () => window.__sim.ux().won, 30, 2);
     ok(trp > 0, `replay repeats the demonstration and wins again (${trp}s)`);
+    // "Posunout kostku a přehrát znovu": the same actions with the cube 4 cm away miss (open loop)
+    await S(p, () => window.__sim.advance(1.5));
+    ok(await S(p, () => window.__sim.shiftReplay()), 'shifted replay starts');
+    await advanceUntil(p, () => !window.__sim.ux().replaying, 40, 2);
+    const sr = await S(p, () => [window.__sim.shiftResult(), window.__sim.ux().won, !document.getElementById('ux-shift-note').hidden]);
+    ok(sr[0] === 'miss' && !sr[1] && sr[2], 'shifted replay misses and explains why (' + JSON.stringify(sr) + ')');
 
     // cameras + exploded view + hi-detail
     await S(p, () => window.__sim.mission('bowl'));
@@ -393,14 +406,14 @@ async function touchDrag(page, from, to, steps = 8) {
       ok(st.scene && st.m === id && st.glb, `${id}: object scene, mission and its GLBs loaded (${JSON.stringify(st)})`);
       if (id === 'line') await shot(q, 'desk-11-line');
       if (id === 'breakfast') {
-        // click-to-pick with a real object: apple, then the plate
+        // from mission 04 the click-to-grab autopilot is off for the player …
         await S(q, () => window.__sim.pick('apple'));
-        await advanceUntil(q, () => window.__sim.ux().held === 'apple' && !window.__sim.ux().busy, 20, 1);
-        await S(q, () => window.__sim.pick('plate'));
-        await advanceUntil(q, () => !window.__sim.ux().busy, 20, 1);
-        await S(q, () => window.__sim.advance(1));
-        const h = await S(q, () => window.__sim.ux().hud);
-        ok(/Hotovo 1 z 3/.test(h), 'click the apple, then the plate: the arm puts it on the plate (' + h + ')');
+        ok(!(await S(q, () => window.__sim.ux().busy)), 'object mission: a click on the apple does not start the autopilot');
+        // … and stays available as hint rung 3: the arm grabs and lifts the next item, the player finishes
+        const rung = await S(q, () => window.__sim.hintRung(3));
+        const held = await advanceUntil(q, () => !!window.__sim.ux().held && !window.__sim.ux().busy, 20, 1);
+        const rr = await S(q, () => window.__sim.run());
+        ok(rung === 3 && held > 0 && rr.auto, 'hint rung 3 (partial demo) grabs ' + (await S(q, () => window.__sim.ux().held)) + ' and marks the run as autopilot');
       }
       await S(q, () => window.__sim.solve());
       const t = await advanceUntil(q, () => window.__sim.ux().won, 160, 4);

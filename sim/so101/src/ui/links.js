@@ -224,7 +224,7 @@ export class Links {
 
   startDrag(P) {
     const ux = this.ux, j = P.part.j;
-    ux.ctl.cancel(); ux.pending = null; ux.app.stopDemo(); ux.runner.start();
+    ux.ctl.cancel(); ux.pending = null; ux.app.stopDemo(); ux.runner.start(); if (ux.markManual) ux.markManual();
     if (this.pull() && P.point) { this.startPull(P); return; }
     // the controller's commanded grip / joint follow the hand from here on
     this.frame(j);
@@ -324,7 +324,7 @@ export class Links {
   deselect() { this.sel = -1; this.clear(); }
   nudge(dir, big) {
     const j = this.sel; if (j < 0) return false;
-    const ux = this.ux; ux.ctl.cancel(); ux.pending = null; ux.runner.start();
+    const ux = this.ux; ux.ctl.cancel(); ux.pending = null; ux.runner.start(); if (ux.markManual) ux.markManual();
     const step = (big ? 10 : 2) * Math.PI / 180 * (j === 5 ? 1.5 : 1);
     const [lo, hi] = this.lim[j], v = this.app.d.ctrl[this.app.act[j]] + dir * step;
     const stop = v < lo || v > hi;
