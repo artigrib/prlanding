@@ -16,6 +16,7 @@ const world = new World(mj, m, d);
 const runner = new MissionRunner(world);
 const ts = m.opt.timestep;
 let userBusy = false;
+const reloads = [];
 const tipSite = mj.mj_name2id(m, mj.mjtObj.mjOBJ_SITE.value, 'gripperframe');
 
 function reset(id = runner.m.id) {
@@ -33,7 +34,8 @@ const api = createSimApi({
     const t = d.site_xpos.subarray(3 * tipSite, 3 * tipSite + 3), p = world.pos('cube', [0, 0, 0]);
     return Math.hypot(p[0] - t[0], p[1] - t[1], p[2] - t[2]) < 0.03 ? 'cube' : null;
   },
-  snapshot: async () => ({ dataUrl: 'data:image/jpeg;base64,AAAA' })
+  snapshot: async () => ({ dataUrl: 'data:image/jpeg;base64,AAAA' }),
+  reloadInto: (id) => { reloads.push(id); }
 });
 
 // like the page: one frame = tick + 4 physics steps + mission check
@@ -129,8 +131,11 @@ test('STOP in the page ends the motion and blocks motion until released; the per
 
 test('missions: list, unknown id, reset', async () => {
   const l = api.listMissions().missions.map((x) => x.id);
-  assert.deepEqual(l, ['bowl', 'stack', 'sort', 'ball', 'trace']);
-  assert.equal((await code(call('start_mission', { mission_id: 'lab' }))).code, 'UNKNOWN_MISSION');
+  assert.deepEqual(l, ['bowl', 'stack', 'sort', 'ball', 'trace', 'line', 'breakfast', 'tidy', 'workshop', 'lab']);
+  assert.deepEqual(api.listMissions().missions.filter((x) => x.needs_reload).map((x) => x.id), ['line', 'breakfast', 'tidy', 'workshop', 'lab']);
+  assert.equal((await code(call('start_mission', { mission_id: 'nope' }))).code, 'UNKNOWN_MISSION');
+  const lab = await call('start_mission', { mission_id: 'lab' });
+  assert.ok(lab.reload_required && lab.reconnect_required); assert.deepEqual(reloads, ['lab']);
   const s = await call('start_mission', { mission_id: 'stack' });
   assert.equal(s.mission.id, 'stack'); assert.equal(s.mission.state, 'running');
   assert.equal(api.getScene().objects.filter((o) => o.kind === 'cube').length, 2);
@@ -143,4 +148,26 @@ test('mission 01 is solved only through the agent tools', async () => {
   const st = api.checkMission().mission;
   assert.ok(won, `not won: ${JSON.stringify(st)} hud ${runner.last.text}\n${lines.join('\n')}`);
   console.log('  ' + lines.join('\n  ') + `\n  won after ${st.elapsed_s} s`);
+});
+
+test('object scene: missions 06-10 start in place (no reload) and their objects are reported', async () => {
+  const { loadObjectScene } = await import('./mj-node.mjs');
+  const S = await loadObjectScene();
+  const w = new World(S.mj, S.m, S.d); w.sizes(S.sizes);
+  const r = new MissionRunner(w);
+  const act2 = ['shoulder_pan', 'shoulder_lift', 'elbow_flex', 'wrist_flex', 'wrist_roll', 'gripper'].map((n) => S.mj.mj_name2id(S.m, S.mj.mjtObj.mjOBJ_ACTUATOR.value, n));
+  const sel = (id) => { S.mj.mj_resetDataKeyframe(S.m, S.d, 0); r.select(id); r.setup(); S.mj.mj_forward(S.m, S.d); };
+  const a2 = createSimApi({
+    mj: S.mj, m: S.m, d: S.d, act: act2, chain: chainFromModel(S.mj, S.m), world: w, runner: r, missions: MISSIONS,
+    userBusy: () => false, selectMission: sel, resetScene: () => sel(r.m.id), heldObject: () => null,
+    reloadInto: () => { throw new Error('must not reload in the object scene'); }
+  });
+  assert.equal(a2.listMissions().missions.filter((x) => x.needs_reload).length, 0);
+  for (const id of ['line', 'breakfast', 'tidy', 'workshop', 'lab', 'bowl']) {
+    const s = a2.startMission({ mission_id: id });
+    assert.equal(s.mission.id, id); assert.ok(!s.reload_required);
+    const objs = a2.getScene().objects;
+    assert.ok(objs.length >= 2, id + ': objects ' + objs.length);
+    if (id !== 'bowl') assert.ok(objs.some((o) => o.kind === 'object'), id + ' has library objects');
+  }
 });

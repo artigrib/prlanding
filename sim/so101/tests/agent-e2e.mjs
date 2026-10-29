@@ -77,7 +77,7 @@ try {
   await page.getByTestId('agent-allow').click();
   const con = await pending;
   ok(!con.isError, 'connect after Allow');
-  const session = con.structuredContent.session;
+  let session = con.structuredContent.session;
   await page.locator('#ai-panel[data-state=paired]').waitFor();
   ok(await page.locator('.ai-bar').isVisible(), 'STOP / Odpojit bar visible over the 3D view');
 
@@ -124,6 +124,26 @@ try {
   ok(/Přesun chapadla na x/.test(logText) && /Zavřít chapadlo/.test(logText) && /Spouští misi 01/.test(logText), 'activity log is human-readable');
   await page.evaluate(() => window.__sim.cameraNow && window.__sim.cameraNow('orbit'));
   await page.screenshot({ path: path.join(OUT, 'agent-won.png') }).catch(() => {});
+
+  // ---- missions 06-10: listed by the relay; from the plain scene the page reloads into the object scene ----
+  const lm = (await call('list_missions')).missions;
+  ok(lm.length === 10 && lm.find((m) => m.id === 'breakfast').title_en === 'Breakfast' && lm.find((m) => m.id === 'breakfast').needs_reload === true, 'list_missions: 10 missions, server titles, object missions need a reload');
+  const sb = await call('start_mission', { mission_id: 'breakfast' });
+  ok(sb.reload_required === true && sb.reconnect_required === true, 'start_mission(breakfast) from the plain scene: reload + reconnect');
+  await page.waitForURL(/mise=breakfast/, { timeout: 30000 });
+  await page.waitForFunction(() => window.__sim && (window.__sim.ready || window.__sim.error), null, { timeout: 300000 });
+  await page.evaluate(() => { window.__sim._app.sim.paused = true; window.__pump = setInterval(() => window.__sim.advance(1 / 20), 20); });
+  await codeEl.filter({ hasText: /^[A-Z]{4}-[A-Z]{4}$/ }).waitFor({ timeout: 30000 });
+  ok(true, 'after the reload the panel reopened by itself with a new code');
+  const old = await raw('get_state');
+  ok(old.isError && old.structuredContent.error.code === 'TAB_GONE', 'the old session ended with the page');
+  const code2 = (await codeEl.textContent()).trim();
+  const p2 = client.callTool({ name: 'connect', arguments: { code: code2 } });
+  await page.getByTestId('agent-allow').click();
+  session = (await p2).structuredContent.session;
+  const sb2 = await call('start_mission', { mission_id: 'breakfast' });
+  const objs = (await call('get_scene')).objects;
+  ok(sb2.mission.state === 'running' && !sb2.reload_required && objs.some((o) => o.kind === 'object'), `breakfast runs in the object scene (${objs.filter((o) => o.kind === 'object').map((o) => o.id).join(', ')})`);
 
   // ---- Odpojit ----
   await page.getByTestId('agent-disconnect').click();

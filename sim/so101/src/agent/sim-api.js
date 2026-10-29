@@ -17,8 +17,9 @@ export const SPEED_CAP_DPS = 90;           // peak joint speed of any AI motion
 export const GRIP_CAP_PPS = 160;           // gripper, percent per second
 export const WORKSPACE_MM = { x: [-300, 600], y: [-450, 450], z: [-2, 500] };
 export const BODY_FLOOR_MM = -2;           // no arm body origin below the table top
-/** Missions the relay's catalogue knows (backend/bridge/src/schemas.ts MISSIONS). Object missions need a reload. */
-export const AGENT_MISSIONS = ['bowl', 'stack', 'sort', 'ball', 'trace'];
+/** Missions the relay's catalogue knows (backend/bridge/src/schemas.ts MISSIONS). The object missions (06–10) run
+ *  in the object scene: from the plain scene the page reloads into it, which ends the AI session (new code needed). */
+export const AGENT_MISSIONS = ['bowl', 'stack', 'sort', 'ball', 'trace', 'line', 'breakfast', 'tidy', 'workshop', 'lab'];
 const SAMPLES = 16;                         // workspace check: FK samples along the planned path
 const DEG = 180 / Math.PI;
 const r1 = (x) => Math.round(x * 10) / 10;
@@ -227,6 +228,7 @@ export function createSimApi(env) {
   }
 
   const missionList = () => env.missions.filter((x) => AGENT_MISSIONS.includes(x.id));
+  const needsReload = (x) => !!x.objects && !world.lib;
 
   // ---------------- handler (backend/bridge-client/README.md) ----------------
   const api = {
@@ -284,13 +286,20 @@ export function createSimApi(env) {
       return env.snapshot({ view: a.view || 'overview', width: a.width || 512 });
     },
     listMissions: () => ({
-      missions: missionList().map((x) => ({ id: x.id, n: +x.n, current: x.id === runner.m.id })),
+      missions: missionList().map((x) => ({ id: x.id, n: +x.n, current: x.id === runner.m.id, needs_reload: needsReload(x) })),
       meta: meta()
     }),
     startMission(a) {
       if (!missionList().some((x) => x.id === a.mission_id)) throw new AgentError('UNKNOWN_MISSION', { mission_id: String(a.mission_id).slice(0, 32) });
       preflight();
       if (motion) finish('preempted');
+      const mi = missionList().find((x) => x.id === a.mission_id);
+      if (needsReload(mi)) {
+        // the object scene is a different compiled model: the page reloads into it and this AI session ends
+        if (!env.reloadInto) throw new AgentError('NOT_SUPPORTED', { mission_id: mi.id, reason: 'reload_required' });
+        env.reloadInto(mi.id);
+        return { mission: { id: mi.id, state: 'idle', elapsed_s: 0 }, reload_required: true, reconnect_required: true, meta: meta() };
+      }
       env.selectMission(a.mission_id);
       runner.start();
       return { mission: missionInfo(), robot: jointState(), meta: meta() };

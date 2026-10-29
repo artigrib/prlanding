@@ -7,6 +7,7 @@ import { chainFromModel } from '../kin.js';
 import { MISSIONS } from '../missions.js';
 import { t } from '../i18n/index.js';
 
+const REOPEN = 'pr-ai-reopen';
 export const REAL_ARMED = () => /[?&]real=1\b/.test(location.search);
 
 /** Tool name -> API method (same mapping as backend/bridge-client/agent-bridge.js). */
@@ -37,7 +38,14 @@ export function installAgent(ux, page) {
     heldObject: () => ux.heldObject(),
     hidden: () => document.hidden,
     renderOk: () => !app.lost,
-    snapshot: (a) => snapshot(ux, a)
+    snapshot: (a) => snapshot(ux, a),
+    // object missions from the plain scene: reload into the object scene (ux.selectMission does it); the AI session
+    // ends with the page, so the panel opens again by itself and shows a new code
+    reloadInto(id) {
+      try { sessionStorage.setItem(REOPEN, '1'); } catch (e) { /* private mode: the visitor opens the panel again */ }
+      ux.panel.toast(t('Načítám předměty mise. Potom dejte AI nový kód.'));
+      setTimeout(() => ux.selectMission(id), 400);   // after the reply has left
+    }
   });
   ux.agent = api;
   // the person always wins: a slider or a key press ends the AI motion at once
@@ -88,6 +96,7 @@ export function installAgent(ux, page) {
     if (btn.getAttribute('aria-expanded') === 'true') { if (loading) loading.then((p) => p && p.collapse()); return; }
     openPanel();
   });
+  try { if (sessionStorage.getItem(REOPEN)) { sessionStorage.removeItem(REOPEN); setTimeout(openPanel, 300); } } catch (e) { /* ignore */ }
   return api;
 }
 
