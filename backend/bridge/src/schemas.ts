@@ -201,7 +201,7 @@ export const DESCRIPTIONS: Record<ToolName, string> = {
   set_gripper: 'Open or close the gripper (percent open, or "open"/"close").',
   home: 'Move the arm to the home pose (or all-zero) and wait until done.',
   stop: 'Stop any motion now and hold the current pose. Always allowed. This is a software stop, not an emergency stop.',
-  snapshot: 'Render a camera image of the simulation (JPEG). Costs tokens: use get_state/get_scene for numbers and snapshot only to verify visually.',
+  snapshot: 'Render a camera image of the simulation (JPEG): your only view of the scene (you never see the user). Costs tokens: use get_state/get_scene for numbers and snapshot only to verify visually.',
   list_missions: 'List the missions this simulation offers.',
   start_mission: 'Reset the scene for a mission and start its timer and success check.',
   check_mission: 'Mission status: id, state (idle|running|success|failed), elapsed seconds, and score fields if finished.',

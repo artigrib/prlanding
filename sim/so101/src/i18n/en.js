@@ -294,7 +294,7 @@ const strings = {
   'Ruka si cestu naplánovala sama. Teď zkuste totéž rukou – za chvíli to budete umět i bez pomoci.': 'The arm planned the path by itself. Now try the same by hand – in a moment you’ll manage without help.',
   'Kapitola 06': 'Chapter 06', 'Skutečná ruka': 'The real arm', 'Nastavení serv nanečisto: ID, kalibrace, test': 'Servo setup dry run: IDs, calibration, test',
   'Odemčeno: zvládli jste 3 mise': 'Unlocked: you completed 3 missions', 'Doporučujeme po 3 misích – otevřít můžete hned': 'Recommended after 3 missions – you can open it now',
-  'SO-101 – výzva': 'SO-101 – challenge', 'Odkaz s výzvou je ve schránce': 'The challenge link is in your clipboard', 'Zkopírujte odkaz s výzvou:': 'Copy the challenge link:',
+  'SO-101 – mise': 'SO-101 – mission', 'Odkaz na misi je ve schránce': 'The mission link is in your clipboard', 'Zkopírujte odkaz na misi:': 'Copy the mission link:',
   'Za chvíli to uděláte sami: klepněte na kostku, pak na misku.': 'In a moment you’ll do this yourself: tap the cube, then the bowl.',
   /* object missions 06–10 */
   'Třídicí linka': 'Sorting line', 'Z linky přijely matice a šrouby M8. Matice patří do oranžové přihrádky, šrouby do modré. (Díly jsou zvětšené 2,5×, aby je tištěné čelisti spolehlivě chytly.)': 'M8 nuts and bolts came down the line. Nuts go into the orange bin, bolts into the blue one. (The parts are shown 2.5× larger so the printed jaws can hold them reliably.)',
@@ -345,20 +345,22 @@ const strings = {
   'Šroub M8': 'M8 bolt', 'Matice M8': 'M8 nut', 'Muffin': 'Cupcake', 'Kobliha': 'Donut',
   'Jablko': 'Apple', 'Banán': 'Banana', 'Šroubovák': 'Phillips screwdriver',
   /* "Připojit AI" panel (src/agent/) */
-  'Co říct AI': 'What to tell the AI', 'Začátek': 'Getting started', 'Mise pro AI': 'Missions for the AI', 'Zábava': 'Fun', 'Učení': 'Learning',
+  'Co říct AI': 'What to tell the AI', 'Začátek': 'Getting started', 'Zábava': 'Fun', 'Učení': 'Learning',
   'Pro misi {n}: {title}': 'For mission {n}: {title}', 'Zeptej se AI na tuto misi': 'Ask the AI about this mission',
-  'Řekni mi, co je na stole, a ukaž mi to na snímku z kamery.': 'Tell me what is on the table and show me a camera picture.',
   'Dojeď chapadlem nad kostku, pak nad misku a vrať se do výchozí polohy.': 'Move the gripper over the cube, then over the bowl, and go back to the home pose.',
   'Jaké mise tahle simulace nabízí? Vyber pro začátek tu nejjednodušší.': 'Which missions does this simulation offer? Pick the easiest one to start with.',
-  'Spusť misi 01 a přenes oranžovou kostku do modré misky.': 'Start mission 01 and move the orange cube into the blue bowl.',
   'Postav věž: polož oranžovou kostku přesně na modrou (mise 02).': 'Build a tower: put the orange cube exactly on the blue one (mission 02).',
-  'Roztřiď barvy v misi 03 a po každém kroku zkontroluj stav mise.': 'Sort the colours in mission 03 and check the mission state after every step.',
   'Zatanči s robotickou rukou: jeden plynulý tanec přes 10 bodů, chapadlo ať klape do rytmu.': 'Dance with the robot arm: one smooth dance through 10 points, with the gripper clapping to the beat.',
   'Zamávej mi chapadlem třikrát a pak se ukloň.': 'Wave the gripper at me three times, then take a bow.',
-  'Nakresli chapadlem ve vzduchu nad stolem srdce.': 'Draw a heart in the air above the table with the gripper.',
   'Vysvětli, co je inverzní kinematika, a ukaž to pohybem k bodu x 250, y 0, z 80 mm.': 'Explain what inverse kinematics is and show it by moving to the point x 250, y 0, z 80 mm.',
   'Pohni postupně každým kloubem o 20° a řekni mi, k čemu který kloub slouží.': 'Move each joint by 20° in turn and tell me what each joint is for.',
-  'Vysvětli dětem ve třech větách, co jsi právě udělal.': 'Explain to children in three sentences what you just did.',
+  'Podívej se snímkem z kamery a řekni mi, co vidíš na stole.': 'Take a camera snapshot and tell me what you see on the table.',
+  'Mise s AI': 'Missions with AI',
+  'Vysvětli mi, jak by ses dostal ke kostce, a nech mě to zkusit.': 'Explain how you would get to the cube, then let me try.',
+  'Spusť misi 01, udělej první krok a pak mi řekni, co mám udělat já.': 'Start mission 01, do the first step, then tell me what I should do.',
+  'Vymysli krátký pohyb, popiš mi ho slovy a nech mě ho zopakovat posuvníky.': 'Make up a short move, describe it to me in words and let me repeat it with the sliders.',
+  'Neřeš to za mě: napověz mi, kterým kloubem mám pohnout, aby se chapadlo dostalo ke kostce.': 'Don’t solve it for me: give me a hint which joint to move so the gripper gets to the cube.',
+  'Claude je pro dospělé (18+). Děti: požádejte rodiče nebo učitele, ať AI připojí a je u toho.': 'Claude is for adults (18+). Kids: ask a parent or teacher to connect the AI and stay with you.',
   'Spusť misi {n} „{title}“ a vyřeš ji. Po každém kroku zkontroluj stav mise a na konci mi řekni, jak to dopadlo.': 'Start mission {n} “{title}” and solve it. Check the mission state after every step and tell me at the end how it went.',
   'Ovládání přes AI': 'AI control', 'Plynulý pohyb přes {n} bodů': 'Smooth move through {n} points', 'Zrušit': 'Cancel', 'Zkusit hned': 'Try now',
   'Server neodpovídá. Zkusím to znovu za {s} s (pokus {n} z {max}).': 'The server isn’t answering. Trying again in {s} s (attempt {n} of {max}).',
@@ -439,10 +441,10 @@ Object.assign(strings, {
 
 const patterns = [
   [/^(\d+) \/ (\d+) misí$/, '$1 / $2 missions'], [/^(\d+) ★ z (\d+)$/, '$1 ★ of $2'], [/^další: (.+)$/, (m, a) => `next: ${T(a)}`],
-  [/^Výzva: (.+)$/, 'Challenge: $1'], [/^Výzva od kamaráda: „(.+)“ za (.+)\. Překonáte to\?$/, (m, a, b) => `A friend’s challenge: “${T(a)}” in ${b}. Can you beat it?`],
+  [/^Sdílený čas: (.+)$/, 'Shared time: $1'], [/^Sdílená mise: „(.+)“, hotovo za (.+)\. Zkuste ji po svém\.$/, (m, a, b) => `Shared mission: “${T(a)}”, done in ${b}. Try it your own way.`],
   [/^Pokračujete misí (\d+)\. Rekordy máte uložené v tomto prohlížeči\.$/, 'Continuing with mission $1. Your records are saved in this browser.'],
-  [/^Mise „(.+)“ za (.+) a (\d) ★ v simulaci SO-101\. Překonáte to\?$/, (m, a, b, c) => `Mission “${T(a)}” in ${b} with ${c} ★ in the SO-101 simulator. Can you beat it?`],
-  [/^rekord kamaráda (.+) překonán o (\d+) s!$/, 'friend’s record $1 beaten by $2 s!'], [/^rekord kamaráda (.+) zatím platí$/, 'friend’s record $1 still stands'],
+  [/^Mise „(.+)“ v simulaci SO-101: hotovo za (.+), (\d) ★\. Zkuste si ji taky\.$/, (m, a, b, c) => `Mission “${T(a)}” in the SO-101 simulator: done in ${b}, ${c} ★. Give it a try too.`],
+  [/^sdílený čas (.+)$/, 'shared time $1'],
   [/^Hotovo za (.+)! Kostka je v misce\.$/, 'Done in $1! The cube is in the bowl.'],
   [/^(.+) · doraz$/, (m, a) => `${T(a)} · end stop`],
   [/^(\d+)× servo Feetech STS3215$/, '$1× Feetech STS3215 servo'],
@@ -533,7 +535,7 @@ const patterns = [
 ];
 
 // pieces of composed messages, translated as a whole by the patterns above (for tools/i18n-extract.mjs)
-const fragments = ['STOP uvolněn. {} Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.', 'STOP uvolněn. {} Řízení zapnete tlačítkem „Znovu zapnout moment“.', 'Pauza po dlouhé relaci: pohyb půjde aktivovat za {}.', 'Skutečná ruka · POHYB POVOLEN · {} · zbývá {}', 'Skutečná ruka · jen čtení (shadow) · pauza {}', '· další: {}', '{} / {} misí · {} ★ z {}', '· rekord kamaráda {} překonán o {} s!', '· rekord kamaráda {} zatím platí', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
+const fragments = ['STOP uvolněn. {} Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.', 'STOP uvolněn. {} Řízení zapnete tlačítkem „Znovu zapnout moment“.', 'Pauza po dlouhé relaci: pohyb půjde aktivovat za {}.', 'Skutečná ruka · POHYB POVOLEN · {} · zbývá {}', 'Skutečná ruka · jen čtení (shadow) · pauza {}', '· další: {}', '{} / {} misí · {} ★ z {}', '· sdílený čas {}', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
 
 // object library names: generated map, hand-written keys above win
 for (const [k, v] of Object.entries(objectNames)) if (!(k in strings)) strings[k] = v;

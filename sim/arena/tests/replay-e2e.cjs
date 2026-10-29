@@ -44,6 +44,9 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); };
   await p.evaluate(() => window.__arena.frame()); await shot('r2-end');
   const btns = await p.evaluate(() => ({ hit: !document.getElementById('replay-btn').hidden, full: !document.getElementById('full-btn').hidden }));
   assert(btns.full, 'full replay button');
+  // no kit link before the player's 3rd win (a fresh browser), and never a primary "buy" button
+  const kit = await p.evaluate(() => ({ hidden: document.getElementById('kit-row').hidden, wins: window.__arena.wins, primary: !!document.querySelector('#end .btn-act[href*="sada"]') }));
+  assert((kit.hidden || kit.wins >= 3) && !kit.primary, 'end card kit link: ' + JSON.stringify(kit));
   // "Celý zápas" from the end screen, then back to the end screen
   await p.click('#full-btn');
   await p.waitForSelector('#replay-ui:not([hidden])', { timeout: 10000 });

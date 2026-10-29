@@ -76,8 +76,7 @@ body.dark-map #msg{color:#fff;text-shadow:0 2px 0 var(--ink),0 0 22px rgba(0,0,0
 #end,#fail{left:50%;top:50%;transform:translate(-50%,-50%);width:min(420px,calc(100% - 2*var(--pad)))}
 #end h1{font-size:clamp(48px,8vw,84px);letter-spacing:-.05em}
 #end.win h1{color:var(--accent-text)}
-#end .kit{border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:12px}
-#end .kit b{font-weight:500;font-size:18px;letter-spacing:-.02em}
+#end .kit{border-top:1px solid var(--line);padding-top:12px;margin:0}
 
 /* touch controls */
 .tc{display:none}
@@ -176,7 +175,7 @@ body.dark-map #msg{color:#fff;text-shadow:0 2px 0 var(--ink),0 0 22px rgba(0,0,0
 .touch #tools{bottom:auto;top:calc(env(safe-area-inset-top) + 64px)}
 .touch #tools kbd{display:none}
 #pause{left:50%;top:50%;transform:translate(-50%,-50%);width:min(360px,calc(100% - 2*var(--pad)))}
-.chk{display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink-2);min-height:32px;cursor:pointer}
+.chk{display:flex;flex-wrap:wrap;gap:0 10px;align-items:center;font-size:14px;color:var(--ink-2);min-height:32px;cursor:pointer}
 .chk input{width:18px;height:18px;accent-color:var(--ink)}
 #replay-ui{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 12px);transform:translateX(-50%);width:min(760px,calc(100% - 2*var(--pad)));background:var(--ink);color:#fff;padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px;z-index:3}
 #replay-ui .rec{width:10px;height:10px;border-radius:50%;background:var(--accent);animation:blink 1s steps(2) infinite;flex:none}
@@ -256,7 +255,7 @@ body.split::after{content:'';position:absolute;background:var(--ink);pointer-eve
 
 <div id="tools" hidden>
   <button type="button" id="cam-btn" title="Přepnout kameru (C)"><span>TV přenos</span><kbd>C</kbd></button>
-  <button type="button" id="snd-btn" aria-pressed="true" title="Zvuk (M)"><span>Zvuk zap.</span><kbd>M</kbd></button>
+  <button type="button" id="snd-btn" aria-pressed="true" title="Zvuk (M)"><span>Zvuk vyp.</span><kbd>M</kbd></button>
   <button type="button" id="reset-btn" hidden title="Vrátit na start (R)">Na start</button>
   <button type="button" id="dummy-btn" hidden aria-pressed="false" title="Soupeř jezdí (T)">Soupeř jezdí</button>
   <button type="button" id="pause-btn" title="Pauza (Esc)">Pauza</button>
@@ -284,6 +283,7 @@ body.split::after{content:'';position:absolute;background:var(--ink);pointer-eve
     <div id="map-row" role="group" aria-label="Aréna"><div class="lbl"><span>Aréna</span></div><div class="seg wrap" id="maps"></div><p class="hint" id="mapdesc"></p></div>
     <div class="hint" id="hint"></div>
     <div class="gofoot"><button class="link" id="more-set" type="button" hidden>↓ Další nastavení: garáž, barva, aréna</button><button class="btn btn-act" id="go" type="button" disabled><span>Načítám…</span><span aria-hidden="true">→</span></button></div>
+    <label class="chk calm-chk"><input type="checkbox" class="calm-opt" id="calm-start"> Klidný režim <span class="mono">bez otřesů, zpomalení, publika a znělek</span></label>
     <div class="loadrp"><button class="link" id="load-replay" type="button">Přehrát uložený záznam (.prreplay)…</button><input type="file" id="replay-file" accept=".prreplay,.gz,.json,application/gzip,application/json" hidden><span id="load-msg" role="status"></span></div>
     <div class="credit">3D modely: Project SVRN – Shoverobotics (CC&nbsp;BY&nbsp;4.0); vertikální spinner – TheBlackfish, remix „150g vert“ od Muffin578 (CC&nbsp;BY-SA&nbsp;4.0), upraveno. Zvuky jsou syntetizované. <a href="NOTICE.txt">Licence a zdroje</a></div>
   </div>
@@ -300,6 +300,7 @@ body.split::after{content:'';position:absolute;background:var(--ink);pointer-eve
   <button class="btn btn-act" id="resume" type="button"><span>Pokračovat</span><span aria-hidden="true">▶</span></button>
   <div class="row"><button class="btn btn-o" id="restart" type="button"><span>Od začátku</span><span aria-hidden="true">↻</span></button><button class="btn btn-o" id="quit" type="button"><span>Do menu</span><span aria-hidden="true">≡</span></button></div>
   <button class="btn btn-o" id="last-btn" type="button"><span>Záznam posledních 20 s</span><span aria-hidden="true">▶</span></button>
+  <label class="chk"><input type="checkbox" class="calm-opt" id="calm-opt"> Klidný režim <span class="mono">bez otřesů, zpomalení, publika a znělek</span></label>
   <label class="chk"><input type="checkbox" id="shake-opt"> Otřesy kamery při zásahu</label>
   <label class="chk"><input type="checkbox" id="replay-opt"> Automaticky přehrát záznam K.O.</label>
   <div class="hint"><kbd>C</kbd> kamera · <kbd>M</kbd> zvuk · <kbd>Esc</kbd> pokračovat</div>
@@ -353,10 +354,7 @@ body.split::after{content:'';position:absolute;background:var(--ink);pointer-eve
     <button class="btn btn-o" id="share" type="button"><span>Sdílet výsledek</span><span aria-hidden="true">↗</span></button>
   </div>
   <div id="share-msg" role="status"></div>
-  <div class="kit">
-    <div><div class="mono" id="end-kit-l">Stavebnice</div><b id="end-kit"></b></div>
-    <a class="btn btn-act" id="cta" href="../../"><span id="cta-l">Postavte si ho</span><span aria-hidden="true">→</span></a>
-  </div>
+  <p class="kit" id="kit-row" hidden><a class="link" id="cta" data-cta="arena-kit" href="../../"><span id="cta-l">Dejte mi vědět, až bude sada</span></a></p>
   <div class="credit">3D modely: Shoverobotics (CC&nbsp;BY&nbsp;4.0), TheBlackfish / Muffin578 (CC&nbsp;BY-SA&nbsp;4.0). <a href="NOTICE.txt">Licence a zdroje</a></div>
 </section>
 

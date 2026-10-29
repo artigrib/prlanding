@@ -20,6 +20,7 @@ import { t as tr } from './i18n/index.js';
 import { HiDetail } from './ui/hidetail.js';
 import { store } from './ui/store.js';
 import { track } from './analytics.js';
+import { calmMode } from './ui/calm.js';
 
 export async function install(page, env) {
   // core.js layout (servo-emulator branch): the page (MissionPage) owns sliders/demo/HUD, page.sim (ArmSim)
@@ -72,7 +73,8 @@ class UX {
   constructor(app, { THREE, mj, TEST, objects, ObjectView }) {
     this.app = app; this.T = THREE; this.mj = mj; this.TEST = TEST;
     this.m = app.m; this.d = app.d;
-    this.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.calm = calmMode();     // ?klid=1 (remembered): same as prefers-reduced-motion
+    this.reduced = this.calm || matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.touch = matchMedia('(pointer: coarse)').matches;
     this.world = new World(mj, app.m, app.d);
     this.ctl = new ArmController(mj, app.m, app.d, app.act);
@@ -521,7 +523,7 @@ class UX {
     const ch = this.challenge;
     if (own && ch && ch.id === m.id) {
       const d = ch.time - res.time;
-      this.panel.winStats.textContent += d > 0 ? ` · rekord kamaráda ${fmtT(ch.time)} překonán o ${Math.max(1, Math.round(d))} s!` : ` · rekord kamaráda ${fmtT(ch.time)} zatím platí`;
+      if (Number.isFinite(d)) this.panel.winStats.textContent += ` · sdílený čas ${fmtT(ch.time)}`;   // descriptive, no beat / lost framing
     }
     this.panel.showMission(m, this.progress[m.id]);
     document.getElementById('win').hidden = false;
@@ -540,10 +542,11 @@ class UX {
     const m = MISSIONS.find((x) => x.id === r.id);
     const lang = new URLSearchParams(location.search).get('lang');
     const url = location.origin + location.pathname + `?mise=${r.id}&rekord=${r.time.toFixed(1)}` + (lang ? `&lang=${lang}` : '');
-    const text = tr(`Mise „${m.title}“ za ${fmtT(r.time)} a ${r.stars} ★ v simulaci SO-101. Překonáte to?`);   // leaves the page: translate here
-    try { if (navigator.share) { await navigator.share({ title: tr('SO-101 – výzva'), text, url }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
-    try { await navigator.clipboard.writeText(text + ' ' + url); this.panel.toast('Odkaz s výzvou je ve schránce'); }
-    catch (e) { window.prompt(tr('Zkopírujte odkaz s výzvou:'), url); }
+    // neutral and descriptive (players are often 10-16): what was done, an invitation, no dare
+    const text = tr(`Mise „${m.title}“ v simulaci SO-101: hotovo za ${fmtT(r.time)}, ${r.stars} ★. Zkuste si ji taky.`);   // leaves the page: translate here
+    try { if (navigator.share) { await navigator.share({ title: tr('SO-101 – mise'), text, url }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+    try { await navigator.clipboard.writeText(text + ' ' + url); this.panel.toast('Odkaz na misi je ve schránce'); }
+    catch (e) { window.prompt(tr('Zkopírujte odkaz na misi:'), url); }
   }
 
   /** start: a challenge link, or continue where the visitor left off */
@@ -552,8 +555,8 @@ class UX {
     if (want && MISSIONS.some((m) => m.id === want) && rek > 0.5 && rek < 3600) {
       this.challenge = { id: want, time: Math.round(rek * 10) / 10 };
       const m = MISSIONS.find((x) => x.id === want);
-      this.panel.showChallenge(`Výzva: ${fmtT(this.challenge.time)}`);
-      setTimeout(() => this.panel.toast(`Výzva od kamaráda: „${m.title}“ za ${fmtT(this.challenge.time)}. Překonáte to?`), 900);
+      this.panel.showChallenge(`Sdílený čas: ${fmtT(this.challenge.time)}`);
+      setTimeout(() => this.panel.toast(`Sdílená mise: „${m.title}“, hotovo za ${fmtT(this.challenge.time)}. Zkuste ji po svém.`), 900);
       return want;
     }
     if (want) return want;

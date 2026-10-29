@@ -51,10 +51,10 @@ const strings = {
   'TPU boky': 'TPU sides', 'Měkké boky pohltí zásahy z boku, +9 g': 'Soft sides absorb side hits, +9 g', 'Titanový štít': 'Titanium shield', 'Pevná příď, +14 g': 'Solid nose, +14 g',
   'Bez pancíře': 'No armour', 'Lehký a křehký, −8 g': 'Light and fragile, −8 g', 'Gyro asistent': 'Gyro assist', 'Drží směr a dávkuje zatáčení': 'Holds heading and smooths steering',
   'Bez gyra': 'No gyro', 'Čisté ruční řízení – rychlejší otáčení, těžší jízda': 'Pure manual control – faster turning, harder to drive',
-  'Rychlost': 'Speed', 'Tlak': 'Push', 'Odolnost': 'Toughness', 'Hotovo': 'Done', 'Stavebnice': 'Kit', 'Postavte si ho': 'Build it',
+  'Rychlost': 'Speed', 'Tlak': 'Push', 'Odolnost': 'Toughness', 'Hotovo': 'Done', 'Stavebnice': 'Kit',
   /* HUD */
   'Vy': 'You', 'Soupeř': 'Opponent', 'AI': 'AI', 'Hráč 1': 'Player 1', 'Hráč 2': 'Player 2', 'Hráč 1:': 'Player 1:',
-  'Zvuk zap.': 'Sound on', 'Zvuk vyp.': 'Sound off', 'Zvuk vypnut': 'Sound off', 'Zvuk zapnut': 'Sound on', 'Zvuk (M)': 'Sound (M)', 'Na start': 'Reset', 'Pauza': 'Pause', 'Pauza (Esc)': 'Pause (Esc)', 'Pozastavit': 'Pause',
+  'Zvuk': 'Sound', 'Zvuk zap.': 'Sound on', 'Zvuk vyp.': 'Sound off', 'Zvuk vypnut': 'Sound off', 'Zvuk zapnut': 'Sound on', 'Zvuk (M)': 'Sound (M)', 'Na start': 'Reset', 'Pauza': 'Pause', 'Pauza (Esc)': 'Pause (Esc)', 'Pozastavit': 'Pause',
   'Přepnout kameru (C)': 'Switch camera (C)', 'Vrátit na start (R)': 'Back to start (R)', 'Soupeř jezdí (T)': 'Opponent drives (T)', 'Soupeř jezdí': 'Opponent drives', 'Soupeř stojí': 'Opponent stands still',
   'Kamera': 'Camera', 'TV přenos': 'TV broadcast', 'Za robotem': 'Chase', 'Shora': 'Top', 'Z robota (FPV)': 'On board (FPV)', 'Z robota': 'On board', 'Rozdělená obrazovka': 'Split screen',
   'kamera ·': 'camera ·', 'zvuk ·': 'sound ·', 'Esc': 'Esc',
@@ -70,7 +70,9 @@ const strings = {
   'Záznam posledních 20 s': 'Replay of the last 20 s', 'Otřesy kamery při zásahu': 'Camera shake on hits', 'Automaticky přehrát záznam K.O.': 'Auto-play the K.O. replay',
   'Konec zápasu': 'End of match', 'Výhra': 'Win', 'Prohra': 'Loss', 'Remíza': 'Draw', 'Vyhrává hráč 1': 'Player 1 wins', 'Vyhrává hráč 2': 'Player 2 wins', 'Vítěz turnaje!': 'Tournament winner!',
   'Konec zápasu · K.O.': 'End of match · K.O.', 'Konec zápasu · rozhodnutí rozhodčích': 'End of match · judges’ decision',
-  'Zatím jen ve hře': 'Only in the game so far', 'Stavebnici připravujeme': 'Kit coming soon', 'Bojoví roboti v katalogu': 'Combat robots in the catalogue', 'Dejte mi vědět': 'Notify me',
+  'Dejte mi vědět, až bude sada': 'Let me know when the kit is ready',
+  'Klidný režim': 'Calm mode', 'bez otřesů, zpomalení, publika a znělek': 'no shake, slow motion, crowd or jingles',
+  'Klidný režim zapnut': 'Calm mode on', 'Klidný režim vypnut': 'Calm mode off',
   'Opakovat K.O.': 'Replay the K.O.', 'Opakovat zásah': 'Replay the hit', 'Další soupeř': 'Next opponent', 'Celý zápas': 'Full match', 'Sdílet výsledek': 'Share the result',
   'Bodování rozhodčích': 'Judges’ scores', 'Celkem': 'Total', 'Poškození': 'Damage', 'Agrese': 'Aggression', 'Kontrola': 'Control',
   'Hráč 1 vytlačil soupeře z arény.': 'Player 1 pushed the opponent out of the arena.', 'Vytlačili jste soupeře z arény.': 'You pushed the opponent out of the arena.',
@@ -132,12 +134,12 @@ const patterns = [
   [/^Levý joystick jízda · tlačítko vpravo (.+)$/, (m, a) => `Left stick drives · right button ${T(a)}`],
   [/^Garáž · (.+)$/, 'Garage · $1'], [/^Garáž$/, 'Garage'], [/^Překročili byste limit (\d+) g$/, 'You’d exceed the $1 g limit'], [/^Přetíženo o (\d+) g \(limit (\d+) g\)$/, 'Overweight by $1 g (limit $2 g)'],
   [/^Výhra K\.O\. za (.+)$/, 'K.O. win in $1'],
-  [/^(Remíza|Výhra K\.O\. za .+|Výhra na body|Prohra): (.+) vs\. (.+) v aréně 150 g na printedrobotics\.cz\. Zkusíte to líp\?$/, (m, v, a, b) => `${T(v)}: ${T(a)} vs. ${T(b)} in the 150 g arena on printedrobotics.cz. Can you do better?`],
+  [/^Zápas v aréně 150 g na printedrobotics\.cz: (.+) vs\. (.+?)\.(?: (Remíza|Výhra K\.O\. za .+|Výhra na body)\.)?$/, (m, a, b, v) => `A match in the 150 g arena on printedrobotics.cz: ${T(a)} vs. ${T(b)}.${v ? ' ' + T(v) + '.' : ''}`],
   [/^Jáma se otevře za (\d+) s$/, 'The pit opens in $1 s'],
   [/^Rychlost (.+)×$/, (m, a) => `Speed ${dec(a)}×`], [/^Záznam uložen \((\d+) kB\)\.$/, 'Replay saved ($1 kB).'], [/^Klip uložen \((\d+) kB\)\.$/, 'Clip saved ($1 kB).']
 ];
 
 // composed messages translated whole by the patterns above (for tools/i18n-extract.mjs)
-const fragments = ['{}: {} vs. {} v aréně 150 g na printedrobotics.cz. Zkusíte to líp?'];
+const fragments = ['Zápas v aréně 150 g na printedrobotics.cz: {} vs. {}.{}'];
 
 export default { strings, patterns, fragments };

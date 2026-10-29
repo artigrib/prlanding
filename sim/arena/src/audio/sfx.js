@@ -5,10 +5,11 @@
 import { store } from '../ui/store.js';
 import { ArenaAudio } from './arena-audio.js';
 import { mountSettings } from './settings.js';
+import { calm } from '../ui/calm.js';
 
-const A = new ArenaAudio();
+const A = new ArenaAudio({ calm });
 const E = A.eng;
-E.muted = !!store.get('muted', false);
+E.muted = !!store.get('muted', true);     // off until the player turns it on (like the SO-101 sim), then remembered
 {
   const saved = store.get('audio', null) || {};
   for (const k of ['master', 'sfx', 'amb']) { const v = +saved[k]; if (Number.isFinite(v)) E.levels[k] = Math.max(0, Math.min(1, v)); }
@@ -33,6 +34,7 @@ export const sfx = {
   crowd(e = 1) { A.crowd(e); },
   jingle(win = true) { A.jingle(win); },
   click() { A.click(); },
+  calmChanged() { A.ambience(A.ambOn); },   // calm mode toggled: fade the room tone in / out
   motor(id, level, spin = 0, r = null) { A.motor(id, level, spin, r); },
   stopMotors() { A.stopMotors(); }
 };

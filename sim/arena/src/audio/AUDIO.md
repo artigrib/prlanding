@@ -35,7 +35,8 @@ It is suspended while the tab is hidden.
 | `sfx.fall()` / `sfx.pitOpen()` | robot out / into pit, pit trapdoor |
 | `sfx.beep(final)` / `sfx.buzzer()` / `sfx.jingle(win)` | countdown, round end, result sting |
 | `sfx.crowd(e)` / `sfx.click()` | crowd reaction (rate-limited), UI click |
-| `sfx.setMuted(b)` / `sfx.setLevels({master, sfx, amb})` | persisted via `ui/store.js` (`muted`, `audio`; try/catch) |
+| `sfx.setMuted(b)` / `sfx.setLevels({master, sfx, amb})` | persisted via `ui/store.js` (`muted`, `audio`; try/catch). Muted until the player turns sound on (same as the SO-101 sim) |
+| `sfx.calmChanged()` | calm mode (`ui/calm.js`) toggled: no crowd, no ambience, no jingles, no ducking, `sfx`/`motors` one-shots at half gain |
 
 Replays (`createReplayUI({ onEvent })` in main.js): recorded `hit` events play `sfx.hit` (hazard hits, `by: -1`,
 play `sfx.wall`), `fire` -> `sfx.flip`, `flip` -> thud, `pit`/`out` -> `sfx.fall`, `ko` -> crowd. `sounds()` calls
