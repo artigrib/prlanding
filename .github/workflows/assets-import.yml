@@ -98,9 +98,14 @@ jobs:
             || { echo "::error::import failed (see run artifact)"; exit 1; }
 
       - name: Validate whole library in MuJoCo
+        id: validate
         run: |
-          python -I tools/assets/validate.py --report "$LOGS/validate.json" 2> "$LOGS/validate.log" \
-            || { echo "::error::validation failed (see run artifact)"; exit 1; }
+          if python -I tools/assets/validate.py --report "$LOGS/validate.json" 2> "$LOGS/validate.log"; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::error::library validation failed (draft PR will carry the details)"
+          fi
 
       - name: Regenerate manifest and licence list
         run: python -I tools/assets/manifest.py 2> "$LOGS/manifest.log" || { echo "::error::manifest failed"; exit 1; }
@@ -129,7 +134,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           BRANCH: assets/import-${{ github.run_id }}
-          TESTS_OK: ${{ steps.nodetest.outputs.ok }}
+          TESTS_OK: ${{ steps.nodetest.outputs.ok == 'true' && steps.validate.outputs.ok == 'true' }}
+          NODE_OK: ${{ steps.nodetest.outputs.ok }}
+          VALIDATE_OK: ${{ steps.validate.outputs.ok }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           if [ -z "$(git status --porcelain -- sim/so101/objects)" ]; then
@@ -149,7 +156,21 @@ jobs:
             echo "\`/sim/so101/objects.html\`, and fix \`name_cs\` where \`name_cs_auto\` is set."
             echo
             cat "$LOGS/import-report.md"
-            if [ "$TESTS_OK" != "true" ]; then
+            if [ "$VALIDATE_OK" != "true" ]; then
+              echo
+              echo "## Library validation FAILED (do not merge as is)"
+              echo
+              echo '```'
+              python -c 'import json,sys
+          r = json.load(open(sys.argv[1])) if __import__("os").path.exists(sys.argv[1]) else {}
+          for o in r.get("objects", []):
+              if not o.get("ok"): print(o["id"], "; ".join(o.get("errors", [])))
+          sc = r.get("scene", {})
+          if not sc.get("ok", True): print("combined scene:", {k: v for k, v in sc.items() if k in ("error", "too_large", "slow")})
+          if not r: print("validate.py crashed; see validate.log in the run artifact")' "$LOGS/validate.json"
+              echo '```'
+            fi
+            if [ "$NODE_OK" != "true" ]; then
               echo
               echo "## Library unit tests FAILED (do not merge as is)"
               echo

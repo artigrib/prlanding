@@ -146,6 +146,9 @@ def process(c, out_root, policy):
         rec["brand_review"] = s["brand_review"]
         write_json(Path(out_root) / oid / f"{oid}.json", rec)
 
+    if not validate.fits_table(rec["size_m"]):
+        shutil.rmtree(Path(out_root) / oid, ignore_errors=True)
+        return {"id": oid, "ok": False, "reason": "too large for the SO-101 table (no free spot next to robot/bowl/cube)"}
     v = validate.validate_object(Path(out_root) / oid)
     if not v["ok"]:
         shutil.rmtree(Path(out_root) / oid, ignore_errors=True)
