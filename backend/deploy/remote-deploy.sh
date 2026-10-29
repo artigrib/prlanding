@@ -382,6 +382,10 @@ tls_state() ( set +eu +o pipefail
     [ "$(readlink /proc/$pid/ns/net)" = "$hostns" ] && ns=host || ns=separate
     say "tls other caddy: $kind; $cm; netns $ns; started $(ps -o lstart= -p "$pid" 2>/dev/null | awk '{print $2" "$3" "$4}'); systemd caddy.service active: $(systemctl is-active caddy 2>/dev/null || echo n/a)"
   done
+  local opid lp
+  for pid in $(pgrep -x caddy); do grep -q "$fid" "/proc/$pid/cgroup" 2>/dev/null && opid=$pid; done
+  lp=$(ss -ltnpH 2>/dev/null | grep "pid=$opid," | awk '{print $4}' | sed -E 's/.*:([0-9]+)$/\1/' | sort -un | tr '\n' ' ')
+  say "tls our caddy listening ports: ${lp:-none}; host :80 listen addrs: $(ss -ltnH 'sport = :80' 2>/dev/null | awk '{print $4}' | sed -E 's/^0\.0\.0\.0:.*/any4/; s/^\[::\]:.*/any6/; s/^\*:.*/any/; s/^127\..*/loopback/; s/^[0-9].*/specific-v4/; s/^\[.*/specific-v6/' | tr '\n' ' '); /dev/tcp 127.0.0.1:80 $(timeout 3 bash -c 'exec 3<>/dev/tcp/127.0.0.1/80' 2>/dev/null && echo open || echo closed), :443 $(timeout 3 bash -c 'exec 3<>/dev/tcp/127.0.0.1/443' 2>/dev/null && echo open || echo closed); bind errors in log: $(lg | grep -ci 'address already in use\|bind:' )"
   for port in 80 443; do
     hex=$(printf '%04X' "$port")
     owner=""
