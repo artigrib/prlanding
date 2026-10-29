@@ -278,6 +278,7 @@ const strings = {
 };
 
 const patterns = [
+  [/^(.+) – SO-101 v simulaci \| printedrobotics\.cz$/, (m, a) => `${T(a)} – SO-101 simulator | printedrobotics.cz`],
   /* loading, joints, stars */
   [/^Stahujeme fyzikální engine \((.+) MB\)… (.+) %$/, (m, a, b) => `Downloading the physics engine (${dec(a)} MB)… ${dec(b)} %`],
   [/^· ještě asi (.+)$/, (m, a) => `· about ${a.replace(/ s$/, ' s').replace(/ min$/, ' min')} left`],
