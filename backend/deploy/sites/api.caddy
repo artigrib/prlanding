@@ -1,4 +1,0 @@
-api.printedrobotics.cz {
-	import common
-	reverse_proxy 127.0.0.1:18181
-}

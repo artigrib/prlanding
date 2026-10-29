@@ -81,11 +81,11 @@ test('per-IP: 20 connects/min, then 10 failures in 10 min trigger a 15 min cool-
   assert.ok(limited);
 });
 
-test('only one pending pairing per tab (second gets BUSY); session cap gives CAPACITY', async () => {
+test('only one pending pairing per tab (second gets PAIRING_FAILED, no code-validity oracle); session cap gives CAPACITY', async () => {
   const reg = new Registry(testConfig({ approvalTimeoutMs: 100, maxSessions: 1 }));
   const tab = openTab(reg);
   const p1 = reg.connect(tab.code, '1.1.1.1', 'a');
-  await rejectsWith(reg.connect(tab.code, '1.1.1.2', 'b'), 'BUSY');
+  await rejectsWith(reg.connect(tab.code, '1.1.1.2', 'b'), 'PAIRING_FAILED');
   reg.onTabMessage(tab.room, { t: 'approve', pairId: tab.last('pair_request')!.pairId, decision: 'allow' });
   await p1;
   const tab2 = openTab(reg, '10.0.0.2');

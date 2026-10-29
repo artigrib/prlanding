@@ -2,7 +2,7 @@
 # Runs ON THE SERVER (piped by deploy-backend.yml / rollback-backend.yml over SSH).
 # Touches only the compose project "printedrobotics" and images named ghcr.io/artigrib/prlanding-*.
 #
-# Usage: ACTION=deploy|rollback|status [API_IMAGE=... BRIDGE_IMAGE=... APP_VERSION=... SITES="api mcp"
+# Usage: ACTION=deploy|rollback|status|fixports [API_IMAGE=... BRIDGE_IMAGE=... APP_VERSION=...
 #        GHCR_USER=...] bash remote-deploy.sh   (GHCR token, if any, on stdin)
 #
 # Output contract: the only lines written to stdout are "STATUS ..." / "WARN ..." / "ERROR ..."
@@ -41,13 +41,6 @@ report_services() {
   while IFS= read -r line; do
     [ -n "$line" ] && say "service $line"
   done < <(dc ps --all --format '{{.Service}}: {{.State}} {{.Health}}' 2>/dev/null || true)
-  # For containers that are not running, show Docker's own start error (sanitized).
-  local id st
-  for id in $(dc ps --all -q 2>/dev/null || true); do
-    st=$(docker inspect -f '{{.State.Status}}|{{.State.ExitCode}}|{{.State.Error}}' "$id" 2>/dev/null || true)
-    case "$st" in running*) continue;; esac
-    warn "container $(docker inspect -f '{{index .Config.Labels "com.docker.compose.service"}}' "$id" 2>/dev/null): $(sanitize "$st")"
-  done
 }
 
 hget() { # hget PORT PATH -> raw HTTP/1.0 response from a 127.0.0.1-published port (works without our Caddy)
@@ -61,7 +54,6 @@ check_health() { # check_health EXPECTED_VERSION BRIDGE_ENABLED
     case "$body" in *'"ok":true'*) break;; esac
     sleep 3
   done
-  case "$body" in *'"ok":true'*) ;; *) warn "api check output: $(sanitize "$(printf '%s' "$body" | tail -c 200)")";; esac
   case "$body" in
     *"\"version\":\"$v\""*) say "internal check: api /health ok (version ${v:0:12})";;
     *'"ok":true'*) warn "internal check: api healthy but reports another version"; return 1;;
@@ -81,13 +73,6 @@ check_health() { # check_health EXPECTED_VERSION BRIDGE_ENABLED
   return 0
 }
 
-proxies_80_443() { # PIDs of docker-proxy processes listening on host port 80 or 443
-  local pid args
-  for pid in $(pgrep -x docker-proxy || true); do
-    args=$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null || true)
-    case "$args" in *"-host-port 80 "*|*"-host-port 443 "*) echo "$pid";; esac
-  done
-}
 
 
 ensure_network() {
@@ -98,7 +83,6 @@ ensure_network() {
     docker network create --driver bridge --label org.printedrobotics.owner=printedrobotics printedrobotics_web >/dev/null \
       && say "network printedrobotics_web created" || die "could not create network printedrobotics_web"
   fi
-  say "network printedrobotics_web: present; containers attached: $(docker network inspect printedrobotics_web -f '{{len .Containers}}' 2>/dev/null)"
 }
 
 guard_no_public_ports() {
@@ -119,21 +103,11 @@ bring_up() {
   profiles=$(release_var "$ROOT/release.env" COMPOSE_PROFILES | tr ',' '\n' | grep -x bridge | paste -sd, -)
   local err
   if ! err=$(COMPOSE_PROFILES="$profiles" dc up -d --remove-orphans --wait --wait-timeout 150 2>&1); then
-    warn "compose up failed: $(sanitize "$(printf '%s\n' "$err" | grep -v '^ *$' | tail -3)")"
-    local p=""
-    ss -ltn 2>/dev/null | grep -q ':80 ' && p="$p 80/tcp"
-    ss -ltn 2>/dev/null | grep -q ':443 ' && p="$p 443/tcp"
-    ss -lun 2>/dev/null | grep -q ':443 ' && p="$p 443/udp"
-    [ -z "$p" ] || warn "host ports currently listening:$p"
+    warn "compose up failed ($(classify_err "$err"))"
     return 1
   fi
 }
 
-sanitize() { # strip addresses, ids and paths from an error line before it reaches the public log
-  printf '%s' "$1" | tr '\n' ' ' \
-    | sed -E 's/[0-9]{1,3}(\.[0-9]{1,3}){3}/<ip>/g; s/\[?[0-9a-fA-F:]{6,}\]?/<id>/g; s#(/[A-Za-z0-9._-]+){2,}#<path>#g' \
-    | cut -c1-240
-}
 
 
 prune_old_images() {
@@ -160,7 +134,7 @@ disk_guard() {
   if [ "${free_kb:-0}" -lt $((MIN_FREE_GB * 1024 * 1024)) ]; then
     die "disk guard: less than ${MIN_FREE_GB} GB free, aborting (nothing changed)"
   fi
-  say "disk guard ok: $((free_kb / 1024 / 1024)) GB free"
+  say "disk guard ok"
 }
 
 ensure_secrets() {
@@ -173,26 +147,11 @@ ensure_secrets() {
 
 install_files() {
   [ -f "$INCOMING/compose.yml" ] || die "deploy files missing"
-  install -d -m 750 "$ROOT/sites" "$ROOT/sites-enabled"
-  # cp (not mv) keeps the inode, so Caddy's bind-mounted Caddyfile sees the new content.
   cp "$INCOMING/compose.yml" "$ROOT/compose.yml"
-  cp "$INCOMING/Caddyfile" "$ROOT/Caddyfile"
-  chmod 644 "$ROOT/Caddyfile" "$ROOT/compose.yml"
-  rm -f "$ROOT"/sites/*.caddy
-  cp "$INCOMING"/sites/*.caddy "$ROOT/sites/"
-  # Enable only the sites the workflow verified (DNS points here).
-  rm -f "$ROOT"/sites-enabled/*.caddy
-  local s enabled=""
-  for s in ${SITES:-}; do
-    case "$s" in *[!a-z]*|"") continue;; esac
-    if [ -f "$ROOT/sites/$s.caddy" ]; then
-      cp "$ROOT/sites/$s.caddy" "$ROOT/sites-enabled/$s.caddy"
-      enabled="$enabled $s"
-    fi
-  done
-  chmod 644 "$ROOT"/sites/*.caddy "$ROOT"/sites-enabled/*.caddy 2>/dev/null || true
-  chmod 755 "$ROOT/sites-enabled"
-  say "https sites enabled:${enabled:- none}"
+  chmod 644 "$ROOT/compose.yml"
+  # Leftovers of the removed Caddy setup.
+  rm -rf "$ROOT/Caddyfile" "$ROOT/sites" "$ROOT/sites-enabled" "$ROOT/prev-config"
+  say "deploy files installed"
 }
 
 classify_err() { # map a docker error to a fixed, non-sensitive reason
@@ -260,48 +219,6 @@ docker compose version >/dev/null || die "docker compose plugin missing"
 install -d -m 750 "$ROOT"
 cd "$ROOT"
 
-diagnose() ( set +eu +o pipefail
-  # Low-sensitivity facts only: counts, our own network names, our own DNS lookups.
-  local id n
-  for id in $(dc ps --all -q 2>/dev/null || true); do
-    n=$(docker inspect -f '{{index .Config.Labels "com.docker.compose.service"}}: networks={{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' "$id" 2>/dev/null || true)
-    say "diag $n"
-  done
-  say "diag containers attached to our network: $(docker network inspect printedrobotics_web -f '{{len .Containers}}' 2>/dev/null || echo none)"
-  say "diag other containers publishing 80: $(docker ps --filter publish=80 --format '{{.Label "com.docker.compose.project"}}' | grep -vc '^printedrobotics$' || true), 443: $(docker ps --filter publish=443 --format '{{.Label "com.docker.compose.project"}}' | grep -vc '^printedrobotics$' || true)"
-  say "diag docker-proxy processes: $(pgrep -c docker-proxy || echo 0); listening tcp :80 sockets: $(ss -ltnH 'sport = :80' 2>/dev/null | wc -l)"
-  say "diag caddy resolves api: $(sanitize "$(dc exec -T caddy nslookup api 127.0.0.11 2>&1 | grep -ciE 'address' || true) address line(s)")"
-  local port procs ours others ourips pid args cip
-  ourips=" $(for id in $(dc ps --all -q 2>/dev/null); do docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' "$id" 2>/dev/null; done) "
-  for port in 80 443; do
-    procs=$(ss -ltnpH "sport = :$port" 2>/dev/null | grep -o 'users:(("[^"]*"' | sed 's/users:(("//' | sort | uniq -c | awk '{print $2"x"$1}' | tr '\n' ' ')
-    ours=0; others=0
-    for pid in $(pgrep -x docker-proxy || true); do
-      args=$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null || true)
-      case "$args" in *"-host-port $port "*) ;; *) continue;; esac
-      cip=$(printf '%s' "$args" | sed -n 's/.*-container-ip \([^ ]*\).*/\1/p')
-      case "$ourips" in *" $cip "*) ours=$((ours + 1));; *) others=$((others + 1));; esac
-    done
-    say "diag tcp :$port listeners by process: ${procs:-none}; docker-proxy for :$port -> our containers: $ours, to other/unknown IPs: $others"
-  done
-  say "diag containers with host port 80 in their mapping (any project): $(docker ps --format '{{.Ports}}' | grep -cE '(0\.0\.0\.0|\[?::\]?):80->' || true), of them ours: $(dc ps --format '{{.Ports}}' 2>/dev/null | grep -cE ':80->' || true)"
-  # Who do the 80/443 docker-proxies forward to? Categories only, never names or addresses.
-  local c info
-  for pid in $(pgrep -x docker-proxy || true); do
-    args=$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null || true)
-    case "$args" in *"-host-port 80 "*|*"-host-port 443 "*) ;; *) continue;; esac
-    cip=$(printf '%s' "$args" | sed -n 's/.*-container-ip \([^ ]*\).*/\1/p')
-    info=""
-    for c in $(docker ps -aq); do
-      if docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' "$c" | grep -qw -- "$cip"; then
-        info="$info [$(docker inspect -f '{{if eq (index .Config.Labels "com.docker.compose.project") "printedrobotics"}}ours{{else}}other{{end}} state={{.State.Status}} restarts={{.RestartCount}} hostports={{range $p, $b := .HostConfig.PortBindings}}{{range $b}}{{.HostPort}},{{end}}{{end}}' "$c" | sed -E 's/hostports=(.*)/hp,\1/' | awk '{h=$NF; w=(h ~ /(^|,)(80|443),/) ? "maps-host-80/443=yes" : "maps-host-80/443=no"; $NF=w; print}')]"
-      fi
-    done
-    say "diag proxy host-port $(printf '%s' "$args" | sed -n 's/.*-host-port \([0-9]*\).*/\1/p') proto $(printf '%s' "$args" | sed -n 's/.*-proto \([a-z]*\).*/\1/p') -> ${info:- no container with that IP}"
-  done
-  say "diag live-restore: $(docker info -f '{{.LiveRestoreEnabled}}' 2>/dev/null); swarm: $(docker info -f '{{.Swarm.LocalNodeState}}' 2>/dev/null)"
-  say "diag docker: $(docker version -f '{{.Server.Version}}' 2>/dev/null), compose: $(docker compose version --short 2>/dev/null)"
-)
 
 
 stale_endpoints() ( set +eu +o pipefail
@@ -318,222 +235,18 @@ stale_endpoints() ( set +eu +o pipefail
 )
 
 fixports() ( set +eu +o pipefail
-  local total ours net name
-  total=$(stale_endpoints | grep -c . )
-  ours=$(stale_endpoints | awk '$2 ~ /^printedrobotics-/' | grep -c .)
-  say "stale endpoints: total $total, ours $ours"
-  stale_endpoints | awk '$2 ~ /^printedrobotics-/' | while read -r net name; do
-    docker network disconnect -f "$net" "$name" && say "removed our stale endpoint ${name}" || warn "could not remove our stale endpoint ${name}"
-  done
-  say "after cleanup: stale endpoints total $(stale_endpoints | grep -c .), docker-proxy for :80 $(pgrep -a docker-proxy | grep -c -- '-host-port 80 ')"
+  # Remove only our own stale endpoints (names printedrobotics-*); nothing is printed about others.
+  local net name n=0
+  while read -r net name; do
+    docker network disconnect -f "$net" "$name" && n=$((n + 1))
+  done < <(stale_endpoints | awk '$2 ~ /^printedrobotics-/')
+  [ "$n" = 0 ] || say "removed $n stale endpoint(s) of ours"
 )
 
-tls_state() ( set +eu +o pipefail
-  # Per-host ACME state as fixed strings: cert present + last error category from Caddy's log.
-  local h cert logs cat fw cid
-  cid=$(dc ps -q caddy 2>/dev/null | head -1)
-  lg() { docker logs "$cid" 2>&1; }
-  cnt() { lg | awk -v k="$1" 'index(tolower($0),tolower(k)){n++} END{print n+0}'; }
-  local hn=0 hp=0 id nm
-  for id in $(docker ps -q --filter label=com.docker.compose.project=printedrobotics); do
-    [ "$(docker inspect -f '{{.HostConfig.NetworkMode}}' "$id")" = host ] && hn=$((hn + 1))
-    docker inspect -f '{{range $p, $b := .HostConfig.PortBindings}}{{range $b}}{{.HostPort}} {{end}}{{end}}' "$id" | grep -qwE '80|443' && hp=$((hp + 1))
-  done
-  nm=$(docker inspect -f '{{.State.Status}}' printedrobotics-caddy-1 2>/dev/null || echo absent)
-  say "tls our stack: running containers with host networking $hn, publishing host 80/443 $hp; printedrobotics-caddy-1: $nm; binds :80/:443: $([ "$hn$hp" = 00 ] && [ "$nm" != running ] && echo no || echo YES)"
-  say "tls network printedrobotics_web: containers attached $(docker network inspect printedrobotics_web -f '{{len .Containers}}' 2>/dev/null || echo missing), of them other projects $(docker network inspect printedrobotics_web -f '{{range .Containers}}{{.Name}} {{end}}' 2>/dev/null | tr ' ' '\n' | grep . | grep -vc '^printedrobotics-' || true)"
-  say "tls caddy container: $([ -n "$cid" ] && echo found || echo missing); log driver: $(docker inspect -f '{{.HostConfig.LogConfig.Type}}' "$cid" 2>/dev/null); started: $(docker inspect -f '{{.State.StartedAt}}' "$cid" 2>/dev/null | cut -c1-16)"
-  # Live TLS app shape as yes/no flags only.
-  local tj; tj=$(dc exec -T caddy wget -q -T 3 -O - http://127.0.0.1:12019/config/apps/tls 2>/dev/null)
-  say "tls live tls app: automation policy $(printf '%s' "$tj" | grep -q '"policies"' && echo yes || echo no); acme issuer $(printf '%s' "$tj" | grep -q '"module":"acme"' && echo yes || echo no); challenges block $(printf '%s' "$tj" | grep -q '"challenges"' && echo yes || echo no)"
-  # Caddy log "msg" values counted against a fixed allowlist of Caddy/CertMagic message strings.
-  say "tls caddy msgs: $(lg | awk '
-    BEGIN { n=split("obtaining certificate|trying to solve challenge|served key authentication|validations succeeded|certificate obtained successfully|challenge failed|validating authorization|could not get certificate from issuer|will retry|job failed|no information found to solve challenge|looking up info for HTTP challenge|server running|server is listening only on the HTTP port, so no automatic HTTPS will be applied to this server|enabling automatic HTTP->HTTPS redirects|enabling automatic TLS certificate management|admin endpoint started|serving initial configuration|started background certificate maintenance|new ACME account registered|creating new account because no account for configured email is known to us|waiting on internal rate limiter|authorization finalized|using ACME account|config is unchanged|load complete|HTTP/2 skipped because it requires TLS|failed to solve HTTP challenge|redirected default logger|using adjacent Caddyfile|adapted config to JSON|stopped previous server|shutting down apps, then terminating", m, "|"); for (i=1;i<=n;i++) ok[m[i]]=1 }
-    { if (match($0, /"msg":"[^"]*"/)) { s=substr($0, RSTART+7, RLENGTH-8); if (!(s in ok)) s="(other)"; c[s]++ } }
-    { if (match($0, /"challenge_type":"[a-z0-9-]*"/)) ct[substr($0, RSTART+18, RLENGTH-19)]++ }
-    END { for (s in c) printf "%s=%d; ", s, c[s]; for (t in ct) printf "challenge %s=%d; ", t, ct[t]; print "" }')"
-  # Which process owns the :80/:443 listening sockets? Yes/no answers only.
-  local fid cp ours pid port hex ino owner
-  fid=$(docker inspect -f '{{.Id}}' "$cid" 2>/dev/null)
-  cp=0; ours=0
-  for pid in $(pgrep -x caddy); do cp=$((cp + 1)); grep -q "$fid" "/proc/$pid/cgroup" 2>/dev/null && ours=$((ours + 1)); done
-  say "tls caddy processes on host: $cp, in our container: $ours; our network mode: $(docker inspect -f '{{.HostConfig.NetworkMode}}' "$cid" 2>/dev/null | sed 's/^container:.*/container/'); whoami root: $([ "$(id -u)" = 0 ] && echo yes || echo no)"
-  local hostns cg cgid kind
-  hostns=$(readlink /proc/1/ns/net)
-  for pid in $(pgrep -x caddy); do
-    grep -q "$fid" "/proc/$pid/cgroup" 2>/dev/null && continue
-    cg=$(cat "/proc/$pid/cgroup" 2>/dev/null)
-    cgid=$(printf '%s' "$cg" | grep -oE '[0-9a-f]{64}' | head -1)
-    if [ -n "$cgid" ]; then
-      if docker inspect "$cgid" >/dev/null 2>&1; then
-        kind="docker container ($(docker inspect -f '{{if eq (index .Config.Labels "com.docker.compose.project") "printedrobotics"}}our project{{else}}other project{{end}}, net={{.HostConfig.NetworkMode}}' "$cgid" | sed 's/net=container:.*/net=container/; s/net=[^h].*/net=bridge-or-custom/'))"
-      else kind="cgroup of a docker container that no longer exists"; fi
-    else
-      case "$cg" in *system.slice*caddy*) kind="systemd caddy unit";; *system.slice*) kind="other systemd unit";; *user.slice*|*session*) kind="user session";; *) kind="other cgroup";; esac
-    fi
-    case "$(tr '\0' ' ' < /proc/$pid/cmdline)" in "caddy run --config /etc/caddy/Caddyfile --adapter caddyfile "*) cm="same command as ours";; *" run "*|*" run") cm="caddy run (other args)";; *) cm="other command";; esac
-    [ "$(readlink /proc/$pid/ns/net)" = "$hostns" ] && ns=host || ns=separate
-    say "tls other caddy: $kind; $cm; netns $ns; started $(ps -o lstart= -p "$pid" 2>/dev/null | awk '{print $2" "$3" "$4}'); systemd caddy.service active: $(systemctl is-active caddy 2>/dev/null || echo n/a)"
-  done
-  local opid lp
-  for pid in $(pgrep -x caddy); do grep -q "$fid" "/proc/$pid/cgroup" 2>/dev/null && opid=$pid; done
-  lp=$(ss -ltnpH 2>/dev/null | grep "pid=$opid," | awk '{print $4}' | sed -E 's/.*:([0-9]+)$/\1/' | sort -un | tr '\n' ' ')
-  say "tls our caddy listening ports: ${lp:-none}; host :80 listen addrs: $(ss -ltnH 'sport = :80' 2>/dev/null | awk '{print $4}' | sed -E 's/^0\.0\.0\.0:.*/any4/; s/^\[::\]:.*/any6/; s/^\*:.*/any/; s/^127\..*/loopback/; s/^[0-9].*/specific-v4/; s/^\[.*/specific-v6/' | tr '\n' ' '); /dev/tcp 127.0.0.1:80 $(timeout 3 bash -c 'exec 3<>/dev/tcp/127.0.0.1/80' 2>/dev/null && echo open || echo closed), :443 $(timeout 3 bash -c 'exec 3<>/dev/tcp/127.0.0.1/443' 2>/dev/null && echo open || echo closed); bind errors in log: $(lg | grep -ci 'address already in use\|bind:' )"
-  local oth myns l80 sfd m80
-  myns=$(readlink /proc/self/ns/net)
-  l80() { cat "$1/net/tcp" "$1/net/tcp6" 2>/dev/null | awk '$2 ~ /:0050$/ && $4=="0A" {print $10}'; }
-  m80=$(l80 /proc/self | tr '\n' ' ')
-  sfd=$(ls -l "/proc/$opid/fd" 2>/dev/null | grep -o 'socket:\[[0-9]*\]' | tr -d 'socket:[]' | tr '\n' ' ')
-  hit=no; for i in $m80; do case " $sfd " in *" $i "*) hit=yes;; esac; done
-  say "tls ns: our caddy in shell netns $([ "$(readlink /proc/$opid/ns/net)" = "$myns" ] && echo yes || echo no); pid1 in shell netns $([ "$(readlink /proc/1/ns/net)" = "$myns" ] && echo yes || echo no); :80 LISTEN sockets in shell netns $(printf '%s' "$m80" | wc -w); our caddy socket fds $(printf '%s' "$sfd" | wc -w); our caddy owns a :80 listener: $hit"
-  for pid in $(pgrep -x caddy); do
-    [ "$pid" = "$opid" ] && continue
-    say "tls other caddy netns: has :80 listener $(l80 /proc/$pid | grep -c .); same netns as shell $([ "$(readlink /proc/$pid/ns/net)" = "$myns" ] && echo yes || echo no); owns a :80 listener of shell netns: $(o=no; for i in $m80; do ls -l /proc/$pid/fd 2>/dev/null | grep -q "socket:\[$i\]" && o=yes; done; echo $o)"
-  done
-  local ipn nfr lo80
-  ipn=$(iptables-save 2>/dev/null)
-  nfr=$(nft list ruleset 2>/dev/null)
-  say "tls redirect rules: iptables DNAT/REDIRECT total $(printf '%s\n' "$ipn" | grep -cE -- '-j (DNAT|REDIRECT)'), mentioning 80/443 $(printf '%s\n' "$ipn" | grep -E -- '-j (DNAT|REDIRECT)' | grep -cE -- '(dport|dports) ([0-9,:]*,)?(80|443)([,: ]|$)'); nft dnat/redirect total $(printf '%s\n' "$nfr" | grep -cE 'dnat|redirect'), mentioning 80/443 $(printf '%s\n' "$nfr" | grep -E 'dnat|redirect' | grep -cE '(^|[^0-9])(80|443)([^0-9]|$)'); nft tables: $(printf '%s\n' "$nfr" | grep -c '^table'); tproxy rules $(printf '%s\n%s\n' "$ipn" "$nfr" | grep -ci tproxy)"
-  lo80=$(timeout 5 bash -c 'exec 3<>/dev/tcp/127.0.0.1/80; printf "HEAD /x HTTP/1.0\r\nHost: api.printedrobotics.cz\r\n\r\n" >&3; timeout 3 cat <&3' 2>/dev/null | tr -d '\r')
-  say "tls loopback :80 answer: status $(printf '%s\n' "$lo80" | head -1 | grep -o ' [0-9][0-9][0-9]' | tr -d ' '), edge marker $(printf '%s\n' "$lo80" | grep -ci '^x-pr-edge:'), bytes $(printf '%s' "$lo80" | wc -c); first line: $(printf '%s\n' "$lo80" | head -1 | tr -cd 'A-Za-z0-9/. ' | sed -E 's/[0-9]{1,3}(\.[0-9]{1,3}){3}/<ip>/g' | cut -c1-60); header names: $(printf '%s\n' "$lo80" | sed -n '2,20s/^\([A-Za-z-]*\):.*/\1/p' | tr '\n' ' ')"
-  local c pb ipv cp2 ocaddy=""
-  for pid in $(pgrep -x caddy); do [ "$pid" = "$opid" ] || ocaddy="$ocaddy $pid"; done
-  for c in $(docker ps -q); do
-    [ "$(docker inspect -f '{{index .Config.Labels "com.docker.compose.project"}}' "$c")" = printedrobotics ] && continue
-    pb=$(docker inspect -f '{{range $p, $b := .HostConfig.PortBindings}}{{range $b}}{{$p}}@{{.HostIp}}@{{.HostPort}} {{end}}{{end}}' "$c" 2>/dev/null)
-    printf '%s' "$pb" | grep -qE '@(80|443)( |$)' || continue
-    ipv=$(printf '%s' "$pb" | tr ' ' '\n' | awk -F@ '$3==80||$3==443 {h=$2; if (h=="" || h=="0.0.0.0" || h=="::") print "any"; else if (h ~ /^127\./) print "loopback"; else print "specific-address"}' | sort -u | tr '\n' ',')
-    cp2=$(docker inspect -f '{{.State.Pid}}' "$c")
-    isc=no; for p in $ocaddy; do [ "$p" = "$cp2" ] && isc=yes; grep -q "$(docker inspect -f '{{.Id}}' "$c")" /proc/$p/cgroup 2>/dev/null && isc=yes; done
-    say "tls other container binds host 80/443: bind address $ipv; running image is caddy: $(docker inspect -f '{{.Config.Image}}' "$c" | grep -qi caddy && echo yes || echo no); is the other caddy process: $isc; network mode: $(docker inspect -f '{{.HostConfig.NetworkMode}}' "$c" | sed -E 's/^(host|bridge|none)$/\1/; t; s/.*/custom/')"
-  done
-  say "tls docker firewall backend: $(docker info -f '{{.FirewallBackend.Driver}}' 2>/dev/null | tr -cd 'a-z+-' || echo unknown); nft binary: $(command -v nft >/dev/null && echo yes || echo no)"
-  local aip
-  aip=$(getent ahostsv4 api.printedrobotics.cz | awk 'NR==1{print $1}')
-  local sip; sip=$(printf '%s' "${SSH_CONNECTION:-}" | awk '{print $3}')
-  say "tls ssh: arrived on address equal to A record: $([ -n "$sip" ] && [ "$sip" = "$aip" ] && echo yes || echo no); ssh address on local interface: $(ip -o addr 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | grep -qxF "$sip" && echo yes || echo no); ssh address is private: $(printf '%s' "$sip" | grep -qE '^(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)' && echo yes || echo no); A record resolves on server same as public DNS: see runner"
-  say "tls public address: A record address configured on a local interface: $(ip -o -4 addr 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | grep -qxF "$aip" && echo yes || echo no); host default route via private gateway: $(ip -4 route show default 2>/dev/null | awk '{print $3}' | grep -qE '^(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.|100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.)' && echo yes || echo no); container virtualization: $(systemd-detect-virt -c 2>/dev/null || echo unknown); vm virtualization: $(systemd-detect-virt -v 2>/dev/null || echo unknown)"
-  for port in 80 443; do
-    hex=$(printf '%04X' "$port")
-    owner=""
-    for ino in $(cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk -v h=":$hex" '$2 ~ h"$" && $4=="0A" {print $10}'); do
-      for pid in $(ls /proc | grep -E '^[0-9]+$'); do
-        if ls -l "/proc/$pid/fd" 2>/dev/null | grep -q "socket:\[$ino\]"; then
-          c=$(tr '\0' ' ' < "/proc/$pid/comm" 2>/dev/null)
-          case "$c" in caddy*) cc=caddy;; docker-proxy*) cc=docker-proxy;; nginx*) cc=nginx;; *) cc=other;; esac
-          grep -q "$fid" "/proc/$pid/cgroup" 2>/dev/null && w=ours || w=not-ours
-          owner="$owner $cc/$w"
-          break
-        fi
-      done
-    done
-    say "tls :$port listening sockets owned by:${owner:- unknown}"
-  done
-  local rr
-  rr=$(timeout 5 bash -c 'exec 3<>/dev/tcp/127.0.0.1/80; printf "GET /.well-known/acme-challenge/probe HTTP/1.1\r\nHost: api.printedrobotics.cz\r\nConnection: close\r\n\r\n" >&3; head -c 300 <&3' 2>/dev/null | head -1 | grep -o ' [0-9][0-9][0-9]')
-  say "tls raw loopback :80 status:${rr:- none}"
-  d80=$(iptables -t nat -S 2>/dev/null | grep -- '-j DNAT' | grep -cE -- '--dport 80( |$)' || true)
-  say "tls nat DNAT dport 80 rules: $d80; iptables readable: $(iptables -t nat -S >/dev/null 2>&1 && echo yes || echo no)"
-  for h in api mcp relay; do
-    cert=no
-    dc exec -T caddy sh -c "ls /data/caddy/certificates/*/$h.printedrobotics.cz/$h.printedrobotics.cz.crt" >/dev/null 2>&1 && cert=yes
-    [ -f "$ROOT/sites-enabled/$h.caddy" ] && en=yes || en=no
-    cat=none
-    l=$(lg | awk -v h="$h.printedrobotics.cz" 'index($0,h) && (index(tolower($0),"error")||index(tolower($0),"fail")||index($0,"rateLimited")||index($0,"unauthorized")) {x=$0} END{print x}')
-    if [ -n "$l" ]; then
-      case "$l" in
-        *rateLimited*|*"rate limit"*|*429*) cat="rate-limited";;
-        *"Timeout during connect"*|*"i/o timeout"*|*"timed out"*) cat="http-01 challenge: connection timeout";;
-        *"Connection refused"*|*"connection refused"*) cat="http-01 challenge: connection refused";;
-        *unauthorized*|*"Invalid response"*|*"404"*) cat="http-01 challenge: unauthorized/invalid response";;
-        *"no such host"*|*NXDOMAIN*|*"DNS problem"*) cat="DNS problem";;
-        *) cat="other error";;
-      esac
-    fi
-    say "tls $h: site enabled: $en; cert present: $cert; last acme error: $cat"
-  done
-  say "tls: acme dns-01 not used; http-01 only"
-  say "tls log counts: lines $(lg | wc -l), bytes $(lg | wc -c), obtaining $(cnt obtain), obtained $(cnt 'certificate obtained'), errors $(cnt '"level":"error"'), cert dirs $(dc exec -T caddy sh -c 'ls -d /data/caddy/certificates/*/* 2>/dev/null | wc -l')"
-  say "tls storage: acme dir entries $(dc exec -T caddy sh -c 'ls /data/caddy/acme/*/ 2>/dev/null | wc -l'), data dirs $(dc exec -T caddy sh -c 'ls /data/caddy 2>/dev/null | tr "\n" " "'), writable $(dc exec -T caddy sh -c 'touch /data/caddy/.w && rm /data/caddy/.w && echo yes || echo no' 2>/dev/null)"
-  local cfg
-  cfg=$(dc exec -T caddy wget -q -T 3 -O - http://127.0.0.1:12019/config/apps/tls 2>&1)
-  say "tls admin config: automation $(printf '%s' "$cfg" | grep -ac '"automation"'), issuers acme $(printf '%s' "$cfg" | grep -ac '"module":"acme"'), subjects $(printf '%s' "$cfg" | grep -o 'printedrobotics.cz' | wc -l), size $(printf '%s' "$cfg" | wc -c)"
-  local hc
-  hc=$(dc exec -T caddy wget -q -T 3 -O - http://127.0.0.1:12019/config/apps/http 2>&1)
-  say "tls admin http config: size $(printf '%s' "$hc" | wc -c), hosts $(printf '%s' "$hc" | grep -o '[a-z]*\.printedrobotics\.cz' | sort -u | wc -l), automatic_https disabled $(printf '%s' "$hc" | grep -ac '"automatic_https":{"disable"'); tls config is $(case "$cfg" in *error*) echo error-response;; null*|"") echo empty;; *) echo present;; esac)"
-  say "tls docker log bytes: $(docker logs "$cid" 2>&1 | wc -c); since 1h lines: $(docker logs --since 1h "$cid" 2>&1 | wc -l)"
-  local k n
-  local ec pn
-  for pn in 80 443; do
-    say "tls tcp:$pn listener process: $(ss -ltnpH "sport = :$pn" 2>/dev/null | grep -ao 'users:(("[^"]*"' | sed 's/users:(("//;s/"//' | sort | uniq -c | awk '{print $2"x"$1}' | tr '\n' ' ')"
-  done
-  local lh
-  lh=$(dc exec -T caddy wget -q -T 3 -S -O /dev/null http://127.0.0.1:80/.well-known/acme-challenge/x 2>&1 | head -1)
-  say "tls local port 80 answers: $(printf '%s' "$lh" | grep -ao 'HTTP/[0-9.]* [0-9]*' | head -1)"
-  # ACME detail text with every word outside a fixed vocabulary masked, so no hosts/IPs/ids can leak.
-  say "tls acme detail (masked): $(lg | awk '
-    BEGIN { split("cannot negotiate alpn protocol acme tls for challenge during secondary validation invalid response from fetching timeout connect likely firewall problem unauthorized remote error handshake failure certificate unknown authority no application internal unrecognized name connection refused reset by peer eof read write dial the a an of to is was not found got expected returned status code http https redirect redirects too many while verifying server did present valid cert alert bad protocol version first record does look like handshake mismatch could get incorrect key authorization dns lookup no such host timed out context deadline exceeded network unreachable no route i o", w, " "); for (i in w) ok[w[i]]=1 }
-    /urn:ietf:params:acme:error/ { x=tolower($0) }
-    END { if (x=="") { print "none"; exit } i=index(x,"urn:ietf:params:acme:error"); x=substr(x,i+27,400); gsub(/[^a-z]+/," ",x); n=split(x,t," "); out=""; for (j=1;j<=n;j++) { o=(t[j] in ok)?t[j]:"_"; if (o=="_" && prev=="_") continue; out=out o " "; prev=o } print substr(out,1,300) }')"
-  local ec2
-  say "tls acme problem types: $(lg | awk '{ while (match($0, /urn:ietf:params:acme:error:[A-Za-z]+/)) { t=substr($0, RSTART+27, RLENGTH-27); c[t]++; $0=substr($0, RSTART+RLENGTH) } } END { for (t in c) printf "%s=%d ", t, c[t]; print "" }')"
-  say "tls acme http codes: $(lg | awk '{ while (match($0, /HTTP [0-9][0-9][0-9]/)) { t=substr($0, RSTART+5, 3); c[t]++; $0=substr($0, RSTART+RLENGTH) } } END { for (t in c) printf "%s=%d ", t, c[t]; print "" }')"
-  say "tls admin raw response: starts with brace $(printf '%s' "$hc" | head -c1 | grep -c '{'), contains html $(printf '%s' "$hc" | grep -aci '<html'), contains 'error' $(printf '%s' "$hc" | grep -aci error), contains 'wget' $(printf '%s' "$hc" | grep -aci wget)"
-  say "tls shape: lines with json msg field $(cnt '"msg"'), with level $(cnt level), with tab $(lg | awk '/	/{n++} END{print n+0}')"
-  say "tls admin http: reverse_proxy $(printf '%s' "$hc" | grep -ao 'reverse_proxy' | wc -l), host matchers $(printf '%s' "$hc" | grep -ao '"host"' | wc -l), listen entries $(printf '%s' "$hc" | grep -ao '"listen"' | wc -l)"
-  for k in 'rateLimited' 'Timeout during connect' 'Connection refused' 'unauthorized' 'Invalid response' 'no valid A records' 'DNS problem' 'CAA' 'context deadline' 'permission denied' 'read-only'; do
-    n=$(cnt "$k")
-    [ "$n" -gt 0 ] && say "tls log category '$k': $n line(s)"
-  done
-  local d80 d443 pc
-  d80=$(iptables -t nat -S 2>/dev/null | grep -- '-j DNAT' | grep -cE -- '--dport 80( |$)' || true)
-  d443=$(iptables -t nat -S 2>/dev/null | grep -- '-j DNAT' | grep -cE -- '--dport 443( |$)' || true)
-  pc=$(docker ps --format '{{.Label "com.docker.compose.project"}} {{.Ports}}' | grep -v '^printedrobotics ' | grep -cE '(0\.0\.0\.0|::\]?):(80|443)->' || true)
-  say "tls nat: DNAT rules dport 80: $d80, dport 443: $d443; other running containers publishing host 80/443: $pc; nft dnat 80/443 rules: $(nft list ruleset 2>/dev/null | grep -E 'dport (80|443)' | grep -c dnat || true)"
-  local pubip hl
-  pubip=$(ip -4 route get 1.1.1.1 2>/dev/null | sed -n 's/.* src \([0-9.]*\).*/\1/p')
-  for h in api; do
-    hl=$(curl -s -D - -o /dev/null --max-time 5 -H "Host: $h.printedrobotics.cz" "http://127.0.0.1/.well-known/acme-challenge/probe" | tr -d '\r' | sed -n '1s/.* \([0-9][0-9][0-9]\).*/\1/p;s/^[Ss]erver: *//p' | tr 'A-Z\n' 'a-z ' | sed -E 's/[^ ]*caddy[^ ]*/caddy/;s/[^ ]*nginx[^ ]*/nginx/;s/[^ ]*traefik[^ ]*/traefik/' | grep -oE '^[0-9]{3}( (caddy|nginx|traefik))?' )
-    say "tls host-local http via loopback: ${hl:-none}"
-    [ -n "$pubip" ] && hl=$(curl -s -D - -o /dev/null --max-time 5 -H "Host: $h.printedrobotics.cz" "http://$pubip/.well-known/acme-challenge/probe" | tr -d '\r' | sed -n '1s/.* \([0-9][0-9][0-9]\).*/\1/p;s/^[Ss]erver: *//p' | tr 'A-Z\n' 'a-z ' | sed -E 's/[^ ]*caddy[^ ]*/caddy/;s/[^ ]*nginx[^ ]*/nginx/;s/[^ ]*traefik[^ ]*/traefik/' | grep -oE '^[0-9]{3}( (caddy|nginx|traefik))?' )
-    say "tls host-local http via primary address: ${hl:-none}"
-  done
-  say "tls: caddy host-network listeners :80 $(ss -ltnH 'sport = :80' | wc -l), :443 $(ss -ltnH 'sport = :443' | wc -l)"
-  if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q '^Status: active'; then
-    u=$(ufw status 2>/dev/null)
-    a80=no; a443=no
-    printf '%s\n' "$u" | grep -E '^(80|80/tcp|Nginx|Apache|WWW)\b' | grep -q ALLOW && a80=yes
-    printf '%s\n' "$u" | grep -E '^(443|443/tcp|WWW Secure|Nginx HTTPS)\b' | grep -q ALLOW && a443=yes
-    fw="ufw active, 80 allowed $a80, 443 allowed $a443"
-  elif command -v nft >/dev/null 2>&1 && nft list ruleset 2>/dev/null | grep -qE 'hook input.*policy drop'; then
-    fw="nft input policy drop present (ports not evaluated)"
-  elif command -v iptables >/dev/null 2>&1 && iptables -S INPUT 2>/dev/null | grep -q '^-P INPUT DROP'; then
-    fw="iptables INPUT policy drop"
-  else
-    fw="inactive (no ufw, no drop-policy nft/iptables input)"
-  fi
-  say "tls firewall: $fw"
-)
 
 case "$ACTION" in
-  tlsrestart|porttest)
-    die "action disabled: our stack no longer runs caddy or binds host ports 80/443"
-    ;;
-  tls)
-    [ -f "$ROOT/release.env" ] || die "no release deployed yet"
-    build_env
-    tls_state
-    exit 0
-    ;;
   fixports)
     fixports
-    exit 0
-    ;;
-  diag)
-    [ -f "$ROOT/release.env" ] || die "no release deployed yet"
-    build_env
-    report_services
-    diagnose
     exit 0
     ;;
   status)
@@ -571,12 +284,8 @@ ensure_secrets
 
 pull_images
 
-# Snapshot the files that a rollback must restore together with the images.
-if [ -f "$ROOT/release.env" ]; then
-  cp "$ROOT/release.env" "$ROOT/release.prev.env"
-  rm -rf "$ROOT/prev-config"; install -d -m 750 "$ROOT/prev-config"
-  cp -a "$ROOT/compose.yml" "$ROOT/Caddyfile" "$ROOT/sites-enabled" "$ROOT/prev-config/" 2>/dev/null || true
-fi
+# Keep the current release for a rollback (images only; compose.yml is not rolled back).
+[ -f "$ROOT/release.env" ] && cp "$ROOT/release.env" "$ROOT/release.prev.env"
 
 install_files
 mv -f "$ROOT/release.next.env" "$ROOT/release.env"
@@ -591,10 +300,5 @@ fi
 
 warn "new release failed its health checks; rolling back"
 report_services
-diagnose
-if [ -d "$ROOT/prev-config" ]; then
-  # compose.yml is NOT restored: an older one could still contain the host-network Caddy.
-  :
-fi
 rollback || true
 die "deploy failed (release ${APP_VERSION:0:12})"

@@ -1,7 +1,7 @@
 # Manual rollback / status for the printedrobotics backend on vps1.
 #   rollback: switch to the previous release (images kept on the server) and health-check it.
 #   status:   show the current release and the state of our own containers.
-#   diag:     low-sensitivity diagnostics (counts, our network, docker/compose versions).
+#   fixports: remove stale network endpoints of our own containers.
 # Prints only fixed STATUS/WARN/ERROR lines from remote-deploy.sh as annotations (public logs).
 name: Rollback backend
 # Trigger: Run workflow in the Actions tab (only once this file is on the default branch), or
@@ -15,7 +15,7 @@ on:
       action:
         description: What to do
         type: choice
-        options: [status, rollback, diag, fixports, tls]
+        options: [status, rollback, fixports]
         default: status
 permissions:
   contents: read
@@ -62,51 +62,11 @@ jobs:
         env:
           U: ${{ secrets.VPS_USER }}
           ACT_INPUT: ${{ inputs.action }}
-          HOST: ${{ secrets.VPS_HOST }}
         run: |
           ACT="$ACT_INPUT"
           [ -n "$ACT" ] || ACT=$(awk 'NR==1{print $1}' backend/deploy/ops-request 2>/dev/null)
-          case "$ACT" in status|rollback|diag|fixports|tls) ;; *) echo "::error::bad action"; exit 1;; esac
+          case "$ACT" in status|rollback|fixports) ;; *) echo "::error::bad action"; exit 1;; esac
           set +e
-          if [ "$ACT" = tls ]; then
-            # Outside view from the runner; prints fixed strings only (no IPs).
-            vps=$(getent ahostsv4 "$HOST" | awk 'NR==1{print $1}')
-            for n in api mcp relay; do
-              f=$n.printedrobotics.cz
-              a=$(dig +short A "$f" @1.1.1.1 2>/dev/null | grep -E '^[0-9.]+$' | sort -u)
-              if [ -n "$a" ] && [ "$a" = "$vps" ]; then r=yes; elif [ -z "$a" ]; then r="no (no record)"; else r="no (other address)"; fi
-              aaaa=$(dig +short AAAA "$f" @1.1.1.1 2>/dev/null | grep -c ':' || true)
-              ns=$(dig +short NS printedrobotics.cz @1.1.1.1 2>/dev/null | sed -E 's/\.$//' | awk -F. '{print $(NF-1)"."$NF}' | sort -u | tr '\n' ' ')
-              caa=$(dig +short CAA printedrobotics.cz @1.1.1.1 2>/dev/null | grep -c . || true)
-              cn=$(dig +short CNAME "$f" @1.1.1.1 2>/dev/null | grep -c . || true)
-              d1="AAAA $aaaa, CNAME $cn, CAA $caa"
-              tp=""
-              for port in 80 443; do
-                if timeout 6 bash -c "exec 3<>/dev/tcp/$vps/$port" 2>/dev/null; then st=open
-                else rc=$?; [ "$rc" = 124 ] && st=timeout || st=refused/unreachable; fi
-                tp="$tp $port=$st"
-              done
-              case $n in api) path=/health;; *) path=/healthz;; esac
-              h=$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "http://$f$path" 2>/dev/null)
-              s=$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "https://$f$path" 2>/dev/null)
-              d2="resolves to VPS: $r; tcp:$tp; http ${h:-000}; https ${s:-000}"
-              # Who answers outside? Fixed categories only.
-              hd=$(curl -s -D - -o /dev/null --max-time 8 "http://$f/.well-known/acme-challenge/probe" 2>/dev/null | tr -d '\r')
-              sv=$(printf '%s\n' "$hd" | sed -n 's/^[Ss]erver: *//p' | head -1 | tr 'A-Z' 'a-z')
-              case "$sv" in "") sv=none;; *caddy*) sv=caddy;; *traefik*) sv=traefik;; *nginx*) sv=nginx;; *apache*) sv=apache;; *) sv=other;; esac
-              lo=$(printf '%s\n' "$hd" | sed -n 's/^[Ll]ocation: *//p' | head -1)
-              case "$lo" in "") lc=none;; "https://$f/.well-known/acme-challenge/probe") lc="https same host+path";; https://$f*) lc="https same host";; https://*) lc="https other host";; *) lc=other;; esac
-              ed=$(printf '%s\n' "$hd" | grep -ci '^x-pr-edge:')
-              hn=$(printf '%s\n' "$hd" | sed -n '2,20s/^\([A-Za-z-]*\):.*/\1/p' | tr '\n' ' ')
-              cs=$(printf '%s\n' "$hd" | head -1 | grep -o ' [0-9][0-9][0-9]' | tr -d ' ')
-              iss=$(echo | timeout 8 openssl s_client -connect "$vps:443" -servername "$f" 2>/dev/null | openssl x509 -noout -issuer 2>/dev/null | tr 'A-Z' 'a-z')
-              case "$iss" in "") ic="no certificate/handshake failed";; *"traefik default"*) ic="traefik default cert";; *"caddy local"*) ic="caddy local CA";; *"let's encrypt"*|*"lets encrypt"*) ic="lets encrypt";; *zerossl*) ic="zerossl";; *"google trust"*) ic="google trust services";; *"kubernetes ingress"*|*fake*) ic="ingress fake cert";; *) ic=other;; esac
-              ah=$(printf '' | timeout 8 openssl s_client -connect "$vps:443" -servername "$f" -alpn acme-tls/1 2>&1 | grep -ao 'ALPN protocol: [a-z0-9/.-]*\|No ALPN negotiated\|alert [a-z ]*' | head -1)
-              case "${s:-000}" in 200) ok200=yes;; *) ok200=no;; esac
-              v=$(curl -s -o /dev/null -w '%{ssl_verify_result}' --max-time 8 "https://$f$path" 2>/dev/null); case "$v" in 0) vr=valid;; "") vr=none;; *) vr=invalid;; esac
-              echo "::notice::tls $n public check: https://$f$path returns 200: $ok200; certificate chain: $vr; issuer: $ic; detail: $d1; $d2; challenge-path status ${cs:-000}; server header $sv; our edge marker: $ed; header names: $hn; redirect $lc; 443 cert issuer: $ic; acme-tls/1 probe: ${ah:-none}"
-            done
-          fi
           # Use the script from this commit (it does not need the deploy files for these actions).
           out=$(ssh -o StrictHostKeyChecking=$STRICT -l "$U" vps "ACTION=$ACT bash -s" < backend/deploy/remote-deploy.sh 2>/dev/null)
           rc=$?

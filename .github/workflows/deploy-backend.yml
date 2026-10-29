@@ -1,6 +1,6 @@
-# Build, push and deploy the printedrobotics.cz backend (api + optional bridge + Caddy) to vps1.
+# Build, push and deploy the printedrobotics.cz backend (api + optional bridge; TLS is terminated by an external edge proxy) to vps1.
 #
-#   test   -> unit tests, typecheck, Caddyfile + compose validation
+#   test   -> unit tests, typecheck, compose validation
 #   build  -> images to GHCR (ghcr.io/artigrib/prlanding-api, -bridge), tagged with the commit sha
 #   deploy -> DNS gate for HTTPS sites, pinned SSH, remote-deploy.sh (disk guard, pull by digest,
 #             compose up --wait, internal health check, automatic rollback), external HTTPS check
@@ -63,19 +63,14 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund
           if npm run | grep -q '^  typecheck'; then npm run typecheck; fi
           if npm run | grep -q '^  test'; then npm test; fi
-      - name: Validate Caddyfile (all sites enabled) and compose file
+      - name: Validate compose file and deploy script
         run: |
-          d=$(mktemp -d)
-          cp -r backend/deploy/. "$d/"
-          mkdir -p "$d/sites-enabled" && cp "$d"/sites/*.caddy "$d/sites-enabled/"
-          docker run --rm -v "$d:/etc/caddy:ro" caddy:2-alpine \
-            caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1 \
-            || { echo "::error::Caddyfile is invalid"; exit 1; }
+          d=backend/deploy
           API_IMAGE=example.invalid/api:test docker compose -f "$d/compose.yml" config -q \
             || { echo "::error::compose.yml is invalid"; exit 1; }
           COMPOSE_PROFILES=bridge API_IMAGE=example.invalid/api:test docker compose -f "$d/compose.yml" config -q
           bash -n backend/deploy/remote-deploy.sh
-          echo "::notice::Caddyfile, compose.yml and remote-deploy.sh are valid"
+          echo "::notice::compose.yml and remote-deploy.sh are valid"
 
   build:
     needs: test
@@ -229,14 +224,13 @@ jobs:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
           API_DIGEST: ${{ needs.build.outputs.api }}
           BRIDGE_DIGEST: ${{ needs.build.outputs.bridge }}
-          SITES: ${{ steps.dns.outputs.sites }}
           ACTOR: ${{ github.actor }}
         run: |
           api="${IMAGE_PREFIX}api@${API_DIGEST}"
           bridge=""; [ -n "$BRIDGE_DIGEST" ] && bridge="${IMAGE_PREFIX}bridge@${BRIDGE_DIGEST}"
           set +e
           out=$(printf '%s\n' "$TOKEN" | ssh -o StrictHostKeyChecking=$STRICT -l "$U" vps \
-            "ACTION=deploy API_IMAGE='$api' BRIDGE_IMAGE='$bridge' APP_VERSION='$GITHUB_SHA' SITES='$SITES' GHCR_USER='$ACTOR' bash /opt/printedrobotics/incoming/remote-deploy.sh" 2>/dev/null)
+            "ACTION=deploy API_IMAGE='$api' BRIDGE_IMAGE='$bridge' APP_VERSION='$GITHUB_SHA' GHCR_USER='$ACTOR' bash /opt/printedrobotics/incoming/remote-deploy.sh" 2>/dev/null)
           rc=$?
           set -e
           # Only the fixed STATUS/WARN/ERROR lines from remote-deploy.sh are shown.

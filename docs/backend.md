@@ -43,7 +43,7 @@ Privacy design:
 - No cookies are read or set, no identifiers, no user agent, no referrer, no URL. The database
   holds only `(day, event, count)`.
 - The client IP is used only in RAM for the rate limit (60 events/min per IP, 6000/min overall);
-  the map is cleared every minute and never written anywhere. Caddy has no access log.
+  the map is cleared every minute and never written anywhere.
 - CORS and the `Origin` check allow only `https://printedrobotics.cz`. Requests without that
   Origin get 403.
 - Counts are buffered in memory and written to SQLite every 5 s (and on shutdown).
@@ -84,15 +84,13 @@ or the workflow file, or run **Actions → Deploy backend → Run workflow**.
 
 `.github/workflows/deploy-backend.yml`:
 1. **test**: api typecheck and tests; bridge tests if `backend/bridge/Dockerfile` exists;
-   `caddy validate` with all sites enabled; `docker compose config`.
+   `docker compose config`; `bash -n remote-deploy.sh`.
 2. **build**: builds images and pushes them to GHCR with the job's `GITHUB_TOKEN`
    (`ghcr.io/artigrib/prlanding-api:<sha>`, `ghcr.io/artigrib/prlanding-bridge:<sha>`).
    Images are deployed by digest, never `latest`.
 3. **deploy** (environment `production`):
-   - DNS gate: for `api`, `mcp` and `relay` it checks whether the A record already points at the
-     VPS. Only those hostnames get a Caddy site block, so Caddy never asks Let's Encrypt for a
-     name that does not point here. `mcp` and `relay` also wait for the bridge image. The
-     annotations list which names are enabled and which are pending.
+   - DNS gate: for `api`, `mcp` and `relay` it checks whether the A record points at the VPS;
+     only those names get the external HTTPS check at the end of the job.
    - SSH with the pinned host key (`VPS_KNOWN_HOSTS`, `StrictHostKeyChecking=yes`).
    - Uploads `backend/deploy/` and runs `remote-deploy.sh` on the server, which:
      aborts if less than 3 GB is free; generates server-side secrets once; logs in to GHCR with
@@ -117,7 +115,7 @@ Why the GHCR images are not built on push to `main`: the backend lives only on b
 - Automatic: a deploy whose health check fails restores the previous release by itself.
 - Manual: workflow **Rollback backend** with action `rollback`. It switches to the previous
   release kept on the server and health-checks it. `status` shows the current release and the
-  state of our containers; `diag`, `porttest` and `fixports` are low-sensitivity diagnostics.
+  state of our containers; `fixports` removes stale network endpoints of our own containers.
   How to start it: `workflow_dispatch` only works for workflows on the default branch (`main`),
   so on branch `backend` commit a change to `backend/deploy/ops-request` whose first word is the
   action (for example `rollback`) and push. Once the workflow file is also on `main`, the
@@ -130,7 +128,6 @@ Why the GHCR images are not built on push to `main`: the backend lives only on b
 Public ports 80/443 on vps1 belong to another project's Caddy (it also serves other sites). Our
 stack never binds them: there is no Caddy in `backend/deploy/compose.yml`, nothing uses host
 networking, and `remote-deploy.sh` refuses to run a compose file that would (`guard_no_public_ports`).
-The `tlsrestart` and `porttest` ops actions are disabled for the same reason.
 
 - Network: `printedrobotics_web` is declared `external` in compose. `remote-deploy.sh` creates it
   once if it is missing; compose never creates, removes or recreates it, and neither deploy nor
@@ -146,23 +143,20 @@ The `tlsrestart` and `porttest` ops actions are disabled for the same reason.
   check and the api CORS accept `https://printedrobotics.cz` (`ALLOWED_ORIGINS`).
 - Health checks during deploy and rollback go straight to the 127.0.0.1 publishes
   (api 18181, bridge 18180).
-- Verify: **Rollback backend** with action `tls` reports whether our stack binds 80/443 (it must
-  say `no`) and, for each hostname, whether the public https URL returns 200, whether the
-  certificate chain is valid, and the issuer.
-- `backend/deploy/Caddyfile` and `sites/` are kept only as a reference for the external proxy's
-  site blocks; they are not run.
+- Verify: the deploy job's last step checks each public https URL and prints only OK / not OK.
+- Public logs: the workflows print only fixed pass/fail lines (no host, firewall, Docker or
+  other-project details).
 
 ## What the owner must do
 
 1. **DNS A records** (at the DNS provider of printedrobotics.cz): `api`, `mcp` and `relay` → the
    VPS IPv4 address. Today they fall through to the GitHub Pages wildcard. Do not add AAAA
    records unless they point at the VPS. After adding them, re-run **Deploy backend**; the DNS
-   gate enables HTTPS for each name that resolves to the VPS. Optional: CAA record on the apex
-   `0 issue "letsencrypt.org"` (Caddy is configured for Let's Encrypt only, and GitHub Pages also
-   uses Let's Encrypt).
-2. **Firewall**: if a host firewall (ufw, provider firewall) is active, allow TCP 80, TCP 443 and
-   UDP 443. Caddy runs on the host network, so ufw rules apply to it (unlike Docker-published
-   ports). Let's Encrypt needs port 80 or 443 reachable from the internet.
+   gate checks HTTPS for each name that resolves to the VPS (certificates come from the external
+   edge proxy).
+2. **Edge proxy**: the other project's proxy on 80/443 must route `api.printedrobotics.cz` to
+   `printedrobotics-api-1:8081` and `mcp`/`relay` to `printedrobotics-bridge-1:8080` over the
+   `printedrobotics_web` network (see "Edge proxy (external)").
 3. **Pin the SSH host key** (`VPS_KNOWN_HOSTS` secret). Until it is set, each run trusts the key it
    sees (trust on first use) and prints the SHA256 fingerprints as notices. On your own computer:
 
@@ -182,11 +176,10 @@ The `tlsrestart` and `porttest` ops actions are disabled for the same reason.
    - **Deployment branches and tags**: "Selected branches and tags" → add `backend`.
    - Optionally move `VPS_HOST`, `VPS_PORT`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS` from
      repository secrets to environment secrets of `production`, so they are released only to
-     approved deploy jobs (then also add them to an environment used by `vps-report.yml`, or keep
-     repository copies for it).
+     approved deploy jobs.
    After this, every deploy waits for your approval in the Actions UI.
 5. Later (from the security plan): replace root SSH with a `deploy` user and a forced-command key,
-   disable root login, and pin `caddy`/`node` base images by digest (Dependabot can keep them
+   disable root login, and pin the `node` base images by digest (Dependabot can keep them
    fresh).
 
 ## Wiring the analytics beacon into the site (not done yet)

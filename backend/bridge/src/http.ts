@@ -41,7 +41,8 @@ export function createBridge(cfg: Config): Bridge {
   const mcp = createMcpHandler(() => buildServer(registry, cfg.version), {
     onerror: (e) => log('mcp_error', { name: e.name })
   });
-  const mcpNode = toNodeHandler(mcp);
+  // Adapter-level body cap too (the Content-Length check above misses chunked bodies).
+  const mcpNode = toNodeHandler(mcp, { maxRequestBodySize: MAX_MCP_BODY });
 
   const server = createServer((req: IncomingMessage, res: ServerResponse) => {
     const path = (req.url || '/').split('?')[0];

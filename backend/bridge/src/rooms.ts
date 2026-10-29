@@ -237,7 +237,13 @@ export class Registry {
       this.issueCode(room, 'code');
       throw new BridgeError('PAIRING_FAILED', { reason: 'expired' });
     }
-    if (room.pending) throw new BridgeError('BUSY', { reason: 'pairing_in_progress' });
+    if (room.pending) {
+      // Same answer and same failure accounting as a wrong code: a distinct BUSY here would tell
+      // a guesser that the code is valid (someone else is pairing with it right now).
+      this.gate.fail(ip);
+      this.stats.pairFail++;
+      throw new BridgeError('PAIRING_FAILED');
+    }
     if (this.sessions.size >= this.cfg.maxSessions) throw new BridgeError('CAPACITY', { max_sessions: this.cfg.maxSessions });
 
     const pairId = newId('p_');
