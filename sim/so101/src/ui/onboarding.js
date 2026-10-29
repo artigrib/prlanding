@@ -33,8 +33,8 @@ const STEPS = [
   {
     anchor: 'elbow', title: () => 'Chyťte kteroukoli část ruky a otočte s ní',
     text: (u) => (u.touch
-      ? 'Táhněte prstem za rameno, loket nebo zápěstí – otočí se jen ten kloub. Klepnutí na čelisti otevře / zavře chapadlo, dvojité klepnutí vrátí kloub domů.'
-      : 'Táhněte myší za rameno, loket nebo zápěstí – otočí se jen ten kloub. Klik na čelisti otevře / zavře chapadlo, dvojklik vrátí kloub domů. Klávesy 1–6 vyberou kloub.'),
+      ? 'Táhněte prstem za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klepnutí na čelisti otevře / zavře chapadlo. Přepínač „Kloub po kloubu“ je v panelu.'
+      : 'Táhněte myší za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klik na čelisti otevře / zavře chapadlo. „Kloub po kloubu“ v panelu otáčí jen jedním kloubem, klávesy 1–6 vyberou kloub.'),
     done: (k) => k === 'link'
   }
 ];

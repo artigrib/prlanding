@@ -27,7 +27,7 @@ const DEVICES = [
   ['iPhone SE', devices['iPhone SE']]
 ].filter(([, d]) => d);
 const SWEEP = [[320, 568], [360, 740], [390, 844], [480, 800], [600, 960], [712, 1138], [768, 1024], [800, 1280], [860, 900],
-  [861, 900], [960, 600], [1024, 768], [1138, 712], [1180, 820], [1280, 800], [1366, 768], [1366, 1024]];
+  [861, 900], [960, 600], [1024, 768], [1138, 712], [1180, 820], [1280, 800], [1366, 768], [1366, 1024], [1440, 900]];
 
 // show the win card (normal + assisted + long labels) without playing the mission
 const SHOW = (variant) => {
@@ -49,6 +49,12 @@ const CHECK = () => {
     const q = e.getBoundingClientRect();
     if (q.width > r.width + 0.5 || q.left < r.left - 0.5 || q.right > r.right + 0.5) bad.push((e.id || e.className || e.tagName) + ' ' + Math.round(q.left) + '–' + Math.round(q.right));
     if (e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).overflowX !== 'visible' && e !== win) bad.push('clipped ' + (e.id || e.className));
+  }
+  // panel button rows (teach & replay, mode rows, phone action row): no button wider than its box or clipped
+  for (const b of document.querySelectorAll('.ux-teach .btn, .ux-row2 .btn, .ux-row3 .btn, .ux-qrow .btn, .row-b .btn')) {
+    if (!b.getClientRects().length) continue;
+    const q = b.getBoundingClientRect(), pr = b.parentElement.getBoundingClientRect();
+    if (b.scrollWidth > b.clientWidth + 1 || q.right > pr.right + 0.5 || q.left < pr.left - 0.5) bad.push('panel button ' + (b.id || b.textContent.trim().slice(0, 12)) + ' ' + b.scrollWidth + '/' + b.clientWidth);
   }
   return { bad, card: [Math.round(r.left), Math.round(r.right)], vw: innerWidth, docW: document.documentElement.scrollWidth, inView: r.left >= -0.5 && r.right <= innerWidth + 0.5 };
 };

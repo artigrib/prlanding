@@ -137,6 +137,7 @@ async function touchDrag(page, from, to, steps = 8) {
 
     // ---- direct joint manipulation: drag any link → only that joint moves ----
     const names = ['pan', 'lift', 'elbow', 'flex', 'roll', 'gripper'];
+    await S(p, () => window.__sim.grabMode('joint'));      // "Kloub po kloubu"
     for (let j = 0; j < 6; j++) {
       await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.3));
       const lp = await S(p, (jj) => window.__sim.linkPoint(jj), j);
@@ -148,6 +149,38 @@ async function touchDrag(page, from, to, steps = 8) {
       const c1 = await S(p, () => window.__sim.state().ctrl);
       const others = c1.map((v, i) => (i === j ? 0 : Math.abs(v - c0[i]))).reduce((a, b) => Math.max(a, b), 0);
       ok(Math.abs(c1[j] - c0[j]) > 0.02 && others < 1e-6, `drag on ${lp.body} turns only ${names[j]} (Δ ${(c1[j] - c0[j]).toFixed(3)} rad, others ${others.toExponential(1)})`);
+    }
+    await S(p, () => window.__sim.grabMode('pull'));
+    // ---- physics pull (default "Tahem"): the whole chain gives way, release holds, flicks stay stable ----
+    {
+      await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.5));
+      const lp = await S(p, () => window.__sim.linkPoint(4));
+      const q0 = (await S(p, () => window.__sim.state().qpos)).slice(0, 6);
+      await p.mouse.move(lp.x, lp.y); await p.mouse.down();
+      for (let i = 1; i <= 20; i++) { await p.mouse.move(lp.x - 5 * i, lp.y + 3 * i); await S(p, () => window.__sim.advance(1 / 30)); }
+      const gs = await S(p, () => window.__sim.grabState());
+      const q1 = (await S(p, () => window.__sim.state().qpos)).slice(0, 6);
+      const moved = q1.map((v, i) => Math.abs(v - q0[i]));
+      ok(gs.active && gs.mode === 'pull' && moved.filter((x) => x > 0.03).length >= 3, 'pulling the gripper moves several joints (' + moved.map((x) => x.toFixed(2)).join(' ') + ')');
+      await p.mouse.up();
+      await S(p, () => window.__sim.advance(0.4));
+      const qa = (await S(p, () => window.__sim.state().qpos)).slice(0, 5);
+      await S(p, () => window.__sim.advance(2));
+      const qb = (await S(p, () => window.__sim.state().qpos)).slice(0, 5);
+      const drift = Math.max(...qb.map((v, i) => Math.abs(v - qa[i])));
+      ok(drift < 0.02 && Math.max(...qa.map((v, i) => Math.abs(v - q1[i]))) > 0.0, `release holds the pose for 2 s (drift ${drift.toFixed(4)} rad)`);
+      // fast flick
+      const lp2 = await S(p, () => window.__sim.linkPoint(2));
+      await p.mouse.move(lp2.x, lp2.y); await p.mouse.down();
+      let vmax = 0, finite = true;
+      for (let i = 0; i < 40; i++) {
+        await p.mouse.move(lp2.x + (i % 2 ? 260 : -260), lp2.y + (i % 4 < 2 ? 180 : -180));
+        await S(p, () => window.__sim.advance(1 / 30));
+        const st = await S(p, () => { const d = window.__sim._ux.app.d; return { v: Math.max(...Array.from(d.qvel.slice(0, 6), Math.abs)), f: Array.from(d.qpos).every(Number.isFinite) }; });
+        vmax = Math.max(vmax, st.v); finite = finite && st.f;
+      }
+      await p.mouse.up(); await S(p, () => window.__sim.advance(1));
+      ok(finite && vmax < 40, `fast flicks stay stable (finite state, max joint speed ${vmax.toFixed(1)} rad/s)`);
     }
     // empty space: camera orbit, never the arm
     await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.3));
@@ -172,6 +205,7 @@ async function touchDrag(page, from, to, steps = 8) {
     }
     // tap on the jaws toggles the gripper; the HUD follows
     {
+      await S(p, () => window.__sim.cameraNow('orbit'));   // the orbit test above leaves a frame-rate dependent view
       await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.3));
       await S(p, () => { const u = window.__sim._ux, c = u.world.pos('cube', [0, 0, 0]); u.ctl.begin(); u.ctl.setGrip(false); u.ctl.setTarget(c[0], c[1], c[2] + 0.035); });
       await S(p, () => window.__sim.advance(3));
@@ -321,6 +355,14 @@ async function touchDrag(page, from, to, steps = 8) {
     await shot(p, 'desk-09-assembly');
     await S(p, () => window.__sim.explode(false));
     await p.close();
+
+    // ---------------- real arm armed: no physics pulling ----------------
+    {
+      const r = await open(browser, base + '?test=1&real=1&mise=bowl&detail=low', { width: 1280, height: 800 });
+      const st = await S(r, () => ({ pull: window.__sim._ux.links.pull(), seg: window.__sim._ux.panel.grabSeg.hidden }));
+      ok(!st.pull && st.seg, 'with ?real=1 the physics pull is off and its switch hidden');
+      await r.close();
+    }
 
     // ---------------- onboarding (first visit) ----------------
     const o = await open(browser, base + '?test=1&onboard=1&detail=low', { width: 1280, height: 800 });

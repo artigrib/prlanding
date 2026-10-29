@@ -100,3 +100,13 @@ Findings: scratchpad usability report (P0/P1/P2). Changes:
   speed-limited; floor cursor green/orange/red by deviation; steep top-down camera with a "3D pohled" toggle;
   K = "Nakreslit prstem" (finger trace → planner). Scoring retuned (85 % coverage, 9 mm hit, 3 ★ < 60 s & < 2.5 mm).
 - **Win card** is a 2-column grid that never overflows (tests/win-layout.cjs: tablets, phones, 320–1366 px sweep).
+
+### Physics grab (branch `so101-grab`)
+- `src/grab.js` (node-tested in `tests/grab.test.mjs`): like MuJoCo `simulate`'s perturbation – a spring-damper force
+  at the grab point toward the cursor through `d.xfrc_applied` (k from an effective mass ≥ 0.45 kg at 3.2 Hz,
+  ζ 0.75, capped 12 N). While held the servos are back-driven: kp × 0.015, kv × 0.05, reference trails the pose
+  (30 /s), gravity compensated via `qfrc_applied = qfrc_bias`; joint damping / friction / limits stay. On release
+  ctrl = qpos and stiffness + gravity compensation blend back over 0.3 s → the arm holds the pose.
+- `src/ui/links.js`: "Tahem" (default) vs "Kloub po kloubu" (`pr-sim-grab-mode`); cursor on a camera-facing plane
+  through the grab point; spring line (colour/thickness = force), red link + vibration at an end-stop; IK ball hidden
+  while pulling. With `?real=1` the pull is disabled and its switch hidden (physics pulling never reaches hardware).

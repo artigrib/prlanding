@@ -279,10 +279,19 @@ const strings = {
   'Tato serva mají tovární rozsah 0–4095, kalibrace do nich ještě nebyla zapsaná.': 'These servos have the factory range 0–4095; no calibration has been written to them yet.',
   'Projděte krok 3 průvodce (kalibrace).': 'Go through step 3 of the wizard (calibration).', 'Servo hlásí přetížení.': 'The servo reports an overload.',
   'Uvolněte kloub a zkontrolujte, že nic nebrání pohybu.': 'Free the joint and check that nothing is blocking its movement.',
-  '/dev/ttyACM0 · virtuální Waveshare Bus Servo Adapter': '/dev/ttyACM0 · virtual Waveshare Bus Servo Adapter', 'USB sériový port': 'USB serial port'
+  '/dev/ttyACM0 · virtuální Waveshare Bus Servo Adapter': '/dev/ttyACM0 · virtual Waveshare Bus Servo Adapter', 'USB sériový port': 'USB serial port',
+  /* physics pull ("Tahem") – so101-grab */
+  'Uchopení části ruky': 'Grabbing a part of the arm', 'Tahem': 'Pull', 'Kloub po kloubu': 'Joint by joint',
+  'Ruka povolí a celá se nechá vést – jako skutečná': 'The arm gives way and the whole of it follows – like a real one',
+  'Otáčí se jen uchopeným kloubem': 'Only the grabbed joint turns',
+  'Táhněte – ruka povolí': 'Pull – the arm gives way', 'Uchopte a táhněte': 'Grab and pull',
+  'Táhněte prstem za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klepnutí na čelisti otevře / zavře chapadlo. Přepínač „Kloub po kloubu“ je v panelu.': 'Pull any part with your finger – the arm gives way and lets you guide it like a real one. Tap the jaws to open / close the gripper. The “Joint by joint” switch is in the panel.',
+  'Táhněte myší za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klik na čelisti otevře / zavře chapadlo. „Kloub po kloubu“ v panelu otáčí jen jedním kloubem, klávesy 1–6 vyberou kloub.': 'Pull any part with the mouse – the arm gives way and lets you guide it like a real one. Click the jaws to open / close the gripper. “Joint by joint” in the panel turns just one joint; keys 1–6 select a joint.',
+  'tahem ruku vedete (celá povolí); v režimu Kloub po kloubu otočíte jen tím kloubem, dvojklik = výchozí poloha': 'pull to guide the arm (all of it gives way); in Joint by joint mode you turn only that joint, double-click = home position',
 };
 
 const patterns = [
+  [/^(.+) · doraz$/, (m, a) => `${T(a)} · end stop`],
   [/^(\d+)× servo Feetech STS3215$/, '$1× Feetech STS3215 servo'],
   [/^(.+) – SO-101 v simulaci \| printedrobotics\.cz$/, (m, a) => `${T(a)} – SO-101 simulator | printedrobotics.cz`],
   /* loading, joints, stars */
