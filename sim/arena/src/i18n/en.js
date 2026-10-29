@@ -53,7 +53,7 @@ const strings = {
   'Bez gyra': 'No gyro', 'Čisté ruční řízení – rychlejší otáčení, těžší jízda': 'Pure manual control – faster turning, harder to drive',
   'Rychlost': 'Speed', 'Tlak': 'Push', 'Odolnost': 'Toughness', 'Hotovo': 'Done', 'Stavebnice': 'Kit', 'Postavte si ho': 'Build it',
   /* HUD */
-  'Vy': 'You', 'Soupeř': 'Opponent', 'AI': 'AI', 'Hráč 1': 'Player 1', 'Hráč 2': 'Player 2',
+  'Vy': 'You', 'Soupeř': 'Opponent', 'AI': 'AI', 'Hráč 1': 'Player 1', 'Hráč 2': 'Player 2', 'Hráč 1:': 'Player 1:',
   'Zvuk zap.': 'Sound on', 'Zvuk vyp.': 'Sound off', 'Zvuk vypnut': 'Sound off', 'Zvuk zapnut': 'Sound on', 'Zvuk (M)': 'Sound (M)', 'Na start': 'Reset', 'Pauza': 'Pause', 'Pauza (Esc)': 'Pause (Esc)', 'Pozastavit': 'Pause',
   'Přepnout kameru (C)': 'Switch camera (C)', 'Vrátit na start (R)': 'Back to start (R)', 'Soupeř jezdí (T)': 'Opponent drives (T)', 'Soupeř jezdí': 'Opponent drives', 'Soupeř stojí': 'Opponent stands still',
   'Kamera': 'Camera', 'TV přenos': 'TV broadcast', 'Za robotem': 'Chase', 'Shora': 'Top', 'Z robota (FPV)': 'On board (FPV)', 'Z robota': 'On board', 'Rozdělená obrazovka': 'Split screen',
