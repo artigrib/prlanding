@@ -141,31 +141,70 @@ def validate_object(obj_dir, policy=None):
             "detail": drops}
 
 
-def validate_scene(ids, objects_dir):
-    """All objects at once in the real SO-101 scene (catches name clashes, keyframe sizes, robot contacts)."""
+TABLE_XY = ((-0.22, 0.50), (-0.27, 0.27))          # usable table top (scene.xml table minus a margin)
+KEEP_OUT = (((0.0, 0.0), 0.12), ((0.20, 0.15), 0.07), ((0.25, -0.11), 0.03))  # robot base, bowl, cube
+
+
+def table_spots(footprints):
+    """Greedy packing of objects (footprint radius r) onto the table, away from the robot, bowl and cube.
+    Returns a list of batches; each batch is [(index, x, y)] that fits on the table at once."""
+    def find(r, cur):
+        for x in np.arange(TABLE_XY[0][0] + r, TABLE_XY[0][1] - r + 1e-9, 0.01):
+            for y in np.arange(TABLE_XY[1][0] + r, TABLE_XY[1][1] - r + 1e-9, 0.01):
+                if any(np.hypot(x - c[0], y - c[1]) < rad + r for c, rad in KEEP_OUT):
+                    continue
+                if any(np.hypot(x - px, y - py) < r + footprints[k] + 0.015 for k, px, py in cur):
+                    continue
+                return round(float(x), 3), round(float(y), 3)
+        return None
+
+    batches, cur = [], []
+    for i in sorted(range(len(footprints)), key=lambda i: -footprints[i]):
+        spot = find(footprints[i], cur)
+        if spot is None and cur:
+            batches.append(cur)
+            cur = []
+            spot = find(footprints[i], cur)
+        if spot is None:
+            raise ValueError("object larger than the table")
+        cur.append((i, *spot))
+    if cur:
+        batches.append(cur)
+    return batches
+
+
+def validate_scene(ids, objects_dir, seconds=3.0):
+    """All objects in the real SO-101 scene (catches name clashes, keyframe sizes, robot/bowl contacts).
+    Objects are packed onto the table; if they do not all fit, several scenes are checked."""
     import mujoco
     model_dir = SCENE_XML.parent
+    od = Path(objects_dir)
+    metas = [json.loads((od / i / f"{i}.json").read_text(encoding="utf-8")) for i in ids]
+    foot = [0.5 * float(np.hypot(m["size_m"][0], m["size_m"][1])) for m in metas]
+    speeds, info = {}, []
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td) / "model"
         shutil.copytree(model_dir, tmp)
-        objs = []
-        for k, oid in enumerate(ids):
-            a, b = split_mjcf((Path(objects_dir) / oid / f"{oid}.xml").read_text(encoding="utf-8"))
-            x, y = 0.10 + 0.07 * (k % 4), -0.20 + 0.11 * (k // 4)
-            pos = (round(x, 3), round(y, 3), 0.02)
-            objs.append((a, place(b, " ".join(map(str, pos))), (*pos, 1, 0, 0, 0)))
-        (tmp / "scene_objects.xml").write_text(inject(SCENE_XML.read_text(encoding="utf-8"), objs), encoding="utf-8")
-        m = mujoco.MjModel.from_xml_path(str(tmp / "scene_objects.xml"))
-        d = mujoco.MjData(m)
-        mujoco.mj_resetDataKeyframe(m, d, 0)
-        for _ in range(int(2.0 / m.opt.timestep)):
-            mujoco.mj_step(m, d)
-        if not np.all(np.isfinite(d.qpos)):
-            return {"ok": False, "error": "NaN in combined scene"}
-        speeds = {oid: float(np.linalg.norm(d.cvel[mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_BODY, f"obj_{oid}")][3:]))
-                  for oid in ids}
-        ok = all(v < 0.05 for v in speeds.values())
-        return {"ok": ok, "nq": int(m.nq), "nbody": int(m.nbody), "speeds": speeds}
+        for batch in table_spots(foot):
+            objs = []
+            for i, x, y in batch:
+                a, b = split_mjcf((od / ids[i] / f"{ids[i]}.xml").read_text(encoding="utf-8"))
+                pos = (x, y, 0.003)
+                objs.append((a, place(b, " ".join(map(str, pos))), (*pos, 1, 0, 0, 0)))
+            (tmp / "scene_objects.xml").write_text(inject(SCENE_XML.read_text(encoding="utf-8"), objs), encoding="utf-8")
+            m = mujoco.MjModel.from_xml_path(str(tmp / "scene_objects.xml"))
+            d = mujoco.MjData(m)
+            mujoco.mj_resetDataKeyframe(m, d, 0)
+            for _ in range(int(seconds / m.opt.timestep)):
+                mujoco.mj_step(m, d)
+            if not np.all(np.isfinite(d.qpos)):
+                return {"ok": False, "error": "NaN in combined scene"}
+            for i, _, _ in batch:
+                b = mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_BODY, f"obj_{ids[i]}")
+                speeds[ids[i]] = float(np.linalg.norm(d.cvel[b][3:]))
+            info.append({"objects": len(batch), "nq": int(m.nq)})
+    ok = all(v < 0.05 for v in speeds.values())
+    return {"ok": ok, "scenes": info, "speeds": speeds, "slow": sorted(k for k, v in speeds.items() if v >= 0.05)}
 
 
 def main():

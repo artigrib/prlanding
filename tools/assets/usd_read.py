@@ -30,6 +30,15 @@ def find_root_usd(pkg: Path):
     down (skipping dot-folders); otherwise the only USD in such a folder."""
     if pkg.is_file():
         return pkg
+    roots = pkg / ".metadata" / "com.nvidia.simready.root_usds.json"  # SimReady packaging lists the root USD(s)
+    if roots.is_file():
+        try:
+            for rel in json.loads(roots.read_text(encoding="utf-8")).get("entries", []):
+                cand = pkg / rel
+                if cand.suffix in USD_SUFFIXES and cand.is_file() and _inside(cand, pkg):
+                    return cand
+        except (ValueError, AttributeError):
+            pass
     asset = pkg.name
     folders = [pkg] + sorted(p for p in pkg.iterdir() if p.is_dir() and not p.name.startswith("."))
     for f in folders:
@@ -148,13 +157,7 @@ def read_asset(path):
     if stage is None:
         raise AssetError("stage cannot be opened")
     default = stage.GetDefaultPrim() or stage.GetPseudoRoot()
-    # physics runtime variant: prefer MuJoCo
-    for vs_name in default.GetVariantSets().GetNames():
-        vs = default.GetVariantSets().GetVariantSet(vs_name)
-        names = vs.GetVariantNames()
-        pick = next((n for n in names if n.lower() == "mujoco"), None)
-        if pick:
-            vs.SetVariantSelection(pick)
+    physics_variant = select_mujoco_variant(default)
     layers = []
     for lyr in stage.GetUsedLayers():
         rp = lyr.realPath
@@ -176,12 +179,14 @@ def read_asset(path):
         p = np.c_[pts, np.ones(len(pts))] @ M
         return _to_zup(p[:, :3] * mpu, up)
 
-    for prim in stage.Traverse():
+    masses = []
+    # SimReady packages put meshes inside instanceable prims: traverse instance proxies too
+    for prim in stage.Traverse(Usd.TraverseInstanceProxies(Usd.PrimDefaultPredicate)):
         if prim.HasAPI(UsdPhysics.MassAPI):
             m = UsdPhysics.MassAPI(prim)
             mass, dens = m.GetMassAttr().Get(), m.GetDensityAttr().Get()
             if mass and mass > 0:
-                phys["mass"] = float(mass)
+                masses.append((str(prim.GetPath()), float(mass)))
             if dens and dens > 0:
                 phys["density"] = float(dens)
             com = m.GetCenterOfMassAttr().Get()
@@ -202,8 +207,7 @@ def read_asset(path):
                    if prim.IsA(UsdGeom.Imageable) else True)
         is_col = prim.HasAPI(UsdPhysics.CollisionAPI)
         if is_col and not UsdPhysics.CollisionAPI(prim).GetCollisionEnabledAttr().Get() is False:
-            approx = (UsdPhysics.MeshCollisionAPI(prim).GetApproximationAttr().Get()
-                      if prim.HasAPI(UsdPhysics.MeshCollisionAPI) else "none")
+            approx = _approximation(prim, UsdPhysics)
             if prim.IsA(UsdGeom.Mesh):
                 mesh = UsdGeom.Mesh(prim)
                 pts = np.array(mesh.GetPointsAttr().Get() or [], dtype=float)
@@ -248,6 +252,16 @@ def read_asset(path):
 
     if not visuals:
         raise AssetError("no renderable mesh")
+    # masses: a body-level MassAPI wins; otherwise per-mesh masses add up (nested duplicates are skipped)
+    if masses:
+        masses.sort(key=lambda x: x[0].count("/"))
+        kept = []
+        for path_, m_ in masses:
+            if not any(path_.startswith(k + "/") for k, _ in kept):
+                kept.append((path_, m_))
+        phys["mass"] = sum(m_ for _, m_ in kept)
+    elif isinstance(metadata.get("mass"), (int, float)) and metadata["mass"] > 0:
+        phys["mass"] = float(metadata["mass"])
     physics = {"mass": phys["mass"], "density": phys["density"] or (phys["material_density"][0]
                if phys["material_density"] else None), "center_of_mass": phys["center_of_mass"],
                "static_friction": float(np.mean(phys["static_friction"])) if phys["static_friction"] else None,
@@ -255,7 +269,83 @@ def read_asset(path):
                "restitution": float(np.mean(phys["restitution"])) if phys["restitution"] else None}
     return {"visuals": visuals, "colliders": colliders, "physics": physics, "metadata": metadata,
             "packaging": packaging, "root_usd": str(root_usd), "package_dir": str(pkg), "layers": sorted(layers),
-            "meters_per_unit": mpu, "up_axis": up}
+            "meters_per_unit": mpu, "up_axis": up, "physics_variant": physics_variant}
+
+
+def select_mujoco_variant(prim):
+    """SimReady: one variant set per runtime (MuJoCo / Newton / PhysX) with Enabled/Disabled. Enable MuJoCo and
+    disable the others. Older layout: one set (e.g. "Physics") with a variant named MuJoCo. Returns what was picked."""
+    sets = prim.GetVariantSets()
+    names = sets.GetNames()
+    mj = next((n for n in names if n.lower() == "mujoco"), None)
+    if mj:
+        vs = sets.GetVariantSet(mj)
+        on = next((v for v in vs.GetVariantNames() if v.lower() in ("enabled", "on", "true")), None)
+        if on:
+            for other in names:
+                if other != mj and other.lower() in ("physx", "newton", "isaac", "warp"):
+                    o = sets.GetVariantSet(other)
+                    off = next((v for v in o.GetVariantNames() if v.lower() in ("disabled", "off", "false")), None)
+                    if off:
+                        o.SetVariantSelection(off)
+            vs.SetVariantSelection(on)
+            return "MuJoCo:" + on
+    for n in names:
+        vs = sets.GetVariantSet(n)
+        pick = next((v for v in vs.GetVariantNames() if v.lower() == "mujoco"), None)
+        if pick:
+            vs.SetVariantSelection(pick)
+            return f"{n}:{pick}"
+    return None
+
+
+def _approximation(prim, UsdPhysics):
+    """physics:approximation of a collider. SimReady's MuJoCo runtime layer authors it on the instance root above
+    the mesh (opinions inside an instance cannot be overridden), so the nearest authored ancestor value wins over
+    the generic one inside the instance."""
+    p = prim.GetParent()
+    while p and not p.IsPseudoRoot():
+        a = p.GetAttribute("physics:approximation")
+        if a and a.HasAuthoredValue() and not p.IsInstanceProxy():
+            return a.Get()
+        p = p.GetParent()
+    if prim.HasAPI(UsdPhysics.MeshCollisionAPI):
+        return UsdPhysics.MeshCollisionAPI(prim).GetApproximationAttr().Get()
+    a = prim.GetAttribute("physics:approximation")
+    return a.Get() if a and a.HasAuthoredValue() else "none"
+
+
+def diffuse_texture_files(root_usd, pkg):
+    """Package-relative paths of the textures feeding UsdPreviewSurface diffuseColor (for a two-phase download:
+    geometry/USD first, then only these images). Works when the image files are not present yet."""
+    from pxr import Usd, UsdShade
+    stage = Usd.Stage.Open(str(root_usd))
+    select_mujoco_variant(stage.GetDefaultPrim() or stage.GetPseudoRoot())
+    out = set()
+    for prim in stage.Traverse(Usd.TraverseInstanceProxies(Usd.PrimDefaultPredicate)):
+        if not prim.IsA(UsdShade.Shader):
+            continue
+        sh = UsdShade.Shader(prim)
+        if sh.GetIdAttr().Get() != "UsdPreviewSurface":
+            continue
+        i = sh.GetInput("diffuseColor")
+        if not i or not i.HasConnectedSource():
+            continue
+        tex = UsdShade.Shader(i.GetConnectedSource()[0].GetPrim())
+        f = tex.GetInput("file")
+        if not f:
+            continue
+        attr = f.GetAttr()
+        val = attr.Get()
+        if val is None or not val.path:
+            continue
+        stack = attr.GetPropertyStack(Usd.TimeCode.Default())
+        if not stack:
+            continue
+        absp = Path(stack[0].layer.ComputeAbsolutePath(val.path))
+        if _inside(absp, Path(pkg)):
+            out.add(absp.resolve().relative_to(Path(pkg).resolve()).as_posix())
+    return sorted(out)
 
 
 def _primitive_points(prim, UsdGeom):
