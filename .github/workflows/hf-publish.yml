@@ -30,6 +30,8 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # HF_TOKEN is stored as an environment secret of github-pages (POC); move to a dedicated env later.
+    environment: github-pages
     timeout-minutes: 15
     steps:
       - name: Check for HF_TOKEN
