@@ -403,6 +403,18 @@ tls_state() ( set +eu +o pipefail
   say "tls redirect rules: iptables DNAT/REDIRECT total $(printf '%s\n' "$ipn" | grep -cE -- '-j (DNAT|REDIRECT)'), mentioning 80/443 $(printf '%s\n' "$ipn" | grep -E -- '-j (DNAT|REDIRECT)' | grep -cE -- '(dport|dports) ([0-9,:]*,)?(80|443)([,: ]|$)'); nft dnat/redirect total $(printf '%s\n' "$nfr" | grep -cE 'dnat|redirect'), mentioning 80/443 $(printf '%s\n' "$nfr" | grep -E 'dnat|redirect' | grep -cE '(^|[^0-9])(80|443)([^0-9]|$)'); nft tables: $(printf '%s\n' "$nfr" | grep -c '^table'); tproxy rules $(printf '%s\n%s\n' "$ipn" "$nfr" | grep -ci tproxy)"
   lo80=$(timeout 5 bash -c 'exec 3<>/dev/tcp/127.0.0.1/80; printf "HEAD /x HTTP/1.0\r\nHost: api.printedrobotics.cz\r\n\r\n" >&3; timeout 3 cat <&3' 2>/dev/null | tr -d '\r')
   say "tls loopback :80 answer: status $(printf '%s\n' "$lo80" | head -1 | grep -o ' [0-9][0-9][0-9]' | tr -d ' '), edge marker $(printf '%s\n' "$lo80" | grep -ci '^x-pr-edge:'), bytes $(printf '%s' "$lo80" | wc -c); first line: $(printf '%s\n' "$lo80" | head -1 | tr -cd 'A-Za-z0-9/. ' | sed -E 's/[0-9]{1,3}(\.[0-9]{1,3}){3}/<ip>/g' | cut -c1-60); header names: $(printf '%s\n' "$lo80" | sed -n '2,20s/^\([A-Za-z-]*\):.*/\1/p' | tr '\n' ' ')"
+  local c pb ipv cp2 ocaddy=""
+  for pid in $(pgrep -x caddy); do [ "$pid" = "$opid" ] || ocaddy="$ocaddy $pid"; done
+  for c in $(docker ps -q); do
+    [ "$(docker inspect -f '{{index .Config.Labels "com.docker.compose.project"}}' "$c")" = printedrobotics ] && continue
+    pb=$(docker inspect -f '{{range $p, $b := .HostConfig.PortBindings}}{{range $b}}{{$p}}@{{.HostIp}}@{{.HostPort}} {{end}}{{end}}' "$c" 2>/dev/null)
+    printf '%s' "$pb" | grep -qE '@(80|443)( |$)' || continue
+    ipv=$(printf '%s' "$pb" | tr ' ' '\n' | awk -F@ '$3==80||$3==443 {h=$2; if (h=="" || h=="0.0.0.0" || h=="::") print "any"; else if (h ~ /^127\./) print "loopback"; else print "specific-address"}' | sort -u | tr '\n' ',')
+    cp2=$(docker inspect -f '{{.State.Pid}}' "$c")
+    isc=no; for p in $ocaddy; do [ "$p" = "$cp2" ] && isc=yes; grep -q "$(docker inspect -f '{{.Id}}' "$c")" /proc/$p/cgroup 2>/dev/null && isc=yes; done
+    say "tls other container binds host 80/443: bind address $ipv; running image is caddy: $(docker inspect -f '{{.Config.Image}}' "$c" | grep -qi caddy && echo yes || echo no); is the other caddy process: $isc; network mode: $(docker inspect -f '{{.HostConfig.NetworkMode}}' "$c" | sed -E 's/^(host|bridge|none)$/\1/; t; s/.*/custom/')"
+  done
+  say "tls docker firewall backend: $(docker info -f '{{.FirewallBackend.Driver}}' 2>/dev/null | tr -cd 'a-z+-' || echo unknown); nft binary: $(command -v nft >/dev/null && echo yes || echo no)"
   for port in 80 443; do
     hex=$(printf '%04X' "$port")
     owner=""
