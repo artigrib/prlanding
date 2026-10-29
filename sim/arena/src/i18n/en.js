@@ -104,6 +104,11 @@ const strings = {
   'PROTO ROBOT Praha': 'PROTO ROBOT Prague', 'Noční finále: pily a jáma od 1:00': 'Night final: saws, and a pit from 1:00',
   'Noční finále pražského meetupu: reflektory, publikum, pily ve stěnách a jáma uprostřed, která se otevře v polovině zápasu.': 'The night final of the Prague meetup: spotlights, a crowd, saws in the walls and a pit in the middle that opens halfway through the match.',
   /* arena-fixes */
+  'Střední': 'Intermediate', 'Zkusit lehčího soupeře': 'Try an easier opponent', '↓ Další nastavení: garáž, barva, aréna': '↓ More settings: garage, colour, arena',
+  'První zápas': 'First match', 'Jak na to': 'How to play', 'Rozumím, jedeme!': 'Got it, let’s go!', 'Přeskočit': 'Skip',
+  'Jízda:': 'Drive:', 'nebo šipky. Zbraň:': 'or arrows. Weapon:', 'Jízda: levý joystick. Zbraň: tlačítko vpravo.': 'Drive: left stick. Weapon: right button.',
+  'Vyhrajete, když soupeře vytlačíte z arény nebo do jámy, nebo ho převrátíte na 10 s.': 'You win by pushing the opponent out of the arena or into the pit, or by flipping them for 10 s.',
+  'Jinak po 2 minutách rozhodují rozhodčí: útočte a zasahujte.': 'Otherwise the judges decide after 2 minutes: attack and land hits.',
   'Rozhodčí: roboti od sebe!': 'Referee: robots apart!', '· kleště = otočit': '· clamp = self-right', 'Oddělení': 'Separation',
   'kleště – chytit a pustit (i k převrácení zpět)': 'clamp – grab and release (also to self-right)', 'kleště – chytit a pustit (i k převrácení zpět) ·': 'clamp – grab and release (also to self-right) ·',
   'Klip je prázdný – obraz se nenahrál. Nechte kartu otevřenou a zkuste to znovu.': 'The clip is empty – no picture was recorded. Keep the tab open and try again.',

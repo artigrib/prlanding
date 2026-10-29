@@ -1,13 +1,13 @@
 // Opponent AI with three personalities.
 //  Začátečník – slow reactions, sloppy aim, forgets the weapon, never plans a push.
-//  Pokročilý  – leads the target, uses the weapon sensibly, unsticks itself.
+//  Střední    – leads the target, uses the weapon sensibly, unsticks itself.
 //  Mistr      – flanks around the weapon side, pushes toward the nearest hazard,
 //               self-rights instantly and backs off to spin up.
 import * as THREE from 'three';
 
 export const LEVELS = {
   easy:   { id: 'easy', name: 'Začátečník', blurb: 'Pomalé reakce, učí se jezdit', handicap: 0.74, react: [0.22, 0.14], aimErr: 0.35, lead: 0, fireP: 0.12, selfRight: 2.2, flank: false, herd: false, spinUpAt: 2.5 },
-  normal: { id: 'normal', name: 'Pokročilý', blurb: 'Míří, tlačí a používá zbraň', handicap: 0.88, react: [0.09, 0.06], aimErr: 0.08, lead: 0.25, fireP: 0.35, selfRight: 0.7, flank: false, herd: false, spinUpAt: 0.6 },
+  normal: { id: 'normal', name: 'Střední', blurb: 'Míří, tlačí a používá zbraň', handicap: 0.88, react: [0.09, 0.06], aimErr: 0.08, lead: 0.25, fireP: 0.35, selfRight: 0.7, flank: false, herd: false, spinUpAt: 0.6 },
   hard:   { id: 'hard', name: 'Mistr', blurb: 'Obchází zbraň a tlačí do jámy', handicap: 1.0, react: [0.04, 0.03], aimErr: 0, lead: 0.4, fireP: 0.9, selfRight: 0.15, flank: true, herd: true, wary: true, spinUpAt: 0.2 },
   dummy:  { id: 'dummy', name: 'Figurína', blurb: 'Stojí a čeká', handicap: 1, react: [0.3, 0.1], aimErr: 0, lead: 0, fireP: 0, selfRight: 0.5, flank: false, herd: false, spinUpAt: 1e9, idle: true }
 };

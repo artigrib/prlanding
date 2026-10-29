@@ -62,7 +62,7 @@ const S = {
   color: COLORS.some(c => c.id === params.get('color')) ? params.get('color') : COLORS.some(c => c.id === saved.color) ? saved.color : 'orange',
   p2robot: own(ROBOTS, saved.p2robot) ? saved.p2robot : robotIds[1] || robotIds[0],
   mode: MODES.some(m => m.id === params.get('mode')) ? params.get('mode') : MODES.some(m => m.id === saved.mode) ? saved.mode : 'quick',
-  level: own(LEVELS, saved.level) && saved.level !== 'dummy' ? saved.level : 'normal',
+  level: own(LEVELS, saved.level) && saved.level !== 'dummy' ? saved.level : 'easy',   // newcomers start against the beginner
   map: params.get('map') || saved.map || null,
   cam: CAM_MODES.some(c => c.id === saved.cam) ? saved.cam : 'tv',
   shake: saved.shake !== false && !reduce,
@@ -114,6 +114,7 @@ if (!MAP_LIST.some(m => m.id === S.map)) S.map = ARENA.DEFAULT_MAP || MAP_LIST[0
 
 // ------------------------------------------------------------------ UI refs
 const ui = {
+  coach: $('#coach'), easier: $('#easier'),
   start: $('#start'), end: $('#end'), hud: $('#hud'), msg: $('#msg'), timer: $('#timer'), garage: $('#garage'), pause: $('#pause'),
   go: $('#go'), again: $('#again'), cta: $('#cta'), back: $('#back'), colors: $('#colors'), pick: $('#pick'), modes: $('#modes'),
   ctx: $('#mode-ctx'), maps: $('#maps'), mapRow: $('#map-row'),
@@ -466,6 +467,7 @@ function startRound() {
   placeAtSpawns();
   brain && brain.reset();
   newStats(); recStart(); pinT = 0;
+  hideCoach();
   Object.assign(game, { state: 'countdown', time: 0, left: ROUND, count: 3.2, acc: 0, result: null, events: [], hitstop: 0, ko: 0, slow: 1, lastBeep: 0, kos: 0 });
   input.reset();
   input.split.on = S.mode === 'duo';
@@ -475,6 +477,7 @@ function startRound() {
   showScreen('play');
   ui.wlabel.textContent = player.weaponLabel || (player.def.weapon === 'flipper' ? 'Flipper' : 'Zbraň');
   renderer.domElement.focus({ preventScroll: true });
+  maybeCoach();
 }
 function camModeFor() { return CAM_MODES.some(c => c.id === S.cam) ? S.cam : 'tv'; }
 
@@ -535,6 +538,8 @@ function showEnd() {
   ui.replayBtn.querySelector('span').textContent = kind === 'ko' ? 'Opakovat K.O.' : 'Opakovat zásah';
   ui.fullBtn.hidden = !tr;
   ui.share.hidden = false; ui.shareMsg.textContent = '';
+  // lost a quick match: offer the next easier AI right here
+  ui.easier.hidden = !(S.mode === 'quick' && win === false && S.level !== 'easy');
   ui.again.querySelector('span').textContent = S.mode === 'ladder' && !win ? 'Zkusit znovu' : 'Znovu';
   sfx.jingle(duo ? true : !!win);
   endTimer = setTimeout(() => { if (game.state !== 'end') return; showScreen('end'); focusEnd(); }, kind === 'ko' ? 200 : 900);
@@ -542,6 +547,27 @@ function showEnd() {
 // the result heading gets focus, not "Znovu": a fire key still held from the fight (Space / Enter)
 // must not restart the match before the result is read
 function focusEnd() { ui.endTitle.focus({ preventScroll: true }); }
+// ---- first-match coach: three lines over the countdown (frozen while it shows), once per browser
+let coachOn = false;
+function showCoach() {
+  coachOn = true;
+  if (touch) $('#coach-drive').innerHTML = 'Jízda: levý joystick. Zbraň: tlačítko vpravo.';
+  ui.coach.hidden = false;
+  $('#coach-go').focus({ preventScroll: true });
+}
+function hideCoach() { coachOn = false; ui.coach.hidden = true; }
+function dismissCoach() { if (!coachOn) return; hideCoach(); store.set('coached', 1); last = performance.now(); }
+function maybeCoach() { if (!store.get('coached', 0) && (!DEBUG || params.has('coach'))) showCoach(); }
+function tryEasier() {
+  S.level = S.level === 'hard' ? 'normal' : 'easy';
+  saveSettings(); hudNames(); startRound();
+}
+// main menu: a hint above Start while the lower settings are still below the fold
+function updMoreSet() {
+  const el = ui.start, b = $('#more-set');
+  if (!b) return;
+  b.hidden = el.hidden || el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+}
 function renderCard(card) {
   ui.card.hidden = !card;
   if (!card) return;
@@ -955,7 +981,7 @@ function frame(now) {
     rui.tick(wall);
     if (game.state === 'replay') replayHud();
   } else if (ready && player && player.body && (st === 'countdown' || st === 'fight' || st === 'ko' || st === 'end')) {
-    if (st === 'countdown') { game.count -= dt; if (game.count <= 0) { game.state = 'fight'; game.time = 0; } }
+    if (st === 'countdown' && !coachOn) { game.count -= simDt; if (game.count <= 0) { game.state = 'fight'; game.time = 0; } }
     if (game.hitstop > 0) { game.hitstop -= wall; }
     else {
       game.acc += simDt * (st === 'ko' ? 0.6 : 1);
@@ -1004,6 +1030,8 @@ function render() {
 
 // ------------------------------------------------------------------ screens
 function showScreen(s) {
+  if (s !== 'play' && coachOn) hideCoach();
+  requestAnimationFrame(updMoreSet);
   ui.start.hidden = s !== 'menu';
   ui.garage.hidden = s !== 'garage';
   ui.end.hidden = s !== 'end';
@@ -1020,6 +1048,7 @@ function showScreen(s) {
 }
 function toMenu() {
   clearTimeout(endTimer);
+  hideCoach();
   quitReplay();
   game.state = 'menu';
   if (world) removeBodies();
@@ -1031,6 +1060,7 @@ function toMenu() {
   ui.go.focus({ preventScroll: true });
 }
 function pause(on) {
+  if (on && coachOn) return;
   if (on && (game.state === 'fight' || game.state === 'countdown')) {
     game.pausedFrom = game.state; game.state = 'paused';
     ui.lastBtn.hidden = !(rec && rec.length > 60);
@@ -1220,6 +1250,7 @@ addEventListener('keydown', e => {
   sfx.unlock();
   const inField = e.target && e.target.closest && e.target.closest('input,select,textarea');
   if (inField) return;
+  if (coachOn) { if (e.code === 'Enter' || e.code === 'Space' || e.code === 'Escape') { e.preventDefault(); dismissCoach(); } return; }
   if (game.state === 'replay') {
     if (!rui.active) { if (e.code === 'Escape') { e.preventDefault(); replayFailed(); } return; }
     if (rui.key(e)) e.preventDefault();
@@ -1252,6 +1283,11 @@ addEventListener('pointerdown', e => { sfx.unlock(); if (e.pointerType === 'touc
 try {
   ui.go.onclick = () => { sfx.unlock(); startRound(); };
   ui.again.onclick = startRound;
+  ui.easier.onclick = tryEasier;
+  $('#coach-go').onclick = dismissCoach; $('#coach-skip').onclick = dismissCoach;
+  $('#more-set').onclick = () => $('#garage-btn').scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+  ui.start.addEventListener('scroll', updMoreSet, { passive: true });
+  addEventListener('resize', updMoreSet);
   ui.next.onclick = startRound;
   ui.menuBtn.onclick = toMenu;
   ui.replayBtn.onclick = () => openReplay('instant', 'end');

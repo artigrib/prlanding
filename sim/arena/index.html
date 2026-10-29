@@ -125,6 +125,11 @@ body.dark-map #msg{color:#fff;text-shadow:0 2px 0 var(--ink),0 0 22px rgba(0,0,0
 .gbtn b::after{content:' →';color:var(--mute)}
 #start .gofoot{position:sticky;bottom:-24px;margin:0 -24px -16px;padding:12px 24px 24px;background:#fff;border-top:1px solid var(--line);z-index:1}
 #start .gofoot+.credit{margin-top:8px}
+#more-set{display:block;margin:-4px 0 8px;font-size:12px;text-decoration:none;color:var(--mute)}#more-set:hover{color:var(--ink)}
+#coach{left:50%;top:50%;transform:translate(-50%,-50%);width:min(380px,calc(100% - 2*var(--pad)));z-index:4}
+#coach ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:15px;color:var(--ink-2)}
+#coach .row{display:flex;gap:8px;flex-wrap:wrap}
+#end-title:focus:not(:focus-visible){outline:none}
 #mode-ctx{display:flex;flex-direction:column;gap:8px}
 #mode-ctx .hint{margin:0}
 #garage{left:var(--pad);top:50%;transform:translateY(-50%);width:min(420px,calc(100% - 2*var(--pad)))}
@@ -276,7 +281,7 @@ body.split::after{content:'';position:absolute;background:var(--ink);pointer-eve
     <div role="group" aria-label="Barva tisku"><div class="lbl"><span>Barva tisku</span><span id="color-name"></span></div><div class="sws" id="colors"></div></div>
     <div id="map-row" role="group" aria-label="Aréna"><div class="lbl"><span>Aréna</span></div><div class="seg wrap" id="maps"></div><p class="hint" id="mapdesc"></p></div>
     <div class="hint" id="hint"></div>
-    <div class="gofoot"><button class="btn btn-act" id="go" type="button" disabled><span>Načítám…</span><span aria-hidden="true">→</span></button></div>
+    <div class="gofoot"><button class="link" id="more-set" type="button" hidden>↓ Další nastavení: garáž, barva, aréna</button><button class="btn btn-act" id="go" type="button" disabled><span>Načítám…</span><span aria-hidden="true">→</span></button></div>
     <div class="loadrp"><button class="link" id="load-replay" type="button">Přehrát uložený záznam (.prreplay)…</button><input type="file" id="replay-file" accept=".prreplay,.gz,.json,application/gzip,application/json" hidden><span id="load-msg" role="status"></span></div>
     <div class="credit">3D modely: Project SVRN – Shoverobotics (CC&nbsp;BY&nbsp;4.0); vertikální spinner – TheBlackfish, remix „150g vert“ od Muffin578 (CC&nbsp;BY-SA&nbsp;4.0), upraveno. Zvuky jsou syntetizované. <a href="NOTICE.txt">Licence a zdroje</a></div>
   </div>
@@ -319,6 +324,17 @@ body.split::after{content:'';position:absolute;background:var(--ink);pointer-eve
   <div id="rp-msg" role="status"></div>
 </section>
 
+<section class="panel" id="coach" hidden role="dialog" aria-modal="false" aria-labelledby="coach-h">
+  <div class="mono">První zápas</div>
+  <h1 id="coach-h">Jak na to</h1>
+  <ol>
+    <li id="coach-drive">Jízda: <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> nebo šipky. Zbraň: <kbd>Mezerník</kbd>.</li>
+    <li>Vyhrajete, když soupeře vytlačíte z arény nebo do jámy, nebo ho převrátíte na 10 s.</li>
+    <li>Jinak po 2 minutách rozhodují rozhodčí: útočte a zasahujte.</li>
+  </ol>
+  <div class="row"><button class="btn btn-act" id="coach-go" type="button"><span>Rozumím, jedeme!</span><span aria-hidden="true">→</span></button><button class="link" id="coach-skip" type="button">Přeskočit</button></div>
+</section>
+
 <section class="panel" id="end" hidden aria-live="polite" aria-labelledby="end-title">
   <div class="mono" id="end-kicker">Konec zápasu</div>
   <h1 id="end-title" tabindex="-1">Výhra</h1>
@@ -331,6 +347,7 @@ body.split::after{content:'';position:absolute;background:var(--ink);pointer-eve
     <button class="btn btn-o" id="to-menu" type="button"><span>Menu</span><span aria-hidden="true">≡</span></button>
     <button class="btn btn-o" id="replay-btn" type="button" hidden><span>Opakovat zásah</span><span aria-hidden="true">▶</span></button>
     <button class="btn btn-o" id="full-btn" type="button" hidden><span>Celý zápas</span><span aria-hidden="true">⏵</span></button>
+    <button class="btn btn-o" id="easier" type="button" hidden style="grid-column:1/-1"><span>Zkusit lehčího soupeře</span><span aria-hidden="true">↓</span></button>
     <button class="btn btn-o" id="share" type="button"><span>Sdílet výsledek</span><span aria-hidden="true">↗</span></button>
   </div>
   <div id="share-msg" role="status"></div>
