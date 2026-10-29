@@ -126,8 +126,40 @@ const VIEWS = {
   side: { pos: [0.18, 0.16, -0.78], at: [0.18, 0.12, 0] }
 };
 
+const BG = '#e9e9e4';
+/** true when the snapshot holds (almost) nothing but the background fill: the WebGL draw produced no scene */
+function blankCanvas(c2, w, h) {
+  const px = c2.getImageData(0, 0, w, h).data;
+  let n = 0;
+  for (let i = 0; i < px.length; i += 16) {             // every 4th pixel is plenty
+    if (Math.abs(px[i] - 0xe9) + Math.abs(px[i + 1] - 0xe9) + Math.abs(px[i + 2] - 0xe4) > 12) n++;
+  }
+  return n < (w * h / 4) * 0.01;                         // under 1 % of the image differs from the fill
+}
+
+/**
+ * Wait, without blocking the page, until the GPU has finished the work already queued (earlier frames). The
+ * snapshot's read-back below is synchronous and would otherwise wait for that backlog on the main thread; with a
+ * slow (software) GPU that can take long enough to starve the relay heartbeat. WebGL2 fence, polled by timer.
+ */
+async function gpuIdle(gl, maxMs = 120000) {
+  if (!gl || !gl.fenceSync) return;
+  const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+  if (!sync) return;
+  gl.flush();
+  try {
+    for (const t0 = performance.now(); performance.now() - t0 < maxMs;) {
+      const s = gl.clientWaitSync(sync, 0, 0);
+      if (s === gl.ALREADY_SIGNALED || s === gl.CONDITION_SATISFIED || s === gl.WAIT_FAILED) return;
+      await new Promise((res) => setTimeout(res, 15));
+    }
+  } finally { gl.deleteSync(sync); }
+}
+
 async function snapshot(ux, a) {
   const app = ux.app, T = ux.T, r = app.renderer, d = ux.d, m = ux.m;
+  if (app.lost) throw new AgentError('RENDER_UNAVAILABLE');
+  await gpuIdle(r.getContext());
   if (app.lost) throw new AgentError('RENDER_UNAVAILABLE');
   // a background tab steps physics without syncing the meshes (core.js bgTick): bring them up to date first
   app.sync(); if (ux.extras) ux.extras.sync();
@@ -157,26 +189,41 @@ async function snapshot(ux, a) {
   out.width = width; out.height = height;
   const g = ux.gizmo, hide = g ? [g.root, g.ghost, g.drop, g.foot].filter(Boolean) : [];
   const vis = hide.map((o) => o.visible);
+  const c2 = out.getContext('2d', { willReadFrequently: true });
+  // render on demand into the output canvas; a hidden or busy tab can hand back an empty drawing buffer, so the
+  // result is checked and rendered once more before giving up (never send an empty image to the AI)
+  const draw = () => {
+    r.shadowMap.needsUpdate = true;
+    r.render(app.scene, cam);
+    c2.fillStyle = BG;     // the WebGL canvas is transparent (CSS gradient behind it); JPEG has no alpha
+    c2.fillRect(0, 0, width, height);
+    c2.drawImage(r.domElement, 0, 0, width, height);   // same task: the drawing buffer is still valid
+    return !blankCanvas(c2, width, height);
+  };
+  let drawn = false;
   try {
     hide.forEach((o) => { o.visible = false; });       // the real scene only: no gizmo, ghost or path preview
     r.setPixelRatio(1);
     r.setSize(width, height, false);
     r.setScissorTest(false);
     r.setViewport(0, 0, width, height);
-    r.shadowMap.needsUpdate = true;
-    r.render(app.scene, cam);
-    const c2 = out.getContext('2d');
-    c2.fillStyle = '#e9e9e4';     // the WebGL canvas is transparent (CSS gradient behind it); JPEG has no alpha
-    c2.fillRect(0, 0, width, height);
-    c2.drawImage(r.domElement, 0, 0, width, height);   // same task: the drawing buffer is still valid
+    drawn = draw();
+    if (!drawn) {                                       // retry once after a forced, completed render
+      const gl = r.getContext(); app.sync(); if (ux.extras) ux.extras.sync();
+      if (gl && gl.finish) gl.finish();
+      drawn = draw();
+    }
   } finally {
     hide.forEach((o, i) => { o.visible = vis[i]; });
     r.setPixelRatio(ratio);
     r.setSize(size.x, size.y, false);
     r.setViewport(0, 0, size.x, size.y);
-    if (ux.cameras) ux.cameras.render(); else r.render(app.scene, app.camera);
+    // repaint the page view, but not in a hidden tab: nobody sees it, and with software GL a full-size frame can
+    // block the page for seconds (the relay heartbeat must keep flowing)
+    if (!document.hidden) { if (ux.cameras) ux.cameras.render(); else r.render(app.scene, app.camera); }
   }
+  if (!drawn) throw new AgentError('RENDER_UNAVAILABLE', { reason: 'empty_render' });
   const blob = await new Promise((res) => out.toBlob(res, 'image/jpeg', 0.82));
-  if (!blob) throw new AgentError('RENDER_UNAVAILABLE');
+  if (!blob || !blob.size) throw new AgentError('RENDER_UNAVAILABLE', { reason: 'empty_image' });
   return { blob, view: a.view || 'overview', width, height, sim_time_s: Math.round(d.time * 10) / 10 };
 }
