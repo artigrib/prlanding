@@ -152,7 +152,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [so101, arena-replay, bridge]
+        suite: [so101, arena-replay, bridge, analytics]
     name: e2e-${{ matrix.suite }}
     steps:
       - uses: actions/checkout@v4
@@ -173,6 +173,9 @@ jobs:
           python3 -m http.server 8792 --bind 127.0.0.1 >/tmp/http.log 2>&1 &
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:8792/ >/dev/null && break; sleep 1; done
           node sim/arena/tests/replay-e2e.cjs http://127.0.0.1:8792
+      - name: analytics e2e (consent off/declined/DNT -> zero requests, consent on -> events reach the api, axe on the banner)
+        if: matrix.suite == 'analytics'
+        run: node tests/analytics-e2e.mjs
       - name: bridge e2e (relay + MCP client + Chromium tab, incl. the real sim)
         if: matrix.suite == 'bridge'
         working-directory: backend/bridge

@@ -52,5 +52,7 @@
   <url><loc>https://printedrobotics.cz/en/guides/combat-robots-150-g/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/navody/bojovi-roboti-150-g/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/guides/combat-robots-150-g/"/></url>
   <url><loc>https://printedrobotics.cz/navody/licence-open-source-hardwaru/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/navody/licence-open-source-hardwaru/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/guides/open-source-hardware-licences/"/></url>
   <url><loc>https://printedrobotics.cz/en/guides/open-source-hardware-licences/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/navody/licence-open-source-hardwaru/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/guides/open-source-hardware-licences/"/></url>
+  <url><loc>https://printedrobotics.cz/soukromi/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/soukromi/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/privacy/"/></url>
+  <url><loc>https://printedrobotics.cz/en/privacy/</loc><xhtml:link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/soukromi/"/><xhtml:link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/privacy/"/></url>
   <url><loc>https://printedrobotics.cz/sim/so101/</loc></url>
 </urlset>

@@ -1,0 +1,57 @@
+<!--meta
+{"title":"Privacy policy and analytics | printedrobotics.cz",
+ "description":"What printedrobotics.cz measures, what it never measures and who processes the data. Analytics only with your consent: no ads, no names, no e-mails.",
+ "ogTitle":"Privacy policy: analytics only with consent",
+ "h":"Privacy policy",
+ "image":"assets/media/og-home.jpg","imageW":1200,"imageH":630,"imageAlt":"The simulated SO-101 robot arm carrying a cube into a bowl"}
+-->
+<section class="g doc-hero">
+<div class="a1 mono">Privacy</div>
+<div class="a4" style="display:flex;flex-direction:column;gap:20px">
+<h1>We measure only with consent. No ads, no names.</h1>
+<p class="lead">The site and the simulations work fully without analytics. If you allow it, we see anonymously where people get stuck and what to improve, such as how many people finish the first mission.</p>
+<div class="doc-act"><button type="button" class="btn btn-act" data-pr-consent>Change privacy settings</button></div>
+<p class="doc-note"><i aria-hidden="true"></i><span>TODO (operator): add the operator's name, company ID, registered address and a contact e-mail for data protection questions. The text below describes how the site works technically; the legal review is up to the operator.</span></p>
+</div>
+</section>
+
+<section class="section" id="analytics">
+<div class="g rule">
+<div class="a1 mono">01 — Analytics</div>
+<div class="a4 prose">
+<h2>What we measure and what we don't</h2>
+<p><b>Off by default.</b> Until you click “Allow analytics”, nothing is sent and nothing about you is stored. “Decline” and “Allow analytics” carry the same weight, and the site works the same whichever you choose. If your browser sends Do Not Track or Global Privacy Control, we treat it as declined.</p>
+<p><b>After consent</b> your browser stores a random number (an anonymous identifier) in its local storage. It is not a cookie and contains nothing about you. It lets us see that two events belong to the same visit, for example “started the simulation” and “finished a mission”.</p>
+<p><b>We measure only predefined events:</b> page views (the path without parameters, the domain you came from and utm campaign tags), simulation loading, mission start and finish (stars, time), hint use, control mode changes, recording and sharing a demonstration, connecting an AI assistant, arena matches, kit page views, clicks on the main buttons and successful form submissions (only that it happened, never the content). The complete list is public in the site's repository (analytics/schema.json).</p>
+<p><b>We never measure:</b> names, e-mails, text you type, your precise location or a browser fingerprint. Your IP address is used only briefly in the server's memory to stop floods and is never stored. A country code (such as CZ) is recorded only when the network infrastructure passes it to our server; we do not look it up from your IP address ourselves. The data is never used for advertising and never sold.</p>
+<p><b>Legal basis</b> for analytics is your consent. You can withdraw it at any time in Privacy settings (link in the footer of every page, or the button above). Declining deletes the identifier from your browser.</p>
+<p><b>For children and younger students:</b> nothing on the site needs analytics. If you are not sure, simply choose “Decline”, or ask a parent or teacher.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="processors">
+<div class="g rule">
+<div class="a1 mono">02 — Who processes the data</div>
+<div class="a4 prose">
+<h2>Processors</h2>
+<ul>
+<li><b>Our server</b> (api.printedrobotics.cz) receives events, checks them against the list of allowed events and stores them. TODO (operator): add the server provider and the country where it runs.</li>
+<li><b>ClickHouse Cloud, EU region</b> (planned, not used yet): database for long-term storage of events.</li>
+<li><b>Amplitude, EU data centre</b>: analysis of visitor journeys (how many visits reach the first mission, and so on). Only our server sends events there; your browser never connects to Amplitude and Amplitude does not receive your IP address.</li>
+</ul>
+<p><b>Outside analytics:</b> fonts are loaded from Google Fonts (your browser connects to Google's servers for that). Forms (pre-order, waitlist, question, school pilot) send the details you enter to the operator's spreadsheet via Google Apps Script. TODO (operator): confirm the website hosting provider and describe how form data is processed.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="retention">
+<div class="g rule">
+<div class="a1 mono">03 — Retention and your rights</div>
+<div class="a4 prose">
+<h2>Retention and rights</h2>
+<p>Events are kept for at most 25 months and then deleted automatically. TODO (operator): add the retention period configured in Amplitude.</p>
+<p>Under the GDPR you have the right to access, rectification, erasure, restriction of processing and withdrawal of consent, and you can lodge a complaint with the Czech data protection authority. As we don't know who you are, it helps if you send us your anonymous identifier (in your browser's local storage under the key pr-aid). TODO (operator): add a contact for exercising these rights.</p>
+</div>
+</div>
+</section>

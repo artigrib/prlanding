@@ -4,6 +4,7 @@
 
 import './src/i18n/index.js'; // first: English translation (?lang=en) starts before any UI is built
 import { COLORS, JOINTS, DEMO, DemoPlayer, ArmSim, loadSim, hasWebGL } from './core.js';
+import { track } from './src/analytics.js';
 
 const $ = (id) => document.getElementById(id);
 const TEST = new URLSearchParams(location.search).get('test') === '1';  // Playwright hook only
@@ -25,7 +26,8 @@ function wantsObjects() {
 }
 
 
-function fail(msg) {
+function fail(msg, reason) {
+  track('sim_load_failed', { sim: 'so101', reason: reason || 'error' });
   $('loader').hidden = true;
   $('fail').hidden = false;
   document.body.classList.add('sim-fail');
@@ -33,7 +35,7 @@ function fail(msg) {
   if (TEST) window.__sim = { error: msg || 'fail' };
 }
 if (typeof WebAssembly !== 'object' || !hasWebGL()) {
-  fail();
+  fail(undefined, typeof WebAssembly !== 'object' ? 'no_wasm' : 'no_webgl');
 } else {
   main().catch((e) => {
     console.error(e);
@@ -43,6 +45,7 @@ if (typeof WebAssembly !== 'object' || !hasWebGL()) {
 
 async function main() {
   const t0 = performance.now();
+  track('sim_load_start', { sim: 'so101' });
   const bar = $('prog');
   const copy = loadingCopy(t0);   // [ux-hook:loading] honest progress text on slow networks
   const ctx = await loadSim((f) => { bar.style.width = (f * 100).toFixed(1) + '%'; copy(f); }, { objects: wantsObjects() });
@@ -51,6 +54,7 @@ async function main() {
     canvas: $('c'),
     onInteract: () => { $('hint').hidden = true; },
     onContextLost: () => {
+      track('sim_load_failed', { sim: 'so101', reason: 'context_lost' }, { once: true });
       $('fail-msg').textContent = 'Grafika prohlížeče se resetovala. Počkejte chvíli, nebo obnovte stránku.';
       $('reload').hidden = false; $('fail').hidden = false;
     },
@@ -66,6 +70,7 @@ async function main() {
   $('hud').hidden = false;
   $('hint').hidden = false;
   $('sr').textContent = 'Simulace je připravena, ovládání je dostupné.';
+  track('sim_loaded', { sim: 'so101', ms: Math.round(performance.now() - t0), detail: ctx.objects ? 'objects' : 'plain' });
   if (TEST) { window.__sim = app.api(); window.__sim.loadMs = Math.round(performance.now() - t0); }
   // free WASM heap objects (Embind handles are not garbage-collected)
   addEventListener('pagehide', (e) => { if (!e.persisted) sim.dispose(); });
@@ -136,7 +141,7 @@ class MissionPage {
     $('reset').addEventListener('click', () => this.reset());
     $('again').addEventListener('click', () => this.reset());
     $('demo').addEventListener('click', () => this.startDemo());
-    $('cta').addEventListener('click', () => { try { window.dataLayer && window.dataLayer.push({ event: 'sim_cta', robot: 'so101' }); } catch (e) {} });
+    $('cta').addEventListener('click', () => { try { window.dataLayer && window.dataLayer.push({ event: 'sim_cta', robot: 'so101' }); } catch (e) {} track('cta_click', { id: 'sim-win-kit' }); });
 
     const sw = $('sw');
     this.swatches = COLORS.map((c) => {

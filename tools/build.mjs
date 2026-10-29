@@ -41,7 +41,8 @@ const CONTENT = [
   { id: 'navody', cs: 'navody/', en: 'en/guides/', nav: 'navody' },
   { id: 'lerobot', cs: 'navody/so101-lerobot-prvni-kroky/', en: 'en/guides/so101-lerobot-first-steps/', nav: 'navody' },
   { id: 'combat', cs: 'navody/bojovi-roboti-150-g/', en: 'en/guides/combat-robots-150-g/', nav: 'navody' },
-  { id: 'licence', cs: 'navody/licence-open-source-hardwaru/', en: 'en/guides/open-source-hardware-licences/', nav: 'navody' }
+  { id: 'licence', cs: 'navody/licence-open-source-hardwaru/', en: 'en/guides/open-source-hardware-licences/', nav: 'navody' },
+  { id: 'soukromi', cs: 'soukromi/', en: 'en/privacy/', nav: null }
 ];
 const CONTENT_EN = Object.fromEntries(CONTENT.map(c => [c.cs, c.en]));
 

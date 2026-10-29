@@ -2,6 +2,7 @@
 // DOM/three-free. Texts are Czech, formal "vy".
 
 import { ArmController } from './controller.js';
+import { track } from './analytics.js';
 
 const STAR_PTS = (() => {
   // 5-point star outline (closed), centre (0.215, 0.0), outer radius 5.5 cm, sampled every ~7 mm
@@ -597,5 +598,5 @@ export class MissionRunner {
     return r;
   }
   /** The timer starts with the first arm movement. */
-  start() { this.started = true; }
+  start() { if (!this.started) track('mission_start', { mission: this.m.id }); this.started = true; }
 }

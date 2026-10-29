@@ -6,6 +6,9 @@
   var ROOT = document.body.getAttribute('data-root') || '';
   var SITE = 'https://printedrobotics.cz/';
   function href(id) { return ROOT + 'sada/' + id + '/'; }
+  /* consent banner + funnel analytics (docs/analytics/events.md); nothing is sent before consent */
+  (function () { var s = document.createElement('script'); s.src = ROOT + 'assets/track.js'; document.head.appendChild(s); })();
+  function track(e, p) { (window.prTrackQ = window.prTrackQ || []).push([e, p]); }
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function no(r) { return (r.idx < 9 ? '0' : '') + (r.idx + 1); }
@@ -119,7 +122,7 @@
       sch.removeAttribute('aria-invalid'); m.textContent = EN ? 'Sending…' : 'Odesíláme…';
       var note = [val('role') && 'Role: ' + val('role'), val('pupils') && (EN ? 'Students: ' : 'Žáci: ') + val('pupils'), val('note')].filter(Boolean).join('\n');
       send({ _subject: 'Škola – pilot: ' + val('school'), type: 'school', robot: 'pilot', school: val('school'), note: note, email: em.value.trim(), page: location.href, source: 'pro-skoly' })
-        .then(function () { f.innerHTML = '<b>' + (EN ? 'Thank you.' : 'Děkujeme.') + '</b><span class="muted">' + (EN ? 'We’ll reply to ' : 'Ozveme se na ') + esc(em.value.trim()) + (EN ? ' and agree on the next steps.' : ' a domluvíme další postup.') + '</span>'; })
+        .then(function () { track('school_lead_submit'); f.innerHTML = '<b>' + (EN ? 'Thank you.' : 'Děkujeme.') + '</b><span class="muted">' + (EN ? 'We’ll reply to ' : 'Ozveme se na ') + esc(em.value.trim()) + (EN ? ' and agree on the next steps.' : ' a domluvíme další postup.') + '</span>'; })
         .catch(function (er) { m.textContent = er && er.message === 'no-endpoint' ? NO_ENDPOINT_MSG : (EN ? 'Sending failed. Please try again.' : 'Odeslání se nezdařilo. Zkuste to prosím znovu.'); });
       return;
     }
@@ -129,7 +132,7 @@
     if (kind === 'waitlist' && !want) { m.textContent = 'Vyberte, co chcete připojit.'; f.querySelector('input[name=want]').focus(); return; }
     var subj = kind === 'price' ? 'Cena na e-mail: ' : kind === 'waitlist' ? 'Čekací listina: ' : 'Novinky: ';
     send({ _subject: subj + (kind === 'waitlist' ? want : robot || 'web'), type: kind === 'price' || kind === 'waitlist' ? kind : 'news', robot: kind === 'waitlist' ? want : robot, email: em.value.trim(), page: location.href, source: page === 'quiz' ? 'kviz' : 'web' })
-      .then(function () { f.innerHTML = '<b>Hotovo.</b><span class="muted">' + (kind === 'price' ? 'Cenu pošleme na ' + esc(em.value.trim()) + ', jakmile ji budeme znát.' : kind === 'waitlist' ? 'Jste na čekací listině. Napíšeme na ' + esc(em.value.trim()) + ', až půjde připojení vyzkoušet.' : 'Díky, ozveme se, až bude co ukázat.') + '</span>'; })
+      .then(function () { if (kind === 'waitlist') track('waitlist_submit', { interest: want }); f.innerHTML = '<b>Hotovo.</b><span class="muted">' + (kind === 'price' ? 'Cenu pošleme na ' + esc(em.value.trim()) + ', jakmile ji budeme znát.' : kind === 'waitlist' ? 'Jste na čekací listině. Napíšeme na ' + esc(em.value.trim()) + ', až půjde připojení vyzkoušet.' : 'Díky, ozveme se, až bude co ukázat.') + '</span>'; })
       .catch(function (er) { m.textContent = er && er.message === 'no-endpoint' ? NO_ENDPOINT_MSG : 'Odeslání se nezdařilo. Zkuste to prosím znovu.'; });
   });
   (function () { var ft = document.querySelector('.site-f'); if (ft && !ft.querySelector('form.soft')) { var d = document.createElement('div'); d.className = 'soft-foot'; d.innerHTML = softForm('news'); ft.insertBefore(d, ft.firstChild); } })();

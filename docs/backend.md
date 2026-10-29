@@ -35,13 +35,14 @@ rotated at 10 MB × 3.
 | Endpoint | What it does |
 |---|---|
 | `GET /health` (also `/healthz`) | `{"ok":true,"version":"<git sha>"}` |
-| `POST /e` | Counts one event. Body `{"e":"<name>"}` or the bare name, max 256 bytes. Names: `sim_start sim_success sim_cta arena_start arena_end arena_cta mcp_connect mcp_tool kit_view`. Returns 204. |
+| `POST /e` | Analytics batch from `assets/track.js` (only after consent), validated against `analytics/schema.json`, max 16 KB / 25 events; see [docs/analytics/events.md](analytics/events.md). The legacy body `{"e":"<name>"}` (max 256 bytes) is still counted. Returns 204. |
 | `OPTIONS /e` | CORS preflight. |
 | `GET /stats?days=30` | Daily aggregates. Needs `Authorization: Bearer <STATS_TOKEN>`. |
 
 Privacy design:
-- No cookies are read or set, no identifiers, no user agent, no referrer, no URL. The database
-  holds only `(day, event, count)`.
+- No cookies are read or set. The SQLite database holds only `(day, event, count)`. Analytics
+  events (with a random anonymous id, only after consent) go to the sinks described in
+  docs/analytics/events.md; no IP or user agent is ever stored.
 - The client IP is used only in RAM for the rate limit (60 events/min per IP, 6000/min overall);
   the map is cleared every minute and never written anywhere.
 - CORS and the `Origin` check allow only `https://printedrobotics.cz`. Requests without that
@@ -181,26 +182,11 @@ networking, and `remote-deploy.sh` refuses to run a compose file that would (`gu
 5. Later (from the security plan): replace root SSH with a `deploy` user and a forced-command key,
    disable root login, and pin the `node` base images by digest (Dependabot can keep them
    fresh).
+6. **Analytics secrets** (optional, each sink stays off while its secrets are empty): see
+   "Owner setup" in [docs/analytics/events.md](analytics/events.md).
 
-## Wiring the analytics beacon into the site (not done yet)
+## Analytics
 
-`assets/track.js` is on branch `backend` only and no page loads it. To turn it on (on `main`):
-
-1. Add before `</body>` of the pages that should count events:
-
-   ```html
-   <script src="/assets/track.js" defer></script>
-   ```
-
-2. Send events:
-   - declaratively on links/buttons: `<a href="/sada.html" data-track="sim_cta">`
-   - from code: `window.prTrack && window.prTrack('sim_start', { once: true })`
-   Suggested places: `sim_start`/`sim_success`/`sim_cta` in `sim/so101`, `arena_start`/
-   `arena_end`/`arena_cta` in `sim/arena`, `kit_view` on `sada.html`, `mcp_connect`/`mcp_tool` from
-   the bridge client.
-3. If a page has a Content Security Policy, add `https://api.printedrobotics.cz` to `connect-src`.
-4. Mention in the privacy notice: aggregate, identifier-free counters; no cookies; requests from
-   browsers with Global Privacy Control or Do Not Track are not sent.
-
-The beacon is fire-and-forget: if the api is down, blocked or DNS is missing, nothing happens and
-the page is unaffected. It only works once `api.printedrobotics.cz` has HTTPS (step 1 above).
+Consent-gated funnel analytics (banner, `assets/track.js`, `POST /e` batches, NDJSON / ClickHouse /
+Amplitude sinks, owner secrets): see [docs/analytics/events.md](analytics/events.md) and
+[docs/analytics/amplitude.md](analytics/amplitude.md).

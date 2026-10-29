@@ -1,0 +1,57 @@
+<!--meta
+{"title":"Zásady soukromí a analytika | printedrobotics.cz",
+ "description":"Co na printedrobotics.cz měříme, co ne a komu data svěřujeme. Analytika jen s vaším souhlasem, bez reklam, bez jmen a e-mailů.",
+ "ogTitle":"Zásady soukromí: analytika jen se souhlasem",
+ "h":"Zásady soukromí",
+ "image":"assets/media/og-home.jpg","imageW":1200,"imageH":630,"imageAlt":"Robotická ruka SO-101 v simulaci přenáší kostku do misky"}
+-->
+<section class="g doc-hero">
+<div class="a1 mono">Soukromí</div>
+<div class="a4" style="display:flex;flex-direction:column;gap:20px">
+<h1>Měříme jen se souhlasem. Bez reklam, bez jmen.</h1>
+<p class="lead">Web a simulace fungují celé i bez analytiky. Když ji povolíte, uvidíme anonymně, kde lidé končí a co je potřeba zlepšit, třeba kolik lidí dokončí první misi.</p>
+<div class="doc-act"><button type="button" class="btn btn-act" data-pr-consent>Změnit nastavení soukromí</button></div>
+<p class="doc-note"><i aria-hidden="true"></i><span>TODO (provozovatel): doplnit název nebo jméno provozovatele, IČO, sídlo a kontaktní e-mail pro dotazy k osobním údajům. Text níže popisuje, jak web technicky funguje; právní posouzení doplní provozovatel.</span></p>
+</div>
+</section>
+
+<section class="section" id="analytika">
+<div class="g rule">
+<div class="a1 mono">01 — Analytika</div>
+<div class="a4 prose">
+<h2>Co měříme a co ne</h2>
+<p><b>Výchozí stav je vypnuto.</b> Dokud nekliknete na „Povolit analytiku“, neposíláme nic a nic o vás neukládáme. Tlačítka „Odmítnout“ a „Povolit analytiku“ mají stejnou váhu; web funguje stejně, ať zvolíte cokoli. Když prohlížeč posílá signál „Nesledovat“ (Do Not Track) nebo Global Privacy Control, bereme to jako odmítnutí.</p>
+<p><b>Po souhlasu</b> prohlížeč uloží náhodné číslo (anonymní identifikátor) do svého úložiště (localStorage). Není to cookie a není v něm nic o vás. Podle něj poznáme, že dvě události patří ke stejné návštěvě, například „spustil simulaci“ a „dokončil misi“.</p>
+<p><b>Měříme jen předem dané události:</b> zobrazení stránky (cesta bez parametrů, doména, ze které jste přišli, a značky kampaně utm), načtení simulace, začátek a dokončení mise (hvězdy, čas), použití nápovědy, přepnutí ovládání, nahrání a sdílení ukázky, připojení AI asistenta, zápasy v aréně, zobrazení stavebnice, kliknutí na hlavní tlačítka a úspěšné odeslání formuláře (jen to, že proběhlo, ne jeho obsah). Úplný seznam je veřejný v repozitáři webu (soubor analytics/schema.json).</p>
+<p><b>Nikdy neměříme:</b> jména, e-maily, texty, které napíšete, přesnou polohu ani otisk prohlížeče. IP adresu používáme jen chvilkově v paměti serveru proti zahlcení a neukládáme ji. Zemi (například CZ) zaznamenáme jen tehdy, když ji serveru předá síťová infrastruktura; z IP adresy ji sami nezjišťujeme. Data nepoužíváme k reklamě a nikomu je neprodáváme.</p>
+<p><b>Právní základ</b> analytiky je váš souhlas. Souhlas můžete kdykoli odvolat v Nastavení soukromí (odkaz v patičce každé stránky nebo tlačítko výše). Odmítnutím se identifikátor z vašeho prohlížeče smaže.</p>
+<p><b>Pro děti a mladší studenty:</b> analytika není potřeba k ničemu na webu. Pokud si nejste jistí, klidně zvolte „Odmítnout“, nebo se zeptejte rodičů či učitele.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="zpracovatele">
+<div class="g rule">
+<div class="a1 mono">02 — Kdo data zpracovává</div>
+<div class="a4 prose">
+<h2>Zpracovatelé</h2>
+<ul>
+<li><b>Náš server</b> (api.printedrobotics.cz) přijímá události, kontroluje je proti seznamu povolených událostí a ukládá je. TODO (provozovatel): doplnit poskytovatele serveru a zemi, kde server běží.</li>
+<li><b>ClickHouse Cloud, region EU</b> (plánováno, zatím nepoužíváme): databáze pro dlouhodobé uložení událostí.</li>
+<li><b>Amplitude, datové centrum EU</b>: analýza cesty návštěvníků (kolik lidí z návštěvy dojde k první misi atd.). Události posílá jen náš server, váš prohlížeč se s Amplitude nespojuje a Amplitude nedostává vaši IP adresu.</li>
+</ul>
+<p><b>Mimo analytiku:</b> písma načítáme ze služby Google Fonts (prohlížeč se přitom spojí se servery Google). Formuláře (předobjednávka, čekací listina, dotaz, pilot pro školy) odesílají vámi vyplněné údaje do tabulky provozovatele přes Google Apps Script. TODO (provozovatel): potvrdit poskytovatele hostingu webu a doplnit podmínky zpracování údajů z formulářů.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="doba">
+<div class="g rule">
+<div class="a1 mono">03 — Jak dlouho a vaše práva</div>
+<div class="a4 prose">
+<h2>Doba uložení a práva</h2>
+<p>Události ukládáme nejvýš 25 měsíců, potom se automaticky mažou. TODO (provozovatel): doplnit dobu uložení v Amplitude podle nastavení projektu.</p>
+<p>Podle nařízení GDPR máte právo na přístup, opravu, výmaz, omezení zpracování a odvolání souhlasu a můžete podat stížnost u Úřadu pro ochranu osobních údajů. Protože nevíme, kdo jste, pomůže nám, když nám pošlete svůj anonymní identifikátor (najdete ho v úložišti prohlížeče pod klíčem pr-aid). TODO (provozovatel): doplnit kontakt pro uplatnění práv.</p>
+</div>
+</div>
+</section>

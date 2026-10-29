@@ -3,7 +3,10 @@
 # Touches only the compose project "printedrobotics" and images named ghcr.io/artigrib/prlanding-*.
 #
 # Usage: ACTION=deploy|rollback|status|fixports [API_IMAGE=... BRIDGE_IMAGE=... APP_VERSION=...
-#        GHCR_USER=...] bash remote-deploy.sh   (GHCR token, if any, on stdin)
+#        GHCR_USER=...] bash remote-deploy.sh
+#   deploy reads stdin: line 1 = GHCR token (may be empty), then optional analytics settings as
+#   NAME=<base64 value> lines (names in ANALYTICS_VARS; empty value = that sink off). They are written to
+#   $ROOT/analytics.env (0600) and replace the previous file, so removing a GitHub secret switches a sink off.
 #
 # Output contract: the only lines written to stdout are "STATUS ..." / "WARN ..." / "ERROR ..."
 # with fixed, low-sensitivity text; the workflow turns them into annotations. Actions logs are
@@ -25,9 +28,13 @@ die()  { echo "ERROR $*" >&3; exit 1; }
 
 dc() { docker compose -p "$PROJECT" --project-directory "$ROOT" -f "$ROOT/compose.yml" --env-file "$ROOT/.compose.env" "$@" </dev/null; }
 
+ANALYTICS_VARS="CLICKHOUSE_URL CLICKHOUSE_USER CLICKHOUSE_PASSWORD AMPLITUDE_API_KEY COUNTRY_HEADER"
+
 build_env() {
-  # Combine generated secrets and the current release into the file compose reads.
-  cat "$ROOT/secrets.env" "$ROOT/release.env" > "$ROOT/.compose.env.tmp"
+  # Combine generated secrets, analytics settings (from GitHub secrets) and the current release into the
+  # file compose reads.
+  touch "$ROOT/analytics.env"; chmod 600 "$ROOT/analytics.env"
+  cat "$ROOT/secrets.env" "$ROOT/analytics.env" "$ROOT/release.env" > "$ROOT/.compose.env.tmp"
   chmod 600 "$ROOT/.compose.env.tmp"
   mv -f "$ROOT/.compose.env.tmp" "$ROOT/.compose.env"
 }
@@ -168,9 +175,33 @@ classify_err() { # map a docker error to a fixed, non-sensitive reason
   esac
 }
 
+read_stdin() {
+  # Line 1: GHCR token. Then NAME=<base64> analytics lines. Values are never printed.
+  GHCR_TOKEN=""
+  IFS= read -r GHCR_TOKEN || true
+  local line name b64 val out="" on=""
+  while IFS= read -r line; do
+    name=${line%%=*}; b64=${line#*=}
+    case " $ANALYTICS_VARS " in *" $name "*) ;; *) continue;; esac
+    val=$(printf '%s' "$b64" | base64 -d 2>/dev/null) || { warn "analytics setting $name: not valid base64, ignored"; continue; }
+    # compose .env single-quoted literal: printable ASCII without space, quotes or backslash only
+    if [ -n "$(printf '%s' "$val" | LC_ALL=C tr -d '!#-&(-[]-~')" ]; then
+      warn "analytics setting $name: unsupported characters, ignored"; continue
+    fi
+    out="$out$name='$val'"$'\n'
+    [ -n "$val" ] && on="$on $name"
+  done
+  printf '%s' "$out" > "$ROOT/analytics.env.tmp"
+  chmod 600 "$ROOT/analytics.env.tmp"
+  mv -f "$ROOT/analytics.env.tmp" "$ROOT/analytics.env"
+  local sinks="ndjson"
+  case "$on" in *CLICKHOUSE_URL*) case "$on" in *CLICKHOUSE_USER*) case "$on" in *CLICKHOUSE_PASSWORD*) sinks="$sinks, clickhouse";; esac;; esac;; esac
+  case "$on" in *AMPLITUDE_API_KEY*) sinks="$sinks, amplitude";; esac
+  say "analytics sinks: $sinks"
+}
+
 pull_images() {
-  local token="" tmp ref
-  IFS= read -r token || true
+  local token="${GHCR_TOKEN:-}" tmp ref
   tmp=$(mktemp -d)
   # Public packages pull anonymously; otherwise log in with the job's short-lived token
   # in a throw-away docker config (nothing is stored on the server).
@@ -274,6 +305,7 @@ case "${APP_VERSION:-}" in *[!0-9a-f]*|"") die "bad version";; esac
 
 disk_guard
 ensure_secrets
+read_stdin
 
 {
   echo "APP_VERSION=$APP_VERSION"

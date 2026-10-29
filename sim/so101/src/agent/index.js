@@ -6,6 +6,7 @@ import { createSimApi, AgentError } from './sim-api.js';
 import { chainFromModel } from '../kin.js';
 import { MISSIONS } from '../missions.js';
 import { t } from '../i18n/index.js';
+import { track } from '../analytics.js';
 
 const REOPEN = 'pr-ai-reopen';
 export const REAL_ARMED = () => /[?&]real=1\b/.test(location.search);
@@ -54,7 +55,7 @@ export function installAgent(ux, page) {
   const sim = page.sim;
   const syncBg = () => { if (sim && sim.syncBg) sim.syncBg(); };
   if (sim) sim.keepAlive = () => linked || api.busy;
-  const onLink = (on) => { if (on !== linked) { linked = on; syncBg(); } };
+  const onLink = (on) => { if (on !== linked) { linked = on; syncBg(); if (on) track('ai_paired'); } };
   // tab strip: "● AI ovládá ruku — …" while an AI motion runs (restored a moment after the last one ends)
   let baseTitle = null, titleT = 0;
   api.on('motion', (e) => {
@@ -114,6 +115,7 @@ export function installAgent(ux, page) {
   }
   let loading = null;
   function openPanel() {
+    track('ai_panel_open', {}, { once: true });
     if (!loading) {
       loading = import('./panel.js').then((m) => m.mountAgentPanel(mount.querySelector('#ai-panel'), { api, ux, button: btn, onLink }))
         .catch((e) => { console.error(e); loading = null; ux.panel.toast(t('Panel AI se nepodařilo načíst. Zkuste to znovu.'), 'err'); });
