@@ -32,7 +32,9 @@ export class AgentError extends Error {
 
 /**
  * env: { mj, m, d, act (actuator ids, 6), chain (kin chain), world, runner, missions (MISSIONS),
- *        userBusy(): bool        the person is driving (drag, click-to-pick plan, replay)
+ *        userBusy(): bool        the person is driving (drag, click-to-pick plan, replay): a new AI motion is BUSY
+ *        tookOver(): bool        (optional) the person touched the controls during an AI motion: it stops
+ *        onTick(): void          (optional) called on every motion tick (slider refresh)
  *        takeControl(): void     cancel the page's own controller before an AI motion
  *        afterMotion(): void     sync the page controller / sliders after an AI motion
  *        selectMission(id), resetScene(), heldObject(): name|null,
@@ -181,7 +183,8 @@ export function createSimApi(env) {
   function tick(dt) {
     const mo = motion;
     if (!mo) return;
-    if (env.userBusy && env.userBusy()) return finish('stopped');      // the person took over
+    if (env.tookOver ? env.tookOver() : env.userBusy && env.userBusy()) return finish('stopped');      // the person took over
+    if (env.onTick) env.onTick();
     mo.t += dt;
     const k = Math.min(1, mo.t / mo.T), e = smooth(k);
     for (let i = 0; i < 6; i++) d.ctrl[act[i]] = mo.from[i] + (mo.to[i] - mo.from[i]) * e;
@@ -310,6 +313,8 @@ export function createSimApi(env) {
       emit('estop', estop);
     },
     get estop() { return estop; },
+    /** The person moved a slider / pressed a key: the AI motion ends at once (status "stopped"). */
+    userTakeover() { finish('stopped'); },
     get busy() { return !!motion; },
     on(ev, fn) { (listeners[ev] || (listeners[ev] = [])).push(fn); return () => { listeners[ev] = listeners[ev].filter((f) => f !== fn); }; },
     limits: { joints_deg: Object.fromEntries(ARM.map((j, i) => [j, limDeg[i]])), gripper_pct: [0, 100], workspace_mm: WORKSPACE_MM, speed_cap_dps: SPEED_CAP_DPS }
