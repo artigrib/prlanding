@@ -119,6 +119,27 @@ async function wizardSetup(page, base, { shots = false, prefix = '' } = {}) {
   await idle(page);
 }
 
+/** Real-arm arming checklist (SR-3/13/19): tick the four boxes, pick a profile, press "Aktivovat pohyb". */
+async function arm(page, profile = 'owner') {
+  await page.check(`input[name=profile][value="${profile}"]`);
+  for (const c of await page.$$('#arm-checks input')) await c.check();
+  await page.click('#arm-go');
+  await page.waitForFunction(() => window.__wiz.state().perm.armed, null, { timeout: 5000 });
+  await idle(page);
+}
+/** Switch torque on (real path); one retry when a reply got lost on a loaded CI machine, with the reason logged. */
+async function torqueOn(page) {
+  for (let k = 0; k < 2; k++) {
+    await page.click('#t-torque');
+    const on = await page.waitForFunction(() => window.__wiz.state().torque, null, { timeout: 10000 }).then(() => true, () => false);
+    if (on) return;
+    console.log('torque-on retry:', await page.textContent('#t-msg'), await page.textContent('#arm-msg'), JSON.stringify((await state(page)).perm));
+    await idle(page);
+  }
+  throw new Error('torque did not switch on');
+}
+const fakeTorque = (page) => page.evaluate(() => window.__fake.servos.map((s) => s.mem[40]));
+
 async function diag(page) {
   await page.click('#diag-go');
   await page.waitForSelector('#diag li[data-code]', { timeout: 15000 });
@@ -161,13 +182,22 @@ async function diag(page) {
       await page.click('#again');
       const codes = await diag(page);
       ok(codes.join() === 'all-ok', 'wizard: diagnostics all ok after setup (' + codes + ')');
+      // the poll shows "—" while diagnostics hold the bus; wait for the next live read
+      await page.waitForFunction(() => [...document.querySelectorAll('#reg-t tbody tr')].every((x) => /°C/.test(x.textContent)), null, { timeout: 3000 }).catch(() => {});
       const rows = await page.$$eval('#reg-t tbody tr', (r) => r.map((x) => x.textContent));
       ok(rows.length === 6 && rows.every((r) => /V/.test(r) && /°C/.test(r)), 'wizard: live registers for 6 servos');
-      // STOP turns torque off
+      if (!rows.every((r) => /°C/.test(r))) console.log('rows:', JSON.stringify(rows), await page.textContent('#reg-note'));
+      // two-stage STOP: 1st = hold (arm joints keep torque, gripper released), 2nd = torque off
+      const tqv = () => page.evaluate(() => window.__wiz.arm.servos.map((s) => s.mem[40]));
       await page.click('#stop');
       await page.waitForTimeout(400);
-      const tq = await page.evaluate(() => window.__wiz.arm.servos.map((s) => s.mem[40]));
-      ok(tq.every((v) => v === 0), 'wizard: STOP disables torque on all servos');
+      ok((await tqv()).join() === '1,1,1,1,1,0', 'wizard: 1st STOP holds the arm, gripper torque off (' + (await tqv()) + ')');
+      ok(await page.isVisible('#stop-release') && await page.isDisabled('#t-torque'), 'wizard: STOP latched, only "Uvolnit STOP" releases it');
+      await page.click('#stop');
+      await page.waitForTimeout(400);
+      ok((await tqv()).every((v) => v === 0), 'wizard: 2nd STOP disables torque on all servos');
+      await page.click('#stop-release');
+      ok(!(await page.isVisible('#stop-release')) && !(await page.isDisabled('#t-torque')), 'wizard: released STOP, torque can be switched on again');
       ok(!errors.length, 'wizard: no console errors ' + errors.join(' | '));
       await page.context().close();
     }
@@ -249,9 +279,35 @@ async function diag(page) {
       await page.click('#cal-save');
       await page.waitForSelector('.step[data-step="test"]:not([hidden])', { timeout: 10000 });
       await idle(page);
+      // SR-13/19: no torque, no motion without the arming checklist, and only on allow-listed firmware
+      ok(await page.isDisabled('#t-torque'), 'serial: "Zapnout moment" locked until motion is armed');
+      ok(/jen čtení \(shadow\)/.test(await page.textContent('#armed-bar')), 'serial: banner says read-only (shadow) while disarmed');
+      ok(await page.isDisabled('#arm-go'), 'serial: "Aktivovat pohyb" locked until all four checklist items are ticked');
+      for (const c of await page.$$('#arm-checks input')) await c.check();
+      await page.click('#arm-go');
+      await page.waitForFunction(() => /není na seznamu/.test(document.getElementById('arm-msg').textContent), null, { timeout: 5000 });
+      const st0 = await state(page);
+      ok(!st0.perm.armed && st0.fw && st0.fw.reason === 'allow_list_empty' && /3\.10/.test(await page.textContent('#arm-msg')),
+        'serial SR-19: firmware 3.10 not on the (empty) allow-list -> stays shadow, version named');
+      await page.evaluate(() => window.__wiz.setFirmwareAllow([window.__wiz.EMULATED_FIRMWARE]));
+      // teacher profile: 20 °/s, slider capped
+      await arm(page, 'teacher');
+      const tst = await state(page);
+      ok(tst.speed === 20 && await page.evaluate(() => +document.getElementById('t-speed').max) === 20, 'serial: teacher profile caps the speed at 20 °/s');
+      ok(/POHYB POVOLEN · učitelský režim · zbývá [345]:\d\d/.test(await page.textContent('#armed-bar')), 'serial: armed banner with profile and countdown (' + await page.textContent('#armed-bar') + ')');
+      ok((await page.title()).startsWith('● REAL'), 'serial: page title marked ● REAL while armed');
+      ok(await page.isDisabled('input[name=profile][value="owner"]'), 'serial: profile cannot change while armed');
+      // STOP while armed but unpowered disarms; release, re-arm as owner
+      await page.click('#stop'); await idle(page); await page.waitForTimeout(200);
+      ok(!(await state(page)).perm.armed, 'serial: STOP withdraws the motion permission');
+      await page.click('#stop-release');
+      await arm(page, 'owner');
+      ok(await page.evaluate(() => +document.getElementById('t-speed').max) === 60, 'serial SR-7: owner speed slider stops at 60 °/s');
+      await page.evaluate(() => { const i = document.getElementById('t-speed'); i.max = 90; i.value = 90; i.dispatchEvent(new Event('input')); });
+      ok((await state(page)).speed === 60, 'serial SR-7: a forged 90 °/s slider value is clamped to 60');
+      await page.evaluate(() => { const i = document.getElementById('t-speed'); i.value = 30; i.dispatchEvent(new Event('input')); });
       const before = await page.evaluate(() => window.__fake.servos.map((s) => s.reg('Present_Position')));
-      await page.click('#t-torque');
-      await page.waitForFunction(() => window.__wiz.state().torque, null, { timeout: 10000 });
+      await torqueOn(page);
       await page.waitForTimeout(500);
       const after = await page.evaluate(() => window.__fake.servos.map((s) => s.reg('Present_Position')));
       ok(after.every((p, i) => Math.abs(p - before[i]) <= 2), 'serial: enabling torque does not move the arm (goal = present first)');
@@ -268,12 +324,78 @@ async function diag(page) {
       const max = await page.evaluate(() => +document.getElementById('t-shoulder_pan').max);
       const cal = (await state(page)).cal.shoulder_pan;
       ok(max < (cal.range_max - cal.range_min) / 2 * 360 / 4095, 'serial: slider range is inside the calibrated range (margin)');
+      // SR-6 stage one during motion: Esc = HOLD (goal := present on 1–5, gripper released), measured T1
+      await page.evaluate(() => window.__wiz.advance(0.3));
       await page.keyboard.press('Escape');
+      await idle(page); await page.waitForTimeout(300);
+      const hs = await state(page);
+      const tqH = await fakeTorque(page);
+      const gp = await page.evaluate(() => window.__fake.servos.map((s) => [s.reg('Goal_Position'), s.reg('Present_Position')]));
+      ok(tqH.join() === '1,1,1,1,1,0', 'serial SR-6: Esc = HOLD, joints 1–5 keep torque, gripper torque off (' + tqH + ')');
+      ok(gp.slice(0, 5).every(([g, p]) => Math.abs(g - p) <= 2), 'serial SR-6: hold writes goal := present on joints 1–5');
+      ok(hs.latch === 'hold' && hs.lastStop && hs.lastStop.stage === 'hold' && hs.lastStop.ok, 'serial SR-6: hold latched and verified by read-back');
+      ok(hs.lastStop.t1Ms != null && hs.lastStop.t1Ms < 30, `serial SR-15: STOP T1 keydown -> emergency write ${hs.lastStop.t1Ms && hs.lastStop.t1Ms.toFixed(1)} ms (< 30 ms)`);
+      ok(/ruka drží, chapadlo uvolněno/.test(await page.textContent('#alert')), 'serial SR-6: banner "STOP: ruka drží, chapadlo uvolněno"');
+      const pan0 = await page.evaluate(() => window.__fake.servos[0].reg('Present_Position'));
+      await page.evaluate(() => window.__wiz.advance(1)); await page.waitForTimeout(300);
+      const pan1 = await page.evaluate(() => window.__fake.servos[0].reg('Present_Position'));
+      ok(Math.abs(pan1 - pan0) <= 2, 'serial SR-6: nothing streams while the STOP is latched (base stays put)');
+      ok(await page.isDisabled('#t-torque'), 'serial: torque-on locked while STOP is latched');
+      // stage two: Esc again = LIMP
+      await page.keyboard.press('Escape');
+      await idle(page); await page.waitForTimeout(400);
+      ok((await fakeTorque(page)).every((v) => v === 0), 'serial SR-6: 2nd Esc = torque off on all servos');
+      ok(/bez síly/.test(await page.textContent('#alert')), 'serial SR-6: limp banner says the arm has no torque');
+      await page.click('#stop-release');
+      const rel = await state(page);
+      ok(rel.latch === null && !rel.perm.armed && await page.isDisabled('#t-torque'), 'serial: "Uvolnit STOP" clears the latch but needs a fresh arming');
+      // press-and-hold STOP for 1 s = limp
+      await arm(page);
+      await torqueOn(page);
+      await idle(page);
+      const box = await page.locator('#stop').boundingBox();
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
       await page.waitForTimeout(400);
-      const tq = await page.evaluate(() => window.__fake.servos.map((s) => s.mem[40]));
-      ok(tq.every((v) => v === 0), 'serial: Esc = STOP, torque off on all servos');
-      const torqueOf = () => page.evaluate(() => window.__fake.servos.map((s) => s.mem[40]));
+      const mid = await fakeTorque(page);
+      await page.waitForTimeout(900);
+      await page.mouse.up();
+      await idle(page); await page.waitForTimeout(300);
+      ok(mid.join() === '1,1,1,1,1,0' && (await fakeTorque(page)).every((v) => v === 0), 'serial SR-6: STOP held 1 s = hold first, then limp (' + mid + ')');
+      await page.click('#stop-release');
+      // Space while moving = STOP (hold)
+      await arm(page);
+      await torqueOn(page);
+      await idle(page);
+      await page.keyboard.press('Space');
+      await idle(page); await page.waitForTimeout(300);
+      ok((await state(page)).latch === 'hold' && (await fakeTorque(page)).join() === '1,1,1,1,1,0', 'serial SR-6: Space while moving = HOLD');
+      await page.click('#stop-release');
+      // SR-12 hidden tab: HOLD + disarm, not limp, not latched
+      await arm(page);
+      await torqueOn(page);
+      await idle(page);
+      await page.evaluate(() => { Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' }); document.dispatchEvent(new Event('visibilitychange')); });
+      await idle(page); await page.waitForTimeout(300);
+      const hid = await state(page);
+      if (!hid.held || hid.perm.armed) console.log('hidden state:', JSON.stringify({ ...hid, cal: 0, live: 0 }), await page.textContent('#alert'), await fakeTorque(page));
+      ok((await fakeTorque(page)).join() === '1,1,1,1,1,0' && hid.held && !hid.torque, 'serial SR-12: hidden tab = HOLD (not limp)');
+      ok(!hid.perm.armed && hid.latch === null && /pozadí/.test(await page.textContent('#alert')), 'serial SR-12: hidden tab disarms (permission withdrawn), banner explains');
+      await page.evaluate(() => { Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' }); });
+      // SR-13 permission expiry while moving: idle 3 min -> hold + disarm; renewed by motion up to 10 min
+      await arm(page);
+      await torqueOn(page);
+      await idle(page);
+      const touch = () => page.evaluate(() => { const i = document.getElementById('t-elbow_flex'); i.value = +i.value + 0.5; i.dispatchEvent(new Event('input')); });
+      for (let m = 0; m < 6; m++) { await page.evaluate(() => window.__wiz.skip(2 * 60e3)); await touch(); }
+      ok((await state(page)).perm.armed, 'serial SR-13: motions renew the permission past its first 10 min (12 min)');
+      await page.evaluate(() => window.__wiz.skip(3 * 60e3 + 500));
+      await idle(page); await page.waitForTimeout(300);
+      const ex = await state(page);
+      ok(!ex.perm.armed && ex.perm.reason === 'idle' && ex.held && (await fakeTorque(page)).join() === '1,1,1,1,1,0', 'serial SR-13: 3 min without motion -> disarmed and held (' + ex.perm.reason + ')');
+      ok(/3 minuty bez pohybu/.test(await page.textContent('#alert')) && await page.isDisabled('#t-torque'), 'serial SR-13: expiry banner, checklist needed again');
       // B1: STOP pressed while torque is being switched on must win
+      await arm(page);
       await idle(page);
       await page.evaluate(() => { window.__fakeDelay = 25; });
       await page.click('#t-torque');
@@ -281,12 +403,13 @@ async function diag(page) {
       await page.keyboard.press('Escape');
       await idle(page);
       await page.waitForTimeout(600);
-      ok((await torqueOf()).every((v) => v === 0) && !(await state(page)).torque, 'serial B1: STOP during torque-on wins (all servos off, UI off)');
+      ok((await fakeTorque(page)).every((v) => v === 0) && !(await state(page)).torque, 'serial B1: STOP during torque-on wins (all servos off, UI off)');
       ok(/Zapnout|Znovu/.test(await page.textContent('#t-torque')), 'serial B1: button offers to switch torque on again');
       // B2: the port stops taking data while the arm is powered -> STOP must not hang
       await page.evaluate(() => { window.__fakeDelay = 0; });
-      await page.click('#t-torque');
-      await page.waitForFunction(() => window.__wiz.state().torque, null, { timeout: 10000 });
+      await page.click('#stop-release');
+      await arm(page);
+      await torqueOn(page);
       await idle(page);
       await page.evaluate(() => { window.__fakeHang = true; });
       await page.click('#stop');

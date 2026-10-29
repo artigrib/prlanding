@@ -9,6 +9,7 @@ import { VirtualArm } from '../lib/sts3215-emu.js';
 import { VARIANTS } from '../lib/variants.js';
 import { VirtualTransport, SerialTransport, hasWebSerial } from '../lib/transport.js';
 import * as S from '../lib/so101-setup.js';
+import * as SF from '../lib/safety.js';
 
 const $ = (id) => document.getElementById(id);
 const TEST = new URLSearchParams(location.search).get('test') === '1';
@@ -30,8 +31,19 @@ const st = {
   stopGen: 0,          // incremented by every STOP; long operations abort when it changes
   lost: false,         // port gone or wedged: nothing can be sent any more
   units: null,         // Goal_Velocity unit per servo (°/s), from configureFollower
-  prep: null           // promise: torque off + configure, started when calibration opens
+  prep: null,          // promise: torque off + configure, started when calibration opens
+  held: false,         // stage-one STOP / fault hold: joints 1–5 hold their pose, nothing streams
+  liveAt: 0,           // performance.now() of the last successful register poll
+  lastGoals: null,     // Map id -> raw Goal_Position last handed to the port
+  lastStop: null,      // {stage, t1Ms, ok, reason}: shown to the tests (SR-15 T1)
+  fw: null             // SR-19 firmware check result of the last arming attempt
 };
+// Safety clocks. Test mode can skip time (__wiz.skip) to check expiry without waiting 10 minutes.
+let clockSkew = 0;
+const wall = () => Date.now() + clockSkew;
+const latch = new SF.StopLatch({ now: () => performance.now() });
+const perm = new SF.MotionPermission({ now: wall });
+let fwAllow = SF.FIRMWARE_ALLOW;      // test mode may allow the emulator's version (__wiz.setFirmwareAllow)
 let sim = null, arm = null, transport = null, bus = null;
 
 // ---------- 3D ----------
@@ -62,7 +74,7 @@ simReady.then(() => { $('v-connect').disabled = false; }).catch((e) => {
 // ---------- steps ----------
 const STEPS = ['port', 'ids', 'cal', 'test'];
 function show(step) {
-  if (st.step === 'test' && step !== 'test' && st.torque) {
+  if (st.step === 'test' && step !== 'test' && (st.torque || st.held)) {
     // never cut torque silently: the arm is released and can drop
     if (st.mode === 'real' && !confirm('Moment se vypne a ruka se uvolní – může klesnout. Přidržte ji rukou. Pokračovat?')) return;
     torqueOff();
@@ -156,6 +168,7 @@ function connected(mode) {
   renderFaults();
   startPoll();
   if (mode === 'real') {
+    applySpeedUi(); updateArmUi();
     $('t-home').innerHTML = 'Do středu <span aria-hidden="true">⌂</span>';
     $('t-home').title = 'Všech šest kloubů najednou pojede do středu kalibrovaného rozsahu (rychlostním limitem).';
     // no WebGL: drive the goal stream from our own frame loop
@@ -335,7 +348,7 @@ function enterTest() {
     const w = document.createElement('div'); w.className = 'jn' + (m.name === 'gripper' ? ' grip' : '');
     w.innerHTML = `<label for="t-${m.name}">${JOINTS[i].label}</label><output></output><input type="range" id="t-${m.name}" min="${lo}" max="${hi}" step="any">`;
     const input = w.querySelector('input'), out = w.querySelector('output');
-    input.addEventListener('input', () => { st.demo = null; if (st.targets) st.targets[i] = +input.value; });
+    input.addEventListener('input', () => { st.demo = null; if (st.targets) { st.targets[i] = +input.value; perm.touch(); } });
     $('tj').appendChild(w);
     return { input, out, lo, hi, name: m.name };
   });
@@ -361,7 +374,9 @@ $('t-torque').addEventListener('click', () => task(async () => {
     if (st.mode === 'real' && !confirm('Vypnutí momentu ruku uvolní – může klesnout. Držíte ji?')) return;
     return torqueOff();
   }
-  const gen = st.stopGen, abort = () => st.stopGen !== gen || st.lost;
+  if (latch.latched) { msg($('t-msg'), 'STOP je aktivní. Nejdřív stiskněte „Uvolnit STOP“.', 'warn'); return; }
+  if (st.mode === 'real' && !permOk()) { msg($('t-msg'), 'Pohyb není povolený. Projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.', 'warn'); updateTorqueUi(); return; }
+  const gen = st.stopGen, abort = () => st.stopGen !== gen || st.lost || (st.mode === 'real' && !perm.armed);
   try {
     const cfg = await S.configureFollower(bus, { ...cfgOpts(), abort });
     st.units = cfg.units;
@@ -371,21 +386,23 @@ $('t-torque').addEventListener('click', () => task(async () => {
     // the rate limiter then walks it into the allowed range, so nothing jumps over the safety margin.
     st.cmd = S.MOTORS.map((m) => S.normalize(m.name, st.cal[m.name], goals.get(m.id)));
     st.targets = st.cmd.map((v, i) => clampT(i, v));
-    st.sent = null;
-    st.torque = true; st.stopped = false;
+    st.sent = null; st.lastGoals = goals;
+    st.torque = true; st.stopped = false; st.held = false;
+    perm.touch();
   } catch (e) {
     st.torque = false; st.targets = null; updateTorqueUi();
     if (e.code === 'aborted') { msg($('t-msg'), 'Zapínání momentu přerušil STOP, moment je vypnutý.', 'warn'); return; }
     throw e;
   }
   updateTorqueUi();
-  msg($('t-msg'), st.mode === 'real' ? 'Moment zapnutý. Pohybujte pomalu, STOP nebo Esc ho kdykoli vypne (ruka se pak uvolní).' : 'Moment zapnutý. Posuňte klouby nebo spusťte misi.', 'ok');
+  msg($('t-msg'), st.mode === 'real' ? 'Moment zapnutý. Pohybujte pomalu. STOP, Esc nebo mezerník ruku zastaví a podrží; druhý STOP vypne moment.' : 'Moment zapnutý. Posuňte klouby nebo spusťte misi.', 'ok');
 }, $('t-msg')));
 
 /** Normal torque off (not STOP): verified by read-back; the UI follows what the servos report. */
 async function torqueOff() {
   st.demo = null; st.targets = null;
   const r = await S.disableTorque(bus);
+  if (r.ok) st.held = false;
   st.torque = !r.ok;                      // not confirmed -> still treat as powered (button offers another try)
   if (r.ok) { msg($('t-msg'), 'Moment vypnutý (ověřeno čtením). Ruka se uvolnila.'); alertBox(null); }
   else alertBox(`Servo ${r.unconfirmed.join(', ')} nepotvrdilo vypnutí momentu. Stiskněte STOP, případně vypněte napájení serv.`, 'err');
@@ -394,15 +411,19 @@ async function torqueOff() {
 }
 
 function updateTorqueUi() {
-  $('t-torque').textContent = st.torque ? 'Vypnout moment' : (st.stopped ? 'Znovu zapnout moment' : 'Zapnout moment');
+  $('t-torque').textContent = st.torque ? 'Vypnout moment' : (st.stopped || st.held ? 'Znovu zapnout moment' : 'Zapnout moment');
   $('t-torque').classList.toggle('btn-act', !st.torque);
   $('t-torque').classList.toggle('btn-o', st.torque);
+  // switching torque off is always allowed; switching it on needs no STOP latch and, on the real arm, a valid permission
+  $('t-torque').disabled = !st.torque && (latch.latched || st.lost || (st.mode === 'real' && !perm.armed));
   $('tj').disabled = !st.torque;
   $('t-home').disabled = !st.torque;
   $('t-mission').disabled = !st.torque || st.mode !== 'virtual';
+  $('stop-release').hidden = !latch.latched || st.lost;
+  updateArmUi();
 }
 
-$('t-home').addEventListener('click', () => { if (!st.targets) return; st.demo = null; st.targets = homeTargets(); });
+$('t-home').addEventListener('click', () => { if (!st.targets) return; st.demo = null; st.targets = homeTargets(); perm.touch(); });
 $('t-mission').addEventListener('click', () => {
   if (!st.torque || st.mode !== 'virtual') return;
   $('win').hidden = true; sim.won = false; sim.inBowl = 0;
@@ -416,37 +437,100 @@ $('t-reset').addEventListener('click', () => {
 });
 $('again').addEventListener('click', () => { $('win').hidden = true; });
 $('t-speed').addEventListener('input', () => {
-  st.speed = +$('t-speed').value; $('t-speed-o').textContent = st.speed + ' °/s';
+  // SR-7: never above the profile cap (owner 60 °/s, teacher 20 °/s), whatever the slider says
+  st.speed = SF.clampSpeed(+$('t-speed').value, perm.profile || selectedProfile());
+  $('t-speed').value = st.speed;
+  $('t-speed-o').textContent = st.speed + ' °/s';
   if (bus && st.units && !st.lost) S.setSpeedCap(bus, st.speed, st.units).catch((e) => console.error(e));
 });
 
-// ---------- STOP ----------
-// STOP is never queued behind other work: S.stopAll first writes a broadcast torque-off straight to
-// the port (bypassing the transaction queue), then verifies every servo by reading Torque_Enable.
-async function stop(reason) {
-  if (!bus || st.lost) return;
-  st.stopGen++;                                  // aborts a torque-on / configure in progress (B1)
-  st.demo = null; st.torque = false; st.stopped = true; st.targets = null;
+// ---------- STOP (two-stage, SR-6) ----------
+// 1st press (STOP button, Esc, Space while the arm moves) = HOLD: Goal_Position := present position on
+// joints 1–5 written straight to the port (bypassing the transaction queue) and gripper torque off,
+// so a pinched finger comes free and nothing falls. Then read back and say so.
+// 2nd press, or holding STOP / Esc for 1 s = LIMP: broadcast torque off ×3 + read-back (S.stopAll).
+// The latch stays until "Uvolnit STOP" (an explicit action in this page); on the real arm releasing
+// also needs a fresh "Aktivovat pohyb". Faults (hidden tab, expiry, port trouble) hold, never limp.
+let stopSeq = 0, longTimer = null, keyDown = null;
+
+/** Freshest raw positions of joints 1–5: a poll younger than 150 ms, else the last commanded goals. */
+function lastKnownGoals() {
+  const fresh = performance.now() - st.liveAt <= 150 && S.ARM_IDS.every((id) => st.live[id] && Number.isInteger(st.live[id].position));
+  return fresh ? new Map(S.ARM_IDS.map((id) => [id, st.live[id].position])) : st.lastGoals;
+}
+/** Stop everything that streams goals or runs a long operation. */
+function freeze() { st.stopGen++; st.demo = null; st.targets = null; st.torque = false; }
+
+async function portDead() {
+  try { await transport.forceClose(); } catch (e) {}
+  lost('STOP se NEPODAŘILO odeslat – port neodpovídá, spojení jsme zavřeli. Serva mohou mít zapnutý moment: okamžitě vypněte napájení serv.');
+}
+
+/** HOLD. `latched` = a human STOP press (banner offers the second stage); otherwise a fault hold. */
+async function hold(reason, { t0 = performance.now(), latched = false } = {}) {
+  if (!bus || st.lost) return null;
+  const seq = ++stopSeq;
+  freeze(); st.held = true; st.stopped = true;
+  updateTorqueUi();
+  let r;
+  try { r = await S.holdAll(bus, { lastKnown: lastKnownGoals(), t0 }); } catch (e) { console.error(e); r = { wire: false, ok: false }; }
+  st.lastStop = { stage: 'hold', t1Ms: r.t1Ms, ok: r.ok, latched, reason: reason || null };
+  if (seq !== stopSeq) return r;                     // a later STOP (limp) took over meanwhile
+  if (!r.wire && st.mode === 'real') { await portDead(); return r; }
+  if (r.ok) {
+    const text = latched ? 'STOP: ruka drží, chapadlo uvolněno. Znovu STOP = vypnout moment (ruka může klesnout).' : (reason ? reason + ' ' : '') + 'Ruka drží polohu, chapadlo je uvolněné.';
+    alertBox(text, 'warn');
+    msg($('t-msg'), latched ? 'STOP: ruka drží polohu (ověřeno čtením), chapadlo je uvolněné.' : text, 'warn');
+  } else {
+    alertBox('Držení polohy se nepodařilo ověřit. Stiskněte STOP znovu (vypne moment), případně vypněte napájení serv.', 'err');
+    msg($('t-msg'), 'Držení polohy neověřeno.', 'err');
+  }
+  updateTorqueUi();
+  return r;
+}
+
+/** LIMP: torque off on every servo, verified by read-back. Only the second STOP stage does this. */
+async function limp(reason) {
+  if (!bus || st.lost) return null;
+  const seq = ++stopSeq;
+  freeze(); st.stopped = true;
   updateTorqueUi();
   alertBox('STOP: vypínáme moment…', 'warn');
   let r;
   try { r = await S.stopAll(bus); } catch (e) { console.error(e); r = { ok: false, unconfirmed: S.IDS.slice(), wire: false }; }
-  st.torque = false; updateTorqueUi();
+  st.lastStop = { stage: 'limp', ok: r.ok, reason: reason || null };
+  if (seq !== stopSeq) return r;
+  st.torque = false; if (r.ok) st.held = false;
   if (r.ok) {
-    alertBox(reason ? reason + ' Moment je vypnutý (ověřeno čtením), ruka se uvolnila.' : null, 'warn');
+    alertBox((reason ? reason + ' ' : '') + 'Moment vypnutý – ruka je bez síly, přidržte ji.', 'warn');
     msg($('t-msg'), 'STOP: moment všech serv je vypnutý (ověřeno čtením). Ruka se uvolnila.', 'warn');
   } else if (!r.wire && st.mode === 'real') {
-    // the port does not take data any more: close it and say what that means
-    try { await transport.forceClose(); } catch (e) {}
-    lost('STOP se NEPODAŘILO odeslat – port neodpovídá, spojení jsme zavřeli. Serva mohou mít zapnutý moment: okamžitě vypněte napájení serv.');
+    await portDead();                              // the port does not take data any more
   } else {
     alertBox(`STOP neověřen: servo ${r.unconfirmed.join(', ')} nepotvrdilo vypnutí momentu. Vypněte napájení serv.`, 'err');
     msg($('t-msg'), 'STOP neověřen.', 'err');
   }
+  updateTorqueUi();
+  return r;
 }
+
+/** One human STOP press: hold first, limp on the next press. */
+function stopPress(t0 = performance.now()) {
+  if (!bus || st.lost) return;
+  const action = latch.press();
+  if (st.mode === 'real') disarm('stop', false);
+  if (action === 'hold') hold(null, { t0, latched: true }); else limp(null);
+}
+function longPressStart() {
+  clearTimeout(longTimer);
+  longTimer = setTimeout(() => { longTimer = null; if (latch.state === 'hold') { latch.holdLong(); limp(null); } }, SF.LIMP_HOLD_MS);
+}
+function longPressEnd() { clearTimeout(longTimer); longTimer = null; }
+
 /** The connection is gone (unplugged or wedged): nothing can be sent. Say so plainly. */
 function lost(text) {
   st.lost = true; st.pollOn = false; st.torque = false; st.targets = null; st.demo = null; st.stopGen++;
+  perm.disarm('lost'); longPressEnd();
   updateTorqueUi();
   $('stop').disabled = true;
   $('stop').querySelector('.stop-t').textContent = 'nelze odeslat';
@@ -455,15 +539,135 @@ function lost(text) {
   msg($('t-msg'), text, 'err');
   document.body.classList.add('lost');
 }
-$('stop').addEventListener('click', () => stop());
-addEventListener('keydown', (e) => { if (e.key === 'Escape' && bus) stop(); });
-// leaving / hiding the page with a powered real arm: stop (the arm is released, see the beta warning)
-const realPowered = () => st.mode === 'real' && !st.lost && (st.torque || Object.values(st.live).some((l) => l && l.torque === 1));
-addEventListener('beforeunload', (e) => { if (realPowered()) { e.preventDefault(); e.returnValue = ''; } });
-addEventListener('pagehide', () => { if (st.mode === 'real' && bus && !st.lost) stop(); });
-addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden' && realPowered()) stop('Karta přešla na pozadí, proto jsme stiskli STOP.');
+
+// pointer: act on pointerdown (no click delay); keep the button pressed 1 s = limp
+$('stop').addEventListener('pointerdown', (e) => { if (e.button !== 0) return; stopPress(performance.now()); longPressStart(); });
+for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) $('stop').addEventListener(ev, longPressEnd);
+$('stop').addEventListener('click', (e) => { if (e.detail === 0) stopPress(); });   // keyboard activation only
+addEventListener('keydown', (e) => {
+  if (!bus || st.lost) return;
+  const esc = e.key === 'Escape', space = e.code === 'Space' || e.key === ' ';
+  if (!esc && !space) return;
+  // Space is a STOP key only while the arm moves (or as the 2nd press within 2 s); otherwise it keeps
+  // its normal meaning (tick a checkbox, press a button)
+  if (space && keyDown !== 'space' && !latch.spaceIsStop(st.torque)) return;
+  e.preventDefault();
+  if (e.repeat || keyDown) return;
+  keyDown = esc ? 'esc' : 'space';
+  stopPress(performance.now()); longPressStart();
 });
+addEventListener('keyup', (e) => {
+  if ((keyDown === 'esc' && e.key === 'Escape') || (keyDown === 'space' && (e.code === 'Space' || e.key === ' '))) { keyDown = null; longPressEnd(); }
+});
+addEventListener('blur', () => { keyDown = null; longPressEnd(); });
+
+$('stop-release').addEventListener('click', () => {
+  if (!latch.latched || st.lost) return;
+  latch.release();
+  alertBox(null);
+  const pose = st.held ? 'Ruka dál drží polohu.' : 'Moment je vypnutý.';
+  if (st.mode === 'real') { disarm('stop', false); msg($('t-msg'), `STOP uvolněn. ${pose} Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.`, 'ok'); }
+  else msg($('t-msg'), `STOP uvolněn. ${pose} Řízení zapnete tlačítkem „Znovu zapnout moment“.`, 'ok');
+  updateTorqueUi();
+});
+
+// leaving / hiding the page with a real arm: HOLD + disarm (never limp: a limp arm drops while nobody watches)
+const realPowered = () => st.mode === 'real' && !st.lost && (st.torque || st.held || Object.values(st.live).some((l) => l && l.torque === 1));
+addEventListener('beforeunload', (e) => { if (realPowered()) { e.preventDefault(); e.returnValue = ''; } });
+addEventListener('pagehide', () => {
+  if (st.mode !== 'real' || !bus || st.lost) return;
+  const powered = realPowered();
+  disarm('hidden', false);
+  if (powered) hold('Stránka se zavírá.');
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'hidden' || st.mode !== 'real' || !bus || st.lost) return;
+  const was = perm.armed, powered = realPowered();
+  disarm('hidden', false);
+  if (powered) hold('Karta přešla na pozadí – pohyb je zakázaný, po návratu ho znovu aktivujte.');
+  else if (was) alertBox(REASON.hidden, 'warn');
+});
+
+// ---------- motion permission (SR-13/14/16/19, real arm only) ----------
+const REASON = {
+  expired: 'Povolení pohybu vypršelo.',
+  idle: 'Povolení pohybu vypršelo: 3 minuty bez pohybu.',
+  session: 'Relace dosáhla maximální délky – teď 5 minut pauza, ruka je jen pro čtení.',
+  hidden: 'Karta přešla na pozadí, povolení pohybu jsme zrušili.',
+  stop: '',
+  lost: ''
+};
+const selectedProfile = () => (document.querySelector('input[name=profile]:checked') || {}).value || 'owner';
+const armChecks = () => [...document.querySelectorAll('#arm-checks input')];
+const armReady = () => armChecks().every((c) => c.checked);
+armChecks().forEach((c) => c.addEventListener('change', updateArmUi));
+document.querySelectorAll('input[name=profile]').forEach((r) => r.addEventListener('change', () => {
+  if (perm.armed) return;                         // the profile cannot change while armed (SR-16)
+  st.speed = SF.PROFILES[selectedProfile()].defaultSpeed; applySpeedUi(); updateArmUi();
+}));
+function applySpeedUi() {
+  const p = SF.PROFILES[perm.profile || selectedProfile()];
+  $('t-speed').max = p.maxSpeed;
+  st.speed = SF.clampSpeed(st.speed, p.id);
+  $('t-speed').value = st.speed; $('t-speed-o').textContent = st.speed + ' °/s';
+}
+
+/** Withdraw the permission; with `doHold` a streaming / powered arm is held (fault response, SR-17). */
+function disarm(reason, doHold = true, wasArmed = perm.armed) {
+  perm.disarm(reason);
+  armChecks().forEach((c) => { c.checked = false; });
+  if (wasArmed) say(REASON[reason] || 'Pohyb už není povolený.');
+  if (wasArmed && doHold && realPowered()) hold(REASON[reason] || '');
+  else if (wasArmed && REASON[reason]) alertBox(REASON[reason], 'warn');
+  updateTorqueUi();
+}
+/** Check the permission now; on expiry run the fault response. */
+function permOk() {
+  if (!perm.armed) return false;
+  const c = perm.check();
+  if (!c.ok) disarm(c.reason, true, true);
+  return c.ok;
+}
+function safetyTick() { if (st.mode === 'real' && !st.lost) { permOk(); updateArmUi(); } }
+setInterval(safetyTick, 250);
+
+$('arm-go').addEventListener('click', () => task(async () => {
+  if (st.mode !== 'real' || !armReady() || latch.latched || st.lost || perm.armed) return;
+  const can = perm.canArm();
+  if (!can.ok) { msg($('arm-msg'), `Pauza po dlouhé relaci: pohyb půjde aktivovat za ${SF.fmtLeft(can.leftMs)}.`, 'warn'); return; }
+  msg($('arm-msg'), 'Čteme verzi firmwaru serv…');
+  st.fw = SF.checkFirmware(await S.readFirmware(bus), fwAllow);
+  if (!st.fw.ok) {
+    const vers = [...new Set(st.fw.unknown.map((u) => u.version))].join(', ');
+    msg($('arm-msg'), st.fw.missing.length ? `Servo ${st.fw.missing.join(', ')} neodpovídá – pohyb nepovolíme.`
+      : `Firmware serv ${vers} zatím není na seznamu ověřených verzí. Skutečná ruka zůstane jen pro čtení (shadow).`, 'err');
+    return;
+  }
+  perm.arm(selectedProfile());
+  applySpeedUi();
+  if (st.units) await S.setSpeedCap(bus, st.speed, st.units);
+  msg($('arm-msg'), 'Pohyb povolen. Teď můžete zapnout moment.', 'ok');
+  updateTorqueUi();
+}, $('arm-msg')));
+
+const baseTitle = () => document.title.replace(/^● REAL /, '');
+function updateArmUi() {
+  const real = st.mode === 'real';
+  $('arm-go').disabled = !real || perm.armed || !armReady() || latch.latched || st.lost;
+  $('arm-profile').disabled = perm.armed;
+  armChecks().forEach((c) => { c.disabled = perm.armed; });
+  document.body.classList.toggle('armed', real && perm.armed && !st.lost);
+  const bar = $('armed-bar');
+  bar.hidden = !real || st.lost;
+  if (!real) return;
+  const s = perm.status();
+  const text = s.armed ? `Skutečná ruka · POHYB POVOLEN · ${s.profile === 'teacher' ? 'učitelský režim' : 'režim vlastníka'} · zbývá ${SF.fmtLeft(s.leftMs)}`
+    : s.cooldownLeftMs ? `Skutečná ruka · jen čtení (shadow) · pauza ${SF.fmtLeft(s.cooldownLeftMs)}` : 'Skutečná ruka · jen čtení (shadow)';
+  if (bar.textContent !== text) bar.textContent = text;
+  bar.classList.toggle('off', !s.armed);
+  const title = (s.armed && !st.lost ? '● REAL ' : '') + baseTitle();
+  if (document.title !== title) document.title = title;
+}
 
 // ---------- per-frame ----------
 const maxRate = () => (st.mode === 'real' ? st.speed : 150);   // °/s (and %/s for the gripper)
@@ -487,7 +691,7 @@ function frame(dt) {
     if (!q) { st.demo = null; } else q.forEach((v, i) => { st.targets[i] = clampT(i, qToNorm(i, v)); });
   }
   // rate-limited goal stream (both modes)
-  if (st.torque && st.targets && st.cmd && bus) {
+  if (st.torque && st.targets && st.cmd && bus && !latch.latched && (st.mode !== 'real' || perm.armed)) {
     const r = maxRate() * dt;
     let changed = false;
     for (let i = 0; i < N; i++) {
@@ -502,8 +706,8 @@ function frame(dt) {
       if (key !== st.sent) {
         st.sending = true; lastSend = now;
         bus.syncWriteReg('Goal_Position', goals)
-          .then(() => { st.sent = key; })
-          .catch((e) => { console.error(e); if (st.mode === 'real') stop('Zápis cíle na port selhal.'); })
+          .then(() => { st.sent = key; st.lastGoals = goals; })
+          .catch((e) => { console.error(e); if (st.mode === 'real') hold('Zápis cíle na port selhal.'); })
           .finally(() => { st.sending = false; });
       }
     }
@@ -534,7 +738,7 @@ function startPoll() {
         try { await pollOnce(); } catch (e) {
           if (st.lost) break;
           // the port stopped taking data: treat it like a STOP (which closes a wedged port)
-          if (st.mode === 'real' && (e.code === 'timeout' || e.code === 'closed')) { stop('Port přestal přijímat data.'); break; }
+          if (st.mode === 'real' && (e.code === 'timeout' || e.code === 'closed')) { hold('Port přestal přijímat data.'); break; }
           console.error(e);
         }
       }
@@ -561,8 +765,9 @@ async function pollOnce() {
       torque: tq.get(id).comm === 'ok' ? tq.get(id).data[0] : null
     };
   }
+  st.liveAt = performance.now();
   // UI follows the servos: torque on although we think it is off -> say so (real arm)
-  if (st.mode === 'real' && !st.torque && !st.busy) {
+  if (st.mode === 'real' && !st.torque && !st.held && !st.busy) {
     const on = S.IDS.filter((id) => st.live[id].torque === 1);
     if (on.length) alertBox(`Servo ${on.join(', ')} hlásí zapnutý moment. Stiskněte STOP.`, 'err');
   }
@@ -643,7 +848,13 @@ show('port');
 if (TEST) {
   window.__wiz = {
     ready: () => simReady.then(() => true),
-    state: () => ({ step: st.step, mode: st.mode, torque: st.torque, cal: st.cal, live: st.live, won: sim && sim.won, idDone: st.idDone.size, busy: st.busy, sweep: !!st.sweep, demo: !!st.demo }),
+    state: () => ({ step: st.step, mode: st.mode, torque: st.torque, cal: st.cal, live: st.live, won: sim && sim.won, idDone: st.idDone.size, busy: st.busy, sweep: !!st.sweep, demo: !!st.demo,
+      held: st.held, latch: latch.state, lastStop: st.lastStop, speed: st.speed, perm: perm.status(), fw: st.fw }),
+    /** skip the safety wall clock forward (permission expiry, idle, session cap) */
+    skip: (ms) => { clockSkew += ms; safetyTick(); },
+    /** SR-19: allow-list for this page load (tests allow the emulator's 3.10) */
+    setFirmwareAllow: (list) => { fwAllow = list; },
+    EMULATED_FIRMWARE: SF.EMULATED_FIRMWARE,
     /** advance simulated time in 1/30 s slices, letting bus traffic flow between slices */
     advance: async (sec) => {
       for (let t = 0; t < sec; t += 1 / 30) { sim.advance(1 / 30); await sleep(0); }

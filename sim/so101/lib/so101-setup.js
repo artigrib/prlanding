@@ -8,8 +8,9 @@
 // LeRobot: Copyright 2024 The HuggingFace Inc. team, Apache License 2.0 (see ../NOTICE.txt).
 // No DOM here: the wizard and the Node tests both use it.
 
-import { REG, ERR, STS3215_MODEL, BAUD_CODE, SO101_MOTORS, RESOLUTION, BROADCAST_ID, writePacket, decodeReg, fromBytes, decodeSM } from './feetech.js';
+import { REG, ERR, STS3215_MODEL, BAUD_CODE, SO101_MOTORS, RESOLUTION, BROADCAST_ID, writePacket, syncWritePacket, encodeReg, decodeReg, fromBytes, decodeSM } from './feetech.js';
 import { VARIANTS } from './variants.js';
+import { SPEED } from './safety.js';
 
 export const MOTORS = SO101_MOTORS;
 export const IDS = MOTORS.map((m) => m.id);
@@ -113,6 +114,67 @@ export async function stopAll(bus, ids = IDS, { timeoutMs = 1500 } = {}) {
   return { ...r, wire };
 }
 
+export const ARM_IDS = MOTORS.filter((m) => m.name !== 'gripper').map((m) => m.id);   // 1–5
+export const GRIPPER_ID = MOTORS.find((m) => m.name === 'gripper').id;                  // 6
+const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+
+/**
+ * Stage-one STOP (SR-6) = HOLD: the arm keeps its pose, the gripper lets go.
+ * 1) Straight to the wire, bypassing the transaction queue (like stopAll): a Sync Write
+ *    Goal_Position for joints 1–5 (from `lastKnown`, raw positions measured or last commanded, when
+ *    given) and a Sync Write Torque_Enable = 0 for the gripper. Sync writes get no reply, so a packet
+ *    slipped between two queued transactions cannot be mistaken for someone's answer.
+ * 2) Through the queue: read Present_Position of joints 1–5 and write it as Goal_Position (goal :=
+ *    present), switch the gripper off again if it did not confirm, read everything back.
+ * Never switches torque ON: a joint that was limp stays limp. Returns
+ * {wire, t1Ms, ok, goals: Map, torque: Map, gripperOff, timeout?}. `t1Ms` = trigger (`t0`,
+ * performance.now() of the key/click) -> first emergency packet handed to the port (SR-15 T1).
+ */
+export async function holdAll(bus, { lastKnown = null, t0 = nowMs(), timeoutMs = 1500, armIds = ARM_IDS, gripperId = GRIPPER_ID } = {}) {
+  let wire = false, t1Ms = null;
+  const goalsPkt = lastKnown && armIds.every((id) => Number.isInteger(lastKnown.get(id)))
+    ? syncWritePacket(REG.Goal_Position[0], 2, armIds.map((id) => [id, encodeReg('Goal_Position', lastKnown.get(id))])) : null;
+  const gripPkt = syncWritePacket(REG.Torque_Enable[0], 1, [[gripperId, [0]]]);
+  for (const pkt of goalsPkt ? [goalsPkt, gripPkt] : [gripPkt]) {
+    try { await bus.emergency(pkt); if (!wire) { wire = true; t1Ms = nowMs() - t0; } } catch (e) { if (!wire) break; }
+  }
+  if (!wire) return { wire, t1Ms, ok: false, goals: new Map(), torque: new Map(), gripperOff: false };
+  const verify = (async () => {
+    // a reply lost to bus noise must not leave a joint un-held: retry the missing ones
+    const goals = new Map();
+    for (let k = 0; k < 3 && goals.size < armIds.length; k++) {
+      const pos = await bus.syncReadReg('Present_Position', armIds.filter((id) => !goals.has(id)));
+      for (const [id, r] of pos) if (isOk(r)) goals.set(id, r.value);
+    }
+    if (goals.size) await bus.syncWriteReg('Goal_Position', goals);
+    let tq = await readTorque(bus, [...armIds, gripperId]);
+    for (let k = 0; k < 3 && tq.get(gripperId) !== 0; k++) {
+      await bus.syncWrite(REG.Torque_Enable[0], 1, new Map([[gripperId, [0]]]));
+      tq = await readTorque(bus, [gripperId]).then((m) => new Map([...tq, ...m]));
+    }
+    const back = new Map();
+    for (let k = 0; k < 3 && back.size < goals.size; k++) {
+      const r = await bus.syncReadReg('Goal_Position', [...goals.keys()].filter((id) => !back.has(id)));
+      for (const [id, x] of r) if (isOk(x)) back.set(id, x.value);
+    }
+    const goalsOk = [...goals].every(([id, g]) => back.get(id) === g);
+    const gripperOff = tq.get(gripperId) === 0;
+    return { ok: goals.size === armIds.length && goalsOk && gripperOff, goals, torque: tq, gripperOff };
+  })().catch(() => ({ ok: false, goals: new Map(), torque: new Map(), gripperOff: false }));
+  const deadline = sleep(timeoutMs).then(() => ({ ok: false, goals: new Map(), torque: new Map(), gripperOff: false, timeout: true }));
+  return { wire, t1Ms, ...(await Promise.race([verify, deadline])) };
+}
+
+/** SR-19: firmware and model of each servo: Map id -> {major, minor, model} | null. */
+export async function readFirmware(bus, ids = IDS) {
+  const out = new Map();
+  for (const id of ids) {
+    const r = await bus.read(id, 0, 5);           // Firmware_Major, Firmware_Minor, (2), Model_Number
+    out.set(id, isOk(r) && r.data.length === 5 ? { major: r.data[0], minor: r.data[1], model: fromBytes(r.data, 3, 2) } : null);
+  }
+  return out;
+}
+
 /**
  * Enable torque safely: Goal_Position = Present_Position first (nothing jumps to a stale goal), then
  * Torque_Enable = 1 and Lock = 1 per servo (feetech.enable_torque), then read back.
@@ -186,9 +248,14 @@ export async function configureFollower(bus, { real = false, speedDegS = 0, abor
   return { units };
 }
 
-/** Goal_Velocity backstop for all servos (RAM register). */
+/**
+ * Goal_Velocity backstop for all servos (RAM register): 1.25 × the browser cap, in the unit given by
+ * Phase bit 2 (velocityUnitDeg). TO VERIFY ON BENCH (spec B-5): the unit on real firmware.
+ */
 export async function setSpeedCap(bus, speedDegS, units) {
-  const vals = new Map(MOTORS.map((m) => [m.id, speedDegS > 0 ? Math.min(32767, Math.ceil(speedDegS * 1.25 / units[m.id])) : 0]));
+  // never above the owner maximum (SR-7): a bad caller cannot raise the firmware backstop past 75 °/s
+  const cap = Math.min(speedDegS, SPEED.ownerMax);
+  const vals = new Map(MOTORS.map((m) => [m.id, cap > 0 ? Math.min(32767, Math.ceil(cap * 1.25 / units[m.id])) : 0]));
   await bus.syncWriteReg('Goal_Velocity', vals);
   return vals;
 }

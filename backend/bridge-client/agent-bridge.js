@@ -15,6 +15,15 @@ import { validate } from './validate.js';
 
 export const PROTOCOL = 1;
 export const DEFAULT_URL = 'wss://relay.printedrobotics.cz/tab';
+/**
+ * Real-arm deadman (safety spec SR-12): the relay's own heartbeat (hb 5 s, lost after 3 misses =
+ * 15 s) is fine for the simulator only. A page driving a real arm passes `localDeadmanMs:
+ * REAL_DEADMAN_MS`: the tab then pings every 250 ms and, when nothing at all has arrived for 1 s,
+ * stops the motion (handler.stop -> hold) and calls handler.onLinkLost('deadman'). The socket and
+ * the server-side session are left alone (no protocol change); an aborted motion is never resumed.
+ */
+export const REAL_DEADMAN_MS = 1000;
+export const REAL_PING_MS = 250;
 
 /** Throw this from handler methods to return a structured error to the agent. */
 export class BridgeError extends Error {
@@ -67,6 +76,8 @@ async function toImage(res) {
  * @param {object} [opts.ui]         optional UI hooks: onState, onCode, onPairRequest, onPairCancel, onPaired, onUnpaired, onActivity
  * @param {boolean} [opts.reconnect] reconnect with backoff after a dropped link (default true)
  * @param {object} [opts.client]     {app, ver} reported in hello
+ * @param {number} [opts.localDeadmanMs] real arm: hold when the link is silent this long (0 = off)
+ * @param {number} [opts.pingMs]     real arm: ping period while the deadman runs (default 250)
  */
 export function createAgentBridge(opts) {
   const url = opts.url || DEFAULT_URL;
@@ -74,6 +85,9 @@ export function createAgentBridge(opts) {
   const ui = opts.ui || {};
   const WS = opts.WebSocketImpl || globalThis.WebSocket;
   const reconnect = opts.reconnect !== false;
+  const deadmanMs = Math.max(0, Number(opts.localDeadmanMs) || 0);
+  const pingMs = Math.max(50, Number(opts.pingMs) || REAL_PING_MS);
+  const now = opts.now || (() => Date.now());
   if (!handler) throw new Error('createAgentBridge: handler is required');
 
   let ws = null;
@@ -83,6 +97,7 @@ export function createAgentBridge(opts) {
   let code = null, pending = null, clientName = null;
   const calls = new Map();       // call id -> { ac, tool }
   let motion = null;             // { id, ac, done: Promise }
+  let dmPing = null, dmCheck = null, dmTripped = false;
 
   const emit = (name, arg) => { try { ui[name] && ui[name](arg); } catch (e) { console.error(e); } };
   const setState = (s, info) => { state = s; emit('onState', { state: s, ...info }); };
@@ -125,6 +140,8 @@ export function createAgentBridge(opts) {
     };
     sock.onmessage = (ev) => {
       lastRx = Date.now();
+      dmRx = now();
+      if (dmTripped) { dmTripped = false; emit('onDeadman', { tripped: false }); }
       let m;
       try { m = JSON.parse(ev.data); } catch (e) { return; }
       if (!m || m.v !== PROTOCOL || typeof m.t !== 'string') return;
@@ -134,6 +151,7 @@ export function createAgentBridge(opts) {
       if (ws !== sock) return;
       ws = null;
       stopHeartbeat();
+      stopDeadman();
       linkDown('link_closed');
       if (wanted && reconnect) { setState('offline'); scheduleRetry(); } else setState('idle');
     };
@@ -153,6 +171,7 @@ export function createAgentBridge(opts) {
         // relay silent: treat as lost, stop motion, reconnect
         const s = ws; ws = null;
         stopHeartbeat();
+        stopDeadman();
         linkDown('heartbeat');
         try { s && s.close(4001, 'heartbeat'); } catch (e) { /* ignore */ }
         if (wanted && reconnect) { setState('offline'); scheduleRetry(); } else setState('idle');
@@ -163,11 +182,33 @@ export function createAgentBridge(opts) {
   }
   function stopHeartbeat() { clearInterval(hbTimer); hbTimer = null; }
 
+  // fast local deadman for the real arm (see REAL_DEADMAN_MS); independent of the relay's hb value
+  let dmRx = 0;
+  function startDeadman() {
+    stopDeadman();
+    if (!deadmanMs) return;
+    dmRx = now(); dmTripped = false;
+    dmPing = setInterval(() => send({ t: 'ping' }), pingMs);
+    dmCheck = setInterval(() => {
+      const silent = now() - dmRx;
+      if (dmTripped || silent <= deadmanMs) return;
+      dmTripped = true;
+      for (const c of calls.values()) c.ac.abort('deadman');
+      if (state === 'paired' || motion) {
+        haltMotion('deadman');
+        try { handler.onLinkLost && handler.onLinkLost('deadman'); } catch (e) { console.error(e); }
+      }
+      emit('onDeadman', { tripped: true, silentMs: silent });
+    }, Math.min(50, pingMs));
+  }
+  function stopDeadman() { clearInterval(dmPing); clearInterval(dmCheck); dmPing = dmCheck = null; }
+
   function onMessage(m) {
     switch (m.t) {
       case 'welcome':
         hbSec = Math.max(1, Math.min(60, Number(m.hb) || 5));
         startHeartbeat();
+        startDeadman();
         // falls through
       case 'code':
         code = { code: String(m.code || '').slice(0, 16), expiresAt: Number(m.codeExp) || 0 };
@@ -261,7 +302,7 @@ export function createAgentBridge(opts) {
         if (ac.signal.aborted) {
           const why = ac.signal.reason;
           if (why === 'deadline') throw new BridgeError('TIMEOUT');
-          if (why === 'cancelled' || why === 'link_closed' || why === 'heartbeat' || why === 'unpaired') throw new BridgeError('CANCELLED', { reason: String(why) });
+          if (why === 'cancelled' || why === 'link_closed' || why === 'heartbeat' || why === 'unpaired' || why === 'deadman') throw new BridgeError('CANCELLED', { reason: String(why) });
           // preempted/stopped motions report their own (stopped) status from the handler
         }
         return res;
@@ -298,6 +339,7 @@ export function createAgentBridge(opts) {
       clearTimeout(retryTimer);
       const s = ws; ws = null;
       stopHeartbeat();
+      stopDeadman();
       linkDown('user_disconnect');
       try { s && s.close(1000, 'bye'); } catch (e) { /* ignore */ }
       setState('idle');
@@ -307,6 +349,8 @@ export function createAgentBridge(opts) {
     /** Ask for a fresh pairing code. */
     rotateCode() { if (state === 'waiting') send({ t: 'rotate' }); },
     get state() { return state; },
+    /** true while the real-arm deadman has tripped and the link has not spoken since */
+    get deadmanTripped() { return dmTripped; },
     get code() { return code; },
     get clientName() { return clientName; }
   };

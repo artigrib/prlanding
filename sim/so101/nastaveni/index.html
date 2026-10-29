@@ -40,7 +40,9 @@
       <span id="hud-text" role="status" aria-live="polite"></span>
     </div>
     <div class="alert" id="alert" role="alert" hidden></div>
-    <button type="button" class="stop" id="stop" hidden title="Vypne moment všech serv. Ruka se uvolní a může klesnout – přidržte ji."><span class="stop-k">STOP</span><span class="stop-t">vypnout moment · Esc</span></button>
+    <button type="button" class="stop" id="stop" hidden title="1. stisk: ruka drží polohu, chapadlo se uvolní. 2. stisk nebo podržení 1 s: vypne moment všech serv – ruka může klesnout."><span class="stop-k">STOP</span><span class="stop-t">držet polohu · Esc</span></button>
+    <button type="button" class="stop-rel" id="stop-release" hidden>Uvolnit STOP</button>
+    <p class="armed-bar mono" id="armed-bar" hidden></p>
     <p class="real-tag mono" id="real-tag" hidden>Skutečná ruka · beta · napájení mějte na dosah · 3D model ukazuje přečtené polohy</p>
 
     <div class="loader" id="loader">
@@ -99,7 +101,7 @@
       </div>
       <div class="card card-real" id="real-card" hidden>
         <h3>Skutečná ruka <span class="badge">beta</span></h3>
-        <p class="warn"><b>Beta – vyzkoušejte na vlastní riziko, napájení mějte na dosah.</b> Ruka se může nečekaně pohnout. Ruku upevněte ke stolu, v dosahu nic nemějte a kdykoli stiskněte STOP nebo Esc, případně vytáhněte zdroj. <b>Vypnutí momentu (STOP, Esc, „Vypnout moment“, přechod na kalibraci, přepnutí karty nebo zavření stránky) ruku uvolní – může klesnout, přidržte ji.</b> Když se odpojí USB, moment vypnout nejde: pomůže jen vytažení zdroje serv.</p>
+        <p class="warn"><b>Beta – vyzkoušejte na vlastní riziko, napájení mějte na dosah.</b> Ruka se může nečekaně pohnout. Ruku upevněte ke stolu, v dosahu nic nemějte a kdykoli stiskněte STOP nebo Esc, případně vytáhněte zdroj. <b>První STOP ruku zastaví a podrží (chapadlo se uvolní), druhý STOP vypne moment. Vypnutí momentu (druhý STOP, „Vypnout moment“, přechod na kalibraci) ruku uvolní – může klesnout, přidržte ji.</b> Když se odpojí USB, moment vypnout nejde: pomůže jen vytažení zdroje serv.</p>
         <div id="r-ok">
           <label class="check"><input type="checkbox" id="r-ack"> Rozumím, napájení mám na dosah</label>
           <button type="button" class="btn btn-o" id="r-connect" disabled>Připojit skutečnou ruku <span aria-hidden="true">→</span></button>
@@ -152,10 +154,27 @@
         <button type="button" class="btn btn-act" id="t-torque">Zapnout moment</button>
         <button type="button" class="btn btn-o" id="t-home" disabled>Domů <span aria-hidden="true">⌂</span></button>
       </div>
+      <div class="card realonly card-arm" id="arm-card">
+        <h3>Povolení pohybu</h3>
+        <fieldset class="variant" id="arm-profile">
+          <legend class="mono">Režim</legend>
+          <label class="opt"><input type="radio" name="profile" value="owner" checked><span><b>Vlastník</b><small>max 60 °/s · povolení 10 min · relace 45 min</small></span></label>
+          <label class="opt"><input type="radio" name="profile" value="teacher"><span><b>Učitel / ukázka</b><small>20 °/s · povolení 5 min · relace 20 min</small></span></label>
+        </fieldset>
+        <div class="arm-checks" id="arm-checks">
+          <label class="check"><input type="checkbox" data-arm="clamp"> Ruka je přišroubovaná ke stolu</label>
+          <label class="check"><input type="checkbox" data-arm="psu"> Zdroj serv mám na dosah ruky</label>
+          <label class="check"><input type="checkbox" data-arm="clear"> V dosahu ruky nikdo nestojí, ruce za čárou</label>
+          <label class="check"><input type="checkbox" data-arm="cables"> Kabely nejsou přiskřípnuté v kloubu</label>
+        </div>
+        <button type="button" class="btn btn-act" id="arm-go" disabled>Aktivovat pohyb</button>
+        <p class="note">Povolení samo vyprší (po 3 min bez pohybu dříve). Přepnutí karty povolení zruší a ruka zůstane držet polohu. STOP: 1. stisk = ruka drží, chapadlo se uvolní; 2. stisk nebo podržení 1 s = moment vypnutý.</p>
+        <p class="msg" id="arm-msg" role="status"></p>
+      </div>
       <div class="card realonly" id="t-limits">
         <label for="t-speed" class="lbl">Rychlostní limit <output id="t-speed-o">30 °/s</output></label>
-        <input type="range" id="t-speed" min="10" max="90" step="5" value="30">
-        <p class="note">Rozsah kloubů je omezený na kalibrovaný rozsah minus 3 % na každé straně. Rychlost omezuje prohlížeč. Serva navíc dostanou záložní strop rychlosti (registr Goal_Velocity, o čtvrtinu vyšší) a mírnější zrychlení; na skutečných servech jsme tyto hodnoty zatím neověřili.</p>
+        <input type="range" id="t-speed" min="10" max="60" step="5" value="30">
+        <p class="note">Rozsah kloubů je omezený na kalibrovaný rozsah minus 3 % na každé straně. Rychlost omezuje prohlížeč. Strop je 60 °/s (učitelský režim 20 °/s). Serva navíc dostanou záložní strop rychlosti (registr Goal_Velocity, o čtvrtinu vyšší) a mírnější zrychlení; na skutečných servech jsme tyto hodnoty zatím neověřili.</p>
       </div>
       <fieldset class="joints" id="tj" disabled><legend class="mono">Klouby</legend></fieldset>
       <div class="virt">

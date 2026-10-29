@@ -206,7 +206,7 @@ const strings = {
   'Virtuální ruka': 'Virtual arm', 'Šest emulovaných serv STS3215 na sběrnici, jako by právě přišla v krabici: všechna mají tovární ID 1.': 'Six emulated STS3215 servos on the bus, as if fresh out of the box: all have factory ID 1.',
   'Připojit virtuální ruku': 'Connect the virtual arm', 'Beta – vyzkoušejte na vlastní riziko, napájení mějte na dosah.': 'Beta – try it at your own risk and keep the power within reach.',
   'Ruka se může nečekaně pohnout. Ruku upevněte ke stolu, v dosahu nic nemějte a kdykoli stiskněte STOP nebo Esc, případně vytáhněte zdroj.': 'The arm can move unexpectedly. Clamp it to the table, keep its reach clear, and press STOP or Esc at any time, or pull the power plug.',
-  'Vypnutí momentu (STOP, Esc, „Vypnout moment“, přechod na kalibraci, přepnutí karty nebo zavření stránky) ruku uvolní – může klesnout, přidržte ji.': 'Turning torque off (STOP, Esc, “Torque off”, going to calibration, switching tabs or closing the page) makes the arm go limp – it may drop, hold it.',
+  'První STOP ruku zastaví a podrží (chapadlo se uvolní), druhý STOP vypne moment. Vypnutí momentu (druhý STOP, „Vypnout moment“, přechod na kalibraci) ruku uvolní – může klesnout, přidržte ji.': 'The first STOP stops the arm and holds it (the gripper lets go); the second STOP turns torque off. Turning torque off (second STOP, “Torque off”, going to calibration) makes the arm go limp – it may drop, hold it.',
   'Když se odpojí USB, moment vypnout nejde: pomůže jen vytažení zdroje serv.': 'If USB disconnects, torque can’t be turned off: only pulling the servo power supply helps.',
   'Rozumím, napájení mám na dosah': 'Understood, the power is within reach', 'Připojit skutečnou ruku': 'Connect the real arm',
   'Váš prohlížeč neumí Web Serial, takže se ke skutečné ruce nepřipojí. Funguje to v Chrome, Edge nebo Opeře na počítači (Windows, macOS, Linux, ChromeOS). Safari, Firefox ani prohlížeče na iPhonu a iPadu Web Serial nepodporují. Virtuální ruka ale funguje všude.': 'Your browser doesn’t support Web Serial, so it can’t connect to a real arm. It works in Chrome, Edge or Opera on a computer (Windows, macOS, Linux, ChromeOS). Safari, Firefox and browsers on iPhone and iPad don’t support Web Serial. The virtual arm works everywhere, though.',
@@ -227,7 +227,7 @@ const strings = {
   'Vaše ruka (moment vypnutý)': 'Your arm (torque off)', 'Stáhnout kalibraci (JSON pro LeRobot)': 'Download the calibration (JSON for LeRobot)',
   'Zapněte moment a pohybujte rukou posuvníky. Úhly jsou ve stupních od středu kalibrovaného rozsahu, chapadlo v procentech, stejně jako v LeRobotu (': 'Turn torque on and move the arm with the sliders. Angles are in degrees from the centre of the calibrated range, the gripper in percent, just like in LeRobot (',
   'Zapnout moment': 'Torque on', 'Vypnout moment': 'Torque off', 'Rychlostní limit': 'Speed limit',
-  'Rozsah kloubů je omezený na kalibrovaný rozsah minus 3 % na každé straně. Rychlost omezuje prohlížeč. Serva navíc dostanou záložní strop rychlosti (registr Goal_Velocity, o čtvrtinu vyšší) a mírnější zrychlení; na skutečných servech jsme tyto hodnoty zatím neověřili.': 'Joint travel is limited to the calibrated range minus 3 % on each side. The browser limits the speed. The servos also get a backup speed cap (Goal_Velocity register, a quarter higher) and gentler acceleration; we haven’t verified these values on real servos yet.',
+  'Rozsah kloubů je omezený na kalibrovaný rozsah minus 3 % na každé straně. Rychlost omezuje prohlížeč. Strop je 60 °/s (učitelský režim 20 °/s). Serva navíc dostanou záložní strop rychlosti (registr Goal_Velocity, o čtvrtinu vyšší) a mírnější zrychlení; na skutečných servech jsme tyto hodnoty zatím neověřili.': 'Joint travel is limited to the calibrated range minus 3 % on each side. The browser limits the speed. The cap is 60 °/s (teacher mode 20 °/s). The servos also get a backup speed cap (Goal_Velocity register, a quarter higher) and gentler acceleration; we haven’t verified these values on real servos yet.',
   'Spustit misi: kostka do misky': 'Run the mission: cube into the bowl', 'Vrátit kostku a ruku na začátek': 'Reset the cube and arm',
   'Registry serv': 'Servo registers', 'Napětí': 'Voltage', 'Teplota': 'Temperature', 'Zátěž': 'Load', 'Moment': 'Torque', 'Diagnostika': 'Diagnostics', 'Spustit diagnostiku': 'Run diagnostics',
   'Tréninkové poruchy: zapněte jednu, spusťte diagnostiku a zkuste podle ní závadu najít.': 'Training faults: switch one on, run diagnostics and try to find the fault from its report.',
@@ -345,6 +345,39 @@ const strings = {
   'Jablko': 'Apple', 'Banán': 'Banana', 'Šroubovák': 'Phillips screwdriver',
 };
 
+// real-arm safety (two-stage STOP, motion permission, firmware allow-list)
+Object.assign(strings, {
+  '1. stisk: ruka drží polohu, chapadlo se uvolní. 2. stisk nebo podržení 1 s: vypne moment všech serv – ruka může klesnout.': '1st press: the arm holds its pose and the gripper lets go. 2nd press or holding for 1 s: torque off on all servos – the arm may drop.',
+  'držet polohu · Esc': 'hold pose · Esc', 'Uvolnit STOP': 'Release STOP',
+  'Povolení pohybu': 'Motion permission', 'Režim': 'Profile', 'Vlastník': 'Owner', 'Učitel / ukázka': 'Teacher / demo',
+  'max 60 °/s · povolení 10 min · relace 45 min': 'max 60 °/s · permission 10 min · session 45 min',
+  '20 °/s · povolení 5 min · relace 20 min': '20 °/s · permission 5 min · session 20 min',
+  'Ruka je přišroubovaná ke stolu': 'The arm is screwed to the table', 'Zdroj serv mám na dosah ruky': 'The servo power supply is within my reach',
+  'V dosahu ruky nikdo nestojí, ruce za čárou': 'Nobody stands within the arm’s reach, hands behind the line', 'Kabely nejsou přiskřípnuté v kloubu': 'No cable is pinched in a joint',
+  'Aktivovat pohyb': 'Enable motion',
+  'Povolení samo vyprší (po 3 min bez pohybu dříve). Přepnutí karty povolení zruší a ruka zůstane držet polohu. STOP: 1. stisk = ruka drží, chapadlo se uvolní; 2. stisk nebo podržení 1 s = moment vypnutý.':
+    'The permission expires by itself (sooner after 3 min without motion). Switching tabs withdraws it and the arm keeps holding its pose. STOP: 1st press = the arm holds and the gripper lets go; 2nd press or holding for 1 s = torque off.',
+  'STOP je aktivní. Nejdřív stiskněte „Uvolnit STOP“.': 'STOP is active. Press “Release STOP” first.',
+  'Pohyb není povolený. Projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.': 'Motion is not enabled. Go through the checklist and press “Enable motion”.',
+  'Moment zapnutý. Pohybujte pomalu. STOP, Esc nebo mezerník ruku zastaví a podrží; druhý STOP vypne moment.': 'Torque on. Move slowly. STOP, Esc or the space bar stops the arm and holds it; a second STOP turns torque off.',
+  'STOP: ruka drží, chapadlo uvolněno. Znovu STOP = vypnout moment (ruka může klesnout).': 'STOP: the arm holds, the gripper is released. STOP again = torque off (the arm may drop).',
+  'STOP: ruka drží polohu (ověřeno čtením), chapadlo je uvolněné.': 'STOP: the arm holds its pose (verified by reading back); the gripper is released.',
+  'Ruka drží polohu, chapadlo je uvolněné.': 'The arm holds its pose; the gripper is released.',
+  'Držení polohy se nepodařilo ověřit. Stiskněte STOP znovu (vypne moment), případně vypněte napájení serv.': 'Holding the pose couldn’t be verified. Press STOP again (turns torque off) or switch off the servo power.',
+  'Držení polohy neověřeno.': 'Hold not verified.',
+  'Moment vypnutý – ruka je bez síly, přidržte ji.': 'Torque off – the arm has no strength, hold it.',
+  'Povolení pohybu vypršelo.': 'The motion permission expired.',
+  'Povolení pohybu vypršelo: 3 minuty bez pohybu.': 'The motion permission expired: 3 minutes without motion.',
+  'Relace dosáhla maximální délky – teď 5 minut pauza, ruka je jen pro čtení.': 'The session reached its maximum length – now a 5-minute break; the arm is read-only.',
+  'Karta přešla na pozadí, povolení pohybu jsme zrušili.': 'The tab went to the background, so we withdrew the motion permission.',
+  'Karta přešla na pozadí – pohyb je zakázaný, po návratu ho znovu aktivujte.': 'The tab went to the background – motion is disabled; enable it again when you’re back.',
+  'Stránka se zavírá.': 'The page is closing.', 'Pohyb už není povolený.': 'Motion is no longer enabled.',
+  'Čteme verzi firmwaru serv…': 'Reading the servo firmware version…', 'Pohyb povolen. Teď můžete zapnout moment.': 'Motion enabled. You can turn torque on now.',
+  'Skutečná ruka · jen čtení (shadow)': 'Real arm · read-only (shadow)',
+  'Ruka dál drží polohu.': 'The arm keeps holding its pose.', 'Moment je vypnutý.': 'Torque is off.',
+  'režim vlastníka': 'owner mode', 'učitelský režim': 'teacher mode'
+});
+
 const patterns = [
   [/^(\d+) \/ (\d+) misí$/, '$1 / $2 missions'], [/^(\d+) ★ z (\d+)$/, '$1 ★ of $2'], [/^další: (.+)$/, (m, a) => `next: ${T(a)}`],
   [/^Výzva: (.+)$/, 'Challenge: $1'], [/^Výzva od kamaráda: „(.+)“ za (.+)\. Překonáte to\?$/, (m, a, b) => `A friend’s challenge: “${T(a)}” in ${b}. Can you beat it?`],
@@ -378,6 +411,16 @@ const patterns = [
   [/^(.+): zpět do výchozí polohy$/, (m, a) => `${T(a)}: back to the home position`],
   [/^Vybrán kloub (\d): (.+)\. Šipky vlevo a vpravo jím otáčí, Esc výběr zruší\.$/, (m, a, b) => `Joint ${a} selected: ${T(b)}. Left and right arrows turn it, Esc cancels.`],
   /* wizard */
+  [/^(.+) Ruka drží polohu, chapadlo je uvolněné\.$/, (m, a) => `${T(a)} The arm holds its pose; the gripper is released.`],
+  [/^STOP uvolněn\. (Ruka dál drží polohu\.|Moment je vypnutý\.) Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“\.$/,
+    (m, a) => `STOP released. ${a.startsWith('Ruka') ? 'The arm keeps holding its pose.' : 'Torque is off.'} For the next motion go through the checklist again and press “Enable motion”.`],
+  [/^STOP uvolněn\. (Ruka dál drží polohu\.|Moment je vypnutý\.) Řízení zapnete tlačítkem „Znovu zapnout moment“\.$/,
+    (m, a) => `STOP released. ${a.startsWith('Ruka') ? 'The arm keeps holding its pose.' : 'Torque is off.'} Switch control back on with “Torque on again”.`],
+  [/^Pauza po dlouhé relaci: pohyb půjde aktivovat za (\d+:\d\d)\.$/, 'Break after a long session: motion can be enabled in $1.'],
+  [/^Servo (.+) neodpovídá – pohyb nepovolíme\.$/, 'Servo $1 doesn’t respond – motion stays disabled.'],
+  [/^Firmware serv (.+) zatím není na seznamu ověřených verzí\. Skutečná ruka zůstane jen pro čtení \(shadow\)\.$/, 'Servo firmware $1 is not on the list of verified versions yet. The real arm stays read-only (shadow).'],
+  [/^Skutečná ruka · POHYB POVOLEN · (režim vlastníka|učitelský režim) · zbývá (\d+:\d\d)$/, (m, a, b) => `Real arm · MOTION ENABLED · ${a === 'učitelský režim' ? 'teacher mode' : 'owner mode'} · ${b} left`],
+  [/^Skutečná ruka · jen čtení \(shadow\) · pauza (\d+:\d\d)$/, 'Real arm · read-only (shadow) · break $1'],
   [/^Připojte k řídicí desce$/, 'Connect to the driver board'],
   [/^jen servo: (.+)$/, (m, a) => `only the servo: ${T(a)}`],
   [/^\((.+)\)\. Ostatní serva odpojte\. Zdroj nechte zapnutý\.$/, '($1). Disconnect the other servos. Leave the power supply on.'],
@@ -431,6 +474,6 @@ const patterns = [
 ];
 
 // pieces of composed messages, translated as a whole by the patterns above (for tools/i18n-extract.mjs)
-const fragments = ['· další: {}', '{} / {} misí · {} ★ z {}', '· rekord kamaráda {} překonán o {} s!', '· rekord kamaráda {} zatím platí', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
+const fragments = ['STOP uvolněn. {} Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.', 'STOP uvolněn. {} Řízení zapnete tlačítkem „Znovu zapnout moment“.', 'Pauza po dlouhé relaci: pohyb půjde aktivovat za {}.', 'Skutečná ruka · POHYB POVOLEN · {} · zbývá {}', 'Skutečná ruka · jen čtení (shadow) · pauza {}', '· další: {}', '{} / {} misí · {} ★ z {}', '· rekord kamaráda {} překonán o {} s!', '· rekord kamaráda {} zatím platí', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
 
 export default { strings, patterns, fragments };
