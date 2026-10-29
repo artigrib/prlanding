@@ -15,7 +15,7 @@ on:
       action:
         description: What to do
         type: choice
-        options: [status, rollback, diag, porttest, fixports, tls, tlsrestart]
+        options: [status, rollback, diag, fixports, tls]
         default: status
 permissions:
   contents: read
@@ -66,9 +66,9 @@ jobs:
         run: |
           ACT="$ACT_INPUT"
           [ -n "$ACT" ] || ACT=$(awk 'NR==1{print $1}' backend/deploy/ops-request 2>/dev/null)
-          case "$ACT" in status|rollback|diag|porttest|fixports|tls|tlsrestart) ;; *) echo "::error::bad action"; exit 1;; esac
+          case "$ACT" in status|rollback|diag|fixports|tls) ;; *) echo "::error::bad action"; exit 1;; esac
           set +e
-          if [ "$ACT" = tls ] || [ "$ACT" = tlsrestart ]; then
+          if [ "$ACT" = tls ]; then
             # Outside view from the runner; prints fixed strings only (no IPs).
             vps=$(getent ahostsv4 "$HOST" | awk 'NR==1{print $1}')
             for n in api mcp relay; do

@@ -89,25 +89,6 @@ proxies_80_443() { # PIDs of docker-proxy processes listening on host port 80 or
   done
 }
 
-fix_stale_ports() {
-  # Earlier failed starts of our Caddy left docker-proxy processes holding host ports 80/443
-  # while no container publishes them (Docker 29 then refuses the port as "already allocated").
-  # Only when NO running container of any project binds host port 80/443 are such proxies
-  # leftovers that serve nobody; then stop them. Other containers are never touched.
-  local n mapped
-  n=$(proxies_80_443 | wc -l)
-  [ "$n" -gt 0 ] || return 0
-  mapped=$(docker ps -q | xargs -r docker inspect -f '{{range $p, $b := .HostConfig.PortBindings}}{{range $b}}{{.HostPort}} {{end}}{{end}}' 2>/dev/null | grep -cwE '80|443' || true)
-  if [ "$mapped" -gt 0 ]; then
-    warn "a running container publishes host port 80/443; leaving it alone"
-    return 0
-  fi
-  warn "found $n leftover port-80/443 proxy process(es) without any container; stopping them"
-  dc rm -sf caddy || true
-  for pid in $(proxies_80_443); do kill "$pid" || true; done
-  sleep 2
-  say "leftover port-80/443 proxies after cleanup: $(proxies_80_443 | wc -l)"
-}
 
 ensure_network() {
   # printedrobotics_web is declared `external` in compose.yml: compose never creates, removes or
@@ -120,30 +101,22 @@ ensure_network() {
   say "network printedrobotics_web: present; containers attached: $(docker network inspect printedrobotics_web -f '{{len .Containers}}' 2>/dev/null)"
 }
 
-edge_mode() { # own|external, from the current release
-  case "$(release_var "$ROOT/release.env" EDGE)" in external) echo external;; *) echo own;; esac
+guard_no_public_ports() {
+  # Our stack must never take host ports 80/443 (another project's edge proxy owns them) and never
+  # use host networking. Refuse to run compose with a file that would.
+  if grep -qE '^[[:space:]]*network_mode:[[:space:]]*"?host|(^|[^0-9])(80|443):[0-9]+|^[[:space:]]{2}caddy:' "$ROOT/compose.yml"; then
+    die "compose.yml would bind host 80/443, use host networking or run caddy; refusing"
+  fi
 }
+
 
 bring_up() {
   build_env
   ensure_network
-  local profiles edge
-  edge=$(edge_mode)
-  profiles=$(release_var "$ROOT/release.env" COMPOSE_PROFILES)
-  # Releases written before the edge profile existed: own edge always means our Caddy runs.
-  if [ "$edge" = own ]; then
-    case ",$profiles," in *,edge,*) ;; *) profiles="${profiles:+$profiles,}edge";; esac
-  else
-    profiles=$(printf '%s' "$profiles" | tr ',' '\n' | grep -vx edge | paste -sd, -)
-  fi
-  if [ "$edge" = own ]; then
-    fixports
-    fix_stale_ports
-  else
-    # External edge proxy terminates TLS: our Caddy (profile "edge") must not hold 80/443.
-    dc rm -sf caddy >/dev/null 2>&1 || true
-    say "edge: external (our caddy stopped; no public ports, no certificate requests)"
-  fi
+  guard_no_public_ports
+  fixports
+  local profiles
+  profiles=$(release_var "$ROOT/release.env" COMPOSE_PROFILES | tr ',' '\n' | grep -x bridge | paste -sd, -)
   local err
   if ! err=$(COMPOSE_PROFILES="$profiles" dc up -d --remove-orphans --wait --wait-timeout 150 2>&1); then
     warn "compose up failed: $(sanitize "$(printf '%s\n' "$err" | grep -v '^ *$' | tail -3)")"
@@ -162,10 +135,6 @@ sanitize() { # strip addresses, ids and paths from an error line before it reach
     | cut -c1-240
 }
 
-caddy_reload() {
-  [ "$(edge_mode)" = own ] || return 0
-  dc exec -T caddy caddy reload --address 127.0.0.1:12019 --config /etc/caddy/Caddyfile --adapter caddyfile
-}
 
 prune_old_images() {
   # Keep images referenced by the current and previous release; remove our other images only.
@@ -263,7 +232,6 @@ pull_images() {
   done
   DOCKER_CONFIG="$tmp" docker logout ghcr.io || true
   rm -rf "$tmp"
-  docker pull "$(release_var "$ROOT/release.next.env" CADDY_IMAGE)" || die "caddy image pull failed"
   say "images pulled"
 }
 
@@ -275,13 +243,9 @@ rollback() {
     return 1
   fi
   cp "$ROOT/release.env" "$ROOT/release.failed.env" 2>/dev/null || true
-  local em; em=$(edge_mode)
   cp "$ROOT/release.prev.env" "$ROOT/release.env"
-  # The edge mode is an operator choice, not part of a release: keep the current one.
-  sed -i '/^EDGE=/d' "$ROOT/release.env"; echo "EDGE=$em" >> "$ROOT/release.env"
   if bring_up && check_health "$(release_var "$ROOT/release.env" APP_VERSION)" \
        "$([ -n "$(release_var "$ROOT/release.env" BRIDGE_IMAGE)" ] && echo 1 || echo 0)"; then
-    caddy_reload || true
     say "rolled back to previous release ($(release_var "$ROOT/release.env" APP_VERSION | cut -c1-12))"
     return 0
   fi
@@ -339,23 +303,6 @@ diagnose() ( set +eu +o pipefail
   say "diag docker: $(docker version -f '{{.Server.Version}}' 2>/dev/null), compose: $(docker compose version --short 2>/dev/null)"
 )
 
-porttest() ( set +eu +o pipefail
-  # Throw-away containers (name prefix printedrobotics-porttest) to see which port bindings work.
-  local n=0 spec net st
-  for spec in "web 127.0.0.1:18081:80" "default 127.0.0.1:18082:80" "default 0.0.0.0:80:80" "web 0.0.0.0:80:80"; do
-    n=$((n + 1)); set -- $spec; net=$1
-    docker rm -f "printedrobotics-porttest$n" >/dev/null 2>&1
-    if [ "$net" = web ]; then
-      docker run -d --name "printedrobotics-porttest$n" --network printedrobotics_web -p "$2" caddy:2-alpine caddy respond --listen :80 ok
-    else
-      docker run -d --name "printedrobotics-porttest$n" -p "$2" caddy:2-alpine caddy respond --listen :80 ok
-    fi
-    sleep 2
-    st=$(docker inspect -f '{{.State.Status}}|{{.State.Error}}' "printedrobotics-porttest$n" 2>&1)
-    say "porttest $n net=$net bind=$(printf '%s' "$2" | sed -E 's/^[0-9.]+:/<ip>:/') -> $(sanitize "$st")"
-    docker rm -f "printedrobotics-porttest$n" >/dev/null 2>&1
-  done
-)
 
 stale_endpoints() ( set +eu +o pipefail
   # Endpoints in any network whose container no longer exists. Prints "<network-id> <endpoint-name>".
@@ -387,6 +334,14 @@ tls_state() ( set +eu +o pipefail
   cid=$(dc ps -q caddy 2>/dev/null | head -1)
   lg() { docker logs "$cid" 2>&1; }
   cnt() { lg | awk -v k="$1" 'index(tolower($0),tolower(k)){n++} END{print n+0}'; }
+  local hn=0 hp=0 id nm
+  for id in $(docker ps -q --filter label=com.docker.compose.project=printedrobotics); do
+    [ "$(docker inspect -f '{{.HostConfig.NetworkMode}}' "$id")" = host ] && hn=$((hn + 1))
+    docker inspect -f '{{range $p, $b := .HostConfig.PortBindings}}{{range $b}}{{.HostPort}} {{end}}{{end}}' "$id" | grep -qwE '80|443' && hp=$((hp + 1))
+  done
+  nm=$(docker inspect -f '{{.State.Status}}' printedrobotics-caddy-1 2>/dev/null || echo absent)
+  say "tls our stack: running containers with host networking $hn, publishing host 80/443 $hp; printedrobotics-caddy-1: $nm; binds :80/:443: $([ "$hn$hp" = 00 ] && [ "$nm" != running ] && echo no || echo YES)"
+  say "tls network printedrobotics_web: containers attached $(docker network inspect printedrobotics_web -f '{{len .Containers}}' 2>/dev/null || echo missing), of them other projects $(docker network inspect printedrobotics_web -f '{{range .Containers}}{{.Name}} {{end}}' 2>/dev/null | tr ' ' '\n' | grep . | grep -vc '^printedrobotics-' || true)"
   say "tls caddy container: $([ -n "$cid" ] && echo found || echo missing); log driver: $(docker inspect -f '{{.HostConfig.LogConfig.Type}}' "$cid" 2>/dev/null); started: $(docker inspect -f '{{.State.StartedAt}}' "$cid" 2>/dev/null | cut -c1-16)"
   # Live TLS app shape as yes/no flags only.
   local tj; tj=$(dc exec -T caddy wget -q -T 3 -O - http://127.0.0.1:12019/config/apps/tls 2>/dev/null)
@@ -561,13 +516,8 @@ tls_state() ( set +eu +o pipefail
 )
 
 case "$ACTION" in
-  tlsrestart)
-    [ -f "$ROOT/release.env" ] || die "no release deployed yet"
-    build_env
-    dc restart caddy && say "restarted our caddy container" || warn "caddy restart failed"
-    sleep 90
-    tls_state
-    exit 0
+  tlsrestart|porttest)
+    die "action disabled: our stack no longer runs caddy or binds host ports 80/443"
     ;;
   tls)
     [ -f "$ROOT/release.env" ] || die "no release deployed yet"
@@ -577,11 +527,6 @@ case "$ACTION" in
     ;;
   fixports)
     fixports
-    porttest
-    exit 0
-    ;;
-  porttest)
-    porttest
     exit 0
     ;;
   diag)
@@ -621,13 +566,7 @@ ensure_secrets
   echo "APP_VERSION=$APP_VERSION"
   echo "API_IMAGE=$API_IMAGE"
   echo "BRIDGE_IMAGE=${BRIDGE_IMAGE:-}"
-  echo "CADDY_IMAGE=caddy:2-alpine"
-  # EDGE: own (our Caddy terminates TLS on 80/443) or external (another proxy on printedrobotics_web
-  # does). An explicit EDGE input wins; otherwise the current release's mode is kept.
-  edge=${EDGE:-}; case "$edge" in own|external) ;; *) edge=$( [ -f "$ROOT/release.env" ] && edge_mode || echo own );; esac
-  echo "EDGE=$edge"
-  p=""; [ -n "${BRIDGE_IMAGE:-}" ] && p=bridge; [ "$edge" = own ] && p="${p:+$p,}edge"
-  echo "COMPOSE_PROFILES=$p"
+  echo "COMPOSE_PROFILES=$([ -n "${BRIDGE_IMAGE:-}" ] && echo bridge || true)"
 } > "$ROOT/release.next.env"
 
 pull_images
@@ -643,7 +582,7 @@ install_files
 mv -f "$ROOT/release.next.env" "$ROOT/release.env"
 
 bridge_on=0; [ -n "${BRIDGE_IMAGE:-}" ] && bridge_on=1
-if bring_up && caddy_reload && check_health "$APP_VERSION" "$bridge_on"; then
+if bring_up && check_health "$APP_VERSION" "$bridge_on"; then
   report_services
   say "deploy ok: release ${APP_VERSION:0:12} is healthy"
   prune_old_images
@@ -654,10 +593,8 @@ warn "new release failed its health checks; rolling back"
 report_services
 diagnose
 if [ -d "$ROOT/prev-config" ]; then
-  cp "$ROOT/prev-config/compose.yml" "$ROOT/compose.yml" 2>/dev/null || true
-  cp "$ROOT/prev-config/Caddyfile" "$ROOT/Caddyfile" 2>/dev/null || true
-  rm -f "$ROOT"/sites-enabled/*.caddy
-  cp "$ROOT"/prev-config/sites-enabled/*.caddy "$ROOT/sites-enabled/" 2>/dev/null || true
+  # compose.yml is NOT restored: an older one could still contain the host-network Caddy.
+  :
 fi
 rollback || true
 die "deploy failed (release ${APP_VERSION:0:12})"

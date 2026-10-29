@@ -1,6 +1,6 @@
 # Docker Compose project "printedrobotics" on vps1 (installed to the deploy root by deploy-backend.yml).
-# Caddy (profile "edge", only with EDGE=own) runs on the host network; api and bridge sit on the
-# external network printedrobotics_web and are published on 127.0.0.1 only. See docs/backend.md.
+# api and bridge sit on the external network printedrobotics_web (reached there by the external edge
+# proxy) and are published on 127.0.0.1 only (deploy health checks). See docs/backend.md.
 # Image references come from release.env (written by remote-deploy.sh), secrets from secrets.env
 # (generated on the server, never in GitHub). Never run `docker compose config` in CI logs.
 name: printedrobotics
@@ -12,41 +12,9 @@ x-logging: &logging
     max-file: "3"
 
 services:
-  caddy:
-    # Profile "edge": started only while we terminate TLS ourselves (EDGE=own in release.env).
-    # With EDGE=external another project's proxy, attached to printedrobotics_web, serves the
-    # public hostnames and this container is not run (no 80/443 binds, no ACME requests).
-    profiles: [edge]
-    image: ${CADDY_IMAGE:-caddy:2-alpine}
-    restart: unless-stopped
-    # Host networking: Docker 29 on vps1 keeps host port 80 marked as "already allocated" after
-    # failed starts (only a dockerd restart clears that, which would restart the other projects'
-    # containers). Caddy therefore binds 80/443 itself and reaches api/bridge through ports
-    # published on 127.0.0.1 only. To go back to bridge mode after a dockerd restart: remove
-    # network_mode, add ports "80:80", "443:443", "443:443/udp", networks [web], and point the
-    # site files at api:8081 / bridge:8080 again.
-    network_mode: host
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./sites-enabled:/etc/caddy/sites-enabled:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    read_only: true
-    tmpfs: [/tmp]
-    cap_drop: [ALL]
-    cap_add: [NET_BIND_SERVICE]
-    security_opt: ["no-new-privileges:true"]
-    mem_limit: 128m
-    cpus: 0.5
-    pids_limit: 200
-    logging: *logging
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:18199/health"]
-      interval: 15s
-      timeout: 3s
-      retries: 3
-      start_period: 10s
-
+  # No Caddy here: the public hostnames are served by another project's edge proxy (attached to
+  # printedrobotics_web). Our stack must never bind host ports 80/443 and never use host networking;
+  # remote-deploy.sh refuses to start a compose file that does.
   api:
     image: ${API_IMAGE:?API_IMAGE not set}
     # Fixed name: an external edge proxy on printedrobotics_web reaches it as printedrobotics-api-1:8081.
@@ -109,6 +77,4 @@ networks:
     external: true
 
 volumes:
-  caddy_data:
-  caddy_config:
   api_data:

@@ -13,21 +13,18 @@ Browser (printedrobotics.cz on GitHub Pages)
    │  WSS  wss://relay.printedrobotics.cz/...      (bridge, later)
    ▼
 vps1 ── docker compose project "printedrobotics"
-   caddy (host network) :80/:443   Let's Encrypt only, automatic HTTPS, no access log
-     api.printedrobotics.cz   ─▶ 127.0.0.1:18181 ─▶ api:8081     (backend/api)
-     mcp.printedrobotics.cz   ─▶ 127.0.0.1:18180 ─▶ bridge:8080  (backend/bridge, MCP Streamable HTTP)
-     relay.printedrobotics.cz ─▶ 127.0.0.1:18180 ─▶ bridge:8080  (backend/bridge, WebSocket relay)
+   external edge proxy (another project's Caddy, owns :80/:443, attached to printedrobotics_web)
+     api.printedrobotics.cz   ─▶ printedrobotics-api-1:8081     (backend/api)
+     mcp.printedrobotics.cz   ─▶ printedrobotics-bridge-1:8080  (backend/bridge, MCP Streamable HTTP)
+     relay.printedrobotics.cz ─▶ printedrobotics-bridge-1:8080  (backend/bridge, WebSocket relay)
    api      Node 24 + TypeScript, SQLite file in volume printedrobotics_api_data
    bridge   built and started once backend/bridge/Dockerfile exists (compose profile "bridge")
-   network  printedrobotics_web (api, bridge); nothing else of ours on the host network
+   network  printedrobotics_web (external, fixed name); api/bridge also on 127.0.0.1:18181/18180
 ```
 
-Why Caddy uses the host network: on vps1, Docker 29 kept host port 80 marked as "already
-allocated" after early failed Caddy starts, even with no listener, endpoint or container left.
-Only a restart of the Docker daemon clears that, and the daemon has no live-restore, so it would
-restart the other projects' containers too. Caddy therefore binds 80/443 directly, and api/bridge
-are published on 127.0.0.1 only. If the owner restarts Docker in a maintenance window, Caddy can
-go back to bridge mode (the steps are in a comment in `backend/deploy/compose.yml`).
+Our stack has no Caddy of its own any more and never binds host ports 80/443: an earlier
+host-network Caddy of ours blocked the other project's proxy from re-publishing them. See
+"Edge proxy (external)" below.
 
 Every container is read-only, drops all capabilities, has
 `no-new-privileges`, memory/CPU/PID limits, `restart: unless-stopped` and json-file logs
@@ -100,8 +97,8 @@ or the workflow file, or run **Actions → Deploy backend → Run workflow**.
    - Uploads `backend/deploy/` and runs `remote-deploy.sh` on the server, which:
      aborts if less than 3 GB is free; generates server-side secrets once; logs in to GHCR with
      the short-lived job token in a throw-away docker config, pulls by digest and logs out;
-     saves the previous release; runs `docker compose up -d --wait`; reloads Caddy; checks
-     `http://api:8081/health` from inside the Caddy container (and the bridge `/healthz`) and
+     saves the previous release; runs `docker compose up -d --wait`; checks
+     `/health` on 127.0.0.1:18181 (and the bridge `/healthz` on 18180) and
      compares the version with the commit; on failure restores the previous release, config and
      images, and the job fails. On success it removes old `ghcr.io/artigrib/prlanding-*` images,
      keeping the current and previous release. It never prunes anything else.
@@ -128,29 +125,32 @@ Why the GHCR images are not built on push to `main`: the backend lives only on b
 - To go back to any older commit: re-run its **Deploy backend** run (Actions → the run → Re-run
   all jobs), or revert the commit on `backend` and push.
 
-## Edge proxy: own or external
+## Edge proxy (external)
 
-Public ports 80/443 on vps1 can be served either by our own Caddy (`EDGE=own`) or by another
-project's proxy that is attached to our Docker network (`EDGE=external`).
+Public ports 80/443 on vps1 belong to another project's Caddy (it also serves other sites). Our
+stack never binds them: there is no Caddy in `backend/deploy/compose.yml`, nothing uses host
+networking, and `remote-deploy.sh` refuses to run a compose file that would (`guard_no_public_ports`).
+The `tlsrestart` and `porttest` ops actions are disabled for the same reason.
 
-- Network: `printedrobotics_web` is declared `external` in `backend/deploy/compose.yml`.
-  `remote-deploy.sh` creates it once if it is missing; compose never creates, removes or recreates
-  it, and neither deploy nor rollback runs `docker compose down` (a failed first release is only
-  stopped). Containers of other projects attached to it therefore stay attached across our deploys.
-- Targets for an external proxy on that network: `printedrobotics-api-1:8081` for
+- Network: `printedrobotics_web` is declared `external` in compose. `remote-deploy.sh` creates it
+  once if it is missing; compose never creates, removes or recreates it, and neither deploy nor
+  rollback runs `docker compose down` (a failed first release is only stopped). A failed deploy
+  does not restore an older compose.yml. The external proxy stays attached across our deploys.
+- Targets for the external proxy on that network: `printedrobotics-api-1:8081` for
   `api.printedrobotics.cz` (`/health`, `/e`, `/stats`) and `printedrobotics-bridge-1:8080` for
   `mcp.printedrobotics.cz` and `relay.printedrobotics.cz` (`/healthz`, `/mcp` Streamable HTTP with
   SSE, so no response buffering, and the `/tab` WebSocket). Container names are fixed in compose.
 - Proxy headers: api and bridge use `X-Forwarded-For` (right-most entry) for rate limits and logs
   only when the TCP peer is inside the container's own Docker subnet (`printedrobotics_web`) or
-  loopback. `TRUST_PROXY_CIDRS` (comma list) overrides the detected subnets. Browser origin check
-  for `/tab` and CORS for the api accept `https://printedrobotics.cz` (`ALLOWED_ORIGINS`).
-- Switching: run **Deploy backend** manually with input `edge=external` (or `edge=own` to go back).
-  The mode is stored in the server's `release.env`; push deploys and rollbacks keep it. With
-  `external`, our Caddy (compose profile `edge`) is stopped: no 80/443 binds and no certificate
-  requests. api and bridge stay published on 127.0.0.1 only, which the deploy health checks use.
-- Verify: **Rollback backend** with action `tls` reports for each hostname whether the public
-  https URL returns 200, whether the certificate chain is valid, and the issuer.
+  loopback. `TRUST_PROXY_CIDRS` (comma list) overrides the detected subnets. The `/tab` origin
+  check and the api CORS accept `https://printedrobotics.cz` (`ALLOWED_ORIGINS`).
+- Health checks during deploy and rollback go straight to the 127.0.0.1 publishes
+  (api 18181, bridge 18180).
+- Verify: **Rollback backend** with action `tls` reports whether our stack binds 80/443 (it must
+  say `no`) and, for each hostname, whether the public https URL returns 200, whether the
+  certificate chain is valid, and the issuer.
+- `backend/deploy/Caddyfile` and `sites/` are kept only as a reference for the external proxy's
+  site blocks; they are not run.
 
 ## What the owner must do
 
