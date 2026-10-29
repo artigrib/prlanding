@@ -61,7 +61,7 @@
 <div class="a4 prose">
 <h2>Two arms, six servos each</h2>
 <p>The setup has two arms. You guide the <b>leader arm</b> with your own hand and the <b>follower arm</b> repeats the movement. Both use six Feetech STS3215 servos. The follower uses 1:345 gearing throughout; the leader has different ratios on different joints (1:191, 1:345 and 1:147) so it is easy to move by hand. The exact table is in the official guide.<sup><a href="#sources">1</a></sup></p>
-<p>You also need a servo driver board for each arm, USB cables, a power supply that matches your servo variant, and a computer with Python. The full bill of materials and print files are in the project repository.<sup><a href="#sources">2</a></sup></p>
+<p>You also need a servo driver board for each arm, USB cables, a power supply that matches your servo variant, and a computer with Python. The full bill of materials and print files are in the project repository.<sup><a href="#sources">2</a></sup> The build from printing to first motion is covered in <a href="../../../en/guides/so101-assembly/">SO-101 assembly, step by step</a>.</p>
 <p><b>Before you buy anything</b>, try the arm in the <a href="../../../sim/so101/?lang=en">SO-101 simulation</a>. You’ll see how the joints move and what the arm can do.</p>
 </div>
 </div>
@@ -73,11 +73,12 @@
 <div class="a4 prose">
 <h2>Python 3.12 and LeRobot</h2>
 <p>The official guide recommends Python 3.12 in a conda environment (via Miniforge); <code>uv</code> or <code>venv</code> also work.<sup><a href="#sources">3</a></sup> For the SO-101 you also install Feetech servo support:<sup><a href="#sources">1</a></sup></p>
-<pre><code>conda create -y -n lerobot python=3.12
+<pre tabindex="0"><code>conda create -y -n lerobot python=3.12
 conda activate lerobot
 conda install ffmpeg -c conda-forge
 git clone https://github.com/huggingface/lerobot.git
 cd lerobot
+pip install -e ".[core_scripts]"
 pip install -e ".[feetech]"</code></pre>
 <p class="src">According to the guide, <code>ffmpeg</code> is needed to decode video in datasets and can be skipped on some platforms. Details are in the installation guide.<sup><a href="#sources">3</a></sup></p>
 </div>
@@ -89,7 +90,7 @@ pip install -e ".[feetech]"</code></pre>
 <div class="a1 mono">03 — Port</div>
 <div class="a4 prose">
 <h2>Find each arm’s port</h2>
-<p><code>lerobot-find-port</code> asks you to unplug the USB cable and prints the port that disappeared. On Linux it looks like <code>/dev/ttyACM0</code>, on macOS <code>/dev/tty.usbmodem…</code>, on Windows <code>COM3</code>. Repeat for both arms.</p>
+<p><code>lerobot-find-port</code> asks you to unplug the USB cable and prints the port that disappeared. On Linux it looks like <code>/dev/ttyACM0</code>, on macOS <code>/dev/tty.usbmodem…</code>, on Windows <code>COM3</code>. Repeat for both arms. On Linux you may need to grant access to the port, for example <code>sudo chmod 666 /dev/ttyACM0</code>.<sup><a href="#sources">1</a></sup></p>
 <p><b>Dry run:</b> <a href="../../../sim/so101/nastaveni/?lang=en">dry-run servo setup</a>, step 1. The virtual arm connects without a cable.</p>
 </div>
 </div>
@@ -101,7 +102,7 @@ pip install -e ".[feetech]"</code></pre>
 <div class="a4 prose">
 <h2>Each servo gets its own ID</h2>
 <p>New servos all ship with the same ID, so on a shared bus they would talk over each other. <code>lerobot-setup-motors</code> walks you through it: <b>only one servo</b> is connected to the board at a time, starting with the gripper (ID 6) and ending with the base (ID 1).<sup><a href="#sources">1</a></sup></p>
-<pre><code>lerobot-setup-motors \
+<pre tabindex="0"><code>lerobot-setup-motors \
     --robot.type=so101_follower \
     --robot.port=/dev/ttyACM0</code></pre>
 <p>The leader arm is the same, with <code>--teleop.type=so101_leader</code> and <code>--teleop.port=…</code>.</p>
@@ -116,7 +117,7 @@ pip install -e ".[feetech]"</code></pre>
 <div class="a4 prose">
 <h2>The centre and range of every joint</h2>
 <p><code>lerobot-calibrate</code> first records the middle of the range (all joints centred, as in the picture in the guide), then you move each joint from stop to stop.<sup><a href="#sources">1</a></sup> Give the arms fixed names in <code>--robot.id</code> and <code>--teleop.id</code>: LeRobot stores the calibration under that ID, and you use the same ID for teleoperation and recording.<sup><a href="#sources">4</a></sup></p>
-<pre><code>lerobot-calibrate \
+<pre tabindex="0"><code>lerobot-calibrate \
     --robot.type=so101_follower \
     --robot.port=/dev/ttyACM0 \
     --robot.id=my_follower_arm</code></pre>
@@ -131,7 +132,7 @@ pip install -e ".[feetech]"</code></pre>
 <div class="a1 mono">06 — Teleoperation</div>
 <div class="a4 prose">
 <h2>The follower repeats the leader</h2>
-<pre><code>lerobot-teleoperate \
+<pre tabindex="0"><code>lerobot-teleoperate \
     --robot.type=so101_follower \
     --robot.port=/dev/ttyACM0 \
     --robot.id=my_follower_arm \
@@ -140,7 +141,7 @@ pip install -e ".[feetech]"</code></pre>
     --teleop.id=my_leader_arm</code></pre>
 <p>If a calibration is missing, the command runs it first, according to the guide.<sup><a href="#sources">4</a></sup></p>
 <p><b>Safety:</b> clamp the arm to the table, keep its reach clear and keep the power supply within reach. Kits are for ages 14 and up, younger children only under adult supervision.</p>
-<p><b>Dry run:</b> the wizard, step 4 (testing with sliders). The same wizard can also connect a real arm over Web Serial in desktop Chrome or Edge. It is in beta: use it at your own risk.</p>
+<p><b>Dry run:</b> the wizard, step 4 (testing with sliders). Connecting a real arm straight from the browser stays hidden until it passes a safety review on hardware; drive the real arm through LeRobot.</p>
 </div>
 </div>
 </section>

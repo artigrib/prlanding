@@ -140,7 +140,7 @@ await check('worksheet prints without site chrome', '/pro-skoly/pracovni-list/',
   await p.emulateMedia({ media: 'print' });
   for (const sel of ['.site-h', '.site-f', '[data-print]']) if (await p.locator(sel).first().isVisible()) throw new Error(sel + ' visible in print');
 });
-for (const [path, nSrc] of [['/navody/', 0], ['/navody/so101-lerobot-prvni-kroky/', 3], ['/navody/bojovi-roboti-150-g/', 2], ['/navody/licence-open-source-hardwaru/', 4]]) {
+for (const [path, nSrc] of [['/navody/', 0], ['/navody/so101-lerobot-prvni-kroky/', 3], ['/navody/bojovi-roboti-150-g/', 2], ['/navody/licence-open-source-hardwaru/', 4], ['/navody/so101-sestaveni/', 5]]) {
   await check('guide ' + path, path, async p => {
     const html = await (await p.request.get(BASE + path)).text();
     if (!(await p.locator('h1').innerText()).trim()) throw new Error('empty h1');
@@ -151,6 +151,37 @@ for (const [path, nSrc] of [['/navody/', 0], ['/navody/so101-lerobot-prvni-kroky
     if (/Kassow|investor/i.test(html)) throw new Error('forbidden mention');
   });
 }
+// SO-101 build path: seven stages, each with a time estimate, a checklist and troubleshooting; no horizontal scroll at 360 px
+await check('assembly guide: stages, estimates, 360 px', '/navody/so101-sestaveni/', async p => {
+  await p.setViewportSize({ width: 360, height: 780 });
+  for (let i = 0; i <= 6; i++) {
+    const sec = p.locator('#e' + i);
+    if (!/odhad/.test(await sec.locator('.stage-meta').innerText())) throw new Error(`stage ${i}: time not marked as an estimate`);
+    if (i < 6 && !(await sec.locator('ul.chk li').count())) throw new Error(`stage ${i}: no checklist`);
+    if (i < 6 && !(await sec.locator('.fix').count())) throw new Error(`stage ${i}: no troubleshooting`);
+  }
+  if (!(await p.locator('a[href$="sim/so101/nastaveni/"]').count())) throw new Error('no link to the setup wizard');
+  if (!(await p.locator('a[href$="kontrolni-seznam/"]').count())) throw new Error('no link to the checklist');
+  if ((await p.evaluate(() => document.documentElement.scrollWidth)) > 360) throw new Error('horizontal scroll at 360 px');
+});
+await check('bench checklist prints on one A4 page', '/navody/so101-sestaveni/kontrolni-seznam/', async p => {
+  if ((await p.locator('.ws-box ul.chk').count()) < 6) throw new Error('checklist blocks missing');
+  await p.emulateMedia({ media: 'print' });
+  for (const sel of ['.site-h', '.site-f', '[data-print]']) if (await p.locator(sel).first().isVisible()) throw new Error(sel + ' visible in print');
+  const pdf = await p.pdf({ format: 'A4', margin: { top: '14mm', bottom: '14mm', left: '14mm', right: '14mm' }, preferCSSPageSize: true });
+  const pages = (pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length;
+  if (pages !== 1) throw new Error('checklist prints on ' + pages + ' pages');
+});
+// build log template: draft, noindex, not in the sitemap and not linked from any page
+await check('build log draft: noindex, unlinked', '/stavba/so101/', async p => {
+  if ((await p.locator('meta[name="robots"]').getAttribute('content')) !== 'noindex,nofollow') throw new Error('not noindex');
+  if ((await p.locator('article.log-entry').count()) < 7) throw new Error('log entries missing');
+  if (/TODO/.test(await p.locator('body').innerText())) throw new Error('visible TODO');
+  const sm = await (await p.request.get(BASE + '/sitemap.xml')).text();
+  if (/stavba\/|en\/build\//.test(sm)) throw new Error('build log in the sitemap');
+  for (const path of ['/', '/navody/', '/navody/so101-sestaveni/', '/sada/so101/', '/en/guides/so101-assembly/'])
+    if (/stavba\/so101|en\/build\/so101/.test(await (await p.request.get(BASE + path)).text())) throw new Error('build log linked from ' + path);
+});
 await check('home nav links the schools page', '/', async p => {
   const a = p.locator('.nav a[href="pro-skoly/"]');
   if (!(await a.count())) throw new Error('no Pro školy in the home nav');

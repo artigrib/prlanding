@@ -26,7 +26,7 @@
 <div class="a4 prose">
 <h2>Dvě ruce, šest serv v každé</h2>
 <p>Sestava má dvě ruce. <b>Ovládací ruku (leader)</b> vedete vlastní rukou, <b>výkonná ruka (follower)</b> pohyb opakuje. Obě mají šest serv Feetech STS3215. Follower má všechna serva s převodem 1:345, leader má na jednotlivých kloubech různé převody (1:191, 1:345 a 1:147), aby šel lehce vést rukou. Přesnou tabulku najdete v oficiálním návodu.<sup><a href="#zdroje">1</a></sup></p>
-<p>Dále potřebujete řídicí desku serv pro každou ruku, USB kabely, napájecí zdroj podle varianty serv a počítač s Pythonem. Kompletní kusovník a soubory k tisku jsou v repozitáři projektu.<sup><a href="#zdroje">2</a></sup></p>
+<p>Dále potřebujete řídicí desku serv pro každou ruku, USB kabely, napájecí zdroj podle varianty serv a počítač s Pythonem. Kompletní kusovník a soubory k tisku jsou v repozitáři projektu.<sup><a href="#zdroje">2</a></sup> Stavbu od tisku po první pohyb popisuje návod <a href="{root}navody/so101-sestaveni/">Sestavení SO-101 krok za krokem</a>.</p>
 <p><b>Ještě před nákupem</b> si ruku vyzkoušejte v <a href="{root}sim/so101/">simulaci SO-101</a>. Uvidíte, jak se klouby hýbou a co ruka zvládne.</p>
 </div>
 </div>
@@ -38,11 +38,12 @@
 <div class="a4 prose">
 <h2>Python 3.12 a LeRobot</h2>
 <p>Oficiální návod doporučuje Python 3.12 v prostředí conda (přes Miniforge); fungují i <code>uv</code> nebo <code>venv</code>.<sup><a href="#zdroje">3</a></sup> Pro SO-101 se instaluje i podpora serv Feetech:<sup><a href="#zdroje">1</a></sup></p>
-<pre><code>conda create -y -n lerobot python=3.12
+<pre tabindex="0"><code>conda create -y -n lerobot python=3.12
 conda activate lerobot
 conda install ffmpeg -c conda-forge
 git clone https://github.com/huggingface/lerobot.git
 cd lerobot
+pip install -e ".[core_scripts]"
 pip install -e ".[feetech]"</code></pre>
 <p class="src">Balíček <code>ffmpeg</code> je podle návodu potřeba ke čtení videa v datasetech; na některých platformách ho lze vynechat. Podrobnosti v instalačním návodu.<sup><a href="#zdroje">3</a></sup></p>
 </div>
@@ -54,7 +55,7 @@ pip install -e ".[feetech]"</code></pre>
 <div class="a1 mono">03 — Port</div>
 <div class="a4 prose">
 <h2>Najděte port každé ruky</h2>
-<p>Příkaz <code>lerobot-find-port</code> vás vyzve k odpojení USB kabelu a vypíše port, který zmizel. Na Linuxu vypadá jako <code>/dev/ttyACM0</code>, na macOS <code>/dev/tty.usbmodem…</code>, na Windows <code>COM3</code>. Zopakujte pro obě ruce.</p>
+<p>Příkaz <code>lerobot-find-port</code> vás vyzve k odpojení USB kabelu a vypíše port, který zmizel. Na Linuxu vypadá jako <code>/dev/ttyACM0</code>, na macOS <code>/dev/tty.usbmodem…</code>, na Windows <code>COM3</code>. Zopakujte pro obě ruce. Na Linuxu může být potřeba přístup k portu, například <code>sudo chmod 666 /dev/ttyACM0</code>.<sup><a href="#zdroje">1</a></sup></p>
 <p><b>Nanečisto:</b> <a href="{root}sim/so101/nastaveni/">Nastavení serv nanečisto</a>, krok 1. Virtuální ruka se připojí bez kabelu.</p>
 </div>
 </div>
@@ -66,7 +67,7 @@ pip install -e ".[feetech]"</code></pre>
 <div class="a4 prose">
 <h2>Každé servo dostane vlastní ID</h2>
 <p>Nová serva mají z výroby stejné ID, na společné sběrnici by se překřikovala. Příkaz <code>lerobot-setup-motors</code> vás provede nastavením: vždy je k desce připojené <b>jen jedno servo</b>, začíná se chapadlem (ID 6) a končí základnou (ID 1).<sup><a href="#zdroje">1</a></sup></p>
-<pre><code>lerobot-setup-motors \
+<pre tabindex="0"><code>lerobot-setup-motors \
     --robot.type=so101_follower \
     --robot.port=/dev/ttyACM0</code></pre>
 <p>Pro ovládací ruku stejně, jen s <code>--teleop.type=so101_leader</code> a <code>--teleop.port=…</code>.</p>
@@ -81,7 +82,7 @@ pip install -e ".[feetech]"</code></pre>
 <div class="a4 prose">
 <h2>Střed a rozsah každého kloubu</h2>
 <p>Příkaz <code>lerobot-calibrate</code> nejdřív zapíše střed rozsahu (všechny klouby doprostřed, jak ukazuje obrázek v návodu), pak projedete každým kloubem od dorazu k dorazu.<sup><a href="#zdroje">1</a></sup> Ruce dejte stálá jména v <code>--robot.id</code> a <code>--teleop.id</code>: podle nich LeRobot ukládá kalibraci a stejné ID pak používáte při teleoperaci i nahrávání.<sup><a href="#zdroje">4</a></sup></p>
-<pre><code>lerobot-calibrate \
+<pre tabindex="0"><code>lerobot-calibrate \
     --robot.type=so101_follower \
     --robot.port=/dev/ttyACM0 \
     --robot.id=moje_vykonna_ruka</code></pre>
@@ -96,7 +97,7 @@ pip install -e ".[feetech]"</code></pre>
 <div class="a1 mono">06 — Teleoperace</div>
 <div class="a4 prose">
 <h2>Výkonná ruka opakuje ovládací</h2>
-<pre><code>lerobot-teleoperate \
+<pre tabindex="0"><code>lerobot-teleoperate \
     --robot.type=so101_follower \
     --robot.port=/dev/ttyACM0 \
     --robot.id=moje_vykonna_ruka \
@@ -105,7 +106,7 @@ pip install -e ".[feetech]"</code></pre>
     --teleop.id=moje_ovladaci_ruka</code></pre>
 <p>Pokud kalibrace chybí, příkaz ji podle návodu spustí sám.<sup><a href="#zdroje">4</a></sup></p>
 <p><b>Bezpečnost:</b> ruku upevněte ke stolu, v jejím dosahu nic nemějte a napájení mějte na dosah. Sady jsou určené osobám od 14 let, mladším jen pod dohledem dospělého.</p>
-<p><b>Nanečisto:</b> průvodce, krok 4 (test posuvníky). Ve stejném průvodci je i připojení skutečné ruky přes Web Serial v Chrome nebo Edge na počítači. Je ve verzi beta: používáte ho na vlastní riziko.</p>
+<p><b>Nanečisto:</b> průvodce, krok 4 (test posuvníky). Připojení skutečné ruky přímo z prohlížeče je zatím skryté, dokud neprojde bezpečnostní kontrolou na hardwaru; skutečnou ruku ovládejte přes LeRobot.</p>
 </div>
 </div>
 </section>

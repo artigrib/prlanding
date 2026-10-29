@@ -1,0 +1,342 @@
+<!--meta
+{"title":"Sestavení SO-101 krok za krokem | printedrobotics.cz",
+ "description":"Stavba robotické ruky SO-101 v sedmi etapách: příprava, tisk, ID serv, mechanika kloub po kloubu, elektronika, první pohyb s LeRobotem a co z toho si vyzkoušíte v simulaci.",
+ "ogTitle":"Sestavení SO-101 krok za krokem",
+ "ogDesc":"Etapy stavby SO-101 s odhadem času, kontrolním seznamem a řešením nejčastějších chyb. Podle oficiálního návodu LeRobot a repozitáře SO-ARM100.",
+ "h":"Sestavení SO-101",
+ "crumb":[["Návody","navody"]],
+ "article":true,"date":"2026-10-29",
+ "image":"img/so101_white.jpg","imageW":1200,"imageH":900,"imageAlt":"Robotická ruka SO-101, vizualizace z CAD projektu"}
+-->
+<section class="g doc-hero">
+<div class="a1 mono">Návod · 29. 10. 2026</div>
+<div class="a4" style="display:flex;flex-direction:column;gap:20px">
+<h1>Sestavení SO-101 krok za krokem</h1>
+<p class="lead">Postavte si pár rukou SO-101 (ovládací leader a výkonnou follower) od vybalení po první pohyb. Sedm etap, u každé odhad času, náročnost, kontrolní seznam a co dělat, když to nejde.</p>
+<p class="doc-note"><i aria-hidden="true"></i><span><b>Jak číst tento návod.</b> Postup, šrouby a příkazy přebíráme z <a href="https://huggingface.co/docs/lerobot/so101">oficiálního návodu LeRobot</a> a z <a href="https://github.com/TheRobotStudio/SO-ARM100">repozitáře SO-ARM100</a> (stav k 29. 10. 2026). Doplňky, které v oficiálních zdrojích nejsou, označujeme <b>naše poznámka</b>. Všechny časy jsou <b>odhady</b>: zdokumentovanou vlastní stavbu zatím nemáme, upřesníme je podle ní. Když se tento návod a oficiální dokumentace liší, platí oficiální dokumentace.</span></p>
+<ol class="toc" aria-label="Obsah">
+<li><a href="#prehled">Přehled</a></li><li><a href="#e0">0 Před stavbou</a></li><li><a href="#e1">1 Tisk</a></li><li><a href="#e2">2 ID serv</a></li><li><a href="#e3">3 Mechanika</a></li><li><a href="#e4">4 Elektronika</a></li><li><a href="#e5">5 První pohyb</a></li><li><a href="#e6">6 Simulace a realita</a></li><li><a href="#zdroje">Zdroje</a></li>
+</ol>
+<p class="doc-act"><a class="btn btn-o" href="{root}navody/so101-sestaveni/kontrolni-seznam/">Kontrolní seznam k vytištění <span aria-hidden="true">→</span></a><a class="btn btn-o" href="{root}sim/so101/nastaveni/">Nastavení serv nanečisto <span aria-hidden="true">→</span></a></p>
+</div>
+</section>
+
+<section class="section" id="prehled">
+<div class="g rule">
+<div class="a1 mono">Přehled</div>
+<div class="a4 prose">
+<h2>Sedm etap, odhad 10 až 19 hodin práce</h2>
+<figure class="doc-fig"><img src="{root}img/so101_white.jpg" alt="Robotická ruka SO-101, vizualizace z CAD projektu" width="1200" height="900" loading="lazy"><figcaption>Obr. 1 — SO-101, vizualizace z CAD projektu (ne fotografie stavby). Rozložený pohled na všechny díly otevřete na stránce <a href="{root}sada/so101/">SO-101</a> tlačítkem Rozložit.</figcaption></figure>
+<p>Pořadí sleduje oficiální návod: <b>ID serv se nastavují před montáží</b>, každé servo samostatně. Kalibrace přichází až na sestavenou ruku, proto je v etapě 5.</p>
+<div class="doc-t-wrap" tabindex="0" role="region" aria-label="Etapy stavby a odhad času">
+<table class="doc-t">
+<thead><tr><th scope="col">Etapa</th><th scope="col">Odhad času</th><th scope="col">Náročnost</th></tr></thead>
+<tbody>
+<tr><th scope="row"><a href="#e0">0 Před stavbou</a></th><td>1–2 h</td><td>snadné</td></tr>
+<tr><th scope="row"><a href="#e1">1 Tisk</a></th><td>≈ 16,5 h tiskárny + 1,5–3 h práce</td><td>střední</td></tr>
+<tr><th scope="row"><a href="#e2">2 ID serv</a></th><td>1–2 h</td><td>snadné</td></tr>
+<tr><th scope="row"><a href="#e3">3 Mechanika</a></th><td>4–8 h za pár</td><td>náročné</td></tr>
+<tr><th scope="row"><a href="#e4">4 Elektronika</a></th><td>0,5–1 h</td><td>střední</td></tr>
+<tr><th scope="row"><a href="#e5">5 První pohyb</a></th><td>1–2 h</td><td>střední</td></tr>
+<tr><th scope="row"><a href="#e6">6 Simulace a realita</a></th><td>0,5–1 h, volitelné</td><td>snadné</td></tr>
+<tr><th scope="row">Celkem</th><td>≈ 10–19 h práce + ≈ 16,5 h tisku</td><td></td></tr>
+</tbody>
+</table>
+</div>
+<p class="src">Všechny časy jsou odhady, ne změřené hodnoty. Doba tisku ≈ 16,5 h za pár je údaj z našeho katalogu; oficiální zdroje dobu tisku neuvádějí. Pokud máte stavebnici s vytištěnými díly, etapu 1 přeskočíte.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="e0">
+<div class="g rule">
+<div class="a1 mono">0 — Před stavbou</div>
+<div class="a4 prose">
+<h2>Nářadí, místo a kontrola serv</h2>
+<p class="stage-meta"><span>Čas <b>1–2 h (odhad)</b></span><span>Náročnost <b>snadné</b></span></p>
+<h3>Nářadí a pracoviště</h3>
+<ul>
+<li>Křížové šroubováky <b>PH0 a PH1</b>. Repozitář SO-ARM100 je výslovně doporučuje pro šrouby ruky.<sup><a href="#zdroje">2</a></sup></li>
+<li>Malý plochý šroubovák nebo špachtle na odstranění podpor.<sup><a href="#zdroje">1</a></sup></li>
+<li>Svěrky ke stolu: kusovník počítá se 4 pro pár (2 pro jednu ruku).<sup><a href="#zdroje">2</a></sup></li>
+<li><b>Naše poznámka:</b> miska nebo krabička s přihrádkami na šrouby, dobré světlo, stůl, kam ruku později přišroubujete svěrkami, a počítač s USB-C.</li>
+</ul>
+<h3>Varianty serv: zkontrolujte hned po vybalení</h3>
+<p>Všechna serva jsou Feetech STS3215, ale liší se převodem. Follower má šest stejných serv, leader má tři různé převody, aby šel lehce vést rukou a přitom unesl vlastní váhu.<sup><a href="#zdroje">1</a></sup> Záměna je nejčastější chyba, která se projeví až po sestavení.</p>
+<div class="doc-t-wrap" tabindex="0" role="region" aria-label="Převod serva pro každý kloub">
+<table class="doc-t">
+<thead><tr><th scope="col">ID</th><th scope="col">Kloub (název v LeRobot)</th><th scope="col">Follower</th><th scope="col">Leader</th></tr></thead>
+<tbody>
+<tr><td class="n">1</td><th scope="row">Otočení základny (shoulder_pan)</th><td>1/345 (C001)</td><td>1/191 (C044)</td></tr>
+<tr><td class="n">2</td><th scope="row">Rameno (shoulder_lift)</th><td>1/345 (C001)</td><td>1/345 (C001)</td></tr>
+<tr><td class="n">3</td><th scope="row">Loket (elbow_flex)</th><td>1/345 (C001)</td><td>1/191 (C044)</td></tr>
+<tr><td class="n">4</td><th scope="row">Zápěstí, náklon (wrist_flex)</th><td>1/345 (C001)</td><td>1/147 (C046)</td></tr>
+<tr><td class="n">5</td><th scope="row">Zápěstí, rotace (wrist_roll)</th><td>1/345 (C001)</td><td>1/147 (C046)</td></tr>
+<tr><td class="n">6</td><th scope="row">Chapadlo (gripper)</th><td>1/345 (C001)</td><td>1/147 (C046)</td></tr>
+</tbody>
+</table>
+</div>
+<p class="src">Převody podle oficiálního návodu LeRobot, kódy C001, C044 a C046 podle kusovníku SO-ARM100.<sup><a href="#zdroje">1, 2</a></sup> Pro pár tedy: 7× 1/345, 2× 1/191, 3× 1/147. Zda je kód nebo převod vyznačený přímo na servu, jsme na skutečných kusech zatím neověřili; když označení nenajdete, ověřte ho u prodejce a serva si hned popište.</p>
+<p><b>Napětí:</b> serva 7,4 V se napájí zdrojem 5 V. Follower lze postavit i se silnějšími servy 12 V; pak potřebuje zdroj 12 V s proudem aspoň 5 A. Leader má u SO-101 vždy serva 7,4 V.<sup><a href="#zdroje">2</a></sup></p>
+<h3>Kontrolní seznam</h3>
+<ul class="chk">
+<li>Serva roztříděná na leader a follower a popsaná číslem kloubu podle tabulky.</li>
+<li>Zdroj odpovídá servům: 5 V pro 7,4 V serva, 12 V (5 A+) jen pro 12V serva followeru.</li>
+<li>2 řídicí desky serv, 2 kabely USB-C, svěrky.</li>
+<li>Šroubováky PH0 a PH1, šrouby M2×6 a M3×6.</li>
+<li>Prostudovaný <a href="{root}sada/so101/">rozložený pohled</a> nebo animace Sestavení.</li>
+</ul>
+<h3>Když to nejde</h3>
+<ul>
+<li class="fix"><b>Neumím rozeznat převod serva.</b> Neodhadujte podle vzhledu, serva vypadají stejně. Zeptejte se prodejce nebo dodavatele sady.</li>
+<li class="fix"><b>Chybí šrouby.</b> Kusovník SO-ARM100 šrouby samostatně neuvádí; oficiální návod používá jen M2×6 a M3×6.<sup><a href="#zdroje">1, 2</a></sup> Ve stavebnici je najdete ve spojovacím materiálu roztříděném po krocích.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="section" id="e1">
+<div class="g rule">
+<div class="a1 mono">1 — Tisk</div>
+<div class="a4 prose">
+<h2>Tisk dílů a odstranění podpor</h2>
+<p class="stage-meta"><span>Čas <b>≈ 16,5 h tiskárny + 1,5–3 h práce (odhad)</b></span><span>Náročnost <b>střední</b></span></p>
+<p>Doporučené nastavení podle repozitáře SO-ARM100:<sup><a href="#zdroje">2</a></sup></p>
+<ul>
+<li>Materiál <b>PLA+</b>, výplň <b>15 %</b>.</li>
+<li>Tryska 0,4 mm s vrstvou 0,2 mm, nebo tryska 0,6 mm s vrstvou 0,4 mm.</li>
+<li>Podpory všude, kromě sklonů nad 45° od vodorovné roviny. <b>V otvorech pro šrouby s vodorovnou osou podpory být nemají.</b></li>
+<li>Orientaci řešit nemusíte: všechny díly leaderu nebo followeru jsou v jednom souboru, už natočené osou Z nahoru kvůli co nejmenším podporám. Soubory jsou pro podložku 220 × 220 mm (Ender) a 205 × 250 mm (Prusa).</li>
+</ul>
+<p><b>Nejdřív měrky.</b> Ve složce Gauges jsou zkušební díly: měrka na servo STS3215 (Gauge 0 a Gauge tight), nebo na kostku Lego 4×2. Když měrka 0 nesedí, upravte nastavení tiskárny dřív, než vytisknete celou ruku.<sup><a href="#zdroje">2</a></sup></p>
+<h3>Kontrolní seznam</h3>
+<ul class="chk">
+<li>Tiskárna kalibrovaná, podložka čistá a suchá.</li>
+<li>Měrka 0 sedí na servo (nebo Lego) podle videa v repozitáři.</li>
+<li>Vytištěný soubor leaderu i followeru pro vaši velikost podložky.</li>
+<li>Podpory odstraněné, otvory pro šrouby a lůžka serv čisté.</li>
+</ul>
+<h3>Když to nejde</h3>
+<ul>
+<li class="fix"><b>Servo nejde do lůžka nebo v něm volně sedí.</b> Vytiskněte znovu měrku a upravte rozměrovou přesnost tiskárny. Naše poznámka: lůžko nebruste ani nevrtejte naslepo, servo pak drží jen šrouby.</li>
+<li class="fix"><b>Podpora zůstala v otvoru.</b> Opatrně ji vyrýpněte malým šroubovákem.<sup><a href="#zdroje">1</a></sup> Naše poznámka: otvor nevrtejte větším vrtákem, šroub M2 by v něm nedržel.</li>
+<li class="fix"><b>Nemám tiskárnu.</b> Repozitář odkazuje na tiskové služby; v naší <a href="{root}sada/so101/">stavebnici</a> jsou díly vytištěné.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="section" id="e2">
+<div class="g rule">
+<div class="a1 mono">2 — ID serv</div>
+<div class="a4 prose">
+<h2>Každé servo dostane vlastní ID, ještě před montáží</h2>
+<p class="stage-meta"><span>Čas <b>1–2 h včetně instalace LeRobotu (odhad)</b></span><span>Náročnost <b>snadné</b></span></p>
+<p><b>Nanečisto:</b> celý postup (port, ID, kalibrace, test) si projděte v <a href="{root}sim/so101/nastaveni/">průvodci Nastavení serv nanečisto</a>. Emulovaná serva mají po „vybalení“ všechna ID 1 jako skutečná a průvodce umí nasimulovat i typické poruchy.</p>
+<p>Instalace podle oficiálního návodu (Python 3.12):<sup><a href="#zdroje">3, 1</a></sup></p>
+<pre tabindex="0"><code>conda create -y -n lerobot python=3.12
+conda activate lerobot
+git clone https://github.com/huggingface/lerobot.git
+cd lerobot
+pip install -e ".[core_scripts]"
+pip install -e ".[feetech]"</code></pre>
+<p>Port každé řídicí desky najdete příkazem <code>lerobot-find-port</code> (vyzve vás k odpojení USB). Na Linuxu může být potřeba přístup k portu: <code>sudo chmod 666 /dev/ttyACM0</code>.<sup><a href="#zdroje">1</a></sup></p>
+<p>Pak pro follower (a stejně pro leader s <code>--teleop.type=so101_leader</code> a <code>--teleop.port</code>):<sup><a href="#zdroje">1</a></sup></p>
+<pre tabindex="0"><code>lerobot-setup-motors \
+    --robot.type=so101_follower \
+    --robot.port=/dev/tty.usbmodem585A0076841  # &lt;- paste here the port found at previous step</code></pre>
+<p>Skript vás vyzve „Connect the controller board to the 'gripper' motor only and press enter.“ Připojte <b>jen jedno servo</b>, bez dalšího serva v řetězu. Začíná se chapadlem (ID 6) a končí otočením základny (ID 1).<sup><a href="#zdroje">1</a></sup></p>
+<h3>Kontrolní seznam</h3>
+<ul class="chk">
+<li>LeRobot nainstalovaný, port obou desek zapsaný.</li>
+<li>U desky Waveshare jsou obě propojky (jumpery) na kanálu <b>B</b> (USB).<sup><a href="#zdroje">1</a></sup></li>
+<li>Všech 6 serv followeru má ID 6 až 1 a štítek s číslem.</li>
+<li>Všech 6 serv leaderu má ID 6 až 1 a štítek s číslem. Leader a follower nemíchejte.</li>
+<li>Do každého serva je zapojený jeden 3pinový kabel (oficiální návod to doporučuje před montáží).<sup><a href="#zdroje">1</a></sup></li>
+</ul>
+<h3>Když to nejde</h3>
+<ul>
+<li class="fix"><b>Chyba při zápisu ID.</b> Zkontrolujte zdroj, kabel USB a 3pinový kabel k servu. Mezi kroky zkontrolujte, že se zdroj při manipulaci s deskou neodpojil.<sup><a href="#zdroje">1</a></sup></li>
+<li class="fix"><b>Deska Waveshare nekomunikuje.</b> Propojky musí být na kanálu B (USB).<sup><a href="#zdroje">1</a></sup></li>
+<li class="fix"><b>Odpovídá víc serv nebo žádné.</b> K desce bylo připojeno víc serv najednou, nebo servo zůstalo v řetězu. V průvodci nanečisto si tuto poruchu (duplicitní ID) můžete vyzkoušet.</li>
+<li class="fix"><b>Serva z jiného robota.</b> Mají jiné ID a rychlost sběrnice, nastavte je tímto krokem znovu.<sup><a href="#zdroje">1</a></sup></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="section" id="e3">
+<div class="g rule">
+<div class="a1 mono">3 — Mechanika</div>
+<div class="a4 prose">
+<h2>Kloub po kloubu: základna, rameno, loket, zápěstí, chapadlo</h2>
+<p class="stage-meta"><span>Čas <b>2–4 h na ruku, 4–8 h za pár (odhad)</b></span><span>Náročnost <b>náročné</b></span></p>
+<p>Kroky a šrouby jsou z oficiálního návodu; u každého kloubu je tam krátké video.<sup><a href="#zdroje">1</a></sup> Animaci v pořadí oficiálního návodu spustíte na stránce <a href="{root}sada/so101/">SO-101</a> tlačítkem Sestavení, nebo v <a href="{root}sim/so101/">simulaci</a> přes „Z čeho se ruka skládá“.</p>
+<p><b>Obecná pravidla.</b> Oficiální návod používá jen dvě velikosti šroubů: <b>M2×6</b> (nejmenší) hlavně na uchycení serv a držáků a <b>M3×6</b> na horny (otočné páky serv) a díly připevněné k hornům. U serv se dvěma horny se šroubem zajišťuje jen horní; spodní horn je bez šroubu.<sup><a href="#zdroje">1</a></sup></p>
+
+<h3>Kloub 1: otočení základny (ID 1)</h3>
+<ul>
+<li>Nasaďte oba horny, horní zajistěte šroubem M3×6.</li>
+<li>Servo vložte do základny a připevněte 4× M2×6 (dva shora, dva zespodu).</li>
+<li>Nasuňte první držák serva, 2× M2×6 (z každé strany jeden).</li>
+<li>Nasaďte díl ramene a dotáhněte 4× M3×6 shora a 4× M3×6 zespodu. Přidejte držák serva ramene.</li>
+</ul>
+<h3>Kloub 2: rameno (ID 2)</h3>
+<ul>
+<li>Oba horny, horní M3×6. Servo zasuňte shora a připevněte 4× M2×6.</li>
+<li>Horní rameno připevněte 4× M3×6 z každé strany.</li>
+</ul>
+<h3>Kloub 3: loket (ID 3)</h3>
+<ul>
+<li>Oba horny, horní M3×6. Servo 3 vložte a připevněte 4× M2×6.</li>
+<li>Předloktí připevněte k servu 3 4× M3×6 z každé strany.</li>
+</ul>
+<h3>Kloub 4: zápěstí, náklon (ID 4)</h3>
+<ul>
+<li>Oba horny, horní M3×6. <b>Nejdřív</b> nasuňte držák serva 4, <b>pak</b> zasuňte servo 4 a připevněte 4× M2×6.</li>
+</ul>
+<h3>Kloub 5: zápěstí, rotace (ID 5)</h3>
+<ul>
+<li>Servo 5 vložte do držáku zápěstí, 2× M2×6 zepředu.</li>
+<li>Na toto servo patří <b>jen jeden horn</b>, zajistěte ho M3×6.</li>
+<li>Zápěstí připevněte k servu 4 šrouby M3×6 z obou stran (oficiální návod: „4 M3x6mm screws on both sides“).</li>
+</ul>
+<h3>Chapadlo followeru (ID 6)</h3>
+<ul>
+<li>Chapadlo připevněte k hornu zápěstí 4× M3×6.</li>
+<li>Servo chapadla vložte a připevněte 2× M2×6 z každé strany. Oba horny, horní M3×6.</li>
+<li>Pohyblivou čelist připevněte 4× M3×6 z obou stran.</li>
+</ul>
+<h3>Rukojeť leaderu (ID 6)</h3>
+<ul>
+<li>Držák leaderu na zápěstí 4× M3×6, rukojeť k držáku 1× M2×6.</li>
+<li>Servo vložte, 2× M2×6 z každé strany, horn M3×6. Spoušť připevněte 4× M3×6.</li>
+</ul>
+
+<h3>Kontrolní seznam (pro každou ruku)</h3>
+<ul class="chk">
+<li>Každé servo sedí v kloubu se správným ID a převodem (leader: 1/191, 1/345, 1/191, 1/147, 1/147, 1/147).</li>
+<li>U každého serva se dvěma horny je horní zajištěný M3×6, spodní volný.</li>
+<li>Servo 5 má jen jeden horn.</li>
+<li>Kabely vedou volně, nic se neskřípne při pohybu kloubu z dorazu na doraz (zkuste rukou, bez napájení).</li>
+<li>Žádný šroub není delší než 6 mm a žádný nepřetáčí plast.</li>
+</ul>
+<h3>Když to nejde</h3>
+<ul>
+<li class="fix"><b>Leader jde ztuha nebo sám padá.</b> Nejspíš je zaměněné servo: zkontrolujte převody podle tabulky v etapě 0. Leader se servy 1/345 všude se vede rukou těžce.</li>
+<li class="fix"><b>Horn a nulová poloha.</b> Oficiální návod žádnou nulovou polohu hornu při montáži nepředepisuje: střed rozsahu se nastaví až kalibrací (etapa 5), kdy LeRobot zapíše do serva posun tak, aby střed kloubu odpovídal polovině otáčky.<sup><a href="#zdroje">5</a></sup> Naše poznámka: hlídejte hlavně, aby horn dosedl celou drážkou na hřídel a nebyl nasazený šikmo.</li>
+<li class="fix"><b>Kabel se zasekává nebo vypadává.</b> Zapojte kabel do serva dřív, než servo zasunete do dílu, jak doporučuje oficiální návod.<sup><a href="#zdroje">1</a></sup> Naše poznámka: nechte u každého kloubu malou smyčku, aby kabel při pohybu netahal za konektor.</li>
+<li class="fix"><b>Strhnutý závit v plastu.</b> Naše poznámka: šrouby M2 a M3 se řežou přímo do plastu. Dotahujte jen do odporu, ne silou. Strhnutý otvor obvykle znamená vytisknout díl znovu.</li>
+<li class="fix"><b>Šroub nejde dotáhnout nebo něco drhne.</b> Naše poznámka: zkontrolujte délku; delší šroub než 6 mm může narazit dovnitř serva nebo prorazit plast.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="section" id="e4">
+<div class="g rule">
+<div class="a1 mono">4 — Elektronika</div>
+<div class="a4 prose">
+<h2>Řetěz serv, řídicí deska a napájení</h2>
+<p class="stage-meta"><span>Čas <b>0,5–1 h (odhad)</b></span><span>Náročnost <b>střední</b></span></p>
+<p>Po nastavení ID se serva propojí do řetězu: 3pinový kabel z každého serva do dalšího a kabel z prvního serva (otočení základny, ID 1) do řídicí desky. Desku pak připevněte k základně ruky.<sup><a href="#zdroje">1</a></sup> Pro desku Waveshare je v repozitáři tištěná destička (WaveShare_Mounting_Plate).<sup><a href="#zdroje">2</a></sup></p>
+<p><b>Napájení:</b> každá ruka má vlastní desku a vlastní zdroj. Serva 7,4 V na zdroj 5 V, 12V serva followeru na zdroj 12 V (5 A a víc).<sup><a href="#zdroje">2</a></sup> Naše poznámka: 12V zdroj nikdy nepřipojujte k ruce se servy 7,4 V, je to nad jejich jmenovitým napětím.</p>
+<h3>Kontrolní seznam</h3>
+<ul class="chk">
+<li>Řetěz: deska → ID 1 → 2 → 3 → 4 → 5 → 6, všechny konektory zacvaknuté.</li>
+<li>Propojky Waveshare na kanálu B.</li>
+<li>Zdroj odpovídá servům (5 V nebo 12 V) a je zapojený do desky dané ruky.</li>
+<li>Zdroj máte na dosah, abyste ho mohli kdykoli vytáhnout.</li>
+</ul>
+<h3>Když to nejde</h3>
+<ul>
+<li class="fix"><b>Některé servo neodpovídá.</b> Uvolněný kabel v řetězu odřízne všechna serva za ním. V průvodci nanečisto si poruchu „Uvolněný kabel“ vyzkoušíte i s diagnostikou.</li>
+<li class="fix"><b>Serva se restartují nebo slábnou při zátěži.</b> Naše poznámka: zkontrolujte, že zdroj odpovídá kusovníku a že konektor zdroje drží; v průvodci nanečisto je k tomu porucha „Špatný zdroj“.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="section" id="e5">
+<div class="g rule">
+<div class="a1 mono">5 — První pohyb</div>
+<div class="a4 prose">
+<h2>Kalibrace a teleoperace</h2>
+<p class="stage-meta"><span>Čas <b>1–2 h (odhad)</b></span><span>Náročnost <b>střední</b></span></p>
+<p>Ruce upevněte svěrkami ke stolu. Kalibrace zajistí, že leader i follower mají ve stejné fyzické poloze stejné hodnoty.<sup><a href="#zdroje">1</a></sup> Follower:</p>
+<pre tabindex="0"><code># Use the port of your follower arm, and give the arm a unique name with --robot.id
+lerobot-calibrate \
+    --robot.type=so101_follower \
+    --robot.port=/dev/tty.usbmodem58760431551 \
+    --robot.id=my_awesome_follower_arm</code></pre>
+<p>Leader:</p>
+<pre tabindex="0"><code># Use the port of your leader arm, and give the arm a unique name with --teleop.id
+lerobot-calibrate \
+    --teleop.type=so101_leader \
+    --teleop.port=/dev/tty.usbmodem58760431551 \
+    --teleop.id=my_awesome_leader_arm</code></pre>
+<p>Postup: všechny klouby nejdřív do <b>středu rozsahu</b>, Enter, pak každým kloubem projeďte celý rozsah.<sup><a href="#zdroje">1</a></sup> Rotace zápěstí se podle kódu LeRobotu nekalibruje rozsahem, dostane celou otáčku.<sup><a href="#zdroje">5</a></sup> Pak teleoperace:<sup><a href="#zdroje">4</a></sup></p>
+<pre tabindex="0"><code>lerobot-teleoperate \
+    --robot.type=so101_follower \
+    --robot.port=/dev/tty.usbmodem58760431541 \
+    --robot.id=my_awesome_follower_arm \
+    --teleop.type=so101_leader \
+    --teleop.port=/dev/tty.usbmodem58760431551 \
+    --teleop.id=my_awesome_leader_arm</code></pre>
+<p>Porty nahraďte svými z etapy 2 a ID rukou pak používejte stejná ve všech dalších příkazech.</p>
+<h3>Kontrolní seznam</h3>
+<ul class="chk">
+<li>Obě ruce upevněné ke stolu, v dosahu followeru nic není.</li>
+<li>Follower i leader zkalibrované, každý pod vlastním stálým ID.</li>
+<li>Follower opakuje pohyb leaderu ve všech šesti kloubech, včetně chapadla.</li>
+<li>Víte, jak ruku zastavit: vytáhnout zdroj serv.</li>
+</ul>
+<h3>Když to nejde</h3>
+<ul>
+<li class="fix"><b>Ruka při kalibraci klesne.</b> Při kalibraci je moment serv vypnutý; ruku přidržte.</li>
+<li class="fix"><b>Kloub jde při teleoperaci na opačnou stranu nebo jen kousek.</b> Kalibraci zopakujte a každým kloubem opravdu projeďte od dorazu k dorazu. V průvodci nanečisto je to porucha „Špatná kalibrace“.</li>
+<li class="fix"><b>Servo se hřeje.</b> Kloub se o něco opírá nebo je na dorazu. Odstraňte překážku. LeRobot u chapadla followeru omezuje moment na polovinu, aby se servo nespálilo.<sup><a href="#zdroje">5</a></sup></li>
+<li class="fix"><b>Pořád to nejde.</b> Oficiální návod odkazuje na komunitu LeRobot na Discordu.<sup><a href="#zdroje">1</a></sup></li>
+</ul>
+<p><b>Bezpečnost:</b> sady jsou určené osobám od 14 let, mladším jen pod dohledem dospělého.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="e6">
+<div class="g rule">
+<div class="a1 mono">6 — Simulace a realita</div>
+<div class="a4 prose">
+<h2>Co si dnes vyzkoušíte v simulaci a co ne</h2>
+<p class="stage-meta"><span>Čas <b>0,5–1 h, volitelné (odhad)</b></span><span>Náročnost <b>snadné</b></span></p>
+<figure class="doc-fig"><img src="{root}assets/media/so101-poster.jpg" alt="Robotická ruka SO-101 v simulaci nad kostkou a miskou" width="960" height="540" loading="lazy"><figcaption>Obr. 2 — záběr ze simulace v prohlížeči, ne ze skutečné ruky.</figcaption></figure>
+<div class="doc-t-wrap" tabindex="0" role="region" aria-label="Simulace a skutečná ruka">
+<table class="doc-t">
+<thead><tr><th scope="col">Téma</th><th scope="col">V simulaci dnes</th><th scope="col">Na skutečné ruce</th></tr></thead>
+<tbody>
+<tr><th scope="row">Díly a pořadí montáže</th><td>Rozložený pohled a animace v pořadí oficiálního návodu.</td><td>Šrouby, horny a kabely jen na skutečné ruce.</td></tr>
+<tr><th scope="row">Port, ID, kalibrace</th><td>Průvodce s emulovanými servy STS3215 a tréninkovými poruchami.</td><td>Stejné kroky v LeRobotu. Kalibraci z průvodce nelze použít, skutečnou ruku kalibrujte znovu.</td></tr>
+<tr><th scope="row">Pohyb a úlohy</th><td>Fyzika MuJoCo, mise, učení ukázkou.</td><td>Teleoperace leader → follower přes LeRobot.</td></tr>
+<tr><th scope="row">Data pro učení</th><td>Export ukázek do formátu LeRobot: jen polohy kloubů, bez kamer.</td><td>Nahrávání s kamerami přes <code>lerobot-record</code>.</td></tr>
+<tr><th scope="row">Připojení skutečné ruky z prohlížeče</th><td>Zatím skryté: čeká na bezpečnostní kontrolu na hardwaru.</td><td>Ověřená cesta je LeRobot v Pythonu.</td></tr>
+</tbody>
+</table>
+</div>
+<p class="src">Emulace serv je zjednodušená a rychlostní limity průvodce jsme na skutečných servech zatím neověřili. Model natrénovaný jen na datech ze simulace pro skutečnou ruku nestačí.</p>
+<p>Další krok po první teleoperaci: <a href="{root}navody/so101-lerobot-prvni-kroky/#uceni">nahrávání ukázek a učení</a>.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="zdroje">
+<div class="g rule">
+<div class="a1 mono">Zdroje</div>
+<ol class="a4 prose src">
+<li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/so101">LeRobot – SO-101</a> (převody serv, ID, montáž kloubů, kalibrace). Ověřeno 29. 10. 2026.</li>
+<li>The Robot Studio: <a href="https://github.com/TheRobotStudio/SO-ARM100">SO-ARM100 na GitHubu</a> (kusovník, varianty serv a zdrojů, nastavení tisku, měrky). Ověřeno 29. 10. 2026.</li>
+<li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/installation">LeRobot – Installation</a>. Ověřeno 29. 10. 2026.</li>
+<li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/il_robots">LeRobot – Getting started with real-world robots</a> (teleoperace). Ověřeno 29. 10. 2026.</li>
+<li>Zdrojový kód LeRobot: <a href="https://github.com/huggingface/lerobot/blob/main/src/lerobot/robots/so_follower/so_follower.py">so_follower.py</a> a <a href="https://github.com/huggingface/lerobot/blob/main/src/lerobot/motors/motors_bus.py">motors_bus.py</a> (kalibrace, omezení chapadla). Větev main, 29. 10. 2026.</li>
+</ol>
+</div>
+</section>
