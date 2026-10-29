@@ -338,6 +338,11 @@ const strings = {
   'Načítám předměty mise…': 'Loading the mission’s objects…', 'Ten už držíte. Klikněte, kam ho položit.': 'You’re already holding it. Click where to put it.',
   'Nejdřív položte, co držíte – klikněte na cíl nebo na stůl.': 'First put down what you’re holding – click a target or the table.', 'Nejdřív klikněte na předmět, ruka ho vezme.': 'First click an object, the arm picks it up.',
   'Objekty: NVIDIA SimReady (CC BY 4.0)': 'Objects: NVIDIA SimReady (CC BY 4.0)', 'Objekty: NVIDIA SimReady (CC BY 4.0) · hrnek: Google Scanned Objects (CC BY 4.0)': 'Objects: NVIDIA SimReady (CC BY 4.0) · mug: Google Scanned Objects (CC BY 4.0)',
+  /* object library names (manifest name_cs; objects.html, missions) */
+  'Houbička': 'Sponge', 'Lahvička': 'Glass vial', 'Dinosaurus': 'Toy dinosaur', 'Hrnek': 'Mug',
+  'Vidlička': 'Fork', 'Talíř': 'Small plate', 'Lžíce': 'Spoon', 'Slon': 'Toy elephant',
+  'Šroub M8': 'M8 bolt', 'Matice M8': 'M8 nut', 'Muffin': 'Cupcake', 'Kobliha': 'Donut',
+  'Jablko': 'Apple', 'Banán': 'Banana', 'Šroubovák': 'Phillips screwdriver',
 };
 
 const patterns = [
