@@ -35,6 +35,9 @@ export async function install(page, env) {
   ux.start();
   // "Připojit AI": the agent API (window.so101) + panel; never with ?real=1 (see src/agent/index.js)
   try { (await import('./agent/index.js')).installAgent(ux, page); } catch (e) { console.warn('AI panel disabled:', e); }
+  ux.panel.mountAI();   // the AI entry is a row of the panel's "Nástroje" (tools) block
+  // count the AI's motions since the last reset: the win card credits "Vyřešila to AI v N krocích"
+  if (ux.agent && ux.agent.on) ux.agent.on('motion', (e) => { if (e.phase === 'start') ux.aiSteps = (ux.aiSteps || 0) + 1; });
   return ux;
 }
 
@@ -132,7 +135,7 @@ class UX {
     const desc = document.createElement('p'); desc.id = 'ux-c-desc'; desc.className = 'sr-only';
     desc.textContent = 'Šipky posouvají cíl ruky, PageUp a PageDown mění výšku, mezerník otevře a zavře chapadlo, otazník ukáže všechny zkratky.';
     c.parentNode.appendChild(desc); c.setAttribute('aria-describedby', desc.id);
-    c.setAttribute('aria-label', 'Robotická ruka SO-101 na stole s předměty mise. Ovládání: modrá koule (chytrý pohyb), klik na předmět, šipky a mezerník, nebo posuvníky kloubů v režimu Klouby.');
+    c.setAttribute('aria-label', 'Robotická ruka SO-101 na stole s předměty mise. Ovládání: modrá koule (režim Táhnout ruku), klik na předmět, šipky a mezerník, nebo posuvníky kloubů v režimu Klouby.');
   }
 
   start() {
@@ -152,7 +155,8 @@ class UX {
     this.teach.loadFromHash().then((n) => {   // a shared link (#ukazka=…) wins over the stored one
       if (!n) { if (this.teach.rejected) this.panel.toast('Odkaz s ukázkou je poškozený nebo příliš velký – nic jsme nenahráli', 'err'); return; }
       this.selectMission(this.teach.demo.mission.id);
-      this.panel.toast('Máte sdílenou ukázku – spusťte ji tlačítkem Přehrát v sekci Učení ukázkou');
+      this.panel.openTeach(true, true);
+      this.panel.toast('Máte sdílenou ukázku – spusťte ji tlačítkem Přehrát v nástroji Učit ukázkou');
     });
     if (this.touch && !this.TEST && !store.get('tip-orbit', false)) {
       store.set('tip-orbit', true);
@@ -228,6 +232,7 @@ class UX {
 
   onReset() {
     this.ctl.cancel(); this.pending = null;
+    this.aiSteps = 0;
     if (!this.replayResetting) this.teach.stopReplay();
     this.runner.setup();
     this.extras.onLayout(this.runner.m);
@@ -279,6 +284,8 @@ class UX {
   setMode(mode, quiet) {
     if (!quiet && mode !== this.mode) track('mode_changed', { mode });
     this.mode = mode; store.set('mode', mode);
+    // one switch for both: "Táhnout ruku" pulls the whole arm when a part is grabbed, "Klouby" turns one joint
+    if (this.links) { this.links.setMode(mode === 'joints' ? 'joint' : 'pull'); this.panel.showGrabMode(this.links.mode); }
     this.panel.showMode(mode);
     if (mode !== 'smart') { this.ctl.cancel(); this.pending = null; if (this.penTool) this.togglePen(); }
     else this.ctl.syncFromCtrl();
@@ -342,6 +349,14 @@ class UX {
   toggleGrip() {
     if (this.teach.replaying) return;
     const open = this.d.ctrl[this.app.act[5]] > 0.5;
+    if (this.mode === 'joints') {
+      // joint mode: drive only the gripper joint (the IK controller would re-pose the wrist)
+      this.ctl.cancel(); this.pending = null;
+      this.app.setCtrl(5, open ? GRIP_CLOSED : GRIP_OPEN);
+      this.sound.grip(!open); this.onboarding.notify('grip');
+      this.runner.start();
+      return;
+    }
     if (!this.ctl.active) this.ctl.begin();
     this.ctl.setGrip(!open);
     this.runner.start();
@@ -509,7 +524,7 @@ class UX {
     const isNew = own && (!best || res.stars > best.stars || (res.stars === best.stars && res.time < best.time));
     if (own) { this.wins = (store.get('wins', 0) || 0) + 1; store.set('wins', this.wins); }
     if (isNew) { this.progress[m.id] = { stars: Math.max(res.stars, best ? best.stars : 0), time: Math.min(res.time, best ? best.time : Infinity) }; store.set('progress', this.progress); }
-    const by = own ? null : (this.runner.assisted ? 'assisted' : 'replay');
+    const by = own ? null : (this.runner.assisted ? (this.aiSteps > 0 ? 'ai' : 'assisted') : 'replay');
     this.panel.showWin(m, res, best, isNew, by);
     this.onboarding.notify('won');
     const guided = this.onboarding.atWin();
@@ -580,6 +595,7 @@ class UX {
       const k = e.key;
       if (k === 'Escape') {
         if (this.panel.modalOpen()) { this.panel.closeModals(); return; }
+        if (this.panel.popOpen()) { this.panel.closeSet(true); return; }
         if (this.links.sel >= 0) { this.links.deselect(); return; }
         if (this.onboarding.active()) { this.onboarding.finish(); return; }
         this.ctl.cancel(); this.pending = null; this.gizmo.clearPath(); this.teach.stopReplay(); return;

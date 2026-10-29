@@ -370,7 +370,7 @@ async function touchDrag(page, from, to, steps = 8) {
     {
       const r = await open(browser, base + '?test=1&real=1&mise=bowl&detail=low', { width: 1280, height: 800 });
       const st = await S(r, () => ({ pull: window.__sim._ux.links.pull(), seg: window.__sim._ux.panel.grabSeg.hidden }));
-      ok(!st.pull && st.seg, 'with ?real=1 the physics pull is off and its switch hidden');
+      ok(!st.pull && st.seg, 'with ?real=1 the physics pull is off and its tip hidden');
       await r.close();
     }
 
