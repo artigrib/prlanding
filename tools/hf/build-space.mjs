@@ -15,6 +15,7 @@
 //   LICENSE.md   licences of everything in the Space
 import fs from 'node:fs';
 import path from 'node:path';
+import { walkGraph } from './imports.mjs';
 
 const ROOT = process.cwd();
 const OUT = path.join(ROOT, 'dist-hf');
@@ -51,6 +52,21 @@ const write = (p, s) => { fs.mkdirSync(path.dirname(p), { recursive: true }); fs
 const DEV = /(^|\/)(tests?|tools|node_modules|src\/\.\.\.)(\/|$)|\.(md|cjs)$|(^|\/)package(-lock)?\.json$|(^|\/)\./;
 const keepMd = new Set(['sim/so101/objects/LICENSES.md']);
 const skipDev = (r, name) => (DEV.test(r) && !keepMd.has(r)) || name.startsWith('.');
+
+// Files a Space imports from outside the folders copied above (e.g. the AI panel's
+// ../../../../backend/bridge-client/agent-bridge.js and its imports) are copied in from the repo at the same
+// relative path, following the static import graph. Dev-only files are never pulled in; anything still
+// unresolved fails the build (tools/hf/check-imports.mjs runs the same walk in CI).
+function pullImports(D) {
+  const pulled = [];
+  const problems = walkGraph(D, { onMissing: (t) => {
+    const r = path.relative(D, t).split(path.sep).join('/'), src = path.join(ROOT, r);
+    if (r.startsWith('..') || skipDev(r, path.basename(r)) || !fs.existsSync(src) || !fs.statSync(src).isFile()) return false;
+    copy(src, t); pulled.push(r); return true;
+  } });
+  if (pulled.length) console.log(`${rel(D)}: pulled in ${pulled.sort().join(', ')}`);
+  if (problems.length) throw new Error(`${rel(D)}: unresolved imports:\n  ` + problems.map((p) => `${path.relative(D, p.from)} -> ${p.spec} (${p.problem})`).join('\n  '));
+}
 
 /* ---------- shared pieces ---------- */
 function shim({ kitText, side = 'left' }) {
@@ -229,6 +245,7 @@ Licences of everything in this Space: [LICENSE.md](LICENSE.md). ${codeLine()}
 Source: [github.com/artigrib/prlanding](https://github.com/artigrib/prlanding) (\`sim/so101/\`). This Space is built by
 \`tools/hf/build-space.mjs\` and published automatically; please report issues on GitHub.
 `);
+  pullImports(D);
   write(path.join(D, 'LICENSE.md'), `# Licences — SO-101 simulator Space
 
 | Part | Path | Licence |
@@ -296,6 +313,7 @@ Details and licence texts: \`sim/arena/NOTICE.txt\`, \`models/NOTICE.txt\`, [LIC
 
 Source: [github.com/artigrib/prlanding](https://github.com/artigrib/prlanding) (\`sim/arena/\`). Built by \`tools/hf/build-space.mjs\`.
 `);
+  pullImports(D);
   write(path.join(D, 'LICENSE.md'), `# Licences — antweight combat arena Space
 
 | Part | Path | Licence |

@@ -36,7 +36,10 @@ secret or disable the workflow. To revoke access, delete the token on Hugging Fa
 copies only what the pages load, keeping the site's folder layout so every relative path in the sims works unchanged:
 
 - SO-101: `sim/so101/` without tests, tools and notes (pages, `src/`, `lib/`, `model/`, `objects/`, `vendor/`,
-  NOTICE and LICENSE files) and `assets/i18n.js`. About 16 MB; `mujoco.wasm` (10.4 MB) goes through Git LFS, which
+  NOTICE and LICENSE files) and `assets/i18n.js`, plus every file the pages import from outside `sim/so101/`
+  (today `backend/bridge-client/agent-bridge.js`, `schemas.js`, `validate.js` for "Připojit AI"), pulled in by
+  following the static import graph. The build fails on any import it cannot resolve inside the Space; CI runs
+  `node tools/hf/check-imports.mjs` and `tests/smoke-space.mjs` on every PR. About 16 MB; `mujoco.wasm` (10.4 MB) goes through Git LFS, which
   `upload_folder` handles automatically.
 - Arena: `sim/arena/index.html`, `NOTICE.txt`, `build/`, and the robot models listed in
   `sim/arena/src/robots/catalog.js` (`models/<id>.glb`) with `models/NOTICE.txt`. About 4 MB.

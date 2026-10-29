@@ -17,6 +17,7 @@ on:
       - 'models/*.glb'
       - 'models/NOTICE.txt'
       - 'assets/i18n.js'
+      - 'backend/bridge-client/*.js'
       - 'tools/hf/**'
       - '.github/workflows/hf-publish.yml'
 

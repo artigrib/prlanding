@@ -65,6 +65,19 @@ jobs:
       - name: Committed sim/so101/vendor/mujoco must equal the stripped npm build
         run: npm run check
 
+  hf-space:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Build the Hugging Face Spaces
+        run: node tools/hf/build-space.mjs
+      - name: Every relative import in dist-hf resolves inside its Space
+        run: node tools/hf/check-imports.mjs dist-hf
+
   so101-unit:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -103,6 +116,8 @@ jobs:
         run: node tests/smoke.mjs
       - name: English smoke test
         run: node tests/smoke-en.mjs
+      - name: Hugging Face Space smoke test (dist-hf served at its own root)
+        run: node tools/hf/build-space.mjs && node tests/smoke-space.mjs
 
   backend:
     runs-on: ubuntu-latest
