@@ -29,7 +29,7 @@ const strings = {
   'Začátečník': 'Beginner', 'Pomalé reakce, učí se jezdit': 'Slow reactions, still learning to drive', 'Pokročilý': 'Advanced', 'Míří, tlačí a používá zbraň': 'Aims, pushes and uses its weapon',
   'Mistr': 'Master', 'Obchází zbraň a tlačí do jámy': 'Dodges your weapon and pushes you into the pit', 'Figurína': 'Dummy', 'Stojí a čeká': 'Stands and waits',
   'Kancelářská sponka': 'Paper Clip', 'Bzučák': 'Buzzer', 'Ocelová Máňa': 'Steel Mabel',
-  'Žebříček': 'Ladder', 'Začít turnaj znovu': 'Restart the tournament', '· poražen': '· beaten', '· na řadě': '· up next', 'Robot hráče 2': 'Player 2’s robot',
+  'Žebříček': 'Ladder', 'Začít turnaj znovu': 'Restart the tournament', '· poražen': '· beaten', '· na řadě': '· up next', 'poražen': 'beaten', 'na řadě': 'up next', 'Robot hráče 2': 'Player 2’s robot',
   '· Hráč 2: šipky +': '· Player 2: arrows +', 'přepne na rozdělenou obrazovku.': 'switches to split screen.', '· nebo dva gamepady.': '· or two gamepads.',
   'Volná jízda bez časového limitu. Soupeř stojí jako figurína – tlačítkem': 'Free driving with no time limit. The opponent stands still like a dummy – press', 'ho rozjedete.': 'to set it moving.',
   'vrátí oba roboty na start.': 'puts both robots back at the start.', 'Úpravy pro tohoto robota připravujeme.': 'Upgrades for this robot are coming soon.',

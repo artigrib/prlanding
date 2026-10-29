@@ -146,7 +146,7 @@ const strings = {
   'Přepnout pohled (C)': 'Switch view (C)', 'Kamera na zápěstí': 'Wrist camera', 'Kamera na zápěstí (V)': 'Wrist camera (V)', 'Rozložený pohled – z čeho se skládá (X)': 'Exploded view – what it’s made of (X)',
   'Klávesové zkratky a nápověda': 'Keyboard shortcuts and help', 'Nápověda (?)': 'Help (?)', 'Nápověda': 'Help', 'Ovládání a zkratky': 'Controls and shortcuts', 'Spustit průvodce znovu': 'Run the guide again',
   'Nakreslete čáru po stole prstem nebo myší – ruka ji zopakuje': 'Draw a line on the table with your finger or mouse – the arm repeats it', 'Nakreslit prstem': 'Draw with finger', 'Kreslit': 'Draw',
-  'Detail': 'Detail', 'Vysoký': 'High', 'Úsporný': 'Low', 'Detailní model se nepodařilo načíst': 'The detailed model failed to load',
+  'Detail': 'Detail', 'Detail modelu': 'Model detail', 'Mise': 'Mission', 'Ukázka': 'Demo', 'Vysoký': 'High', 'Úsporný': 'Low', 'Detailní model se nepodařilo načíst': 'The detailed model failed to load',
   'Zjednodušené díly (rychlejší na slabších telefonech).': 'Simplified parts (faster on weaker phones).', 'Původní tvary dílů, 325 tisíc trojúhelníků (≈ 1 MB).': 'Original part shapes, 325,000 triangles (≈ 1 MB).',
   'Načítám detailní díly…': 'Loading detailed parts…', 'Další mise': 'Next mission', 'Tohle zvládla ruka sama.': 'The arm did this on its own.', 'Ukázka splnila misi.': 'The demo completed the mission.',
   'Řešení ukázala ruka sama – zkuste to teď vy. Stačí kliknout na kostku a pak na misku.': 'The arm showed the solution itself – now you try. Just click the cube and then the bowl.',
