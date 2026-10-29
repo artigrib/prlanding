@@ -55,6 +55,11 @@ Positions use the robot base frame: x forward, y left, z up, origin at the base 
 | `check_mission` | Mission state: `idle`, `running`, `success` or `failed` | — |
 | `reset_scene` | Reset the arm and the objects | — |
 
+Missions: `bowl`, `stack`, `sort`, `ball`, `trace` (01–05) and the object missions `line`, `breakfast`,
+`tidy`, `workshop`, `lab` (06–10). The object missions use a different scene: from the plain scene,
+`start_mission` returns `reload_required: true, reconnect_required: true`, the page reloads into that mission,
+the session ends and the panel opens again with a new code (`list_missions` marks them `needs_reload`).
+
 Joint ranges (degrees): `shoulder_pan` ±110, `shoulder_lift` ±100, `elbow_flex` ±96.8,
 `wrist_flex` ±95, `wrist_roll` −157.2…162.8. The gripper goes from 0 (closed) to 100 % open.
 
