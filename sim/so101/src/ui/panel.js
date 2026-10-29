@@ -177,9 +177,10 @@ export class Panel {
     this.offered = false;
     if (this.hintLevel < 1) this.hintLevel = 1;
     this.showHint(true);
-    // after the DOM translation (?lang=en) has run on the new text
-    setTimeout(() => this.toast(this.hintText.textContent, null, 7000), 0);
+    // phones: the sheet opens on the hint box; desktops also get the tip as a toast over the scene
+    // (after the DOM translation of ?lang=en has run on the new text)
     if (this.mq.matches) { this.selectTab('mission'); if (this.snap < 1) this.setSnap(1); }
+    else setTimeout(() => this.toast(this.hintText.innerText.replace(/\s*\n+\s*/g, ' ').trim(), null, 7000), 0);
   }
   /** the next rung, from the button inside the hint box (rung 4 is #demo with its own handler) */
   hintNext() {
