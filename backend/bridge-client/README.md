@@ -126,5 +126,5 @@ there should stay a thin file:
 - `moveTo` maps to the controller's IK (`kin.solveAuto`) with mm → m and pitch in degrees.
 - Motions call `controller.cancel()` first and are cancelled by the `signal`.
 - `listMissions`, `startMission` and `checkMission` map to `MISSIONS` and `MissionRunner.result`.
-- The server already knows the ids `bowl`, `stack`, `sort`, `ball` and `trace`. A new mission id
+- The server knows the ids `bowl`, `stack`, `sort`, `ball`, `trace` and the object missions `line`, `breakfast`, `tidy`, `workshop`, `lab`. A new mission id
   needs an entry in `MISSIONS` in `backend/bridge/src/schemas.ts`.

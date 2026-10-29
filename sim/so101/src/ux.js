@@ -31,6 +31,8 @@ export async function install(page, env) {
   patchSliders(page);
   if (page.sim) page.sim.onRender = (dt) => ux.render(dt);   // [ux-hook:render] in core.js loop()
   ux.start();
+  // "Připojit AI": the agent API (window.so101) + panel; never with ?real=1 (see src/agent/index.js)
+  try { (await import('./agent/index.js')).installAgent(ux, page); } catch (e) { console.warn('AI panel disabled:', e); }
   return ux;
 }
 
@@ -174,6 +176,7 @@ class UX {
       this.ctl.setTarget(t[0], t[1], t[2]);
     }
     if (!this.teach.replaying) this.ctl.update(dt);
+    if (this.agent) this.agent.tick(dt);   // AI motion (src/agent/sim-api.js) writes d.ctrl after the controller
   }
 
   check(dt) {

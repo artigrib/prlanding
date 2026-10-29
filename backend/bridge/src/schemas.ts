@@ -30,7 +30,13 @@ export const MISSIONS: Record<string, { title_cs: string; title_en: string; goal
   stack: { title_cs: 'Postavte věž', title_en: 'Build a tower', goal_en: 'Place the orange cube precisely on top of the blue cube.' },
   sort: { title_cs: 'Roztřiďte barvy', title_en: 'Sort the colours', goal_en: 'Put the orange cube into the orange bowl and the blue cube into the blue bowl.' },
   ball: { title_cs: 'Dostrkejte míček do branky', title_en: 'Push the ball into the goal', goal_en: 'The ball cannot be grasped. Close the gripper and push the ball into the goal.' },
-  trace: { title_cs: 'Obkreslete hvězdu', title_en: 'Trace the star', goal_en: 'The gripper holds a pen. Lower the tip to the paper and trace the star outline.' }
+  trace: { title_cs: 'Obkreslete hvězdu', title_en: 'Trace the star', goal_en: 'The gripper holds a pen. Lower the tip to the paper and trace the star outline.' },
+  // object missions 06-10 (sim/so101/src/missions.js `objects: true`): the tab reloads into the object scene first
+  line: { title_cs: 'Třídicí linka', title_en: 'Sorting line', goal_en: 'Sort the M8 nuts into the orange bin and the M8 bolts into the blue bin.' },
+  breakfast: { title_cs: 'Snídaně', title_en: 'Breakfast', goal_en: 'Put the apple, the banana and the cupcake on the plate.' },
+  tidy: { title_cs: 'Uklizený stůl', title_en: 'Tidy table', goal_en: 'Put the mug, the spoon, the fork and the sponge on the tray.' },
+  workshop: { title_cs: 'Dílna', title_en: 'Workshop', goal_en: 'Put the screwdriver back into the printed holder, lying flat in its groove.' },
+  lab: { title_cs: 'Laboratoř', title_en: 'Lab', goal_en: 'Slide the glass vial into the rack without knocking it over; it must stand upright.' }
 };
 
 export const VIEWS = ['overview', 'top', 'side', 'wrist'] as const;
