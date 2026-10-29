@@ -96,7 +96,7 @@ The bridge handles these, so the handler does not have to:
 - Adding `meta.backend = "sim"`.
 
 **Errors to use:** `OUT_OF_LIMITS`, `UNREACHABLE`, `IK_NO_SOLUTION`, `ESTOP_ACTIVE` (STOP latched in
-the page), `TAB_HIDDEN` (the sim is paused in a background tab), `RENDER_UNAVAILABLE`,
+the page), `TAB_HIDDEN` (only for a page that cannot run in a background tab; the SO-101 sim keeps running there while an AI is linked and never sends it), `RENDER_UNAVAILABLE`,
 `UNKNOWN_MISSION`, `NOT_SUPPORTED`, `COLLISION_DETECTED`, `WORKSPACE_VIOLATION`. Any other code
 reaches the agent as `TAB_ERROR`. Free-text strings in results are dropped by the server.
 

@@ -36,7 +36,8 @@ export function installAgent(ux, page) {
     selectMission: (id) => ux.selectMission(id),
     resetScene: () => app.reset(),
     heldObject: () => ux.heldObject(),
-    hidden: () => document.hidden,
+    // no `hidden`: the sim keeps running in a background tab while an AI is linked (core.js background driver),
+    // so TAB_HIDDEN is never sent from here. The real arm never gets this API (REAL_ARMED above).
     renderOk: () => !app.lost,
     snapshot: (a) => snapshot(ux, a),
     // object missions from the plain scene: reload into the object scene (ux.selectMission does it); the AI session
@@ -48,6 +49,24 @@ export function installAgent(ux, page) {
     }
   });
   ux.agent = api;
+  // background tab: physics keeps running while an AI is paired or a motion runs (ArmSim.keepAlive / syncBg)
+  let linked = false;
+  const sim = page.sim;
+  const syncBg = () => { if (sim && sim.syncBg) sim.syncBg(); };
+  if (sim) sim.keepAlive = () => linked || api.busy;
+  const onLink = (on) => { if (on !== linked) { linked = on; syncBg(); } };
+  // tab strip: "● AI ovládá ruku — …" while an AI motion runs (restored a moment after the last one ends)
+  let baseTitle = null, titleT = 0;
+  api.on('motion', (e) => {
+    syncBg();
+    clearTimeout(titleT);
+    if (e.phase === 'start') {
+      if (baseTitle == null) baseTitle = document.title;
+      document.title = '● ' + t('AI ovládá ruku') + ' — ' + baseTitle;
+    } else if (baseTitle != null) {
+      titleT = setTimeout(() => { if (!api.busy && baseTitle != null) { document.title = baseTitle; baseTitle = null; } }, 1500);
+    }
+  });
   // the person always wins: a slider or a key press ends the AI motion at once
   const take = () => { if (api.busy) api.userTakeover(); };
   document.getElementById('joints').addEventListener('input', take);
@@ -87,7 +106,7 @@ export function installAgent(ux, page) {
   let loading = null;
   function openPanel() {
     if (!loading) {
-      loading = import('./panel.js').then((m) => m.mountAgentPanel(mount.querySelector('#ai-panel'), { api, ux, button: btn }))
+      loading = import('./panel.js').then((m) => m.mountAgentPanel(mount.querySelector('#ai-panel'), { api, ux, button: btn, onLink }))
         .catch((e) => { console.error(e); loading = null; ux.panel.toast(t('Panel AI se nepodařilo načíst. Zkuste to znovu.'), 'err'); });
     }
     return loading.then((p) => p && p.open());
@@ -110,6 +129,8 @@ const VIEWS = {
 async function snapshot(ux, a) {
   const app = ux.app, T = ux.T, r = app.renderer, d = ux.d, m = ux.m;
   if (app.lost) throw new AgentError('RENDER_UNAVAILABLE');
+  // a background tab steps physics without syncing the meshes (core.js bgTick): bring them up to date first
+  app.sync(); if (ux.extras) ux.extras.sync();
   const width = a.width || 512, height = Math.round(width * 0.75);
   let cam;
   if (a.view === 'wrist') {

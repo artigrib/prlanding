@@ -45,6 +45,9 @@ export const DEMO = [
   { q: null, t: 1.4 }                                    // home
 ];
 
+const BG_MS = 16;            // background tick period (ms), ~60 Hz like the rAF loop
+const BG_SLICE = 1 / 60;    // background physics slice (s): onFrame / step / onAfter per slice, like one frame
+const TICKER_SRC = 'let t=0;onmessage=(e)=>{clearInterval(t);t=setInterval(()=>postMessage(0),e.data)}';
 const BOWL_R = 0.05;        // success radius (m) around bowl centre
 const WIN_HOLD = 0.5;       // seconds the cube must rest in the bowl
 
@@ -193,12 +196,20 @@ export class ArmSim {
     this.last = performance.now();
     this.loop = this.loop.bind(this);
     this.raf = requestAnimationFrame(this.loop);
+    // background driver: browsers stop requestAnimationFrame in a hidden tab. While keepAlive() says so (an AI
+    // session drives the sim, see src/agent/index.js) physics keeps running from worker ticks, without rendering.
+    this.keepAlive = null; this.bg = false; this.ticker = null;
+    this.bgTick = this.bgTick.bind(this);
+    this.syncBg = this.syncBg.bind(this);
+    document.addEventListener('visibilitychange', this.syncBg);
   }
 
   dispose() {
     if (this.disposed) return;
     this.disposed = true;
     cancelAnimationFrame(this.raf);
+    document.removeEventListener('visibilitychange', this.syncBg);
+    this.stopTicker();
     try { this.d.delete(); this.m.delete(); } catch (e) {}
     this.controls.dispose();
     this.renderer.dispose();
@@ -450,6 +461,7 @@ export class ArmSim {
   loop(now) {
     if (this.disposed) return;
     this.raf = requestAnimationFrame(this.loop);
+    if (this.bg) return;                   // the background driver owns the clock (no double stepping)
     if (this.lost) { this.last = now; return; }
     let dt = (now - this.last) / 1000; this.last = now;
     if (!(dt > 0)) dt = 0; if (dt > 1 / 20) dt = 1 / 20;   // tab switch / slow frame: don't spiral
@@ -461,6 +473,54 @@ export class ArmSim {
     this.controls.update();
     if (this.onRender) this.onRender(dt); else this.renderer.render(this.scene, this.camera);  // [ux-hook:render]
   }
+
+  // ---------- background driver (hidden tab) ----------
+  /** Hidden tab + keepAlive(): physics from worker ticks; otherwise the rAF loop. Called on visibilitychange,
+   *  on every background tick and by the page when keepAlive() may have changed. */
+  syncBg() {
+    const want = !this.disposed && document.hidden && !!(this.keepAlive && this.keepAlive());
+    if (want === this.bg) return;
+    this.bg = want;
+    this.last = performance.now();         // one clock for both drivers: the switch never replays the gap
+    if (want) this.startTicker(); else this.stopTicker();
+  }
+
+  bgTick() {
+    if (!this.bg) return;
+    this.syncBg();
+    if (!this.bg) return;
+    const now = performance.now();
+    let dt = (now - this.last) / 1000; this.last = now;
+    if (this.lost || this.paused || !(dt > 0)) return;
+    // ticks may arrive late (a throttled fallback timer): catch up in frame-sized slices, at most 1 s at once
+    dt = Math.min(dt, 1);
+    for (let t = 0; t < dt - 1e-9; t += BG_SLICE) {
+      const h = Math.min(BG_SLICE, dt - t);
+      this.onFrame && this.onFrame(h);
+      this.step(h);
+      this.onAfter && this.onAfter(h);
+    }
+    // no sync() / render: nobody sees the canvas (a snapshot syncs and renders on demand)
+  }
+
+  /** Dedicated worker timer: not throttled in background tabs like main-thread timers are. */
+  startTicker() {
+    if (this.ticker) return;
+    try {
+      const url = URL.createObjectURL(new Blob([TICKER_SRC], { type: 'text/javascript' }));
+      const w = new Worker(url);
+      URL.revokeObjectURL(url);
+      w.onmessage = this.bgTick;
+      w.postMessage(BG_MS);
+      this.ticker = { stop: () => w.terminate() };
+    } catch (e) {
+      // no workers (CSP, odd embeds): a plain timer; throttled when hidden, the slices above catch up
+      const id = setInterval(this.bgTick, BG_MS);
+      this.ticker = { stop: () => clearInterval(id) };
+    }
+  }
+
+  stopTicker() { if (this.ticker) { this.ticker.stop(); this.ticker = null; } }
 
   /** Test hook: advance simulated time synchronously in small slices (headless GPUs are slow). */
   advance(sec, slice = 1 / 60) {

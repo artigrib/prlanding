@@ -84,7 +84,7 @@ function copyBtn(get, label = 'Kopírovat') {
   return b;
 }
 
-export function mountAgentPanel(root, { api, ux, button }) {
+export function mountAgentPanel(root, { api, ux, button, onLink }) {
   root.textContent = '';
   // ---------- status + connect ----------
   const status = el('p', 'ai-status');
@@ -157,11 +157,15 @@ export function mountAgentPanel(root, { api, ux, button }) {
   // ---------- bar over the 3D view (always visible while an AI link exists) ----------
   const stage = document.querySelector('.stage');
   const bar = el('div', 'ai-bar'); bar.hidden = true; bar.setAttribute('role', 'region'); bar.setAttribute('aria-label', t('Ovládání přes AI'));
+  const barCol = el('span', 'ai-bar-col');
   const barText = el('span', 'ai-bar-t');
+  // the sim keeps running in a background tab while an AI is paired (core.js background driver)
+  const barBg = el('span', 'ai-bar-bg', t('AI pracuje i na pozadí')); barBg.setAttribute('data-testid', 'agent-bar-bg');
+  barCol.append(barText, barBg);
   const barStop = el('button', 'ai-bar-stop', 'STOP'); barStop.type = 'button'; barStop.setAttribute('data-testid', 'agent-bar-stop');
   const barOff = el('button', 'ai-bar-off', t('Odpojit')); barOff.type = 'button';
   const barDot = el('i', 'ai-dot'); barDot.setAttribute('aria-hidden', 'true');
-  bar.append(barDot, barText, barStop, barOff);
+  bar.append(barDot, barCol, barStop, barOff);
   stage.append(bar);
 
   // ---------- Allow prompt ----------
@@ -253,6 +257,8 @@ export function mountAgentPanel(root, { api, ux, button }) {
     bar.dataset.state = state;
     barText.textContent = paired ? t('AI ovládá ruku: {name}', { name: clientName || 'AI' }) : t('STOP je zapnutý');
     barOff.hidden = !paired;
+    barBg.hidden = !paired || est;
+    if (onLink) onLink(paired);
     for (const b of [btnStop, barStop]) {
       b.textContent = est ? t('Uvolnit STOP') : 'STOP';
       b.setAttribute('aria-pressed', String(est));
