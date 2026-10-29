@@ -3,7 +3,7 @@
  "name_cs": "Miska",
  "name_en": "Dishware bowl",
  "category": "bowl",
- "mass_kg": 1.0,
+ "mass_kg": 0.3,
  "size_m": [
   0.1627,
   0.1627,
@@ -44,7 +44,7 @@
   "usd_meters_per_unit": 1.0,
   "usd_up_axis": "Z",
   "usd_physics_variant": "MuJoCo:Enabled",
-  "mass_note": "authored mass is exactly 1 kg (a common placeholder) - please check",
+  "mass_note": "authored mass was exactly 1 kg (USD placeholder); set to 0.3 kg, a typical ceramic bowl of 16 cm (0.25–0.35 kg). Inertia scaled by the same factor.",
   "glb": {
    "bytes": 251312,
    "triangles": 6000,

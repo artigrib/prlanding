@@ -241,6 +241,82 @@ export function pushPlan(ctl, w, tries = 3, from) {
   return plan;
 }
 
+// ---------------- library objects (object missions) ----------------
+const FIXED_JAW = 0.0195;
+const LIB_FLOOR = 0.007;   // controller site offset for a zero-width object (cube: 0.007 at 25 mm)
+
+/** Grasp geometry of a library object in its current pose: closing direction across the narrowest horizontal
+ *  body axis, grasp height, top. Returns { c: COM, dir, yaw (closing heading), width, z, top, bottom }. */
+export function libGrasp(w, name) {
+  const e = w.o[name], sz = e.size, c = Array.from(w.com(name, [0, 0, 0]));
+  // closing direction: across the narrowest horizontal body axis (bounding box)
+  let dir = null, bw = Infinity;
+  for (let k = 0; k < 3; k++) {
+    const a = w.axis(name, k), hn = Math.hypot(a[0], a[1]);
+    if (hn > 0.7 && sz[k] < bw) { bw = sz[k]; dir = [a[0] / hn, a[1] / hn]; }
+  }
+  if (!dir) dir = [1, 0];
+  // local profile of the collision mesh around the COM along the long axis: width, centre and height there
+  const P = w.points(name), L = [-dir[1], dir[0]];
+  let lo = Infinity, hi = -Infinity, zb = Infinity, zt = -Infinity, n = 0;
+  for (const band of [0.008, 0.016, 1]) {
+    lo = hi = NaN; lo = Infinity; hi = -Infinity; zb = Infinity; zt = -Infinity; n = 0;
+    for (let i = 0; i < P.length; i += 3) {
+      const dx = P[i] - c[0], dy = P[i + 1] - c[1];
+      if (Math.abs(dx * L[0] + dy * L[1]) > band) continue;
+      const u = dx * dir[0] + dy * dir[1];
+      lo = Math.min(lo, u); hi = Math.max(hi, u); zb = Math.min(zb, P[i + 2]); zt = Math.max(zt, P[i + 2]); n++;
+    }
+    if (n >= 4) break;
+  }
+  const mid = (lo + hi) / 2, width = hi - lo;
+  const g = [c[0] + mid * dir[0], c[1] + mid * dir[1]];
+  const bottom = Math.max(0, zb), top = zt, h = top - bottom;
+  // finger pads reach ~5 mm below the site: keep their lower edge below the object's equator (a round part
+  // pinched above it squeezes out), but no higher than 3 cm
+  const z = Math.max(LIB_FLOOR, Math.min(bottom + Math.min(0.5 * h - 0.008, 0.03), top - 0.004));
+  return { c, g, dir, yaw: Math.atan2(dir[1], dir[0]), width, z, top, bottom };
+}
+
+/** Pick a library object; returns the pick plan with .ref (held reference point fn) and .dz (grasp height above bottom). */
+export function libPick(ctl, w, name, from, o = {}) {
+  const g = libGrasp(w, name);
+  if (o.z != null) g.z = Math.max(LIB_FLOOR, Math.min(g.top - 0.006, g.bottom + o.z * (g.top - g.bottom)));
+  const off = Math.max(-0.014, FIXED_JAW - g.width / 2 - 0.004);   // 4 mm clear of the fixed jaw
+  const plan = ctl.planPick([g.g[0], g.g[1], g.z], 0, g.yaw, from || null, { z: g.z, top: g.top, period: Math.PI, offset: off, floor: LIB_FLOOR });
+  const dzc = g.z - g.c[2];
+  plan.ref = () => { const p = w.com(name, [0, 0, 0]); p[2] += dzc; return p; };
+  plan.dz = g.z - g.bottom;
+  plan.kind = 'pick';
+  return plan;
+}
+
+/** Place the held library object with its bottom at height `surface` and centre at (x, y); closeYaw (optional)
+ *  turns the wrist so the jaws close along that heading (aligns long objects). */
+export function libPlace(ctl, w, pick, [x, y], surface, closeYaw) {
+  const dest = [x, y, surface + pick.dz];
+  let roll = pick.roll;
+  if (closeYaw != null) roll = ctl.graspRoll(dest, closeYaw, ctl.home, Math.PI).roll;
+  const plan = ctl.planPlace(dest, pick.end, roll, pick.ref);
+  plan.steps[0].speed = LIB_CARRY;   // carry gently: long light parts swing out of a fast-moving pinch
+  return plan;
+}
+export const LIB_CARRY = 0.12;
+
+export function libPickPlace(ctl, w, name, xy, surface, closeYaw, from, o) {
+  const a = libPick(ctl, w, name, from, o), b = libPlace(ctl, w, a, xy, surface, closeYaw);
+  return [a, b];
+}
+
+/** Is the library object resting inside a fixture zone (fixture frame, COM based)? */
+export function inZone(w, name, fx, slack = 0) {
+  const c = w.com(name, SA), f = w.pos(fx, SB), z = w.o[fx].fixture.zone, yaw = w.yaw(fx);
+  const dx = c[0] - f[0], dy = c[1] - f[1];
+  const lx = Math.cos(yaw) * dx + Math.sin(yaw) * dy, ly = -Math.sin(yaw) * dx + Math.cos(yaw) * dy;
+  const inXY = z.r != null ? Math.hypot(lx, ly) < z.r - 0.01 + slack : Math.abs(lx) < z.hx + slack && Math.abs(ly) < z.hy + slack;
+  return inXY && c[2] - f[2] < z.top + 0.06 && c[2] > f[2] - 0.01;
+}
+
 /**
  * Runs the active mission: layout, timer, success detection, rating. No DOM.
  * ctx (filled by the caller each tick): { tip: [x,y,z] actual gripper tip, gripOpen, smart }

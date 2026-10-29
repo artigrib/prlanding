@@ -1,5 +1,9 @@
 // Scene objects of the mission table (cubes, ball, bowls, goal): ids, poses, placement.
 // DOM/three-free (used by missions, planner and node tests).
+// Library objects + fixtures of the object missions (src/objects/scene.js) are registered when the compiled model
+// contains them (the object scene); body origin of a library object = bottom centre of its bounding box.
+
+import { LIB_ITEMS, FIXTURES, FIXTURE_PARK, parkSpot, labelOf, LYING_QUAT } from './objects/scene.js';
 
 export const OBJECTS = {
   cube:   { kind: 'free', half: 0.0125, label: 'oranžová kostka', acc: 'oranžovou kostku' },
@@ -30,7 +34,50 @@ export class World {
       } else e.mocap = m.body_mocapid[b];
       this.o[name] = e;
     }
+    // object-mission items (only in the object scene)
+    this.lib = false;
+    for (const [i, it] of LIB_ITEMS.entries()) {
+      const b = mj.mj_name2id(m, O.mjOBJ_BODY.value, it.name);
+      if (b < 0) continue;
+      this.lib = true;
+      const j = m.body_jntadr[b], [label, acc] = labelOf(it.name);
+      this.o[it.name] = { name: it.name, body: b, kind: 'free', lib: it, half: 0, label, acc, active: false,
+        qadr: m.jnt_qposadr[j], vadr: m.jnt_dofadr[j], park: parkSpot(i), mass: m.body_mass[b] };
+      PARK[it.name] = parkSpot(i);
+    }
+    for (const [name, fx] of Object.entries(FIXTURES)) {
+      const b = mj.mj_name2id(m, O.mjOBJ_BODY.value, name);
+      if (b < 0) continue;
+      this.o[name] = { name, body: b, kind: 'mocap', fixture: fx, mocap: m.body_mocapid[b], label: fx.label[0], acc: fx.label[1], active: false };
+      PARK[name] = [...FIXTURE_PARK[name], -0.75];
+    }
     this.p = new Float64Array(3);
+  }
+  /** Size (m, body frame) of a library item, set by the page / tests from the manifest (sizes()). */
+  sizes(map) { for (const [n, sz] of Object.entries(map)) if (this.o[n]) this.o[n].size = sz; }
+  /** Centre of mass (world) of a body. */
+  com(name, out) {
+    const b = this.o[name].body, x = this.d.xipos; out = out || this.p;
+    out[0] = x[3 * b]; out[1] = x[3 * b + 1]; out[2] = x[3 * b + 2]; return out;
+  }
+  /** World-frame collision vertices of a body's mesh geoms (flat array x, y, z, …). */
+  points(name) {
+    const m = this.m, d = this.d, b = this.o[name].body, out = [];
+    for (let g = m.body_geomadr[b], n = g + m.body_geomnum[b]; g < n; g++) {
+      if (m.geom_type[g] !== 7) continue;
+      const id = m.geom_dataid[g], V = m.mesh_vert, a = m.mesh_vertadr[id], k = m.mesh_vertnum[id];
+      const P = d.geom_xpos, M = d.geom_xmat, p = 3 * g, r = 9 * g;
+      for (let i = a; i < a + k; i++) {
+        const x = V[3 * i], y = V[3 * i + 1], z = V[3 * i + 2];
+        out.push(P[p] + M[r] * x + M[r + 1] * y + M[r + 2] * z, P[p + 1] + M[r + 3] * x + M[r + 4] * y + M[r + 5] * z, P[p + 2] + M[r + 6] * x + M[r + 7] * y + M[r + 8] * z);
+      }
+    }
+    return out;
+  }
+  /** Unit vector of body axis k (0 x, 1 y, 2 z) in world. */
+  axis(name, k, out) {
+    const b = this.o[name].body, M = this.d.xmat; out = out || [0, 0, 0];
+    out[0] = M[9 * b + k]; out[1] = M[9 * b + 3 + k]; out[2] = M[9 * b + 6 + k]; return out;
   }
 
   pos(name, out) {
@@ -47,13 +94,18 @@ export class World {
     const v = this.d.qvel; return Math.hypot(v[e.vadr], v[e.vadr + 1], v[e.vadr + 2]);
   }
 
-  place(name, x, y, z, yaw = 0) {
+  place(name, x, y, z, yaw = 0, base = 0) {
     const e = this.o[name];
     if (e.kind === 'free') {
       const q = this.d.qpos, a = e.qadr;
-      if (z == null) z = e.half;
+      let qw = Math.cos(yaw / 2), qx = 0, qy = 0, qz = Math.sin(yaw / 2);
+      if (e.lib && e.lib.lying) {   // yaw ∘ lying
+        const [bw, bx, by, bz] = LYING_QUAT;
+        [qw, qx, qy, qz] = [qw * bw - qz * bz, qw * bx - qz * by, qw * by + qz * bx, qw * bz + qz * bw];
+      }
+      if (z == null) z = e.lib ? base + restZ(e, [qw, qx, qy, qz]) : e.half;
       q[a] = x; q[a + 1] = y; q[a + 2] = z;
-      q[a + 3] = Math.cos(yaw / 2); q[a + 4] = 0; q[a + 5] = 0; q[a + 6] = Math.sin(yaw / 2);
+      q[a + 3] = qw; q[a + 4] = qx; q[a + 5] = qy; q[a + 6] = qz;
       const v = this.d.qvel; for (let i = 0; i < 6; i++) v[e.vadr + i] = 0;
     } else {
       const mp = this.d.mocap_pos, mq = this.d.mocap_quat, i = e.mocap;
@@ -61,7 +113,7 @@ export class World {
       mq[4 * i] = Math.cos(yaw / 2); mq[4 * i + 1] = 0; mq[4 * i + 2] = 0; mq[4 * i + 3] = Math.sin(yaw / 2);
     }
   }
-  park(name) { const p = PARK[name]; this.place(name, p[0], p[1], p[2]); this.o[name].active = false; this.activeList = null; }
+  park(name) { const p = PARK[name]; if (!p) return; const e = this.o[name]; if (e.lib) this.place(name, p[0], p[1], null, 0, -0.75); else this.place(name, p[0], p[1], p[2]); this.o[name].active = false; this.activeList = null; }
 
   /** Set up a layout: { cube: [x, y, yaw?], bowl: [x, y, yaw?], ... }; everything else is parked. */
   layout(spec) {
@@ -88,4 +140,14 @@ export class World {
   }
 
   active() { return this.activeList || (this.activeList = Object.values(this.o).filter((e) => e.active)); }
+}
+
+// height of the body origin so the lowest corner of the (rotated) bounding box rests 1 mm above the table
+function restZ(e, [w, x, y, z]) {
+  const s = e.size; if (!s) return 0.003;
+  // third row of the rotation matrix (world z of each body axis)
+  const r0 = 2 * (x * z - w * y), r1 = 2 * (y * z + w * x), r2 = 1 - 2 * (x * x + y * y);
+  let lo = Infinity;
+  for (const cx of [-s[0] / 2, s[0] / 2]) for (const cy of [-s[1] / 2, s[1] / 2]) for (const cz of [0, s[2]]) lo = Math.min(lo, r0 * cx + r1 * cy + r2 * cz);
+  return 0.001 - lo;
 }

@@ -26,6 +26,7 @@ export class ArmController {
     this.grip = GRIP_OPEN;
     this.active = false; this.dragging = false;
     this.reachable = true; this.err = 0; this.usedPitch = this.pitch;
+    this.floor = FLOOR;                           // lowest target; a library grasp may go a little lower (o.floor)
     this.vmax = 2.2;                              // rad/s per joint (commanded)
     this.plan = null;                             // { steps, i, t, ... }
     this.listeners = {};
@@ -55,7 +56,7 @@ export class ArmController {
     out.set(this.kin.fk(q)); return out;
   }
 
-  cancel() { this.active = false; this.dragging = false; if (this.plan) { this.plan = null; this.emit('plan', null); } }
+  cancel() { this.floor = FLOOR; this.active = false; this.dragging = false; if (this.plan) { this.plan = null; this.emit('plan', null); } }
 
   /** Start following (a drag began or the keyboard moved the target). */
   begin() { if (!this.active) { this.syncTargetOnly(); } this.active = true; if (this.plan) { this.plan = null; this.emit('plan', null); } }
@@ -66,7 +67,7 @@ export class ArmController {
     this.target[0] = Math.max(-0.25, Math.min(0.55, x));
     this.target[1] = Math.max(-0.40, Math.min(0.40, y));
     // the table is the floor (9 mm keeps the fingertips out of it); user moves get told so (P1-8)
-    if (z < FLOOR) { z = FLOOR; if (!this.plan) this.emit('floor'); }
+    if (z < this.floor) { z = this.floor; if (!this.plan) this.emit('floor'); }
     this.target[2] = Math.min(0.42, z);
   }
   setRoll(r) { this.roll = Math.max(this.lo[4], Math.min(this.hi[4], r)); }
@@ -120,7 +121,7 @@ export class ArmController {
    * Roll that aligns the jaws with a face of a box of heading `yaw` when grasping at p.
    * Returns { roll, at } where `at` is the site position (offset along the closing axis).
    */
-  graspRoll(p, yaw, seed, period = Math.PI / 2) {
+  graspRoll(p, yaw, seed, period = Math.PI / 2, offset = JAW_OFFSET) {
     const q = this._q; q.set(seed); q[4] = 0;
     this.reach(q, p);
     const h = this.jawHeading(q);
@@ -129,7 +130,7 @@ export class ArmController {
     if (roll > this.hi[4]) roll -= period; if (roll < this.lo[4]) roll += period;
     q[4] = roll; this.reach(q, p);
     const h2 = this.jawHeading(q);
-    const at = [p[0] + JAW_OFFSET * Math.cos(h2), p[1] + JAW_OFFSET * Math.sin(h2), p[2]];
+    const at = [p[0] + offset * Math.cos(h2), p[1] + offset * Math.sin(h2), p[2]];
     return { roll, at };
   }
 
@@ -139,20 +140,22 @@ export class ArmController {
   /**
    * Build a pick plan for an object: center p=[x,y,z], half height hz, heading yaw.
    * Returns { steps, path, ok } (path = polyline for the preview).
+   * o (library objects): { z: grasp height, top: object top, period: jaw symmetry (π for a closing axis),
+   *   offset: site offset along the closing axis from the grasp centre }
    */
-  planPick(p, hz, yaw = 0, from) {
+  planPick(p, hz, yaw = 0, from, o = {}) {
     const s = from || this.startPoint();
-    const grasp = [p[0], p[1], Math.max(0.007, p[2] - 0.002)];
-    const { roll, at } = this.graspRoll(grasp, yaw, this.home);
-    const hover = p[2] + hz + HOVER;
+    const grasp = [p[0], p[1], o.z != null ? o.z : Math.max(0.007, p[2] - 0.002)];
+    const { roll, at } = this.graspRoll(grasp, yaw, this.home, o.period, o.offset);
+    const hover = (o.top != null ? o.top : p[2] + hz) + HOVER;
     const lift = Math.max(s[2], hover);
     const pts = [s, [s[0], s[1], lift], [at[0], at[1], hover], at];
     const steps = [
       { k: 'grip', open: true },
       { k: 'move', pts: [s, [s[0], s[1], lift], [at[0], at[1], hover]], roll },
-      { k: 'move', pts: [[at[0], at[1], hover], at], roll, slow: true, settle: true },
+      { k: 'move', pts: [[at[0], at[1], hover], at], roll, slow: true, settle: true, floor: o.floor },
       { k: 'grip', open: false, t: 0.7 },
-      { k: 'move', pts: [at, [at[0], at[1], hover + 0.03]], roll, slow: true }
+      { k: 'move', pts: [at, [at[0], at[1], hover + 0.03]], roll, slow: true, floor: o.floor }
     ];
     return this.finish(steps, pts.concat([[at[0], at[1], hover + 0.03]]), { kind: 'pick', roll, end: [at[0], at[1], hover + 0.03] });
   }
@@ -234,7 +237,7 @@ export class ArmController {
 
   nextStep() {
     const P = this.plan; P.i++; P.t = 0;
-    if (P.i >= P.steps.length) { const done = P.plan; this.plan = null; this.emit('done', done); return; }
+    if (P.i >= P.steps.length) { const done = P.plan; this.plan = null; this.floor = FLOOR; this.emit('done', done); return; }
     const st = P.steps[P.i];
     if (st.k === 'move') {
       // arc-length table for the polyline (allocation only at step start)
@@ -243,6 +246,7 @@ export class ArmController {
       const v = st.speed || (st.slow ? 0.09 : 0.2);
       st.T = Math.max(0.25, st.len / v + 0.25);
       if (st.roll != null) this.setRoll(st.roll);
+      this.floor = st.floor != null ? st.floor : FLOOR;
       this.pitch = st.pitch != null ? st.pitch : Math.PI / 2;
     } else if (st.k === 'grip') {
       this.grip = st.open ? GRIP_OPEN : GRIP_CLOSED;
