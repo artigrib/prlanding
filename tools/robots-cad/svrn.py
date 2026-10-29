@@ -186,8 +186,9 @@ def build(out):
     for i, (x, y) in enumerate(WHEELS):
         n = root.child(f'wheel_{i + 1}', (x, y, FLOOR + WR))
         n.tol = (0.16, 0.5)
+        # dark hubs (like the lid): only the printed body takes the print colour
         for m, ss in wheel(WR, WW, 1 if x > 0 else -1, lugs=16).items():
-            n.add(m, *[Pos(x, y, FLOOR + WR) * s for s in ss])
+            n.add('accent' if m == 'print' else m, *[Pos(x, y, FLOOR + WR) * s for s in ss])
     hinge = Pos(*HINGE)
     fl = root.child('flipper', HINGE)
     fl.tol = (0.1, 0.45)
