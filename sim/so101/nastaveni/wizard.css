@@ -106,7 +106,7 @@ body:not(.m-real) .realonly{display:none!important}
 body.m-real .virt{display:none!important}
 
 /* stage overlays */
-.stop{position:absolute;right:16px;top:16px;z-index:3;display:flex;flex-direction:column;align-items:flex-start;gap:0;min-width:132px;min-height:60px;padding:8px 16px;background:var(--accent);border:2px solid var(--ink);color:var(--ink);cursor:pointer;box-shadow:4px 4px 0 var(--ink);font-family:var(--sans)}
+.stop{position:absolute;right:16px;top:16px;z-index:3;display:flex;flex-direction:column;align-items:flex-start;gap:0;min-width:132px;min-height:64px;padding:8px 16px;background:var(--accent);border:2px solid var(--ink);color:var(--ink);cursor:pointer;box-shadow:4px 4px 0 var(--ink);font-family:var(--sans)}
 .stop:hover{background:var(--accent-d)}
 .stop:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
 .stop-k{font-size:24px;font-weight:700;letter-spacing:.04em;line-height:1.1}
@@ -124,7 +124,7 @@ body.lost .step .btn,body.lost #diag-go{opacity:.45;pointer-events:none}
   body.wiz{--pw:100%}
   .wiz .stage{height:40vh;height:40svh;min-height:260px}
   .variant{grid-template-columns:1fr}
-  .stop{right:12px;top:12px;min-width:0;min-height:52px;padding:6px 12px}
+  .stop{right:12px;top:12px;min-width:0;min-height:64px;padding:6px 12px}
   .stop-k{font-size:20px}
   .stop-t{font-size:10px}
   .wiz .hud{max-width:calc(100% - 140px)}
@@ -132,4 +132,19 @@ body.lost .step .btn,body.lost #diag-go{opacity:.45;pointer-events:none}
   .steps button{font-size:13px;flex-direction:column;gap:0;min-height:52px}
   .t{font-size:12px}
   .t th,.t td{padding:4px 4px}
+}
+
+/* real-arm safety: release STOP, armed banner, arming card */
+.stop-rel{position:absolute;right:16px;top:92px;z-index:3;min-height:44px;padding:6px 12px;background:#fff;border:2px solid var(--ink);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.stop-rel:hover{background:var(--sand)}
+.armed-bar{position:absolute;left:16px;right:170px;bottom:44px;z-index:3;margin:0;padding:6px 10px;border:2px solid var(--accent-d);background:#FFE3D9;font-size:12.5px;color:var(--ink)}
+body.armed .stage{box-shadow:inset 0 0 0 4px var(--accent-d);animation:armpulse 1.6s ease-in-out infinite}
+@keyframes armpulse{50%{box-shadow:inset 0 0 0 4px transparent}}
+@media (prefers-reduced-motion:reduce){body.armed .stage{animation:none}}
+.armed-bar.off{border-color:var(--ink);background:#fff}
+.card-arm .arm-checks{display:flex;flex-direction:column}
+.card-arm fieldset:disabled .opt{opacity:.6;cursor:not-allowed}
+@media (max-width:860px){
+  .stop-rel{right:12px;top:84px}
+  .armed-bar{left:12px;right:12px;bottom:40px}
 }

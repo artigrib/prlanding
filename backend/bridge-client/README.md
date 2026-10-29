@@ -86,6 +86,12 @@ The bridge handles these, so the handler does not have to:
 - Deadlines (`TIMEOUT`, then `stop()`).
 - `cancel` from the client.
 - Calling `stop()` and `onLinkLost()` when the link drops.
+- Real arm only, with `createAgentBridge({ ..., localDeadmanMs: REAL_DEADMAN_MS })`: a local
+  deadman independent of the relay's `hb`. The tab pings every 250 ms; when nothing has arrived for
+  1 s it aborts the motion, calls `stop()` (hold) and `onLinkLost('deadman')`, answers the aborted call
+  with `CANCELLED {reason: "deadman"}` and fires the UI hook `onDeadman({tripped, silentMs})`
+  (again with `tripped: false` when the link speaks). The aborted motion is never resumed. Server semantics are
+  unchanged (the relay still drops a silent tab after `hb` × 3).
 - Converting the snapshot blob to base64.
 - Adding `meta.backend = "sim"`.
 
