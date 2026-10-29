@@ -24,7 +24,6 @@
       "Ruku v simulaci může řídit váš Claude.": "Your Claude can drive the simulated arm.",
       "Claude nebo jiný asistent s podporou MCP dostane nástroje k ovládání simulované SO-101: pohyb kloubů, chapadlo, snímek kamery a mise. Ruka se hýbe ve vaší záložce, i když je na pozadí.": "Claude or another assistant with MCP support gets tools to control the simulated SO-101: joint moves, the gripper, a camera snapshot and missions. The arm moves in your browser tab, even when the tab is in the background.",
       "Jednou přidejte server do Claude Code:": "Add the server to Claude Code once:",
-      "Příkaz pro Claude Code": "Command for Claude Code",
       "Kopírovat příkaz": "Copy command",
       "Zkopírováno": "Copied",
       "Otevřete simulaci a v panelu klikněte na Připojit AI. Zobrazí se kód.": "Open the simulation and click Connect AI in the panel. A code appears.",

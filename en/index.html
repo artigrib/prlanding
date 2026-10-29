@@ -113,7 +113,7 @@
 <div class="feat-txt">
 <p class="lead">Claude or another assistant with MCP support gets tools to control the simulated SO-101: joint moves, the gripper, a camera snapshot and missions. The arm moves in your browser tab, even when the tab is in the background.</p>
 <ol class="ai-steps">
-<li>Add the server to Claude Code once:<span class="code" tabindex="0" role="region" aria-label="Command for Claude Code"><code id="mcp-cmd">claude mcp add --transport http printedrobotics https://mcp.printedrobotics.cz/mcp</code></span><button type="button" class="linkbtn copy-btn" data-copy="mcp-cmd" hidden>Copy command</button></li>
+<li>Add the server to Claude Code once:<span class="code"><code id="mcp-cmd">claude mcp add --transport http printedrobotics https://mcp.printedrobotics.cz/mcp</code></span><button type="button" class="linkbtn copy-btn" data-copy="mcp-cmd" hidden>Copy command</button></li>
 <li>Open the simulation and click Connect AI in the panel. A code appears.</li>
 <li>Give Claude the code and allow the connection in the tab.</li>
 </ol>
@@ -128,7 +128,7 @@
 <span class="mono-s">Simulation only: the AI cannot control a real arm. Our server only relays messages and stores nothing. Press STOP at any time.</span>
 </div>
 <figure class="feat-fig">
-<img src="../assets/media/ai-panel.jpg" width="1100" height="511" alt="SO-101 simulation with the AI control panel: the simulation is controlled by Claude Code, STOP and Disconnect buttons and a log of what the AI does" loading="lazy" decoding="async">
+<img src="../assets/media/ai-panel.jpg" width="1110" height="360" alt="SO-101 simulation with the AI control panel: the simulation is controlled by Claude Code, STOP and Disconnect buttons and a log of what the AI does" loading="lazy" decoding="async">
 <figcaption class="mono">Fig. 3 — The Connect AI panel while “Claude Code” controls the simulation (Czech interface shown). Every AI step is logged in the panel.</figcaption>
 </figure>
 </div>
