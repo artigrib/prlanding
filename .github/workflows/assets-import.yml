@@ -52,7 +52,7 @@ jobs:
       - name: Validate inputs
         run: |
           re_repo='^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}/[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$'
-          re_assets='^[A-Za-z0-9_.*?/, -]{1,500}$'
+          re_assets='^[A-Za-z0-9_.*?/, -]{1,3000}$'
           re_rev='^[A-Za-z0-9_./-]{1,100}$'
           [[ "$HF_REPO" =~ $re_repo ]] || { echo "::error::invalid hf_repo"; exit 1; }
           [[ "$ASSETS" =~ $re_assets ]] && [[ "$ASSETS" != *..* ]] || { echo "::error::invalid assets"; exit 1; }
