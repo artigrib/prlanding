@@ -8,6 +8,7 @@ import type { Config } from './config.ts';
 import { TokenBucket } from './ratelimit.ts';
 import type { Registry, Room } from './rooms.ts';
 import { log } from './log.ts';
+import { isTrustedPeer, trustedCidrs } from './trusted-proxy.ts';
 
 const TAB_TYPES = new Set(['hello', 'ping', 'pong', 'approve', 'result', 'event', 'revoke', 'rotate']);
 const HELLO_TIMEOUT_MS = 5000;
@@ -24,8 +25,12 @@ export function tabOriginAllowed(cfg: Config, origin: string | undefined): boole
   return cfg.tabOrigins.includes(origin) || (cfg.dev && isDevOrigin(origin));
 }
 
+let cidrs: ReturnType<typeof trustedCidrs> | undefined;
+
+/** Client IP for rate limits/logs. X-Forwarded-For counts only from a proxy on our Docker network or loopback. */
 export function clientIp(cfg: Config, req: IncomingMessage): string {
-  if (cfg.trustProxy) {
+  cidrs ??= trustedCidrs();
+  if (cfg.trustProxy && isTrustedPeer(req.socket.remoteAddress, cidrs)) {
     const xff = req.headers['x-forwarded-for'];
     const v = Array.isArray(xff) ? xff.join(',') : xff;
     if (v) {

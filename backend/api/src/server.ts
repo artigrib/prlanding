@@ -7,6 +7,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { timingSafeEqual, createHash } from 'node:crypto';
 import { CounterStore } from './store.ts';
 import { RateLimiter } from './ratelimit.ts';
+import { isTrustedPeer, trustedCidrs } from './trusted-proxy.ts';
 
 export const EVENTS: ReadonlySet<string> = new Set([
   'sim_start',
@@ -56,10 +57,14 @@ function tokenMatches(given: string, expected: string): boolean {
   return timingSafeEqual(a, b);
 }
 
+let cidrs: ReturnType<typeof trustedCidrs> | undefined;
+
 function clientKey(req: IncomingMessage, trustProxy: boolean): string {
-  if (trustProxy) {
-    // Caddy replaces X-Forwarded-For with the real peer address (no trusted proxies configured),
-    // so the last entry is the client as seen by Caddy.
+  cidrs ??= trustedCidrs();
+  if (trustProxy && isTrustedPeer(req.socket.remoteAddress, cidrs)) {
+    // Only a proxy on our own Docker network (or loopback) may set X-Forwarded-For. Caddy
+    // replaces the header with the real peer address (no trusted_proxies configured), so the
+    // last entry is the client as seen by that proxy.
     const xff = req.headers['x-forwarded-for'];
     const v = Array.isArray(xff) ? xff[xff.length - 1] : xff;
     if (v) {

@@ -1,6 +1,6 @@
 # Docker Compose project "printedrobotics" on vps1 (installed to the deploy root by deploy-backend.yml).
-# Caddy runs on the host network (see below); api and bridge sit on the project's own network
-# and are published on 127.0.0.1 only.
+# Caddy (profile "edge", only with EDGE=own) runs on the host network; api and bridge sit on the
+# external network printedrobotics_web and are published on 127.0.0.1 only. See docs/backend.md.
 # Image references come from release.env (written by remote-deploy.sh), secrets from secrets.env
 # (generated on the server, never in GitHub). Never run `docker compose config` in CI logs.
 name: printedrobotics
@@ -13,6 +13,10 @@ x-logging: &logging
 
 services:
   caddy:
+    # Profile "edge": started only while we terminate TLS ourselves (EDGE=own in release.env).
+    # With EDGE=external another project's proxy, attached to printedrobotics_web, serves the
+    # public hostnames and this container is not run (no 80/443 binds, no ACME requests).
+    profiles: [edge]
     image: ${CADDY_IMAGE:-caddy:2-alpine}
     restart: unless-stopped
     # Host networking: Docker 29 on vps1 keeps host port 80 marked as "already allocated" after
@@ -45,6 +49,8 @@ services:
 
   api:
     image: ${API_IMAGE:?API_IMAGE not set}
+    # Fixed name: an external edge proxy on printedrobotics_web reaches it as printedrobotics-api-1:8081.
+    container_name: printedrobotics-api-1
     restart: unless-stopped
     environment:
       APP_VERSION: ${APP_VERSION:-unknown}
@@ -71,6 +77,8 @@ services:
   bridge:
     profiles: [bridge]
     image: ${BRIDGE_IMAGE:-ghcr.io/artigrib/prlanding-bridge:unset}
+    # Fixed name: an external edge proxy reaches it as printedrobotics-bridge-1:8080 (/mcp, /tab, /healthz).
+    container_name: printedrobotics-bridge-1
     restart: unless-stopped
     environment:
       APP_VERSION: ${APP_VERSION:-unknown}
@@ -92,8 +100,13 @@ services:
     networks: [web]
 
 networks:
+  # Stable, externally managed network. remote-deploy.sh creates it once if missing; compose never
+  # creates, removes or recreates it (no `compose down` anywhere), so other projects' containers
+  # attached to it (e.g. an external edge proxy) survive our deploys and rollbacks.
+  # api and bridge trust X-Forwarded-For only from peers in this network's subnet (and loopback).
   web:
-    driver: bridge
+    name: printedrobotics_web
+    external: true
 
 volumes:
   caddy_data:

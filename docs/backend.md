@@ -128,6 +128,30 @@ Why the GHCR images are not built on push to `main`: the backend lives only on b
 - To go back to any older commit: re-run its **Deploy backend** run (Actions → the run → Re-run
   all jobs), or revert the commit on `backend` and push.
 
+## Edge proxy: own or external
+
+Public ports 80/443 on vps1 can be served either by our own Caddy (`EDGE=own`) or by another
+project's proxy that is attached to our Docker network (`EDGE=external`).
+
+- Network: `printedrobotics_web` is declared `external` in `backend/deploy/compose.yml`.
+  `remote-deploy.sh` creates it once if it is missing; compose never creates, removes or recreates
+  it, and neither deploy nor rollback runs `docker compose down` (a failed first release is only
+  stopped). Containers of other projects attached to it therefore stay attached across our deploys.
+- Targets for an external proxy on that network: `printedrobotics-api-1:8081` for
+  `api.printedrobotics.cz` (`/health`, `/e`, `/stats`) and `printedrobotics-bridge-1:8080` for
+  `mcp.printedrobotics.cz` and `relay.printedrobotics.cz` (`/healthz`, `/mcp` Streamable HTTP with
+  SSE, so no response buffering, and the `/tab` WebSocket). Container names are fixed in compose.
+- Proxy headers: api and bridge use `X-Forwarded-For` (right-most entry) for rate limits and logs
+  only when the TCP peer is inside the container's own Docker subnet (`printedrobotics_web`) or
+  loopback. `TRUST_PROXY_CIDRS` (comma list) overrides the detected subnets. Browser origin check
+  for `/tab` and CORS for the api accept `https://printedrobotics.cz` (`ALLOWED_ORIGINS`).
+- Switching: run **Deploy backend** manually with input `edge=external` (or `edge=own` to go back).
+  The mode is stored in the server's `release.env`; push deploys and rollbacks keep it. With
+  `external`, our Caddy (compose profile `edge`) is stopped: no 80/443 binds and no certificate
+  requests. api and bridge stay published on 127.0.0.1 only, which the deploy health checks use.
+- Verify: **Rollback backend** with action `tls` reports for each hostname whether the public
+  https URL returns 200, whether the certificate chain is valid, and the issuer.
+
 ## What the owner must do
 
 1. **DNS A records** (at the DNS provider of printedrobotics.cz): `api`, `mcp` and `relay` → the

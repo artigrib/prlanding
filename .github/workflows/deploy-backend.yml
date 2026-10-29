@@ -18,6 +18,12 @@ on:
       - '!backend/deploy/ops-request'
       - '.github/workflows/deploy-backend.yml'
   workflow_dispatch:
+    inputs:
+      edge:
+        description: "Who terminates TLS: keep (current mode), own (our Caddy on 80/443) or external (another proxy on printedrobotics_web; our Caddy is stopped)"
+        type: choice
+        options: [keep, own, external]
+        default: keep
 
 permissions:
   contents: read
@@ -231,12 +237,14 @@ jobs:
           BRIDGE_DIGEST: ${{ needs.build.outputs.bridge }}
           SITES: ${{ steps.dns.outputs.sites }}
           ACTOR: ${{ github.actor }}
+          EDGE_INPUT: ${{ inputs.edge }}
         run: |
+          case "$EDGE_INPUT" in own|external) edge="$EDGE_INPUT";; *) edge="";; esac
           api="${IMAGE_PREFIX}api@${API_DIGEST}"
           bridge=""; [ -n "$BRIDGE_DIGEST" ] && bridge="${IMAGE_PREFIX}bridge@${BRIDGE_DIGEST}"
           set +e
           out=$(printf '%s\n' "$TOKEN" | ssh -o StrictHostKeyChecking=$STRICT -l "$U" vps \
-            "ACTION=deploy API_IMAGE='$api' BRIDGE_IMAGE='$bridge' APP_VERSION='$GITHUB_SHA' SITES='$SITES' GHCR_USER='$ACTOR' bash /opt/printedrobotics/incoming/remote-deploy.sh" 2>/dev/null)
+            "ACTION=deploy API_IMAGE='$api' BRIDGE_IMAGE='$bridge' APP_VERSION='$GITHUB_SHA' SITES='$SITES' GHCR_USER='$ACTOR' EDGE='$edge' bash /opt/printedrobotics/incoming/remote-deploy.sh" 2>/dev/null)
           rc=$?
           set -e
           # Only the fixed STATUS/WARN/ERROR lines from remote-deploy.sh are shown.

@@ -50,28 +50,32 @@ report_services() {
   done
 }
 
+hget() { # hget PORT PATH -> raw HTTP/1.0 response from a 127.0.0.1-published port (works without our Caddy)
+  timeout 5 bash -c "exec 3<>/dev/tcp/127.0.0.1/$1; printf 'GET $2 HTTP/1.0\r\nHost: localhost\r\n\r\n' >&3; cat <&3" 2>/dev/null || true
+}
+
 check_health() { # check_health EXPECTED_VERSION BRIDGE_ENABLED
   local v="$1" bridge="$2" body i
   for i in $(seq 1 20); do
-    body=$(dc exec -T caddy wget -q -T 3 -O - http://127.0.0.1:18181/health 2>&1 || true)
+    body=$(hget 18181 /health)
     case "$body" in *'"ok":true'*) break;; esac
     sleep 3
   done
-  case "$body" in *'"ok":true'*) ;; *) warn "caddy -> api check output: $(sanitize "$body")";; esac
+  case "$body" in *'"ok":true'*) ;; *) warn "api check output: $(sanitize "$(printf '%s' "$body" | tail -c 200)")";; esac
   case "$body" in
-    *"\"version\":\"$v\""*) say "internal check: caddy -> api /health ok (version ${v:0:12})";;
+    *"\"version\":\"$v\""*) say "internal check: api /health ok (version ${v:0:12})";;
     *'"ok":true'*) warn "internal check: api healthy but reports another version"; return 1;;
-    *) warn "internal check: api /health not reachable from caddy"; return 1;;
+    *) warn "internal check: api /health not reachable on its loopback port"; return 1;;
   esac
   if [ "$bridge" = 1 ]; then
     for i in $(seq 1 20); do
-      body=$(dc exec -T caddy wget -q -T 3 -O - http://127.0.0.1:18180/healthz 2>/dev/null || true)
+      body=$(hget 18180 /healthz)
       case "$body" in *'"ok":true'*) break;; esac
       sleep 3
     done
     case "$body" in
-      *'"ok":true'*) say "internal check: caddy -> bridge /healthz ok";;
-      *) warn "internal check: bridge /healthz not reachable from caddy"; return 1;;
+      *'"ok":true'*) say "internal check: bridge /healthz ok";;
+      *) warn "internal check: bridge /healthz not reachable on its loopback port"; return 1;;
     esac
   fi
   return 0
@@ -105,12 +109,41 @@ fix_stale_ports() {
   say "leftover port-80/443 proxies after cleanup: $(proxies_80_443 | wc -l)"
 }
 
+ensure_network() {
+  # printedrobotics_web is declared `external` in compose.yml: compose never creates, removes or
+  # recreates it, so containers of other projects attached to it (an external edge proxy) stay
+  # attached across our deploys and rollbacks. Created here once if missing.
+  if ! docker network inspect printedrobotics_web >/dev/null 2>&1; then
+    docker network create --driver bridge --label org.printedrobotics.owner=printedrobotics printedrobotics_web >/dev/null \
+      && say "network printedrobotics_web created" || die "could not create network printedrobotics_web"
+  fi
+  say "network printedrobotics_web: present; containers attached: $(docker network inspect printedrobotics_web -f '{{len .Containers}}' 2>/dev/null)"
+}
+
+edge_mode() { # own|external, from the current release
+  case "$(release_var "$ROOT/release.env" EDGE)" in external) echo external;; *) echo own;; esac
+}
+
 bring_up() {
   build_env
-  fixports
-  fix_stale_ports
-  local profiles
+  ensure_network
+  local profiles edge
+  edge=$(edge_mode)
   profiles=$(release_var "$ROOT/release.env" COMPOSE_PROFILES)
+  # Releases written before the edge profile existed: own edge always means our Caddy runs.
+  if [ "$edge" = own ]; then
+    case ",$profiles," in *,edge,*) ;; *) profiles="${profiles:+$profiles,}edge";; esac
+  else
+    profiles=$(printf '%s' "$profiles" | tr ',' '\n' | grep -vx edge | paste -sd, -)
+  fi
+  if [ "$edge" = own ]; then
+    fixports
+    fix_stale_ports
+  else
+    # External edge proxy terminates TLS: our Caddy (profile "edge") must not hold 80/443.
+    dc rm -sf caddy >/dev/null 2>&1 || true
+    say "edge: external (our caddy stopped; no public ports, no certificate requests)"
+  fi
   local err
   if ! err=$(COMPOSE_PROFILES="$profiles" dc up -d --remove-orphans --wait --wait-timeout 150 2>&1); then
     warn "compose up failed: $(sanitize "$(printf '%s\n' "$err" | grep -v '^ *$' | tail -3)")"
@@ -130,6 +163,7 @@ sanitize() { # strip addresses, ids and paths from an error line before it reach
 }
 
 caddy_reload() {
+  [ "$(edge_mode)" = own ] || return 0
   dc exec -T caddy caddy reload --address 127.0.0.1:12019 --config /etc/caddy/Caddyfile --adapter caddyfile
 }
 
@@ -236,11 +270,15 @@ pull_images() {
 rollback() {
   if [ ! -f "$ROOT/release.prev.env" ]; then
     warn "no previous release to roll back to; stopping the failed release"
-    dc down --remove-orphans || true
+    # stop, never `down`: the external network and anything attached to it must survive.
+    dc stop || true
     return 1
   fi
   cp "$ROOT/release.env" "$ROOT/release.failed.env" 2>/dev/null || true
+  local em; em=$(edge_mode)
   cp "$ROOT/release.prev.env" "$ROOT/release.env"
+  # The edge mode is an operator choice, not part of a release: keep the current one.
+  sed -i '/^EDGE=/d' "$ROOT/release.env"; echo "EDGE=$em" >> "$ROOT/release.env"
   if bring_up && check_health "$(release_var "$ROOT/release.env" APP_VERSION)" \
        "$([ -n "$(release_var "$ROOT/release.env" BRIDGE_IMAGE)" ] && echo 1 || echo 0)"; then
     caddy_reload || true
@@ -584,7 +622,12 @@ ensure_secrets
   echo "API_IMAGE=$API_IMAGE"
   echo "BRIDGE_IMAGE=${BRIDGE_IMAGE:-}"
   echo "CADDY_IMAGE=caddy:2-alpine"
-  echo "COMPOSE_PROFILES=$([ -n "${BRIDGE_IMAGE:-}" ] && echo bridge || true)"
+  # EDGE: own (our Caddy terminates TLS on 80/443) or external (another proxy on printedrobotics_web
+  # does). An explicit EDGE input wins; otherwise the current release's mode is kept.
+  edge=${EDGE:-}; case "$edge" in own|external) ;; *) edge=$( [ -f "$ROOT/release.env" ] && edge_mode || echo own );; esac
+  echo "EDGE=$edge"
+  p=""; [ -n "${BRIDGE_IMAGE:-}" ] && p=bridge; [ "$edge" = own ] && p="${p:+$p,}edge"
+  echo "COMPOSE_PROFILES=$p"
 } > "$ROOT/release.next.env"
 
 pull_images
