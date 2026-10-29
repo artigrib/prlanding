@@ -1,0 +1,67 @@
+{
+ "id": "hardware_bracket_smallcorner_a01",
+ "name_cs": "Úhelník malý rohový",
+ "name_en": "Small corner bracket",
+ "category": "stand",
+ "mass_kg": 0.00268653,
+ "size_m": [
+  0.0228,
+  0.0226,
+  0.0179
+ ],
+ "friction": 0.455,
+ "license": "CC-BY-4.0",
+ "license_url": "https://creativecommons.org/licenses/by/4.0/",
+ "attribution": "\"Hardware bracket small corner\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+ "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/hardware_bracket_smallCorner_a01",
+ "files": {
+  "glb": "hardware_bracket_smallcorner_a01/hardware_bracket_smallcorner_a01.glb",
+  "mjcf": "hardware_bracket_smallcorner_a01/hardware_bracket_smallcorner_a01.xml"
+ },
+ "body": "obj_hardware_bracket_smallcorner_a01",
+ "graspable": true,
+ "source": {
+  "repo": "nvidia/simready-assets",
+  "revision": "a666cb4381ba513b174fb120ed523c1566ba832c",
+  "path": "hardware_bracket_smallCorner_a01",
+  "url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/hardware_bracket_smallCorner_a01"
+ },
+ "conversion": {
+  "scale": 1.0,
+  "mass_source": "usd:mass",
+  "friction_source": "usd",
+  "hull_source": "usd",
+  "hulls": 1,
+  "hull_vertices": [
+   48
+  ],
+  "hull_volume_cm3": 4.87,
+  "com_m": [
+   0.00029,
+   -0.00037,
+   0.00899
+  ],
+  "usd_meters_per_unit": 1.0,
+  "usd_up_axis": "Z",
+  "usd_physics_variant": "MuJoCo:Enabled",
+  "mass_note": null,
+  "glb": {
+   "bytes": 184368,
+   "triangles": 3500,
+   "texture": 256,
+   "simplify_error": 0.01,
+   "attempts": 6
+  },
+  "usd_layers": [
+   "simready_usd/payloads/Physics/physics.usda",
+   "simready_usd/payloads/base.usda",
+   "simready_usd/payloads/geometries.usd",
+   "simready_usd/payloads/instances.usda",
+   "simready_usd/payloads/instances_mujoco.usda",
+   "simready_usd/payloads/materials.usda",
+   "simready_usd/runnables/physics/mujoco.usd",
+   "simready_usd/sm_hardware_bracket_smallCorner_a01_01.usda"
+  ]
+ },
+ "name_source": "auto"
+}

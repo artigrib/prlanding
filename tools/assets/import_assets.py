@@ -13,7 +13,6 @@ Usage: python -I tools/assets/import_assets.py (--spec S --root R | --fetch F) [
 """
 import argparse
 import json
-import re
 import shutil
 import subprocess
 import sys
@@ -27,26 +26,7 @@ from convert import ConvertError, convert  # noqa: E402
 from usd_read import AssetError, find_root_usd  # noqa: E402
 import validate  # noqa: E402
 
-NAMES_CS = {k: v for k, v in json.loads((HERE / "names_cs.json").read_text(encoding="utf-8")).items()
-            if not k.startswith("_")}
-
-
-def tokens(text):
-    """'handTool_hexKey_lShape_a01' -> ['hand', 'tool', 'hex', 'key', 'l', 'shape', 'a01']"""
-    t = re.sub(r"([a-z])([A-Z])", r"\1 \2", str(text))
-    return [x for x in re.split(r"[^a-z0-9]+", t.lower()) if x]
-
-
-def czech_name(text):
-    toks = tokens(text)
-    name = next((NAMES_CS[t] for t in toks if t in NAMES_CS), None)
-    size = next((t.upper() for t in toks if re.fullmatch(r"m\d{1,2}", t)), None)  # thread size: M4, M8
-    return f"{name} {size}" if name and size else name
-
-
-def english_name(text):
-    toks = [t for t in tokens(text) if not re.fullmatch(r"[a-z]\d\d", t)]  # drop variant codes like a01
-    return " ".join(toks).capitalize() if toks else str(text)
+from names import derive as derive_names  # noqa: E402
 
 
 def root_metadata(pkg):
@@ -122,8 +102,9 @@ def process(c, out_root, policy):
     if hits and not s.get("brand_review"):
         return {"id": oid, "ok": False, "reason": "possible trademark/brand: " + ", ".join(hits)}
 
-    name_en = s.get("name_en") or english_name(md.get("asset_name") or Path(s["path"]).name)
-    name_cs = s.get("name_cs") or czech_name(name_en) or czech_name(s["path"])
+    auto_cs, auto_en, known = derive_names(md.get("asset_name") or Path(s["path"]).name)
+    name_en = s.get("name_en") or auto_en
+    name_cs = s.get("name_cs") or (auto_cs if known else None)
     attribution = s.get("attribution") or (
         f"\"{name_en}\" from {c['source'].get('repo', 'unknown source')}"
         + (f" by {md['author']}" if md.get("author") else "") + f", {spdx}; converted by printedrobotics.cz")
@@ -139,9 +120,10 @@ def process(c, out_root, policy):
     except Exception as e:  # malformed USD etc.
         shutil.rmtree(Path(out_root) / oid, ignore_errors=True)
         return {"id": oid, "ok": False, "reason": f"conversion error: {type(e).__name__}"}
-    if not name_cs:
+    rec["name_source"] = "spec" if s.get("name_cs") else "auto"
+    if not name_cs:  # no dictionary entry: the Czech name is the English one until a human fixes it
         rec["name_cs_auto"] = True
-        write_json(Path(out_root) / oid / f"{oid}.json", rec)
+    write_json(Path(out_root) / oid / f"{oid}.json", rec)
     if s.get("brand_review"):
         rec["brand_review"] = s["brand_review"]
         write_json(Path(out_root) / oid / f"{oid}.json", rec)
@@ -155,7 +137,10 @@ def process(c, out_root, policy):
         return {"id": oid, "ok": False, "reason": "drop test failed: " + "; ".join(v["errors"])}
     return {"id": oid, "ok": True, "license": spdx, "glb_bytes": rec["conversion"]["glb"]["bytes"],
             "hulls": rec["conversion"]["hulls"], "mass_kg": rec["mass_kg"], "name_cs": rec["name_cs"], "size_m": rec["size_m"],
-            "drop": v["drop"], "path": s.get("path"), "note": rec["conversion"].get("mass_note")}
+            "drop": v["drop"], "path": s.get("path"), "name_en": rec.get("name_en"),
+            "note": "; ".join(x for x in (rec["conversion"].get("mass_note"),
+                                          "no Czech name in names.json - name_cs is English, please add it"
+                                          if rec.get("name_cs_auto") else None) if x)}
 
 
 def report_md(results):
@@ -163,10 +148,10 @@ def report_md(results):
     exc = [r for r in results if not r["ok"]]
     lines = ["# Object import report", "", f"Included: {len(inc)} · excluded: {len(exc)}", ""]
     if inc:
-        lines += ["| id | name_cs | source path | licence | GLB KB | hulls | mass kg | size m | settle s | note |",
-                  "|---|---|---|---|---|---|---|---|---|---|"]
+        lines += ["| id | name_cs | name_en | source path | licence | GLB KB | hulls | mass kg | size m | settle s | note |",
+                  "|---|---|---|---|---|---|---|---|---|---|---|"]
         for r in inc:
-            lines.append(f"| {r['id']} | {r.get('name_cs', '')} | `{r.get('path')}` | {r['license']} | "
+            lines.append(f"| {r['id']} | {r.get('name_cs', '')} | {r.get('name_en', '')} | `{r.get('path')}` | {r['license']} | "
                          f"{r['glb_bytes'] / 1024:.0f} | {r['hulls']} | {r['mass_kg']} | "
                          f"{' × '.join(str(x) for x in r['size_m'])} | {r['drop']['settle_s']} | {r.get('note') or ''} |")
     if exc:

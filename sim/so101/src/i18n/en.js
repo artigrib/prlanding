@@ -3,6 +3,7 @@
 // text nodes, attributes and toasts are translated without touching the sim code; strings built from
 // pieces need a pattern. Czech stays the source of truth: when a Czech string changes, update its key
 // here (node tools/i18n-extract.mjs sim/so101/src/i18n/en.js sim/so101 lists what is missing).
+import objectNames from './objects-en.js';  // generated from the object manifest (tools/assets/manifest.py)
 const T = (s) => (globalThis.PRI18N ? globalThis.PRI18N.t(s) : s);
 const dec = (s) => String(s).replace(/(\d),(\d)/g, '$1.$2');
 const ids = (s) => dec(s).replace(/\(([^)]+)\)/g, (m, n) => '(' + T(n) + ')');
@@ -514,5 +515,8 @@ const patterns = [
 
 // pieces of composed messages, translated as a whole by the patterns above (for tools/i18n-extract.mjs)
 const fragments = ['STOP uvolněn. {} Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.', 'STOP uvolněn. {} Řízení zapnete tlačítkem „Znovu zapnout moment“.', 'Pauza po dlouhé relaci: pohyb půjde aktivovat za {}.', 'Skutečná ruka · POHYB POVOLEN · {} · zbývá {}', 'Skutečná ruka · jen čtení (shadow) · pauza {}', '· další: {}', '{} / {} misí · {} ★ z {}', '· rekord kamaráda {} překonán o {} s!', '· rekord kamaráda {} zatím platí', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
+
+// object library names: generated map, hand-written keys above win
+for (const [k, v] of Object.entries(objectNames)) if (!(k in strings)) strings[k] = v;
 
 export default { strings, patterns, fragments };

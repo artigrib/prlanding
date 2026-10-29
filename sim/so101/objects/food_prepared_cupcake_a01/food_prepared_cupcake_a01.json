@@ -1,7 +1,7 @@
 {
  "id": "food_prepared_cupcake_a01",
  "name_cs": "Muffin",
- "name_en": "Food prepared cupcake",
+ "name_en": "Cupcake",
  "category": "prop",
  "mass_kg": 0.085,
  "size_m": [
@@ -64,5 +64,6 @@
    "simready_usd/payloads/materials.usda",
    "simready_usd/sm_food_prepared_cupcake_a01_01.usd"
   ]
- }
+ },
+ "name_source": "auto"
 }

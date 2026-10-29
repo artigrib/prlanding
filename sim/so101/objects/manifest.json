@@ -6,9 +6,198 @@
  },
  "objects": [
   {
+   "id": "accessory_eyeglasses_a01",
+   "name_cs": "Brýle",
+   "name_en": "Eyeglasses",
+   "category": "prop",
+   "mass_kg": 0.175078,
+   "size_m": [
+    0.1446,
+    0.1743,
+    0.0569
+   ],
+   "friction": 0.47,
+   "graspable": true,
+   "body": "obj_accessory_eyeglasses_a01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Accessory eyeglasses\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/accessory_eyeglasses_a01",
+   "files": {
+    "glb": "accessory_eyeglasses_a01/accessory_eyeglasses_a01.glb",
+    "mjcf": "accessory_eyeglasses_a01/accessory_eyeglasses_a01.xml"
+   },
+   "bytes": {
+    "glb": 274780,
+    "mjcf": 6104
+   }
+  },
+  {
+   "id": "bandage_medical_a01",
+   "name_cs": "Obvaz zdravotní",
+   "name_en": "Medical bandage",
+   "category": "prop",
+   "mass_kg": 0.0162636,
+   "size_m": [
+    0.0494,
+    0.0519,
+    0.0424
+   ],
+   "friction": 0.7,
+   "graspable": true,
+   "body": "obj_bandage_medical_a01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Bandage medical\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/bandage_medical_a01",
+   "files": {
+    "glb": "bandage_medical_a01/bandage_medical_a01.glb",
+    "mjcf": "bandage_medical_a01/bandage_medical_a01.xml"
+   },
+   "bytes": {
+    "glb": 238292,
+    "mjcf": 1825
+   }
+  },
+  {
+   "id": "blood_glucosemeter_a01",
+   "name_cs": "Glukometr",
+   "name_en": "Glucose meter",
+   "category": "prop",
+   "mass_kg": 0.457439,
+   "size_m": [
+    0.2229,
+    0.1183,
+    0.026
+   ],
+   "friction": 0.4,
+   "graspable": false,
+   "body": "obj_blood_glucosemeter_a01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Blood glucosemeter\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/blood_glucosemeter_a01",
+   "files": {
+    "glb": "blood_glucosemeter_a01/blood_glucosemeter_a01.glb",
+    "mjcf": "blood_glucosemeter_a01/blood_glucosemeter_a01.xml"
+   },
+   "bytes": {
+    "glb": 303112,
+    "mjcf": 3306
+   }
+  },
+  {
+   "id": "bottle_laboratory_a01",
+   "name_cs": "Láhev laboratorní",
+   "name_en": "Laboratory bottle",
+   "category": "prop",
+   "mass_kg": 0.710593,
+   "size_m": [
+    0.0604,
+    0.0661,
+    0.1428
+   ],
+   "friction": 0.4,
+   "graspable": false,
+   "body": "obj_bottle_laboratory_a01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Bottle laboratory\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/bottle_laboratory_a01",
+   "files": {
+    "glb": "bottle_laboratory_a01/bottle_laboratory_a01.glb",
+    "mjcf": "bottle_laboratory_a01/bottle_laboratory_a01.xml"
+   },
+   "bytes": {
+    "glb": 31404,
+    "mjcf": 4687
+   }
+  },
+  {
+   "id": "bottle_laboratory_b01",
+   "name_cs": "Láhev laboratorní",
+   "name_en": "Laboratory bottle",
+   "category": "prop",
+   "mass_kg": 0.0442979,
+   "size_m": [
+    0.0101,
+    0.01,
+    0.05
+   ],
+   "friction": 0.4,
+   "graspable": true,
+   "body": "obj_bottle_laboratory_b01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Bottle laboratory\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/bottle_laboratory_b01",
+   "files": {
+    "glb": "bottle_laboratory_b01/bottle_laboratory_b01.glb",
+    "mjcf": "bottle_laboratory_b01/bottle_laboratory_b01.xml"
+   },
+   "bytes": {
+    "glb": 290928,
+    "mjcf": 4605
+   }
+  },
+  {
+   "id": "bottle_laboratory_c01",
+   "name_cs": "Láhev laboratorní",
+   "name_en": "Laboratory bottle",
+   "category": "prop",
+   "mass_kg": 0.109462,
+   "size_m": [
+    0.0288,
+    0.0288,
+    0.0502
+   ],
+   "friction": 0.528,
+   "graspable": true,
+   "body": "obj_bottle_laboratory_c01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Bottle laboratory\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/bottle_laboratory_c01",
+   "files": {
+    "glb": "bottle_laboratory_c01/bottle_laboratory_c01.glb",
+    "mjcf": "bottle_laboratory_c01/bottle_laboratory_c01.xml"
+   },
+   "bytes": {
+    "glb": 31044,
+    "mjcf": 4625
+   }
+  },
+  {
+   "id": "cleaning_brush_a01",
+   "name_cs": "Kartáč",
+   "name_en": "Brush",
+   "category": "prop",
+   "mass_kg": 0.268768,
+   "size_m": [
+    0.1621,
+    0.0856,
+    0.1562
+   ],
+   "friction": 0.4,
+   "graspable": false,
+   "body": "obj_cleaning_brush_a01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Cleaning brush\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/cleaning_brush_a01",
+   "files": {
+    "glb": "cleaning_brush_a01/cleaning_brush_a01.glb",
+    "mjcf": "cleaning_brush_a01/cleaning_brush_a01.xml"
+   },
+   "bytes": {
+    "glb": 257024,
+    "mjcf": 1858
+   }
+  },
+  {
    "id": "cleaning_sponge_b01",
    "name_cs": "Houbička",
-   "name_en": "Cleaning sponge",
+   "name_en": "Sponge",
    "category": "prop",
    "mass_kg": 0.0210326,
    "size_m": [
@@ -33,9 +222,198 @@
    }
   },
   {
+   "id": "cleaning_sponge_c01",
+   "name_cs": "Houbička",
+   "name_en": "Sponge",
+   "category": "prop",
+   "mass_kg": 0.0189072,
+   "size_m": [
+    0.0708,
+    0.0909,
+    0.0272
+   ],
+   "friction": 0.55,
+   "graspable": true,
+   "body": "obj_cleaning_sponge_c01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Cleaning sponge\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/cleaning_sponge_c01",
+   "files": {
+    "glb": "cleaning_sponge_c01/cleaning_sponge_c01.glb",
+    "mjcf": "cleaning_sponge_c01/cleaning_sponge_c01.xml"
+   },
+   "bytes": {
+    "glb": 189576,
+    "mjcf": 1851
+   }
+  },
+  {
+   "id": "cleaning_sponge_e01",
+   "name_cs": "Houbička",
+   "name_en": "Sponge",
+   "category": "prop",
+   "mass_kg": 0.013667,
+   "size_m": [
+    0.059,
+    0.0796,
+    0.0244
+   ],
+   "friction": 0.55,
+   "graspable": true,
+   "body": "obj_cleaning_sponge_e01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Cleaning sponge\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/cleaning_sponge_e01",
+   "files": {
+    "glb": "cleaning_sponge_e01/cleaning_sponge_e01.glb",
+    "mjcf": "cleaning_sponge_e01/cleaning_sponge_e01.xml"
+   },
+   "bytes": {
+    "glb": 279992,
+    "mjcf": 1885
+   }
+  },
+  {
+   "id": "cleaning_sponge_f01",
+   "name_cs": "Houbička",
+   "name_en": "Sponge",
+   "category": "prop",
+   "mass_kg": 0.00189908,
+   "size_m": [
+    0.0736,
+    0.1,
+    0.027
+   ],
+   "friction": 0.7,
+   "graspable": true,
+   "body": "obj_cleaning_sponge_f01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Cleaning sponge\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/cleaning_sponge_f01",
+   "files": {
+    "glb": "cleaning_sponge_f01/cleaning_sponge_f01.glb",
+    "mjcf": "cleaning_sponge_f01/cleaning_sponge_f01.xml"
+   },
+   "bytes": {
+    "glb": 223400,
+    "mjcf": 1834
+   }
+  },
+  {
+   "id": "cleaning_sponge_g01",
+   "name_cs": "Houbička",
+   "name_en": "Sponge",
+   "category": "prop",
+   "mass_kg": 0.0203177,
+   "size_m": [
+    0.0789,
+    0.1105,
+    0.0286
+   ],
+   "friction": 0.55,
+   "graspable": true,
+   "body": "obj_cleaning_sponge_g01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Cleaning sponge\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/cleaning_sponge_g01",
+   "files": {
+    "glb": "cleaning_sponge_g01/cleaning_sponge_g01.glb",
+    "mjcf": "cleaning_sponge_g01/cleaning_sponge_g01.xml"
+   },
+   "bytes": {
+    "glb": 192904,
+    "mjcf": 1876
+   }
+  },
+  {
+   "id": "consumable_bearing_ball_a01",
+   "name_cs": "Kulička z ložiska",
+   "name_en": "Bearing ball",
+   "category": "prop",
+   "mass_kg": 0.105268,
+   "size_m": [
+    0.0379,
+    0.0378,
+    0.0076
+   ],
+   "friction": 0.35,
+   "graspable": true,
+   "body": "obj_consumable_bearing_ball_a01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Consumable bearing ball\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/consumable_bearing_ball_a01",
+   "files": {
+    "glb": "consumable_bearing_ball_a01/consumable_bearing_ball_a01.glb",
+    "mjcf": "consumable_bearing_ball_a01/consumable_bearing_ball_a01.xml"
+   },
+   "bytes": {
+    "glb": 242064,
+    "mjcf": 1842
+   }
+  },
+  {
+   "id": "consumable_bearing_ball_b01",
+   "name_cs": "Kulička z ložiska",
+   "name_en": "Bearing ball",
+   "category": "prop",
+   "mass_kg": 0.01,
+   "size_m": [
+    0.0344,
+    0.0344,
+    0.0076
+   ],
+   "friction": 0.35,
+   "graspable": true,
+   "body": "obj_consumable_bearing_ball_b01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Consumable bearing ball\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/consumable_bearing_ball_b01",
+   "files": {
+    "glb": "consumable_bearing_ball_b01/consumable_bearing_ball_b01.glb",
+    "mjcf": "consumable_bearing_ball_b01/consumable_bearing_ball_b01.xml"
+   },
+   "bytes": {
+    "glb": 242032,
+    "mjcf": 1878
+   }
+  },
+  {
+   "id": "consumable_bearing_ball_c01",
+   "name_cs": "Kulička z ložiska",
+   "name_en": "Bearing ball",
+   "category": "prop",
+   "mass_kg": 0.01,
+   "size_m": [
+    0.0309,
+    0.0308,
+    0.0076
+   ],
+   "friction": 0.475,
+   "graspable": true,
+   "body": "obj_consumable_bearing_ball_c01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Consumable bearing ball\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/consumable_bearing_ball_c01",
+   "files": {
+    "glb": "consumable_bearing_ball_c01/consumable_bearing_ball_c01.glb",
+    "mjcf": "consumable_bearing_ball_c01/consumable_bearing_ball_c01.xml"
+   },
+   "bytes": {
+    "glb": 241972,
+    "mjcf": 1883
+   }
+  },
+  {
    "id": "container_vial_glass_a01",
-   "name_cs": "Lahvička",
-   "name_en": "Container vial glass",
+   "name_cs": "Lahvička skleněná",
+   "name_en": "Glass vial",
    "category": "prop",
    "mass_kg": 0.224946,
    "size_m": [
@@ -89,7 +467,7 @@
   {
    "id": "dishware_bowl_a01",
    "name_cs": "Miska",
-   "name_en": "Dishware bowl",
+   "name_en": "Bowl",
    "category": "bowl",
    "mass_kg": 0.3,
    "size_m": [
@@ -111,13 +489,66 @@
    "bytes": {
     "glb": 251312,
     "mjcf": 1840
+   }
+  },
+  {
+   "id": "dishware_cup_paper_a01",
+   "name_cs": "Kelímek",
+   "name_en": "Paper cup",
+   "category": "prop",
+   "mass_kg": 0.0254881,
+   "size_m": [
+    0.0801,
+    0.0801,
+    0.1099
+   ],
+   "friction": 0.7,
+   "graspable": false,
+   "body": "obj_dishware_cup_paper_a01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Dishware cup paper\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/dishware_cup_paper_a01",
+   "files": {
+    "glb": "dishware_cup_paper_a01/dishware_cup_paper_a01.glb",
+    "mjcf": "dishware_cup_paper_a01/dishware_cup_paper_a01.xml"
    },
-   "mass_note": "authored mass was exactly 1 kg (USD placeholder); set to 0.3 kg, a typical ceramic bowl of 16 cm (0.25–0.35 kg). Inertia scaled by the same factor."
+   "bytes": {
+    "glb": 189168,
+    "mjcf": 1876
+   }
+  },
+  {
+   "id": "dishware_cup_tea_a01",
+   "name_cs": "Šálek",
+   "name_en": "Teacup",
+   "category": "prop",
+   "mass_kg": 1.34827,
+   "size_m": [
+    0.1188,
+    0.0842,
+    0.1019
+   ],
+   "friction": 0.35,
+   "graspable": false,
+   "body": "obj_dishware_cup_tea_a01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Dishware cup tea\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/dishware_cup_tea_a01",
+   "files": {
+    "glb": "dishware_cup_tea_a01/dishware_cup_tea_a01.glb",
+    "mjcf": "dishware_cup_tea_a01/dishware_cup_tea_a01.xml"
+   },
+   "bytes": {
+    "glb": 279596,
+    "mjcf": 1847
+   }
   },
   {
    "id": "dishware_mug_a01",
    "name_cs": "Hrnek",
-   "name_en": "Dishware mug",
+   "name_en": "Mug",
    "category": "bowl",
    "mass_kg": 0.1,
    "size_m": [
@@ -142,9 +573,63 @@
    }
   },
   {
-   "id": "dishware_plastic_cup_a01",
+   "id": "dishware_mug_b01",
    "name_cs": "Hrnek",
-   "name_en": "Dishware plastic cup",
+   "name_en": "Mug",
+   "category": "drinking vessel",
+   "mass_kg": 1.48611,
+   "size_m": [
+    0.0925,
+    0.1365,
+    0.0919
+   ],
+   "friction": 0.35,
+   "graspable": false,
+   "body": "obj_dishware_mug_b01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Dishware mug\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/dishware_mug_b01",
+   "files": {
+    "glb": "dishware_mug_b01/dishware_mug_b01.glb",
+    "mjcf": "dishware_mug_b01/dishware_mug_b01.xml"
+   },
+   "bytes": {
+    "glb": 223392,
+    "mjcf": 1837
+   }
+  },
+  {
+   "id": "dishware_mug_c01",
+   "name_cs": "Hrnek",
+   "name_en": "Mug",
+   "category": "drinking vessel",
+   "mass_kg": 1.48843,
+   "size_m": [
+    0.0889,
+    0.1277,
+    0.1072
+   ],
+   "friction": 0.35,
+   "graspable": false,
+   "body": "obj_dishware_mug_c01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Dishware mug\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/dishware_mug_c01",
+   "files": {
+    "glb": "dishware_mug_c01/dishware_mug_c01.glb",
+    "mjcf": "dishware_mug_c01/dishware_mug_c01.xml"
+   },
+   "bytes": {
+    "glb": 239444,
+    "mjcf": 1839
+   }
+  },
+  {
+   "id": "dishware_plastic_cup_a01",
+   "name_cs": "Kelímek plastový",
+   "name_en": "Plastic cup",
    "category": "prop",
    "mass_kg": 0.0897029,
    "size_m": [
@@ -170,8 +655,8 @@
   },
   {
    "id": "dishware_plastic_fork_a01",
-   "name_cs": "Vidlička",
-   "name_en": "Dishware plastic fork",
+   "name_cs": "Vidlička plastová",
+   "name_en": "Plastic fork",
    "category": "prop",
    "mass_kg": 0.0158757,
    "size_m": [
@@ -197,8 +682,8 @@
   },
   {
    "id": "dishware_plastic_smallplate_a01",
-   "name_cs": "Talíř",
-   "name_en": "Dishware plastic small plate",
+   "name_cs": "Talířek plastový",
+   "name_en": "Plastic small plate",
    "category": "prop",
    "mass_kg": 0.0845086,
    "size_m": [
@@ -224,8 +709,8 @@
   },
   {
    "id": "dishware_plastic_spoon_a01",
-   "name_cs": "Lžíce",
-   "name_en": "Dishware plastic spoon",
+   "name_cs": "Lžíce plastová",
+   "name_en": "Plastic spoon",
    "category": "prop",
    "mass_kg": 0.0168204,
    "size_m": [
@@ -279,7 +764,7 @@
   {
    "id": "factory_bolt_m8_loose",
    "name_cs": "Šroub M8",
-   "name_en": "Factory bolt m8 loose",
+   "name_en": "M8 bolt",
    "category": "screw",
    "mass_kg": 0.00172544,
    "size_m": [
@@ -304,9 +789,90 @@
    }
   },
   {
+   "id": "factory_bolt_m8_tight",
+   "name_cs": "Šroub M8",
+   "name_en": "M8 bolt",
+   "category": "screw",
+   "mass_kg": 0.00176497,
+   "size_m": [
+    0.013,
+    0.013,
+    0.026
+   ],
+   "friction": 0.61,
+   "graspable": true,
+   "body": "obj_factory_bolt_m8_tight",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Factory bolt m8 tight\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/factory_bolt_m8_tight",
+   "files": {
+    "glb": "factory_bolt_m8_tight/factory_bolt_m8_tight.glb",
+    "mjcf": "factory_bolt_m8_tight/factory_bolt_m8_tight.xml"
+   },
+   "bytes": {
+    "glb": 233148,
+    "mjcf": 1734
+   }
+  },
+  {
+   "id": "factory_nut_m12_loose",
+   "name_cs": "Matice M12",
+   "name_en": "M12 nut",
+   "category": "screw",
+   "mass_kg": 0.00221419,
+   "size_m": [
+    0.019,
+    0.0219,
+    0.01
+   ],
+   "friction": 0.61,
+   "graspable": true,
+   "body": "obj_factory_nut_m12_loose",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Factory nut loose\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/factory_nut_m12_loose",
+   "files": {
+    "glb": "factory_nut_m12_loose/factory_nut_m12_loose.glb",
+    "mjcf": "factory_nut_m12_loose/factory_nut_m12_loose.xml"
+   },
+   "bytes": {
+    "glb": 259600,
+    "mjcf": 1785
+   }
+  },
+  {
+   "id": "factory_nut_m16_loose",
+   "name_cs": "Matice M16",
+   "name_en": "M16 nut",
+   "category": "screw",
+   "mass_kg": 0.00364296,
+   "size_m": [
+    0.024,
+    0.0277,
+    0.013
+   ],
+   "friction": 0.61,
+   "graspable": true,
+   "body": "obj_factory_nut_m16_loose",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Factory nut loose\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/factory_nut_m16_loose",
+   "files": {
+    "glb": "factory_nut_m16_loose/factory_nut_m16_loose.glb",
+    "mjcf": "factory_nut_m16_loose/factory_nut_m16_loose.xml"
+   },
+   "bytes": {
+    "glb": 259508,
+    "mjcf": 1779
+   }
+  },
+  {
    "id": "factory_nut_m8_loose",
    "name_cs": "Matice M8",
-   "name_en": "Factory nut m8 loose",
+   "name_en": "M8 nut",
    "category": "screw",
    "mass_kg": 0.000992802,
    "size_m": [
@@ -331,9 +897,36 @@
    }
   },
   {
+   "id": "factory_nut_m8_tight",
+   "name_cs": "Matice M8",
+   "name_en": "M8 nut",
+   "category": "screw",
+   "mass_kg": 0.000997595,
+   "size_m": [
+    0.013,
+    0.015,
+    0.0065
+   ],
+   "friction": 0.61,
+   "graspable": true,
+   "body": "obj_factory_nut_m8_tight",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Factory nut m8 tight\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/factory_nut_m8_tight",
+   "files": {
+    "glb": "factory_nut_m8_tight/factory_nut_m8_tight.glb",
+    "mjcf": "factory_nut_m8_tight/factory_nut_m8_tight.xml"
+   },
+   "bytes": {
+    "glb": 237912,
+    "mjcf": 1813
+   }
+  },
+  {
    "id": "food_prepared_cupcake_a01",
    "name_cs": "Muffin",
-   "name_en": "Food prepared cupcake",
+   "name_en": "Cupcake",
    "category": "prop",
    "mass_kg": 0.085,
    "size_m": [
@@ -358,9 +951,90 @@
    }
   },
   {
+   "id": "food_prepared_cupcake_b01",
+   "name_cs": "Muffin",
+   "name_en": "Cupcake",
+   "category": "prop",
+   "mass_kg": 0.0300861,
+   "size_m": [
+    0.067,
+    0.0658,
+    0.0542
+   ],
+   "friction": 0.45,
+   "graspable": true,
+   "body": "obj_food_prepared_cupcake_b01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Food prepared cupcake\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/food_prepared_cupcake_b01",
+   "files": {
+    "glb": "food_prepared_cupcake_b01/food_prepared_cupcake_b01.glb",
+    "mjcf": "food_prepared_cupcake_b01/food_prepared_cupcake_b01.xml"
+   },
+   "bytes": {
+    "glb": 197444,
+    "mjcf": 1917
+   }
+  },
+  {
+   "id": "food_prepared_cupcake_c01",
+   "name_cs": "Muffin",
+   "name_en": "Cupcake",
+   "category": "prop",
+   "mass_kg": 0.05,
+   "size_m": [
+    0.0702,
+    0.0703,
+    0.0791
+   ],
+   "friction": 0.45,
+   "graspable": false,
+   "body": "obj_food_prepared_cupcake_c01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Food prepared cupcake\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/food_prepared_cupcake_c01",
+   "files": {
+    "glb": "food_prepared_cupcake_c01/food_prepared_cupcake_c01.glb",
+    "mjcf": "food_prepared_cupcake_c01/food_prepared_cupcake_c01.xml"
+   },
+   "bytes": {
+    "glb": 294808,
+    "mjcf": 1897
+   }
+  },
+  {
+   "id": "food_prepared_cupcake_d01",
+   "name_cs": "Muffin",
+   "name_en": "Cupcake",
+   "category": "prop",
+   "mass_kg": 0.0383674,
+   "size_m": [
+    0.0646,
+    0.0664,
+    0.0655
+   ],
+   "friction": 0.45,
+   "graspable": true,
+   "body": "obj_food_prepared_cupcake_d01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Food prepared cupcake\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/food_prepared_cupcake_d01",
+   "files": {
+    "glb": "food_prepared_cupcake_d01/food_prepared_cupcake_d01.glb",
+    "mjcf": "food_prepared_cupcake_d01/food_prepared_cupcake_d01.xml"
+   },
+   "bytes": {
+    "glb": 279924,
+    "mjcf": 1919
+   }
+  },
+  {
    "id": "food_prepared_donut_a01",
    "name_cs": "Kobliha",
-   "name_en": "Food prepared donut",
+   "name_en": "Donut",
    "category": "prop",
    "mass_kg": 0.103422,
    "size_m": [
@@ -387,7 +1061,7 @@
   {
    "id": "food_produce_apple_b01",
    "name_cs": "Jablko",
-   "name_en": "Food produce apple",
+   "name_en": "Apple",
    "category": "prop",
    "mass_kg": 0.159845,
    "size_m": [
@@ -414,7 +1088,7 @@
   {
    "id": "food_produce_apple_c01",
    "name_cs": "Jablko",
-   "name_en": "Food produce apple",
+   "name_en": "Apple",
    "category": "prop",
    "mass_kg": 0.170638,
    "size_m": [
@@ -439,9 +1113,144 @@
    }
   },
   {
+   "id": "food_produce_apple_d01",
+   "name_cs": "Jablko",
+   "name_en": "Apple",
+   "category": "prop",
+   "mass_kg": 0.124757,
+   "size_m": [
+    0.0596,
+    0.0613,
+    0.0694
+   ],
+   "friction": 0.45,
+   "graspable": true,
+   "body": "obj_food_produce_apple_d01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Food produce apple\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/food_produce_apple_d01",
+   "files": {
+    "glb": "food_produce_apple_d01/food_produce_apple_d01.glb",
+    "mjcf": "food_produce_apple_d01/food_produce_apple_d01.xml"
+   },
+   "bytes": {
+    "glb": 265864,
+    "mjcf": 1898
+   }
+  },
+  {
+   "id": "food_produce_apple_e01",
+   "name_cs": "Jablko",
+   "name_en": "Apple",
+   "category": "prop",
+   "mass_kg": 0.148631,
+   "size_m": [
+    0.0645,
+    0.0696,
+    0.0675
+   ],
+   "friction": 0.45,
+   "graspable": true,
+   "body": "obj_food_produce_apple_e01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Food produce apple\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/food_produce_apple_e01",
+   "files": {
+    "glb": "food_produce_apple_e01/food_produce_apple_e01.glb",
+    "mjcf": "food_produce_apple_e01/food_produce_apple_e01.xml"
+   },
+   "bytes": {
+    "glb": 269564,
+    "mjcf": 1899
+   }
+  },
+  {
+   "id": "food_produce_apple_f01",
+   "name_cs": "Jablko",
+   "name_en": "Apple",
+   "category": "prop",
+   "mass_kg": 0.172865,
+   "size_m": [
+    0.0738,
+    0.0746,
+    0.0674
+   ],
+   "friction": 0.45,
+   "graspable": true,
+   "body": "obj_food_produce_apple_f01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Food produce apple\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/food_produce_apple_f01",
+   "files": {
+    "glb": "food_produce_apple_f01/food_produce_apple_f01.glb",
+    "mjcf": "food_produce_apple_f01/food_produce_apple_f01.xml"
+   },
+   "bytes": {
+    "glb": 130088,
+    "mjcf": 1894
+   }
+  },
+  {
+   "id": "food_produce_apple_grannysmith_a",
+   "name_cs": "Jablko Granny Smith",
+   "name_en": "Granny Smith apple",
+   "category": "prop",
+   "mass_kg": 0.29603,
+   "size_m": [
+    0.092,
+    0.0888,
+    0.0965
+   ],
+   "friction": 0.45,
+   "graspable": false,
+   "body": "obj_food_produce_apple_grannysmith_a",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Food produce apple granny smith\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/food_produce_apple_grannySmith_a01",
+   "files": {
+    "glb": "food_produce_apple_grannysmith_a/food_produce_apple_grannysmith_a.glb",
+    "mjcf": "food_produce_apple_grannysmith_a/food_produce_apple_grannysmith_a.xml"
+   },
+   "bytes": {
+    "glb": 261804,
+    "mjcf": 1960
+   }
+  },
+  {
+   "id": "food_produce_apple_reddelicous_a",
+   "name_cs": "Jablko Red Delicious",
+   "name_en": "Red Delicious apple",
+   "category": "prop",
+   "mass_kg": 0.232845,
+   "size_m": [
+    0.0776,
+    0.081,
+    0.0954
+   ],
+   "friction": 0.45,
+   "graspable": false,
+   "body": "obj_food_produce_apple_reddelicous_a",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Food produce apple red delicous\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/food_produce_apple_redDelicous_a01",
+   "files": {
+    "glb": "food_produce_apple_reddelicous_a/food_produce_apple_reddelicous_a.glb",
+    "mjcf": "food_produce_apple_reddelicous_a/food_produce_apple_reddelicous_a.xml"
+   },
+   "bytes": {
+    "glb": 287748,
+    "mjcf": 1953
+   }
+  },
+  {
    "id": "food_produce_banana_a01",
    "name_cs": "Banán",
-   "name_en": "Food produce banana",
+   "name_en": "Banana",
    "category": "prop",
    "mass_kg": 0.242798,
    "size_m": [
@@ -466,30 +1275,300 @@
    }
   },
   {
-   "id": "handtool_screwdriver_phillips_ph",
-   "name_cs": "Šroubovák",
-   "name_en": "Hand tool screwdriver phillips ph1",
+   "id": "food_produce_banana_b01",
+   "name_cs": "Banán",
+   "name_en": "Banana",
    "category": "prop",
-   "mass_kg": 0.0492052,
+   "mass_kg": 0.234426,
    "size_m": [
-    0.1471,
-    0.0272,
-    0.026
+    0.0952,
+    0.1692,
+    0.0316
+   ],
+   "friction": 0.65,
+   "graspable": true,
+   "body": "obj_food_produce_banana_b01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Food produce banana\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/food_produce_banana_b01",
+   "files": {
+    "glb": "food_produce_banana_b01/food_produce_banana_b01.glb",
+    "mjcf": "food_produce_banana_b01/food_produce_banana_b01.xml"
+   },
+   "bytes": {
+    "glb": 227804,
+    "mjcf": 1919
+   }
+  },
+  {
+   "id": "food_produce_banana_c01",
+   "name_cs": "Banán",
+   "name_en": "Banana",
+   "category": "prop",
+   "mass_kg": 0.207601,
+   "size_m": [
+    0.063,
+    0.18,
+    0.0309
+   ],
+   "friction": 0.65,
+   "graspable": true,
+   "body": "obj_food_produce_banana_c01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Food produce banana\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/food_produce_banana_c01",
+   "files": {
+    "glb": "food_produce_banana_c01/food_produce_banana_c01.glb",
+    "mjcf": "food_produce_banana_c01/food_produce_banana_c01.xml"
+   },
+   "bytes": {
+    "glb": 279136,
+    "mjcf": 1925
+   }
+  },
+  {
+   "id": "food_produce_dragonfruit_a01",
+   "name_cs": "Dračí ovoce",
+   "name_en": "Dragon fruit",
+   "category": "prop",
+   "mass_kg": 0.34947,
+   "size_m": [
+    0.1418,
+    0.0836,
+    0.0787
+   ],
+   "friction": 0.45,
+   "graspable": false,
+   "body": "obj_food_produce_dragonfruit_a01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Food produce dragon fruit\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/food_produce_dragonFruit_a01",
+   "files": {
+    "glb": "food_produce_dragonfruit_a01/food_produce_dragonfruit_a01.glb",
+    "mjcf": "food_produce_dragonfruit_a01/food_produce_dragonfruit_a01.xml"
+   },
+   "bytes": {
+    "glb": 294084,
+    "mjcf": 1927
+   }
+  },
+  {
+   "id": "handtool_pliers_combination_a01",
+   "name_cs": "Kleště kombinované",
+   "name_en": "Combination pliers",
+   "category": "prop",
+   "mass_kg": 0.324551,
+   "size_m": [
+    0.1895,
+    0.0689,
+    0.0264
+   ],
+   "friction": 0.35,
+   "graspable": false,
+   "body": "obj_handtool_pliers_combination_a01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Hand tool pliers combination\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/handTool_pliers_combination_a01",
+   "files": {
+    "glb": "handtool_pliers_combination_a01/handtool_pliers_combination_a01.glb",
+    "mjcf": "handtool_pliers_combination_a01/handtool_pliers_combination_a01.xml"
+   },
+   "bytes": {
+    "glb": 277756,
+    "mjcf": 3383
+   }
+  },
+  {
+   "id": "handtool_screwdriver_phillips_ph",
+   "name_cs": "Šroubovák křížový PH2",
+   "name_en": "Phillips screwdriver PH2",
+   "category": "prop",
+   "mass_kg": 0.0799679,
+   "size_m": [
+    0.1879,
+    0.0339,
+    0.0324
    ],
    "friction": 0.35,
    "graspable": true,
    "body": "obj_handtool_screwdriver_phillips_ph",
    "license": "CC-BY-4.0",
    "license_url": "https://creativecommons.org/licenses/by/4.0/",
-   "attribution": "\"Hand tool screwdriver phillips ph1\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
-   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/handTool_screwdriver_phillips_ph1_a01",
+   "attribution": "\"Hand tool screwdriver phillips ph2\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/handTool_screwdriver_phillips_ph2_a01",
    "files": {
     "glb": "handtool_screwdriver_phillips_ph/handtool_screwdriver_phillips_ph.glb",
     "mjcf": "handtool_screwdriver_phillips_ph/handtool_screwdriver_phillips_ph.xml"
    },
    "bytes": {
-    "glb": 243128,
-    "mjcf": 1958
+    "glb": 243572,
+    "mjcf": 1989
+   }
+  },
+  {
+   "id": "handtool_screwdriver_slotted_4mm",
+   "name_cs": "Šroubovák plochý 4 mm",
+   "name_en": "Slotted screwdriver 4 mm",
+   "category": "prop",
+   "mass_kg": 0.0364701,
+   "size_m": [
+    0.148,
+    0.0272,
+    0.026
+   ],
+   "friction": 0.35,
+   "graspable": true,
+   "body": "obj_handtool_screwdriver_slotted_4mm",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Hand tool screwdriver slotted 4mm\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/handTool_screwdriver_slotted_4mm_a01",
+   "files": {
+    "glb": "handtool_screwdriver_slotted_4mm/handtool_screwdriver_slotted_4mm.glb",
+    "mjcf": "handtool_screwdriver_slotted_4mm/handtool_screwdriver_slotted_4mm.xml"
+   },
+   "bytes": {
+    "glb": 243044,
+    "mjcf": 1978
+   }
+  },
+  {
+   "id": "handtool_screwdriver_torx_t10_a0",
+   "name_cs": "Šroubovák Torx T10",
+   "name_en": "Torx screwdriver T10",
+   "category": "prop",
+   "mass_kg": 0.050224,
+   "size_m": [
+    0.1477,
+    0.0272,
+    0.026
+   ],
+   "friction": 0.35,
+   "graspable": true,
+   "body": "obj_handtool_screwdriver_torx_t10_a0",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Hand tool screwdriver torx\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/handTool_screwdriver_torx_t10_a01",
+   "files": {
+    "glb": "handtool_screwdriver_torx_t10_a0/handtool_screwdriver_torx_t10_a0.glb",
+    "mjcf": "handtool_screwdriver_torx_t10_a0/handtool_screwdriver_torx_t10_a0.xml"
+   },
+   "bytes": {
+    "glb": 242356,
+    "mjcf": 1975
+   }
+  },
+  {
+   "id": "handtool_socket_1_2in_a01",
+   "name_cs": "Nástrčná hlavice 1/2\"",
+   "name_en": "Socket 1/2\"",
+   "category": "prop",
+   "mass_kg": 0.257174,
+   "size_m": [
+    0.0303,
+    0.0303,
+    0.0448
+   ],
+   "friction": 0.3,
+   "graspable": true,
+   "body": "obj_handtool_socket_1_2in_a01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Hand tool socket 1 2in\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/handTool_socket_1_2in_a01",
+   "files": {
+    "glb": "handtool_socket_1_2in_a01/handtool_socket_1_2in_a01.glb",
+    "mjcf": "handtool_socket_1_2in_a01/handtool_socket_1_2in_a01.xml"
+   },
+   "bytes": {
+    "glb": 213820,
+    "mjcf": 1894
+   }
+  },
+  {
+   "id": "handtool_socket_3_8in_a01",
+   "name_cs": "Nástrčná hlavice 3/8\"",
+   "name_en": "Socket 3/8\"",
+   "category": "prop",
+   "mass_kg": 0.243311,
+   "size_m": [
+    0.0303,
+    0.0303,
+    0.0438
+   ],
+   "friction": 0.3,
+   "graspable": true,
+   "body": "obj_handtool_socket_3_8in_a01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Hand tool socket 3 8in\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/handTool_socket_3_8in_a01",
+   "files": {
+    "glb": "handtool_socket_3_8in_a01/handtool_socket_3_8in_a01.glb",
+    "mjcf": "handtool_socket_3_8in_a01/handtool_socket_3_8in_a01.xml"
+   },
+   "bytes": {
+    "glb": 214516,
+    "mjcf": 1901
+   }
+  },
+  {
+   "id": "hardware_bracket_smallcorner_a01",
+   "name_cs": "Úhelník malý rohový",
+   "name_en": "Small corner bracket",
+   "category": "stand",
+   "mass_kg": 0.00268653,
+   "size_m": [
+    0.0228,
+    0.0226,
+    0.0179
+   ],
+   "friction": 0.455,
+   "graspable": true,
+   "body": "obj_hardware_bracket_smallcorner_a01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Hardware bracket small corner\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/hardware_bracket_smallCorner_a01",
+   "files": {
+    "glb": "hardware_bracket_smallcorner_a01/hardware_bracket_smallcorner_a01.glb",
+    "mjcf": "hardware_bracket_smallcorner_a01/hardware_bracket_smallcorner_a01.xml"
+   },
+   "bytes": {
+    "glb": 184368,
+    "mjcf": 1929
+   }
+  },
+  {
+   "id": "instrument_spoon_a01",
+   "name_cs": "Lžíce",
+   "name_en": "Spoon",
+   "category": "prop",
+   "mass_kg": 0.364934,
+   "size_m": [
+    0.1825,
+    0.0289,
+    0.0288
+   ],
+   "friction": 0.3,
+   "graspable": false,
+   "body": "obj_instrument_spoon_a01",
+   "license": "CC-BY-4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "attribution": "\"Instrument spoon\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+   "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/instrument_spoon_a01",
+   "files": {
+    "glb": "instrument_spoon_a01/instrument_spoon_a01.glb",
+    "mjcf": "instrument_spoon_a01/instrument_spoon_a01.xml"
+   },
+   "bytes": {
+    "glb": 232252,
+    "mjcf": 1886
    }
   },
   {

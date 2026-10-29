@@ -1,0 +1,69 @@
+{
+ "id": "food_produce_apple_d01",
+ "name_cs": "Jablko",
+ "name_en": "Apple",
+ "category": "prop",
+ "mass_kg": 0.124757,
+ "size_m": [
+  0.0596,
+  0.0613,
+  0.0694
+ ],
+ "friction": 0.45,
+ "license": "CC-BY-4.0",
+ "license_url": "https://creativecommons.org/licenses/by/4.0/",
+ "attribution": "\"Food produce apple\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+ "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/food_produce_apple_d01",
+ "files": {
+  "glb": "food_produce_apple_d01/food_produce_apple_d01.glb",
+  "mjcf": "food_produce_apple_d01/food_produce_apple_d01.xml"
+ },
+ "body": "obj_food_produce_apple_d01",
+ "graspable": true,
+ "source": {
+  "repo": "nvidia/simready-assets",
+  "revision": "a666cb4381ba513b174fb120ed523c1566ba832c",
+  "path": "food_produce_apple_d01",
+  "url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/food_produce_apple_d01"
+ },
+ "conversion": {
+  "scale": 1.0,
+  "mass_source": "usd:mass",
+  "friction_source": "usd",
+  "hull_source": "usd",
+  "hulls": 1,
+  "hull_vertices": [
+   48
+  ],
+  "hull_volume_cm3": 112.07,
+  "com_m": [
+   1e-05,
+   0.0001,
+   0.03084
+  ],
+  "usd_meters_per_unit": 1.0,
+  "usd_up_axis": "Z",
+  "usd_physics_variant": "MuJoCo:Enabled",
+  "mass_note": null,
+  "glb": {
+   "bytes": 265864,
+   "triangles": 6000,
+   "texture": 384,
+   "simplify_error": 0.01,
+   "attempts": 4
+  },
+  "usd_layers": [
+   "simready_usd/payloads/MuJoCo/enabled.usda",
+   "simready_usd/payloads/Newton/disabled.usda",
+   "simready_usd/payloads/PhysX/disabled.usda",
+   "simready_usd/payloads/Physics/physics.usda",
+   "simready_usd/payloads/base.usda",
+   "simready_usd/payloads/geometries.usd",
+   "simready_usd/payloads/instances.usda",
+   "simready_usd/payloads/instances_mujoco.usda",
+   "simready_usd/payloads/materials.usda",
+   "simready_usd/sm_food_produce_apple_d01_01.usd"
+  ]
+ },
+ "name_source": "auto"
+}

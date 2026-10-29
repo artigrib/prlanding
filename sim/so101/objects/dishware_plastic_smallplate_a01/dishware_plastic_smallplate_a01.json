@@ -1,7 +1,7 @@
 {
  "id": "dishware_plastic_smallplate_a01",
- "name_cs": "Talíř",
- "name_en": "Dishware plastic small plate",
+ "name_cs": "Talířek plastový",
+ "name_en": "Plastic small plate",
  "category": "prop",
  "mass_kg": 0.0845086,
  "size_m": [
@@ -64,5 +64,6 @@
    "simready_usd/payloads/materials.usda",
    "simready_usd/sm_dishware_plastic_smallPlate_a01_01.usd"
   ]
- }
+ },
+ "name_source": "auto"
 }

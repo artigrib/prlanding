@@ -1,19 +1,19 @@
 {
  "id": "handtool_screwdriver_phillips_ph",
- "name_cs": "Šroubovák",
- "name_en": "Hand tool screwdriver phillips ph1",
+ "name_cs": "Šroubovák křížový PH2",
+ "name_en": "Phillips screwdriver PH2",
  "category": "prop",
- "mass_kg": 0.0492052,
+ "mass_kg": 0.0799679,
  "size_m": [
-  0.1471,
-  0.0272,
-  0.026
+  0.1879,
+  0.0339,
+  0.0324
  ],
  "friction": 0.35,
  "license": "CC-BY-4.0",
  "license_url": "https://creativecommons.org/licenses/by/4.0/",
- "attribution": "\"Hand tool screwdriver phillips ph1\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
- "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/handTool_screwdriver_phillips_ph1_a01",
+ "attribution": "\"Hand tool screwdriver phillips ph2\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+ "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/handTool_screwdriver_phillips_ph2_a01",
  "files": {
   "glb": "handtool_screwdriver_phillips_ph/handtool_screwdriver_phillips_ph.glb",
   "mjcf": "handtool_screwdriver_phillips_ph/handtool_screwdriver_phillips_ph.xml"
@@ -23,8 +23,8 @@
  "source": {
   "repo": "nvidia/simready-assets",
   "revision": "a666cb4381ba513b174fb120ed523c1566ba832c",
-  "path": "handTool_screwdriver_phillips_ph1_a01",
-  "url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/handTool_screwdriver_phillips_ph1_a01"
+  "path": "handTool_screwdriver_phillips_ph2_a01",
+  "url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/handTool_screwdriver_phillips_ph2_a01"
  },
  "conversion": {
   "scale": 1.0,
@@ -35,18 +35,18 @@
   "hull_vertices": [
    48
   ],
-  "hull_volume_cm3": 34.12,
+  "hull_volume_cm3": 66.75,
   "com_m": [
-   -0.02678,
-   -6e-05,
-   0.01299
+   -0.03524,
+   -3e-05,
+   0.01614
   ],
   "usd_meters_per_unit": 1.0,
   "usd_up_axis": "Z",
   "usd_physics_variant": "MuJoCo:Enabled",
   "mass_note": null,
   "glb": {
-   "bytes": 243128,
+   "bytes": 243572,
    "triangles": 5999,
    "texture": 384,
    "simplify_error": 0.01,
@@ -62,7 +62,8 @@
    "simready_usd/payloads/instances.usda",
    "simready_usd/payloads/instances_mujoco.usda",
    "simready_usd/payloads/materials.usda",
-   "simready_usd/sm_handTool_screwdriver_phillips_ph1_a01_01.usd"
+   "simready_usd/sm_handTool_screwdriver_phillips_ph2_a01_01.usd"
   ]
- }
+ },
+ "name_source": "auto"
 }
