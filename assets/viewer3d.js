@@ -63,6 +63,10 @@ export function mountViewer(host, url, opts) {
   loader.load(url, gltf => {
     if (disposed) return;
     const root = gltf.scene;
+    // rigged arena models carry every swappable module as opt_<slot>_<option>: show only the ones asked for
+    const drop = [];
+    root.traverse(o => { if (/^opt_/.test(o.name || '') && !(opts.show || []).includes(o.name)) drop.push(o); });
+    drop.forEach(o => o.parent && o.parent.remove(o));
     scene.add(root);
     root.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(root);

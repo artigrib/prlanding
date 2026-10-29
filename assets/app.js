@@ -421,7 +421,7 @@
         if (mode3d && !viewer) {
           import('./viewer3d.js').then(function (mod) {
             viewer = mod.mountViewer(host, ROOT + 'models/' + r.id + '.glb', {
-              color: colorObj().hex,
+              color: colorObj().hex, show: r.glbShow,
               label: '3D model: ' + r.name,
               onReady: function (n) { msg3.remove(); $('#v3d-hint').textContent = n + ' dílů · táhněte pro otočení · dva prsty nebo kolečko pro přiblížení'; },
               onError: function () { msg3.textContent = '3D model se nepodařilo načíst.'; }

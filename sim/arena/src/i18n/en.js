@@ -104,6 +104,9 @@ const strings = {
   'PROTO ROBOT Praha': 'PROTO ROBOT Prague', 'Noční finále: pily a jáma od 1:00': 'Night final: saws, and a pit from 1:00',
   'Noční finále pražského meetupu: reflektory, publikum, pily ve stěnách a jáma uprostřed, která se otevře v polovině zápasu.': 'The night final of the Prague meetup: spotlights, a crowd, saws in the walls and a pit in the middle that opens halfway through the match.',
   /* arena-fixes */
+  'Modul': 'Module', 'Chapadlo': 'Grabber', 'Kloubová ocelová deska na servu – převrací soupeře': 'Hinged steel plate on a servo – flips the opponent',
+  'Pevný široký ocelový klín bez serva, −9 g': 'Fixed wide steel wedge, no servo, −9 g', 'Vidlice a kleště: chytí, zvedne a odveze, +3 g': 'Forks and a clamp: grabs, lifts and carries off, +3 g',
+  'Klín – tlačte': 'Wedge – push', 'nic (klín bez serva – tlačte)': 'nothing (wedge without a servo – push)', 'nic (klín bez serva – tlačte) ·': 'nothing (wedge without a servo – push) ·',
   'Střední': 'Intermediate', 'Zkusit lehčího soupeře': 'Try an easier opponent', '↓ Další nastavení: garáž, barva, aréna': '↓ More settings: garage, colour, arena',
   'První zápas': 'First match', 'Jak na to': 'How to play', 'Rozumím, jedeme!': 'Got it, let’s go!', 'Přeskočit': 'Skip',
   'Jízda:': 'Drive:', 'nebo šipky. Zbraň:': 'or arrows. Weapon:', 'Jízda: levý joystick. Zbraň: tlačítko vpravo.': 'Drive: left stick. Weapon: right button.',

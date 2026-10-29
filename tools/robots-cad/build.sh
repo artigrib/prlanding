@@ -4,7 +4,7 @@
 set -e
 cd "$(dirname "$0")"
 TMP=${TMPDIR:-/tmp}
-for r in ${*:-kosa klepeto}; do
+for r in ${*:-kosa klepeto svrn}; do
   python3 "$r.py" "$TMP/$r-raw.glb"
   npx -y gltfpack@0.25.0 -i "$TMP/$r-raw.glb" -o "../../models/$r.glb" -kn -km -cc -vp 14 -vn 8
 done
