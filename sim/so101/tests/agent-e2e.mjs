@@ -41,12 +41,20 @@ const startPump = (page) => page.evaluate(() => {
   step();
 });
 /**
- * Wait until the page has rendered n animation frames. Right after the reload into the object scene the first frames
- * take seconds each with software GL (new materials and meshes: measured 1-4 rAF per 4-5 s for the first 10-25 s),
- * and Playwright's actionability checks wait for frames (scroll into view, "stable"): a click then sometimes ran into
- * its 30 s timeout. That was the "Odpojit never clickable after the object-mission reconnect" flake.
+ * Wait until the page renders smoothly again (>= 5 animation frames within one second, up to 3 min). Right after the
+ * reload into the object scene the GPU process is busy with the new meshes and textures (software GL), and frames
+ * take seconds each: measured 1-4 rAF per 4-5 s for the first 10-25 s. Playwright's actionability checks wait for
+ * frames (scroll into view, "stable"), so a click then sometimes ran into its 30 s timeout. That was the
+ * "Odpojit never clickable after the object-mission reconnect" flake (and the same for Povolit).
  */
-const frames = (page, n = 3) => page.evaluate((n) => new Promise((r) => { let k = 0; const f = () => (++k >= n ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); }), n);
+async function steadyFrames(page) {
+  const t0 = Date.now();
+  while (Date.now() - t0 < 180000) {
+    const n = await page.evaluate(() => new Promise((r) => { let k = 0; const t1 = performance.now(); const f = () => { k++; if (performance.now() - t1 < 1000) requestAnimationFrame(f); else r(k); }; requestAnimationFrame(f); }));
+    if (n >= 5) return Date.now() - t0;
+  }
+  throw new Error('the page did not render smoothly within 3 min');
+}
 const freePort = () => new Promise((r) => { const s = net.createServer(); s.listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => r(p)); }); });
 async function waitHttp(url, sec = 20) {
   for (let i = 0; i < sec * 5; i++) { try { const r = await fetch(url); if (r.ok) return true; } catch (e) { /* not yet */ } await sleep(200); }
@@ -180,8 +188,8 @@ try {
   await page.waitForURL(/mise=breakfast/, { timeout: 30000 });
   await page.waitForFunction(() => window.__sim && (window.__sim.ready || window.__sim.error), null, { timeout: 300000 });
   await page.waitForFunction(() => window.__sim.objectsReady(), null, { timeout: 300000 });
-  await frames(page, 3);
   await startPump(page);
+  console.log('     frames steady after the reload in ' + (await steadyFrames(page)) + ' ms');
   await codeEl.filter({ hasText: /^[A-Z]{4}-[A-Z]{4}$/ }).waitFor({ timeout: 30000 });
   ok(true, 'after the reload the panel reopened by itself with a new code');
   const old = await raw('get_state');
@@ -195,7 +203,7 @@ try {
   ok(sb2.mission.state === 'running' && !sb2.reload_required && objs.some((o) => o.kind === 'object'), `breakfast runs in the object scene (${objs.filter((o) => o.kind === 'object').map((o) => o.id).join(', ')})`);
 
   // ---- Odpojit ----
-  await frames(page, 3);
+  await steadyFrames(page);
   await page.getByTestId('agent-disconnect').click();
   await sleep(300);
   const gone = await raw('get_state');
