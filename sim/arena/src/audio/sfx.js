@@ -21,6 +21,7 @@ export const sfx = {
   setMuted(m) { E.setMuted(m); store.set('muted', E.muted); },
   setLevels(l) { E.setLevels(l); const { master, sfx: s, amb } = E.levels; store.set('audio', { master, sfx: s, amb }); },
   listen(camera) { A.listen(camera); },
+  rate(r = 1) { A.speed = r; },            // replay playback speed: one-shot pitch/tempo follow (clamped)
   hit(e = 0.5, spinner = false, p = null) { A.hit(e, spinner, p); },
   wall(e = 0.4, p = null) { A.wall(e, p); },
   flip(r = null) { A.flip(r); },

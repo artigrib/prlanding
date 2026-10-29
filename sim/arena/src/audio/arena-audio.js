@@ -13,7 +13,7 @@ export class ArenaAudio {
   constructor(opts = {}) {
     this.eng = new Engine({ context: opts.context || null, maxVoices: 6 });
     this.L = new Listener();
-    this.bank = {}; this.tasks = null;
+    this.bank = {}; this.tasks = null; this.speed = 1;
     this.robots = new Map();        // id -> voice state
     this.scrape = null; this.amb = null; this._mid = { x: 0, y: 0, z: 0 }; this.ambOn = false; this.ambLevel = 0;
     this.eng.onBuild = () => this.startBank(!!opts.context);
@@ -47,7 +47,8 @@ export class ArenaAudio {
     t = this.at(t);
     if (!this.eng.gate(key, cd, e, t)) return;
     const g = gain * this.L.gain(p) * Math.pow(10, rnd(-1.2, 1.2) / 20);
-    this.eng.play(this.pick(name), { bus, gain: g, pan: this.L.pan(p), rate: rate * (1 + rnd(-vary, vary)), when: t, prio });
+    const sp = bus === 'ui' ? 1 : Math.max(0.7, Math.min(1.2, this.speed));      // replay slow-mo: pitch down, but not to mud
+    this.eng.play(this.pick(name), { bus, gain: g, pan: this.L.pan(p), rate: rate * sp * (1 + rnd(-vary, vary)), when: t, prio });
   }
 
   // ---- events ----

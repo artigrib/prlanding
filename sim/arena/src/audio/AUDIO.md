@@ -37,8 +37,11 @@ It is suspended while the tab is hidden.
 | `sfx.crowd(e)` / `sfx.click()` | crowd reaction (rate-limited), UI click |
 | `sfx.setMuted(b)` / `sfx.setLevels({master, sfx, amb})` | persisted via `ui/store.js` (`muted`, `audio`; try/catch) |
 
-Replays: call `sfx.hit(e, true, p)` from `replay.onEvent` (already wired); other replay events can call the
-same functions. Sliders (master / effects / ambience) are injected into `#pause` by `settings.js`.
+Replays (`createReplayUI({ onEvent })` in main.js): recorded `hit` events play `sfx.hit` (hazard hits, `by: -1`,
+play `sfx.wall`), `fire` -> `sfx.flip`, `flip` -> thud, `pit`/`out` -> `sfx.fall`, `ko` -> crowd. `sounds()` calls
+`sfx.rate(playback.rate())` each frame so one-shots follow replay speed / auto slow-mo (pitch clamped 0.7–1.2).
+Motor loops stay silent during replays (state is not `fight`); a paused replay fires no events = silence.
+Sliders (master / effects / ambience) are injected into `#pause` by `settings.js`.
 
 ## Verification
 
