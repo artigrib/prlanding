@@ -192,7 +192,7 @@
     if (!document.getElementById('pr-lang-css')) {
       var st = document.createElement('style'); st.id = 'pr-lang-css';
       st.textContent = '.lang-sw{display:inline-flex;align-items:center;gap:2px;font-family:var(--mono,ui-monospace,monospace);font-size:12px;color:var(--mute,#5E5E59);white-space:nowrap}' +
-        '.lang-sw a,.lang-sw span{display:inline-flex;align-items:center;justify-content:center;min-width:28px;min-height:32px;padding:0 4px;text-decoration:none;color:inherit}' +
+        '.lang-sw a,.brand .lang-sw a,.lang-sw span{display:inline-flex;align-items:center;justify-content:center;min-width:24px;min-height:32px;padding:0 3px;text-decoration:none;color:inherit;font-size:12px;font-weight:400;letter-spacing:0}' +
         '.lang-sw [aria-current]{color:var(--ink,#0E0E0E);font-weight:500}.lang-sw .sep{opacity:.5;min-width:0;padding:0}';
       document.head.appendChild(st);
     }

@@ -18,7 +18,7 @@ const strings = {
   'Vyzkoušejte si nastavení robotické ruky SO-101 ještě předtím, než vám dorazí stavebnice: ID serv, kalibrace, test a hledání závad na virtuální ruce přímo v prohlížeči.': 'Try setting up the SO-101 robot arm before your kit arrives: servo IDs, calibration, testing and troubleshooting on a virtual arm right in your browser.',
   'Nastavení SO-101 nanečisto': 'SO-101 setup dry run', 'Průvodce nastavením serv SO-101 na virtuální ruce: ID, kalibrace, test a diagnostika závad.': 'SO-101 servo setup wizard on a virtual arm: IDs, calibration, testing and fault diagnostics.',
   /* shell, loading, failure */
-  'SO-101 · simulace': 'SO-101 · simulation', 'Zpět na SO-101': 'Back to the SO-101', 'Domů': 'Home',
+  'SO-101 · simulace': 'SO-101 · simulation', 'Zpět na SO-101': 'Back to SO-101', 'Domů': 'Home',
   '3D simulace robotické ruky': '3D robot arm simulation',
   'Robotická ruka SO-101 na stole, kostka a miska. Ovládání posuvníky vpravo.': 'SO-101 robot arm on a table with a cube and a bowl. Controls are the sliders on the right.',
   'Natočte ruku ke kostce': 'Turn the arm towards the cube',
@@ -163,6 +163,9 @@ const strings = {
   'Zkratky jednou klávesou (písmena, číslice, mezerník) fungují kdekoli na stránce. Vypnuté fungují jen se zaměřenou 3D scénou.': 'Single-key shortcuts (letters, digits, space) work anywhere on the page. When off, they work only while the 3D scene has focus.',
   'Ukázku nejde přehrát – je poškozená, smazali jsme ji': 'The demo can’t be played – it’s damaged, so we deleted it',
   'Odkaz s ukázkou je poškozený nebo příliš velký – nic jsme nenahráli': 'The demo link is damaged or too large – nothing was loaded',
+  /* short labels without diacritics */
+  'Poradit': 'Show me', 'Vybrat misi': 'Choose mission', 'Pero nahoru': 'Pen up', 'Zkratky': 'Shortcuts', 'Zvuk': 'Sound', 'Chyba': 'Error', 'Pozor': 'Caution',
+  'Ruka': 'Arm', 'Zastavit': 'Stop', 'REC': 'REC', 'Registry serv': 'Servo registers',
   /* teach (JSON export notes) */
   'Ukázkový formát inspirovaný datasety LeRobot (sloupce observation.state a action po snímcích).': 'Example format inspired by LeRobot datasets (observation.state and action columns per frame).',
   'Slouží k pochopení principu, není to přímo načitatelný LeRobot dataset (ten používá Parquet a videa z kamer).': 'Meant for understanding the idea; it isn’t a directly loadable LeRobot dataset (those use Parquet and camera videos).',
