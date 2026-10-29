@@ -99,3 +99,4 @@
   .pl-src a::after{content:" " attr(href);font-size:8pt;word-break:break-all}
   .plan-grp{break-inside:auto}
 }
+.plan-arr .arr-g{font-size:13px;color:var(--mute);white-space:nowrap;min-height:24px;display:inline-flex;align-items:center}

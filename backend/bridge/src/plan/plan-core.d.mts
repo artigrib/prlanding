@@ -25,5 +25,6 @@ export function parseListing(text: string): VariantCheck['found'];
 export function checkData(data: any, schema?: any): string[];
 export function validateSchema(schema: any, data: any): string[];
 export function requiredVariants(data: any, arms: string[]): Array<Record<string, any>>;
+export function buildTime(data: any, arms: number, print?: string): Record<string, any>;
 export function toEur(data: any, price: number | null, currency: string): number | null;
 export const STATUSES: string[];

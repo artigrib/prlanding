@@ -112,6 +112,10 @@ await check('plan so101: totals, variant guard, checker, local state', '/plan/so
   if (await total() !== '386–412 €') throw new Error('pair total ' + await total());
   if (!/OpenELAB[\s\S]*1\/191/.test(await p.locator('#variant-flags').innerText()) || !(await p.locator('#variant-flags .pb-no').count())) throw new Error('OpenELAB C001 not flagged nedoporučujeme');
   if ((await p.locator('.plan-grp').count()) < 4) throw new Error('supplier groups');
+  if (!/\/navody\/so101-sestaveni\/$/.test(await p.locator('[data-testid=plan-guide-link]').evaluate(a => a.href))) throw new Error('build time not linked to the guide');
+  if ((await p.locator('#plan-stages a[href*="so101-sestaveni/#e"]').count()) !== 7) throw new Error('guide stage links');
+  if (!/práce 10–19 h/.test((await p.locator('#plan-sum').innerText()).replace(/\s+/g, ' '))) throw new Error('pair work hours differ from the guide');
+  if ((await p.locator('#plan-arrivals a[href*="so101-sestaveni/#e"]').count()) !== 6) throw new Error('arrival → guide stage links');
   if (await p.locator('.plan-grp a[rel~=sponsored]').count()) throw new Error('no link is affiliate/sponsored yet');
   await p.selectOption('#chk-exp', 'leader:2');
   await p.fill('#chk-text', 'Feetech STS3215 C001 7.4V 1/191');

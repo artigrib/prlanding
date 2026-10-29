@@ -163,7 +163,7 @@ export function buildPlan(data, opts = {}) {
       supplier: 'self_print', name: 'Printed by you', name_cs: 'Tisknete sami', country: '—', url: p.stl_url, vat: 'none', estimate: true,
       lines: [{ component: cfg.arms.includes('leader') ? 'so101.printed.follower+leader' : 'so101.printed.follower', name: `Filament PLA+ ≈ ${cfg.print_grams} g (estimate)`, name_cs: `Filament PLA+ ≈ ${cfg.print_grams} g (odhad)`,
         qty: 1, packs: 1, per: 1, arm: null, source: 'filament', label: 'PLA+', url: p.stl_url, price: null, currency: 'EUR', unit_eur: eur, subtotal_eur: eur,
-        checked: data.meta.generated, status: p.status, stock: '', eta_days: [0, 0], flag: null, flag_reason: null, flag_reason_cs: null, alternatives: [], print_hours: cfg.print_hours }],
+        checked: data.meta.generated, status: p.status, stock: '', eta_days: [0, 0], flag: null, flag_reason: null, flag_reason_cs: null, alternatives: [], print_hours: buildTime(data, arms, 'self').print_hours }],
       shipping_override: [0, 0]
     });
   } else {
@@ -207,15 +207,7 @@ export function buildPlan(data, opts = {}) {
   }
   out.sort((a, b) => (a.supplier === 'none') - (b.supplier === 'none') || b.landed_eur[1] - a.landed_eur[1]);
 
-  const bt = data.build_time;
-  const build = {
-    status: 'estimate',
-    print_hours: print === 'self' ? cfg.print_hours : [0, 0],
-    work_hours: [
-      round2(bt.assembly_h_per_arm[0] * arms + bt.setup_h_per_arm[0] * arms + bt.calibration_h[0]),
-      round2(bt.assembly_h_per_arm[1] * arms + bt.setup_h_per_arm[1] * arms + bt.calibration_h[1])
-    ]
-  };
+  const build = buildTime(data, arms, print);
 
   let alternative = null;
   if (cfg.alternative) {
@@ -247,6 +239,28 @@ export function buildPlan(data, opts = {}) {
     build_time: build,
     arrivals: data.arrivals,
     alternative
+  };
+}
+
+/**
+ * Build-time estimate from the guide's stages (data.build_time.stages): the plan page, the MCP tool and the
+ * assembly guide (navody/so101-sestaveni, expanded by tools/build.mjs) all read this, so they always agree.
+ * Stages with h_per_arm scale with the number of arms; only_print stages drop out for the other print option.
+ */
+export function buildTime(data, arms, print = 'self') {
+  const bt = data.build_time;
+  const stages = bt.stages.filter((st) => !st.only_print || st.only_print === print).map((st) => {
+    const h = st.h_per_arm ? [st.h_per_arm[0] * arms, st.h_per_arm[1] * arms] : st.h;
+    return { id: st.id, name: st.name, name_cs: st.name_cs, hours: [round2(h[0]), round2(h[1])], optional: !!st.optional, per_arm: st.h_per_arm || null };
+  });
+  const lo = stages.reduce((a, st) => a + st.hours[0], 0), hi = stages.reduce((a, st) => a + st.hours[1], 0);
+  const printer = print === 'self' ? round2(bt.printer_h_per_arm * arms) : 0;
+  return {
+    status: 'estimate', arms, print,
+    stages,
+    work_hours: [Math.round(lo), Math.ceil(hi)],
+    print_hours: [printer, printer],
+    guide: bt.guide
   };
 }
 

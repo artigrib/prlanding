@@ -8,6 +8,7 @@
  "article":true,"date":"2026-10-29",
  "image":"img/so101_white.jpg","imageW":1200,"imageH":900,"imageAlt":"Robotická ruka SO-101, vizualizace z CAD projektu"}
 -->
+<!-- {bt:…} times come from data/components/so101.json build_time (shared with /plan/so101/); edit them there -->
 <section class="g doc-hero">
 <div class="a1 mono">Návod · 29. 10. 2026</div>
 <div class="a4" style="display:flex;flex-direction:column;gap:20px">
@@ -25,25 +26,25 @@
 <div class="g rule">
 <div class="a1 mono">Přehled</div>
 <div class="a4 prose">
-<h2>Sedm etap, odhad 10 až 19 hodin práce</h2>
+<h2>Sedm etap, odhad {bt:total_lo} až {bt:total_hi} hodin práce</h2>
 <figure class="doc-fig"><img src="{root}img/so101_white.jpg" alt="Robotická ruka SO-101, vizualizace z CAD projektu" width="1200" height="900" loading="lazy"><figcaption>Obr. 1 — SO-101, vizualizace z CAD projektu (ne fotografie stavby). Rozložený pohled na všechny díly otevřete na stránce <a href="{root}sada/so101/">SO-101</a> tlačítkem Rozložit.</figcaption></figure>
 <p>Pořadí sleduje oficiální návod: <b>ID serv se nastavují před montáží</b>, každé servo samostatně. Kalibrace přichází až na sestavenou ruku, proto je v etapě 5.</p>
 <div class="doc-t-wrap" tabindex="0" role="region" aria-label="Etapy stavby a odhad času">
 <table class="doc-t">
 <thead><tr><th scope="col">Etapa</th><th scope="col">Odhad času</th><th scope="col">Náročnost</th></tr></thead>
 <tbody>
-<tr><th scope="row"><a href="#e0">0 Před stavbou</a></th><td>1–2 h</td><td>snadné</td></tr>
-<tr><th scope="row"><a href="#e1">1 Tisk</a></th><td>≈ 16,5 h tiskárny + 1,5–3 h práce</td><td>střední</td></tr>
-<tr><th scope="row"><a href="#e2">2 ID serv</a></th><td>1–2 h</td><td>snadné</td></tr>
-<tr><th scope="row"><a href="#e3">3 Mechanika</a></th><td>4–8 h za pár</td><td>náročné</td></tr>
-<tr><th scope="row"><a href="#e4">4 Elektronika</a></th><td>0,5–1 h</td><td>střední</td></tr>
-<tr><th scope="row"><a href="#e5">5 První pohyb</a></th><td>1–2 h</td><td>střední</td></tr>
-<tr><th scope="row"><a href="#e6">6 Simulace a realita</a></th><td>0,5–1 h, volitelné</td><td>snadné</td></tr>
-<tr><th scope="row">Celkem</th><td>≈ 10–19 h práce + ≈ 16,5 h tisku</td><td></td></tr>
+<tr><th scope="row"><a href="#e0">0 Před stavbou</a></th><td>{bt:e0} h</td><td>snadné</td></tr>
+<tr><th scope="row"><a href="#e1">1 Tisk</a></th><td>≈ {bt:print} h tiskárny + {bt:e1} h práce</td><td>střední</td></tr>
+<tr><th scope="row"><a href="#e2">2 ID serv</a></th><td>{bt:e2} h</td><td>snadné</td></tr>
+<tr><th scope="row"><a href="#e3">3 Mechanika</a></th><td>{bt:e3} h za pár</td><td>náročné</td></tr>
+<tr><th scope="row"><a href="#e4">4 Elektronika</a></th><td>{bt:e4} h</td><td>střední</td></tr>
+<tr><th scope="row"><a href="#e5">5 První pohyb</a></th><td>{bt:e5} h</td><td>střední</td></tr>
+<tr><th scope="row"><a href="#e6">6 Simulace a realita</a></th><td>{bt:e6} h, volitelné</td><td>snadné</td></tr>
+<tr><th scope="row">Celkem</th><td>≈ {bt:total} h práce + ≈ {bt:print} h tisku</td><td></td></tr>
 </tbody>
 </table>
 </div>
-<p class="src">Všechny časy jsou odhady, ne změřené hodnoty. Doba tisku ≈ 16,5 h za pár je údaj z našeho katalogu; oficiální zdroje dobu tisku neuvádějí. Pokud máte stavebnici s vytištěnými díly, etapu 1 přeskočíte.</p>
+<p class="src">Všechny časy jsou odhady, ne změřené hodnoty. Doba tisku ≈ {bt:print} h za pár je údaj z našeho katalogu; oficiální zdroje dobu tisku neuvádějí. Pokud máte stavebnici s vytištěnými díly, etapu 1 přeskočíte.</p>
 </div>
 </div>
 </section>
@@ -53,7 +54,7 @@
 <div class="a1 mono">0 — Před stavbou</div>
 <div class="a4 prose">
 <h2>Nářadí, místo a kontrola serv</h2>
-<p class="stage-meta"><span>Čas <b>1–2 h (odhad)</b></span><span>Náročnost <b>snadné</b></span></p>
+<p class="stage-meta"><span>Čas <b>{bt:e0} h (odhad)</b></span><span>Náročnost <b>snadné</b></span></p>
 <h3>Nářadí a pracoviště</h3>
 <ul>
 <li>Křížové šroubováky <b>PH0 a PH1</b>. Repozitář SO-ARM100 je výslovně doporučuje pro šrouby ruky.<sup><a href="#zdroje">2</a></sup></li>
@@ -100,7 +101,7 @@
 <div class="a1 mono">1 — Tisk</div>
 <div class="a4 prose">
 <h2>Tisk dílů a odstranění podpor</h2>
-<p class="stage-meta"><span>Čas <b>≈ 16,5 h tiskárny + 1,5–3 h práce (odhad)</b></span><span>Náročnost <b>střední</b></span></p>
+<p class="stage-meta"><span>Čas <b>≈ {bt:print} h tiskárny + {bt:e1} h práce (odhad)</b></span><span>Náročnost <b>střední</b></span></p>
 <p>Doporučené nastavení podle repozitáře SO-ARM100:<sup><a href="#zdroje">2</a></sup></p>
 <ul>
 <li>Materiál <b>PLA+</b>, výplň <b>15 %</b>.</li>
@@ -131,7 +132,7 @@
 <div class="a1 mono">2 — ID serv</div>
 <div class="a4 prose">
 <h2>Každé servo dostane vlastní ID, ještě před montáží</h2>
-<p class="stage-meta"><span>Čas <b>1–2 h včetně instalace LeRobotu (odhad)</b></span><span>Náročnost <b>snadné</b></span></p>
+<p class="stage-meta"><span>Čas <b>{bt:e2} h včetně instalace LeRobotu (odhad)</b></span><span>Náročnost <b>snadné</b></span></p>
 <p><b>Nanečisto:</b> celý postup (port, ID, kalibrace, test) si projděte v <a href="{root}sim/so101/nastaveni/">průvodci Nastavení serv nanečisto</a>. Emulovaná serva mají po „vybalení“ všechna ID 1 jako skutečná a průvodce umí nasimulovat i typické poruchy.</p>
 <p>Instalace podle oficiálního návodu (Python 3.12):<sup><a href="#zdroje">3, 1</a></sup></p>
 <pre tabindex="0"><code>conda create -y -n lerobot python=3.12
@@ -170,7 +171,7 @@ pip install -e ".[feetech]"</code></pre>
 <div class="a1 mono">3 — Mechanika</div>
 <div class="a4 prose">
 <h2>Kloub po kloubu: základna, rameno, loket, zápěstí, chapadlo</h2>
-<p class="stage-meta"><span>Čas <b>2–4 h na ruku, 4–8 h za pár (odhad)</b></span><span>Náročnost <b>náročné</b></span></p>
+<p class="stage-meta"><span>Čas <b>{bt:e3_arm} h na ruku, {bt:e3} h za pár (odhad)</b></span><span>Náročnost <b>náročné</b></span></p>
 <p>Kroky a šrouby jsou z oficiálního návodu; u každého kloubu je tam krátké video.<sup><a href="#zdroje">1</a></sup> Animaci v pořadí oficiálního návodu spustíte na stránce <a href="{root}sada/so101/">SO-101</a> tlačítkem Sestavení, nebo v <a href="{root}sim/so101/">simulaci</a> přes „Z čeho se ruka skládá“.</p>
 <p><b>Obecná pravidla.</b> Oficiální návod používá jen dvě velikosti šroubů: <b>M2×6</b> (nejmenší) hlavně na uchycení serv a držáků a <b>M3×6</b> na horny (otočné páky serv) a díly připevněné k hornům. U serv se dvěma horny se šroubem zajišťuje jen horní; spodní horn je bez šroubu.<sup><a href="#zdroje">1</a></sup></p>
 
@@ -238,7 +239,7 @@ pip install -e ".[feetech]"</code></pre>
 <div class="a1 mono">4 — Elektronika</div>
 <div class="a4 prose">
 <h2>Řetěz serv, řídicí deska a napájení</h2>
-<p class="stage-meta"><span>Čas <b>0,5–1 h (odhad)</b></span><span>Náročnost <b>střední</b></span></p>
+<p class="stage-meta"><span>Čas <b>{bt:e4} h (odhad)</b></span><span>Náročnost <b>střední</b></span></p>
 <p>Po nastavení ID se serva propojí do řetězu: 3pinový kabel z každého serva do dalšího a kabel z prvního serva (otočení základny, ID 1) do řídicí desky. Desku pak připevněte k základně ruky.<sup><a href="#zdroje">1</a></sup> Pro desku Waveshare je v repozitáři tištěná destička (WaveShare_Mounting_Plate).<sup><a href="#zdroje">2</a></sup></p>
 <p><b>Napájení:</b> každá ruka má vlastní desku a vlastní zdroj. Serva 7,4 V na zdroj 5 V, 12V serva followeru na zdroj 12 V (5 A a víc).<sup><a href="#zdroje">2</a></sup> Naše poznámka: 12V zdroj nikdy nepřipojujte k ruce se servy 7,4 V, je to nad jejich jmenovitým napětím.</p>
 <h3>Kontrolní seznam</h3>
@@ -262,7 +263,7 @@ pip install -e ".[feetech]"</code></pre>
 <div class="a1 mono">5 — První pohyb</div>
 <div class="a4 prose">
 <h2>Kalibrace a teleoperace</h2>
-<p class="stage-meta"><span>Čas <b>1–2 h (odhad)</b></span><span>Náročnost <b>střední</b></span></p>
+<p class="stage-meta"><span>Čas <b>{bt:e5} h (odhad)</b></span><span>Náročnost <b>střední</b></span></p>
 <p>Ruce upevněte svěrkami ke stolu. Kalibrace zajistí, že leader i follower mají ve stejné fyzické poloze stejné hodnoty.<sup><a href="#zdroje">1</a></sup> Follower:</p>
 <pre tabindex="0"><code># Use the port of your follower arm, and give the arm a unique name with --robot.id
 lerobot-calibrate \
@@ -308,7 +309,7 @@ lerobot-calibrate \
 <div class="a1 mono">6 — Simulace a realita</div>
 <div class="a4 prose">
 <h2>Co si dnes vyzkoušíte v simulaci a co ne</h2>
-<p class="stage-meta"><span>Čas <b>0,5–1 h, volitelné (odhad)</b></span><span>Náročnost <b>snadné</b></span></p>
+<p class="stage-meta"><span>Čas <b>{bt:e6} h, volitelné (odhad)</b></span><span>Náročnost <b>snadné</b></span></p>
 <figure class="doc-fig"><img src="{root}assets/media/so101-poster.jpg" alt="Robotická ruka SO-101 v simulaci nad kostkou a miskou" width="960" height="540" loading="lazy"><figcaption>Obr. 2 — záběr ze simulace v prohlížeči, ne ze skutečné ruky.</figcaption></figure>
 <div class="doc-t-wrap" tabindex="0" role="region" aria-label="Simulace a skutečná ruka">
 <table class="doc-t">

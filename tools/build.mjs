@@ -10,6 +10,7 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 import { checkComponents } from './check-components.mjs';
+import { buildTime } from '../assets/plan/plan-core.mjs';
 
 // component data (purchase plans): fail the build on a source without URL/date/status
 {
@@ -22,6 +23,20 @@ import { checkComponents } from './check-components.mjs';
   fs.writeFileSync(B + 'plan-core.mjs', hdr + fs.readFileSync('assets/plan/plan-core.mjs', 'utf8'));
   fs.copyFileSync('data/components/so101.json', B + 'so101.json');
 }
+// build-time estimates: one source (data/components/so101.json build_time) for the plan page and the assembly guide.
+// {bt:…} tokens in tools/content/*.html expand to the guide's configuration (a pair, printed yourself).
+const SO101 = JSON.parse(fs.readFileSync('data/components/so101.json', 'utf8'));
+function btTokens(L) {
+  const nf = new Intl.NumberFormat(L === 'en' ? 'en-GB' : 'cs-CZ', { maximumFractionDigits: 2 });
+  const r = h => h[0] === h[1] ? nf.format(h[0]) : `${nf.format(h[0])}–${nf.format(h[1])}`;
+  const t = buildTime(SO101, 2, 'self'), one = buildTime(SO101, 1, 'self');
+  const tok = { total: r(t.work_hours), total_lo: nf.format(t.work_hours[0]), total_hi: nf.format(t.work_hours[1]), print: nf.format(t.print_hours[0]) };
+  for (const st of t.stages) tok[st.id] = r(st.hours);
+  for (const st of one.stages) if (st.per_arm) tok[st.id + '_arm'] = r(st.hours);
+  return tok;
+}
+const BT = { cs: btTokens('cs'), en: btTokens('en') };
+const expandBt = (s, L, where) => s.replace(/\{bt:([a-z0-9_]+)\}/g, (m, k) => { if (!(k in BT[L])) throw new Error(`${where}: unknown build-time token ${m}`); return BT[L][k]; });
 
 const SITE = 'https://printedrobotics.cz/';
 const read = f => fs.readFileSync(f, 'utf8');
@@ -40,6 +55,11 @@ vm.runInContext(read('assets/i18n.js'), I);
 I.PRI18N.setLang('en'); I.PRI18N.addDict('en', I.PR_I18N_EN);
 
 const R = W.cs.PR_ROBOTS, SIMS = W.cs.PR_SIMS || {};
+// the catalogue's SO-101 print time must match the build-time data the plan and the guide use
+for (const L of ['cs', 'en']) {
+  const pt = W[L].PR_ROBOTS.find(r => r.id === 'so101').printTime;
+  if (!pt.includes(BT[L].print)) throw new Error(`assets/data${L === 'en' ? '.en' : ''}.js so101 printTime "${pt}" ≠ ${BT[L].print} h (data/components/so101.json build_time)`);
+}
 const tpl = read('tools/sada.template.html');
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const unesc = s => String(s).replace(/&(amp|lt|gt|quot|#39|nbsp);/g, (m, e) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'", nbsp: '\u00A0' })[e]);
@@ -389,7 +409,7 @@ function contentPage(c, L) {
   const meta = JSON.parse(mm[1]);
   const page = c[L], url = SITE + page, root = '../'.repeat(page.split('/').length - 1);
   const en = L === 'en', home = en ? 'en/' : '';
-  let body = src.slice(mm[0].length).replace('<!--kits:licence-->', () => kitsByLicence(L)).replace(/\{root\}/g, root);
+  let body = expandBt(src.slice(mm[0].length), L, page).replace('<!--kits:licence-->', () => kitsByLicence(L)).replace(/\{root\}/g, root);
   // FAQPage from the visible questions
   const faqBlock = /<div class="faq" id="faq">([\s\S]*?)<\/div><!--\/faq-->/.exec(body);
   const faq = faqBlock ? [...faqBlock[1].matchAll(/<details><summary>([\s\S]*?)<\/summary>([\s\S]*?)<\/details>/g)].map(m => [stripTags(m[1]), stripTags(m[2])]) : [];

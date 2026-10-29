@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { buildPlan, checkData, checkPartVariant, parseListing, validateSchema } from '../assets/plan/plan-core.mjs';
+import { buildPlan, buildTime, checkData, checkPartVariant, parseListing, validateSchema } from '../assets/plan/plan-core.mjs';
 import { checkComponents } from '../tools/check-components.mjs';
 
 const read = (f) => JSON.parse(fs.readFileSync(new URL('../' + f, import.meta.url), 'utf8'));
@@ -120,4 +120,23 @@ test('variant checker: match, mismatch, contradiction, multi-variant, unknown', 
   assert.equal(checkPartVariant(data, 'Smart servo, metal gears', 'leader').verdict, 'unknown');
   assert.ok(checkPartVariant(data, 'STS3215-C047 12V 1/345', 'follower_12v').warnings.some((w) => w.code === 'unverified_code'));
   assert.throws(() => checkPartVariant(data, 'x', 'arm7'), RangeError);
+});
+
+test('build time comes from the guide stages and agrees with the assembly guide', () => {
+  const pair = buildPlan(data, { robot: 'pair', print: 'self' }).build_time;
+  assert.deepEqual(pair.work_hours, [10, 19], 'navody/so101-sestaveni: 10–19 h per pair');
+  assert.deepEqual(pair.print_hours, [16.5, 16.5]);
+  assert.deepEqual(pair.stages.map((s) => s.id), ['e0', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6']);
+  assert.deepEqual(pair.stages.find((s) => s.id === 'e3').hours, [4, 8]);
+  const one = buildPlan(data, { robot: 'follower_12v', print: 'self' }).build_time;
+  assert.deepEqual(one.work_hours, [7, 14]);
+  assert.deepEqual(one.stages.find((s) => s.id === 'e3').hours, [2, 4]);
+  const svc = buildTime(data, 2, 'service');
+  assert.ok(!svc.stages.some((s) => s.id === 'e1'), 'print stage drops out with a print service');
+  assert.deepEqual(svc.print_hours, [0, 0]);
+  // the generated guide shows the same numbers
+  const guide = fs.readFileSync(new URL('../navody/so101-sestaveni/index.html', import.meta.url), 'utf8');
+  assert.match(guide, /odhad 10 až 19 hodin práce/);
+  assert.match(guide, /≈ 16,5 h tiskárny \+ 1,5–3 h práce/);
+  assert.ok(data.arrivals.every((a) => /^e[0-6]$/.test(a.guide_stage)));
 });

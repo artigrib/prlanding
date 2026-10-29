@@ -333,11 +333,7 @@
      "source": "none"
     }
    ],
-   "print_grams": 350,
-   "print_hours": [
-    7,
-    9
-   ]
+   "print_grams": 350
   },
   "pair": {
    "name": "Pair: leader + follower (12 V follower)",
@@ -403,10 +399,6 @@
     }
    ],
    "print_grams": 700,
-   "print_hours": [
-    15,
-    18
-   ],
    "alternative": {
     "component": "so101.bundle.seeed_pro",
     "source": "aliexpress",
@@ -477,17 +469,81 @@
  ],
  "build_time": {
   "status": "estimate",
-  "assembly_h_per_arm": [
-   2,
-   3
-  ],
-  "setup_h_per_arm": [
-   0.5,
-   1
-  ],
-  "calibration_h": [
-   0.5,
-   1
+  "note": "Single source for the plan page and the assembly guide (navody/so101-sestaveni): stage estimates, not measurements.",
+  "guide": {
+   "cs": "navody/so101-sestaveni/",
+   "en": "en/guides/so101-assembly/"
+  },
+  "printer_h_per_arm": 8.25,
+  "printer_status": "unverified",
+  "printer_note": "≈ 16.5 h per pair from our catalogue (assets/data.js); official sources give no print time.",
+  "stages": [
+   {
+    "id": "e0",
+    "name": "Before you build",
+    "name_cs": "Před stavbou",
+    "h": [
+     1,
+     2
+    ]
+   },
+   {
+    "id": "e1",
+    "name": "Printing",
+    "name_cs": "Tisk",
+    "h_per_arm": [
+     0.75,
+     1.5
+    ],
+    "printer": true,
+    "only_print": "self"
+   },
+   {
+    "id": "e2",
+    "name": "Servo IDs",
+    "name_cs": "ID serv",
+    "h": [
+     1,
+     2
+    ]
+   },
+   {
+    "id": "e3",
+    "name": "Mechanics",
+    "name_cs": "Mechanika",
+    "h_per_arm": [
+     2,
+     4
+    ]
+   },
+   {
+    "id": "e4",
+    "name": "Electronics",
+    "name_cs": "Elektronika",
+    "h": [
+     0.5,
+     1
+    ]
+   },
+   {
+    "id": "e5",
+    "name": "First motion",
+    "name_cs": "První pohyb",
+    "h": [
+     1,
+     2
+    ]
+   },
+   {
+    "id": "e6",
+    "name": "Simulation and reality",
+    "name_cs": "Simulace a realita",
+    "h": [
+     0.5,
+     1
+    ],
+    "optional": true
+   }
   ]
  },
  "arrivals": [
@@ -495,37 +551,43 @@
    "id": "servos",
    "name": "Servos (label checked for every one)",
    "name_cs": "Serva (štítek zkontrolován u každého)",
-   "needed_for_wizard": true
+   "needed_for_wizard": true,
+   "guide_stage": "e0"
   },
   {
    "id": "board",
    "name": "Bus servo board(s)",
    "name_cs": "Řídicí deska (desky) serv",
-   "needed_for_wizard": true
+   "needed_for_wizard": true,
+   "guide_stage": "e4"
   },
   {
    "id": "psu",
    "name": "Power supply(ies)",
    "name_cs": "Napájecí zdroj(e)",
-   "needed_for_wizard": false
+   "needed_for_wizard": false,
+   "guide_stage": "e4"
   },
   {
    "id": "usb",
    "name": "USB-C data cable(s)",
    "name_cs": "Datový kabel (kabely) USB-C",
-   "needed_for_wizard": false
+   "needed_for_wizard": false,
+   "guide_stage": "e2"
   },
   {
    "id": "clamps",
    "name": "Clamps",
    "name_cs": "Svěrky",
-   "needed_for_wizard": false
+   "needed_for_wizard": false,
+   "guide_stage": "e5"
   },
   {
    "id": "printed",
    "name": "Printed parts",
    "name_cs": "Tištěné díly",
-   "needed_for_wizard": false
+   "needed_for_wizard": false,
+   "guide_stage": "e3"
   }
  ],
  "components": [

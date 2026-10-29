@@ -4,50 +4,133 @@
   "title": "SO-101 component map and purchase plans",
   "description": "Checked by tools/check-components.mjs on every build (node tools/build.mjs). Every source needs an https URL, a checked date and a status. We are not a seller: sources are suppliers the user buys from directly.",
   "type": "object",
-  "required": ["meta", "suppliers", "variants", "configs", "printing", "tools", "build_time", "arrivals", "components"],
+  "required": [
+    "meta",
+    "suppliers",
+    "variants",
+    "configs",
+    "printing",
+    "tools",
+    "build_time",
+    "arrivals",
+    "components"
+  ],
   "properties": {
     "meta": {
       "type": "object",
-      "required": ["robot", "generated", "fx_czk_per_eur", "oss_vat_uplift", "affiliate_links", "status_legend"],
+      "required": [
+        "robot",
+        "generated",
+        "fx_czk_per_eur",
+        "oss_vat_uplift",
+        "affiliate_links",
+        "status_legend"
+      ],
       "properties": {
-        "robot": { "type": "string" },
-        "generated": { "$ref": "#/$defs/date" },
-        "fx_czk_per_eur": { "type": "number", "minimum": 10, "maximum": 50 },
-        "fx_ron_per_eur": { "type": "number" },
-        "oss_vat_uplift": { "type": "number", "minimum": 0, "maximum": 0.1 },
-        "affiliate_links": { "type": "boolean" },
-        "status_legend": { "type": "object" }
+        "robot": {
+          "type": "string"
+        },
+        "generated": {
+          "$ref": "#/$defs/date"
+        },
+        "fx_czk_per_eur": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 50
+        },
+        "fx_ron_per_eur": {
+          "type": "number"
+        },
+        "oss_vat_uplift": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.1
+        },
+        "affiliate_links": {
+          "type": "boolean"
+        },
+        "status_legend": {
+          "type": "object"
+        }
       }
     },
     "suppliers": {
       "type": "object",
       "additionalProperties": {
         "type": "object",
-        "required": ["name", "country", "url", "vat", "shipping_eur", "shipping_status"],
+        "required": [
+          "name",
+          "country",
+          "url",
+          "vat",
+          "shipping_eur",
+          "shipping_status"
+        ],
         "properties": {
-          "name": { "type": "string", "minLength": 1 },
-          "url": { "$ref": "#/$defs/url" },
-          "vat": { "enum": ["eu_oss", "cz", "cz_nonvat", "cn_ioss", "per_vendor", "none"] },
-          "shipping_eur": { "$ref": "#/$defs/range" },
-          "shipping_status": { "$ref": "#/$defs/status" },
-          "eta_days_estimate": { "$ref": "#/$defs/range" },
-          "duty_eur_per_line": { "type": "number", "minimum": 0 }
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "$ref": "#/$defs/url"
+          },
+          "vat": {
+            "enum": [
+              "eu_oss",
+              "cz",
+              "cz_nonvat",
+              "cn_ioss",
+              "per_vendor",
+              "none"
+            ]
+          },
+          "shipping_eur": {
+            "$ref": "#/$defs/range"
+          },
+          "shipping_status": {
+            "$ref": "#/$defs/status"
+          },
+          "eta_days_estimate": {
+            "$ref": "#/$defs/range"
+          },
+          "duty_eur_per_line": {
+            "type": "number",
+            "minimum": 0
+          }
         }
       }
     },
     "variants": {
       "type": "object",
-      "required": ["codes", "arms", "rules", "rules_cs", "how_to_verify", "how_to_verify_cs"],
+      "required": [
+        "codes",
+        "arms",
+        "rules",
+        "rules_cs",
+        "how_to_verify",
+        "how_to_verify_cs"
+      ],
       "properties": {
         "codes": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
-            "required": ["voltage_v", "gear_ratio", "status"],
+            "required": [
+              "voltage_v",
+              "gear_ratio",
+              "status"
+            ],
             "properties": {
-              "voltage_v": { "type": "number" },
-              "gear_ratio": { "type": "string", "pattern": "^1/[0-9]{3}$" },
-              "status": { "$ref": "#/$defs/status" }
+              "voltage_v": {
+                "type": "number"
+              },
+              "gear_ratio": {
+                "type": "string",
+                "pattern": "^1/[0-9]{3}$"
+              },
+              "status": {
+                "$ref": "#/$defs/status"
+              }
             }
           }
         },
@@ -55,14 +138,42 @@
           "type": "object",
           "additionalProperties": {
             "type": "object",
-            "required": ["voltage_v", "joints"],
+            "required": [
+              "voltage_v",
+              "joints"
+            ],
             "properties": {
-              "voltage_v": { "type": "number" },
+              "voltage_v": {
+                "type": "number"
+              },
               "joints": {
-                "type": "array", "minItems": 6, "maxItems": 6,
+                "type": "array",
+                "minItems": 6,
+                "maxItems": 6,
                 "items": {
-                  "type": "object", "required": ["joint", "name", "codes"],
-                  "properties": { "joint": { "type": "integer", "minimum": 1, "maximum": 6 }, "name": { "type": "string" }, "codes": { "type": "array", "minItems": 1, "items": { "type": "string" } } }
+                  "type": "object",
+                  "required": [
+                    "joint",
+                    "name",
+                    "codes"
+                  ],
+                  "properties": {
+                    "joint": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 6
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "codes": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -74,55 +185,277 @@
       "type": "object",
       "additionalProperties": {
         "type": "object",
-        "required": ["name", "name_cs", "arms", "lines", "print_grams", "print_hours"],
+        "required": [
+          "name",
+          "name_cs",
+          "arms",
+          "lines",
+          "print_grams"
+        ],
         "properties": {
           "lines": {
-            "type": "array", "minItems": 1,
+            "type": "array",
+            "minItems": 1,
             "items": {
-              "type": "object", "required": ["component", "qty", "source"],
-              "properties": { "component": { "type": "string" }, "qty": { "type": "integer", "minimum": 1 }, "source": { "type": "string" }, "arm": { "type": "string" } }
+              "type": "object",
+              "required": [
+                "component",
+                "qty",
+                "source"
+              ],
+              "properties": {
+                "component": {
+                  "type": "string"
+                },
+                "qty": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "source": {
+                  "type": "string"
+                },
+                "arm": {
+                  "type": "string"
+                }
+              }
             }
           },
-          "print_grams": { "type": "number", "minimum": 1 },
-          "print_hours": { "$ref": "#/$defs/range" }
+          "print_grams": {
+            "type": "number",
+            "minimum": 1
+          }
         }
       }
     },
     "printing": {
       "type": "object",
-      "required": ["self", "service"],
+      "required": [
+        "self",
+        "service"
+      ],
       "properties": {
-        "self": { "type": "object", "required": ["filament_czk_per_kg", "status"], "properties": { "status": { "$ref": "#/$defs/status" } } },
-        "service": { "type": "object", "required": ["price_eur_per_arm", "status", "eta_days", "sources"], "properties": { "price_eur_per_arm": { "$ref": "#/$defs/range" }, "eta_days": { "$ref": "#/$defs/range" }, "status": { "$ref": "#/$defs/status" } } }
+        "self": {
+          "type": "object",
+          "required": [
+            "filament_czk_per_kg",
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "$ref": "#/$defs/status"
+            }
+          }
+        },
+        "service": {
+          "type": "object",
+          "required": [
+            "price_eur_per_arm",
+            "status",
+            "eta_days",
+            "sources"
+          ],
+          "properties": {
+            "price_eur_per_arm": {
+              "$ref": "#/$defs/range"
+            },
+            "eta_days": {
+              "$ref": "#/$defs/range"
+            },
+            "status": {
+              "$ref": "#/$defs/status"
+            }
+          }
+        }
       }
     },
-    "tools": { "type": "array", "items": { "type": "object", "required": ["id", "name", "name_cs", "required"] } },
-    "build_time": { "type": "object", "required": ["status", "assembly_h_per_arm", "setup_h_per_arm", "calibration_h"], "properties": { "status": { "const": "estimate" }, "assembly_h_per_arm": { "$ref": "#/$defs/range" }, "setup_h_per_arm": { "$ref": "#/$defs/range" }, "calibration_h": { "$ref": "#/$defs/range" } } },
-    "arrivals": { "type": "array", "minItems": 1, "items": { "type": "object", "required": ["id", "name", "name_cs", "needed_for_wizard"] } },
-    "components": {
-      "type": "array", "minItems": 1,
+    "tools": {
+      "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "group", "name", "name_cs", "role", "role_cs", "sources"],
+        "required": [
+          "id",
+          "name",
+          "name_cs",
+          "required"
+        ]
+      }
+    },
+    "build_time": {
+      "type": "object",
+      "required": [
+        "status",
+        "guide",
+        "printer_h_per_arm",
+        "stages"
+      ],
+      "properties": {
+        "status": {
+          "const": "estimate"
+        },
+        "printer_h_per_arm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "guide": {
+          "type": "object",
+          "required": [
+            "cs",
+            "en"
+          ]
+        },
+        "stages": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "name_cs"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^e[0-9]$"
+              },
+              "h": {
+                "$ref": "#/$defs/range"
+              },
+              "h_per_arm": {
+                "$ref": "#/$defs/range"
+              },
+              "only_print": {
+                "enum": [
+                  "self",
+                  "service"
+                ]
+              },
+              "optional": {
+                "type": "boolean"
+              },
+              "printer": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "arrivals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "name_cs",
+          "needed_for_wizard",
+          "guide_stage"
+        ],
         "properties": {
-          "id": { "type": "string", "pattern": "^so101\\." },
+          "guide_stage": {
+            "type": "string",
+            "pattern": "^e[0-9]$"
+          }
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "group",
+          "name",
+          "name_cs",
+          "role",
+          "role_cs",
+          "sources"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^so101\\."
+          },
           "sources": {
-            "type": "array", "minItems": 1,
+            "type": "array",
+            "minItems": 1,
             "items": {
               "type": "object",
-              "required": ["id", "supplier", "label", "url", "checked", "status", "recommend", "price", "currency", "per", "eta_days"],
+              "required": [
+                "id",
+                "supplier",
+                "label",
+                "url",
+                "checked",
+                "status",
+                "recommend",
+                "price",
+                "currency",
+                "per",
+                "eta_days"
+              ],
               "properties": {
-                "id": { "type": "string", "minLength": 1 },
-                "supplier": { "type": "string" },
-                "url": { "$ref": "#/$defs/url" },
-                "checked": { "$ref": "#/$defs/date" },
-                "status": { "$ref": "#/$defs/status" },
-                "recommend": { "type": "boolean" },
-                "price": { "type": ["number", "null"], "minimum": 0 },
-                "currency": { "enum": ["EUR", "CZK", "RON", "GBP", null] },
-                "per": { "type": "integer", "minimum": 1 },
-                "eta_days": { "anyOf": [{ "$ref": "#/$defs/range" }, { "type": "null" }] },
-                "flag": { "enum": ["mislabeled", "variant_not_shown", "check_label", "out_of_stock"] }
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "supplier": {
+                  "type": "string"
+                },
+                "url": {
+                  "$ref": "#/$defs/url"
+                },
+                "checked": {
+                  "$ref": "#/$defs/date"
+                },
+                "status": {
+                  "$ref": "#/$defs/status"
+                },
+                "recommend": {
+                  "type": "boolean"
+                },
+                "price": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                },
+                "currency": {
+                  "enum": [
+                    "EUR",
+                    "CZK",
+                    "RON",
+                    "GBP",
+                    null
+                  ]
+                },
+                "per": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "eta_days": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/range"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "flag": {
+                  "enum": [
+                    "mislabeled",
+                    "variant_not_shown",
+                    "check_label",
+                    "out_of_stock"
+                  ]
+                }
               }
             }
           }
@@ -131,9 +464,30 @@
     }
   },
   "$defs": {
-    "date": { "type": "string", "pattern": "^20[0-9]{2}-[01][0-9]-[0-3][0-9]$" },
-    "url": { "type": "string", "pattern": "^https://[^\\s]+$" },
-    "status": { "enum": ["verified", "carried", "unverified", "estimate"] },
-    "range": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number", "minimum": 0 } }
+    "date": {
+      "type": "string",
+      "pattern": "^20[0-9]{2}-[01][0-9]-[0-3][0-9]$"
+    },
+    "url": {
+      "type": "string",
+      "pattern": "^https://[^\\s]+$"
+    },
+    "status": {
+      "enum": [
+        "verified",
+        "carried",
+        "unverified",
+        "estimate"
+      ]
+    },
+    "range": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number",
+        "minimum": 0
+      }
+    }
   }
 }

@@ -21,7 +21,7 @@ const S = {
     jn: { shoulder_pan: 'základna', shoulder_lift: 'rameno', elbow_flex: 'loket', wrist_flex: 'zápěstí', wrist_roll: 'rotace zápěstí', gripper: 'chapadlo' },
     flagsH: 'Zdroje, které nedoporučujeme nebo kde je třeba dát pozor', allJoints: 'všechny klouby', jointN: (a, j, n) => `${a}, kloub ${j} (${n})`,
     verdict: { match: 'Sedí', likely: 'Pravděpodobně sedí', check_selection: 'Zkontrolujte vybranou variantu', mismatch: 'Nesedí', inconsistent: 'Nedoporučujeme: inzerát si odporuje', unknown: 'Nelze určit' },
-    found: 'V textu', none: 'nic', tools: 'Šrouby a páky serv jsou součástí balení serv.', time: (p, w) => `${p ? `Tisk ${p} h (tiskárna běží sama), ` : ''}sestavení, nastavení serv a kalibrace ${w} h. Je to odhad, ne slib.`,
+    found: 'V textu', none: 'nic', tools: 'Šrouby a páky serv jsou součástí balení serv.', time: (p, w) => `${p ? `Tisk ${p} h (tiskárna běží sama) a ` : ''}${w} h práce podle etap návodu. Je to odhad, ne slib.`, guide: 'Návod na sestavení', stage: 'Etapa', optStage: 'volitelné', guideFor: 'v návodu: etapa',
     printNote: 'Tisk', track: 'Číslo zásilky', trackHint: 'jen u vás v prohlížeči', optional: 'volitelné',
     altH: 'Alternativa pro pár', altNote: 'Cena bez dopravy a cla, převzato', service: 'Nabídku udělá', checked: 'ověřeno',
     req: 'nutné', opt: 'volitelné', backorder: 'Sklad', printed_by_you: 'Soubory STL', fx: 'Kurz'
@@ -36,7 +36,7 @@ const S = {
     jn: { shoulder_pan: 'base', shoulder_lift: 'shoulder', elbow_flex: 'elbow', wrist_flex: 'wrist', wrist_roll: 'wrist roll', gripper: 'gripper' },
     flagsH: 'Sources we do not recommend or that need care', allJoints: 'all joints', jointN: (a, j, n) => `${a}, joint ${j} (${n})`,
     verdict: { match: 'Matches', likely: 'Probably matches', check_selection: 'Check the selected variant', mismatch: 'Does not match', inconsistent: 'Not recommended: the listing contradicts itself', unknown: 'Cannot tell' },
-    found: 'Found', none: 'nothing', tools: 'Servo screws and horns come with the servos.', time: (p, w) => `${p ? `Printing ${p} h (unattended), ` : ''}assembly, servo setup and calibration ${w} h. This is an estimate, not a promise.`,
+    found: 'Found', none: 'nothing', tools: 'Servo screws and horns come with the servos.', time: (p, w) => `${p ? `Printing ${p} h (unattended) and ` : ''}${w} h of work across the guide’s stages. This is an estimate, not a promise.`, guide: 'Assembly guide', stage: 'Stage', optStage: 'optional', guideFor: 'guide: stage',
     printNote: 'Print', track: 'Tracking number', trackHint: 'stored only in your browser', optional: 'optional',
     altH: 'Alternative for a pair', altNote: 'Price without shipping and duty, carried', service: 'Get a quote from', checked: 'checked',
     req: 'required', opt: 'optional', backorder: 'Stock', printed_by_you: 'STL files', fx: 'FX'
@@ -55,6 +55,7 @@ const stock = (t) => L === 'en' ? t : String(t)
   .replace(/^Backorder: (\d+) expected (\d{4}-\d\d-\d\d)$/, (m, n, d) => `na objednávku, naskladnění ${date(d)}`)
   .replace(/^Available$/, 'skladem').replace(/^In store \/ 1–2 days$/, 'na prodejně / 1–2 dny').replace(/^>(\d+) pcs$/, '>$1 ks')
   .replace(/^Not shown$/, 'neuvedeno').replace(/ sold$/, ' prodáno');
+const guideUrl = (stage) => ROOT + data.build_time.guide[L] + (stage ? '#' + stage : '');
 const badge = (st, d) => `<span class="pb pb-${esc(st)}">${esc(S.status[st] || st)}${d ? ' ' + date(d) : ''}</span>`;
 
 /* ---------- local state (guarded: private mode, blocked storage, previews) ---------- */
@@ -94,7 +95,7 @@ function renderSummary(p) {
   $('plan-sum').innerHTML = `<dl class="plan-kpi">
 <div class="k-main"><dt>${S.total}</dt><dd><b data-testid="plan-total-eur">${rng(p.totals.landed_eur, ' €')}</b><span>≈ ${rng(p.totals.landed_czk, CZK)}</span></dd></div>
 <div><dt>${S.eta}</dt><dd><b>${rng(p.eta_days)} ${S.days}</b><span>${S.slowest}</span></dd></div>
-<div><dt>${S.build}</dt><dd><b>${b.print_hours[1] ? `${S.print} ${rng(b.print_hours)} ${S.h} · ` : ''}${S.work} ${rng(b.work_hours)} ${S.h}</b><span>${S.est}</span></dd></div>
+<div><dt>${S.build}</dt><dd><b>${b.print_hours[1] ? `${S.print} ${rng(b.print_hours)} ${S.h} · ` : ''}${S.work} ${rng(b.work_hours)} ${S.h}</b><span>${S.est} · <a href="${guideUrl()}" data-testid="plan-guide-link">${S.guide}</a></span></dd></div>
 </dl>`;
 }
 
@@ -153,13 +154,14 @@ ${g.services ? `<p class="pg-vat">${S.service}: ${g.services.map((s) => `<a href
 function renderTools(p) {
   $('plan-tools').innerHTML = p.tools.map((t) => `<li>${esc(pick(t, 'name'))} <span class="muted">(${t.required ? S.req : S.opt})</span></li>`).join('') + `<li>${S.tools}</li>`;
   const b = p.build_time;
-  $('plan-time').textContent = S.time(b.print_hours[1] ? rng(b.print_hours) : '', rng(b.work_hours));
+  $('plan-time').innerHTML = esc(S.time(b.print_hours[1] ? rng(b.print_hours) : '', rng(b.work_hours)));
+  $('plan-stages').innerHTML = b.stages.map((st) => `<li><a href="${guideUrl(st.id)}">${S.stage} ${esc(st.id.slice(1))} · ${esc(pick(st, 'name'))}</a>: ${rng(st.hours)} ${S.h}${st.optional ? ` (${S.optStage})` : ''}</li>`).join('');
 }
 
 function renderArrivals(p) {
   $('plan-arrivals').innerHTML = p.arrivals.map((a) => {
     const k = `${state.robot}|${a.id}`;
-    return `<li><input type="checkbox" id="arr-${a.id}" data-a="${esc(k)}"${state.arrived[k] ? ' checked' : ''}><label for="arr-${a.id}">${esc(pick(a, 'name'))}</label></li>`;
+    return `<li><input type="checkbox" id="arr-${a.id}" data-a="${esc(k)}"${state.arrived[k] ? ' checked' : ''}><label for="arr-${a.id}">${esc(pick(a, 'name'))}</label><a class="arr-g" href="${guideUrl(a.guide_stage)}">${S.guideFor} ${esc(a.guide_stage.slice(1))}</a></li>`;
   }).join('');
   const groups = p.groups.filter((g) => g.supplier !== 'none' && g.supplier !== 'self_print');
   $('plan-tracking').innerHTML = groups.map((g, i) => {
