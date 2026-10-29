@@ -136,7 +136,7 @@ if (!process.env.SKIP_SIMS) {
   await check('sim so101 ?lang=en', '/sim/so101/?test=1&lang=en', async (p, e) => {
     await p.waitForFunction(() => window.__sim, null, { timeout: 120000 });
     const err = await p.evaluate(() => window.__sim.error); if (err) e.push('sim error: ' + err);
-    await p.waitForTimeout(800); await isLang(p, e, 'en'); await noCzech(p, e);
+    await p.waitForTimeout(2500); await isLang(p, e, 'en'); await noCzech(p, e);
   });
   await check('sim so101 objects ?lang=en', '/sim/so101/objects.html?lang=en', async (p, e) => { await p.waitForTimeout(4000); await noCzech(p, e); });
   await check('sim so101 setup wizard ?lang=en', '/sim/so101/nastaveni/?lang=en', async (p, e) => { await p.waitForTimeout(4000); await noCzech(p, e); });
