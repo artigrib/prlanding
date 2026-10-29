@@ -14,13 +14,18 @@ const SITE = 'https://printedrobotics.cz/';
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const IGNORE = /fonts\.(googleapis|gstatic)\.com/i;
 let failed = 0;
-const fail = (name, msg) => { failed++; console.log(`FAIL ${name}\n  ${msg}`); };
+// schools + guides (tools/content/*), Czech path → English path
+const CONTENT_PAGES = [['pro-skoly/', 'en/for-schools/'], ['pro-skoly/pracovni-list/', 'en/for-schools/worksheet/'], ['navody/', 'en/guides/'],
+  ['navody/so101-lerobot-prvni-kroky/', 'en/guides/so101-lerobot-first-steps/'], ['navody/bojovi-roboti-150-g/', 'en/guides/combat-robots-150-g/'],
+  ['navody/licence-open-source-hardwaru/', 'en/guides/open-source-hardware-licences/']];
+const fail =(name, msg) => { failed++; console.log(`FAIL ${name}\n  ${msg}`); };
 
 /* ---------- 1. static hreflang / sitemap checks ---------- */
 const fileOf = u => { const p = u.replace(SITE, '').split(/[?#]/)[0]; return path.join(ROOT, p.endsWith('/') || p === '' ? p + 'index.html' : p); };
 const alts = html => Object.fromEntries([...html.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)">/g)].map(m => [m[1], m[2]]));
 {
-  const pages = ['kviz.html', 'en/quiz/index.html', ...fs.readdirSync(path.join(ROOT, 'sada')).flatMap(id => [`sada/${id}/index.html`, `en/kit/${id}/index.html`])];
+  const pages = ['kviz.html', 'en/quiz/index.html', ...fs.readdirSync(path.join(ROOT, 'sada')).flatMap(id => [`sada/${id}/index.html`, `en/kit/${id}/index.html`]),
+    ...CONTENT_PAGES.flatMap(([cs, en]) => [cs + 'index.html', en + 'index.html'])];
   if (fs.existsSync(path.join(ROOT, 'en/index.html'))) pages.push('index.html', 'en/index.html');
   const errs = [];
   for (const p of pages) {
@@ -117,6 +122,20 @@ for (const [vp, size] of [['desktop', { width: 1280, height: 900 }], ['phone', {
     if (!/en\/kit\//.test(rel)) e.push('related links not English: ' + rel);
   }, { viewport: size });
 }
+for (const [cs, en] of CONTENT_PAGES) {
+  await check('en ' + en, '/' + en, async (p, e) => {
+    await p.waitForSelector('h1'); await p.waitForTimeout(300);
+    await isLang(p, e, 'en'); await noCzech(p, e); await czLink(p, e, '/' + cs);
+    const bad = await p.locator('main a[href]').evaluateAll(as => as.map(a => new URL(a.href)).filter(u => u.origin === location.origin && (/^\/(sada|pro-skoly|navody)\//.test(u.pathname) || (u.pathname.startsWith('/sim/') && u.searchParams.get('lang') !== 'en'))).map(u => u.pathname + u.search));
+    if (bad.length) e.push('links to Czech pages: ' + bad.slice(0, 5).join(', '));
+  });
+}
+await check('en for-schools pilot form messages are English', '/en/for-schools/', async (p, e) => {
+  await p.locator('#pilot-form [name=email]').fill('teacher@example.com');
+  await p.locator('#pilot-form button[type=submit]').click(); await p.waitForTimeout(300);
+  const m = (await p.locator('#pilot-form .soft-msg').innerText()).replace(/\s+/g, ' ');
+  if (!/school or club/.test(m)) e.push('validation message: ' + m);
+});
 await check('en kit vert150 (coming soon)', '/en/kit/vert150/', async (p, e) => { await p.waitForSelector('#prep-alt a'); await p.waitForTimeout(300); await noCzech(p, e); });
 await check('en quiz', '/en/quiz/', async (p, e) => {
   await czLink(p, e, '/kviz.html');

@@ -192,7 +192,7 @@
       'N° 09 — Licence': 'N° 09 — Licences', 'Prodáváme jen to, co licence dovoluje.': 'We only sell what the licence allows.',
       'Licenci konstrukčních souborů ověřujeme zvlášť od licence softwaru. Projekty s doložkou NC nabízíme jen s písemným souhlasem autorů.': 'We check the licence of the design files separately from the software licence. Projects with an NC clause are offered only with the authors’ written consent.',
       'Vizualizace z otevřených CAD modelů projektů (Sawppy podle modelu Curio, ExoMy podle simulačního modelu ESA). Záznamy na této stránce pocházejí z našich simulací v prohlížeči. Všechny projekty patří svým autorům.': 'Renders from the projects’ open CAD models (Sawppy from the Curio model, ExoMy from ESA’s simulation model). Recordings on this page come from our browser simulations. All projects belong to their authors.',
-      'Novinky': 'News',
+      'Novinky': 'News', 'Pro školy': 'For schools', 'Návody': 'Guides', 'Pro školy: hotová hodina': 'For schools: a ready lesson', '45minutová hodina se simulací SO-101, pracovní list k tisku a hodnoticí tabulka. Zdarma, bez účtů.': 'A 45-minute lesson with the SO-101 simulation, a printable worksheet and a rubric. Free, no accounts.',
       'Přicházíte ze simulace.': 'You’re coming from the simulator.',
       'Kapitola 06: Skutečná ruka': 'Chapter 06: The real arm',
       'Sada ještě není v prodeji – nechte e-mail a napíšeme vám jako prvním.': 'The kit isn’t on sale yet – leave your email and we’ll write to you first.',
