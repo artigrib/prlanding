@@ -201,6 +201,7 @@ function buildSo101() {
   const D = path.join(OUT, 'so101-sim');
   copy(path.join(ROOT, 'sim/so101'), path.join(D, 'sim/so101'), skipDev);
   copy(path.join(ROOT, 'assets/i18n.js'), path.join(D, 'assets/i18n.js'));
+  copy(path.join(ROOT, 'vendor/three'), path.join(D, 'vendor/three'));   // the site's shared three.js (importmap)
   for (const f of walk(path.join(D, 'sim/so101')).filter((f) => f.endsWith('.html'))) injectShim(f, D);
   write(path.join(D, 'hf-space.js'), shim({ kitText: {
     en: { path: '/en/kit/so101/', text: 'Get the real SO-101 kit · more at printedrobotics.cz', close: 'Dismiss' },
@@ -252,7 +253,7 @@ Source: [github.com/artigrib/prlanding](https://github.com/artigrib/prlanding) (
 |---|---|---|
 | SO-101 robot model (MuJoCo Menagerie, The Robot Studio), modified | \`sim/so101/model/\` | Apache-2.0 (\`sim/so101/model/LICENSE\`) |
 | MuJoCo WebAssembly bindings | \`sim/so101/vendor/mujoco/\` | Apache-2.0 (\`vendor/mujoco/LICENSE\`) |
-| three.js, OrbitControls, GLTFLoader, meshopt decoder | \`sim/so101/vendor/three/\` | MIT (\`vendor/three/LICENSE\`) |
+| three.js, OrbitControls, GLTFLoader, meshopt decoder | \`vendor/three/\` | MIT (\`vendor/three/LICENSE\`, \`vendor/three/NOTICE.txt\`) |
 | hyparquet-writer + hyparquet | \`sim/so101/vendor/hyparquet-writer/\` | MIT (\`vendor/hyparquet-writer/LICENSE\`) |
 | Feetech tables / setup flow after LeRobot | \`sim/so101/lib/\` | Apache-2.0 (see \`sim/so101/NOTICE.txt\`) |
 | Scanned objects | \`sim/so101/objects/\` | per object, see \`objects/NOTICE.txt\`, \`objects/LICENSES.md\` |
@@ -273,6 +274,7 @@ function buildArena() {
   const A = path.join(D, 'sim/arena');
   for (const f of ['index.html', 'NOTICE.txt']) copy(path.join(ROOT, 'sim/arena', f), path.join(A, f));
   copy(path.join(ROOT, 'sim/arena/build'), path.join(A, 'build'));
+  copy(path.join(ROOT, 'vendor/three'), path.join(D, 'vendor/three'));   // three.js is external to the bundle (importmap)
   // the arena loads ../../models/<id>.glb for the robots in its catalogue
   const cat = fs.readFileSync(path.join(ROOT, 'sim/arena/src/robots/catalog.js'), 'utf8');
   const ids = [...new Set([...cat.matchAll(/\bmodel:\s*'([a-z0-9_-]+)'/g)].map((m) => m[1]))];
@@ -318,14 +320,14 @@ Source: [github.com/artigrib/prlanding](https://github.com/artigrib/prlanding) (
 
 | Part | Path | Licence |
 |---|---|---|
-| Rapier physics engine (bundled) | \`sim/arena/build/rapier-*.js\` | Apache-2.0 (text in \`sim/arena/NOTICE.txt\`) |
-| three.js (bundled) | \`sim/arena/build/arena.js\` | MIT (text in \`sim/arena/NOTICE.txt\`) |
+| Rapier physics engine | \`sim/arena/build/rapier-*.js\`, \`rapier-*.wasm\` | Apache-2.0 (text in \`sim/arena/NOTICE.txt\`) |
+| three.js | \`vendor/three/\` | MIT (\`vendor/three/LICENSE\`, text also in \`sim/arena/NOTICE.txt\`) |
 | svrn.glb (Shoverobotics) | \`models/\` | CC BY 4.0 |
 | vert150.glb (TheBlackfish / Muffin578), adapted | \`models/\` | CC BY-SA 4.0 |
 | kosa.glb, klepeto.glb (printedrobotics.cz) | \`models/\` | CC BY 4.0 |
 | printedrobotics.cz game code (bundled in arena.js) | \`sim/arena/build/\` | ${CODE_LICENSE || 'not yet declared — see below'} |
 
-Bundled third-party legal comments: \`sim/arena/build/arena.js.LEGAL.txt\`. Model notes: \`models/NOTICE.txt\`.
+Model notes: \`models/NOTICE.txt\`.
 
 ${codeLine()}
 `);

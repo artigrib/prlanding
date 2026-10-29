@@ -14,7 +14,7 @@ export function mountViewer(host, url, opts) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;   // r186: PCFShadowMap is the soft filter (PCFSoftShadowMap was removed)
   host.appendChild(renderer.domElement);
   renderer.domElement.setAttribute('aria-label', opts.label || '3D model');
   renderer.domElement.setAttribute('role', 'img');

@@ -68,7 +68,7 @@ export class ObjectView {
 
   async loader() {
     if (!this._loader) {
-      this._loader = Promise.all([import('../../vendor/three/loaders/GLTFLoader.js'), import('../../vendor/three/libs/meshopt_decoder.module.js')])
+      this._loader = Promise.all([import('three/addons/loaders/GLTFLoader.js'), import('three/addons/libs/meshopt_decoder.module.js')])
         .then(([GL, MD]) => new GL.GLTFLoader().setMeshoptDecoder(MD.MeshoptDecoder));
     }
     return this._loader;

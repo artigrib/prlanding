@@ -385,7 +385,7 @@ function removeBodies() {
 }
 import('@dimforge/rapier3d-compat').then(async mod => {
   RAPIER = mod.default || mod;
-  // rapier-compat 0.19's init() passes the inlined wasm the old way (harmless deprecation warning)
+  // init() fetches build/rapier-*.wasm (build.mjs replaces rapier-compat's inlined base64 copy)
   await RAPIER.init();
   if (failed) return;
   ready = true;

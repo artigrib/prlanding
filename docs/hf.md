@@ -41,7 +41,7 @@ copies only what the pages load, keeping the site's folder layout so every relat
   following the static import graph. The build fails on any import it cannot resolve inside the Space; CI runs
   `node tools/hf/check-imports.mjs` and `tests/smoke-space.mjs` on every PR. About 16 MB; `mujoco.wasm` (10.4 MB) goes through Git LFS, which
   `upload_folder` handles automatically.
-- Arena: `sim/arena/index.html`, `NOTICE.txt`, `build/`, and the robot models listed in
+- Arena: `sim/arena/index.html`, `NOTICE.txt`, `build/`, the shared three.js `vendor/three/` (both Spaces), and the robot models listed in
   `sim/arena/src/robots/catalog.js` (`models/<id>.glb`) with `models/NOTICE.txt`. About 4 MB.
 - Added per Space: `README.md` (Space card: `sdk: static`, title, emoji, colours, tags, licence, description,
   attributions), `LICENSE.md` (licence table), `index.html` and `hf-space.js`.

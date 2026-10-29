@@ -43,8 +43,9 @@ jobs:
           cache-dependency-path: sim/arena/package-lock.json
       - run: npm ci
       - run: npm run build
-      - name: Committed build/ must be reproducible
-        run: git diff --exit-code -- build && test -z "$(git status --porcelain -- build)"
+      - run: npm run vendor-three
+      - name: Committed build/ and vendor/three/ must be reproducible
+        run: git diff --exit-code -- build ../../vendor/three && test -z "$(git status --porcelain -- build ../../vendor/three)"
       - name: Arena unit tests (replay codec)
         run: node --test tests/*.test.mjs
 

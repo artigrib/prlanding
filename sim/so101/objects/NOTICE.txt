@@ -7,8 +7,8 @@ SO-101 simulation — object library (sim/so101/objects/, objects.html, src/obje
    and compressed, textures are resized/re-encoded as WebP, collision shapes are convex hulls with explicit
    mass and inertia. Conversion: tools/assets/ (see docs/objects.md).
 
-2) three.js loaders used by the demo page (vendor/three/loaders/GLTFLoader.js,
-   vendor/three/utils/BufferGeometryUtils.js, vendor/three/libs/meshopt_decoder.module.js)
-   Source:  npm package three 0.160.0 (examples/jsm/), MIT (vendor/three/LICENSE);
+2) three.js loaders used by the demo page (the site's shared vendor/three/addons/: loaders/GLTFLoader.js,
+   utils/BufferGeometryUtils.js, libs/meshopt_decoder.module.js)
+   Source:  npm package three 0.186.1 (examples/jsm/), MIT (vendor/three/LICENSE);
             the meshopt decoder is part of meshoptimizer by Arseny Kapoulkine, MIT.
-   Unmodified.
+   Unmodified; minified by tools/vendor-three.mjs.

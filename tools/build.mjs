@@ -213,6 +213,7 @@ function kitPage(r0, L) {
   let html = tpl
     .replace(/<title>[^<]*<\/title>\n<meta name="description"[^>]*>\n<link rel="canonical"[^>]*>/, () => head)
     .replace(/(href|src)="assets\//g, `$1="${root}assets/`)
+    .replace(/"(three|three\/addons\/)":"vendor\/three\//g, `"$1":"${root}vendor/three/`)   // importmap -> the site's vendored three.js
     .replace(/href="\.\/(#?[^"]*)"/g, `href="${root}$1"`)
     .replace(/href="kviz\.html"/g, `href="${root}kviz.html"`)
     .replace('<body data-page="product"', `<body data-page="product" data-robot="${r.id}" data-root="${root}"`)

@@ -1,22 +1,25 @@
 Antweight arena prototype — printedrobotics.cz
 =============================================
 
-This folder (build/) bundles third-party code, and the page displays third-party
+This folder (build/) bundles third-party code, the page loads three.js from vendor/three/, and the page displays third-party
 3D models. All are used under their licences; the licence texts follow below.
 
-1) Rapier physics engine (bundled in build/rapier-*.js)
+1) Rapier physics engine (build/rapier-*.js and build/rapier-*.wasm)
    Source:  npm package @dimforge/rapier3d-compat 0.19.3, Dimforge EURL
             https://github.com/dimforge/rapier.js
    Licence: Apache License 2.0 (full text in section A below)
-   Unmodified; bundled and minified with esbuild.
+   Bundled and minified with esbuild. Change: init() loads the package's own
+   rapier_wasm3d_bg.wasm (shipped unmodified as build/rapier-*.wasm) instead of
+   decoding the identical copy inlined as base64 in the JS (see build.mjs).
    The npm tarball of 0.19.3 ships no LICENSE file; the Apache-2.0 text below is
    the one published with the same package (0.21.0) and in the upstream repository.
 
-2) three.js (bundled in build/arena.js)
+2) three.js (not bundled: loaded from the site's shared ../../vendor/three/)
    Source:  npm package three 0.186.1 (core, GLTFLoader, meshopt_decoder,
-            RoomEnvironment), https://github.com/mrdoob/three.js
-   Licence: MIT (full text in section B below)
-   Unmodified; bundled and minified with esbuild.
+            RoomEnvironment, ConvexGeometry, BufferGeometryUtils),
+            https://github.com/mrdoob/three.js
+   Licence: MIT (full text in section B below and vendor/three/LICENSE)
+   Unmodified; minified by tools/vendor-three.mjs.
 
 3) Project SVRN 3D model (../../models/svrn.glb, shown in the arena and on the kit page)
    Design:  Project SVRN by Shoverobotics (Jordan Gell)
