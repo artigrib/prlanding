@@ -166,7 +166,7 @@
       'Po zápase si zásah přehrajete zpomaleně a zápas uložíte jako klip.': 'After the match, replay the hit in slow motion and save the match as a clip.',
       'Spustit bojovou arénu': 'Start the combat arena',
       'Tlačný robot s pohonem 4×4, k tomu flipper nebo chapadlo.': 'A 4×4 pusher, plus a flipper or grabber.', 'Dvoukolový robot s rotujícím ostřím. Jen pro uzavřenou arénu.': 'Two-wheel robot with a spinning blade. Enclosed arena only.',
-      'Vertikální spinner 150 g': '150 g vertical spinner',
+      'Vertikální spinner 150 g': '150 g vertical spinner', 'Malý bojový robot s vertikálním rotujícím ostřím': 'Small combat robot with a vertical spinning blade', 'Malý bojový robot Project SVRN s pohonem 4×4 a klínem': 'Project SVRN small combat robot with 4×4 drive and a wedge',
       'N° 04 — Co je nového': 'N° 04 — What’s new', 'Co jsme přidali.': 'What we’ve added.',
       'Záznamy zápasů v aréně': 'Match replays in the arena', 'Opakování zásahu, zpomalení, uložení zápasu a krátký klip k odeslání.': 'Instant replay, slow motion, saving matches and a short clip to share.', 'Aréna': 'Arena',
       'Nový zvuk v aréně': 'New sound in the arena', 'Motory, rotující zbraně, zásahy i odpočet zápasu mají nový zvuk.': 'Motors, spinning weapons, hits and the match countdown all have new sound.',

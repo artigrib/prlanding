@@ -48,21 +48,22 @@ function translateHtml(html) {
     .replace(/(\s(?:aria-label|title|placeholder|alt|data-tip)=")([^"]*)"/g, (m, a, v) => { const r = v && tr(v); return r == null ? m : a + esc(r) + '"'; })
   ).join('');
 }
-// rewrite site links of a page at `page` (path from the site root) to their English counterparts
-function enLinks(html, page) {
+// rewrite site links of a page at `page` (path from the site root) to their English counterparts;
+// `base` is where the source HTML's relative links were written for (defaults to `page`)
+function enLinks(html, page, base = page) {
   const up = '../'.repeat(page.split('/').length - 1);
-  return html.replace(/(\shref=")([^"#][^"]*|#[^"]*)"/g, (m, a, href) => {
-    if (/^(https?:|mailto:|data:|javascript:)/.test(href) || href.startsWith('#')) return m;
-    const u = new URL(href, SITE + page);
-    let p = u.pathname.slice(1), q = u.search, h = u.hash;
-    if (/^(assets|img|models)\//.test(p) || p.startsWith('en/')) return m;
+  return html.replace(/(\s(?:href|src|data-webm|data-mp4)=")([^"]*)"/g, (m, a, href) => {
+    if (!href || /^(https?:|mailto:|data:|javascript:|#)/.test(href)) return m;
+    const u = new URL(href, SITE + base);
+    if (u.origin + '/' !== SITE) return m;
+    let p = u.pathname.slice(1), q = u.search;
     const k = /^sada\/([^/]+)\/?$/.exec(p);
     if (k) p = PATH.kit('en', k[1]);
     else if (p === '' || p === 'index.html') p = 'en/';
     else if (p === 'kviz.html') p = 'en/quiz/';
-    else if (p.startsWith('sim/')) { const s = new URLSearchParams(q); s.set('lang', 'en'); q = '?' + s.toString(); }
-    else return m;
-    return a + (up + p || './') + q + h + '"';
+    else if (p.startsWith('sim/')) { const sp = new URLSearchParams(q); sp.set('lang', 'en'); q = '?' + sp.toString(); }
+    else if (base === page) return m;
+    return a + ((up + p) || './') + q + u.hash + '"';
   });
 }
 function alternates(csPath, enPath) {
@@ -238,6 +239,33 @@ home = home.replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->
   .replace(/<noscript><p>Pro katalog zapněte JavaScript[\s\S]*?<\/noscript>\n?/, '')
   .replace(/id="robot-count">\d+</, `id="robot-count">${R.length}<`).replace(/id="robot-count2">\d+</, `id="robot-count2">${R.length}<`);
 if (!home.includes('<!--/cards-->')) throw new Error('index.html: cards placeholder not found');
+// Czech home gets its hreflang pair + switcher; the English home is rendered from it
+if (home.includes('<!--/cards-->') && home.includes('id="vyzkousejte"')) { // TEMP gate until home v2 (PR #8) is on main
+  home = wireI18n(setAlternates(home, '', 'en/'), 'cs', 'index.html', '', 'en/', '');
+  const enCards = W.en.PR_ROBOTS.map((r, i) => `<a class="card" href="sada/${r.id}/"><div class="tile"><span class="tag">${r.preparing ? 'Připravujeme' : 'Předobjednávka'}</span><img src="img/${r.id}_white.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
+    `<span class="card-meta"><span class="mono" style="color:var(--ink)">${no(i)}</span><span class="mono">${esc(r.preparing ? 'Připravujeme' : r.level)}</span></span>` +
+    `<span><h3>${esc(r.name)}</h3><span class="type">${esc(r.type)}</span></span><span class="spec1">${r.card.map(c => esc(c[1])).join(' · ')}</span>` +
+    `<p class="desc">${esc(r.short)}</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>`).join('\n');
+  const page = 'en/', root = '../';
+  const meta = (re, v) => en => en.replace(re, v);
+  let en = home
+    .replace('<html lang="cs">', '<html lang="en">')
+    .replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->/, `<div class="cards" id="cards">\n${enCards}\n</div><!--/cards-->`)
+    .replace(/<title>[^<]*<\/title>/, '<title>printedrobotics.cz — try a robot in your browser, then build it</title>')
+    .replace(/<meta name="description" content="[^"]*">/, '<meta name="description" content="Try the SO-101 robot arm in a physics simulation right in your browser, and combat robots in the arena. Then we print the parts, add the hardware from the bill of materials and ship it all in one box.">')
+    .replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${SITE}en/">`)
+    .replace(/<meta property="og:title" content="[^"]*">/, '<meta property="og:title" content="Try a robot in your browser, then build it">')
+    .replace(/<meta property="og:description" content="[^"]*">/, '<meta property="og:description" content="Free SO-101 arm simulation and a combat robot arena in your browser. Open-source robot kits: we print, assemble and ship.">')
+    .replace(/<meta property="og:url" content="[^"]*">/, `<meta property="og:url" content="${SITE}en/">`)
+    .replace(/<meta property="og:image:alt" content="[^"]*">/, '<meta property="og:image:alt" content="The simulated SO-101 robot arm carrying a cube into a bowl">')
+    .replace('<meta property="og:locale" content="cs_CZ">', '<meta property="og:locale" content="en_GB">')
+    .replace(/"description":"Stavebnice open-source robotů: tisk dílů, kompletace hardwaru a doprava po ČR a EU\."/, '"description":"Open-source robot kits: printed parts, hardware assembly and shipping within Czechia and the EU."')
+    .replace(/<body data-page="home"/, `<body data-page="home" data-root="${root}"`);
+  en = wireI18n(en, 'en', page, '', page, '').replace(/<script src="assets\/data\.js"><\/script>/, m => m + '\n<script src="assets/data.en.js"></script>');
+  en = enLinks(translateHtml(en), page, '');
+  assertEnglish(en, page);
+  writePage(page + 'index.html', en.replace('<!doctype html>\n', '<!doctype html>\n<!-- generated by tools/build.mjs from index.html — edit that file, not this one -->\n'));
+}
 fs.writeFileSync('index.html', home);
 
 /* ---------- quiz: Czech kviz.html gets its hreflang pair + switcher in place, English copy at en/quiz/ ---------- */
@@ -276,7 +304,7 @@ fs.writeFileSync('index.html', home);
 }
 
 // sitemap with hreflang pairs; sim/so101 is an indexable landing page, sim/arena is noindex
-const pairs = [['', null], ['kviz.html', 'en/quiz/'], ...R.map(r => [PATH.kit('cs', r.id), PATH.kit('en', r.id)]), ['sim/so101/', null]];
+const pairs = [['', fs.existsSync('en/index.html') ? 'en/' : null], ['kviz.html', 'en/quiz/'], ...R.map(r => [PATH.kit('cs', r.id), PATH.kit('en', r.id)]), ['sim/so101/', read('sim/so101/index.html').includes('hreflang="en"') ? 'sim/so101/?lang=en' : null]];
 const loc = (u, alt) => `  <url><loc>${SITE}${u}</loc>${alt ? `<xhtml:link rel="alternate" hreflang="cs" href="${SITE}${alt[0]}"/><xhtml:link rel="alternate" hreflang="en" href="${SITE}${alt[1]}"/>` : ''}</url>`;
 const urls = [];
 for (const [cs, en] of pairs) { urls.push(loc(cs, en && [cs, en])); if (en) urls.push(loc(en, [cs, en])); }

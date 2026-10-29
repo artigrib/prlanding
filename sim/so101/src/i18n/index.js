@@ -9,3 +9,4 @@ const I = globalThis.PRI18N;
 export const lang = I.initSim(en);
 export const t = (s, vars) => I.t(s, vars);
 export const isEn = lang === 'en';
+I.simSwitcher(document.getElementById('lang-sw'));
