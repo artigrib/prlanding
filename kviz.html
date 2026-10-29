@@ -6,6 +6,9 @@
 <title>Který robot je pro vás? Kvíz — printedrobotics.cz</title>
 <meta name="description" content="Tři otázky a doporučíme open-source robota podle vašich zkušeností, cíle a velikosti projektu.">
 <link rel="canonical" href="https://printedrobotics.cz/kviz.html">
+<link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/kviz.html">
+<link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/quiz/">
+<link rel="alternate" hreflang="x-default" href="https://printedrobotics.cz/kviz.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="printedrobotics.cz">
 <meta property="og:title" content="Který open-source robot je pro vás? Kvíz na 30 sekund">
@@ -19,11 +22,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/i18n.css">
 </head>
 <body data-page="quiz">
 <header class="site-h" id="site-h">
 <div class="wrap"><div class="hbar">
-<div class="brand"><i aria-hidden="true"></i><a href="./">printedrobotics</a></div>
+<div class="brand"><i aria-hidden="true"></i><a href="./">printedrobotics</a><!--lang-sw--><span class="lang-sw"><span aria-current="true" lang="cs" title="Čeština">CZ</span><span class="sep" aria-hidden="true">/</span><a href="en/quiz/" hreflang="en" lang="en" data-lang="en" title="English">EN</a></span><!--/lang-sw--></div>
 <nav class="nav" aria-label="Hlavní menu"><a href="./#katalog">Katalog</a><a href="./#postup">Jak to funguje</a><a href="./#licence">Licence</a></nav>
 <a class="pill" href="./">Zavřít kvíz <span aria-hidden="true">✕</span></a>
 </div></div>
@@ -31,6 +35,7 @@
 <main class="wrap" id="quiz" style="padding-bottom:120px;min-height:70vh"></main>
 <script src="assets/config.js"></script>
 <script src="assets/data.js"></script>
+<script src="assets/i18n.js" data-auto></script>
 <script src="assets/app.js"></script>
 </body>
 </html>

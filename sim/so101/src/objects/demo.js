@@ -1,5 +1,6 @@
 // Demo for the object library: SO-101 scene + library objects dropped on the table; pick one with IK.
 // Standalone page (objects.html); does not touch the mission app.
+import '../i18n/index.js'; // first: English translation (?lang=en) starts before any UI is built
 import { ObjectLibrary, injectObjects } from './library.js';
 import { layoutFor } from './layout.js';
 import { armIds, makePick } from './pick.js';

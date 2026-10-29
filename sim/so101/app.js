@@ -2,6 +2,7 @@
 // Physics/rendering live in core.js (shared with the setup wizard in nastaveni/).
 // Model: MuJoCo Menagerie robotstudio_so101 (Apache-2.0), see NOTICE.txt.
 
+import './src/i18n/index.js'; // first: English translation (?lang=en) starts before any UI is built
 import { COLORS, JOINTS, DEMO, DemoPlayer, ArmSim, loadSim, hasWebGL } from './core.js';
 
 const $ = (id) => document.getElementById(id);

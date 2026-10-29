@@ -6,6 +6,7 @@
 //   keyboard: 1–6 select a joint (Shift+1–5 = missions), ←/→ rotate it, Esc deselects; Tab on the canvas cycles joints
 // Scheme: empty space = camera orbit, objects = tap to pick, IK ball handles = move, links = rotate a joint.
 
+import { t as tr } from '../i18n/index.js';
 import { Kin } from '../kin.js';
 import { store } from './store.js';
 
@@ -136,7 +137,7 @@ export class Links {
   showLabel(j, x, y, stop) {
     const st = this.ux.panel.stage.getBoundingClientRect(), v = this.app.d.ctrl[this.app.act[j]];
     const val = j === 5 ? Math.round((v - this.lim[5][0]) / (this.lim[5][1] - this.lim[5][0]) * 100) + ' % otevřeno' : Math.round(v * 180 / Math.PI) + '°';
-    const t = `${NAMES[j]} · ${val}${stop ? ' · doraz' : ''}`;
+    const t = tr(`${NAMES[j]} · ${val}${stop ? ' · doraz' : ''}`); // translated here, not by the DOM observer (no per-frame flicker)
     if (this.label.textContent !== t) this.label.textContent = t;
     this.label.classList.toggle('stop', !!stop);
     this.label.hidden = false;

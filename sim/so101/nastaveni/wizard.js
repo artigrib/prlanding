@@ -2,6 +2,7 @@
 // One code path for the virtual arm (VirtualTransport -> STS3215 emulator -> MuJoCo) and the real arm
 // (SerialTransport -> Web Serial -> USB bus adapter). Only the transport differs.
 
+import '../src/i18n/index.js'; // first: English translation (?lang=en) starts before any UI is built
 import { JOINTS, DEMO, DemoPlayer, ArmSim, loadSim, hasWebGL, COLORS } from '../core.js';
 import { FeetechBus, hex, ERR, decodeSM, fromBytes } from '../lib/feetech.js';
 import { VirtualArm } from '../lib/sts3215-emu.js';
