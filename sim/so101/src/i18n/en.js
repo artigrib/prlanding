@@ -164,8 +164,10 @@ const strings = {
   'Ukázku nejde přehrát – je poškozená, smazali jsme ji': 'The demo can’t be played – it’s damaged, so we deleted it',
   'Odkaz s ukázkou je poškozený nebo příliš velký – nic jsme nenahráli': 'The demo link is damaged or too large – nothing was loaded',
   /* short labels without diacritics */
-  'Poradit': 'Show me', 'Vybrat misi': 'Choose mission', 'Pero nahoru': 'Pen up', 'Zkratky': 'Shortcuts', 'Zvuk': 'Sound', 'Chyba': 'Error', 'Pozor': 'Caution',
+  'Poradit': 'Show me', 'Vybrat misi': 'Choose mission', 'Pero nahoru': 'Pen up', 'Zkratky': 'Keys', 'Zvuk': 'Sound', 'Chyba': 'Error', 'Pozor': 'Caution',
   'Ruka': 'Arm', 'Zastavit': 'Stop', 'REC': 'REC', 'Registry serv': 'Servo registers',
+  'modrou kouli': 'the blue ball', 'modrou': 'the blue one', ', pak na': ', then', '(P) mezi tahy. Nebo': '(P) between strokes. Or',
+  'Ruka sleduje modrou kouli (M)': 'The arm follows the blue ball (M)', '3D pohled': '3D view', 'Pohled a zvuk': 'View and sound', 'Zvuk (S)': 'Sound (S)', 'Z boku': 'Side',
   /* teach (JSON export notes) */
   'Ukázkový formát inspirovaný datasety LeRobot (sloupce observation.state a action po snímcích).': 'Example format inspired by LeRobot datasets (observation.state and action columns per frame).',
   'Slouží k pochopení principu, není to přímo načitatelný LeRobot dataset (ten používá Parquet a videa z kamer).': 'Meant for understanding the idea; it isn’t a directly loadable LeRobot dataset (those use Parquet and camera videos).',
@@ -281,6 +283,7 @@ const strings = {
 };
 
 const patterns = [
+  [/^(\d+)× servo Feetech STS3215$/, '$1× Feetech STS3215 servo'],
   [/^(.+) – SO-101 v simulaci \| printedrobotics\.cz$/, (m, a) => `${T(a)} – SO-101 simulator | printedrobotics.cz`],
   /* loading, joints, stars */
   [/^Stahujeme fyzikální engine \((.+) MB\)… (.+) %$/, (m, a, b) => `Downloading the physics engine (${dec(a)} MB)… ${dec(b)} %`],

@@ -33,7 +33,9 @@ function pieces(s) {
   const out = [];
   s.replace(/\s(?:aria-label|title|placeholder|alt|data-tip)=(?:\\?["'])([^"'\\]*)/g, (m, v) => { out.push(v); return m; });
   s.replace(/<[^>]*>/g, '\u0000').split('\u0000').forEach(p => out.push(p));
-  return out.map(norm).filter(p => CZ.test(p));
+  // inline-tag fragments (<b>modrou kouli</b>) count too when their string has Czech elsewhere
+  const all = out.map(norm);
+  return all.some(p => CZ.test(p)) ? all.filter(p => /\p{L}{2}/u.test(p) && !/^[\w.-]+$/.test(p) || CZ.test(p)) : [];
 }
 function scanJs(src) {
   const found = [];
