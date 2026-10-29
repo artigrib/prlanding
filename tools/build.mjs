@@ -42,8 +42,12 @@ const CONTENT = [
   { id: 'lerobot', cs: 'navody/so101-lerobot-prvni-kroky/', en: 'en/guides/so101-lerobot-first-steps/', nav: 'navody' },
   { id: 'combat', cs: 'navody/bojovi-roboti-150-g/', en: 'en/guides/combat-robots-150-g/', nav: 'navody' },
   { id: 'licence', cs: 'navody/licence-open-source-hardwaru/', en: 'en/guides/open-source-hardware-licences/', nav: 'navody' },
+  { id: 'assembly', cs: 'navody/so101-sestaveni/', en: 'en/guides/so101-assembly/', nav: 'navody' },
+  { id: 'checklist', cs: 'navody/so101-sestaveni/kontrolni-seznam/', en: 'en/guides/so101-assembly/checklist/', nav: 'navody' },
   // draft: noindex and kept out of the sitemap until analytics is switched on (assets/track.js ANALYTICS_ENABLED)
-  { id: 'soukromi', cs: 'soukromi/', en: 'en/privacy/', nav: null, draft: true }
+  { id: 'soukromi', cs: 'soukromi/', en: 'en/privacy/', nav: null, draft: true },
+  // draft: build log template, noindex and unlinked until the owner's real build is written up
+  { id: 'buildlog', cs: 'stavba/so101/', en: 'en/build/so101/', nav: null, draft: true }
 ];
 const CONTENT_EN = Object.fromEntries(CONTENT.map(c => [c.cs, c.en]));
 
