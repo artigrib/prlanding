@@ -7,7 +7,7 @@
   W.PR_I18N_EN = {
     strings: {
       /* header, footer, shared */
-      'Hlavní menu': 'Main menu', 'Katalog': 'Catalogue', 'Jak to funguje': 'How it works', 'Licence': 'Licences',
+      'Hlavní menu': 'Main menu', 'Katalog': 'Catalogue', 'Katalog /': 'Catalogue /', 'Ruce a dlaně': 'Arms and hands', 'Mobilní': 'Mobile', 'Kráčející': 'Walking', 'Stolní': 'Desktop', 'Bojoví roboti': 'Combat robots', 'Jak to funguje': 'How it works', 'Licence': 'Licences',
       'Najít robota': 'Find a robot', 'Zavřít kvíz': 'Close quiz', 'Drobečková navigace': 'Breadcrumb', '← Katalog': '← Catalogue',
       'Praha · Předobjednávky jsou nezávazné': 'Prague · Pre-orders are non-binding',
       'Všechny projekty patří svým autorům.': 'All projects belong to their authors.',
