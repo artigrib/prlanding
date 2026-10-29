@@ -18,6 +18,7 @@
   známými poli, žádné `__proto__`. Chyby jsou vždy česky; když se přehrávač nepodaří otevřít, hra se vrátí do menu
   (Esc funguje vždy). `?replay=` přijme jen relativní cestu na stejném původu. Zavření záznamu ze souboru vrací kola
   a nástrahy do původního stavu; obnovení WebGL kontextu respektuje záznam a pauzu.
+- Otevření záznamu nejdřív zavře případný běžící záznam (dva záznamy přes sebe), chybový panel skryje přehrávač.
 - Testy: `node tests/replay-codec.test.mjs` (round trip, rozpočet velikosti, ring buffer) a `tests/replay-e2e.cjs`
   (Playwright: menu → zápas → konec → záznam, shoda poloh po uložení/načtení < 2 mm, 3 min < 300 kB, klip).
 

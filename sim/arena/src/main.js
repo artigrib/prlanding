@@ -127,6 +127,8 @@ const ui = {
 let failed = false;
 function fail(text) {
   failed = true;
+  // a replay must not stay on top of the error panel (GPU context lost mid-replay)
+  try { if (rui.active) { rui.playback.playing = false; ui.replayBar.hidden = true; } } catch (_) { /* rui not created yet */ }
   for (const p of [ui.end, ui.garage, ui.pause, ui.start, ui.hud]) p.hidden = true;
   ui.fail.hidden = false; ui.msg.hidden = true; ui.tools.hidden = true;
   document.body.classList.remove('playing');
@@ -650,6 +652,8 @@ function tickClock(dt) {
 // back: 'auto' (KO auto replay -> end screen), 'end', 'pause'
 function openReplay(kind, back) {
   if (!rec || rec.length < 30) { if (back === 'auto') showEnd(); return; }
+  // never stack two replays (a late KO timer, a double tap): the open one gives its scene state back first
+  if (rui.active) rui.close('silent');
   const track = rec.track();
   let win = null, title = 'Celý zápas', speed = 1;
   if (kind === 'instant') {
