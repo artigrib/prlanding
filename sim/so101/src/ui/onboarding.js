@@ -101,13 +101,23 @@ export class Onboarding {
   notify(kind) {
     if (this.i < 0 || !STEPS[this.i].done(kind)) return;
     if (kind === 'won') {
-      // the first success: let it sink in, then put the cube back for the "by hand" part
+      // the first success stays on screen (peak moment): the win card offers "Teď ručně →" (afterWin)
       this.ux.firstWin = this.ux.runner.time;
-      const k = this.i;
-      setTimeout(() => { if (this.i === k) { this.ux.app.reset(); this.next(); } }, this.ux.reduced ? 600 : 2600);
+      this.wonStep = this.i;
+      this.el.hidden = true; this.ring.hidden = true;
       return;
     }
     setTimeout(() => this.next(), 350);
+  }
+
+  /** guided first win: is the win card currently the guide's step? */
+  atWin() { return this.i >= 0 && this.wonStep === this.i; }
+  /** "Teď ručně →" on the first win card: scene back, continue with the hands-on steps */
+  afterWin() {
+    if (!this.atWin()) return;
+    this.wonStep = -1;
+    this.ux.app.reset();
+    this.next();
   }
 
   anchorPoint(a) {

@@ -72,6 +72,7 @@ class UX {
     this.ctl = new ArmController(mj, app.m, app.d, app.act);
     this.runner = new MissionRunner(this.world);
     this.progress = store.get('progress', {}) || {};
+    this.wins = store.get('wins', 0) || 0;
     this.mode = store.get('mode', 'smart') === 'joints' ? 'joints' : 'smart';
     this.penTool = false;
     this.pending = null; this.held = null; this.hudKey = '';
@@ -126,8 +127,7 @@ class UX {
   }
 
   start() {
-    const want = new URLSearchParams(location.search).get('mise');
-    this.runner.select(want || store.get('mission', 'bowl'));
+    this.runner.select(this.startRoute(new URLSearchParams(location.search)));
     this.setMode(this.mode, true);
     this.panel.showPitch(this.ctl.pitch);
     this.panel.showSound(this.sound.on);
@@ -307,8 +307,9 @@ class UX {
     this.ctl.setTarget(x, y, z);
   }
   nextMission() {
-    const k = MISSIONS.findIndex((m) => m.id === this.runner.m.id);
+    const k = MISSIONS.findIndex((m) => m.id === this.runner.m.id), guided = this.onboarding.atWin();
     this.selectMission(MISSIONS[(k + 1) % MISSIONS.length].id);
+    if (guided) { this.onboarding.wonStep = -1; this.onboarding.next(); }   // the guide continues on the new mission
     document.getElementById('win-h').blur();
   }
 
@@ -449,9 +450,24 @@ class UX {
     const best = this.progress[m.id];
     const own = !this.teach.replaying && !this.runner.assisted;
     const isNew = own && (!best || res.stars > best.stars || (res.stars === best.stars && res.time < best.time));
+    if (own) { this.wins = (store.get('wins', 0) || 0) + 1; store.set('wins', this.wins); }
     if (isNew) { this.progress[m.id] = { stars: Math.max(res.stars, best ? best.stars : 0), time: Math.min(res.time, best ? best.time : Infinity) }; store.set('progress', this.progress); }
-    this.panel.showWin(m, res, best, isNew, own ? null : (this.runner.assisted ? 'assisted' : 'replay'));
+    const by = own ? null : (this.runner.assisted ? 'assisted' : 'replay');
+    this.panel.showWin(m, res, best, isNew, by);
     this.onboarding.notify('won');
+    const guided = this.onboarding.atWin();
+    if (guided) {
+      this.panel.winH.textContent = `Hotovo za ${fmtT(res.time)}! Kostka je v misce.`;
+      this.panel.winText.textContent = 'Ruka si cestu naplánovala sama. Teď zkuste totéž rukou – za chvíli to budete umět i bez pomoci.';
+    }
+    this.lastRes = { id: m.id, time: res.time, stars: res.stars, own };
+    this.panel.stageWin(m, { by, guided, wins: this.wins || 0, stars: own ? res.stars : 0 });
+    // a friend's record (challenge link): how did it go?
+    const ch = this.challenge;
+    if (own && ch && ch.id === m.id) {
+      const d = ch.time - res.time;
+      this.panel.winStats.textContent += d > 0 ? ` · rekord kamaráda ${fmtT(ch.time)} překonán o ${Math.max(1, Math.round(d))} s!` : ` · rekord kamaráda ${fmtT(ch.time)} zatím platí`;
+    }
     this.panel.showMission(m, this.progress[m.id]);
     document.getElementById('win').hidden = false;
     document.getElementById('win-h').focus({ preventScroll: true });
@@ -460,6 +476,39 @@ class UX {
     this.cameras.cinematic();
     if (this.teach.recording) this.panel.toast('Mise splněna. Nahrávání můžete zastavit.');
     try { window.dataLayer && window.dataLayer.push({ event: 'sim_success', robot: 'so101', mission: m.id, stars: res.stars }); } catch (e) { /* ignore */ }
+  }
+
+  /** "Sdílet rekord": a link that opens the mission with this time as the target (?mise=&rekord=). */
+  async shareRecord() {
+    const r = this.lastRes; if (!r || !r.own) return;
+    const m = MISSIONS.find((x) => x.id === r.id);
+    const url = location.origin + location.pathname + `?mise=${r.id}&rekord=${r.time.toFixed(1)}`;
+    const text = `Mise „${m.title}“ za ${fmtT(r.time)} a ${r.stars} ★ v simulaci SO-101. Překonáte to?`;
+    try { if (navigator.share) { await navigator.share({ title: 'SO-101 – výzva', text, url }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+    try { await navigator.clipboard.writeText(text + ' ' + url); this.panel.toast('Odkaz s výzvou je ve schránce'); }
+    catch (e) { window.prompt('Zkopírujte odkaz s výzvou:', url); }
+  }
+
+  /** start: a challenge link, or continue where the visitor left off */
+  startRoute(q) {
+    const want = q.get('mise'), rek = parseFloat(q.get('rekord'));
+    if (want && MISSIONS.some((m) => m.id === want) && rek > 0.5 && rek < 3600) {
+      this.challenge = { id: want, time: Math.round(rek * 10) / 10 };
+      const m = MISSIONS.find((x) => x.id === want);
+      this.panel.showChallenge(`Výzva: ${fmtT(this.challenge.time)}`);
+      setTimeout(() => this.panel.toast(`Výzva od kamaráda: „${m.title}“ za ${fmtT(this.challenge.time)}. Překonáte to?`), 900);
+      return want;
+    }
+    if (want) return want;
+    const done = (id) => !!this.progress[id];
+    const any = MISSIONS.some((m) => done(m.id));
+    let id = store.get('mission', 'bowl');
+    if (any && done(id)) { const nx = MISSIONS.find((m) => !done(m.id)); if (nx) id = nx.id; }
+    if (any && !this.TEST) {
+      const m = MISSIONS.find((x) => x.id === id) || MISSIONS[0];
+      setTimeout(() => this.panel.toast(`Pokračujete misí ${m.n}. Rekordy máte uložené v tomto prohlížeči.`), 1200);
+    }
+    return id;
   }
 
   // ================= keyboard =================
@@ -609,3 +658,5 @@ class UX {
 }
 
 void GRIP_OPEN; void GRIP_CLOSED;
+
+function fmtT(t) { t = Math.max(0, t || 0); return Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0'); }

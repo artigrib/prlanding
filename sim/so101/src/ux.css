@@ -232,3 +232,14 @@
 #ux-rec{white-space:nowrap}
 .ux-grabmode{display:flex;flex-direction:column;gap:6px;margin-top:12px}
 .ux-grabmode .mono{margin:0}
+/* growth: staged win card, progress, challenge, loader loop */
+.win-b .ux-primary{grid-column:1 / -1}
+.win-b .ux-full{grid-column:1 / -1}
+.win-b #cta:not(.ux-primary):not(.ux-full){grid-column:auto}
+.ux-progline{margin:6px 0 0;color:var(--ink-2)}
+.ux-chapter{text-decoration:none;border-style:dashed}
+.ux-chapter .ink2{font-size:14px}
+.ux-chal{margin-left:6px;padding:2px 8px;border:1px solid var(--accent);color:var(--accent-text);white-space:nowrap}
+.loader-loop{margin:6px 0 0;display:flex;flex-direction:column;gap:6px}
+.loader-loop video,.loader-loop img{width:100%;height:auto;border:1px solid var(--line);background:var(--sand)}
+.loader-loop figcaption{font-size:14px;color:var(--ink-2)}
