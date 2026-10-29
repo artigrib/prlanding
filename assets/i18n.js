@@ -131,7 +131,7 @@
       var label = l === 'cs' ? 'CZ' : 'EN', name = l === 'cs' ? 'Čeština' : 'English';
       return l === cur ? '<span aria-current="true" lang="' + l + '" title="' + name + '">' + label + '</span>'
         : '<a href="' + hrefs[l] + '" hreflang="' + l + '" lang="' + l + '" data-lang="' + l + '" title="' + name + '">' + label + '</a>';
-    }).join('<i aria-hidden="true">/</i>');
+    }).join('<span class="sep" aria-hidden="true">/</span>');
   }
   function banner() {
     if (!G.document || store(BANNER_KEY) || store(KEY) === lang) return;
@@ -193,7 +193,7 @@
       var st = document.createElement('style'); st.id = 'pr-lang-css';
       st.textContent = '.lang-sw{display:inline-flex;align-items:center;gap:2px;font-family:var(--mono,ui-monospace,monospace);font-size:12px;color:var(--mute,#5E5E59);white-space:nowrap}' +
         '.lang-sw a,.lang-sw span{display:inline-flex;align-items:center;justify-content:center;min-width:28px;min-height:32px;padding:0 4px;text-decoration:none;color:inherit}' +
-        '.lang-sw [aria-current]{color:var(--ink,#0E0E0E);font-weight:500}.lang-sw i{font-style:normal;opacity:.5}';
+        '.lang-sw [aria-current]{color:var(--ink,#0E0E0E);font-weight:500}.lang-sw .sep{opacity:.5;min-width:0;padding:0}';
       document.head.appendChild(st);
     }
   }
