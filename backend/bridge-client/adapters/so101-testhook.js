@@ -51,7 +51,7 @@ export function createTestHookHandler(sim, opts = {}) {
 
   /** target: rad[6]. Smoothstep in wall time; the sim's own loop steps physics. */
   function run(target, duration_s, signal) {
-    if (document.hidden) throw new BridgeError('TAB_HIDDEN');
+    // no TAB_HIDDEN: the sim keeps running in a background tab while an AI is linked (core.js background driver)
     if (app.lost) throw new BridgeError('RENDER_UNAVAILABLE');
     ARM.forEach((j, i) => {
       const v = target[i] * DEG, [lo, hi] = limDeg[i];
@@ -82,7 +82,6 @@ export function createTestHookHandler(sim, opts = {}) {
         });
       };
       timer = setInterval(() => {
-        if (document.hidden) return finish('held');
         const k = Math.min(1, (clock() - t0) / 1000 / dur), e = smooth(k);
         sim.setTargets(target.map((v, i) => from[i] + (v - from[i]) * e));
         if (opts.advance) sim.advance(STEP_S);

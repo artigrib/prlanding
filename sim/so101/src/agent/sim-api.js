@@ -133,7 +133,7 @@ export function createSimApi(env) {
   }
   function preflight() {
     if (estop) throw new AgentError('ESTOP_ACTIVE');
-    if (env.hidden && env.hidden()) throw new AgentError('TAB_HIDDEN');
+    if (env.hidden && env.hidden()) throw new AgentError('TAB_HIDDEN');   // only for an env that cannot run hidden (the sim page passes none)
     if (env.renderOk && !env.renderOk()) throw new AgentError('RENDER_UNAVAILABLE');
     if (env.userBusy && env.userBusy()) throw new AgentError('BUSY', { running: 'user' });
   }

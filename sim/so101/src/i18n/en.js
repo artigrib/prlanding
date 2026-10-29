@@ -369,6 +369,7 @@ const strings = {
   'Nepřipojeno': 'Not connected', 'Připojuji se k serveru…': 'Connecting to the server…', 'Čeká na AI asistenta': 'Waiting for the AI assistant',
   'AI asistent žádá o připojení': 'The AI assistant asks to connect', 'Simulaci ovládá: {name}': 'Controlled by: {name}',
   'Spojení přerušeno, zkouším znovu…': 'Connection lost, retrying…', 'AI ovládá ruku: {name}': 'AI drives the arm: {name}',
+  'AI pracuje i na pozadí': 'The AI keeps working in the background', 'AI ovládá ruku': 'AI is driving the arm',
   '{name} chce ovládat tuto simulaci': '{name} wants to control this simulation',
   'Pokud jste právě zadali kód do svého AI asistenta, povolte to. Jinak zamítněte, kód se tím zneplatní. AI uvidí a ovládá jen tuto simulaci, ne skutečnou ruku. Kdykoli ji zastavíte tlačítkem STOP.': 'If you just gave the code to your AI assistant, allow it. Otherwise deny, and the code stops working. The AI sees and controls only this simulation, not a real arm. Stop it at any time with STOP.',
   'Bez odpovědi se za {s} s zamítne.': 'Denied automatically in {s} s.', 'Povolit': 'Allow', 'Zamítnout': 'Deny',
