@@ -1,0 +1,10 @@
+hyparquet-writer — Parquet writer used by the LeRobot export (src/export/lerobot.js)
+====================================================================================
+Source:  npm packages hyparquet-writer 0.16.10 and its dependency hyparquet 1.31.1
+         by Hyperparam (Kenny Daniel), https://github.com/hyparam/hyparquet-writer
+Licence: MIT (both packages; texts in LICENSE)
+Build:   unmodified sources bundled and minified into one ES module with esbuild 0.25.0:
+           echo "export { parquetWriteBuffer } from 'hyparquet-writer';" > entry.mjs
+           npx esbuild entry.mjs --bundle --format=esm --minify --target=es2020 \
+             --legal-comments=eof --outfile=hyparquet-writer.min.js
+Loaded only when a demonstration is exported (dynamic import), never on page load.

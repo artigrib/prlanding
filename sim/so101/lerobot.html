@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Export ukázek SO-101 do LeRobot | printedrobotics.cz</title>
+<meta name="description" content="Převeďte ukázky nahrané v simulátoru SO-101 na dataset LeRobot (Parquet, v2.1) přímo v prohlížeči. Nic se nikam neodesílá.">
+<link rel="canonical" href="https://printedrobotics.cz/sim/so101/lerobot.html">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E8461E'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="sim.css">
+<style>
+  .lx{max-width:760px;margin:0 auto;padding:32px var(--pad) 64px;display:flex;flex-direction:column;gap:20px}
+  .lx h1{margin:4px 0 0;font-weight:500;font-size:clamp(26px,4vw,36px);line-height:1.1;letter-spacing:-.03em}
+  .lx p{margin:0}
+  .lx ol{margin:0;padding-left:22px}.lx li{margin:4px 0}
+  .lx label{display:block;font-weight:500;font-size:15px;margin-bottom:6px}
+  .lx input[type=text],.lx input[type=file]{width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--ink);font:inherit;background:#fff}
+  .lx .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:640px){.lx .row{grid-template-columns:1fr}}
+  .lx .out{min-height:1.5em}.lx .out.err{color:var(--accent-text)}
+  .lx code{font-family:var(--mono);font-size:13px;background:var(--sand);padding:1px 4px}
+  .lx .foot{border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="brand"><i aria-hidden="true"></i><a href="../../">printedrobotics</a><nav class="lang-sw" id="lang-sw" aria-label="Jazyk / Language"></nav></div>
+  <span class="bar-t mono">SO-101 · export do LeRobot</span>
+  <a class="pill" href="./"><span aria-hidden="true">←</span> Do simulátoru</a>
+</header>
+<main class="lx">
+  <div>
+    <p class="mono">Učení ukázkou → dataset</p>
+    <h1>Export ukázek do formátu LeRobot</h1>
+  </div>
+  <p class="ink2">Ukázku nahranou v simulátoru převedeme na dataset LeRobot (formát v2.1: Parquet a metadata). Vše proběhne ve vašem prohlížeči, nic se nikam neodesílá.</p>
+  <ol class="ink2">
+    <li>V simulátoru nahrajte ukázku (Učení ukázkou) a stáhněte ji jako JSON.</li>
+    <li>Vyberte jeden nebo více souborů JSON. Každý soubor bude jedna epizoda.</li>
+    <li>Stáhněte ZIP a nahrajte složku na Hugging Face jako dataset.</li>
+  </ol>
+  <div>
+    <label for="files">Soubory s ukázkami (JSON)</label>
+    <input type="file" id="files" accept=".json,application/json" multiple>
+  </div>
+  <div class="row">
+    <div><label for="repo">Název datasetu (nepovinné)</label><input type="text" id="repo" placeholder="uzivatel/so101-sim-demos" autocomplete="off" spellcheck="false"></div>
+    <div><label for="task">Popis úlohy anglicky (nepovinné)</label><input type="text" id="task" placeholder="Move the cube into the bowl" autocomplete="off"></div>
+  </div>
+  <div><button type="button" class="btn btn-act" id="go" disabled>Stáhnout dataset (ZIP) <span aria-hidden="true">↓</span></button></div>
+  <p class="out mono" id="out" role="status" aria-live="polite"></p>
+  <p class="mono-s foot"><span>Licence datasetu: CC BY 4.0, označení source: simulation.</span> <span>Robot so101_follower, 30 snímků/s, klouby ve stupních, chapadlo 0–100 %, bez kamerových záznamů.</span> <span>Parquet zapisuje knihovna hyparquet-writer (MIT).</span></p>
+</main>
+<script type="module" src="src/export/page.js"></script>
+</body>
+</html>
