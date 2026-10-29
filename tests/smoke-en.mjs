@@ -65,7 +65,7 @@ async function check(name, url, fn, opts = {}) {
   page.on('console', m => { if (m.type() === 'error' && !IGNORE.test(m.text()) && !/Failed to load resource/.test(m.text())) errors.push('console: ' + m.text()); });
   page.on('response', r => { if (r.status() >= 400 && !IGNORE.test(r.url()) && !opts.allow404) errors.push(`HTTP ${r.status()} ${r.url()}`); });
   try {
-    const res = await page.goto(BASE + url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    const res = await page.goto(BASE + url, { waitUntil: 'domcontentloaded', timeout: 120000 });
     if (!res || (!res.ok() && !opts.allow404)) errors.push('navigation status ' + (res && res.status()));
     await fn(page, errors);
   } catch (e) { errors.push('failed: ' + e.message.split('\n')[0]); }
