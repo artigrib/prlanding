@@ -4,11 +4,7 @@
 # after it has checked that the hostname's DNS A record already points at this server.
 {
 	admin 127.0.0.1:12019
-	# http-01 answers were redirected to HTTPS instead of being solved (LE problem type "tls"),
-	# so validate over TLS-ALPN-01 on :443 instead.
-	cert_issuer acme {
-		disable_http_challenge
-	}
+	cert_issuer acme
 }
 
 (common) {
@@ -28,6 +24,14 @@ http://127.0.0.1:18199 {
 	bind 127.0.0.1
 	respond /health "ok" 200
 	respond 404
+}
+
+# Explicit HTTP->HTTPS redirect (same 308 as Caddy's automatic one; ACME challenges are still
+# answered by Caddy before any route). X-PR-Edge lets the ops "tls" check confirm that it is this
+# Caddy, and not some other server, that answers port 80 from the internet.
+http://api.printedrobotics.cz, http://mcp.printedrobotics.cz, http://relay.printedrobotics.cz {
+	header X-PR-Edge 1
+	redir https://{host}{uri} 308
 }
 
 import sites-enabled/*.caddy
