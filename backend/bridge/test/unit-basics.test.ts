@@ -118,3 +118,14 @@ test('server-side limit check reports OUT_OF_LIMITS details in degrees', () => {
   assert.deepEqual(checkLimits('set_gripper', { gripper_pct: 101 }), { joint: 'gripper', value_pct: 101, min_pct: 0, max_pct: 100 });
   assert.equal(checkLimits('set_gripper', { gripper_pct: 'open' }), null);
 });
+
+test('mission catalogue: the 10 SO-101 sim missions (01-05 plus object missions 06-10), server-authored titles', async () => {
+  const { MISSIONS } = await import('../src/schemas.ts');
+  assert.deepEqual(Object.keys(MISSIONS), ['bowl', 'stack', 'sort', 'ball', 'trace', 'line', 'breakfast', 'tidy', 'workshop', 'lab']);
+  for (const m of Object.values(MISSIONS)) assert.ok(m.title_cs && m.title_en && m.goal_en);
+  const { Registry } = await import('../src/rooms.ts');
+  const { testConfig, openTab } = await import('./helpers.ts');
+  const reg = new Registry(testConfig());
+  const tab = openTab(reg, '10.0.0.1', { views: ['overview'], missions: ['bowl', 'line', 'lab', 'nope'] });
+  assert.deepEqual(tab.room.caps.missions, ['bowl', 'line', 'lab'], 'unknown ids are dropped, object missions kept');
+});
