@@ -46,10 +46,10 @@ def main():
                 commit_message="Update from printedrobotics.cz %s" % sha,
                 delete_patterns="*",  # mirror the build: drop files that are gone (.gitattributes is kept)
             )
-            print("%s: published https://huggingface.co/spaces/%s" % (name, repo_id))
+            print("::notice::%s: published https://huggingface.co/spaces/%s" % (name, repo_id))
         except Exception as e:  # fixed line only: no server text, which could echo request details
             status = getattr(getattr(e, "response", None), "status_code", None)
-            print("%s: upload failed (%s%s)" % (name, type(e).__name__, ", HTTP %s" % status if status else ""))
+            print("::error::%s: upload failed (%s%s)" % (name, type(e).__name__, ", HTTP %s" % status if status else ""))
             failed += 1
     return 1 if failed else 0
 
