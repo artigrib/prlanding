@@ -20,9 +20,25 @@ function samplePolyline(c, step) {
   }
   return out;
 }
-export const TRACE = { corners: STAR_PTS, checkpoints: samplePolyline(STAR_PTS, 0.007), penDown: 0.016, hit: 0.0065 };
+export const TRACE = { corners: STAR_PTS, checkpoints: samplePolyline(STAR_PTS, 0.007), penDown: 0.016, hit: 0.009, done: 0.85 };
 
 const near2 = (a, b, r) => Math.hypot(a[0] - b[0], a[1] - b[1]) < r;
+
+/**
+ * Grasp coaching from the gripper state (P0-3): what to do next when the tip is above / at a cube at p.
+ * Returns null when the tip is not near the cube.
+ */
+export function graspHint(c, p) {
+  const t = c.tip, dh = Math.hypot(t[0] - p[0], t[1] - p[1]), dz = t[2] - p[2];
+  const key = c.touch ? 'tlačítkem Chapadlo pod scénou' : 'mezerníkem';
+  if (dh < 0.02 && dz > -0.015 && dz < 0.015) {
+    return c.gripOpen ? `Teď sevřete chapadlo (${key})` : 'Držíte ji – zvedněte kouli nahoru';
+  }
+  if (dh < 0.03 && dz >= 0.015 && dz < 0.12) {
+    return c.gripOpen ? 'Sjeďte dolů ke kostce a sevřete chapadlo' : `Otevřete chapadlo (${key}) a sjeďte níž`;
+  }
+  return null;
+}
 function stars3(t, t3, t2) { return t <= t3 ? 3 : t <= t2 ? 2 : 1; }
 
 // helper: is the object resting in a bowl?
@@ -38,6 +54,8 @@ export const MISSIONS = [
     desc: 'Natočte ruku ke kostce, otevřete chapadlo, sjeďte dolů, sevřete a přeneste kostku do modré misky.',
     short: 'Kostka do misky',
     layout: { cube: [0.25, -0.11], bowl: [0.20, 0.15] },
+    openStart: true,
+    tip: 'Klikněte na <b>kostku</b> – ruka ji sama vezme. Pak klikněte na <b>misku</b>.',
     targets: { cube: 'pick', bowl: 'place' },
     rate: (t) => stars3(t, 25, 60),
     starsHint: '3 ★ do 25 s, 2 ★ do 60 s',
@@ -49,7 +67,7 @@ export const MISSIONS = [
       }
       c.s.hold = 0;
       if (cube[2] > 0.03) return { text: 'Výborně! Přeneste ji nad misku a pusťte' };
-      if (Math.hypot(c.tip[0] - cube[0], c.tip[1] - cube[1], c.tip[2] - cube[2]) < 0.035) return { text: 'Teď sevřete chapadlo' };
+      const gh = graspHint(c, cube); if (gh) return { text: gh };
       return { text: c.smart ? 'Klikněte na kostku, nebo táhněte modrou kouli' : 'Natočte ruku ke kostce a sjeďte k ní' };
     },
     solve: (ctl, w) => pickPlace(ctl, w, 'cube', bowlDrop(w, 'bowl'))
@@ -59,6 +77,9 @@ export const MISSIONS = [
     desc: 'Položte oranžovou kostku přesně na modrou. Čím přesněji a rychleji, tím víc hvězdiček.',
     short: 'Věž ze dvou kostek',
     layout: { cube: [0.26, -0.10, 0.3], cube_b: [0.20, 0.10] },
+    openStart: true,
+    tip: 'Klikněte na <b>oranžovou kostku</b>, pak na <b>modrou</b> – ruka postaví věž.',
+    advice: 'Pro 3 ★ pokládejte pomalu a natočte kostku kroužkem zápěstí tak, aby lícovala s modrou.',
     targets: { cube: 'pick', cube_b: 'place' },
     rate: (t, prec) => Math.min(stars3(t, 30, 75), prec < 0.004 ? 3 : prec < 0.008 ? 2 : 1),
     starsHint: '3 ★: do 30 s a odchylka pod 4 mm',
@@ -74,6 +95,7 @@ export const MISSIONS = [
       c.s.hold = 0;
       if (onTop) return { text: 'Teď kostku pusťte', ok: true };
       if (a[2] > 0.03) return { text: 'Přeneste oranžovou kostku nad modrou a pomalu ji spusťte' };
+      const gh = graspHint(c, a); if (gh) return { text: gh };
       return { text: c.smart ? 'Klikněte na oranžovou kostku, pak na modrou' : 'Uchopte oranžovou kostku' };
     },
     solve: (ctl, w) => { const b = w.pos('cube_b', [0, 0, 0]); return pickPlace(ctl, w, 'cube', [b[0], b[1], b[2] + 0.0265]); }
@@ -83,6 +105,8 @@ export const MISSIONS = [
     desc: 'Oranžovou kostku dejte do oranžové misky a modrou do modré.',
     short: 'Třídění podle barev',
     layout: { cube: [0.27, -0.06, 0.5], cube_b: [0.16, -0.16, -0.3], bowl: [0.14, 0.17], bowl2: [0.30, 0.12] },
+    openStart: true,
+    tip: 'Klikněte na kostku a pak na <b>misku stejné barvy</b>.',
     targets: { cube: 'pick', cube_b: 'pick', bowl: 'place', bowl2: 'place' },
     rate: (t) => stars3(t, 50, 110),
     starsHint: '3 ★ do 50 s, 2 ★ do 110 s',
@@ -95,7 +119,14 @@ export const MISSIONS = [
       }
       c.s.hold = 0;
       if (wrong) return { text: 'Pozor, kostka je ve špatné misce' };
-      if (o || b) return { text: 'Jedna je hotová, ještě druhá', ok: true };
+      for (const [n, done] of [['cube', o], ['cube_b', b]]) {
+        if (done) continue;
+        const pp = w.pos(n, c.s.a || (c.s.a = new Float64Array(3)));
+        if (pp[2] > 0.03) return { text: n === 'cube' ? 'Teď ji položte do oranžové misky' : 'Teď ji položte do modré misky', ok: o || b };
+        const gh = graspHint(c, pp); if (gh) return { text: gh, ok: o || b };
+      }
+      if (o) return { text: c.smart ? 'Oranžová je hotová. Klikněte na modrou kostku, pak na modrou misku' : 'Oranžová je hotová, teď modrá do modré misky', ok: true };
+      if (b) return { text: c.smart ? 'Modrá je hotová. Klikněte na oranžovou kostku, pak na oranžovou misku' : 'Modrá je hotová, teď oranžová do oranžové misky', ok: true };
       return { text: c.smart ? 'Klikněte na kostku a pak na misku stejné barvy' : 'Oranžová do oranžové, modrá do modré' };
     },
     solve: (ctl, w) => {
@@ -109,6 +140,7 @@ export const MISSIONS = [
     desc: 'Míček se uchopit nedá. Zavřete chapadlo a dostrkejte ho jako hokejkou do branky.',
     short: 'Míček do branky',
     layout: { ball: [0.20, -0.06], goal: [0.20, 0.17, Math.PI / 2] },
+    tip: 'Klikněte na <b>míček</b> – ruka ho dostrká do branky. Nebo ho strkejte koulí se zavřeným chapadlem.',
     targets: { ball: 'push', goal: 'push' },
     rate: (t, prec) => Math.min(stars3(t, 25, 60), prec < 0.02 ? 3 : 2),
     starsHint: '3 ★: do 25 s a míček blízko středu branky',
@@ -128,13 +160,19 @@ export const MISSIONS = [
   },
   {
     id: 'trace', n: '05', title: 'Obkreslete hvězdu',
-    desc: 'Ruka drží fix. Sjeďte hrotem k papíru a obtáhněte hvězdu. Můžete ji také nakreslit prstem nástrojem Pero – ruka vaši čáru přesně zopakuje.',
+    desc: 'Ruka drží fix. Táhněte po papíře a fix kreslí – výška se drží sama, magnet vám pomáhá zůstat na čáře. Nebo hvězdu nakreslete prstem a ruka ji přesně zopakuje.',
     short: 'Kreslení hvězdy',
     layout: {},
     pen: true,
+    tip: 'Táhněte po <b>papíře</b> – fix kreslí. <b>Pero nahoru</b> (P) mezi tahy. Nebo <b>Nakreslit prstem</b> – ruka čáru zopakuje.',
+    // steep view over the paper from the far side, so the arm (coming from the base) does not hide the tip
+    // (three.js coords: x, z_mj, -y_mj)
+    look: { t: [0.215, 0.0, 0.0], p: [0.43, 0.38, -0.0001], pn: [0.47, 0.46, -0.0001] },
+    draw: true,
     targets: {},
-    rate: (t, prec) => Math.min(stars3(t, 45, 100), prec < 0.003 ? 3 : prec < 0.005 ? 2 : 1),
-    starsHint: '3 ★: do 45 s a průměrná odchylka čáry pod 3 mm',
+    // tuned so a beginner finishes in < 2 min; 3 ★ still needs a precise line
+    rate: (t, prec) => Math.min(stars3(t, 60, 150), prec < 0.0025 ? 3 : prec < 0.005 ? 2 : 1),
+    starsHint: '3 ★: do 60 s a průměrná odchylka čáry pod 2,5 mm',
     check(c) {
       const s = c.s;
       if (!s.hit) { s.hit = new Uint8Array(TRACE.checkpoints.length); s.n = 0; s.errSum = 0; s.errN = 0; }
@@ -152,9 +190,9 @@ export const MISSIONS = [
         if (seg < 0.03) { s.errSum += seg; s.errN++; }
       }
       const cov = s.n / TRACE.checkpoints.length, prec = s.errN ? s.errSum / s.errN : 1;
-      if (cov >= 0.9) return { text: 'Hvězda je hotová!', ok: true, won: true, prec, progress: cov };
+      if (cov >= TRACE.done) return { text: 'Hvězda je hotová!', ok: true, won: true, prec, progress: cov };
       if (s.n) return { text: `Obkresleno ${Math.round(cov * 100)} %`, ok: cov > 0.5, prec, progress: cov };
-      return { text: c.smart ? 'Sjeďte koulí až k papíru a táhněte po hvězdě, nebo zvolte Pero' : 'Sjeďte hrotem k papíru a táhněte po hvězdě', progress: 0 };
+      return { text: c.smart ? (c.touch ? 'Táhněte prstem po papíře – fix kreslí. Nebo zvolte Nakreslit prstem' : 'Táhněte myší po papíře – fix kreslí. P zvedne pero') : 'Sjeďte hrotem k papíru a táhněte po hvězdě', progress: 0 };
     },
     solve: (ctl) => ctl.planPath(TRACE.corners.map(([x, y]) => [x, y, 0.009]), { grip: false, speed: 0.05, roll: 0 })
   }
@@ -217,7 +255,7 @@ export class MissionRunner {
   /** Apply the layout (call after the sim was reset to its keyframe). */
   setup() {
     this.w.layout(this.m.layout);
-    this.ctx.s = {}; this.time = 0; this.won = false; this.result = null; this.started = false;
+    this.ctx.s = {}; this.time = 0; this.won = false; this.result = null; this.started = false; this.assisted = false;
   }
   /** Returns the check result; sets this.won / this.result once. */
   tick(dt) {

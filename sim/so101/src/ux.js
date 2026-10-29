@@ -13,6 +13,8 @@ import { Sound } from './audio/sound.js';
 import { Confetti } from './ui/fx.js';
 import { Onboarding } from './ui/onboarding.js';
 import { Explode } from './ui/explode.js';
+import { Links } from './ui/links.js';
+import { DrawAssist } from './draw.js';
 import { HiDetail } from './ui/hidetail.js';
 import { store } from './ui/store.js';
 
@@ -22,9 +24,24 @@ export async function install(page, env) {
   const app = page.sim ? hostFor(page) : page;
   const ux = new UX(app, env);
   page.ux = ux;
+  patchSliders(page);
   if (page.sim) page.sim.onRender = (dt) => ux.render(dt);   // [ux-hook:render] in core.js loop()
   ux.start();
   return ux;
+}
+
+// joint sliders: readable values for screen readers and a visible "(doraz)" at the joint limit (P2-5, P2-9)
+function patchSliders(page) {
+  if (!page.sliders || !page.refreshSlider) return;
+  const orig = page.refreshSlider.bind(page);
+  page.refreshSlider = (i) => {
+    orig(i);
+    const sl = page.sliders[i], v = +sl.input.value, lim = !sl.grip && (v <= sl.lo + 1e-3 || v >= sl.hi - 1e-3);
+    if (lim) sl.out.textContent += ' (doraz)';
+    sl.out.classList.toggle('ux-lim', lim);
+    sl.input.setAttribute('aria-valuetext', sl.out.textContent.replace('°', ' stupňů'));
+  };
+  page.refreshSliders();
 }
 
 const PAGE_FIRST = new Set(['reset', 'setCtrl', 'refreshSliders', 'stopDemo', 'tickDemo', 'startDemo', 'hudText', 'hudOk', 'ux']);
@@ -73,22 +90,34 @@ class UX {
     for (const n of ['cube_b', 'ball', 'bowl', 'bowl2', 'goal']) this.extras.meshes[n].userData.pick = n;
     this.explode = new Explode(this);
     this.hd = new HiDetail(this);
+    this.links = new Links(this);
+    this.draw = new DrawAssist(); this.draw.help = store.get('draw-help', 1);
     this.panel.qualityUI();
     this.pickList = [];
 
     this.ctl.on('grip', (open) => { this.sound.grip(open); this.onboarding.notify('grip'); });
     this.ctl.on('done', () => { this.gizmo.fadePath(); });
+    this.ctl.on('floor', () => {   // once per gesture: "you hit the table"
+      if (this.floorNoted) return; this.floorNoted = true;
+      this.panel.toast('Níž to nejde, tam je stůl'); this.sound.blip(140, 0.06, 'square', 0.05);
+      setTimeout(() => { this.floorNoted = false; }, 2500);
+    });
     this.teach.onChange((t) => this.panel.showTeach(t));
     // joint sliders take over from the controller / replay
     document.getElementById('joints').addEventListener('input', () => {
       this.ctl.cancel(); this.teach.stopReplay(); this.pending = null; this.runner.start();
     });
+    this.keysOn = store.get('keys-on', true) !== false;
     this.keys();
     // the visual HUD changes every frame (timer, %, mm): take it out of the live region, announce via #sr
     this.hudEl = document.getElementById('hud-text');
     this.hudEl.removeAttribute('role'); this.hudEl.removeAttribute('aria-live');
     this.srEl = document.getElementById('sr');
     const c = app.renderer.domElement;
+    c.tabIndex = 0;
+    const desc = document.createElement('p'); desc.id = 'ux-c-desc'; desc.className = 'sr-only';
+    desc.textContent = 'Šipky posouvají cíl ruky, PageUp a PageDown mění výšku, mezerník otevře a zavře chapadlo, otazník ukáže všechny zkratky.';
+    c.parentNode.appendChild(desc); c.setAttribute('aria-describedby', desc.id);
     c.setAttribute('aria-label', 'Robotická ruka SO-101 na stole s předměty mise. Ovládání: modrá koule (chytrý pohyb), klik na předmět, šipky a mezerník, nebo posuvníky kloubů v režimu Klouby.');
   }
 
@@ -102,6 +131,17 @@ class UX {
     this.panel.showView('orbit');
     if (!this.touch && !this.TEST && matchMedia('(min-width:861px)').matches && store.get('wrist', false)) this.setWrist(true);
     this.app.reset();          // applies the mission layout through onReset()
+    if (this.runner.m.look) this.cameras.set('orbit', this.runner.m.look);
+    this.teach.load();         // the demonstration from the last visit, if any
+    this.teach.loadFromHash().then((n) => {   // a shared link (#ukazka=…) wins over the stored one
+      if (!n) { if (this.teach.rejected) this.panel.toast('Odkaz s ukázkou je poškozený nebo příliš velký – nic jsme nenahráli', 'err'); return; }
+      this.selectMission(this.teach.demo.mission.id);
+      this.panel.toast('Máte sdílenou ukázku – spusťte ji tlačítkem Přehrát v sekci Učení ukázkou');
+    });
+    if (this.touch && !this.TEST && !store.get('tip-orbit', false)) {
+      store.set('tip-orbit', true);
+      setTimeout(() => this.panel.toast('Jedním prstem otáčíte pohled, dvěma přibližujete'), 2500);
+    }
     // high-detail meshes after the first frames (lazy, does not block the start)
     const idle = window.requestIdleCallback || ((f) => setTimeout(f, 300));
     idle(() => this.hd.start(), { timeout: 1500 });
@@ -117,6 +157,12 @@ class UX {
       if (this.pending.t <= 0) { const p = this.pending.plan; this.pending = null; this.ctl.run(p); }
     }
     this.teach.pre();
+    // drawing mission: the marker follows the (magnet-assisted, speed-limited) pointer in the paper plane
+    if (this.draw.active && this.drawMode() && !this.ctl.busy() && !this.teach.replaying) {
+      const t = this.draw.step(dt);
+      if (!this.ctl.active) this.ctl.begin();
+      this.ctl.setTarget(t[0], t[1], t[2]);
+    }
     if (!this.teach.replaying) this.ctl.update(dt);
   }
 
@@ -126,11 +172,13 @@ class UX {
     if (fell) this.panel.toast(`Spadlo to ze stolu – ${w.o[fell].acc} jsme vrátili zpět`);
     this.ctl.actualTip(ctx.tip);
     ctx.gripOpen = c[act[5]] > 0.5;
-    ctx.smart = this.mode === 'smart';
+    ctx.smart = this.mode === 'smart'; ctx.touch = this.touch;
     this.extras.inkAt(ctx.tip);
     const res = r.tick(dt);
     // HUD (live region: write only on change)
     let text = res.text;
+    if (this.teach.replaying) text = this.touch ? 'Přehrávám ukázku – zastavíte ji tlačítkem Stop' : 'Přehrávám ukázku – Esc ji zastaví';
+    else if (this.mode === 'smart' && this.ctl.active && !this.ctl.reachable && !this.ctl.busy()) text = 'Mimo dosah – zkuste cíl blíž k ruce';
     if (this.app.won) text = 'Mise splněna';
     if (text !== this.app.hudText) { this.hudEl.textContent = text; this.app.hudText = text; this.announce(text); }
     const ok = !!res.ok || this.app.won;
@@ -156,6 +204,8 @@ class UX {
     this.confetti.tick(dt);
     this.panel.tick();
     this.onboarding.tick();
+    this.links.tick();
+    if (this.draw.active && this.drawMode()) this.gizmo.drawCursor(this.draw);
   }
 
   onReset() {
@@ -163,20 +213,31 @@ class UX {
     if (!this.replayResetting) this.teach.stopReplay();
     this.runner.setup();
     this.extras.onLayout(this.runner.m);
+    // pick-and-place missions start with the gripper open: the first move is "go down and close" (P0-3)
+    if (this.runner.m.openStart) {
+      const a = this.app.act[5], m = this.m;
+      this.d.ctrl[a] = GRIP_OPEN; this.d.qpos[m.jnt_qposadr[m.actuator_trnid[2 * a]]] = GRIP_OPEN;
+      this.mj.mj_forward(m, this.d);
+    }
     this.ctl.syncFromCtrl();
+    this.confetti.clear();
+    this.draw.active = false; this.draw.penDown = true;
+    this.links.deselect();
     this.gizmo.clearPath();
     this.cameras.stopCinematic();
     this.panel.showMission(this.runner.m, this.progress[this.runner.m.id]);
     this.held = null;
-    if (this.teach.recording) this.teach.stopRec();
+    if (this.teach.recording && !this.recResetting) { this.teach.stopRec(); this.panel.toast('Nahrávání zastaveno (mise začala znovu)'); }
+    this.panel.showTips(this.runner.m);
   }
 
   startDemo() {
     this.teach.stopReplay();
     const rec = this.teach.recording;
-    this.app.reset();
+    this.recResetting = true; this.app.reset(); this.recResetting = false;
     if (rec) this.teach.startRec();     // recording the planner's solution is a valid demonstration
     this.runner.start();
+    this.runner.assisted = true;        // the robot solved it: no stars / record for the visitor (P1-4)
     const plan = this.runner.m.solve(this.ctl, this.world);
     this.preview(plan, true);
     this.panel.toast('Ruka plánuje řešení…');
@@ -205,7 +266,38 @@ class UX {
     this.runner.select(id); store.set('mission', id);
     this.teach.stopReplay();
     this.app.reset();
-    this.cameras.set('orbit');
+    this.cameras.set('orbit', this.runner.m.look);
+  }
+
+  // ---------- drawing mission (paper-plane mode) ----------
+  drawMode() { return !!this.runner.m.draw && this.mode === 'smart' && !this.penTool; }
+  onPaper(p) { return p[0] > 0.125 && p[0] < 0.305 && Math.abs(p[1]) < 0.09; }
+  drawPoint(x, y) {
+    if (this.teach.replaying) return;
+    const d = this.draw;
+    if (!d.active) {
+      // first touch: start from where the tip is now; the pen goes down on the paper
+      const t = this.ctl.actualTip(this.tipBuf);
+      d.reset(t[0], t[1]); d.tgt[2] = t[2];
+      this.ctl.cancel(); this.pending = null;
+      this.onboarding.notify('draw');
+    }
+    d.point(x, y);
+    this.runner.start();
+  }
+  togglePenUp() {
+    const d = this.draw; d.penDown = !d.penDown;
+    if (d.active) d.point(d.goal[0], d.goal[1]);
+    this.panel.showDraw(this);
+    this.panel.toast(d.penDown ? 'Pero dolů – kreslí' : 'Pero nahoru – můžete se přesunout bez čáry');
+  }
+  setDrawHelp(h) { this.draw.help = h; store.set('draw-help', h); this.panel.showDraw(this); }
+  srSay(t) { this.srEl.textContent = t; }
+
+  /** Target from user input (drag / keys); the controller reports hitting the table ('floor' event). */
+  userSetTarget(x, y, z) {
+    if (z > 0.02) this.floorNoted = false;
+    this.ctl.setTarget(x, y, z);
   }
   nextMission() {
     const k = MISSIONS.findIndex((m) => m.id === this.runner.m.id);
@@ -231,7 +323,13 @@ class UX {
   cycleView() { const v = this.cameras.cycle(); this.panel.showView(v); }
   setWrist(on) { this.cameras.setWrist(on); this.panel.showWrist(on); store.set('wrist', on); }
   setSound(on) { this.sound.set(on); this.panel.showSound(on); if (on) this.sound.blip(660, 0.08); }
-  toggleExplode() { const on = this.explode.toggle(); this.panel.showExplode(on); }
+  toggleExplode() {
+    const on = this.explode.toggle(); this.panel.showExplode(on);
+    // the parts are the scene now: mission objects, confetti and the HUD step aside (P1-6)
+    this.extras.setObjectsVisible(!on);
+    if (on) this.confetti.clear();
+    return on;
+  }
 
   toggleRec() {
     const t = this.teach;
@@ -253,7 +351,13 @@ class UX {
 
   // called by the gizmo
   onUserMove(kind) { this.runner.start(); this.pending = null; this.onboarding.notify(kind); if (this.teach.replaying) this.teach.stopReplay(); }
-  onDragEnd(kind) { this.onboarding.notify('dragend-' + kind); }
+  onDragEnd(kind) {
+    this.onboarding.notify('dragend-' + kind);
+    if (!this.touch && !store.get('tip-keys', false) && !this.onboarding.active()) {
+      store.set('tip-keys', true);
+      this.panel.toast('Tip: šipky posouvají cíl, mezerník ovládá chapadlo, ? ukáže zkratky');
+    }
+  }
 
   pickables() {
     const L = this.pickList; L.length = 0;
@@ -305,7 +409,7 @@ class UX {
         return;
       }
     }
-    if (plan) { this.preview(plan); this.onboarding.notify('plan'); }
+    if (plan && this.preview(plan)) this.onboarding.notify('plan-' + plan.kind);
   }
 
   /** Pen tool stroke (MuJoCo xy points) → the tip follows it. */
@@ -336,9 +440,11 @@ class UX {
     const app = this.app, res = this.runner.result, m = this.runner.m;
     app.won = true;
     const best = this.progress[m.id];
-    const isNew = !best || res.stars > best.stars || (res.stars === best.stars && res.time < best.time);
-    if (!this.teach.replaying && isNew) { this.progress[m.id] = { stars: Math.max(res.stars, best ? best.stars : 0), time: Math.min(res.time, best ? best.time : Infinity) }; store.set('progress', this.progress); }
-    this.panel.showWin(m, res, best, isNew && !this.teach.replaying);
+    const own = !this.teach.replaying && !this.runner.assisted;
+    const isNew = own && (!best || res.stars > best.stars || (res.stars === best.stars && res.time < best.time));
+    if (isNew) { this.progress[m.id] = { stars: Math.max(res.stars, best ? best.stars : 0), time: Math.min(res.time, best ? best.time : Infinity) }; store.set('progress', this.progress); }
+    this.panel.showWin(m, res, best, isNew, own ? null : (this.runner.assisted ? 'assisted' : 'replay'));
+    this.onboarding.notify('won');
     this.panel.showMission(m, this.progress[m.id]);
     document.getElementById('win').hidden = false;
     document.getElementById('win-h').focus({ preventScroll: true });
@@ -358,11 +464,23 @@ class UX {
       const k = e.key;
       if (k === 'Escape') {
         if (this.panel.modalOpen()) { this.panel.closeModals(); return; }
+        if (this.links.sel >= 0) { this.links.deselect(); return; }
         if (this.onboarding.active()) { this.onboarding.finish(); return; }
         this.ctl.cancel(); this.pending = null; this.gizmo.clearPath(); this.teach.stopReplay(); return;
       }
       if (this.panel.modalOpen()) return;
       if (k === ' ' && tag === 'BUTTON') return;   // let a focused button handle Space
+      // WCAG 2.1.4: single-character shortcuts can be switched off; then they only work while the 3D view has focus
+      if (k.length === 1 && !this.keysOn && tg !== this.app.renderer.domElement) return;
+      // Tab on the focused canvas cycles the joints 1…6, then leaves the canvas (no focus trap)
+      if (k === 'Tab' && tg === this.app.renderer.domElement) {
+        const n = this.links.sel + (e.shiftKey ? -1 : 1);
+        if (n >= 0 && n <= 5) { this.links.select(n); e.preventDefault(); } else this.links.deselect();
+        return;
+      }
+      if (this.links.sel >= 0 && (k === 'ArrowLeft' || k === 'ArrowRight' || k === 'ArrowUp' || k === 'ArrowDown')) {
+        this.links.nudge(k === 'ArrowRight' || k === 'ArrowUp' ? 1 : -1, e.shiftKey); e.preventDefault(); return;
+      }
       const step = e.shiftKey ? 0.02 : 0.008;
       const move = (dx, dy, dz) => {
         if (this.mode !== 'smart') this.setMode('smart');
@@ -372,7 +490,7 @@ class UX {
         const fx = tg2.x - cam.position.x, fy = -(tg2.z - cam.position.z), L = Math.hypot(fx, fy) || 1;
         const ux = fx / L, uy = fy / L;           // forward in MuJoCo xy
         const t = this.ctl.target;
-        this.ctl.setTarget(t[0] + ux * dy + uy * dx, t[1] + uy * dy - ux * dx, t[2] + dz);
+        this.userSetTarget(t[0] + ux * dy + uy * dx, t[1] + uy * dy - ux * dx, t[2] + dz);
         this.onUserMove('key');
       };
       let used = true;
@@ -385,9 +503,10 @@ class UX {
         case 'PageDown': case 'e': case 'E': move(0, 0, -step); break;
         case 'a': case 'A': this.setRoll(this.ctl.roll + 0.1); break;
         case 'd': case 'D': this.setRoll(this.ctl.roll - 0.1); break;
-        case ' ': this.toggleGrip(); break;
+        case ' ': case 'g': case 'G': this.toggleGrip(); break;
         case 'm': case 'M': this.setMode(this.mode === 'smart' ? 'joints' : 'smart'); break;
-        case 'p': case 'P': this.togglePen(); break;
+        case 'p': case 'P': if (this.runner.m.draw) this.togglePenUp(); else this.togglePen(); break;
+        case 'k': case 'K': this.togglePen(); break;
         case 'c': case 'C': this.cycleView(); break;
         case 'v': case 'V': this.setWrist(!this.cameras.wristOn); break;
         case 'x': case 'X': this.toggleExplode(); break;
@@ -398,7 +517,10 @@ class UX {
         case 's': case 'S': this.setSound(!this.sound.on); break;
         case '?': this.panel.openHelp(); break;
         default:
-          if (k >= '1' && k <= String(MISSIONS.length)) this.selectMission(MISSIONS[+k - 1].id);
+          // 1–6 = joints (Shift+1–5 = missions; e.code keeps working on Czech layouts)
+          const dg = /^Digit([1-6])$/.exec(e.code || '') ? +e.code.slice(5) : (k >= '1' && k <= '6' ? +k : 0);
+          if (dg && e.shiftKey && dg <= MISSIONS.length) this.selectMission(MISSIONS[dg - 1].id);
+          else if (dg && !e.shiftKey) this.links.select(dg - 1);
           else used = false;
       }
       if (used) e.preventDefault();
@@ -433,6 +555,11 @@ class UX {
     api.replay = (loop) => { this.teach.loop = !!loop; return this.teach.startReplay(); };
     api.exportDemo = () => this.teach.toJSON();
     api.camera = (v) => { this.cameras.set(v); this.panel.showView(v); };
+    api.cameraNow = (v) => {   // tests: jump without the tween (slow software frames)
+      const c = this.cameras; c.set(v); c.tw = null;
+      this.app.camera.position.copy(c.to.p); this.app.controls.target.copy(c.to.t); this.app.controls.update();
+      this.app.camera.updateMatrixWorld(); this.panel.showView(v);
+    };
     api.wrist = (on) => this.setWrist(on);
     api.ux = () => ({
       mission: this.runner.m.id, won: this.runner.won, result: this.runner.result, hud: this.app.hudText,
@@ -443,6 +570,27 @@ class UX {
       objects: Object.fromEntries(this.world.active().map((e) => [e.name, Array.from(this.world.pos(e.name, [0, 0, 0]))])),
       explode: this.explode ? this.explode.amount : null, hiDetail: this.hiDetail || false
     });
+    api.drawPoint = (x, y) => this.drawPoint(x, y);
+    api.penUp = () => this.togglePenUp();
+    api.drawHelp = (h) => this.setDrawHelp(h);
+    api.drawState = () => ({ active: this.draw.active, penDown: this.draw.penDown, help: this.draw.help, goal: Array.from(this.draw.goal), dev: this.draw.dev });
+    /** screen point on a link driven by joint j (verified by the link raycast), or null */
+    api.linkPoint = (j) => {
+      const L = this.links, g = this.gizmo; this.app.world.updateMatrixWorld();
+      const parts = L.parts.filter((p) => p.j === j && p.mesh.visible);
+      for (const p of parts.sort((a, b) => (b.mesh.geometry.boundingSphere ? b.mesh.geometry.boundingSphere.radius : 0) - (a.mesh.geometry.boundingSphere ? a.mesh.geometry.boundingSphere.radius : 0))) {
+        if (!p.mesh.geometry.boundingSphere) p.mesh.geometry.computeBoundingSphere();
+        const c = p.mesh.geometry.boundingSphere.center.clone().applyMatrix4(p.mesh.matrix);
+        const s = g.project([c.x, c.y, c.z], {});
+        for (const [dx, dy] of [[0, 0], [4, 0], [-4, 0], [0, 4], [0, -4], [8, 8], [-8, -8], [8, -8], [-8, 8]]) {
+          const e = { clientX: s.x + dx, clientY: s.y + dy }, h = L.hit(e);
+          const pk = g.pickAt(e);
+          const hd = g.hitHandle(e);
+          if (h && h.part.j === j && !hd && !(pk && pk.name !== 'table' && g.pickDist < h.dist)) return { x: e.clientX, y: e.clientY, body: h.part.bname };
+        }
+      }
+      return null;
+    };
     api.explode = (on) => { if (on !== this.explode.on) this.toggleExplode(); };
     api.assemble = () => this.explode.startPlay();
     api.quality = (q) => this.hd.set(q);

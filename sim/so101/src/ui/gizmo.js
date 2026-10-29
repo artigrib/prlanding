@@ -48,8 +48,9 @@ export class Gizmo {
     // invisible, larger hit proxies (touch friendly)
     const inv = new T.MeshBasicMaterial({ visible: false });
     this.hMove = new T.Mesh(new T.SphereGeometry(0.02, 12, 8), inv);
-    this.hUp = new T.Mesh(new T.CylinderGeometry(0.012, 0.012, 0.03, 8), inv); this.hUp.rotation.x = Math.PI / 2; this.hUp.position.z = 0.036;
-    this.hDown = this.hUp.clone(); this.hDown.position.z = -0.036;
+    this.hUp = new T.Mesh(new T.CylinderGeometry(0.009, 0.009, 0.03, 8), inv); this.hUp.rotation.x = Math.PI / 2; this.hUp.position.z = 0.036;
+    // the lower arrow usually sits right over the object the user wants to click: keep its hit area tight
+    this.hDown = new T.Mesh(new T.CylinderGeometry(0.007, 0.007, 0.022, 8), inv); this.hDown.rotation.x = Math.PI / 2; this.hDown.position.z = -0.04;
     this.hRing = new T.Mesh(new T.TorusGeometry(0.03, 0.007, 6, 32), inv);
     root.add(this.hMove, this.hUp, this.hDown, this.hRing);
     this.handles = [this.hMove, this.hUp, this.hDown, this.hRing];
@@ -163,6 +164,16 @@ export class Gizmo {
     }
   }
 
+  /** drawing mission: the floor ring marks where the marker lands; green / orange / red by deviation */
+  drawCursor(d) {
+    this.foot.position.set(d.goal[0], d.goal[1], 0.0012);
+    const g = d.grade();
+    this.lineMat.color.setHex(!d.penDown ? 0x8a8a84 : g === 'ok' ? 0x1fa34a : g === 'warn' ? 0xf09a00 : 0xff2a1a);
+    this.lineMat.opacity = 0.9;
+    this.foot.scale.setScalar(1.7);
+    this.okCol = null;   // let setColor() restore the normal colour later
+  }
+
   // ---------- planner path preview ----------
   showPath(plan, animate) {
     const T = this.T;
@@ -235,8 +246,9 @@ export class Gizmo {
     this.setRay(e);
     this.root.updateMatrixWorld();
     const h = this.ray.intersectObjects(this.handles, false);
-    if (!h.length) return null;
+    if (!h.length) { this.handleDist = Infinity; return null; }
     const o = h[0].object;
+    this.handleDist = h[0].distance;
     return o === this.hMove ? 'move' : o === this.hRing ? 'roll' : 'height';
   }
   // MuJoCo-frame point where the current ray meets a three.js plane
@@ -249,8 +261,28 @@ export class Gizmo {
   horizPlane(z) { this.plane.set(this.v.set(0, 1, 0), -z); }   // MuJoCo z = three y
 
   onDown(e) {
-    if (e.target !== this.canvas) return;
+    if (e.target !== this.canvas || this.forwarding) return;
     this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (this.pend && e.pointerId !== this.pend.id) {
+      // a second finger while pressing a handle: it is a drag (and a twist), not a tap
+      const P = this.pend; this.pend = null;
+      this.startDrag(P.kind, { pointerId: P.id, clientX: P.x, clientY: P.y });
+    }
+    const lk = this.ux.links;
+    if ((lk.pend || lk.drag) && e.pointerType === 'touch') {
+      // two fingers = camera: hand the first finger over to OrbitControls too, so pinch-zoom works
+      const id = (lk.pend || lk.drag).id, f = this.pointers.get(id);
+      lk.cancelPress();
+      if (f) {
+        this.forwarding = true;
+        try {
+          this.canvas.dispatchEvent(new PointerEvent('pointerdown', { pointerId: id, pointerType: 'touch', isPrimary: true,
+            clientX: f.x, clientY: f.y, button: 0, buttons: 1, bubbles: true, cancelable: true }));
+        } finally { this.forwarding = false; }
+      }
+      return;   // this (second) pointerdown continues to OrbitControls
+    }
+    if (this.drawing && e.pointerId !== this.drawing.id) { this.drawing = null; return; }
     if (this.drag) {
       // second finger while dragging: twist = wrist rotation
       if (e.pointerType === 'touch' && this.pointers.size === 2) {
@@ -263,10 +295,43 @@ export class Gizmo {
     const ux = this.ux;
     if (ux.mode === 'smart') {
       const kind = this.hitHandle(e);
-      if (kind) { this.startDrag(kind, e); e.stopPropagation(); e.preventDefault(); return; }
+      if (kind) {
+        // tap = pick, drag = move: the drag only starts after the pointer travelled > 6 px, so a tap on an
+        // object behind / under a handle still picks it (P0-1). A closer object wins outright.
+        const hd = this.handleDist, pk = this.pickAt(e), pd = pk ? this.pickDist : Infinity;
+        if (!(pk && pk.name !== 'table' && pd < hd - 0.002)) {
+          // the ball sits at the fingertips: a TAP on jaw geometry under it toggles the gripper (a drag still moves the ball)
+          const lh = lk.enabled() ? lk.hit(e) : null, jaw = !!(lh && lk.isJaw(lh.part));
+          this.pend = { kind, id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), pick: pk && pk.name !== 'table' ? pk : null, jaw };
+          try { this.canvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+          e.stopPropagation(); e.preventDefault(); return;
+        }
+      }
       if (ux.penTool) {
         const p = this.tablePoint(e);
         if (p) { this.startStroke(e, p); e.stopPropagation(); e.preventDefault(); return; }
+      }
+      // drawing mission: a drag on the paper moves the marker in the paper plane
+      if (ux.drawMode()) {
+        const p = this.tablePoint(e);
+        if (p && ux.onPaper(p)) {
+          this.drawing = { id: e.pointerId };
+          try { this.canvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+          ux.drawPoint(p[0], p[1]);
+          e.stopPropagation(); e.preventDefault(); return;
+        }
+      }
+    }
+    // any part of the arm: rotate that joint (objects in front of it still win)
+    if (lk.enabled()) {
+      const lh = lk.hit(e);
+      if (lh) {
+        const pk = this.pickAt(e);
+        if (!(pk && pk.name !== 'table' && this.pickDist < lh.dist)) {
+          lk.down(e, lh);
+          try { this.canvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+          e.stopPropagation(); e.preventDefault(); return;
+        }
       }
     }
     this.down = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now() };
@@ -320,6 +385,19 @@ export class Gizmo {
 
   onMove(e) {
     if (this.pointers.has(e.pointerId)) this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (this.ux.links.move(e)) { e.stopPropagation(); e.preventDefault(); return; }
+    if (this.drawing && e.pointerId === this.drawing.id) {
+      e.stopPropagation(); e.preventDefault();
+      const p = this.tablePoint(e); if (p) this.ux.drawPoint(p[0], p[1]);
+      return;
+    }
+    const P = this.pend;
+    if (P && e.pointerId === P.id) {
+      e.stopPropagation(); e.preventDefault();
+      if (Math.hypot(e.clientX - P.x, e.clientY - P.y) <= 6) return;
+      this.pend = null;
+      this.startDrag(P.kind, { pointerId: P.id, clientX: P.x, clientY: P.y });   // plane/offset from the press point
+    }
     const D = this.drag;
     if (D) {
       e.stopPropagation(); e.preventDefault();
@@ -330,13 +408,15 @@ export class Gizmo {
       }
       if (e.pointerId !== D.id) return;
       this.setRay(e);
-      if (D.kind === 'move') {
+      if (D.kind === 'move' && this.ux.drawMode()) {   // paper-plane mode: the ball slides on the paper
+        const p = this.tablePoint(e); if (p) this.ux.drawPoint(p[0], p[1]);
+      } else if (D.kind === 'move') {
         this.plane.copy(D.plane);
         const p = this.tip;
-        if (this.rayPlane(p)) ctl.setTarget(p[0] + this.off[0], p[1] + this.off[1], D.vertical ? p[2] + this.off[2] : t[2]);
+        if (this.rayPlane(p)) this.ux.userSetTarget(p[0] + this.off[0], p[1] + this.off[1], D.vertical ? p[2] + this.off[2] : t[2]);
       } else if (D.kind === 'height') {
         const s = this.lineParam(t);
-        ctl.setTarget(t[0], t[1], D.z0 + (s - D.s0));
+        this.ux.userSetTarget(t[0], t[1], D.z0 + (s - D.s0));
       } else {
         this.plane.copy(D.plane);
         const p = this.tip;
@@ -353,7 +433,9 @@ export class Gizmo {
       const now = performance.now();
       if (now - (this.hoverT || 0) < 50) return; this.hoverT = now;
       let cur = '';
-      if (this.ux.mode === 'smart' && this.hitHandle(e)) cur = 'grab';
+      if (this.ux.mode === 'smart' && this.hitHandle(e)) { cur = 'grab'; this.ux.links.clear(); }
+      else if (this.ux.drawMode() && (() => { const p = this.tablePoint(e); return p && this.ux.onPaper(p); })()) cur = 'crosshair';
+      else if (this.ux.links.enabled() && this.ux.links.hover(e)) cur = 'grab';
       else if (this.ux.penTool && this.tablePoint(e)) cur = 'crosshair';
       else if (this.pickAt(e)) cur = 'pointer';
       this.hover = cur === 'grab';
@@ -363,6 +445,15 @@ export class Gizmo {
 
   onUp(e, cancelled) {
     this.pointers.delete(e.pointerId);
+    if (this.ux.links.up(e, cancelled)) { e.stopPropagation(); return; }
+    if (this.drawing && e.pointerId === this.drawing.id) { this.drawing = null; e.stopPropagation(); return; }
+    const P = this.pend;
+    if (P && e.pointerId === P.id) {
+      this.pend = null; e.stopPropagation();
+      if (!cancelled && P.pick) this.ux.onPick(P.pick.name, P.pick.point);
+      else if (!cancelled && P.jaw) this.ux.toggleGrip();
+      return;
+    }
     const D = this.drag;
     if (D) {
       e.stopPropagation();
@@ -377,7 +468,7 @@ export class Gizmo {
     if (this.strokeOn && e.pointerId === this.strokeId) { e.stopPropagation(); this.endStroke(cancelled); return; }
     const dn = this.down; this.down = null;
     if (!dn || dn.id !== e.pointerId || cancelled) return;
-    if (Math.hypot(e.clientX - dn.x, e.clientY - dn.y) > 7 || performance.now() - dn.t > 600) return;
+    if (Math.hypot(e.clientX - dn.x, e.clientY - dn.y) > 7) return;   // no time limit: a slow press without motion is still a click
     const hit = this.pickAt(e);
     if (hit) this.ux.onPick(hit.name, hit.point);
   }
@@ -394,11 +485,13 @@ export class Gizmo {
   /** Raycast pickable mission objects + the table. Returns { name, point:[x,y,z] } (MuJoCo frame) or null. */
   pickAt(e) {
     this.setRay(e);
+    this.app.world.updateMatrixWorld();   // object poses may have changed since the last rendered frame
     const list = this.ux.pickables();
     const h = this.ray.intersectObjects(list, true);
     if (!h.length) return null;
     let o = h[0].object; while (o && !o.userData.pick) o = o.parent;
     if (!o) return null;
+    this.pickDist = h[0].distance;
     this.app.world.worldToLocal(this.v3.copy(h[0].point));
     return { name: o.userData.pick, point: [this.v3.x, this.v3.y, this.v3.z] };
   }

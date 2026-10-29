@@ -7,7 +7,7 @@ const VIEWS = {
   side: { t: [0.15, 0.06, 0.0], p: [0.16, 0.16, -0.78], pn: [0.16, 0.2, -0.95] },
   front: { t: [0.14, 0.06, 0.0], p: [0.85, 0.22, 0.0], pn: [1.0, 0.3, 0.0] }
 };
-export const VIEW_LABELS = { orbit: 'Volný pohled', top: 'Shora', side: 'Z boku', front: 'Zepředu', arm: 'Ruka' };
+export const VIEW_LABELS = { orbit: 'Volný pohled', top: 'Shora', side: 'Z boku', front: 'Zepředu', arm: 'Ruka', look: 'Volný pohled', fit: 'Ruka' };
 
 export class Cameras {
   constructor(ux) {
@@ -47,8 +47,9 @@ export class Cameras {
     return mesh;
   }
 
-  set(view) {
+  set(view, look) {
     const app = this.app;
+    if (look) { VIEWS.look = look; view = 'look'; }
     this.view = view;
     this.stopCinematic();
     const c = app.controls, cam = app.camera;
@@ -70,6 +71,19 @@ export class Cameras {
   frameArm() {
     VIEWS.arm = { t: [0.06, 0.13, 0.0], p: [0.42, 0.3, -0.36], pn: [0.5, 0.36, -0.48] };
     this.set('arm');
+  }
+
+  /** Tween so that a sphere (MuJoCo centre c, radius r) fills the view, keeping the viewing direction. */
+  frameSphere(c, r) {
+    const cam = this.app.camera, ctr = this.app.controls;
+    const tx = c[0], ty = c[2], tz = -c[1];
+    const dx = cam.position.x - ctr.target.x, dy = cam.position.y - ctr.target.y, dz = cam.position.z - ctr.target.z;
+    const L = Math.hypot(dx, dy, dz) || 1;
+    const vf = cam.fov * Math.PI / 360, hf = Math.atan(Math.tan(vf) * cam.aspect);
+    const dist = Math.min(1.6, Math.max(0.25, r / Math.sin(Math.min(vf, hf)) * 1.05));
+    VIEWS.fit = { t: [tx, ty, tz], p: [tx + dx / L * dist, ty + dy / L * dist, tz + dz / L * dist] };
+    VIEWS.fit.pn = VIEWS.fit.p;
+    this.set('fit');
   }
 
   cycle() {

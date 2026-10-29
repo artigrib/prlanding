@@ -106,6 +106,122 @@ async function touchDrag(page, from, to, steps = 8) {
     const g1 = await S(p, () => window.__sim.state().ctrl[5]);
     ok(Math.abs(g1 - g0) > 0.5, `Space toggles the gripper (${g0.toFixed(2)} -> ${g1.toFixed(2)})`);
 
+    // ---- usability P0 regressions ----
+    // P0-3: pick-and-place missions start with the gripper open; HUD coaches from the gripper state
+    await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.5));
+    ok((await S(p, () => window.__sim.state().ctrl[5])) > 1, 'P0-3: mission 01 starts with the gripper open');
+    await S(p, () => { const u = window.__sim._ux, c = u.world.pos('cube', [0, 0, 0]); u.ctl.begin(); u.ctl.setGrip(false); u.ctl.setTarget(c[0], c[1], c[2] + 0.035); });
+    await S(p, () => window.__sim.advance(3));
+    let hud = (await ux(p)).hud;
+    ok(/Otevřete chapadlo/.test(hud), 'P0-3: closed gripper above the cube → "Otevřete chapadlo…" (' + hud + ')');
+    await S(p, () => window.__sim._ux.ctl.setGrip(true)); await S(p, () => window.__sim.advance(1));
+    hud = (await ux(p)).hud;
+    ok(/Sjeďte dolů/.test(hud), 'P0-3: open gripper above the cube → "Sjeďte dolů…" (' + hud + ')');
+    // P0-1: the gizmo hovers 3.5 cm above the cube; a click on the cube must pick it, not start a drag
+    await S(p, () => window.__sim._ux.gizmo.sync(0.016));
+    a = await S(p, () => window.__sim.screen('cube'));
+    const under = await S(p, ([x, y]) => window.__sim._ux.gizmo.hitHandle({ clientX: x, clientY: y }), [a.x, a.y]);
+    await p.mouse.click(a.x, a.y);
+    ok((await ux(p)).busy, `P0-1: click on the cube under the gizmo (handle there: ${under || 'none'}) starts a pick`);
+    const tP0 = await advanceUntil(p, () => window.__sim.ux().held === 'cube' && !window.__sim.ux().busy, 14, 1);
+    ok(tP0 > 0, 'P0-1: … and the cube is picked');
+    // P0-1: a real drag on the ball (> 6 px) still moves the target
+    a = await S(p, () => { window.__sim._ux.gizmo.sync(0.016); return window.__sim.screen('target'); });
+    const tg0 = (await ux(p)).target;
+    await p.mouse.move(a.x, a.y); await p.mouse.down(); await p.mouse.move(a.x + 3, a.y + 2);
+    ok(!(await S(p, () => !!window.__sim._ux.gizmo.drag)), 'P0-1: < 6 px is still a tap, no drag yet');
+    for (let i = 1; i <= 5; i++) await p.mouse.move(a.x + 12 * i, a.y);
+    await p.mouse.up();
+    const tg1 = (await ux(p)).target;
+    ok(Math.hypot(tg1[0] - tg0[0], tg1[1] - tg0[1]) > 0.01, 'P0-1: drag > 6 px moves the target');
+
+    // ---- direct joint manipulation: drag any link → only that joint moves ----
+    const names = ['pan', 'lift', 'elbow', 'flex', 'roll', 'gripper'];
+    for (let j = 0; j < 6; j++) {
+      await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.3));
+      const lp = await S(p, (jj) => window.__sim.linkPoint(jj), j);
+      if (!lp) { ok(false, `link ${names[j]}: no grabbable screen point`); continue; }
+      const c0 = await S(p, () => window.__sim.state().ctrl);
+      await p.mouse.move(lp.x, lp.y); await p.mouse.down();
+      for (let i = 1; i <= 8; i++) await p.mouse.move(lp.x + 6 * i, lp.y + 4 * i);
+      await p.mouse.up();
+      const c1 = await S(p, () => window.__sim.state().ctrl);
+      const others = c1.map((v, i) => (i === j ? 0 : Math.abs(v - c0[i]))).reduce((a, b) => Math.max(a, b), 0);
+      ok(Math.abs(c1[j] - c0[j]) > 0.02 && others < 1e-6, `drag on ${lp.body} turns only ${names[j]} (Δ ${(c1[j] - c0[j]).toFixed(3)} rad, others ${others.toExponential(1)})`);
+    }
+    // empty space: camera orbit, never the arm
+    await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.3));
+    {
+      const c0 = await S(p, () => window.__sim.state().ctrl), cam0 = await S(p, () => window.__sim._ux.app.camera.position.toArray());
+      const r = await S(p, () => { const r = document.getElementById('c').getBoundingClientRect(); return { x: r.left + r.width * 0.12, y: r.top + r.height * 0.3 }; });
+      const free = await S(p, ([x, y]) => { const u = window.__sim._ux, e = { clientX: x, clientY: y }; return !u.links.hit(e) && !u.gizmo.hitHandle(e) && !(u.gizmo.pickAt(e) && u.gizmo.pickAt(e).name !== 'table'); }, [r.x, r.y]);
+      await p.mouse.move(r.x, r.y); await p.mouse.down();
+      for (let i = 1; i <= 8; i++) await p.mouse.move(r.x + 15 * i, r.y + 3 * i);
+      await p.mouse.up(); await S(p, () => window.__sim.advance(0.3));
+      const c1 = await S(p, () => window.__sim.state().ctrl), cam1 = await S(p, () => window.__sim._ux.app.camera.position.toArray());
+      const dq = c1.reduce((a, v, i) => Math.max(a, Math.abs(v - c0[i])), 0), dc = Math.hypot(cam1[0] - cam0[0], cam1[1] - cam0[1], cam1[2] - cam0[2]);
+      ok(free && dq < 1e-6 && dc > 0.01, `drag on empty space orbits the camera (Δcam ${dc.toFixed(3)}) and never moves the arm (Δq ${dq.toExponential(1)})`);
+    }
+    // keyboard: 3 selects the elbow, → turns only it
+    {
+      await S(p, () => window.__sim.reset());
+      const c0 = await S(p, () => window.__sim.state().ctrl);
+      await p.keyboard.press('3'); await p.keyboard.press('ArrowRight'); await p.keyboard.press('ArrowRight'); await p.keyboard.press('Escape');
+      const c1 = await S(p, () => window.__sim.state().ctrl);
+      ok(Math.abs(c1[2] - c0[2] - 4 * Math.PI / 180) < 1e-3 && Math.abs(c1[1] - c0[1]) < 1e-9, 'keys 3 + → → turn the elbow by 4°, nothing else');
+    }
+    // tap on the jaws toggles the gripper; the HUD follows
+    {
+      await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.3));
+      await S(p, () => { const u = window.__sim._ux, c = u.world.pos('cube', [0, 0, 0]); u.ctl.begin(); u.ctl.setGrip(false); u.ctl.setTarget(c[0], c[1], c[2] + 0.035); });
+      await S(p, () => window.__sim.advance(3));
+      const h0 = (await ux(p)).hud, g0 = await S(p, () => window.__sim._ux.ctl.grip);
+      const jp = await S(p, () => window.__sim.linkPoint(5));
+      await p.mouse.click(jp.x, jp.y);
+      await S(p, () => window.__sim.advance(1.2));
+      const h1 = (await ux(p)).hud, g1 = await S(p, () => window.__sim.state().ctrl[5]);
+      ok(g0 < 0 && g1 > 1 && /Otevřete/.test(h0) && /Sjeďte dolů/.test(h1), `tap on the jaw opens the gripper (${g0.toFixed(2)} → ${g1.toFixed(2)}); HUD "${h0}" → "${h1}"`);
+    }
+
+    // tap on the IK ball where jaw geometry lies under it → gripper toggles (drag would still move the ball)
+    {
+      await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.5));
+      let spot = null;
+      for (const view of ['orbit', 'top', 'front']) {
+        await S(p, (v) => window.__sim.cameraNow(v), view);
+        // search the ball's screen area for a point where a jaw lies under the handle
+        spot = await S(p, () => {
+          const u = window.__sim._ux; u.gizmo.sync(0.016); u.app.camera.updateMatrixWorld();
+          const t = window.__sim.screen('target');
+          for (let dy = -12; dy <= 12; dy += 3) for (let dx = -12; dx <= 12; dx += 3) {
+            const e = { clientX: t.x + dx, clientY: t.y + dy }, h = u.links.hit(e);
+            if (u.gizmo.hitHandle(e) === 'move' && h && u.links.isJaw(h.part)) return { x: e.clientX, y: e.clientY };
+          }
+          return null;
+        });
+        if (spot) break;
+      }
+      if (spot) {
+        const g0 = await S(p, () => window.__sim.state().ctrl[5]);
+        await p.mouse.click(spot.x, spot.y); await S(p, () => window.__sim.advance(1.2));
+        const g1 = await S(p, () => window.__sim.state().ctrl[5]);
+        ok(Math.abs(g1 - g0) > 0.5, `tap on the ball over the jaws toggles the gripper (${g0.toFixed(2)} → ${g1.toFixed(2)})`);
+      } else ok(false, 'tap on the ball over the jaws: no spot found where the ball covers jaw geometry');
+      await S(p, () => window.__sim.cameraNow('orbit'));
+    }
+    // WCAG 2.1.4: single-key shortcuts can be turned off (then only with the 3D view focused)
+    {
+      await S(p, () => { window.__sim._ux.keysOn = false; document.activeElement && document.activeElement.blur(); });
+      const g0 = await S(p, () => window.__sim._ux.ctl.grip);
+      await p.keyboard.press('g');
+      const g1 = await S(p, () => window.__sim._ux.ctl.grip);
+      await S(p, () => document.getElementById('c').focus());
+      await p.keyboard.press('g');
+      const g2 = await S(p, () => window.__sim._ux.ctl.grip);
+      ok(g1 === g0 && g2 !== g1, 'shortcuts off: "g" ignored on the page, works with the 3D view focused');
+      await S(p, () => { window.__sim._ux.keysOn = true; });
+    }
+
     // click-to-pick: click the cube, then the bowl
     await S(p, () => window.__sim.reset());
     a = await S(p, () => window.__sim.screen('cube'));
@@ -131,6 +247,43 @@ async function touchDrag(page, from, to, steps = 8) {
       const u = await ux(p);
       ok(t > 0, `mission ${id} solved by its plan (${t}s, ${u.result ? u.result.stars + '★' : u.hud})`);
       if (id === 'trace' || id === 'sort') await shot(p, 'desk-05-' + id);
+    }
+
+    // drawing mission: top-down view, paper-plane drag keeps the pen on the paper; finger trace → robot completes it
+    {
+      await S(p, () => window.__sim.mission('trace')); await p.waitForTimeout(900);
+      const top = await S(p, () => { const c = window.__sim._ux.app.camera, t = window.__sim._ux.app.controls.target; const d = c.position.clone().sub(t).normalize(); return d.y; });
+      ok(top > 0.8, 'drawing mission starts with a steep top-down camera (' + top.toFixed(3) + ')');
+      const corners = await S(p, () => window.__sim._ux.runner.m && [[0.215, 0.055], [0.2009, 0.0194], [0.1627, 0.017], [0.192, -0.0074], [0.1827, -0.0445]]);
+      let zmin = 1, zmax = 0, started = false;
+      for (let i = 1; i < corners.length; i++) {
+        for (let k = 0; k <= 6; k++) {
+          const x = corners[i - 1][0] + (corners[i][0] - corners[i - 1][0]) * k / 6, y = corners[i - 1][1] + (corners[i][1] - corners[i - 1][1]) * k / 6;
+          const sp = await S(p, ([x, y]) => window.__sim._ux.gizmo.project([x, y, 0], {}), [x, y]);
+          if (!started) { await p.mouse.move(sp.x, sp.y); await p.mouse.down(); started = true; await S(p, () => window.__sim.advance(2.5)); }
+          else await p.mouse.move(sp.x, sp.y);
+          await S(p, () => window.__sim.advance(0.12));
+          const z = (await ux(p)).tip[2]; zmin = Math.min(zmin, z); zmax = Math.max(zmax, z);
+        }
+      }
+      await p.mouse.up();
+      const prog = await S(p, () => window.__sim._ux.runner.last.progress || 0);
+      ok(zmax < 0.016 && zmin > 0.003 && prog > 0.1, `paper-plane drag: tip ${zmin.toFixed(4)}…${zmax.toFixed(4)} m, ink coverage ${(prog * 100).toFixed(0)} %`);
+      await shot(p, 'desk-11-draw');
+      // finger trace (K): draw the whole star, the robot reproduces it
+      await S(p, () => window.__sim.reset()); await p.keyboard.press('k');
+      const star = [[0.215, 0.055], [0.2009, 0.0194], [0.1627, 0.017], [0.192, -0.0074], [0.1827, -0.0445], [0.215, -0.024], [0.2473, -0.0445], [0.238, -0.0074], [0.2673, 0.017], [0.2291, 0.0194], [0.215, 0.055]];
+      let first = true;
+      for (let i = 1; i < star.length; i++) for (let k = 0; k < 8; k++) {
+        const x = star[i - 1][0] + (star[i][0] - star[i - 1][0]) * k / 8, y = star[i - 1][1] + (star[i][1] - star[i - 1][1]) * k / 8;
+        const sp = await S(p, ([x, y]) => window.__sim._ux.gizmo.project([x, y, 0], {}), [x, y]);
+        if (first) { await p.mouse.move(sp.x, sp.y); await p.mouse.down(); first = false; } else await p.mouse.move(sp.x, sp.y);
+      }
+      await p.mouse.up();
+      ok((await ux(p)).busy, 'finger trace starts a planned path');
+      const tw = await advanceUntil(p, () => window.__sim.ux().won, 45, 3);
+      ok(tw > 0, `finger-traced star completes the drawing mission (${tw}s, ${JSON.stringify((await ux(p)).result)})`);
+      await p.keyboard.press('k');
     }
 
     // teach & replay
@@ -173,8 +326,30 @@ async function touchDrag(page, from, to, steps = 8) {
     const o = await open(browser, base + '?test=1&onboard=1&detail=low', { width: 1280, height: 800 });
     await o.waitForTimeout(1500);
     ok(await S(o, () => !document.querySelector('.ux-coach').hidden), 'onboarding is shown');
+    await S(o, () => window.__sim._ux.onboarding.tick());
+    const cover = await S(o, () => { const u = window.__sim._ux, r = document.querySelector('.ux-coach').getBoundingClientRect();
+      const inside = (n) => { const q = u.gizmo.project(n === 'target' ? u.gizmo.tip : u.world.pos(n, [0, 0, 0]), {}); return q.x > r.left - 20 && q.x < r.right + 20 && q.y > r.top - 20 && q.y < r.bottom + 20; };
+      return ['cube', 'bowl', 'target'].filter(inside); });
+    ok(cover.length === 0, 'P0-2: desktop guide bubble covers no object of interest (' + cover.join(',') + ')');
+    // guided first task: click cube → click bowl → won → "Teď ručně"
+    a = await S(o, () => window.__sim.screen('cube')); await o.mouse.click(a.x, a.y);
+    await advanceUntil(o, () => window.__sim.ux().held === 'cube' && !window.__sim.ux().busy, 14, 1);
+    a = await S(o, () => window.__sim.screen('bowl')); await o.mouse.click(a.x, a.y);
+    await advanceUntil(o, () => window.__sim.ux().won, 16, 1);
+    await o.waitForTimeout(3200);
+    const step = await S(o, () => document.getElementById('ux-coach-h').textContent);
+    ok(/Teď ručně/.test(step), 'guided first task advances to the hands-on step after the win (' + step + ')');
     await shot(o, 'desk-10-onboarding');
     await o.close();
+
+    // ---------------- phone onboarding (P0-2) ----------------
+    const po = await open(browser, base + '?test=1&onboard=1&detail=low', { width: 390, height: 844 }, true);
+    await po.waitForTimeout(1500);
+    const pr = await S(po, () => { const c = document.querySelector('.ux-coach'), r = c.getBoundingClientRect(), st = document.querySelector('.stage').getBoundingClientRect();
+      return { inUnder: !!c.closest('.ux-under'), top: r.top, stageBottom: st.bottom, visible: !c.hidden }; });
+    ok(pr.visible && pr.inUnder && pr.top >= pr.stageBottom - 1, 'P0-2: phone guide is a strip under the stage, not over it ' + JSON.stringify(pr));
+    await shot(po, 'phone-00-onboarding');
+    await po.close();
 
     // ---------------- phone ----------------
     const ph = await open(browser, base + '?test=1&mise=bowl&detail=low', { width: 390, height: 844 }, true);

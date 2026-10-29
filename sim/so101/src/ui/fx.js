@@ -30,6 +30,7 @@ export class Confetti {
     }
     this.t = 0; this.on = true; this.c.hidden = false;
   }
+  clear() { if (!this.on) return; this.on = false; this.g.clearRect(0, 0, this.w || 0, this.h || 0); this.c.hidden = true; }
   tick(dt) {
     if (!this.on) return;
     this.t += dt;

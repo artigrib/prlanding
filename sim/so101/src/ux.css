@@ -163,3 +163,66 @@
   .ux-explode .jn input{grid-column:auto;height:28px}
   .ux-ex-b .btn{min-height:42px;font-size:13.5px}
 }
+
+/* ---------- usability round 1 ---------- */
+.ux-hintbtn{margin-left:6px;border:1px solid var(--accent);background:var(--accent);color:var(--ink);font:600 13px/1 var(--sans);padding:6px 10px;cursor:pointer;min-height:32px;animation:ux-pulse 1.6s ease-in-out infinite}
+.ux-hintbtn:hover{background:var(--accent-d)}
+@keyframes ux-pulse{50%{box-shadow:0 0 0 5px rgba(232,70,30,.25)}}
+#ux-mode .row-b{margin-top:12px}
+.ux-under{display:none}
+.ux-exlink{align-self:flex-start;margin-top:4px}
+.ux-setup{display:flex;flex-direction:column;gap:8px}
+.ux-setup>.mono{border-top:1px solid var(--ink);padding-top:12px}
+.ux-setup .mono-s{margin:0}
+.ux-teach2 .btn{font-size:14.5px;justify-content:center}
+/* panel skeleton while loading (sliders appear after the engine is ready) */
+.joints[disabled]:not(:has(.jn)){min-height:200px;background:repeating-linear-gradient(transparent 0 26px,var(--stone) 26px 30px,transparent 30px 52px)}
+/* win dialog above the toolbar and the confetti; no focus ring on the programmatic focus target */
+.win{z-index:8}
+#win-h:focus{outline:none}
+/* exploded view: the parts are the scene */
+.ux-exploding .hud,.ux-exploding .ux-tools .ux-tb:not(#ux-parts),.ux-exploding .hint,.ux-exploding .ux-recb{display:none!important}
+.ux-explode.inpanel{position:static;width:auto;max-height:none;box-shadow:6px 6px 0 var(--accent);margin-bottom:4px}
+/* onboarding strip (phones) */
+.ux-coach.strip{position:static;width:auto;box-shadow:none;border-width:1px 0 0;padding:10px 16px 12px;gap:4px;transform:none!important}
+.ux-coach.strip h3{font-size:17px}
+.ux-coach.strip .ux-coach-t{font-size:14px}
+.ux-coach.strip .ux-coach-b .btn{min-height:40px}
+
+@media (max-width:860px){
+  .stage{min-height:max(300px,52vh)}
+  .ux-under{display:block;position:sticky;top:max(300px,52svh);z-index:3;background:#fff;border-bottom:1px solid var(--ink)}
+  .ux-under .hud{position:static;max-width:none;border:0;border-bottom:1px solid var(--line);padding:8px 12px;font-size:14px}
+  .ux-qrow{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px;padding:8px 10px}
+  .ux-qrow .btn{min-height:48px;padding:0 10px;font-size:14.5px;justify-content:center;gap:6px}
+  .ux-qrow .btn[aria-pressed=true]{background:var(--ink);color:#fff}
+  .ux-hintbtn{display:none}
+  .ux-toast{top:12px}
+  .ux-recb{top:12px}
+}
+.jn output.ux-lim{color:var(--accent-text);font-weight:500}
+#c:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.ux-tb svg{width:20px;height:20px}
+
+/* win card: buttons never stick out at any width 320–1366 px, any orientation (grid instead of nowrap flex) */
+.win{box-sizing:border-box;max-width:calc(100% - 24px);max-height:calc(100% - 24px);overflow:auto}
+.win-b{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.win-b #cta{grid-column:1 / -1}
+.win-b:has(#ux-next[hidden]) #again{grid-column:1 / -1}
+.win-b .btn{min-width:0;width:100%;white-space:normal;overflow-wrap:anywhere;text-align:left;line-height:1.2;padding:8px 14px;min-height:48px;gap:8px}
+.win-b .btn span{flex:none}
+.win h2{overflow-wrap:anywhere}
+@media (max-width:360px){.win{padding:14px}.win-b{grid-template-columns:minmax(0,1fr)}.win-b .btn{font-size:14.5px}}
+/* button rows never overflow narrow phones (320 px) */
+.ux-row2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.ux-row3{grid-template-columns:1.2fr 1fr 1fr}
+.ux-row2 .btn,.ux-row3 .btn,.ux-qrow .btn{min-width:0;white-space:normal;line-height:1.15}
+.ux-row3>*{min-width:0}
+@media (max-width:360px){.ux-row3{grid-template-columns:repeat(3,minmax(0,1fr))}.ux-row2 .btn,.ux-row3 .btn,.ux-qrow .btn{padding:0 8px;font-size:13.5px;gap:4px}}
+.ux-seg3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ux-draw{display:flex;flex-direction:column;gap:8px}
+.ux-draw .mono,.ux-draw .mono-s{margin:0}
+.ux-jlabel{position:absolute;left:0;top:0;pointer-events:none;background:var(--ink);color:#fff;padding:6px 10px;font:500 13.5px/1.2 var(--sans);white-space:nowrap;z-index:6;border-left:4px solid var(--ok)}
+.ux-jlabel.stop{border-left-color:#ff2a1a;background:#B3200F}
+.ux-check{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:start;font-size:14.5px;color:var(--ink-2);cursor:pointer}
+.ux-check input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--ink)}

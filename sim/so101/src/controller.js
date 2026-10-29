@@ -9,7 +9,8 @@ import { Kin, chainFromModel } from './kin.js';
 
 export const GRIP_OPEN = 1.2, GRIP_CLOSED = -0.17;
 const HOVER = 0.075;          // height above an object's top for approach / retreat (m)
-const JAW_OFFSET = 0.007;     // site sits this far from the grasp centre along the closing axis
+const JAW_OFFSET = 0.007;
+const FLOOR = 0.009;         // lowest target (m): every planner waypoint is at or above it     // site sits this far from the grasp centre along the closing axis
 
 export class ArmController {
   constructor(mj, m, d, actIds) {
@@ -64,7 +65,9 @@ export class ArmController {
     // keep the target above the table and inside a generous box (IK reports the rest as unreachable)
     this.target[0] = Math.max(-0.25, Math.min(0.55, x));
     this.target[1] = Math.max(-0.40, Math.min(0.40, y));
-    this.target[2] = Math.max(0.006, Math.min(0.42, z));
+    // the table is the floor (9 mm keeps the fingertips out of it); user moves get told so (P1-8)
+    if (z < FLOOR) { z = FLOOR; if (!this.plan) this.emit('floor'); }
+    this.target[2] = Math.min(0.42, z);
   }
   setRoll(r) { this.roll = Math.max(this.lo[4], Math.min(this.hi[4], r)); }
   setGrip(open) { this.grip = open ? GRIP_OPEN : GRIP_CLOSED; this.active = true; this.emit('grip', open); }
