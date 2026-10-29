@@ -81,36 +81,82 @@
 <div class="a1 hide-s"></div>
 <ol class="a4 steps steps4">
 <li class="step"><span class="mono" style="color:var(--ink)">01</span><h3>Vyzkoušejte</h3><p>Táhnete modrou kouli a ruka ji sleduje. Kliknete na kostku a ruka ji sama vezme. Myší i prstem, se skutečnou fyzikou.</p><a class="step-a" href="sim/so101/">Spustit simulaci</a></li>
-<li class="step"><span class="mono" style="color:var(--ink)">02</span><h3>Naučte se</h3><p>Pět misí, od přenesení kostky po kreslení perem. Pohyb nahrajete a ruka ho zopakuje, stejně jako při učení skutečné SO-101 s LeRobotem.</p><a class="step-a" href="sim/so101/objects.html">Předměty s fyzikou</a></li>
+<li class="step"><span class="mono" style="color:var(--ink)">02</span><h3>Naučte se</h3><p>Deset misí, od přenesení kostky po snídani, dílnu a laboratoř. Pohyb nahrajete a ruka ho zopakuje, stejně jako při učení skutečné SO-101 s LeRobotem.</p><a class="step-a" href="sim/so101/objects.html">Předměty s fyzikou</a></li>
 <li class="step"><span class="mono" style="color:var(--ink)">03</span><h3>Objednejte</h3><p>Díly vytiskneme z originálních souborů projektu, hardware doplníme podle kusovníku. Předobjednávka je nezávazná, cenu a termín potvrdíme e-mailem.</p><a class="step-a" href="sada/so101/">Sada SO-101</a></li>
 <li class="step"><span class="mono" style="color:var(--ink)">04</span><h3>Postavte</h3><p>Rozložený pohled z originálních STL ukáže každý díl. ID serv, kalibraci a test si projdete na virtuální ruce, ještě než krabice dorazí.</p><a class="step-a" href="sim/so101/nastaveni/">Nastavení serv nanečisto</a></li>
 </ol>
+</div>
+<div class="g feat-row">
+<figure class="feat-fig">
+<a href="sim/so101/" class="feat-shot" tabindex="-1" aria-hidden="true"><img src="assets/media/sim-objects.jpg" width="1100" height="530" alt="" loading="lazy" decoding="async"></a>
+<figcaption class="mono">Obr. 2 — Mise 07 Snídaně: jablko, banán a muffin na talíř. Předměty z knihoven NVIDIA SimReady a Google Scanned Objects (CC BY 4.0).</figcaption>
+</figure>
+<div class="feat-txt">
+<h3 class="feat-h">Mise 06–10: skutečné předměty s fyzikou</h3>
+<ul class="ticks ticks-light">
+<li>59 naskenovaných předmětů s hmotností a třením: jídlo, nádobí, nářadí, laboratorní sklo.</li>
+<li>Ruku chytíte tahem za kterýkoli článek, klepnutím na čelisti otevřete nebo zavřete chapadlo.</li>
+<li>V misi s perem kreslíte prstem nebo myší, pomáhá pohled shora.</li>
+</ul>
+<a class="btn btn-act" href="sim/so101/" data-cta="features-sim">Vyzkoušejte SO-101 v prohlížeči <span aria-hidden="true">→</span></a>
+</div>
+</div>
+</section>
+
+<section id="ai" class="wrap section" aria-labelledby="ai-h">
+<div class="g rule">
+<div class="a1 mono">N° 03 — Připojte svou AI</div>
+<h2 class="a4 h2" id="ai-h" style="max-width:52rem">Ruku v simulaci může řídit váš Claude.</h2>
+</div>
+<div class="g feat-row feat-row-r">
+<div class="feat-txt">
+<p class="lead">Claude nebo jiný asistent s podporou MCP dostane nástroje k ovládání simulované SO-101: pohyb kloubů, chapadlo, snímek kamery a mise. Ruka se hýbe ve vaší záložce, i když je na pozadí.</p>
+<ol class="ai-steps">
+<li>Jednou přidejte server do Claude Code:<span class="code" tabindex="0" role="region" aria-label="Příkaz pro Claude Code"><code id="mcp-cmd">claude mcp add --transport http printedrobotics https://mcp.printedrobotics.cz/mcp</code></span><button type="button" class="linkbtn copy-btn" data-copy="mcp-cmd" hidden>Kopírovat příkaz</button></li>
+<li>Otevřete simulaci a v panelu klikněte na Připojit AI. Zobrazí se kód.</li>
+<li>Řekněte Claudovi kód a v záložce povolte připojení.</li>
+</ol>
+<p class="mono feat-k">Zkuste říct Claudovi</p>
+<ul class="prompts">
+<li>„Seber kostku a polož ji do misky.“</li>
+<li>„Zatanči s rukou.“</li>
+<li>„Vyřeš misi 3.“</li>
+<li>„Ukaž mi snímek shora.“</li>
+</ul>
+<a class="btn btn-act" href="sim/so101/" data-cta="ai-sim">Otevřít simulaci <span aria-hidden="true">→</span></a>
+<span class="mono-s">Jen simulace: skutečnou ruku AI neovládá. Server zprávy jen přeposílá a nic neukládá. Kdykoli zastavíte tlačítkem STOP.</span>
+</div>
+<figure class="feat-fig">
+<img src="assets/media/ai-panel.jpg" width="1100" height="511" alt="Simulace SO-101 s panelem Ovládání přes AI: Simulaci ovládá Claude Code, tlačítka STOP a Odpojit a záznam toho, co AI dělá" loading="lazy" decoding="async">
+<figcaption class="mono">Obr. 3 — Panel Připojit AI ve stavu „Simulaci ovládá: Claude Code“. Každý krok AI se zapisuje do panelu.</figcaption>
+</figure>
 </div>
 </section>
 
 <section id="arena" class="band section-band" aria-labelledby="arena-h">
 <div class="wrap">
 <div class="g rule rule-inv">
-<div class="a1 mono">N° 03 — Bojoví roboti</div>
+<div class="a1 mono">N° 04 — Bojoví roboti</div>
 <h2 class="a4 h2" id="arena-h" style="max-width:52rem">Roboti do 150 g. Zápas si nejdřív odehrajete v aréně.</h2>
 </div>
 <div class="g arena-row">
 <figure class="arena-fig">
 <a href="sim/arena/" class="arena-shot" data-cta="arena-shot"><img src="assets/media/arena.jpg" width="1280" height="720" alt="Bojová aréna v prohlížeči: oranžový Project SVRN vyhodil flipperem modrého robota Klepeto do vzduchu" loading="lazy" decoding="async"></a>
-<figcaption class="mono">Obr. 2 — Bojová aréna v prohlížeči, kamera za robotem. Project SVRN právě flipperem vyhodil Klepeto.</figcaption>
+<figcaption class="mono">Obr. 4 — Bojová aréna v prohlížeči, kamera za robotem. Project SVRN právě flipperem vyhodil Klepeto.</figcaption>
 </figure>
 <div class="arena-txt">
 <p class="lead">Fyzika s hmotností a třením, několik map, kamery včetně TV přenosu. Rychlý zápas, turnaj, dva hráči na jedné klávesnici nebo trénink bez časového limitu.</p>
 <ul class="ticks">
 <li>V garáži měníte kola, převody a zbraně, hmotnost se hlídá do 150 g.</li>
-<li>Soupeři Kosa a Klepeto mají vlastní původní modely.</li>
-<li>Po zápase si zásah přehrajete zpomaleně a zápas uložíte jako klip.</li>
+<li>Project SVRN má vpředu výměnný modul: flipper, klín nebo chapadlo. Soupeři Kosa a Klepeto mají vlastní původní modely.</li>
+<li>Po zápase si zásah přehrajete zpomaleně a zápas uložíte jako soubor nebo krátký klip.</li>
+<li>První zápas provede krátký průvodce, soupeř Začátečník reaguje pomaleji. Motory, zbraně a zásahy mají vlastní zvuk.</li>
 </ul>
 <a class="btn btn-act" href="sim/arena/" data-cta="arena">Spustit bojovou arénu <span aria-hidden="true">→</span></a>
 </div>
 </div>
 <ul class="bots">
-<li><a href="sada/svrn/"><span class="bot-img"><img src="img/svrn_white.jpg" width="1200" height="900" alt="Malý bojový robot Project SVRN s pohonem 4×4 a klínem" loading="lazy" decoding="async"></span><span class="bot-t"><span class="bot-st">Předobjednávka</span><b>Project SVRN</b><span>Tlačný robot s pohonem 4×4, k tomu flipper nebo chapadlo.</span></span></a></li>
+<li><a href="sada/svrn/"><span class="bot-img"><img src="img/svrn_white.jpg" width="1200" height="900" alt="Malý bojový robot Project SVRN s pohonem 4×4 a klínem" loading="lazy" decoding="async"></span><span class="bot-t"><span class="bot-st">Předobjednávka</span><b>Project SVRN</b><span>Tlačný robot s pohonem 4×4, vpředu flipper, klín nebo chapadlo.</span></span></a></li>
 <li><a href="sada/vert150/"><span class="bot-img"><img src="img/vert150_white.jpg" width="1200" height="900" alt="Malý bojový robot s vertikálním rotujícím ostřím" loading="lazy" decoding="async"></span><span class="bot-t"><span class="bot-st bot-st-p">Připravujeme</span><b>Vertikální spinner 150 g</b><span>Dvoukolový robot s rotujícím ostřím. Jen pro uzavřenou arénu.</span></span></a></li>
 </ul>
 </div>
@@ -118,26 +164,27 @@
 
 <section id="novinky" class="wrap section" aria-labelledby="nov-h">
 <div class="g rule">
-<div class="a1 mono">N° 04 — Co je nového</div>
+<div class="a1 mono">N° 05 — Co je nového</div>
 <h2 class="a4 h2" id="nov-h">Co jsme přidali.</h2>
 </div>
 <div class="g" style="margin-top:clamp(24px,4vw,56px)">
 <div class="a1 hide-s"></div>
 <ol class="a4 news" reversed>
-<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Ovládejte simulaci přes AI</b>Claude nebo jiný klient MCP ovládá simulovanou SO-101 ve vaší záložce. V panelu klikněte na Připojit AI a pošlete AI zobrazený kód.</span><a href="sim/so101/">Simulace</a></li>
-<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Pro školy: hotová hodina</b>45minutová hodina se simulací SO-101, pracovní list k tisku a hodnoticí tabulka. Zdarma, bez účtů.</span><a href="pro-skoly/">Pro školy</a></li>
+<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Ovládejte simulaci přes AI</b>Claude nebo jiný klient MCP ovládá simulovanou SO-101 ve vaší záložce, i když je na pozadí. V panelu klikněte na Připojit AI a pošlete AI zobrazený kód.</span><a href="sim/so101/">Simulace</a></li>
+<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Mise 06–10 s předměty</b>Třídicí linka, snídaně, uklizený stůl, dílna a laboratoř. 59 naskenovaných předmětů s fyzikou (NVIDIA SimReady a Google Scanned Objects, CC BY 4.0).</span><a href="sim/so101/objects.html">Předměty</a></li>
+<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Web v angličtině</b>Katalog, stránky sad, kvíz, návody i obě simulace jsou i anglicky. Jazyk přepnete v záhlaví.</span><a href="en/">English</a></li>
+<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Pro školy a návody</b>45minutová hodina se simulací SO-101, pracovní list k tisku a hodnoticí tabulka. K tomu návody česky: SO-101 a LeRobot, bojoví roboti 150 g, licence.</span><a href="pro-skoly/">Pro školy</a></li>
+<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Project SVRN s výměnnými moduly</b>V aréně má SVRN vpředu flipper, klín nebo chapadlo. Modul vyberete v garáži, fyzika se mění s ním.</span><a href="sim/arena/">Aréna</a></li>
 <li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Záznamy zápasů v aréně</b>Opakování zásahu, zpomalení, uložení zápasu a krátký klip k odeslání.</span><a href="sim/arena/">Aréna</a></li>
-<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Nový zvuk v aréně</b>Motory, rotující zbraně, zásahy i odpočet zápasu mají nový zvuk.</span><a href="sim/arena/">Aréna</a></li>
-<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Chyťte ruku za kteroukoli část</b>V simulaci SO-101 táhnete za libovolný článek a otáčí se jeho kloub. Klepnutím na čelisti chapadlo otevřete nebo zavřete.</span><a href="sim/so101/">Simulace</a></li>
-<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Kreslení prstem</b>V misi s perem pomáhá pohled shora a přichycení k papíru, na telefonu má pero vlastní tlačítko.</span><a href="sim/so101/">Simulace</a></li>
-<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Průvodce prvním úkolem</b>Lišta s nápovědou vás provede první misí krok za krokem.</span><a href="sim/so101/">Simulace</a></li>
+<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Aréna: zvuk a první zápas</b>Motory, rotující zbraně a zásahy mají nový zvuk. První zápas provede krátký průvodce, soupeř Začátečník reaguje pomaleji.</span><a href="sim/arena/">Aréna</a></li>
+<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Ruka na dotek</b>Táhnete za libovolný článek a otáčí se jeho kloub. Klepnutím na čelisti chapadlo otevřete nebo zavřete, v misi s perem kreslíte prstem.</span><a href="sim/so101/">Simulace</a></li>
 </ol>
 </div>
 </section>
 
 <section id="pripravujeme" class="wrap section" aria-labelledby="prip-h">
 <div class="g rule">
-<div class="a1 mono">N° 05 — Připravujeme</div>
+<div class="a1 mono">N° 06 — Připravujeme</div>
 <h2 class="a4 h2" id="prip-h" style="max-width:52rem">Na čem pracujeme. Zatím to vyzkoušet nejde.</h2>
 </div>
 <div class="g prep-row">
@@ -150,12 +197,9 @@
 <div class="g">
 <div class="a1 hide-s"></div>
 <form class="a4 soft waitlist" novalidate data-soft="waitlist" id="waitlist" aria-labelledby="wl-h">
-<b id="wl-h">Připojte svou SO-101 nebo svou AI</b>
-<span class="muted">Napíšeme jednou, až půjde připojení vyzkoušet.</span>
-<fieldset class="wl-pick"><legend class="sr-only">Co chcete připojit</legend>
-<label class="chip"><input type="checkbox" name="want" value="so101" checked> Svou SO-101</label>
-<label class="chip"><input type="checkbox" name="want" value="ai"> Svou AI</label>
-</fieldset>
+<b id="wl-h">Připojte svou skutečnou SO-101</b>
+<span class="muted">Napíšeme jednou, až půjde skutečnou ruku řídit ze simulace.</span>
+<input type="hidden" name="want" value="so101">
 <span class="soft-row"><label class="sr-only" for="soft-waitlist">E-mail</label><input id="soft-waitlist" type="email" name="email" autocomplete="email" autocapitalize="off" spellcheck="false" inputmode="email" placeholder="vas@email.cz" required><button type="submit" class="btn" data-cta="waitlist">Chci vědět první</button></span>
 <span class="mono soft-note">Odesláním souhlasíte se zasláním tohoto e-mailu. Adresu nikomu nepředáme.</span>
 <span class="soft-msg" role="status" aria-live="polite"></span>
@@ -165,7 +209,7 @@
 
 <section id="katalog" class="wrap section">
 <div class="g rule" style="align-items:start">
-<div class="a1 mono">N° 06 — Katalog</div>
+<div class="a1 mono">N° 07 — Katalog</div>
 <h2 class="a4s h2"><span id="robot-count2">18</span> robotů. Od prvního sestavení po výzkum.</h2>
 <div class="a10 filters" id="filters" role="group" aria-label="Filtr podle typu"></div>
 </div>
@@ -195,7 +239,7 @@
 
 <section id="postup" class="wrap section" aria-labelledby="post-h">
 <div class="g rule">
-<div class="a1 mono">N° 07 — Jak to funguje</div>
+<div class="a1 mono">N° 08 — Jak to funguje</div>
 <h2 class="a4 h2" id="post-h" style="max-width:52rem">Tři kroky mezi repozitářem na GitHubu a robotem na vašem stole.</h2>
 </div>
 <div class="g" style="margin-top:clamp(24px,5vw,80px)">
@@ -208,9 +252,23 @@
 </div>
 </section>
 
+<section id="skoly" class="wrap section" aria-labelledby="skoly-h">
+<div class="g rule">
+<div class="a1 mono">N° 09 — Pro školy a návody</div>
+<h2 class="a4 h2" id="skoly-h" style="max-width:52rem">Hodina robotiky zdarma a návody česky.</h2>
+</div>
+<div class="g" style="margin-top:clamp(24px,4vw,56px)">
+<div class="a1 hide-s"></div>
+<ul class="a4 duo">
+<li><h3>Pro školy</h3><p>Hotová 45minutová hodina se simulací SO-101, pracovní list k tisku a hodnoticí tabulka. Zdarma, v prohlížeči, bez účtů a instalace.</p><a class="step-a" href="pro-skoly/">Hodina a pracovní list</a></li>
+<li><h3>Návody</h3><p>SO-101 a LeRobot: první kroky. Jak začít s bojovými roboty 150 g. Licence open-source hardwaru srozumitelně.</p><a class="step-a" href="navody/">Všechny návody</a></li>
+</ul>
+</div>
+</section>
+
 <section id="komunita" class="wrap section" aria-labelledby="proto-h">
 <div class="g rule">
-<div class="a1 mono">N° 08 — Komunita</div>
+<div class="a1 mono">N° 10 — Komunita</div>
 <div class="a4 proto">
 <h2 class="h2" id="proto-h">PROTO ROBOT</h2>
 <p class="lead">Pražské setkání o robotice a fyzické AI: přednášky, živé ukázky a lidé, kteří roboty staví nebo chtějí začít. První proběhlo 23. 10. 2026, další připravujeme.</p>
@@ -221,7 +279,7 @@
 
 <section id="licence" class="wrap section">
 <div class="g rule">
-<div class="a1 mono">N° 09 — Licence</div>
+<div class="a1 mono">N° 11 — Licence</div>
 <h2 class="a4s h2">Prodáváme jen to, co licence dovoluje.</h2>
 <p class="a10 ink2" style="margin:0;font-size:16px">Licenci konstrukčních souborů ověřujeme zvlášť od licence softwaru. Projekty s doložkou NC nabízíme jen s písemným souhlasem autorů.</p>
 </div>

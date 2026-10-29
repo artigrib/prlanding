@@ -82,36 +82,82 @@
 <div class="a1 hide-s"></div>
 <ol class="a4 steps steps4">
 <li class="step"><span class="mono" style="color:var(--ink)">01</span><h3>Try it</h3><p>Drag the blue ball and the arm follows. Click the cube and the arm picks it up by itself. Mouse or finger, with real physics.</p><a class="step-a" href="../sim/so101/?lang=en">Start the simulation</a></li>
-<li class="step"><span class="mono" style="color:var(--ink)">02</span><h3>Learn</h3><p>Five missions, from moving a cube to drawing with a pen. Record a motion and the arm repeats it — just like teaching a real SO-101 with LeRobot.</p><a class="step-a" href="../sim/so101/objects.html?lang=en">Objects with physics</a></li>
+<li class="step"><span class="mono" style="color:var(--ink)">02</span><h3>Learn</h3><p>Ten missions, from moving a cube to breakfast, a workshop and a lab. Record a motion and the arm repeats it, just like teaching a real SO-101 with LeRobot.</p><a class="step-a" href="../sim/so101/objects.html?lang=en">Objects with physics</a></li>
 <li class="step"><span class="mono" style="color:var(--ink)">03</span><h3>Order</h3><p>We print the parts from the project’s original files and add the hardware from the bill of materials. The pre-order is non-binding; we confirm the price and date by email.</p><a class="step-a" href="../en/kit/so101/">SO-101 kit</a></li>
 <li class="step"><span class="mono" style="color:var(--ink)">04</span><h3>Build</h3><p>An exploded view from the original STLs shows every part. Walk through servo IDs, calibration and testing on a virtual arm before the box arrives.</p><a class="step-a" href="../sim/so101/nastaveni/?lang=en">Servo setup dry run</a></li>
 </ol>
+</div>
+<div class="g feat-row">
+<figure class="feat-fig">
+<a href="../sim/so101/?lang=en" class="feat-shot" tabindex="-1" aria-hidden="true"><img src="../assets/media/sim-objects.jpg" width="1100" height="530" alt="" loading="lazy" decoding="async"></a>
+<figcaption class="mono">Fig. 2 — Mission 07 Breakfast: an apple, a banana and a muffin onto the plate. Objects from NVIDIA SimReady and Google Scanned Objects (CC BY 4.0).</figcaption>
+</figure>
+<div class="feat-txt">
+<h3 class="feat-h">Missions 06–10: real objects with physics</h3>
+<ul class="ticks ticks-light">
+<li>59 scanned objects with mass and friction: food, dishes, tools, lab glassware.</li>
+<li>Grab the arm by any link and pull; tap the jaws to open or close the gripper.</li>
+<li>In the pen mission you draw with a finger or the mouse, helped by a top view.</li>
+</ul>
+<a class="btn btn-act" href="../sim/so101/?lang=en" data-cta="features-sim">Try the SO-101 in your browser <span aria-hidden="true">→</span></a>
+</div>
+</div>
+</section>
+
+<section id="ai" class="wrap section" aria-labelledby="ai-h">
+<div class="g rule">
+<div class="a1 mono">N° 03 — Connect your AI</div>
+<h2 class="a4 h2" id="ai-h" style="max-width:52rem">Your Claude can drive the simulated arm.</h2>
+</div>
+<div class="g feat-row feat-row-r">
+<div class="feat-txt">
+<p class="lead">Claude or another assistant with MCP support gets tools to control the simulated SO-101: joint moves, the gripper, a camera snapshot and missions. The arm moves in your browser tab, even when the tab is in the background.</p>
+<ol class="ai-steps">
+<li>Add the server to Claude Code once:<span class="code" tabindex="0" role="region" aria-label="Command for Claude Code"><code id="mcp-cmd">claude mcp add --transport http printedrobotics https://mcp.printedrobotics.cz/mcp</code></span><button type="button" class="linkbtn copy-btn" data-copy="mcp-cmd" hidden>Copy command</button></li>
+<li>Open the simulation and click Connect AI in the panel. A code appears.</li>
+<li>Give Claude the code and allow the connection in the tab.</li>
+</ol>
+<p class="mono feat-k">Try telling Claude</p>
+<ul class="prompts">
+<li>“Pick up the cube and put it in the bowl.”</li>
+<li>“Make the arm dance.”</li>
+<li>“Solve mission 3.”</li>
+<li>“Show me a picture from the top.”</li>
+</ul>
+<a class="btn btn-act" href="../sim/so101/?lang=en" data-cta="ai-sim">Open the simulation <span aria-hidden="true">→</span></a>
+<span class="mono-s">Simulation only: the AI cannot control a real arm. Our server only relays messages and stores nothing. Press STOP at any time.</span>
+</div>
+<figure class="feat-fig">
+<img src="../assets/media/ai-panel.jpg" width="1100" height="511" alt="SO-101 simulation with the AI control panel: the simulation is controlled by Claude Code, STOP and Disconnect buttons and a log of what the AI does" loading="lazy" decoding="async">
+<figcaption class="mono">Fig. 3 — The Connect AI panel while “Claude Code” controls the simulation (Czech interface shown). Every AI step is logged in the panel.</figcaption>
+</figure>
 </div>
 </section>
 
 <section id="arena" class="band section-band" aria-labelledby="arena-h">
 <div class="wrap">
 <div class="g rule rule-inv">
-<div class="a1 mono">N° 03 — Combat robots</div>
+<div class="a1 mono">N° 04 — Combat robots</div>
 <h2 class="a4 h2" id="arena-h" style="max-width:52rem">Robots up to 150 g. Fight your first match in the arena.</h2>
 </div>
 <div class="g arena-row">
 <figure class="arena-fig">
 <a href="../sim/arena/?lang=en" class="arena-shot" data-cta="arena-shot"><img src="../assets/media/arena.jpg" width="1280" height="720" alt="Combat arena in the browser: the orange Project SVRN flips the blue robot Klepeto into the air" loading="lazy" decoding="async"></a>
-<figcaption class="mono">Fig. 2 — Combat arena in the browser, chase camera. Project SVRN has just flipped Klepeto.</figcaption>
+<figcaption class="mono">Fig. 4 — Combat arena in the browser, chase camera. Project SVRN has just flipped Klepeto with its flipper.</figcaption>
 </figure>
 <div class="arena-txt">
 <p class="lead">Physics with mass and friction, several maps, cameras including a TV broadcast view. Quick match, tournament, two players on one keyboard, or practice with no time limit.</p>
 <ul class="ticks">
 <li>In the garage you swap wheels, gearing and weapons; weight is kept under 150 g.</li>
-<li>Opponents Kosa and Klepeto have their own original models.</li>
-<li>After the match, replay the hit in slow motion and save the match as a clip.</li>
+<li>Project SVRN has a swappable front module: flipper, wedge or grabber. Opponents Kosa and Klepeto have their own original models.</li>
+<li>After the match, replay a hit in slow motion and save the match as a file or a short clip.</li>
+<li>A short guide walks you through the first match, and the Beginner opponent reacts more slowly. Motors, weapons and hits have their own sound.</li>
 </ul>
 <a class="btn btn-act" href="../sim/arena/?lang=en" data-cta="arena">Start the combat arena <span aria-hidden="true">→</span></a>
 </div>
 </div>
 <ul class="bots">
-<li><a href="../en/kit/svrn/"><span class="bot-img"><img src="../img/svrn_white.jpg" width="1200" height="900" alt="Project SVRN small combat robot with 4×4 drive and a wedge" loading="lazy" decoding="async"></span><span class="bot-t"><span class="bot-st">Pre-order</span><b>Project SVRN</b><span>A 4×4 pusher, plus a flipper or grabber.</span></span></a></li>
+<li><a href="../en/kit/svrn/"><span class="bot-img"><img src="../img/svrn_white.jpg" width="1200" height="900" alt="Project SVRN small combat robot with 4×4 drive and a wedge" loading="lazy" decoding="async"></span><span class="bot-t"><span class="bot-st">Pre-order</span><b>Project SVRN</b><span>A 4×4 pusher with a flipper, wedge or grabber at the front.</span></span></a></li>
 <li><a href="../en/kit/vert150/"><span class="bot-img"><img src="../img/vert150_white.jpg" width="1200" height="900" alt="Small combat robot with a vertical spinning blade" loading="lazy" decoding="async"></span><span class="bot-t"><span class="bot-st bot-st-p">Coming soon</span><b>150 g vertical spinner</b><span>Two-wheel robot with a spinning blade. Enclosed arena only.</span></span></a></li>
 </ul>
 </div>
@@ -119,26 +165,27 @@
 
 <section id="novinky" class="wrap section" aria-labelledby="nov-h">
 <div class="g rule">
-<div class="a1 mono">N° 04 — What’s new</div>
+<div class="a1 mono">N° 05 — What’s new</div>
 <h2 class="a4 h2" id="nov-h">What we’ve added.</h2>
 </div>
 <div class="g" style="margin-top:clamp(24px,4vw,56px)">
 <div class="a1 hide-s"></div>
 <ol class="a4 news" reversed>
-<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Control the simulation with AI</b>Claude or another MCP client controls the simulated SO-101 in your browser tab. Click Connect AI in the panel and give the AI the code it shows.</span><a href="../sim/so101/?lang=en">Simulation</a></li>
-<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>For schools: a ready lesson</b>A 45-minute lesson with the SO-101 simulation, a printable worksheet and a rubric. Free, no accounts.</span><a href="../en/for-schools/">For schools</a></li>
+<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Control the simulation with AI</b>Claude or another MCP client controls the simulated SO-101 in your browser tab, even in the background. Click Connect AI in the panel and give the AI the code it shows.</span><a href="../sim/so101/?lang=en">Simulation</a></li>
+<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Missions 06–10 with objects</b>Sorting line, breakfast, tidy desk, workshop and lab. 59 scanned objects with physics (NVIDIA SimReady and Google Scanned Objects, CC BY 4.0).</span><a href="../sim/so101/objects.html?lang=en">Objects</a></li>
+<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>The site in English</b>The catalogue, kit pages, quiz, guides and both simulations are available in English. Switch the language in the header.</span><a href="../en/">English</a></li>
+<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>For schools, and guides</b>A 45-minute lesson with the SO-101 simulation, a printable worksheet and a marking rubric. Plus guides: SO-101 and LeRobot, 150 g combat robots, licences.</span><a href="../en/for-schools/">For schools</a></li>
+<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Project SVRN with swappable modules</b>In the arena SVRN carries a flipper, wedge or grabber at the front. Pick the module in the garage; the physics changes with it.</span><a href="../sim/arena/?lang=en">Arena</a></li>
 <li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Match replays in the arena</b>Instant replay, slow motion, saving matches and a short clip to share.</span><a href="../sim/arena/?lang=en">Arena</a></li>
-<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>New sound in the arena</b>Motors, spinning weapons, hits and the match countdown all have new sound.</span><a href="../sim/arena/?lang=en">Arena</a></li>
-<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Grab the arm anywhere</b>In the SO-101 simulation, drag any link and its joint turns. Tap the jaws to open or close the gripper.</span><a href="../sim/so101/?lang=en">Simulation</a></li>
-<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Drawing with your finger</b>In the pen mission, a top-down view and snapping to the paper help; on phones the pen has its own button.</span><a href="../sim/so101/?lang=en">Simulation</a></li>
-<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>First-task guide</b>A hint bar walks you through the first mission step by step.</span><a href="../sim/so101/?lang=en">Simulation</a></li>
+<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Arena: sound and your first match</b>Motors, spinning weapons and hits have new sound. A short guide walks you through the first match, and the Beginner opponent reacts more slowly.</span><a href="../sim/arena/?lang=en">Arena</a></li>
+<li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Hands-on arm</b>Pull any link and its joint turns. Tap the jaws to open or close the gripper; in the pen mission you draw with your finger.</span><a href="../sim/so101/?lang=en">Simulation</a></li>
 </ol>
 </div>
 </section>
 
 <section id="pripravujeme" class="wrap section" aria-labelledby="prip-h">
 <div class="g rule">
-<div class="a1 mono">N° 05 — Coming soon</div>
+<div class="a1 mono">N° 06 — Coming soon</div>
 <h2 class="a4 h2" id="prip-h" style="max-width:52rem">What we’re working on. Not available to try yet.</h2>
 </div>
 <div class="g prep-row">
@@ -151,12 +198,9 @@
 <div class="g">
 <div class="a1 hide-s"></div>
 <form class="a4 soft waitlist" novalidate data-soft="waitlist" id="waitlist" aria-labelledby="wl-h">
-<b id="wl-h">Connect your SO-101 or your AI</b>
-<span class="muted">We’ll write once, when you can try connecting.</span>
-<fieldset class="wl-pick"><legend class="sr-only">What you want to connect</legend>
-<label class="chip"><input type="checkbox" name="want" value="so101" checked> My SO-101</label>
-<label class="chip"><input type="checkbox" name="want" value="ai"> My AI</label>
-</fieldset>
+<b id="wl-h">Connect your real SO-101</b>
+<span class="muted">We’ll email you once, when a real arm can be driven from the simulation.</span>
+<input type="hidden" name="want" value="so101">
 <span class="soft-row"><label class="sr-only" for="soft-waitlist">Email</label><input id="soft-waitlist" type="email" name="email" autocomplete="email" autocapitalize="off" spellcheck="false" inputmode="email" placeholder="you@example.com" required><button type="submit" class="btn" data-cta="waitlist">Tell me first</button></span>
 <span class="mono soft-note">By submitting you agree to receive this email. We never share your address.</span>
 <span class="soft-msg" role="status" aria-live="polite"></span>
@@ -166,7 +210,7 @@
 
 <section id="katalog" class="wrap section">
 <div class="g rule" style="align-items:start">
-<div class="a1 mono">N° 06 — Catalogue</div>
+<div class="a1 mono">N° 07 — Catalogue</div>
 <h2 class="a4s h2"><span id="robot-count2">18</span> robots. From a first build to research.</h2>
 <div class="a10 filters" id="filters" role="group" aria-label="Filter by type"></div>
 </div>
@@ -196,7 +240,7 @@
 
 <section id="postup" class="wrap section" aria-labelledby="post-h">
 <div class="g rule">
-<div class="a1 mono">N° 07 — How it works</div>
+<div class="a1 mono">N° 08 — How it works</div>
 <h2 class="a4 h2" id="post-h" style="max-width:52rem">Three steps between a GitHub repository and a robot on your desk.</h2>
 </div>
 <div class="g" style="margin-top:clamp(24px,5vw,80px)">
@@ -209,9 +253,23 @@
 </div>
 </section>
 
+<section id="skoly" class="wrap section" aria-labelledby="skoly-h">
+<div class="g rule">
+<div class="a1 mono">N° 09 — For schools and guides</div>
+<h2 class="a4 h2" id="skoly-h" style="max-width:52rem">A free robotics lesson, and guides.</h2>
+</div>
+<div class="g" style="margin-top:clamp(24px,4vw,56px)">
+<div class="a1 hide-s"></div>
+<ul class="a4 duo">
+<li><h3>For schools</h3><p>A ready-made 45-minute lesson with the SO-101 simulation, a printable worksheet and a marking rubric. Free, in the browser, no accounts or installs.</p><a class="step-a" href="../en/for-schools/">Lesson and worksheet</a></li>
+<li><h3>Guides</h3><p>SO-101 and LeRobot: first steps. Getting started with 150 g combat robots. Open-source hardware licences explained.</p><a class="step-a" href="../en/guides/">All guides</a></li>
+</ul>
+</div>
+</section>
+
 <section id="komunita" class="wrap section" aria-labelledby="proto-h">
 <div class="g rule">
-<div class="a1 mono">N° 08 — Community</div>
+<div class="a1 mono">N° 10 — Community</div>
 <div class="a4 proto">
 <h2 class="h2" id="proto-h">PROTO ROBOT</h2>
 <p class="lead">A Prague meetup on robotics and physical AI: talks, live demos and people who build robots or want to start. The first one took place on 23 October 2026; the next is in the works.</p>
@@ -222,7 +280,7 @@
 
 <section id="licence" class="wrap section">
 <div class="g rule">
-<div class="a1 mono">N° 09 — Licences</div>
+<div class="a1 mono">N° 11 — Licences</div>
 <h2 class="a4s h2">We only sell what the licence allows.</h2>
 <p class="a10 ink2" style="margin:0;font-size:16px">We check the licence of the design files separately from the software licence. Projects with an NC clause are offered only with the authors’ written consent.</p>
 </div>
