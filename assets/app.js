@@ -110,8 +110,12 @@
     if (!validEmailStr(em.value)) { em.setAttribute('aria-invalid', 'true'); m.textContent = 'Zkontrolujte prosím e-mailovou adresu.'; em.focus(); return; }
     em.removeAttribute('aria-invalid'); m.textContent = 'Odesíláme…';
     var kind = f.getAttribute('data-soft'), robot = f.getAttribute('data-robot') || '';
-    send({ _subject: (kind === 'price' ? 'Cena na e-mail: ' : 'Novinky: ') + (robot || 'web'), type: kind === 'price' ? 'price' : 'news', robot: robot, email: em.value.trim(), page: location.href, source: page === 'quiz' ? 'kviz' : 'web' })
-      .then(function () { f.innerHTML = '<b>Hotovo.</b><span class="muted">' + (kind === 'price' ? 'Cenu pošleme na ' + esc(em.value.trim()) + ', jakmile ji budeme znát.' : 'Díky, ozveme se, až bude co ukázat.') + '</span>'; })
+    // waitlist (home, "Připravujeme"): same sender and sheet, its own type and the chosen interests
+    var want = [].map.call(f.querySelectorAll('input[name=want]:checked'), function (x) { return x.value; }).join(',');
+    if (kind === 'waitlist' && !want) { m.textContent = 'Vyberte, co chcete připojit.'; f.querySelector('input[name=want]').focus(); return; }
+    var subj = kind === 'price' ? 'Cena na e-mail: ' : kind === 'waitlist' ? 'Čekací listina: ' : 'Novinky: ';
+    send({ _subject: subj + (kind === 'waitlist' ? want : robot || 'web'), type: kind === 'price' || kind === 'waitlist' ? kind : 'news', robot: kind === 'waitlist' ? want : robot, email: em.value.trim(), page: location.href, source: page === 'quiz' ? 'kviz' : 'web' })
+      .then(function () { f.innerHTML = '<b>Hotovo.</b><span class="muted">' + (kind === 'price' ? 'Cenu pošleme na ' + esc(em.value.trim()) + ', jakmile ji budeme znát.' : kind === 'waitlist' ? 'Jste na čekací listině. Napíšeme na ' + esc(em.value.trim()) + ', až půjde připojení vyzkoušet.' : 'Díky, ozveme se, až bude co ukázat.') + '</span>'; })
       .catch(function (er) { m.textContent = er && er.message === 'no-endpoint' ? NO_ENDPOINT_MSG : 'Odeslání se nezdařilo. Zkuste to prosím znovu.'; });
   });
   (function () { var ft = document.querySelector('.site-f'); if (ft && !ft.querySelector('form.soft')) { var d = document.createElement('div'); d.className = 'soft-foot'; d.innerHTML = softForm('news'); ft.insertBefore(d, ft.firstChild); } })();
@@ -162,7 +166,31 @@
           links.forEach(function (a) { if (a.getAttribute('data-sec') === e.target.id) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
         });
       }, { rootMargin: '-45% 0px -50% 0px' });
-      ['postup', 'katalog', 'licence'].forEach(function (id) { var el = document.getElementById(id); if (el) io.observe(el); });
+      ['top', 'vyzkousejte', 'arena', 'pripravujeme', 'katalog', 'novinky', 'postup', 'komunita', 'licence'].forEach(function (id) { var el = document.getElementById(id); if (el) io.observe(el); });
+    }
+    // hero preview: a short loop recorded from the real sim (no MuJoCo/three here). Loads only after the page,
+    // only when visible, never with reduced motion or Save-Data; the poster image stays underneath.
+    var hv = $('.hero-video');
+    var calm = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var save = navigator.connection && navigator.connection.saveData;
+    if (hv && !calm.matches && !save && 'IntersectionObserver' in window) {
+      var startVid = function () {
+        var vo = new IntersectionObserver(function (es) {
+          es.forEach(function (e) {
+            if (e.isIntersecting) {
+              if (!hv.firstChild) {
+                [['webm', 'video/webm'], ['mp4', 'video/mp4']].forEach(function (t) { var s = document.createElement('source'); s.src = hv.getAttribute('data-' + t[0]); s.type = t[1]; hv.appendChild(s); });
+                hv.addEventListener('playing', function () { hv.classList.add('on'); }, { once: true });
+                hv.load();
+              }
+              var pr = hv.play(); if (pr && pr.catch) pr.catch(function () {});
+            } else if (hv.firstChild) hv.pause();
+          });
+        }, { rootMargin: '100px 0px' });
+        vo.observe(hv);
+        calm.addEventListener && calm.addEventListener('change', function (e) { if (e.matches) { vo.disconnect(); hv.pause(); hv.classList.remove('on'); } });
+      };
+      if (document.readyState === 'complete') startVid(); else window.addEventListener('load', startVid, { once: true });
     }
   }
 
