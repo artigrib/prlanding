@@ -1,0 +1,69 @@
+{
+ "id": "handtool_socket_3_8in_a01",
+ "name_cs": "Hand tool socket 3 8in",
+ "name_en": "Hand tool socket 3 8in",
+ "category": "prop",
+ "mass_kg": 0.243311,
+ "size_m": [
+  0.0303,
+  0.0303,
+  0.0438
+ ],
+ "friction": 0.3,
+ "license": "CC-BY-4.0",
+ "license_url": "https://creativecommons.org/licenses/by/4.0/",
+ "attribution": "\"Hand tool socket 3 8in\" from nvidia/simready-assets by NVIDIA, CC-BY-4.0; converted by printedrobotics.cz",
+ "source_url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/handTool_socket_3_8in_a01",
+ "files": {
+  "glb": "handtool_socket_3_8in_a01/handtool_socket_3_8in_a01.glb",
+  "mjcf": "handtool_socket_3_8in_a01/handtool_socket_3_8in_a01.xml"
+ },
+ "body": "obj_handtool_socket_3_8in_a01",
+ "graspable": true,
+ "source": {
+  "repo": "nvidia/simready-assets",
+  "revision": "a666cb4381ba513b174fb120ed523c1566ba832c",
+  "path": "handTool_socket_3_8in_a01",
+  "url": "https://huggingface.co/datasets/nvidia/simready-assets/tree/a666cb4381ba513b174fb120ed523c1566ba832c/handTool_socket_3_8in_a01"
+ },
+ "conversion": {
+  "scale": 1.0,
+  "mass_source": "usd:mass",
+  "friction_source": "usd",
+  "hull_source": "usd",
+  "hulls": 1,
+  "hull_vertices": [
+   48
+  ],
+  "hull_volume_cm3": 26.2,
+  "com_m": [
+   2e-05,
+   0.0,
+   0.01975
+  ],
+  "usd_meters_per_unit": 1.0,
+  "usd_up_axis": "Z",
+  "usd_physics_variant": "MuJoCo:Enabled",
+  "mass_note": null,
+  "glb": {
+   "bytes": 214516,
+   "triangles": 5304,
+   "texture": 512,
+   "simplify_error": 0.01,
+   "attempts": 1
+  },
+  "usd_layers": [
+   "simready_usd/payloads/MuJoCo/enabled.usda",
+   "simready_usd/payloads/Newton/disabled.usda",
+   "simready_usd/payloads/PhysX/disabled.usda",
+   "simready_usd/payloads/Physics/physics.usda",
+   "simready_usd/payloads/base.usda",
+   "simready_usd/payloads/geometries.usd",
+   "simready_usd/payloads/instances.usda",
+   "simready_usd/payloads/instances_mujoco.usda",
+   "simready_usd/payloads/materials.usda",
+   "simready_usd/sm_handTool_socket_3_8in_a01_01.usd"
+  ]
+ },
+ "name_cs_auto": true
+}
