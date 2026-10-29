@@ -386,6 +386,17 @@ tls_state() ( set +eu +o pipefail
   for pid in $(pgrep -x caddy); do grep -q "$fid" "/proc/$pid/cgroup" 2>/dev/null && opid=$pid; done
   lp=$(ss -ltnpH 2>/dev/null | grep "pid=$opid," | awk '{print $4}' | sed -E 's/.*:([0-9]+)$/\1/' | sort -un | tr '\n' ' ')
   say "tls our caddy listening ports: ${lp:-none}; host :80 listen addrs: $(ss -ltnH 'sport = :80' 2>/dev/null | awk '{print $4}' | sed -E 's/^0\.0\.0\.0:.*/any4/; s/^\[::\]:.*/any6/; s/^\*:.*/any/; s/^127\..*/loopback/; s/^[0-9].*/specific-v4/; s/^\[.*/specific-v6/' | tr '\n' ' '); /dev/tcp 127.0.0.1:80 $(timeout 3 bash -c 'exec 3<>/dev/tcp/127.0.0.1/80' 2>/dev/null && echo open || echo closed), :443 $(timeout 3 bash -c 'exec 3<>/dev/tcp/127.0.0.1/443' 2>/dev/null && echo open || echo closed); bind errors in log: $(lg | grep -ci 'address already in use\|bind:' )"
+  local oth myns l80 sfd m80
+  myns=$(readlink /proc/self/ns/net)
+  l80() { cat "$1/net/tcp" "$1/net/tcp6" 2>/dev/null | awk '$2 ~ /:0050$/ && $4=="0A" {print $10}'; }
+  m80=$(l80 /proc/self | tr '\n' ' ')
+  sfd=$(ls -l "/proc/$opid/fd" 2>/dev/null | grep -o 'socket:\[[0-9]*\]' | tr -d 'socket:[]' | tr '\n' ' ')
+  hit=no; for i in $m80; do case " $sfd " in *" $i "*) hit=yes;; esac; done
+  say "tls ns: our caddy in shell netns $([ "$(readlink /proc/$opid/ns/net)" = "$myns" ] && echo yes || echo no); pid1 in shell netns $([ "$(readlink /proc/1/ns/net)" = "$myns" ] && echo yes || echo no); :80 LISTEN sockets in shell netns $(printf '%s' "$m80" | wc -w); our caddy socket fds $(printf '%s' "$sfd" | wc -w); our caddy owns a :80 listener: $hit"
+  for pid in $(pgrep -x caddy); do
+    [ "$pid" = "$opid" ] && continue
+    say "tls other caddy netns: has :80 listener $(l80 /proc/$pid | grep -c .); same netns as shell $([ "$(readlink /proc/$pid/ns/net)" = "$myns" ] && echo yes || echo no); owns a :80 listener of shell netns: $(o=no; for i in $m80; do ls -l /proc/$pid/fd 2>/dev/null | grep -q "socket:\[$i\]" && o=yes; done; echo $o)"
+  done
   for port in 80 443; do
     hex=$(printf '%04X' "$port")
     owner=""
