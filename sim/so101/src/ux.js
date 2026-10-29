@@ -686,6 +686,11 @@ class UX {
     api.penUp = () => this.togglePenUp();
     api.drawHelp = (h) => this.setDrawHelp(h);
     api.drawState = () => ({ active: this.draw.active, penDown: this.draw.penDown, help: this.draw.help, goal: Array.from(this.draw.goal), dev: this.draw.dev });
+    /** tests: one synchronous frame (bodies, gizmo, camera, render), so screen points and hit tests see the current pose */
+    api.renderNow = () => {
+      const a = this.app; a.sync(); a.controls.update(); this.render(0);
+      a.world.updateMatrixWorld(); a.camera.updateMatrixWorld();
+    };
     /** screen point on a link driven by joint j (verified by the link raycast), or null */
     api.linkPoint = (j) => {
       const L = this.links, g = this.gizmo; this.app.world.updateMatrixWorld();

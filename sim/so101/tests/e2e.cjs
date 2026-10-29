@@ -215,7 +215,8 @@ async function touchDrag(page, from, to, steps = 8) {
       const h0 = (await ux(p)).hud, g0 = await S(p, () => window.__sim._ux.ctl.grip);
       let jp = null;
       // fixed camera views in a fixed order; the jaws are hidden behind the cube from some of them
-      for (const v of ['orbit', 'side', 'front', 'top']) { await S(p, (v) => window.__sim.cameraNow(v), v); jp = await S(p, () => window.__sim.linkPoint(5)); if (jp) break; }
+      // renderNow(): one synchronous frame, so the raycast in linkPoint and the click see the same pose and camera
+      for (const v of ['orbit', 'side', 'front', 'top']) { await S(p, (v) => { window.__sim.cameraNow(v); window.__sim.renderNow(); }, v); jp = await S(p, () => window.__sim.linkPoint(5)); if (jp) break; }
       ok(!!jp, 'a visible point on the jaws exists for the tap test');
       await p.mouse.click(jp.x, jp.y);
       await S(p, () => window.__sim.advance(1.2));
@@ -226,10 +227,12 @@ async function touchDrag(page, from, to, steps = 8) {
 
     // tap on the IK ball where jaw geometry lies under it → gripper toggles (drag would still move the ball)
     {
+      // frame loop paused as above: pose, gizmo and camera only change through advance()/renderNow()
+      await S(p, () => { window.__sim._app.sim.paused = true; });
       await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.5));
       let spot = null;
       for (const view of ['orbit', 'top', 'front']) {
-        await S(p, (v) => window.__sim.cameraNow(v), view);
+        await S(p, (v) => { window.__sim.cameraNow(v); window.__sim.renderNow(); }, view);
         // search the ball's screen area for a point where a jaw lies under the handle
         spot = await S(p, () => {
           const u = window.__sim._ux; u.gizmo.sync(0.016); u.app.camera.updateMatrixWorld();
@@ -248,7 +251,7 @@ async function touchDrag(page, from, to, steps = 8) {
         const g1 = await S(p, () => window.__sim.state().ctrl[5]);
         ok(Math.abs(g1 - g0) > 0.5, `tap on the ball over the jaws toggles the gripper (${g0.toFixed(2)} → ${g1.toFixed(2)})`);
       } else ok(false, 'tap on the ball over the jaws: no spot found where the ball covers jaw geometry');
-      await S(p, () => window.__sim.cameraNow('orbit'));
+      await S(p, () => { window.__sim.cameraNow('orbit'); window.__sim._app.sim.paused = false; });
     }
     // WCAG 2.1.4: single-key shortcuts can be turned off (then only with the 3D view focused)
     {

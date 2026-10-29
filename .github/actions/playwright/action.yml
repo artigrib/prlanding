@@ -1,0 +1,26 @@
+name: Playwright (Chromium)
+description: npm ci at the repo root (pinned playwright) and Chromium from a cache keyed by the playwright version.
+runs:
+  using: composite
+  steps:
+    - name: npm ci (root, playwright only)
+      shell: bash
+      run: npm ci --no-audit --no-fund
+      env:
+        PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+    - id: v
+      shell: bash
+      run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+    - id: cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-chromium-${{ runner.os }}-${{ steps.v.outputs.version }}
+    - name: Install Chromium
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: npx playwright install --with-deps chromium
+    - name: Install Chromium system dependencies (browser from cache)
+      if: steps.cache.outputs.cache-hit == 'true'
+      shell: bash
+      run: npx playwright install-deps chromium
