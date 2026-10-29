@@ -1,0 +1,115 @@
+{
+  "$comment": "printedrobotics.cz funnel analytics: the ONLY events and properties the api accepts. Unknown events are dropped, unknown or invalid properties are dropped. Never add names, e-mails, free text, precise location or anything that identifies a person. Human-readable version: docs/analytics/events.md. A copy lives in backend/api/src/schema.json (the api's Docker build context); a test keeps them identical.",
+  "version": 1,
+  "limits": {
+    "maxEventsPerBatch": 25,
+    "maxBodyBytes": 16384
+  },
+  "types": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$" },
+    "path": { "type": "string", "pattern": "^/[A-Za-z0-9/._-]{0,119}$" },
+    "domain": { "type": "string", "pattern": "^[a-z0-9.-]{1,80}$" },
+    "utm": { "type": "string", "pattern": "^[a-z0-9_.+-]{1,40}$" },
+    "lang": { "type": "string", "enum": ["cs", "en"] },
+    "sim": { "type": "string", "enum": ["so101", "arena", "nastaveni", "objects", "lerobot"] },
+    "seconds": { "type": "integer", "min": 0, "max": 86400 },
+    "ms": { "type": "integer", "min": 0, "max": 600000 }
+  },
+  "common": {
+    "path": "path",
+    "lang": "lang"
+  },
+  "events": {
+    "page_view": {
+      "description": "A page was shown (after consent). Referrer reduced to its host name; utm_* lower-cased and restricted to a safe alphabet.",
+      "props": {
+        "ref_domain": "domain",
+        "utm_source": "utm",
+        "utm_medium": "utm",
+        "utm_campaign": "utm",
+        "utm_content": "utm",
+        "utm_term": "utm"
+      }
+    },
+    "sim_load_start": {
+      "description": "A simulator started loading its engine.",
+      "props": { "sim": "sim" }
+    },
+    "sim_loaded": {
+      "description": "The simulator is ready. ms = time from load start; detail = scene variant.",
+      "props": { "sim": "sim", "ms": "ms", "detail": { "type": "string", "enum": ["plain", "objects"] } }
+    },
+    "sim_load_failed": {
+      "description": "The simulator could not start.",
+      "props": { "sim": "sim", "reason": { "type": "string", "enum": ["no_webgl", "no_wasm", "error", "context_lost"] } }
+    },
+    "mission_start": {
+      "description": "First interaction in a fresh attempt of a mission (SO-101).",
+      "props": { "mission": "slug" }
+    },
+    "mission_win": {
+      "description": "A mission was completed. assisted = the planner (hint/solution) or a replay solved it.",
+      "props": { "mission": "slug", "stars": { "type": "integer", "min": 0, "max": 3 }, "seconds": "seconds", "assisted": { "type": "boolean" } }
+    },
+    "hint_used": {
+      "description": "The visitor pressed a hint button. level 1 = hint in the HUD (after 20 s), 2 = hint in the mission card.",
+      "props": { "mission": "slug", "level": { "type": "integer", "min": 1, "max": 3 } }
+    },
+    "solution_shown": {
+      "description": "The arm planned and played the solution of the mission (hint button, demo button or shortcut).",
+      "props": { "mission": "slug" }
+    },
+    "mode_changed": {
+      "description": "Control mode switched.",
+      "props": { "mode": { "type": "string", "enum": ["smart", "joints"] } }
+    },
+    "teach_recorded": {
+      "description": "A teach-by-demonstration recording was kept.",
+      "props": { "mission": "slug" }
+    },
+    "demo_shared": {
+      "description": "A share link for a recorded demonstration was created.",
+      "props": { "mission": "slug" }
+    },
+    "ai_panel_open": {
+      "description": "The 'Connect AI' panel was opened.",
+      "props": {}
+    },
+    "ai_paired": {
+      "description": "An AI assistant was paired with the simulator tab.",
+      "props": {}
+    },
+    "ai_tool_call": {
+      "description": "Sampled: the first call of each tool per page view (not every call).",
+      "props": { "tool": "slug" }
+    },
+    "arena_match_start": {
+      "description": "An arena match started.",
+      "props": { "robot": "slug", "opponent": "slug", "mode": "slug" }
+    },
+    "arena_match_end": {
+      "description": "An arena match ended. result is from player 1's point of view.",
+      "props": { "result": { "type": "string", "enum": ["win", "loss", "draw"] }, "kind": { "type": "string", "enum": ["ko", "decision"] }, "seconds": "seconds", "mode": "slug" }
+    },
+    "replay_shared": {
+      "description": "An arena replay was saved to a file or shared as a link.",
+      "props": { "method": { "type": "string", "enum": ["file", "link"] } }
+    },
+    "kit_view": {
+      "description": "A kit (product) page was shown.",
+      "props": { "kit": "slug" }
+    },
+    "waitlist_submit": {
+      "description": "The waitlist form was sent successfully. interest = the ticked options (comma list of option ids), never the e-mail.",
+      "props": { "interest": { "type": "string", "pattern": "^[a-z0-9_,-]{1,80}$" } }
+    },
+    "school_lead_submit": {
+      "description": "The school pilot form was sent successfully (no form content is tracked).",
+      "props": {}
+    },
+    "cta_click": {
+      "description": "A marked call-to-action (data-cta / data-track attribute) was clicked.",
+      "props": { "id": "slug" }
+    }
+  }
+}

@@ -225,11 +225,23 @@ jobs:
           API_DIGEST: ${{ needs.build.outputs.api }}
           BRIDGE_DIGEST: ${{ needs.build.outputs.bridge }}
           ACTOR: ${{ github.actor }}
+          # Analytics sinks (optional; empty = off). Passed on stdin as base64, never on a command line.
+          CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}
+          CLICKHOUSE_USER: ${{ secrets.CLICKHOUSE_USER }}
+          CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
+          AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
+          COUNTRY_HEADER: ${{ vars.ANALYTICS_COUNTRY_HEADER }}
         run: |
           api="${IMAGE_PREFIX}api@${API_DIGEST}"
           bridge=""; [ -n "$BRIDGE_DIGEST" ] && bridge="${IMAGE_PREFIX}bridge@${BRIDGE_DIGEST}"
           set +e
-          out=$(printf '%s\n' "$TOKEN" | ssh -o StrictHostKeyChecking=$STRICT -l "$U" vps \
+          stdin() {
+            printf '%s\n' "$TOKEN"
+            for n in CLICKHOUSE_URL CLICKHOUSE_USER CLICKHOUSE_PASSWORD AMPLITUDE_API_KEY COUNTRY_HEADER; do
+              printf '%s=%s\n' "$n" "$(printf '%s' "${!n}" | base64 -w0)"
+            done
+          }
+          out=$(stdin | ssh -o StrictHostKeyChecking=$STRICT -l "$U" vps \
             "ACTION=deploy API_IMAGE='$api' BRIDGE_IMAGE='$bridge' APP_VERSION='$GITHUB_SHA' GHCR_USER='$ACTOR' bash /opt/printedrobotics/incoming/remote-deploy.sh" 2>/dev/null)
           rc=$?
           set -e

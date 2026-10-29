@@ -18,6 +18,7 @@ import { createReplayUI } from './ui/replay.js';
 import { Recorder, deserialize, serialize as serializeReplay, isLocalReplayPath } from './replay/codec.js';
 import { createBinding, remapBinding, sanitizeHazards } from './replay/scene.js';
 import { garageModel } from './ui/garage.js';
+import { track } from './ui/track.js';
 
 const { ROBOTS, Robot } = RB;
 const GRAVITY = RB.GRAVITY || 30;
@@ -129,6 +130,7 @@ const ui = {
 let failed = false;
 function fail(text) {
   failed = true;
+  track('sim_load_failed', { sim: 'arena', reason: 'error' }, { once: true });
   // a replay must not stay on top of the error panel (GPU context lost mid-replay)
   try { if (rui.active) { rui.playback.playing = false; ui.replayBar.hidden = true; } } catch (_) { /* rui not created yet */ }
   for (const p of [ui.end, ui.garage, ui.pause, ui.start, ui.hud]) p.hidden = true;
@@ -383,12 +385,15 @@ function removeBodies() {
     if (r.detachPhysics) r.detachPhysics(true); else { world.removeRigidBody(r.body); r.body = null; }
   }
 }
+const loadT0 = performance.now();
+track('sim_load_start', { sim: 'arena' });
 import('@dimforge/rapier3d-compat').then(async mod => {
   RAPIER = mod.default || mod;
   // init() fetches build/rapier-*.wasm (build.mjs replaces rapier-compat's inlined base64 copy)
   await RAPIER.init();
   if (failed) return;
   ready = true;
+  track('sim_loaded', { sim: 'arena', ms: Math.round(performance.now() - loadT0) });
   ui.go.disabled = false; ui.go.querySelector('span').textContent = 'Start';
 }).catch(e => { console.error(e); fail('Fyzikální engine se nepodařilo načíst. Zkuste stránku obnovit.'); });
 
@@ -475,6 +480,7 @@ function startRound() {
   rig.set(S.mode === 'duo' && S.cam === 'split' ? 'tv' : camModeFor(), true);
   hudNames(); renderTools();
   showScreen('play');
+  track('arena_match_start', { robot: S.robot, opponent: (opp.def && opp.def.id) || '', mode: S.mode });
   ui.wlabel.textContent = player.weaponLabel || (player.def.weapon === 'flipper' ? 'Flipper' : 'Zbraň');
   renderer.domElement.focus({ preventScroll: true });
   maybeCoach();
@@ -487,6 +493,7 @@ function nameOf(r) { return r === player ? (S.mode === 'duo' ? 'Hráč 1' : 'Vy'
 function endRound(win, why, kind) {
   if (game.state !== 'fight') return;
   game.result = { win, why, kind, time: Math.min(ROUND, ROUND - game.left) };
+  track('arena_match_end', { result: win === null ? 'draw' : win ? 'win' : 'loss', kind, seconds: Math.round(game.result.time), mode: S.mode });
   if (kind === 'ko') {
     game.state = 'ko'; game.ko = 1.1;      // let the knockout play out, then replay
     sfx.fall(); sfx.crowd(1);

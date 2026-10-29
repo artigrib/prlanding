@@ -161,6 +161,8 @@ function injectShim(htmlFile, spaceDir) {
   const depth = path.relative(path.dirname(htmlFile), spaceDir).split(path.sep).filter(Boolean).length;
   const src = '../'.repeat(depth) + 'hf-space.js';
   if (!/<\/head>/i.test(html)) throw new Error('no </head> in ' + htmlFile);
+  // the site's consent banner + analytics (assets/track.js) are inert outside printedrobotics.cz; keep them out
+  html = html.replace(/<script src="[^"]*assets\/track\.js" defer><\/script>\n?/g, '');
   html = html.replace(/<\/head>/i, `<script src="${src}"></script><!-- Hugging Face Space shim, see README.md -->\n</head>`);
   fs.writeFileSync(htmlFile, html);
 }

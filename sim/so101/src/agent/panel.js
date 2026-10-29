@@ -6,6 +6,7 @@ import { createAgentBridge, BridgeError } from '../../../../backend/bridge-clien
 import { MISSIONS } from '../missions.js';
 import { PROMPT_GROUPS, MISSION_PROMPT } from './prompts.js';
 import { t } from '../i18n/index.js';
+import { track } from '../analytics.js';
 
 export const MCP_URL = 'https://mcp.printedrobotics.cz/mcp';
 export const RELAY_URL = 'wss://relay.printedrobotics.cz/tab';
@@ -369,7 +370,10 @@ export function mountAgentPanel(root, { api, ux, button, onLink }) {
         if (ux.onboarding && ux.onboarding.active()) ux.onboarding.finish();
       },
       onUnpaired() { ux.panel.toast(t('AI asistent byl odpojen.')); },
-      onActivity(a) { if (a.phase === 'start') logStart(a.tool); else { logEnd(a.tool, a.ok, a.code); if (!prompts.hidden) missionPrompt(); } }
+      onActivity(a) {
+        if (a.phase === 'start') { logStart(a.tool); track('ai_tool_call', { tool: String(a.tool).replace(/[^a-z0-9_-]/g, '').slice(0, 40) }, { once: true }); }  // sampled: first call per tool
+        else { logEnd(a.tool, a.ok, a.code); if (!prompts.hidden) missionPrompt(); }
+      }
     }
   });
 

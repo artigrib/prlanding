@@ -3,6 +3,7 @@
 import { Playback, Director, SPEEDS } from '../replay/player.js';
 import { serialize } from '../replay/codec.js';
 import { ClipRecorder, clipType, download } from '../replay/clip.js';
+import { track } from './track.js';
 
 // optional backend hook for short links: replayHooks.upload = async (blob, header) => 'https://…'
 export const replayHooks = { upload: null };
@@ -60,6 +61,7 @@ export function createReplayUI(d) {
     try {
       const bytes = await serialize(pb.track, opts.header);
       download(new Blob([bytes], { type: 'application/octet-stream' }), `zapas-${stamp()}.prreplay`);
+      track('replay_shared', { method: 'file' });
       say(`Záznam uložen (${Math.round(bytes.length / 1024)} kB).`);
     } catch (e) { say('Záznam se nepodařilo uložit.'); }
   };
@@ -68,6 +70,7 @@ export function createReplayUI(d) {
     try {
       const bytes = await serialize(pb.track, opts.header);
       const url = await replayHooks.upload(new Blob([bytes]), opts.header);
+      track('replay_shared', { method: 'link' });
       if (navigator.share) await navigator.share({ title: 'Záznam z arény 150 g', url }).catch(() => {});
       else { await navigator.clipboard.writeText(url); say('Odkaz zkopírován.'); }
     } catch (e) { say('Odkaz se nepodařilo vytvořit.'); }

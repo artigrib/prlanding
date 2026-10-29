@@ -19,6 +19,7 @@ import { Grab } from './grab.js';
 import { t as tr } from './i18n/index.js';
 import { HiDetail } from './ui/hidetail.js';
 import { store } from './ui/store.js';
+import { track } from './analytics.js';
 
 export async function install(page, env) {
   // core.js layout (servo-emulator branch): the page (MissionPage) owns sliders/demo/HUD, page.sim (ArmSim)
@@ -134,6 +135,8 @@ class UX {
 
   start() {
     this.runner.select(this.startRoute(new URLSearchParams(location.search)));
+    // hint buttons (both play the planner's solution, see startDemo): which one was used
+    addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('#ux-hint,#ux-qhint'); if (b) track('hint_used', { mission: this.runner.m.id, level: b.id === 'ux-hint' ? 1 : 2 }); }, true);
     if (this.runner.m.objects && !this.world.lib) this.runner.select('bowl');   // app.js loads the object scene when needed
     this.setMode(this.mode, true);
     this.panel.showPitch(this.ctl.pitch);
@@ -254,6 +257,7 @@ class UX {
     if (rec) this.teach.startRec();     // recording the planner's solution is a valid demonstration
     this.runner.start();
     this.runner.assisted = true;        // the robot solved it: no stars / record for the visitor (P1-4)
+    track('solution_shown', { mission: this.runner.m.id });
     const plan = this.runner.m.solve(this.ctl, this.world);
     this.preview(plan, true);
     this.panel.toast('Ruka plánuje řešení…');
@@ -271,6 +275,7 @@ class UX {
 
   // ================= actions =================
   setMode(mode, quiet) {
+    if (!quiet && mode !== this.mode) track('mode_changed', { mode });
     this.mode = mode; store.set('mode', mode);
     this.panel.showMode(mode);
     if (mode !== 'smart') { this.ctl.cancel(); this.pending = null; if (this.penTool) this.togglePen(); }
@@ -360,7 +365,7 @@ class UX {
 
   toggleRec() {
     const t = this.teach;
-    if (t.recording) { t.stopRec(); if (t.demo) this.panel.toast('Ukázka nahrána. Přehrajte si ji.'); else this.panel.toast('Ukázka byla příliš krátká', 'err'); }
+    if (t.recording) { t.stopRec(); if (t.demo) { track('teach_recorded', { mission: this.runner.m.id }); this.panel.toast('Ukázka nahrána. Přehrajte si ji.'); } else this.panel.toast('Ukázka byla příliš krátká', 'err'); }
     else { t.startRec(); this.runner.start(); this.panel.toast('Nahrávám. Vyřešte úkol a pak nahrávání zastavte.'); }
   }
   togglePlay() {
@@ -526,6 +531,7 @@ class UX {
     this.cameras.cinematic();
     if (this.teach.recording) this.panel.toast('Mise splněna. Nahrávání můžete zastavit.');
     try { window.dataLayer && window.dataLayer.push({ event: 'sim_success', robot: 'so101', mission: m.id, stars: res.stars }); } catch (e) { /* ignore */ }
+    track('mission_win', { mission: m.id, stars: res.stars, seconds: Math.round(res.time), assisted: !own });
   }
 
   /** "Sdílet rekord": a link that opens the mission with this time as the target (?mise=&rekord=). */

@@ -2,6 +2,7 @@
 
 import { store } from './store.js';
 import { MISSIONS } from '../missions.js';
+import { track } from '../analytics.js';
 
 const FPS = 30, MAX_S = 180;
 const SNAP_KEYS = ['qpos', 'qvel', 'ctrl', 'act', 'mpos', 'mquat'];
@@ -138,6 +139,7 @@ export class Teach {
     const gz = await new Response(new Blob([body]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
     let bin = ''; const u8 = new Uint8Array(gz); for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
     const b64 = btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    track('demo_shared', { mission: D.mission.id });
     return location.origin + location.pathname + '#ukazka=' + b64;
   }
   /** Load a demonstration from the #ukazka= hash. Returns the number of frames or 0. */
