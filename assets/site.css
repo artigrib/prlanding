@@ -53,7 +53,7 @@ button{font-family:inherit}
 /* hero */
 .hero-meta{padding-top:40px}
 .hero-h1{margin:clamp(40px,8vw,120px) 0 0;font-weight:500;font-size:clamp(46px,7.4vw,116px);line-height:.94;letter-spacing:-.045em}
-.hero-h1 span{display:block}.ind{margin-left:25%}
+.hero-h1 span{display:block}
 .hero-row{margin-top:clamp(32px,5vw,72px);row-gap:24px;align-items:end}
 .hero-fig{margin:clamp(40px,7vw,96px) 0 0;row-gap:12px}
 .hero-img{aspect-ratio:16/9;background:var(--stone);overflow:hidden}
@@ -234,7 +234,6 @@ legend{padding:0 0 10px;font-family:var(--mono);font-size:13px;color:var(--mute)
   /* hero */
   .hero-meta{padding-top:20px}
   .hero-h1{font-size:clamp(34px,9.6vw,44px);line-height:1.02;letter-spacing:-.04em;margin-top:28px}
-  .ind{margin-left:0}
   .big-num{font-size:44px}
   .hero-fig figcaption{order:2}
   /* section headers: eyebrow label tight above heading */
