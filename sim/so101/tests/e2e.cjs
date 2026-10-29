@@ -210,7 +210,10 @@ async function touchDrag(page, from, to, steps = 8) {
       await S(p, () => { const u = window.__sim._ux, c = u.world.pos('cube', [0, 0, 0]); u.ctl.begin(); u.ctl.setGrip(false); u.ctl.setTarget(c[0], c[1], c[2] + 0.035); });
       await S(p, () => window.__sim.advance(3));
       const h0 = (await ux(p)).hud, g0 = await S(p, () => window.__sim._ux.ctl.grip);
-      const jp = await S(p, () => window.__sim.linkPoint(5));
+      let jp = await S(p, () => window.__sim.linkPoint(5));
+      // the jaws can be hidden behind the cube from the default view (frame-rate dependent orbit): try the fixed views
+      for (const v of ['side', 'front']) { if (jp) break; await S(p, (v) => window.__sim.cameraNow(v), v); await p.waitForTimeout(300); jp = await S(p, () => window.__sim.linkPoint(5)); }
+      ok(!!jp, 'a visible point on the jaws exists for the tap test');
       await p.mouse.click(jp.x, jp.y);
       await S(p, () => window.__sim.advance(1.2));
       const h1 = (await ux(p)).hud, g1 = await S(p, () => window.__sim.state().ctrl[5]);
