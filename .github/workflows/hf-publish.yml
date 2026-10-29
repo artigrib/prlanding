@@ -71,5 +71,5 @@ jobs:
         if: steps.token.outputs.present == 'true'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_ORG: ${{ vars.HF_ORG || 'printedrobotics' }}
+          HF_ORG: ${{ vars.HF_ORG || 'protorobot' }}
         run: python tools/hf/publish_spaces.py

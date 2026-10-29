@@ -42,7 +42,7 @@ test('resample puts frames on an exact 30 fps grid', () => {
 });
 
 test('buildDataset writes a LeRobot v2.1 layout', async () => {
-  const files = await buildDataset([synthDemo('bowl'), synthDemo('stack', 1.5), synthDemo('bowl', 1)], { repoId: 'printedrobotics/so101-sim-test' });
+  const files = await buildDataset([synthDemo('bowl'), synthDemo('stack', 1.5), synthDemo('bowl', 1)], { repoId: 'protorobot/so101-sim-test' });
   const info = JSON.parse(files['meta/info.json']);
   assert.equal(info.codebase_version, 'v2.1');
   assert.equal(info.robot_type, 'so101_follower');
