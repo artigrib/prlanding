@@ -150,6 +150,7 @@ export class Extras {
       mesh.quaternion.set(q[4 * b + 1], q[4 * b + 2], q[4 * b + 3], q[4 * b]);
     }
     if (this.pen.visible) this.syncPen();
+    if (this.ux.objView) this.ux.objView.sync();
   }
 
   syncPen() {

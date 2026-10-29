@@ -114,13 +114,27 @@ export class World {
       mq[4 * i] = Math.cos(yaw / 2); mq[4 * i + 1] = 0; mq[4 * i + 2] = 0; mq[4 * i + 3] = Math.sin(yaw / 2);
     }
   }
-  park(name) { const p = PARK[name]; if (!p) return; const e = this.o[name]; if (e.lib) this.place(name, p[0], p[1], null, 0, -0.75); else this.place(name, p[0], p[1], p[2]); this.o[name].active = false; this.activeList = null; }
+  park(name) {
+    const p = PARK[name]; if (!p) return; const e = this.o[name];
+    if (e.lib) { this.place(name, p[0], p[1], null, 0, -0.75); this.sleep(e, true); } else this.place(name, p[0], p[1], p[2]);
+    e.active = false; this.activeList = null;
+  }
+  /** Parked library objects: no contacts and no gravity (the object scene steps ~4x faster on phones). */
+  sleep(e, on) {
+    const m = this.m;
+    if (!e.geoms) {
+      e.geoms = [];
+      for (let g = m.body_geomadr[e.body], n = g + m.body_geomnum[e.body]; g < n; g++) e.geoms.push([g, m.geom_contype[g], m.geom_conaffinity[g]]);
+    }
+    for (const [g, ct, ca] of e.geoms) { m.geom_contype[g] = on ? 0 : ct; m.geom_conaffinity[g] = on ? 0 : ca; }
+    if (m.body_gravcomp) m.body_gravcomp[e.body] = on ? 1 : 0;
+  }
 
   /** Set up a layout: { cube: [x, y, yaw?], bowl: [x, y, yaw?], ... }; everything else is parked. */
   layout(spec) {
     for (const name of Object.keys(this.o)) {
       const s = spec[name];
-      if (s) { this.place(name, s[0], s[1], null, s[2] || 0); this.o[name].active = true; }
+      if (s) { if (this.o[name].lib) this.sleep(this.o[name], false); this.place(name, s[0], s[1], null, s[2] || 0); this.o[name].active = true; }
       else this.park(name);
     }
     this.activeList = Object.values(this.o).filter((e) => e.active);

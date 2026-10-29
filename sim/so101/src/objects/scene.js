@@ -191,7 +191,10 @@ export async function objectSceneXml(sceneXml, lib, { injectObjects, instanceXml
     const entry = await lib.entry(it.id);
     const text = scaleMjcf(applyCollision(entry, await lib.mjcf(it.id)), it.scale);
     const p = parkSpot(i);
-    inst.push(instanceXml(entry, text, { name: it.name, pos: p, quat: it.lying ? LYING : [1, 0, 0, 0] }));
+    const one = instanceXml(entry, text, { name: it.name, pos: p, quat: it.lying ? LYING : [1, 0, 0, 0] });
+    // compiled with gravity compensation so World.sleep() can switch it per body at run time (parked = floating)
+    one.body = one.body.replace(/<body\b/, '<body gravcomp="1"');
+    inst.push(one);
     items.push({ ...it, entry, scale: it.scale || 1 });
   }
   const j = sceneXml.lastIndexOf('</worldbody>');

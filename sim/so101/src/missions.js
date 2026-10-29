@@ -241,9 +241,10 @@ export const MISSIONS = [
   },
   {
     id: 'tidy', n: '08', title: 'Uklizený stůl',
-    desc: 'Po snídani: hrnek, lžičku, vidličku a houbičku uklidťe na podnos.',
+    desc: 'Po snídani: hrnek, lžičku, vidličku a houbičku ukliďte na podnos.',
     short: 'Úklid na podnos',
     objects: true,
+    credit: 'Objekty: NVIDIA SimReady (CC BY 4.0) · hrnek: Google Scanned Objects (CC BY 4.0)',
     layout: { mug: [0.27, -0.125, 0.3], spoon: [0.17, -0.12, 0.35], fork: [0.215, -0.19, -0.2], sponge: [0.33, -0.025, 0.9], tray: [0.19, 0.165] },
     tip: 'Klikněte na předmět a pak na <b>podnos</b>. Lžičku a vidličku ruka sama natočí podél podnosu.',
     advice: 'Tenkou lžičku a vidličku ruka bere těsně nad stolem – pro 3 ★ je nechte uchopit uprostřed.',

@@ -125,10 +125,10 @@ export class Panel {
       b.addEventListener('click', () => { this.closePicker(); this.ux.selectMission(m.id); });
       this.cards.appendChild(b);
     }
-    // chapter 06: the real arm (servo setup wizard) – visible from the start, never locked (teachers link it directly)
+    // chapter 11 (after the missions): the real arm (servo setup wizard) – visible from the start, never locked (teachers link it directly)
     const pr = progressOf(prog);
     const ch = h(`<a class="ux-card ux-chapter" href="nastaveni/">
-        <span class="mono">Kapitola 06</span>
+        <span class="mono">Kapitola 11</span>
         <b>Skutečná ruka</b>
         <span class="ink2">Nastavení serv nanečisto: ID, kalibrace, test</span>
         <span class="mono-s muted">${pr.done >= 3 ? 'Odemčeno: zvládli jste 3 mise' : 'Doporučujeme po 3 misích – otevřít můžete hned'}</span>
@@ -143,9 +143,16 @@ export class Panel {
   closePicker() { this.picker.hidden = true; if (this.lastFocus) this.lastFocus.focus({ preventScroll: true }); }
 
   showMission(m, prog) {
-    this.mNum.textContent = `Mise ${m.n} / 0${MISSIONS.length}`;
+    this.mNum.textContent = `Mise ${m.n} / ${String(MISSIONS.length).padStart(2, '0')}`;
     this.mTitle.textContent = m.title;
     this.mDesc.textContent = m.desc;
+    // credits for the scanned / authored objects (CC BY 4.0 needs attribution where they are shown)
+    if (!this.credit) {
+      this.credit = h(`<p class="mono-s muted ux-credit"><a href="objects/LICENSES.md" target="_blank" rel="noopener"></a></p>`);
+      this.mDesc.parentNode.insertBefore(this.credit, this.mDesc.nextSibling);
+    }
+    this.credit.hidden = !m.objects;
+    if (m.objects) this.credit.firstChild.textContent = m.credit || 'Objekty: NVIDIA SimReady (CC BY 4.0)';
     const s = prog ? prog.stars : 0;
     this.mStars.innerHTML = starStr(s);
     this.mStars.setAttribute('aria-label', s ? `Nejlepší hodnocení ${s} ze 3 hvězdiček` : 'Zatím nesplněno');
@@ -447,7 +454,8 @@ export class Panel {
       for (let i = 0; i < 3; i++) { sp[i].className = i < res.stars ? 'on' : ''; sp[i].style.animationDelay = (0.15 + i * 0.18) + 's'; }
       this.winStars.setAttribute('aria-label', `${res.stars} ze 3 hvězdiček`);
       let st = `Čas ${fmt(res.time)}`;
-      if (res.prec) st += ` · přesnost ${(res.prec * 1000).toFixed(1)} mm`;
+      if (res.prec && m.precText) st += ` · ${m.precText(res.prec)}`;
+      else if (res.prec) st += ` · přesnost ${(res.prec * 1000).toFixed(1)} mm`;
       st += ` · ${'★'.repeat(res.stars)}${'☆'.repeat(3 - res.stars)}`;
       if (isNew) st += ' · nový rekord';
       else if (best) st += ` · rekord ${fmt(best.time)}`;

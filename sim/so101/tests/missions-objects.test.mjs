@@ -85,3 +85,18 @@ test('every library item can be picked up and carried (SO-101 gripper, real mass
     assert.ok(Math.hypot(p[0] - 0.2, p[1] - 0.14) < 0.03, `${it.id}: put down ${(Math.hypot(p[0] - 0.2, p[1] - 0.14) * 1000).toFixed(0)} mm off`);
   }
 });
+
+test('app.js knows which missions need the object scene (same list and order as MISSIONS)', async () => {
+  const fs = await import('node:fs');
+  const src = fs.readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+  const list = JSON.parse(/const OBJECT_MISSIONS = (\[[^\]]*\])/.exec(src)[1].replace(/'/g, '"'));
+  assert.deepEqual(list, OBJ.map((x) => x.id));
+  assert.deepEqual(MISSIONS.filter((x) => !x.objects).map((x) => x.id), ['bowl', 'stack', 'sort', 'ball', 'trace']);
+});
+
+test('parked library objects float without contacts (no cost, no drift)', () => {
+  reset('line');
+  run(3);
+  for (const n of ['apple', 'vial', 'screwdriver']) assert.ok(Math.abs(world.com(n)[2] + 0.72) < 0.05, `${n} z ${world.com(n)[2]}`);
+  for (const n of ['nut1', 'bolt2']) assert.ok(world.com(n)[2] > 0 && world.com(n)[2] < 0.04, `${n} on the table`);
+});

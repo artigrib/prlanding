@@ -61,3 +61,17 @@ copies of the licence texts are included next to each component.
             https://github.com/zeux/meshoptimizer, Copyright (C) 2016-2022 Arseny Kapoulkine
    Licence: MIT (stated at the top of the file)
    Unmodified.
+
+6) Objects of missions 06–10 (objects/, src/objects/scene.js)
+   "Objekty: NVIDIA SimReady (CC BY 4.0)": M8 nut and bolt, apple, banana, cupcake, plastic spoon and fork,
+   cleaning sponge, Phillips PH1 screwdriver and glass vial from nvidia/simready-assets by NVIDIA, licensed
+   CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); the mug in mission 08 is "Mug" from Google
+   Scanned Objects by Google Research, CC BY 4.0. Per-object attribution and sources: objects/LICENSES.md;
+   conversion and changes: objects/NOTICE.txt.
+   Further changes made by printedrobotics.cz for the missions (src/objects/scene.js):
+     - M8 nut and bolt shown 2.5x larger and the sponge at 80 % (collision, mass and visual scaled together),
+       so the SO-101's printed jaws can hold them; the mission text says so.
+     - Collision of the banana, spoon and fork replaced by chains of convex slices along the object
+       (the single convex hull is a filled shape the jaws cannot close on); mass and inertia unchanged.
+     - dishware_bowl_a01: authored mass of exactly 1 kg (placeholder) set to 0.3 kg, inertia scaled.
+     - Bins, plate, tray, screwdriver holder and vial rack are new, simple geometry by printedrobotics.cz.
