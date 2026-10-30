@@ -61,12 +61,29 @@ async function main() {
   addEventListener('pagehide', (e) => { if (!e.persisted) sim.dispose(); });
 }
 
+/** A drag stick: calls set({x, y}) with -1..1 (y down). Touch never scrolls or zooms the page while on it. */
+function bindStick(pad, knob, set, horizontal = false) {
+  let id = null;
+  const move = (e) => {
+    const r = pad.getBoundingClientRect(), Rx = r.width / 2, Ry = r.height / 2;
+    let x = (e.clientX - r.left - Rx) / (horizontal ? Rx - 23 : Rx), y = horizontal ? 0 : (e.clientY - r.top - Ry) / Ry;
+    const l = Math.hypot(x, y); if (l > 1) { x /= l; y /= l; }
+    set({ x, y }); knob.style.transform = `translate(${x * (horizontal ? Rx - 23 : Rx * 0.6)}px, ${y * Ry * 0.6}px)`;
+  };
+  const end = (e) => { if (e && e.pointerId !== id) return; id = null; set({ x: 0, y: 0 }); knob.style.transform = ''; };
+  pad.addEventListener('pointerdown', (e) => { id = e.pointerId; try { pad.setPointerCapture(id); } catch (err) {} move(e); e.preventDefault(); });
+  pad.addEventListener('pointermove', (e) => { if (e.pointerId === id) { move(e); e.preventDefault(); } });
+  pad.addEventListener('pointerup', end); pad.addEventListener('pointercancel', end); pad.addEventListener('lostpointercapture', end);
+  // iOS Safari: block scroll / pinch-zoom from touches that start on the stick
+  for (const t of ['touchstart', 'touchmove']) pad.addEventListener(t, (e) => e.preventDefault(), { passive: false });
+}
+
 let flashT = 0;
 function flash(text) { $('hud-text').textContent = text; flashT = performance.now() + 1500; }
 
 class Page {
   constructor(sim, policyError) {
-    this.sim = sim; this.keys = new Set(); this.pad = { x: 0, y: 0 }; this.forced = null;
+    this.sim = sim; this.keys = new Set(); this.pad = { x: 0, y: 0 }; this.tmove = { x: 0, y: 0 }; this.tturn = { x: 0, y: 0 }; this.forced = null;
     this.cmd = { vx: 0, vy: 0, yaw: 0 };
     this.sliders();
     this.controls();
@@ -119,19 +136,12 @@ class Page {
     addEventListener('keydown', (e) => { if (K.includes(e.code) && owns(e) && !e.ctrlKey && !e.metaKey && !e.altKey) { this.keys.add(e.code); e.preventDefault(); } });
     addEventListener('keyup', (e) => this.keys.delete(e.code));
     addEventListener('blur', () => this.keys.clear());
-    // on-screen joystick: up = forward, left/right = turn
-    const pad = $('pad'), knob = $('knob');
-    let id = null;
-    const move = (e) => {
-      const r = pad.getBoundingClientRect(), R = r.width / 2;
-      let x = (e.clientX - r.left - R) / R, y = (e.clientY - r.top - R) / R;
-      const l = Math.hypot(x, y); if (l > 1) { x /= l; y /= l; }
-      this.pad = { x, y }; knob.style.transform = `translate(${x * R * 0.6}px, ${y * R * 0.6}px)`;
-    };
-    pad.addEventListener('pointerdown', (e) => { id = e.pointerId; pad.setPointerCapture(id); move(e); });
-    pad.addEventListener('pointermove', (e) => { if (e.pointerId === id) move(e); });
-    const end = () => { id = null; this.pad = { x: 0, y: 0 }; knob.style.transform = ''; };
-    pad.addEventListener('pointerup', end); pad.addEventListener('pointercancel', end);
+    // panel joystick (desktop): up = forward, left/right = turn
+    bindStick($('pad'), $('knob'), (v) => { this.pad = v; });
+    // touch overlay on the canvas: left stick walks (up/down) and sidesteps (left/right), right control turns
+    bindStick($('tpad-move'), $('tknob-move'), (v) => { this.tmove = v; });
+    bindStick($('tpad-turn'), $('tknob-turn'), (v) => { this.tturn = v; }, true);
+    $('t-standup').addEventListener('click', () => { sim.reset(); this.syncMode(); });
   }
 
   input(dt) {
@@ -144,6 +154,7 @@ class Page {
     if (k.has('KeyQ')) vy += 1;
     if (k.has('KeyE')) vy -= 1;
     vx -= this.pad.y; yaw -= this.pad.x;
+    vx -= this.tmove.y; vy -= this.tmove.x; yaw -= this.tturn.x;
     try {
       const gp = navigator.getGamepads && [...navigator.getGamepads()].find((g) => g && g.connected);
       if (gp) {
@@ -162,11 +173,14 @@ class Page {
     const walk = this.sim.mode === 'walk';
     $('mode-walk').checked = walk; $('mode-stand').checked = !walk;
     $('walkbox').hidden = !walk;
+    $('c').closest('.stage').classList.toggle('is-stand', !walk);
     $('joints').disabled = walk;
     $('joints-note').textContent = walk ? (EN ? 'The policy moves the joints; the sliders show the live angles.' : 'Klouby teď řídí politika; posuvníky ukazují skutečné úhly.')
       : (EN ? 'The robot hangs on a gantry; each slider sets a joint target.' : 'Robot visí na stojanu; každý posuvník nastavuje cíl jednoho kloubu.');
     if (!walk) this.syncSliders();
   }
+
+  touchUi() { return getComputedStyle($('touch')).display !== 'none'; }
 
   syncSliders() { for (let j = 0; j < JOINTS.length; j++) this.inputs[j].value = this.sim.sliders[j]; }
 
@@ -182,7 +196,7 @@ class Page {
       $('cmd').textContent = S.cmd(sim.cmd);
     }
     if (performance.now() > flashT) {
-      const t = sim.fallen ? S.fell : walk ? S.walkHud : S.standHud;
+      const t = sim.fallen ? S.fell : walk ? (this.touchUi() ? $('touch').dataset.hud : S.walkHud) : S.standHud;
       if ($('hud-text').textContent !== t) $('hud-text').textContent = t;
     }
     $('hud-dot').classList.toggle('bad', !!sim.fallen);
@@ -203,7 +217,7 @@ class Page {
       reset: () => sim.reset(),
       explode: (v) => { sim.explodeTo = sim.exploded = v ? 1 : 0; sim.sync(); },
       setSlider: (j, v) => { sim.setSlider(j, v); this.syncSliders(); },
-      state: () => { const q = sim.d.qpos; return { t: sim.d.time, x: q[0], y: q[1], z: q[2], fallen: sim.fallen, mode: sim.mode, policyMs: sim.policyMs, ticks: sim.policyTicks }; },
+      state: () => { const q = sim.d.qpos; return { cmd: { ...sim.cmd }, t: sim.d.time, x: q[0], y: q[1], z: q[2], fallen: sim.fallen, mode: sim.mode, policyMs: sim.policyMs, ticks: sim.policyTicks }; },
       fps: () => sim.fps,
       lowQ: () => !!sim.lowQ,
       slow: () => !!sim.slowOffered,

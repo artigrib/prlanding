@@ -37,6 +37,12 @@
     <canvas id="c" aria-label="The ROBOTO ORIGIN humanoid on a grid floor. Walk with W A S D or the joystick; click the robot to push it."></canvas>
     <div class="hud" id="hud" hidden><span class="hud-dot" id="hud-dot" aria-hidden="true"></span><span id="hud-text"></span></div>
     <p class="hint mono" id="hint" hidden>Drag to orbit · scroll to zoom · click the robot to push it</p>
+    <!-- touch / narrow screens: drive controls on the canvas, in the thumb zone (CSS shows them only there) -->
+    <div class="touch" id="touch" data-hud="Walking policy in control · left stick walks, right control turns">
+      <div class="tpad tpad-move" id="tpad-move" role="img" aria-label="Walk: up forward, down back, sideways to sidestep"><span class="knob" id="tknob-move"></span></div>
+      <div class="tpad tpad-turn" id="tpad-turn" role="img" aria-label="Turn: drag left or right"><span class="tturn-l" aria-hidden="true">⟲</span><span class="tturn-r" aria-hidden="true">⟳</span><span class="knob" id="tknob-turn"></span></div>
+      <button type="button" class="tbtn" id="t-standup">Stand up</button>
+    </div>
     <div class="loader" id="loader"><div class="loader-in">
       <p class="mono" role="status">Loading the simulation…</p>
       <div class="prog" aria-hidden="true"><b id="prog"></b></div>
