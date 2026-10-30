@@ -14,7 +14,14 @@
    "estimate": "our assumption"
   },
   "oss_vat_uplift": 0.017,
-  "affiliate_links": false
+  "affiliate_links": false,
+  "license": {
+   "hw": "Apache-2.0",
+   "sw": "Apache-2.0",
+   "status": "verified",
+   "checked": "2026-10-30",
+   "sources": ["https://github.com/TheRobotStudio/SO-ARM100/blob/main/LICENSE", "https://github.com/huggingface/lerobot/blob/main/LICENSE"]
+  }
  },
  "suppliers": {
   "eckstein": {

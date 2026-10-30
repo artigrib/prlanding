@@ -1,0 +1,59 @@
+ROBOTO ORIGIN (RPO) files vendored by printedrobotics.cz
+========================================================
+
+Everything in this folder (vendor/roboto_origin/) comes from RoboParty (Shanghai RoboParty Technology Co., Ltd.):
+
+  Repository:  https://github.com/Roboparty/roboto_origin  (snapshot aggregation repository)
+  Commit:      c71fd9287d28104dca111d7c25b908fa3f45f8e4  (2026-08-18 11:38:59 +0800), fetched 2026-10-30
+  Copyright:   © 2025–2026 RoboParty
+
+Files, upstream paths and licences
+----------------------------------
+mjcf/rpo.xml            modules/rpo_description/mjcf/rpo.xml                      CERN-OHL-W-2.0
+meshes/*.msh            modules/rpo_description/meshes/*.STL (24 files)           CERN-OHL-W-2.0
+policy/policy.onnx      modules/roboparty_deploy/src/inference/robots/rpo/models/policy.onnx
+                                                                                  GPL-3.0-only (see below)
+policy/default.yaml     modules/roboparty_deploy/src/inference/robots/rpo/configs/default.yaml
+                                                                                  GPL-3.0-only
+LICENSE.CERN-OHL-W-2.0  modules/rpo_description/LICENSE (verbatim)
+LICENSE.GPL-3.0         LICENSE of the repository root (verbatim GNU GPL v3 text)
+
+Scope: only what the browser page needs is vendored (the robot description + meshes, CERN-OHL-W-2.0, and the
+walking policy + its config, GPL-3.0-only). Nothing from roboparty_train (incl. the CC-BY-NC-4.0 parkour material),
+no other policies, no rpo_appearance shells, no CAD/PCB files and no RoboParty logos or images are included.
+
+Licence notes
+- modules/rpo_description/README.md: "Files in this directory are licensed under the CERN Open Hardware Licence
+  Version 2 - Weakly Reciprocal (CERN-OHL-W-2.0)". The robot description (MJCF + meshes) is therefore
+  CERN-OHL-W-2.0, not GPL-3.0. Source location of the Covered Source: https://github.com/Roboparty/rpo_description
+  (snapshot above: modules/rpo_description/).
+- policy.onnx sits in roboparty_deploy/src/inference (= Roboparty/roboparty_inference, GPL-3.0). The root
+  THIRD_PARTY_NOTICES.md says the nine ONNX models there "were trained by RoboParty and are owned by RoboParty"
+  and are retained in the public snapshot; no file-specific licence is given, so the directory default
+  (GPL-3.0-only for RoboParty-authored material, LICENSES.md) applies. The upstream release record does not yet
+  name the training-code revision or data for the model. SHA-256 of the vendored file:
+  d364d51a9d2acd1a723b8268dd0abce3ac61f1217e0370413d183dd2ca37d6a4
+  (The separate repository Roboparty/roboparty_inference at 17aa576, 2026-10-30, ships a different policy.onnx
+  with the same interface, SHA-256 6983bc76d4b6dd2f9d773f7543fb26aec26abacde1da11157da8f50b951a7653; we use the one from the roboto_origin snapshot.)
+- Trademarks: RoboParty, 萝博派对, RPO and Roboto Origin are RoboParty's marks (modules/rpo_hardware/TRADEMARKS.md).
+  We use the names only to say where the files come from. printedrobotics.cz is not affiliated with,
+  endorsed by or supported by RoboParty.
+
+Modifications by printedrobotics.cz (CERN-OHL-W-2.0 §3.3 / GPL-3.0 §5: changes and date)
+- 2026-10-30, meshes: the 24 STL meshes (635 311 triangles, 32 MB) were welded, decimated with quadric
+  simplification to 20 % of the faces (minimum 1 200 faces per mesh; 130 484 triangles total) and written as
+  MuJoCo .msh (positions only). Largest bounding-box change of any mesh: 2.99 mm (base_link). Reproduce with
+  sim/origin/tools/decimate.py (needs numpy, trimesh, fast_simplification); the report is in sim/origin/tools/decimate-report.json.
+- 2026-10-30, mjcf/rpo.xml: the 24 mesh file names changed from .STL to .msh. Nothing else changed.
+- policy/policy.onnx and policy/default.yaml: unchanged.
+The modified files in this folder are offered under the same licences (CERN-OHL-W-2.0 for mjcf/ and meshes/,
+GPL-3.0-only for policy/). The complete source of the modifications (the decimation script) is in
+sim/origin/tools/ of https://github.com/artigrib/prlanding.
+
+Not part of this folder
+All other files under sim/origin/ (app.js, core.js, src/, scene.xml, origin.css, index.html, tools/, tests/)
+are printedrobotics.cz code. They load these files at run time as data; they are not derived from RoboParty
+code. The observation layout, joint order, gains and limits in sim/origin/src/policy.js are copied as numbers
+from the upstream configuration (robot.yaml, configs/default.yaml) and from the BSD-3-Clause script
+modules/roboparty_train/robolab/scripts/mujoco/sim2sim_rpo.py (© The Isaac Lab Project Developers,
+© The RoboLab Project Developers) so the policy gets the inputs it was trained with.

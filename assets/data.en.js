@@ -137,6 +137,19 @@ window.PR_EN = {
     arena: { label: 'Try it in the arena', note: 'Browser game · free · ≈ 3.5 MB' },
     so101: { label: 'Try it in the simulator', note: 'Browser simulation · free · ≈ 8.4 MB' }
   },
+  // showcases (data.js PR_SHOWCASE): translated fields only; sources and licences stay as in data.js
+  showcase: {
+    origin: { type: 'Full-size humanoid', level: 'Advanced',
+      badge: 'Showcase · open hardware CERN-OHL-W-2.0 · software GPL-3.0',
+      short: 'An open humanoid with 23 joints in machined aluminium: mechanics, electronics, walking training and deployment published as open source.',
+      lead: 'A humanoid prototype that RoboParty of Shanghai designed in four months and published in full: CAD, circuit boards, bill of materials, the simulation model, Isaac Lab training and ROS 2 deployment including trained policies. According to the authors it can be built from Taobao parts and made-to-order machining. We show it as inspiration – we do not sell parts or kits for it and we are not affiliated with the authors.',
+      note: 'The structure is machined aluminium; only calibration jigs are printed, so “print kits” make no sense here.',
+      specLabels: ['Degrees of freedom', 'Actuators', 'Power', 'Main computer', 'Bus', 'Structure', 'Model mass', 'Model height', 'Walking', 'Software', 'Parts cost (author)'],
+      specValues: ['23 (legs 2× 6, waist 1, arms 2× 5)', '14× Damiao DM-4340P (48 V), 9× DM-10010L', 'Li-ion 48 V, 15 Ah', 'RDK X5 8 GB', 'CAN, 4 buses (6 + 7 + 5 + 5 motors)',
+        'CNC aluminium 6061/7075, black anodised; steel links', '≈ 33.8 kg (sum of MJCF masses, no shells)', '≈ 1.06 m (MJCF, legs straight, no shells)',
+        'RL policy (ONNX), 50 Hz, forward command −0.4 to 0.6 m/s', 'ROS 2 Humble, Isaac Lab 2.1, MuJoCo sim2sim', 'CNY 49,713 (BOM v1.0.1, 5 Jan 2026)'],
+      licenseNotes: 'Robot description (MJCF, meshes), CAD, PCBs and BOM: CERN-OHL-W-2.0; software and firmware: GPL-3.0-only (orangepi-build GPL-2.0, usb2can Apache-2.0); documentation: CC BY-SA 4.0; training: BSD-3-Clause, parkour part CC BY-NC 4.0; vendor part models are not licensed. RoboParty, RPO and Roboto Origin are trademarks.' }
+  },
   licenses: [
     ['Apache-2.0', 'y', 'Yes', 'Copy of the licence, author credit, changes marked'],
     ['MIT', 'y', 'Yes', 'Copy of the licence and the author’s copyright'],
@@ -162,6 +175,13 @@ window.PR_EN_APPLY = function () {
     if (EN.levels[r.level]) r.level = EN.levels[r.level];
     ['type', 'software'].forEach(function (k) { if (!e[k] && EN.values[r[k]]) r[k] = EN.values[r[k]]; });
     Object.keys(e).forEach(function (k) { r[k] = e[k]; });
+  });
+  (W.PR_SHOWCASE || []).forEach(function (r) {
+    var e = EN.showcase[r.id]; if (!e) return;
+    var cs = {}; Object.keys(r).forEach(function (k) { cs[k] = r[k]; }); r._cs = cs;
+    ['type', 'level', 'badge', 'short', 'lead', 'note'].forEach(function (k) { if (e[k]) r[k] = e[k]; });
+    r.specs = r.specs.map(function (s, i) { return [e.specLabels[i] || s[0], e.specValues[i] || s[1], s[2]]; });
+    r.license = Object.assign({}, r.license, { notes: e.licenseNotes });
   });
   Object.keys(EN.sims).forEach(function (k) { if (W.PR_SIMS[k]) { W.PR_SIMS[k].label = EN.sims[k].label; W.PR_SIMS[k].note = EN.sims[k].note; } });
   W.PR_LICENSES = EN.licenses;

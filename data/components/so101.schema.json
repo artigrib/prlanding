@@ -46,6 +46,18 @@
           "minimum": 0,
           "maximum": 0.1
         },
+        "license": {
+          "description": "Licence of the robot project, same shape as license in assets/data.js; rights are derived from it (PR_DERIVE_RIGHTS).",
+          "type": "object",
+          "required": ["hw", "status", "checked", "sources"],
+          "properties": {
+            "hw": { "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "array", "items": { "type": "string" }, "minItems": 1 }] },
+            "sw": { "type": "string" },
+            "status": { "enum": ["verified", "unverified"] },
+            "checked": { "$ref": "#/$defs/date" },
+            "sources": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 }
+          }
+        },
         "affiliate_links": {
           "type": "boolean"
         },

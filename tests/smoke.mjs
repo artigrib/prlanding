@@ -386,5 +386,29 @@ for (const vp of [{ width: 360, height: 780 }, { width: 1440, height: 900 }]) {
   });
 }
 
+// ROBOTO ORIGIN showcase sim (draft): loads, noindex, not in the sitemap, not linked, axe clean, no horizontal scroll
+for (const vp of [{ width: 360, height: 780 }, { width: 1440, height: 900 }]) {
+  await check(`origin sim draft ${vp.width}px`, '/sim/origin/?test=1', async p => {
+    await p.setViewportSize(vp);
+    await p.waitForFunction(() => window.__origin && (window.__origin.ready || window.__origin.error), null, { timeout: 90000 });
+    if (await p.evaluate(() => window.__origin.error)) throw new Error('sim error');
+    if (!(await p.evaluate(() => window.__origin.policy))) throw new Error('walking policy did not load');
+    if ((await p.locator('meta[name="robots"]').getAttribute('content')) !== 'noindex,nofollow') throw new Error('not noindex');
+    if ((await p.locator('#joints input[type=range]').count()) !== 23) throw new Error('joint sliders');
+    if (!/neprodáváme/.test(await p.locator('.panel').innerText())) throw new Error('showcase note missing');
+    await p.addScriptTag({ content: AXE });
+    const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
+    const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    if (bad.length) throw new Error('axe: ' + bad.map(v => `${v.id} (${v.nodes.length}) ${v.nodes[0].target}`).join('; '));
+    if ((await p.evaluate(() => document.documentElement.scrollWidth)) > vp.width) throw new Error('horizontal scroll');
+    if (vp.width > 400) {
+      const sm = await (await p.request.get(BASE + '/sitemap.xml')).text();
+      if (/sim\/origin/.test(sm)) throw new Error('origin sim in the sitemap');
+      for (const path of ['/', '/en/', '/navody/', '/sada/so101/', '/sim/so101/', '/plan/so101/'])
+        if (/sim\/origin/.test(await (await p.request.get(BASE + path)).text())) throw new Error('origin sim linked from ' + path);
+    }
+  });
+}
+
 await browser.close();
 process.exit(failed ? 1 : 0);

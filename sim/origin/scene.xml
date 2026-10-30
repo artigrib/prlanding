@@ -1,0 +1,7 @@
+<!-- printedrobotics.cz scene wrapper (our file, not upstream): includes the vendored upstream model unchanged
+     and only overrides the physics timestep for the browser (upstream sim2sim: 1 ms; here 2 ms, policy at 50 Hz
+     = 10 physics steps per policy step; the policy was checked to walk at 1, 2, 4 and 5 ms in native MuJoCo). -->
+<mujoco model="roboto_origin_browser">
+  <include file="rpo.xml"/>
+  <option timestep="0.002"/>
+</mujoco>
