@@ -1,0 +1,1473 @@
+{
+ "$schema": "./svrn.schema.json",
+ "meta": {
+  "robot": "svrn",
+  "generated": "2026-10-30",
+  "fx_czk_per_eur": 24.2,
+  "fx_note": "Assumption: CNB daily rate not fetched; update before use.",
+  "source": "Component map 2026-10-29, FLS Battlebots / AirsoftShop / Koptery / Rotorama listings re-opened 2026-10-30. We are not a seller: users buy directly from suppliers.",
+  "status_legend": {
+   "verified": "seen on the source page on the checked date",
+   "carried": "from an earlier check, not re-opened",
+   "unverified": "not seen; inferred or page silent",
+   "estimate": "our assumption"
+  },
+  "oss_vat_uplift": 0.017,
+  "affiliate_links": false,
+  "project": {
+   "name": "Project SVRN",
+   "author": "Shoverobotics (Jordan Gell)",
+   "url": "https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai",
+   "licence": "CC BY 4.0 (per our catalogue; the Printables licence field was blank when fetched 2026-10-30)",
+   "forum": "https://forum.bristolbotbuilders.com/t/project-svrn-modular-3d-printed-robot-files/472"
+  }
+ },
+ "suppliers": {
+  "fls": {
+   "name": "FLS Battlebots",
+   "country": "CZ",
+   "url": "https://www.flsbattlebots.cz/en/obchod",
+   "vat": "cz_nonvat",
+   "shipping_eur": [
+    5.33,
+    5.33
+   ],
+   "shipping_status": "verified",
+   "shipping_note": "Home delivery CZ 129 Kč, pickup in Plzeň free, dispatch 1–2 working days after payment (shop page 2026-10-30)",
+   "eta_days_estimate": [
+    2,
+    4
+   ]
+  },
+  "airsoftshop": {
+   "name": "AirsoftShop.cz",
+   "country": "CZ",
+   "url": "https://airsoftshop.cz/",
+   "vat": "cz",
+   "shipping_eur": [
+    3,
+    5
+   ],
+   "shipping_status": "estimate",
+   "eta_days_estimate": [
+    2,
+    5
+   ],
+   "shipping_note": "Ask which carrier ships the LiPo: carriers restrict standalone lithium batteries."
+  },
+  "koptery": {
+   "name": "Koptery.cz",
+   "country": "CZ",
+   "url": "https://www.koptery.cz/",
+   "vat": "cz",
+   "shipping_eur": [
+    3,
+    5
+   ],
+   "shipping_status": "estimate",
+   "eta_days_estimate": [
+    2,
+    5
+   ]
+  },
+  "rotorama": {
+   "name": "Rotorama",
+   "country": "CZ",
+   "url": "https://www.rotorama.com/",
+   "vat": "cz",
+   "shipping_eur": [
+    3,
+    5
+   ],
+   "shipping_status": "estimate",
+   "eta_days_estimate": [
+    2,
+    5
+   ]
+  },
+  "emotors": {
+   "name": "eMotors.cz",
+   "country": "CZ",
+   "url": "https://www.emotors.cz/",
+   "vat": "cz",
+   "shipping_eur": [
+    3,
+    5
+   ],
+   "shipping_status": "estimate"
+  },
+  "gensace_de": {
+   "name": "Gens ace DE",
+   "country": "DE",
+   "url": "https://www.gensace.de/",
+   "vat": "eu_oss",
+   "shipping_eur": [
+    5,
+    15
+   ],
+   "shipping_status": "estimate"
+  },
+  "fingertech": {
+   "name": "FingerTech Robotics",
+   "country": "CA",
+   "url": "https://www.fingertechrobotics.com/",
+   "vat": "non_eu",
+   "duty_eur_per_line": 3,
+   "shipping_eur": [
+    10,
+    25
+   ],
+   "shipping_status": "estimate"
+  },
+  "prusa": {
+   "name": "Prusa Center (Praha)",
+   "country": "CZ",
+   "url": "https://www.prusa3d.com/cs/stranka/zakazkovy-3d-tisk-na-miru_240720/",
+   "vat": "cz",
+   "shipping_eur": [
+    4,
+    4
+   ],
+   "shipping_status": "verified",
+   "shipping_note": "99 Kč CZ shipping (verified 2026-10-29)"
+  },
+  "craftcloud": {
+   "name": "Craftcloud",
+   "country": "DE",
+   "url": "https://craftcloud3d.com",
+   "vat": "per_vendor",
+   "shipping_eur": [
+    0,
+    15
+   ],
+   "shipping_status": "estimate"
+  }
+ },
+ "variants": {
+  "rules": [
+   "Four N10 motors (two per side) need the Malenki HV (Malenki Nano HV): one channel of the standard Malenki Nano drives one N10 (Bristol Bot Builders, FLS).",
+   "Malenki boards have no BEC: a servo on the board gets the battery voltage (2S, up to 8.4 V). Use a servo rated for 8.4 V, or add a BEC.",
+   "All four N10 motors must have the same rpm / gear ratio.",
+   "LiPo: 2S (7.4 V), ≈300 mAh, JST-SYP plug to match the Malenki lead. Never 3S on the standard Nano."
+  ],
+  "rules_cs": [
+   "Čtyři motory N10 (dva na stranu) potřebují Malenki HV (Malenki Nano HV): jeden kanál standardního Malenki Nano utáhne jeden N10 (Bristol Bot Builders, FLS).",
+   "Desky Malenki nemají BEC: servo připojené k desce dostane napětí baterie (2S, až 8,4 V). Použijte servo na 8,4 V, nebo přidejte BEC.",
+   "Všechny čtyři motory N10 musí mít stejné otáčky a převod.",
+   "LiPo: 2S (7,4 V), ≈ 300 mAh, konektor JST-SYP shodný s kabelem Malenki. Na standardní Nano nikdy 3S."
+  ],
+  "how_to_verify": [
+   "Controller: the listing must say HV / 2–4S (6–18 V). 'Malenki Nano' without HV is the 1–2S version.",
+   "Motors: N10, 6 V, pick one rpm (FLS offers 1000 or 600 rpm) for all four.",
+   "Servo: the voltage range must reach 8.4 V (e.g. 4.8–8.4 V). 4.8–6 V servos (SG90, MG90S) need a BEC."
+  ],
+  "how_to_verify_cs": [
+   "Řídicí deska: v inzerátu musí být HV / 2–4S (6–18 V). „Malenki Nano“ bez HV je verze na 1–2S.",
+   "Motory: N10, 6 V, pro všechny čtyři stejné otáčky (FLS má 1000 nebo 600 ot./min).",
+   "Servo: rozsah napětí musí sahat do 8,4 V (např. 4,8–8,4 V). Serva na 4,8–6 V (SG90, MG90S) potřebují BEC."
+  ],
+  "checks": {
+   "esc": {
+    "component": "svrn.ctrl.malenki_nano_hv",
+    "status": "verified",
+    "voltage_v": 7.4,
+    "name": "Drive controller (receiver + motor ESCs)",
+    "name_cs": "Řídicí deska (přijímač + regulátory)",
+    "need": "Malenki HV / Nano HV, 2–4S (6–18 V), AFHDS 2A",
+    "need_cs": "Malenki HV / Nano HV, 2–4S (6–18 V), AFHDS 2A",
+    "avoid": "standard Malenki Nano (1–2S, 1.8 A peak) for 4× N10",
+    "avoid_cs": "standardní Malenki Nano (1–2S, špička 1,8 A) pro 4× N10",
+    "identify": "malenki|\\besc\\b|receiver|přijímač|regulátor",
+    "good": [
+     {
+      "re": "malenki[\\s-]*(nano[\\s-]*)?hv\\b",
+      "what": "Malenki HV"
+     },
+     {
+      "re": "2\\s*[-–]\\s*4\\s*s\\b",
+      "what": "2–4S"
+     },
+     {
+      "re": "6\\s*[-–]\\s*18\\s*v\\b",
+      "what": "6–18 V"
+     }
+    ],
+    "bad": [
+     {
+      "re": "malenki[\\s-]*nano(?![\\s-]*hv)\\b",
+      "reason": "Standard Malenki Nano: one N10 per channel, too weak for 4× N10.",
+      "reason_cs": "Standardní Malenki Nano: jeden N10 na kanál, na 4× N10 nestačí."
+     },
+     {
+      "re": "1\\s*[-–]\\s*2\\s*s\\b",
+      "reason": "1–2S board: the standard Nano rating.",
+      "reason_cs": "Deska na 1–2S: parametry standardního Nano."
+     },
+     {
+      "re": "1[.,]8\\s*a\\b",
+      "reason": "1.8 A peak per channel is the standard Nano rating.",
+      "reason_cs": "Špička 1,8 A na kanál odpovídá standardnímu Nano."
+     }
+    ],
+    "warn": [
+     {
+      "re": "afhds(?!\\s*2)|dsm|frsky|elrs",
+      "reason": "Check the radio protocol: the Malenki speaks FlySky AFHDS 2A.",
+      "reason_cs": "Zkontrolujte protokol: Malenki komunikuje přes FlySky AFHDS 2A."
+     }
+    ]
+   },
+   "motor": {
+    "component": "svrn.motor.n10",
+    "status": "verified",
+    "voltage_v": 6,
+    "name": "Drive motors (4×)",
+    "name_cs": "Motory pohonu (4×)",
+    "need": "N10 gearmotor, 6 V class, 3 mm D shaft, the same rpm for all four",
+    "need_cs": "převodový motor N10, třída 6 V, hřídel 3 mm D, všechny čtyři se stejnými otáčkami",
+    "avoid": "N20 (heavier, other mounts), 3 V motors (over-volted on 2S)",
+    "avoid_cs": "N20 (těžší, jiné držáky), motory na 3 V (na 2S přetížené)",
+    "identify": "\\bn\\s?10\\b|\\bn\\s?20\\b|gear\\s?motor|převodov|motor",
+    "good": [
+     {
+      "re": "\\bn\\s?10\\b",
+      "what": "N10"
+     }
+    ],
+    "bad": [
+     {
+      "re": "\\bn\\s?20\\b",
+      "reason": "N20 is heavier and does not fit the N10 mounts of the SVRN base.",
+      "reason_cs": "N20 je těžší a nesedí do držáků N10 v základně SVRN."
+     },
+     {
+      "re": "(?<![\\d.,])3\\s*v\\b",
+      "reason": "A 3 V motor runs heavily over-volted on 2S (8.4 V).",
+      "reason_cs": "Motor na 3 V je na 2S (8,4 V) silně přetížený."
+     },
+     {
+      "re": "(?<![\\d.,])12\\s*v\\b",
+      "reason": "A 12 V motor is slow on 2S.",
+      "reason_cs": "Motor na 12 V je na 2S pomalý."
+     }
+    ],
+    "warn": [
+     {
+      "re": "\\d{2,4}\\s*rpm[\\s\\S]*\\d{2,4}\\s*rpm|\\d{2,4}\\s*ot[\\s\\S]*\\d{2,4}\\s*ot",
+      "reason": "Several rpm options: choose one and buy all four the same.",
+      "reason_cs": "Více variant otáček: vyberte jednu a kupte všechny čtyři stejné."
+     }
+    ]
+   },
+   "servo": {
+    "component": "svrn.servo",
+    "status": "verified",
+    "voltage_v": 8.4,
+    "name": "Flipper / grabber servo",
+    "name_cs": "Servo flipperu / chapadla",
+    "need": "servo rated up to 8.4 V (2S), ≈ 9–14 g",
+    "need_cs": "servo do 8,4 V (2S), ≈ 9–14 g",
+    "avoid": "4.8–6 V servos (SG90, MG90S) without a BEC",
+    "avoid_cs": "serva na 4,8–6 V (SG90, MG90S) bez BEC",
+    "identify": "servo|serv",
+    "good": [
+     {
+      "re": "8[.,]4\\s*v",
+      "what": "8.4 V"
+     },
+     {
+      "re": "\\bhv\\b|high[\\s-]?voltage",
+      "what": "HV"
+     },
+     {
+      "re": "\\b2\\s*s\\b",
+      "what": "2S"
+     }
+    ],
+    "bad": [
+     {
+      "re": "4[.,]8\\s*[-–~/]\\s*6(?:[.,]0)?\\s*v",
+      "reason": "4.8–6 V servo: on the Malenki it gets up to 8.4 V. Only with a BEC.",
+      "reason_cs": "Servo na 4,8–6 V: na desce Malenki dostane až 8,4 V. Jen s BEC."
+     },
+     {
+      "re": "\\bsg\\s?90\\b|\\bmg\\s?90s?\\b",
+      "reason": "SG90/MG90S are 4.8–6 V class servos: only with a BEC.",
+      "reason_cs": "SG90/MG90S jsou serva třídy 4,8–6 V: jen s BEC."
+     }
+    ],
+    "warn": [
+     {
+      "re": "\\bbec\\b",
+      "reason": "With a BEC set to 5–6 V, a 6 V servo is fine. Set and measure the BEC before connecting the servo.",
+      "reason_cs": "S BEC nastaveným na 5–6 V je servo na 6 V v pořádku. BEC nastavte a změřte před připojením serva."
+     }
+    ]
+   },
+   "lipo": {
+    "component": "svrn.batt.lipo2s",
+    "status": "verified",
+    "voltage_v": 7.4,
+    "name": "LiPo battery",
+    "name_cs": "Akumulátor LiPo",
+    "need": "LiPo 2S (7.4 V), ≈ 300 mAh, JST-SYP plug, balance lead",
+    "need_cs": "LiPo 2S (7,4 V), ≈ 300 mAh, konektor JST-SYP, balanční kabel",
+    "avoid": "1S or 3S packs, big packs over the 150 g budget",
+    "avoid_cs": "články 1S nebo 3S, velké baterie nad limit 150 g",
+    "identify": "lipo|li-?po|li-?pol|akumul|battery|baterie",
+    "good": [
+     {
+      "re": "\\b2\\s*s(?:1p)?\\b",
+      "what": "2S"
+     },
+     {
+      "re": "7[.,]4\\s*v",
+      "what": "7.4 V"
+     }
+    ],
+    "bad": [
+     {
+      "re": "\\b1\\s*s(?:1p)?\\b|(?<![\\d.,])3[.,]7\\s*v",
+      "reason": "1S (3.7 V) pack: too little voltage for this robot.",
+      "reason_cs": "Článek 1S (3,7 V): pro tohoto robota málo napětí."
+     },
+     {
+      "re": "\\b3\\s*s(?:1p)?\\b|11[.,]1\\s*v",
+      "reason": "3S (11.1 V) pack: too much for the standard Nano and over-volts the N10 motors.",
+      "reason_cs": "Baterie 3S (11,1 V): příliš na standardní Nano a přetíží motory N10."
+     },
+     {
+      "re": "\\b4\\s*s(?:1p)?\\b|14[.,]8\\s*v",
+      "reason": "4S pack: far too much for this robot.",
+      "reason_cs": "Baterie 4S: pro tohoto robota výrazně příliš."
+     }
+    ],
+    "warn": [
+     {
+      "re": "xt\\s?30|xt\\s?60|t-?plug|deans",
+      "reason": "Different plug than the JST-SYP on the Malenki lead: you would have to change the connector.",
+      "reason_cs": "Jiný konektor než JST-SYP na kabelu Malenki: konektor byste museli vyměnit."
+     },
+     {
+      "re": "(?<!\\d)([5-9]\\d{2}|\\d{4})\\s*mah",
+      "reason": "Bigger pack: check the 150 g weight limit.",
+      "reason_cs": "Větší baterie: zkontrolujte limit hmotnosti 150 g."
+     }
+    ]
+   }
+  }
+ },
+ "options": {
+  "module": {
+   "name": "Front module",
+   "name_cs": "Přední modul",
+   "default": "flipper",
+   "values": {
+    "flipper": {
+     "name": "Flipper",
+     "name_cs": "Flipper",
+     "print_grams": 10,
+     "lines": [
+      {
+       "component": "svrn.servo",
+       "qty": 1,
+       "source": "fls_ptk"
+      }
+     ]
+    },
+    "wedge": {
+     "name": "Wedge",
+     "name_cs": "Klín",
+     "print_grams": 6,
+     "lines": []
+    },
+    "grabber": {
+     "name": "Grabber",
+     "name_cs": "Chapadlo",
+     "print_grams": 12,
+     "lines": [
+      {
+       "component": "svrn.servo",
+       "qty": 1,
+       "source": "fls_ptk"
+      }
+     ]
+    }
+   }
+  }
+ },
+ "configs": {
+  "robot_only": {
+   "name": "Robot only",
+   "name_cs": "Jen robot",
+   "print_units": 1,
+   "print_grams": 60,
+   "lines": [
+    {
+     "component": "svrn.ctrl.malenki_nano_hv",
+     "qty": 1,
+     "source": "fls"
+    },
+    {
+     "component": "svrn.motor.n10",
+     "qty": 4,
+     "source": "fls"
+    },
+    {
+     "component": "svrn.wheels",
+     "qty": 4,
+     "source": "fls"
+    },
+    {
+     "component": "svrn.switch",
+     "qty": 1,
+     "source": "fls"
+    },
+    {
+     "component": "svrn.conn.jst_syp_f",
+     "qty": 1,
+     "source": "fls"
+    },
+    {
+     "component": "svrn.conn.jst_syp_m",
+     "qty": 1,
+     "source": "fls"
+    },
+    {
+     "component": "svrn.wire",
+     "qty": 1,
+     "source": "fls"
+    },
+    {
+     "component": "svrn.fasteners",
+     "qty": 1,
+     "source": "fls"
+    },
+    {
+     "component": "svrn.batt.lipo2s",
+     "qty": 1,
+     "source": "airsoftshop"
+    }
+   ]
+  },
+  "starter": {
+   "name": "Robot + transmitter + charger",
+   "name_cs": "Robot + vysílač + nabíječka",
+   "print_units": 1,
+   "print_grams": 60,
+   "lines": [
+    {
+     "component": "svrn.ctrl.malenki_nano_hv",
+     "qty": 1,
+     "source": "fls"
+    },
+    {
+     "component": "svrn.motor.n10",
+     "qty": 4,
+     "source": "fls"
+    },
+    {
+     "component": "svrn.wheels",
+     "qty": 4,
+     "source": "fls"
+    },
+    {
+     "component": "svrn.switch",
+     "qty": 1,
+     "source": "fls"
+    },
+    {
+     "component": "svrn.conn.jst_syp_f",
+     "qty": 1,
+     "source": "fls"
+    },
+    {
+     "component": "svrn.conn.jst_syp_m",
+     "qty": 1,
+     "source": "fls"
+    },
+    {
+     "component": "svrn.wire",
+     "qty": 1,
+     "source": "fls"
+    },
+    {
+     "component": "svrn.fasteners",
+     "qty": 1,
+     "source": "fls"
+    },
+    {
+     "component": "svrn.batt.lipo2s",
+     "qty": 1,
+     "source": "airsoftshop"
+    },
+    {
+     "component": "svrn.tx.fsi6x",
+     "qty": 1,
+     "source": "koptery"
+    },
+    {
+     "component": "svrn.charger",
+     "qty": 1,
+     "source": "rotorama"
+    }
+   ]
+  }
+ },
+ "printing": {
+  "self": {
+   "filament_czk_per_kg": 450,
+   "material": "PLA + TPU",
+   "status": "estimate",
+   "stl_url": "https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai",
+   "note": "Body in PLA (PC or PA12 for tougher parts), side armour and mounts in TPU 95A; grams are our estimate (the source gives none).",
+   "note_cs": "Tělo z PLA (odolnější díly z PC nebo PA12), boční pancíř a držáky z TPU 95A; gramáž je náš odhad (zdroj ji neuvádí)."
+  },
+  "service": {
+   "price_eur_per_unit": [
+    15,
+    40
+   ],
+   "status": "estimate",
+   "eta_days": [
+    5,
+    14
+   ],
+   "sources": [
+    "prusa",
+    "craftcloud"
+   ],
+   "line_name": "Printed parts, 1 robot incl. TPU (estimate)",
+   "line_name_cs": "Tištěné díly, 1 robot vč. TPU (odhad)",
+   "note": "No published price for this part set: upload the STLs for a quote. Range is our estimate.",
+   "note_cs": "Cena pro tuto sadu dílů není zveřejněná: nahrajte STL a nechte si udělat nabídku. Rozpětí je náš odhad."
+  }
+ },
+ "tools": [
+  {
+   "id": "solder",
+   "name": "Soldering iron, solder, heat-shrink tubing",
+   "name_cs": "Páječka, cín, smršťovací bužírky",
+   "required": true
+  },
+  {
+   "id": "drivers",
+   "name": "Small screwdrivers / hex keys for M2 screws",
+   "name_cs": "Malé šroubováky / imbusy na šrouby M2",
+   "required": true
+  },
+  {
+   "id": "multimeter",
+   "name": "Multimeter (check polarity and battery voltage)",
+   "name_cs": "Multimetr (polarita a napětí baterie)",
+   "required": false
+  },
+  {
+   "id": "lipo_bag",
+   "name": "LiPo safety bag or a metal box for charging and storage",
+   "name_cs": "Ochranný vak na LiPo nebo plechová krabička na nabíjení a skladování",
+   "required": true
+  },
+  {
+   "id": "printer",
+   "name": "3D printer that can print PLA and TPU 95A",
+   "name_cs": "3D tiskárna, která zvládne PLA i TPU 95A",
+   "required": true,
+   "only_print": "self"
+  },
+  {
+   "id": "tx_own",
+   "name": "An AFHDS 2A transmitter (e.g. FlySky FS-i6X) and a 2S LiPo balance charger: not in this configuration",
+   "name_cs": "Vysílač AFHDS 2A (např. FlySky FS-i6X) a balanční nabíječka LiPo 2S: v této konfiguraci nejsou",
+   "required": true,
+   "only_config": "robot_only"
+  },
+  {
+   "id": "aa",
+   "name": "4× AA batteries for the FS-i6X (not included)",
+   "name_cs": "4× baterie AA do FS-i6X (nejsou v balení)",
+   "required": true,
+   "only_config": "starter"
+  }
+ ],
+ "tools_note": "No software needed: the Malenki is bound to the transmitter, nothing is programmed.",
+ "tools_note_cs": "Software není potřeba: Malenki se jen spáruje s vysílačem, nic se neprogramuje.",
+ "build_time": {
+  "status": "estimate",
+  "note": "Stage estimates for a first build, not measurements. We have no SVRN guide of our own: stages follow the original project.",
+  "guide": {
+   "cs": "https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai",
+   "en": "https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai"
+  },
+  "guide_label": "Project SVRN (Shoverobotics, Printables)",
+  "printer_h_per_unit": 5,
+  "printer_status": "estimate",
+  "printer_note": "≈ 60–80 g of PLA + TPU; the source gives no print time.",
+  "stages": [
+   {
+    "id": "e0",
+    "name": "Before you build: parts check, LiPo safety",
+    "name_cs": "Před stavbou: kontrola dílů, bezpečnost LiPo",
+    "h": [
+     0.5,
+     1
+    ]
+   },
+   {
+    "id": "e1",
+    "name": "Printing (removing supports, inserts)",
+    "name_cs": "Tisk (podpory, zalisování matic)",
+    "h_per_unit": [
+     0.5,
+     1
+    ],
+    "printer": true,
+    "only_print": "self"
+   },
+   {
+    "id": "e2",
+    "name": "Electronics: solder motors, switch, battery lead",
+    "name_cs": "Elektronika: pájení motorů, vypínače a kabelu baterie",
+    "h": [
+     1.5,
+     3
+    ]
+   },
+   {
+    "id": "e3",
+    "name": "Mechanics: motors, wheels, module, armour",
+    "name_cs": "Mechanika: motory, kola, modul, pancíř",
+    "h": [
+     1,
+     2
+    ]
+   },
+   {
+    "id": "e4",
+    "name": "Binding, failsafe test, first drive",
+    "name_cs": "Spárování, test failsafe, první jízda",
+    "h": [
+     0.5,
+     1
+    ]
+   }
+  ]
+ },
+ "arrivals": [
+  {
+   "id": "ctrl",
+   "name": "Malenki HV (check it says HV)",
+   "name_cs": "Malenki HV (zkontrolujte označení HV)",
+   "needed_for_wizard": true,
+   "link": {
+    "url": "https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai",
+    "label": "Project SVRN guide",
+    "label_cs": "návod Project SVRN"
+   }
+  },
+  {
+   "id": "motors",
+   "name": "4× N10 motors, all the same rpm",
+   "name_cs": "4× motor N10, všechny se stejnými otáčkami",
+   "needed_for_wizard": true,
+   "link": {
+    "url": "https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai",
+    "label": "Project SVRN guide",
+    "label_cs": "návod Project SVRN"
+   }
+  },
+  {
+   "id": "lipo",
+   "name": "LiPo 2S: undamaged, not puffed; store it in the LiPo bag",
+   "name_cs": "LiPo 2S: nepoškozená, nenafouklá; uložte ji do vaku na LiPo",
+   "needed_for_wizard": true,
+   "link": {
+    "url_cs": "navody/bojovi-roboti-150-g/#bezpecnost",
+    "url_en": "en/guides/combat-robots-150-g/#safety",
+    "label": "safety rules",
+    "label_cs": "pravidla bezpečnosti"
+   }
+  },
+  {
+   "id": "servo",
+   "name": "Servo rated for 8.4 V",
+   "name_cs": "Servo na 8,4 V",
+   "needed_for_wizard": false,
+   "only_option": {
+    "module": [
+     "flipper",
+     "grabber"
+    ]
+   },
+   "link": {
+    "url": "https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai",
+    "label": "Project SVRN guide",
+    "label_cs": "návod Project SVRN"
+   }
+  },
+  {
+   "id": "small",
+   "name": "Wheels, switch, JST-SYP connectors, wire, screws",
+   "name_cs": "Kola, vypínač, konektory JST-SYP, kabel, šrouby",
+   "needed_for_wizard": false,
+   "link": {
+    "url": "https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai",
+    "label": "Project SVRN guide",
+    "label_cs": "návod Project SVRN"
+   }
+  },
+  {
+   "id": "tx",
+   "name": "FlySky FS-i6X transmitter + 4× AA",
+   "name_cs": "Vysílač FlySky FS-i6X + 4× AA",
+   "needed_for_wizard": false,
+   "only_config": "starter",
+   "link": {
+    "url": "https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai",
+    "label": "Project SVRN guide",
+    "label_cs": "návod Project SVRN"
+   }
+  },
+  {
+   "id": "charger",
+   "name": "LiPo balance charger",
+   "name_cs": "Balanční nabíječka LiPo",
+   "needed_for_wizard": false,
+   "only_config": "starter",
+   "link": {
+    "url_cs": "navody/bojovi-roboti-150-g/#bezpecnost",
+    "url_en": "en/guides/combat-robots-150-g/#safety",
+    "label": "safety rules",
+    "label_cs": "pravidla bezpečnosti"
+   }
+  },
+  {
+   "id": "printed",
+   "name": "Printed parts (body, module, TPU armour)",
+   "name_cs": "Tištěné díly (tělo, modul, pancíř z TPU)",
+   "needed_for_wizard": false,
+   "link": {
+    "url": "https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai",
+    "label": "STL files and guide",
+    "label_cs": "soubory STL a návod"
+   }
+  }
+ ],
+ "notes": [
+  {
+   "id": "esc_hv",
+   "level": "changed",
+   "title": "Malenki HV instead of the standard Malenki Nano",
+   "title_cs": "Malenki HV místo standardního Malenki Nano",
+   "text": "Our catalogue listed the standard Malenki Nano. Its maker (Bristol Bot Builders) and FLS both say one channel of the standard Nano drives one N10 and point to the Malenki HV for 4× N10; the HV has 3 A peak per channel and 2–4S input. The plan uses the HV (+4 €). The original project says it is 'controlled by a Malenki Nano'; we could not open its PDF parts list, so if you follow the 2-motor belt variant, the standard Nano is enough.",
+   "text_cs": "Náš katalog uváděl standardní Malenki Nano. Jeho výrobce (Bristol Bot Builders) i FLS uvádějí, že jeden kanál standardního Nano utáhne jeden N10, a pro 4× N10 odkazují na Malenki HV; HV má špičku 3 A na kanál a vstup 2–4S. Plán proto počítá s HV (+4 €). Původní projekt píše, že robota „řídí Malenki Nano“; jeho PDF s kusovníkem se nám otevřít nepodařilo. Pokud stavíte dvoumotorovou variantu s řemenem, stačí standardní Nano.",
+   "sources": [
+    {
+     "label": "Bristol Bot Builders: Malenki Nano",
+     "url": "https://shop.bristolbotbuilders.com/product/malenki/",
+     "checked": "2026-10-30"
+    },
+    {
+     "label": "Bristol Bot Builders: Malenki HV",
+     "url": "https://shop.bristolbotbuilders.com/product/malenki-hv/",
+     "checked": "2026-10-30"
+    },
+    {
+     "label": "FLS Battlebots: Malenki Nano",
+     "url": "https://www.flsbattlebots.cz/en/obchod/components/controls/malenki-nano",
+     "checked": "2026-10-30"
+    },
+    {
+     "label": "FingerTech: Malenki Nano HV",
+     "url": "https://www.fingertechrobotics.com/proddetail.php?prod=malenki-nano-hv",
+     "checked": "2026-10-30"
+    },
+    {
+     "label": "Hackaday: Project SVRN",
+     "url": "https://hackaday.com/2025/06/11/step-into-combat-robotics-with-project-svrn/",
+     "checked": "2026-10-30"
+    }
+   ]
+  },
+  {
+   "id": "servo_bec",
+   "level": "verify",
+   "only_option": {
+    "module": [
+     "flipper",
+     "grabber"
+    ]
+   },
+   "title": "Check the servo voltage (no BEC on the Malenki)",
+   "title_cs": "Ověřte napětí serva (Malenki nemá BEC)",
+   "text": "Malenki boards have no BEC, so the servo gets the battery voltage (2S, up to 8.4 V). The plan uses the PTK 7462W (4.8–8.4 V). Our catalogue names a KingMax C507; we could not find its voltage rating. Check it, or use a servo rated for 8.4 V or a BEC set to 5–6 V.",
+   "text_cs": "Desky Malenki nemají BEC, takže servo dostane napětí baterie (2S, až 8,4 V). Plán počítá se servem PTK 7462W (4,8–8,4 V). Náš katalog uvádí KingMax C507; jeho napěťový rozsah se nám dohledat nepodařilo. Ověřte ho, nebo použijte servo na 8,4 V či BEC nastavený na 5–6 V.",
+   "sources": [
+    {
+     "label": "Bristol Bot Builders: Malenki (No BEC)",
+     "url": "https://shop.bristolbotbuilders.com/product/malenki/",
+     "checked": "2026-10-30"
+    },
+    {
+     "label": "FingerTech: Malenki Nano HV (BEC: none)",
+     "url": "https://www.fingertechrobotics.com/proddetail.php?prod=malenki-nano-hv",
+     "checked": "2026-10-30"
+    },
+    {
+     "label": "FLS Battlebots: PTK 7462W",
+     "url": "https://www.flsbattlebots.cz/en/obchod/components/serva/powerful-ptk-7462w-mg-servo-for-higher-voltage",
+     "checked": "2026-10-30"
+    }
+   ]
+  },
+  {
+   "id": "parts_list",
+   "level": "verify",
+   "title": "Check wheels, screws and grams against the original guide",
+   "title_cs": "Kola, šrouby a gramáž ověřte v původním návodu",
+   "text": "The FLS wheel is 34 mm; the wheel size of the original STLs is not confirmed. The screw set and the filament grams are our estimate until we read the project's PDF parts list.",
+   "text_cs": "Kolo od FLS má 34 mm; velikost kol podle původních STL nemáme potvrzenou. Sada šroubů a gramáž filamentu jsou náš odhad, dokud nepřečteme PDF kusovník projektu.",
+   "sources": [
+    {
+     "label": "FLS Battlebots: rubber wheel 34 mm",
+     "url": "https://www.flsbattlebots.cz/en/obchod/components/wheels/rubber-wheel-for-n10-n20-engines-2pcs",
+     "checked": "2026-10-30"
+    },
+    {
+     "label": "Project SVRN on Printables",
+     "url": "https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai",
+     "checked": "2026-10-30"
+    }
+   ]
+  }
+ ],
+ "safety": [
+  {
+   "id": "not_toy",
+   "title": "Not a toy",
+   "title_cs": "Není to hračka",
+   "text": "A combat robot with a LiPo battery and a fast flipper or grabber. For teenagers and adults; children build and drive it only with an adult present.",
+   "text_cs": "Bojový robot s akumulátorem LiPo a rychlým flipperem nebo chapadlem. Pro dospívající a dospělé; děti ho staví a řídí jen za přítomnosti dospělého."
+  },
+  {
+   "id": "supervision",
+   "title": "Adult supervision, closed arena",
+   "title_cs": "Dohled dospělého, uzavřená aréna",
+   "text": "Solder, charge and drive under adult supervision. Drive only in a closed box or arena, never at people or animals. Before every fight, check the failsafe: switch the transmitter off and the motors must stop.",
+   "text_cs": "Pájejte, nabíjejte a jezděte pod dohledem dospělého. Jezděte jen v uzavřené krabici nebo aréně, nikdy proti lidem nebo zvířatům. Před každým zápasem vyzkoušejte failsafe: vypněte vysílač a motory se musí zastavit."
+  },
+  {
+   "id": "lipo_handling",
+   "title": "LiPo handling",
+   "title_cs": "Zacházení s LiPo",
+   "text": "Do not puncture, bend or short-circuit the battery. Unplug it after driving. A puffed, dented or hot battery is not used again: put it in the LiPo bag outside and take it to a battery collection point.",
+   "text_cs": "Baterii nepropichujte, neohýbejte a nezkratujte. Po jízdě ji odpojte. Nafouklou, promáčknutou nebo horkou baterii už nepoužívejte: dejte ji do vaku na LiPo venku a odevzdejte ve sběrném místě baterií."
+  },
+  {
+   "id": "lipo_charging",
+   "title": "Charging",
+   "title_cs": "Nabíjení",
+   "text": "Only with a balance charger set to LiPo 2S, at most 1C (0.3 A for a 300 mAh pack). Never unattended or overnight; on a non-flammable surface, in a LiPo bag.",
+   "text_cs": "Jen balanční nabíječkou nastavenou na LiPo 2S, nejvýš 1C (0,3 A u baterie 300 mAh). Nikdy bez dozoru ani přes noc; na nehořlavé podložce, ve vaku na LiPo."
+  },
+  {
+   "id": "lipo_storage",
+   "title": "Storage",
+   "title_cs": "Skladování",
+   "text": "Store at about 3.8 V per cell (storage mode of the charger), in the LiPo bag or a metal box, at room temperature and out of children's reach.",
+   "text_cs": "Skladujte na zhruba 3,8 V na článek (režim storage na nabíječce), ve vaku na LiPo nebo v plechové krabičce, při pokojové teplotě a mimo dosah dětí."
+  },
+  {
+   "id": "lipo_shipping",
+   "level": "verify",
+   "title": "LiPo shipping",
+   "title_cs": "Přeprava LiPo",
+   "text": "Buy the LiPo from a Czech shop that ships it itself, and never send a LiPo yourself by post or parcel locker. Packeta/Zásilkovna lists standalone lithium batteries as excluded on its international routes (only batteries installed in a device, max. 100 Wh). The domestic rules of Zásilkovna and Česká pošta we could not verify: the Balík Do ruky conditions valid from 1 Jan 2026 do not mention lithium batteries and refer to the general postal conditions, which we could not open. Ask the shop which carrier it uses.",
+   "text_cs": "LiPo kupte u českého obchodu, který ji posílá sám, a sami ji nikdy neposílejte poštou ani přes výdejní box. Zásilkovna/Packeta uvádí samostatné lithiové baterie u mezinárodní přepravy jako vyloučené (jen baterie vložené v zařízení, max. 100 Wh). Pravidla vnitrostátní přepravy Zásilkovny a České pošty se nám ověřit nepodařilo: podmínky Balík Do ruky platné od 1. 1. 2026 lithiové baterie nezmiňují a odkazují na Základní poštovní podmínky, které se nám nepodařilo otevřít. Zeptejte se obchodu, jakého dopravce používá.",
+   "sources": [
+    {
+     "label": "Zásilkovna: goods excluded from transport (GB, 30 May 2025)",
+     "label_cs": "Zásilkovna: zboží vyloučené z přepravy (VB, 30. 5. 2025)",
+     "url": "https://www.zasilkovna.cz/blog/velka-britanie-a-severni-irsko-zbozi-a-latky-vyloucene-z-prepravy",
+     "checked": "2026-10-30"
+    },
+    {
+     "label": "Packeta: goods prohibited from transport (GB)",
+     "label_cs": "Packeta: zboží vyloučené z přepravy (VB, anglicky)",
+     "url": "https://blog.packeta.com/great-britain-goods-prohibited-from-transport/",
+     "checked": "2026-10-30"
+    },
+    {
+     "label": "Česká pošta: Balík Do ruky conditions (1 Jan 2026)",
+     "label_cs": "Česká pošta: Podmínky Balík Do ruky (1. 1. 2026)",
+     "url": "https://www.ceskaposta.cz/documents/10180/9310672/Podm%C3%ADnky_Bal%C3%ADk_Do_ruky_2026_01_01.pdf/ef61467d-9a10-0b29-59a5-6098de34b62e",
+     "checked": "2026-10-30"
+    }
+   ]
+  }
+ ],
+ "components": [
+  {
+   "id": "svrn.ctrl.malenki_nano_hv",
+   "group": "Electronics",
+   "name": "Malenki Nano HV (receiver + 3 brushed ESC channels)",
+   "name_cs": "Malenki Nano HV (přijímač + 3 regulátory)",
+   "role": "Drive (2× N10 per side) and weapon channel; AFHDS 2A receiver on board",
+   "role_cs": "Pohon (2× N10 na stranu) a kanál zbraně; přijímač AFHDS 2A na desce",
+   "specs": {
+    "voltage": "2–4S LiPo (6–18 V)",
+    "current": "1 A continuous / 3 A peak per channel, 3 channels",
+    "bec": "none (servos see battery voltage)",
+    "protocol": "AFHDS 2A"
+   },
+   "sources": [
+    {
+     "id": "fls",
+     "supplier": "fls",
+     "label": "FLS Battlebots",
+     "url": "https://www.flsbattlebots.cz/en/obchod/components/controls/malenki-nano-hv",
+     "price": 34.98,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "In stock (3 pcs)",
+     "eta_days": [
+      2,
+      4
+     ],
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": true,
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.flsbattlebots.cz/en/obchod/components/controls/malenki-nano-hv"
+     }
+    },
+    {
+     "id": "fingertech",
+     "supplier": "fingertech",
+     "label": "FingerTech Robotics (Canada, import)",
+     "url": "https://www.fingertechrobotics.com/proddetail.php?prod=malenki-nano-hv",
+     "price": 41.64,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "",
+     "eta_days": null,
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": true
+    }
+   ]
+  },
+  {
+   "id": "svrn.ctrl.malenki_nano",
+   "group": "Electronics",
+   "name": "Malenki Nano (standard, 1–2S)",
+   "name_cs": "Malenki Nano (standardní, 1–2S)",
+   "role": "Only for the 2-motor belt variant (one N10 per channel)",
+   "role_cs": "Jen pro dvoumotorovou variantu s řemenem (jeden N10 na kanál)",
+   "specs": {
+    "voltage": "1–2S LiPo (3.6–10 V)",
+    "current": "1 A continuous / 1.8 A peak per channel",
+    "bec": "none"
+   },
+   "sources": [
+    {
+     "id": "fls",
+     "supplier": "fls",
+     "label": "FLS Battlebots",
+     "url": "https://www.flsbattlebots.cz/en/obchod/components/controls/malenki-nano",
+     "price": 30.86,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "In stock (8 pcs)",
+     "eta_days": [
+      2,
+      4
+     ],
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": true,
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.flsbattlebots.cz/en/obchod/components/controls/malenki-nano"
+     }
+    }
+   ]
+  },
+  {
+   "id": "svrn.motor.n10",
+   "group": "Drive",
+   "name": "N10 gearmotor 6 V (choose one rpm for all four)",
+   "name_cs": "Převodový motor N10, 6 V (pro všechny čtyři stejné otáčky)",
+   "role": "Drive, two per side",
+   "role_cs": "Pohon, dva na každé straně",
+   "specs": {
+    "voltage": "6 V nominal; runs on 2S (FLS)",
+    "variants": "1000 rpm 1:30 (stall 1.08 A) or 600 rpm 1:50 (stall 1.11 A) at 6 V",
+    "shaft": "3 × 10 mm D"
+   },
+   "sources": [
+    {
+     "id": "fls",
+     "supplier": "fls",
+     "label": "FLS Battlebots",
+     "url": "https://www.flsbattlebots.cz/en/obchod/components/engines/n10-dc-motor-with-gearbox",
+     "price": 7.79,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "In stock (8 pcs)",
+     "eta_days": [
+      2,
+      4
+     ],
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": true,
+     "note": "Select 1000 rpm or 600 rpm: the same for all four.",
+     "note_cs": "Vyberte 1000 nebo 600 ot./min, pro všechny čtyři stejně.",
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.flsbattlebots.cz/en/obchod/components/engines/n10-dc-motor-with-gearbox"
+     }
+    }
+   ]
+  },
+  {
+   "id": "svrn.wheels",
+   "group": "Drive",
+   "name": "Rubber wheel for N10/N20, 34 mm (pack of 2)",
+   "name_cs": "Gumové kolo pro N10/N20, 34 mm (balení 2 ks)",
+   "role": "Traction",
+   "role_cs": "Pohon",
+   "sources": [
+    {
+     "id": "fls",
+     "supplier": "fls",
+     "label": "FLS Battlebots",
+     "url": "https://www.flsbattlebots.cz/en/obchod/components/wheels/rubber-wheel-for-n10-n20-engines-2pcs",
+     "price": 1.03,
+     "currency": "EUR",
+     "per": 2,
+     "stock": "In stock (44 pcs)",
+     "eta_days": [
+      2,
+      4
+     ],
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": true,
+     "flag": "check_label",
+     "flag_reason": "34 mm diameter: the wheel size of the original STLs is not confirmed. Check the guide.",
+     "flag_reason_cs": "Průměr 34 mm: velikost kol podle původních STL nemáme potvrzenou. Ověřte v návodu.",
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.flsbattlebots.cz/en/obchod/components/wheels/rubber-wheel-for-n10-n20-engines-2pcs"
+     }
+    }
+   ]
+  },
+  {
+   "id": "svrn.switch",
+   "group": "Electronics",
+   "name": "Slide switch SS12D10 (main power)",
+   "name_cs": "Posuvný vypínač SS12D10 (hlavní vypínač)",
+   "role": "Rule-required power switch",
+   "role_cs": "Vypínač vyžadovaný pravidly",
+   "sources": [
+    {
+     "id": "fls",
+     "supplier": "fls",
+     "label": "FLS Battlebots",
+     "url": "https://www.flsbattlebots.cz/en/obchod/components/cables-connectors-switches/slide-switch-ss12d10",
+     "price": 0.49,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "In stock (6 pcs)",
+     "eta_days": [
+      2,
+      4
+     ],
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": true,
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.flsbattlebots.cz/en/obchod/components/cables-connectors-switches/slide-switch-ss12d10"
+     }
+    }
+   ]
+  },
+  {
+   "id": "svrn.conn.jst_syp_f",
+   "group": "Electronics",
+   "name": "JST-SYP connector, female",
+   "name_cs": "Konektor JST-SYP, samice",
+   "role": "Battery lead",
+   "role_cs": "Kabel baterie",
+   "sources": [
+    {
+     "id": "fls",
+     "supplier": "fls",
+     "label": "FLS Battlebots",
+     "url": "https://www.flsbattlebots.cz/en/obchod/components/cables-connectors-switches/jst-syp-connector-female",
+     "price": 0.21,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "",
+     "eta_days": [
+      2,
+      4
+     ],
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": true
+    }
+   ]
+  },
+  {
+   "id": "svrn.conn.jst_syp_m",
+   "group": "Electronics",
+   "name": "JST-SYP connector, male",
+   "name_cs": "Konektor JST-SYP, samec",
+   "role": "Battery lead",
+   "role_cs": "Kabel baterie",
+   "sources": [
+    {
+     "id": "fls",
+     "supplier": "fls",
+     "label": "FLS Battlebots",
+     "url": "https://www.flsbattlebots.cz/en/obchod/components/cables-connectors-switches/jst-syp-connector-male",
+     "price": 0.21,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "In stock (90 pcs)",
+     "eta_days": [
+      2,
+      4
+     ],
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": true,
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.flsbattlebots.cz/en/obchod/components/cables-connectors-switches/jst-syp-connector-male"
+     }
+    }
+   ]
+  },
+  {
+   "id": "svrn.wire",
+   "group": "Electronics",
+   "name": "Silicone wire 26 AWG, 2 × 15 cm",
+   "name_cs": "Silikonový kabel 26 AWG, 2 × 15 cm",
+   "role": "Wiring",
+   "role_cs": "Kabeláž",
+   "sources": [
+    {
+     "id": "fls",
+     "supplier": "fls",
+     "label": "FLS Battlebots",
+     "url": "https://www.flsbattlebots.cz/en/obchod",
+     "price": 0.25,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "",
+     "eta_days": [
+      2,
+      4
+     ],
+     "checked": "2026-10-29",
+     "status": "carried",
+     "recommend": true
+    }
+   ]
+  },
+  {
+   "id": "svrn.fasteners",
+   "group": "Mechanics",
+   "name": "Screws M2/M1.6, heat-set inserts, motor mounts (set, estimate)",
+   "name_cs": "Šrouby M2/M1,6, zalisovací matice, držáky motorů (sada, odhad)",
+   "role": "Assembly",
+   "role_cs": "Montáž",
+   "sources": [
+    {
+     "id": "fls",
+     "supplier": "fls",
+     "label": "FLS Battlebots (5-packs, motor mounts)",
+     "url": "https://www.flsbattlebots.cz/en/kategorie-produktu/components/fasteners",
+     "price": 3.2,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "",
+     "eta_days": [
+      2,
+      4
+     ],
+     "checked": "2026-10-29",
+     "status": "estimate",
+     "recommend": true
+    }
+   ]
+  },
+  {
+   "id": "svrn.servo",
+   "group": "Module",
+   "name": "Servo PTK 7462W MG, 4.8–8.4 V",
+   "name_cs": "Servo PTK 7462W MG, 4,8–8,4 V",
+   "role": "Flipper or grabber module",
+   "role_cs": "Modul flipper nebo chapadlo",
+   "specs": {
+    "voltage": "4.8–8.4 V (FLS)",
+    "torque": "4.9 kg·cm at 8.4 V",
+    "weight": "13.7 g incl. cable"
+   },
+   "sources": [
+    {
+     "id": "fls_ptk",
+     "supplier": "fls",
+     "label": "FLS Battlebots",
+     "url": "https://www.flsbattlebots.cz/en/obchod/components/serva/powerful-ptk-7462w-mg-servo-for-higher-voltage",
+     "price": 11.08,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "In stock",
+     "eta_days": [
+      2,
+      4
+     ],
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": true,
+     "note": "Select PTK-7462W (not the programmable 7465W) unless you want it.",
+     "note_cs": "Vyberte PTK-7462W (programovatelné 7465W jen pokud ho chcete).",
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.flsbattlebots.cz/en/obchod/components/serva/powerful-ptk-7462w-mg-servo-for-higher-voltage"
+     }
+    },
+    {
+     "id": "fls_mg90s",
+     "supplier": "fls",
+     "label": "FLS Battlebots: MG90S (needs a BEC)",
+     "url": "https://www.flsbattlebots.cz/en/obchod/components/serva/mg90s-servo-with-metal-gears",
+     "price": 3.25,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "",
+     "eta_days": [
+      2,
+      4
+     ],
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": false,
+     "flag": "check_label",
+     "flag_reason": "No voltage on the listing; a 4.8–6 V class servo gets up to 8.4 V on the Malenki. Only with the adjustable BEC (1.19 €).",
+     "flag_reason_cs": "Inzerát neuvádí napětí; servo třídy 4,8–6 V dostane na Malenki až 8,4 V. Jen s nastavitelným BEC (1,19 €)."
+    }
+   ]
+  },
+  {
+   "id": "svrn.batt.lipo2s",
+   "group": "Power",
+   "name": "LiPo 2S 7.4 V 300 mAh, JST-SYP (Gens ace)",
+   "name_cs": "LiPo 2S 7,4 V 300 mAh, JST-SYP (Gens ace)",
+   "role": "Power",
+   "role_cs": "Napájení",
+   "specs": {
+    "capacity": "300 mAh",
+    "size": "≈ 42 × 16 × 12 mm",
+    "connector": "JST-SYP + balance lead"
+   },
+   "sources": [
+    {
+     "id": "airsoftshop",
+     "supplier": "airsoftshop",
+     "label": "AirsoftShop.cz",
+     "url": "https://airsoftshop.cz/en/gens-ace-battery-li-pol-7-4v-300mah-35c-jst",
+     "price": 259,
+     "currency": "CZK",
+     "per": 1,
+     "stock": "In stock (9 pcs)",
+     "eta_days": [
+      2,
+      5
+     ],
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": true,
+     "note": "The title says 35C, the parameters 25C; either is plenty for 4× N10.",
+     "note_cs": "Název uvádí 35C, parametry 25C; pro 4× N10 stačí obojí.",
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://airsoftshop.cz/en/gens-ace-battery-li-pol-7-4v-300mah-35c-jst"
+     }
+    },
+    {
+     "id": "gensace_de",
+     "supplier": "gensace_de",
+     "label": "Gens ace DE (300 mAh 45C JST-SYP)",
+     "url": "https://www.gensace.de/gens-ace-300mah-7-4v-45c-2s1p-lipo-battery-pack-with-jst-syp-plug.html",
+     "price": null,
+     "currency": null,
+     "per": 1,
+     "stock": "",
+     "eta_days": null,
+     "checked": "2026-10-29",
+     "status": "carried",
+     "recommend": true
+    }
+   ]
+  },
+  {
+   "id": "svrn.tx.fsi6x",
+   "group": "Control",
+   "name": "FlySky FS-i6X transmitter, Mode 2, AFHDS 2A (TX only)",
+   "name_cs": "Vysílač FlySky FS-i6X, Mode 2, AFHDS 2A (bez přijímače)",
+   "role": "Control; reusable for every antweight",
+   "role_cs": "Ovládání; použijete ho pro každého dalšího robota",
+   "sources": [
+    {
+     "id": "koptery",
+     "supplier": "koptery",
+     "label": "Koptery.cz (TX only)",
+     "url": "https://www.koptery.cz/radia/flysky-fs-i6x/",
+     "price": 1499,
+     "currency": "CZK",
+     "per": 1,
+     "stock": "In stock",
+     "eta_days": [
+      2,
+      5
+     ],
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": true,
+     "note": "No receiver needed (it is on the Malenki); 4× AA not included.",
+     "note_cs": "Přijímač nepotřebujete (je na Malenki); 4× AA nejsou v balení.",
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.koptery.cz/radia/flysky-fs-i6x/"
+     }
+    },
+    {
+     "id": "emotors",
+     "supplier": "emotors",
+     "label": "eMotors.cz (TX + FS-iA6B receiver you do not need)",
+     "url": "https://www.emotors.cz/p/fly-sky-fs-i6x-2-4ghz-afhds-2a-vysilac-m2-s-fs-ia6b-prijimacem",
+     "price": 1990,
+     "currency": "CZK",
+     "per": 1,
+     "stock": "",
+     "eta_days": null,
+     "checked": "2026-10-29",
+     "status": "carried",
+     "recommend": true
+    }
+   ]
+  },
+  {
+   "id": "svrn.charger",
+   "group": "Power",
+   "name": "SkyRC B6ACneo balance charger, 230 V, 0.1–10 A",
+   "name_cs": "Balanční nabíječka SkyRC B6ACneo, 230 V, 0,1–10 A",
+   "role": "Charging (one per household or club)",
+   "role_cs": "Nabíjení (jedna na domácnost nebo kroužek)",
+   "specs": {
+    "input": "100–240 V AC or 10–30 V DC",
+    "cells": "LiPo 1–6S",
+    "current": "0.1–10 A (set 0.3 A for a 300 mAh pack)",
+    "output": "XT60 + balance port"
+   },
+   "sources": [
+    {
+     "id": "rotorama",
+     "supplier": "rotorama",
+     "label": "Rotorama",
+     "url": "https://www.rotorama.com/product/b6ac-nabijec-lipo-ac-dc-6a-200w",
+     "price": 69.59,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "In stock",
+     "eta_days": [
+      2,
+      5
+     ],
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": true,
+     "note": "Set LiPo 2S, 0.3 A (1C). The output is XT60: check the box for a charge lead to JST-SYP, or buy one.",
+     "note_cs": "Nastavte LiPo 2S, 0,3 A (1C). Výstup je XT60: zkontrolujte, zda je v balení nabíjecí kabel na JST-SYP, případně ho dokupte.",
+     "reviews": {
+      "rating": null,
+      "count": null,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.rotorama.com/product/b6ac-nabijec-lipo-ac-dc-6a-200w"
+     }
+    },
+    {
+     "id": "rotorama_c4",
+     "supplier": "rotorama",
+     "label": "Rotorama: ToolkitRC C4 (from 0.5 A)",
+     "url": "https://www.rotorama.com/product/toolkitrc-c4-compact-ac-charger",
+     "price": 28.69,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Out of stock",
+     "eta_days": null,
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": false,
+     "flag": "check_label",
+     "flag_reason": "Lowest current 0.5 A: about 1.7C for a 300 mAh pack. Only if your battery allows that charge rate.",
+     "flag_reason_cs": "Nejnižší proud 0,5 A: u baterie 300 mAh asi 1,7C. Jen pokud to vaše baterie dovoluje."
+    },
+    {
+     "id": "rotorama_e3",
+     "supplier": "rotorama",
+     "label": "Rotorama: SkyRC e3 (fixed 1.2 A)",
+     "url": "https://www.rotorama.com/nabijeni/skyrc-e3-15w-2-3s",
+     "price": 24.69,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "In stock",
+     "eta_days": null,
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": false,
+     "flag": "check_label",
+     "flag_reason": "Charge current 1.2 A max with no setting (SkyRC): about 4C for a 300 mAh pack. Not for this battery.",
+     "flag_reason_cs": "Nabíjecí proud 1,2 A bez nastavení (SkyRC): u baterie 300 mAh asi 4C. Pro tuto baterii ne."
+    }
+   ]
+  }
+ ]
+}

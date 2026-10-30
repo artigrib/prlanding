@@ -1,0 +1,147 @@
+<!--meta
+{"title":"Project SVRN parts buying plan: 150 g combat robot | printedrobotics.cz",
+ "description":"A parts buying plan for the Project SVRN combat robot (150 g): suppliers, prices with VAT and shipping, delivery times, checks for the controller, motors, servo and LiPo, LiPo safety and an arrivals checklist.",
+ "ogTitle":"Project SVRN parts buying plan",
+ "ogDesc":"You buy the parts directly from suppliers. We tell you what, where, for how much and what to watch for with the controller, servo and LiPo.",
+ "h":"Project SVRN parts buying plan",
+ "print":true,
+ "image":"img/svrn_white.jpg","imageW":1200,"imageH":900,"imageAlt":"The small Project SVRN combat robot with a wedge"}
+-->
+<link rel="stylesheet" href="{root}assets/plan/plan.css">
+<section class="g doc-hero" id="plan" data-lang="en" data-robot="svrn" data-root="{root}">
+<div class="a1 mono">Buying plan · Project SVRN</div>
+<div class="a4" style="display:flex;flex-direction:column;gap:20px">
+<h1>Project SVRN parts buying plan</h1>
+<p class="lead">You buy the parts yourself, directly from suppliers. We tell you what to buy, where, what it costs with shipping, when it arrives and what to watch for with the controller, the servo and the LiPo battery. We sell nothing and never order for you.</p>
+<p class="plan-stamp" id="plan-stamp">Prices checked as of <span id="stamp-date">—</span></p>
+<noscript><p class="doc-note"><i aria-hidden="true"></i><span>The plan is calculated in your browser. Turn on JavaScript, or see the <a href="{root}data/components/svrn.json">price and source data</a>.</span></p></noscript>
+</div>
+</section>
+
+<section class="section" id="bezpecnost">
+<div class="g rule">
+<div class="a1 mono">00 — Safety</div>
+<div class="a4">
+<div class="plan-safety-box" role="note" aria-labelledby="safety-h">
+<h2 id="safety-h">Safety: not a toy</h2>
+<ul class="plan-safety" id="plan-safety"></ul>
+</div>
+</div>
+</div>
+</section>
+
+<section class="section" id="konfigurace">
+<div class="g rule">
+<div class="a1 mono">01 — Configuration</div>
+<div class="a4 plan-cfg">
+<form id="plan-form" class="plan-form plan-form-3">
+<fieldset>
+<legend>What you are buying</legend>
+<label class="plan-opt"><input type="radio" name="robot" value="robot_only" checked><span><b>Robot only</b><small>You already have a transmitter and a charger (e.g. from another robot).</small></span></label>
+<label class="plan-opt"><input type="radio" name="robot" value="starter"><span><b>Robot + transmitter + charger</b><small>Everything for a first robot. The transmitter and charger serve the next ones too.</small></span></label>
+</fieldset>
+<fieldset>
+<legend>Front module</legend>
+<label class="plan-opt"><input type="radio" name="module" value="flipper" checked><span><b>Flipper</b><small>Flips the opponent; needs a servo.</small></span></label>
+<label class="plan-opt"><input type="radio" name="module" value="wedge"><span><b>Wedge</b><small>The simplest, no servo.</small></span></label>
+<label class="plan-opt"><input type="radio" name="module" value="grabber"><span><b>Grabber</b><small>Holds the opponent; needs a servo.</small></span></label>
+</fieldset>
+<fieldset>
+<legend>Printed parts</legend>
+<label class="plan-opt"><input type="radio" name="print" value="self" checked><span><b>I print them myself</b><small>The STLs are free; PLA and TPU.</small></span></label>
+<label class="plan-opt"><input type="radio" name="print" value="service"><span><b>Print service</b><small>Upload the STLs and get a quote.</small></span></label>
+</fieldset>
+</form>
+<div class="plan-sum" id="plan-sum" aria-live="polite"></div>
+<div class="plan-notes" id="plan-notes"></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="varianta">
+<div class="g rule">
+<div class="a1 mono">02 — Part check</div>
+<div class="a4">
+<div class="plan-warn" role="note" aria-labelledby="warn-h">
+<h2 id="warn-h">Watch the controller, servo and LiPo</h2>
+<p>Four N10 motors need the Malenki HV. The board has no BEC, so the servo gets the full battery voltage. And the battery must be 2S with the right plug. Mistakes show up only on the first drive, or as smoke.</p>
+<div id="variant-table"></div>
+<h3>How to check the parts</h3>
+<ol id="variant-how"></ol>
+<div id="variant-flags"></div>
+<div class="plan-check no-print">
+<h3>Check a listing</h3>
+<p>Paste the listing title or description. The check runs only in your browser; nothing is sent anywhere.</p>
+<label for="chk-exp">Which part</label>
+<select id="chk-exp"></select>
+<label for="chk-text">Listing text</label>
+<textarea id="chk-text" rows="3" placeholder="E.g. Malenki Nano HV 2-4S, 3 A per channel"></textarea>
+<button type="button" class="btn btn-o" id="chk-btn">Check</button>
+<p id="chk-out" class="plan-chk-out" aria-live="polite"></p>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="section" id="nakup">
+<div class="g rule">
+<div class="a1 mono">03 — Buying plan</div>
+<div class="a4">
+<div class="plan-bar no-print"><button type="button" class="btn btn-o" id="print-btn">Print the plan</button><span class="muted">Ticks are stored only in your browser.</span></div>
+<div id="plan-groups"></div>
+<div id="plan-alt"></div>
+<p class="src">All links are plain links to the shops. None is an affiliate link and we get nothing for recommending them.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="naradi">
+<div class="g rule">
+<div class="a1 mono">04 — Tools and time</div>
+<div class="a4 prose">
+<h2>Tools you will need</h2>
+<ul id="plan-tools"></ul>
+<h3 id="cas-stavby">Build time estimate</h3>
+<p id="plan-time"></p>
+<ul id="plan-stages"></ul>
+</div>
+</div>
+</section>
+
+<section class="section" id="dorazilo">
+<div class="g rule">
+<div class="a1 mono">05 — What has arrived</div>
+<div class="a4">
+<p class="ink2 plan-p">Tick what has arrived. You can note tracking numbers next to each shop. They are stored only in your browser; we don’t track parcels and have no access to your shop accounts. We have no SVRN guide of our own yet: we link to the author’s original guide.</p>
+<ul class="plan-arr" id="plan-arrivals"></ul>
+<div class="plan-track" id="plan-tracking"></div>
+<div class="plan-next" id="plan-next" hidden>
+<b>Controller, motors and battery are here. Next step:</b>
+<a class="sim-cta" href="https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai" rel="noopener"><span><b>1. Project SVRN guide (Printables)</b><small>The original PDF guide and files by Shoverobotics; bind the Malenki to the transmitter and test the failsafe</small></span><span aria-hidden="true">→</span></a>
+<a class="sim-cta" href="{root}en/guides/combat-robots-150-g/"><span><b>2. Getting started with 150 g combat robots</b><small>Rules, safety and a first tournament</small></span><span aria-hidden="true">→</span></a>
+<a class="sim-cta" href="{root}sim/arena/?robot=svrn&amp;lang=en"><span><b>3. The arena in your browser</b><small>Practise driving before the robot is finished</small></span><span aria-hidden="true">→</span></a>
+</div>
+<p class="plan-wait muted" id="plan-wait">Once the controller, the motors and the battery arrive, the next step appears here.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="upozorneni">
+<div class="g rule">
+<div class="a1 mono">06 — Disclaimer</div>
+<div class="a4 prose">
+<h2>We are not the seller</h2>
+<ul>
+<li>You buy the parts directly from the suppliers. The seller is always the shop: you pay it, and it owes you the warranty and the right of withdrawal. We don’t order, don’t pay and can’t see your orders.</li>
+<li>Prices and stock change every week. Each line shows the date it was checked and the source status (verified, carried, unverified, estimate). Check the price at the shop before you order.</li>
+<li>The landed cost is a range: goods incl. VAT (FLS Battlebots is not a VAT payer, its price is final) and our shipping estimate, verified for FLS. The exchange rate is a fixed assumption of <span id="fx"></span> CZK/€.</li>
+<li>We summarise listing reviews in our own words, with a date; we quote nothing from them.</li>
+<li>No link is an affiliate link. If that ever changes, we’ll say so right next to the link.</li>
+</ul>
+<p class="src">Data: <a href="{root}data/components/svrn.json">data/components/svrn.json</a> · Project SVRN: <a href="https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai">Shoverobotics (Jordan Gell) on Printables</a>, licence CC BY 4.0 per our catalogue (we did not see it on the Printables page on 30 Oct 2026). The author is not affiliated with us.</p>
+<p>Prefer a ready kit? <a href="{root}en/kit/svrn/">Project SVRN kit</a>: leave your email and we’ll let you know.</p>
+</div>
+</div>
+</section>
+<script type="module" src="{root}assets/plan/plan.js"></script>

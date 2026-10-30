@@ -19,7 +19,7 @@ const CONTENT_PAGES = [['pro-skoly/', 'en/for-schools/'], ['pro-skoly/pracovni-l
   ['navody/so101-lerobot-prvni-kroky/', 'en/guides/so101-lerobot-first-steps/'], ['navody/bojovi-roboti-150-g/', 'en/guides/combat-robots-150-g/'],
   ['navody/licence-open-source-hardwaru/', 'en/guides/open-source-hardware-licences/'],
   ['navody/so101-sestaveni/', 'en/guides/so101-assembly/'], ['navody/so101-sestaveni/kontrolni-seznam/', 'en/guides/so101-assembly/checklist/'],
-  ['stavba/so101/', 'en/build/so101/'], ['plan/so101/', 'en/plan/so101/']];
+  ['stavba/so101/', 'en/build/so101/'], ['plan/so101/', 'en/plan/so101/'], ['plan/svrn/', 'en/plan/svrn/']];
 const fail =(name, msg) => { failed++; console.log(`FAIL ${name}\n  ${msg}`); };
 
 /* ---------- 1. static hreflang / sitemap checks ---------- */
@@ -58,7 +58,7 @@ const alts = html => Object.fromEntries([...html.matchAll(/<link rel="alternate"
 // Czech-only letters, plus common Czech UI words that have no diacritics
 const CZ = /[ěřůčšžťďňĚŘŮČŠŽŤĎŇ]|[áéíóúý]\p{L}|\b(Rameno|Loket|Chapadlo|Klouby|Kloub|Mise|Znovu|Hotovo|Kostka|Miska|Simulace|Zkusit|Postavte|Kalibrace|Serva|Teplota|Zapnout|Spustit|Poloha|Diagnostika|Turnaj|Kamera|Pauza|Barva|Soupe\p{L}*|Zpomal\p{L}*|Vidlice|Agrese|Kontrola|Sada|Detail sady|Katalog|Licence a)\b/u;
 // names and quoted titles that legitimately contain such letters
-const OK = /Čeština|González|Ángel|Muffin578|„150g vert“|Jazyk \/ Language/;
+const OK = /Čeština|Zásilkovna|Česká pošta|González|Ángel|Muffin578|„150g vert“|Jazyk \/ Language/;
 const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
 
 async function check(name, url, fn, opts = {}) {
@@ -146,6 +146,28 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
     if (!/en\/guides\/so101-assembly\/$/.test(await p.locator('[data-testid=plan-guide-link]').evaluate(a => a.href))) e.push('build-time guide link');
     const next = await p.locator('#plan-next a').evaluateAll(as => as.map(a => new URL(a.href).pathname + new URL(a.href).search));
     if (next[0] !== '/sim/so101/nastaveni/?lang=en' || next[1] !== '/en/guides/so101-lerobot-first-steps/') e.push('next-step links: ' + next.join(', '));
+    await p.addScriptTag({ content: AXE });
+    const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
+    const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    if (bad.length) e.push('axe: ' + bad.map(v => `${v.id} (${v.nodes.length}) ${v.nodes[0].target}`).join('; '));
+    if (vp.width === 390 && (await p.evaluate(() => document.documentElement.scrollWidth)) > 390) e.push('horizontal scroll');
+  }, { viewport: vp });
+}
+for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
+  await check(`en plan svrn ${vp.width}px`, '/en/plan/svrn/', async (p, e) => {
+    await p.waitForSelector('#plan[data-ready="1"]');
+    await p.check('input[name=robot][value=starter]');
+    await p.check('input[name=module][value=grabber]');
+    await noCzech(p, e);
+    if (!/^\d+–\d+ €$/.test((await p.locator('[data-testid=plan-total-eur]').innerText()).trim())) e.push('total');
+    if (!/not\sa\stoy/.test(await p.locator('#safety-h').textContent())) e.push('not-a-toy heading');
+    if (!/Watch\sthe\scontroller/.test(await p.locator('.plan-warn h2').innerText())) e.push('part check heading');
+    if ((await p.locator('#plan-safety li').count()) !== 6) e.push('safety items');
+    if (!(await p.locator('#chk-exp option').count())) e.push('part check options');
+    const own = await p.locator('#plan-arrivals a').evaluateAll(as => as.map(a => new URL(a.href)).filter(u => u.origin === location.origin).map(u => u.pathname));
+    if (!own.length || own.some(x => !x.startsWith('/en/'))) e.push('arrival links not English: ' + own.join(', '));
+    const next = await p.locator('#plan-next a').evaluateAll(as => as.map(a => new URL(a.href)).filter(u => u.origin === location.origin).map(u => u.pathname + u.search));
+    if (next[0] !== '/en/guides/combat-robots-150-g/' || !/lang=en/.test(next[1] || '')) e.push('next-step links: ' + next.join(', '));
     await p.addScriptTag({ content: AXE });
     const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
     const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');

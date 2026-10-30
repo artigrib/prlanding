@@ -152,6 +152,60 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
     if ((await p.evaluate(() => document.documentElement.scrollWidth)) > vp.width) throw new Error('horizontal scroll');
   });
 }
+await check('plan svrn: totals, module, part check, safety, notes, local state', '/plan/svrn/', async p => {
+  const offsite = [];
+  p.on('request', r => { const u = new URL(r.url()); if (u.origin !== new URL(BASE).origin && !IGNORE.test(r.url())) offsite.push(r.url()); });
+  await p.waitForSelector('#plan[data-ready="1"]');
+  const total = async () => (await p.locator('[data-testid=plan-total-eur]').innerText()).trim();
+  if (await total() !== '103–106 €') throw new Error('robot-only total ' + await total());
+  if (!/^\d\d\.\d\d\.20\d\d$/.test(await p.locator('#stamp-date').innerText())) throw new Error('price stamp date');
+  if (!/není\sto\shračka/.test(await p.locator('#safety-h').textContent())) throw new Error('not-a-toy heading');
+  if ((await p.locator('#plan-safety li').count()) !== 6) throw new Error('safety items');
+  if (!(await p.locator('#plan-safety [data-safety=lipo_shipping] a[href*="zasilkovna.cz"]').count())) throw new Error('LiPo shipping source');
+  if (!(await p.locator('#plan-notes [data-note=esc_hv] a[href*="bristolbotbuilders"]').count())) throw new Error('HV note with source');
+  if (!(await p.locator('#plan-notes [data-note=servo_bec]').count())) throw new Error('servo/BEC verify note');
+  if (!/Malenki Nano HV/.test(await p.locator('#plan-groups').innerText())) throw new Error('HV controller line');
+  if (!(await p.locator('[data-testid=plan-reviews]').count())) throw new Error('review lines');
+  await p.check('input[name=module][value=wedge]');
+  if (await total() !== '92–95 €') throw new Error('wedge total ' + await total());
+  if (await p.locator('#plan-notes [data-note=servo_bec]').count()) throw new Error('servo note shown for the wedge');
+  await p.check('input[name=robot][value=starter]'); await p.check('input[name=module][value=flipper]');
+  if (await total() !== '241–248 €') throw new Error('starter total ' + await total());
+  if ((await p.locator('#plan-arrivals a[href*="printables.com/model/1272536"]').count()) < 4) throw new Error('arrivals → original guide');
+  if (!/printables\.com/.test(await p.locator('[data-testid=plan-guide-link]').evaluate(a => a.href))) throw new Error('guide link');
+  await p.selectOption('#chk-exp', 'esc');
+  await p.fill('#chk-text', 'Malenki Nano 1-2S, 1.8A');
+  await p.click('#chk-btn');
+  if ((await p.locator('[data-testid=chk-verdict]').getAttribute('data-verdict')) !== 'mismatch') throw new Error('esc verdict');
+  await p.selectOption('#chk-exp', 'servo');
+  await p.fill('#chk-text', '<img src=x onerror=alert(1)> PTK 7462W servo 4.8-8.4V');
+  await p.click('#chk-btn');
+  if ((await p.locator('[data-testid=chk-verdict]').getAttribute('data-verdict')) !== 'match') throw new Error('servo verdict');
+  if (await p.locator('#chk-out img').count()) throw new Error('checker output not escaped');
+  await p.locator('.plan-line input[type=checkbox]').first().check();
+  if (await p.locator('#plan-next').isVisible()) throw new Error('next step shown too early');
+  await p.check('#arr-ctrl'); await p.check('#arr-motors'); await p.check('#arr-lipo');
+  if (!(await p.locator('#plan-next').isVisible())) throw new Error('next step not shown');
+  await p.reload(); await p.waitForSelector('#plan[data-ready="1"]');
+  if (!(await p.locator('input[name=robot][value=starter]').isChecked()) || !(await p.locator('input[name=module][value=flipper]').isChecked())) throw new Error('config not restored');
+  if (!(await p.locator('.plan-line input[type=checkbox]').first().isChecked())) throw new Error('local state not restored');
+  if (offsite.length) throw new Error('off-site requests: ' + offsite.join(', '));
+});
+for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
+  await check(`plan svrn axe ${vp.width}px`, '/plan/svrn/', async p => {
+    await p.setViewportSize(vp);
+    await p.waitForSelector('#plan[data-ready="1"]');
+    await p.check('input[name=robot][value=starter]');
+    await p.addScriptTag({ content: AXE });
+    const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
+    const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    if (bad.length) throw new Error('axe: ' + bad.map(v => `${v.id} (${v.nodes.length}) ${v.nodes[0].target}`).join('; '));
+    if ((await p.evaluate(() => document.documentElement.scrollWidth)) > vp.width) throw new Error('horizontal scroll');
+  });
+}
+await check('kit svrn links the buying plan', '/sada/svrn/', async p => {
+  if ((await p.locator('#plan-cta').getAttribute('href')) !== '../../plan/svrn/') throw new Error('kit plan link');
+});
 await check('kit so101 + home link the buying plan, waitlist stays', '/sada/so101/', async p => {
   if ((await p.locator('#plan-cta').getAttribute('href')) !== '../../plan/so101/') throw new Error('kit plan link');
   if (!(await p.locator('#predobjednavka form, #predobjednavka').count())) throw new Error('waitlist gone');

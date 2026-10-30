@@ -1,0 +1,734 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://printedrobotics.cz/data/components/svrn.schema.json",
+  "title": "Project SVRN component map and purchase plans",
+  "description": "Checked by tools/check-components.mjs on every build (node tools/build.mjs). Every source needs an https URL, a checked date and a status. We are not a seller: sources are suppliers the user buys from directly.",
+  "type": "object",
+  "required": [
+    "meta",
+    "suppliers",
+    "variants",
+    "configs",
+    "printing",
+    "tools",
+    "build_time",
+    "arrivals",
+    "components",
+    "safety"
+  ],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "robot",
+        "generated",
+        "fx_czk_per_eur",
+        "oss_vat_uplift",
+        "affiliate_links",
+        "status_legend"
+      ],
+      "properties": {
+        "robot": {
+          "type": "string"
+        },
+        "generated": {
+          "$ref": "#/$defs/date"
+        },
+        "fx_czk_per_eur": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 50
+        },
+        "fx_ron_per_eur": {
+          "type": "number"
+        },
+        "oss_vat_uplift": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.1
+        },
+        "affiliate_links": {
+          "type": "boolean"
+        },
+        "status_legend": {
+          "type": "object"
+        }
+      }
+    },
+    "suppliers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "name",
+          "country",
+          "url",
+          "vat",
+          "shipping_eur",
+          "shipping_status"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "$ref": "#/$defs/url"
+          },
+          "vat": {
+            "enum": [
+              "eu_oss",
+              "cz",
+              "cz_nonvat",
+              "cn_ioss",
+              "non_eu",
+              "per_vendor",
+              "none"
+            ]
+          },
+          "shipping_eur": {
+            "$ref": "#/$defs/range"
+          },
+          "shipping_status": {
+            "$ref": "#/$defs/status"
+          },
+          "eta_days_estimate": {
+            "$ref": "#/$defs/range"
+          },
+          "duty_eur_per_line": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "variants": {
+      "type": "object",
+      "required": [
+        "checks",
+        "rules",
+        "rules_cs",
+        "how_to_verify",
+        "how_to_verify_cs"
+      ],
+      "properties": {
+        "checks": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "component",
+              "name",
+              "name_cs",
+              "need",
+              "need_cs",
+              "avoid",
+              "avoid_cs",
+              "identify",
+              "good",
+              "bad",
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "$ref": "#/$defs/status"
+              },
+              "identify": {
+                "type": "string",
+                "minLength": 1
+              },
+              "good": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "re",
+                    "what"
+                  ],
+                  "properties": {
+                    "re": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              },
+              "bad": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "re",
+                    "reason",
+                    "reason_cs"
+                  ],
+                  "properties": {
+                    "re": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              },
+              "warn": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "re",
+                    "reason",
+                    "reason_cs"
+                  ],
+                  "properties": {
+                    "re": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "configs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "name",
+          "name_cs",
+          "lines",
+          "print_grams",
+          "print_units"
+        ],
+        "properties": {
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "component",
+                "qty",
+                "source"
+              ],
+              "properties": {
+                "component": {
+                  "type": "string"
+                },
+                "qty": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "source": {
+                  "type": "string"
+                },
+                "arm": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "print_grams": {
+            "type": "number",
+            "minimum": 1
+          },
+          "print_units": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "printing": {
+      "type": "object",
+      "required": [
+        "self",
+        "service"
+      ],
+      "properties": {
+        "self": {
+          "type": "object",
+          "required": [
+            "filament_czk_per_kg",
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "$ref": "#/$defs/status"
+            }
+          }
+        },
+        "service": {
+          "type": "object",
+          "required": [
+            "price_eur_per_unit",
+            "status",
+            "eta_days",
+            "sources"
+          ],
+          "properties": {
+            "eta_days": {
+              "$ref": "#/$defs/range"
+            },
+            "status": {
+              "$ref": "#/$defs/status"
+            },
+            "price_eur_per_unit": {
+              "$ref": "#/$defs/range"
+            }
+          }
+        }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "name_cs",
+          "required"
+        ]
+      }
+    },
+    "build_time": {
+      "type": "object",
+      "required": [
+        "status",
+        "guide",
+        "printer_h_per_unit",
+        "stages"
+      ],
+      "properties": {
+        "status": {
+          "const": "estimate"
+        },
+        "guide": {
+          "type": "object",
+          "required": [
+            "cs",
+            "en"
+          ]
+        },
+        "stages": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "name_cs"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^e[0-9]$"
+              },
+              "h": {
+                "$ref": "#/$defs/range"
+              },
+              "only_print": {
+                "enum": [
+                  "self",
+                  "service"
+                ]
+              },
+              "optional": {
+                "type": "boolean"
+              },
+              "printer": {
+                "type": "boolean"
+              },
+              "h_per_unit": {
+                "$ref": "#/$defs/range"
+              }
+            }
+          }
+        },
+        "printer_h_per_unit": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "arrivals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "name_cs",
+          "needed_for_wizard"
+        ],
+        "properties": {
+          "guide_stage": {
+            "type": "string",
+            "pattern": "^e[0-9]$"
+          },
+          "link": {
+            "type": "object",
+            "required": [
+              "label",
+              "label_cs"
+            ],
+            "properties": {
+              "url": {
+                "$ref": "#/$defs/url"
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "group",
+          "name",
+          "name_cs",
+          "role",
+          "role_cs",
+          "sources"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^svrn\\."
+          },
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "supplier",
+                "label",
+                "url",
+                "checked",
+                "status",
+                "recommend",
+                "price",
+                "currency",
+                "per",
+                "eta_days"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "supplier": {
+                  "type": "string"
+                },
+                "url": {
+                  "$ref": "#/$defs/url"
+                },
+                "checked": {
+                  "$ref": "#/$defs/date"
+                },
+                "status": {
+                  "$ref": "#/$defs/status"
+                },
+                "recommend": {
+                  "type": "boolean"
+                },
+                "price": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                },
+                "currency": {
+                  "enum": [
+                    "EUR",
+                    "CZK",
+                    "RON",
+                    "GBP",
+                    null
+                  ]
+                },
+                "per": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "eta_days": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/range"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "flag": {
+                  "enum": [
+                    "mislabeled",
+                    "variant_not_shown",
+                    "check_label",
+                    "out_of_stock"
+                  ]
+                },
+                "reviews": {
+                  "$ref": "#/$defs/reviews"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "options": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "name",
+          "name_cs",
+          "default",
+          "values"
+        ],
+        "properties": {
+          "values": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": [
+                "name",
+                "name_cs",
+                "lines"
+              ],
+              "properties": {
+                "print_grams": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "lines": {
+                  "type": "array",
+                  "minItems": 0,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "component",
+                      "qty",
+                      "source"
+                    ],
+                    "properties": {
+                      "component": {
+                        "type": "string"
+                      },
+                      "qty": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "source": {
+                        "type": "string"
+                      },
+                      "arm": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "title_cs",
+          "text",
+          "text_cs"
+        ],
+        "properties": {
+          "level": {
+            "enum": [
+              "verify",
+              "changed",
+              "info"
+            ]
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "label",
+                "url",
+                "checked"
+              ],
+              "properties": {
+                "url": {
+                  "$ref": "#/$defs/url"
+                },
+                "checked": {
+                  "$ref": "#/$defs/date"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "safety": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "title_cs",
+          "text",
+          "text_cs"
+        ],
+        "properties": {
+          "level": {
+            "enum": [
+              "verify",
+              "changed",
+              "info"
+            ]
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "label",
+                "url",
+                "checked"
+              ],
+              "properties": {
+                "url": {
+                  "$ref": "#/$defs/url"
+                },
+                "checked": {
+                  "$ref": "#/$defs/date"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "date": {
+      "type": "string",
+      "pattern": "^20[0-9]{2}-[01][0-9]-[0-3][0-9]$"
+    },
+    "url": {
+      "type": "string",
+      "pattern": "^https://[^\\s]+$"
+    },
+    "status": {
+      "enum": [
+        "verified",
+        "carried",
+        "unverified",
+        "estimate"
+      ]
+    },
+    "range": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number",
+        "minimum": 0
+      }
+    },
+    "reviews": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "rating",
+            "count",
+            "checked",
+            "signals"
+          ],
+          "properties": {
+            "rating": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 5
+            },
+            "count": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "checked": {
+              "$ref": "#/$defs/date"
+            },
+            "url": {
+              "$ref": "#/$defs/url"
+            },
+            "signals": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "type",
+                  "note_cs",
+                  "note_en"
+                ],
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "variant_mismatch",
+                      "shipping_time",
+                      "quality",
+                      "missing_parts",
+                      "positive"
+                    ]
+                  },
+                  "note_cs": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "note_en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "description": "Buyer reviews on the listing, summarised by us (never copied verbatim). count 0 = the listing has no reviews; null = could not be read."
+    }
+  }
+}

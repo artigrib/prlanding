@@ -208,6 +208,7 @@
       'Díly vytiskneme z originálních souborů projektu, hardware doplníme podle kusovníku. Předobjednávka je nezávazná, cenu a termín potvrdíme e-mailem.': 'We print the parts from the project’s original files and add the hardware from the bill of materials. The pre-order is non-binding; we confirm the price and date by email.',
       'Sada SO-101': 'SO-101 kit', 'Postavte': 'Build',
       'Plán nákupu dílů': 'Parts buying plan', 'Co koupit u kterých dodavatelů, ceny s dopravou a kontrola variant serv': 'What to buy from which supplier, prices with shipping and a servo variant check',
+      'Co koupit u kterých dodavatelů, ceny s dopravou, kontrola desky, serva a LiPo': 'What to buy from which supplier, prices with shipping, controller, servo and LiPo checks',
       'Rozložený pohled z originálních STL ukáže každý díl. ID serv, kalibraci a test si projdete na virtuální ruce, ještě než krabice dorazí.': 'An exploded view from the original STLs shows every part. Walk through servo IDs, calibration and testing on a virtual arm before the box arrives.',
       'Nastavení serv nanečisto': 'Servo setup dry run',
       'Roboti do 150 g. Zápas si nejdřív odehrajete v aréně.': 'Robots up to 150 g. Fight your first match in the arena.',
