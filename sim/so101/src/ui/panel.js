@@ -294,7 +294,7 @@ export class Panel {
     const pr = progressOf(prog);
     const ch = h(`<a class="ux-card ux-chapter" href="nastaveni/">
         <span class="mono">Kapitola 11</span>
-        <b>Skutečná ruka</b>
+        <b>Ke skutečné ruce</b>
         <span class="ink2">Nastavení serv nanečisto: ID, kalibrace, test</span>
         <span class="mono-s muted">${pr.done >= 3 ? 'Odemčeno: zvládli jste 3 mise' : 'Doporučujeme po 3 misích – otevřít můžete hned'}</span>
       </a>`);
