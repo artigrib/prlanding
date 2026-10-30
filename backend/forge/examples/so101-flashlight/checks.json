@@ -1,0 +1,411 @@
+{
+ "printability": {
+  "min_wall_mm": 1.22,
+  "min_wall_required_mm": 1.2,
+  "wall_ok": true,
+  "build_dir": [
+   0.0,
+   1.0,
+   0.0
+  ],
+  "overhang_area_mm2_over_45deg": 128.7,
+  "overhang_note": "The LED bore lies horizontally in the print orientation: Ø≈10 mm round holes print without supports in PLA (slight droop at the top, ream with a 10 mm drill by hand if the LED does not slide in). No other supports needed.",
+  "overhang_note_cs": "Otvor pro LED leží při tisku vodorovně: kruhový otvor Ø≈10 mm se v PLA vytiskne bez podpor (strop se mírně prověsí, případně protáhněte ručně vrtákem 10 mm). Jiné podpory nejsou potřeba.",
+  "watertight": true,
+  "fits_bed": true,
+  "settings": "PLA, 0.4 mm nozzle, 0.2 mm layers, 3 perimeters, 30 % infill, plate face on the bed",
+  "settings_cs": "PLA, tryska 0,4 mm, vrstva 0,2 mm, 3 perimetry, výplň 30 %, destičkou na podložku",
+  "ok": true
+ },
+ "static_fit": {
+  "meshes": [
+   {
+    "mesh": "sts3215_03a_v1",
+    "min_mm": 6.53,
+    "vertices_inside_part": 0,
+    "max_depth_mm": 0.0,
+    "deepest_at": null
+   },
+   {
+    "mesh": "wrist_roll_follower_so101_v1",
+    "min_mm": 0.3,
+    "vertices_inside_part": 0,
+    "max_depth_mm": 0.0,
+    "deepest_at": null
+   },
+   {
+    "mesh": "wrist_roll_follower_so101_camera_mount",
+    "min_mm": 0.33,
+    "vertices_inside_part": 0,
+    "max_depth_mm": 0.05,
+    "deepest_at": null
+   }
+  ],
+  "min_mm": 0.3,
+  "interference": false,
+  "note": "part samples on the seat planes (axis 1 = [24.0, 27.0] ± 0.3 mm) are not counted; a vertex counts as inside when deeper than 0.2 mm"
+ },
+ "collision": {
+  "joints_swept": {
+   "shoulder_lift": [
+    -1.745,
+    1.745,
+    5
+   ],
+   "elbow_flex": [
+    -1.69,
+    1.69,
+    5
+   ],
+   "wrist_flex": [
+    -1.658,
+    1.658,
+    11
+   ],
+   "wrist_roll": [
+    -2.744,
+    2.841,
+    9
+   ],
+   "gripper": [
+    -0.175,
+    1.745,
+    4
+   ]
+  },
+  "other_joints": "shoulder_pan = 0 (it turns the whole arm and does not change link-to-link distances)",
+  "poses": 9900,
+  "poses_excluded_robot_self_contact": 1256,
+  "poses_checked": 8644,
+  "hull": {
+   "min_mm": -1.25,
+   "poses_penetrating": 8,
+   "poses_below_margin": 12,
+   "margin_mm": 2.0,
+   "per_body": {
+    "base": {
+     "min_hull_mm": -1.25,
+     "pose": {
+      "shoulder_lift": 1.745,
+      "elbow_flex": 1.69,
+      "wrist_flex": -0.332,
+      "wrist_roll": -2.046,
+      "gripper": 1.745
+     },
+     "mesh": "waveshare_mounting_plate_so101_v2"
+    },
+    "shoulder": {
+     "min_hull_mm": 0.85,
+     "pose": {
+      "shoulder_lift": -0.873,
+      "elbow_flex": 1.69,
+      "wrist_flex": 0.332,
+      "wrist_roll": 0.747,
+      "gripper": 1.745
+     },
+     "mesh": "rotation_pitch_so101_v1"
+    },
+    "upper_arm": {
+     "min_hull_mm": 17.69,
+     "pose": {
+      "shoulder_lift": -0.873,
+      "elbow_flex": 0.845,
+      "wrist_flex": 1.658,
+      "wrist_roll": 0.049,
+      "gripper": 1.745
+     },
+     "mesh": "upper_arm_so101_v1"
+    },
+    "lower_arm": {
+     "min_hull_mm": 50.0,
+     "pose": {
+      "shoulder_lift": -1.745,
+      "elbow_flex": -1.69,
+      "wrist_flex": -1.658,
+      "wrist_roll": -2.744,
+      "gripper": -0.175
+     },
+     "mesh": "under_arm_so101_v1"
+    },
+    "wrist": {
+     "min_hull_mm": 12.1,
+     "pose": {
+      "shoulder_lift": 1.745,
+      "elbow_flex": 1.69,
+      "wrist_flex": 1.658,
+      "wrist_roll": -0.649,
+      "gripper": 1.745
+     },
+     "mesh": "wrist_roll_pitch_so101_v2"
+    },
+    "moving_jaw_so101_v1": {
+     "min_hull_mm": 2.14,
+     "pose": {
+      "shoulder_lift": -1.745,
+      "elbow_flex": -1.69,
+      "wrist_flex": -1.658,
+      "wrist_roll": -2.744,
+      "gripper": -0.175
+     },
+     "mesh": "moving_jaw_so101_v1"
+    }
+   },
+   "note": "convex hulls: conservative (reads closer than the real parts)"
+  },
+  "exact": {
+   "poses_checked": 12,
+   "min_mm": 0.02,
+   "poses_penetrating": 8,
+   "details": [
+    {
+     "pose": {
+      "shoulder_lift": 1.745,
+      "elbow_flex": 1.69,
+      "wrist_flex": -0.332,
+      "wrist_roll": -2.046,
+      "gripper": -0.175
+     },
+     "min_mm": 0.04,
+     "closest_body": "base",
+     "penetrating": true,
+     "robot_own_hull_clearance_mm": 2.48,
+     "part_hull_mm": -1.25
+    },
+    {
+     "pose": {
+      "shoulder_lift": 1.745,
+      "elbow_flex": 1.69,
+      "wrist_flex": -0.332,
+      "wrist_roll": -2.046,
+      "gripper": 0.465
+     },
+     "min_mm": 0.04,
+     "closest_body": "base",
+     "penetrating": true,
+     "robot_own_hull_clearance_mm": 2.48,
+     "part_hull_mm": -1.25
+    },
+    {
+     "pose": {
+      "shoulder_lift": 1.745,
+      "elbow_flex": 1.69,
+      "wrist_flex": -0.332,
+      "wrist_roll": -2.046,
+      "gripper": 1.105
+     },
+     "min_mm": 0.04,
+     "closest_body": "base",
+     "penetrating": true,
+     "robot_own_hull_clearance_mm": 2.48,
+     "part_hull_mm": -1.25
+    },
+    {
+     "pose": {
+      "shoulder_lift": 1.745,
+      "elbow_flex": 1.69,
+      "wrist_flex": -0.332,
+      "wrist_roll": -2.046,
+      "gripper": 1.745
+     },
+     "min_mm": 0.04,
+     "closest_body": "base",
+     "penetrating": true,
+     "robot_own_hull_clearance_mm": 2.48,
+     "part_hull_mm": -1.25
+    },
+    {
+     "pose": {
+      "shoulder_lift": 0.0,
+      "elbow_flex": 1.69,
+      "wrist_flex": 1.658,
+      "wrist_roll": -2.744,
+      "gripper": -0.175
+     },
+     "min_mm": 0.02,
+     "closest_body": "base",
+     "penetrating": true,
+     "robot_own_hull_clearance_mm": 2.4,
+     "part_hull_mm": -0.36
+    },
+    {
+     "pose": {
+      "shoulder_lift": 0.0,
+      "elbow_flex": 1.69,
+      "wrist_flex": 1.658,
+      "wrist_roll": -2.744,
+      "gripper": 0.465
+     },
+     "min_mm": 0.02,
+     "closest_body": "base",
+     "penetrating": true,
+     "robot_own_hull_clearance_mm": 2.4,
+     "part_hull_mm": -0.36
+    },
+    {
+     "pose": {
+      "shoulder_lift": 0.0,
+      "elbow_flex": 1.69,
+      "wrist_flex": 1.658,
+      "wrist_roll": -2.744,
+      "gripper": 1.105
+     },
+     "min_mm": 0.02,
+     "closest_body": "base",
+     "penetrating": true,
+     "robot_own_hull_clearance_mm": 2.4,
+     "part_hull_mm": -0.36
+    },
+    {
+     "pose": {
+      "shoulder_lift": 0.0,
+      "elbow_flex": 1.69,
+      "wrist_flex": 1.658,
+      "wrist_roll": -2.744,
+      "gripper": 1.745
+     },
+     "min_mm": 0.02,
+     "closest_body": "base",
+     "penetrating": true,
+     "robot_own_hull_clearance_mm": 2.4,
+     "part_hull_mm": -0.36
+    },
+    {
+     "pose": {
+      "shoulder_lift": -0.873,
+      "elbow_flex": 1.69,
+      "wrist_flex": 0.332,
+      "wrist_roll": 0.747,
+      "gripper": -0.175
+     },
+     "min_mm": 0.9,
+     "closest_body": "shoulder",
+     "penetrating": false,
+     "robot_own_hull_clearance_mm": 6.0,
+     "part_hull_mm": 0.85
+    },
+    {
+     "pose": {
+      "shoulder_lift": -0.873,
+      "elbow_flex": 1.69,
+      "wrist_flex": 0.332,
+      "wrist_roll": 0.747,
+      "gripper": 0.465
+     },
+     "min_mm": 0.9,
+     "closest_body": "shoulder",
+     "penetrating": false,
+     "robot_own_hull_clearance_mm": 6.0,
+     "part_hull_mm": 0.85
+    },
+    {
+     "pose": {
+      "shoulder_lift": -0.873,
+      "elbow_flex": 1.69,
+      "wrist_flex": 0.332,
+      "wrist_roll": 0.747,
+      "gripper": 1.105
+     },
+     "min_mm": 0.9,
+     "closest_body": "shoulder",
+     "penetrating": false,
+     "robot_own_hull_clearance_mm": 6.0,
+     "part_hull_mm": 0.85
+    },
+    {
+     "pose": {
+      "shoulder_lift": -0.873,
+      "elbow_flex": 1.69,
+      "wrist_flex": 0.332,
+      "wrist_roll": 0.747,
+      "gripper": 1.745
+     },
+     "min_mm": 0.9,
+     "closest_body": "shoulder",
+     "penetrating": false,
+     "robot_own_hull_clearance_mm": 6.0,
+     "part_hull_mm": 0.85
+    }
+   ],
+   "note": "the closest hull poses re-checked on the real (decimated) meshes"
+  },
+  "collision_free": false,
+  "collisions_only_where_robot_clearance_below_mm": 2.48
+ },
+ "torque": {
+  "added_mass_g": {
+   "total": 5.38,
+   "part_print_g": 2.38,
+   "led_g": 0.6,
+   "resistor_heatshrink_g": 0.4,
+   "cable_on_gripper_g": 2.0
+  },
+  "stall_nm": {
+   "C018 12 V (30 kg·cm)": 2.94,
+   "C001 7.4 V (16.5 kg·cm at 6 V)": 1.62
+  },
+  "rows": [
+   {
+    "joint": "shoulder_lift",
+    "max_static_nm_without": 0.9098,
+    "max_static_nm_with": 0.9276,
+    "delta_nm": 0.0178,
+    "delta_pct": 1.96,
+    "pct_of_stall_with": {
+     "C018 12 V (30 kg·cm)": 31.6,
+     "C001 7.4 V (16.5 kg·cm at 6 V)": 57.3
+    }
+   },
+   {
+    "joint": "elbow_flex",
+    "max_static_nm_without": 0.4838,
+    "max_static_nm_with": 0.4954,
+    "delta_nm": 0.0116,
+    "delta_pct": 2.4,
+    "pct_of_stall_with": {
+     "C018 12 V (30 kg·cm)": 16.9,
+     "C001 7.4 V (16.5 kg·cm at 6 V)": 30.6
+    }
+   },
+   {
+    "joint": "wrist_flex",
+    "max_static_nm_without": 0.1301,
+    "max_static_nm_with": 0.1347,
+    "delta_nm": 0.0046,
+    "delta_pct": 3.54,
+    "pct_of_stall_with": {
+     "C018 12 V (30 kg·cm)": 4.6,
+     "C001 7.4 V (16.5 kg·cm at 6 V)": 8.3
+    }
+   },
+   {
+    "joint": "wrist_roll",
+    "max_static_nm_without": 0.0076,
+    "max_static_nm_with": 0.0089,
+    "delta_nm": 0.0013,
+    "delta_pct": 17.11,
+    "pct_of_stall_with": {
+     "C018 12 V (30 kg·cm)": 0.3,
+     "C001 7.4 V (16.5 kg·cm at 6 V)": 0.5
+    }
+   },
+   {
+    "joint": "gripper",
+    "max_static_nm_without": 0.0035,
+    "max_static_nm_with": 0.0035,
+    "delta_nm": 0.0,
+    "delta_pct": 0.0,
+    "pct_of_stall_with": {
+     "C018 12 V (30 kg·cm)": 0.1,
+     "C001 7.4 V (16.5 kg·cm at 6 V)": 0.2
+    }
+   }
+  ],
+  "note": "Static gravity torque, max over a pose grid, MuJoCo model masses (the model includes the wrist camera mount, 12 g). Added mass sits ≈40 mm from the wrist-roll axis; dynamic loads (fast moves) not included."
+ },
+ "added_mass_g": 5.38,
+ "added_mass_com_gripper_mm": [
+  -24.24,
+  31.03,
+  -23.69
+ ]
+}

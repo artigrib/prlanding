@@ -1,0 +1,78 @@
+{
+ "load": "1× TRU COMPONENTS 1577414, white LED 10 mm, 3250 mcd, 50°, 20 mA (Vf 3.3 V typ., If 20 mA nominal)",
+ "recommended": {
+  "id": "usb5v",
+  "name": "USB 5 V from the PC or a USB charger, series resistor",
+  "name_cs": "USB 5 V z počítače nebo USB nabíječky, sériový rezistor",
+  "circuit": {
+   "supply_v": [
+    4.75,
+    5.0,
+    5.25
+   ],
+   "vf_v": [
+    3.0,
+    3.3,
+    3.6
+   ],
+   "r_ohm": 120.0,
+   "i_ma": {
+    "min": 9.6,
+    "typ": 14.2,
+    "max": 18.8
+   },
+   "p_resistor_mw_max": 42.2,
+   "resistor_rating": "0.25 W or more",
+   "p_led_mw_typ": 46.8,
+   "p_total_mw_typ": 70.8
+  },
+  "why": "Independent of the servo supply (the arm runs on 12 V or 7.4 V servos; mixing them up is the classic mistake). A USB port gives 500 mA; we draw ≈15 mA.",
+  "why_cs": "Nezávislé na napájení serv (rameno jede na 12 V nebo 7,4 V; jejich záměna je klasická chyba). USB port dá 500 mA, odebíráme ≈15 mA.",
+  "wiring": "USB-A plug: VBUS (red) → resistor → LED anode (long leg); LED cathode (short leg, flat side) → GND (black). Heat-shrink over the resistor and both LED legs. Optional inline switch in VBUS.",
+  "wiring_cs": "USB-A: VBUS (červený) → rezistor → anoda LED (delší nožička); katoda (kratší, plochá strana) → GND (černý). Smršťovací bužírka na rezistor i obě nožičky. Volitelně vypínač do VBUS."
+ },
+ "power_bank_note": "A USB power bank works only if it has a low-current / always-on mode: most banks switch off below ≈50–100 mA, and this light draws ≈15 mA.",
+ "power_bank_note_cs": "Powerbanka funguje jen s režimem pro malý odběr (always-on): většina se pod ≈50–100 mA sama vypne a světlo bere ≈15 mA.",
+ "alternative": {
+  "id": "buck5v",
+  "name": "Small buck module to 5 V from the servo power supply (12 V or 7.4 V), same resistor",
+  "name_cs": "Malý step-down modul na 5 V z napájení serv (12 V nebo 7,4 V), stejný rezistor",
+  "circuit": {
+   "supply_v": [
+    4.75,
+    5.0,
+    5.25
+   ],
+   "vf_v": [
+    3.0,
+    3.3,
+    3.6
+   ],
+   "r_ohm": 120.0,
+   "i_ma": {
+    "min": 9.6,
+    "typ": 14.2,
+    "max": 18.8
+   },
+   "p_resistor_mw_max": 42.2,
+   "resistor_rating": "0.25 W or more",
+   "p_led_mw_typ": 46.8,
+   "p_total_mw_typ": 70.8
+  },
+  "conditions": "Module input range must cover the servo PSU voltage (≥ 15 V rating for a 12 V PSU); set/verify 5.0 V with a multimeter BEFORE connecting the LED; 250 mA fuse or polyfuse in the module input; common ground with the bus board is fine.",
+  "conditions_cs": "Vstupní rozsah modulu musí pokrýt napětí zdroje serv (pro 12 V zdroj aspoň 15 V); 5,0 V nastavte a změřte multimetrem DŘÍV, než připojíte LED; pojistka nebo polyswitch 250 mA na vstupu modulu; společná zem se servo deskou nevadí."
+ },
+ "never": [
+  "mains voltage anywhere near the arm",
+  "LiPo / bare Li-ion cells",
+  "LED straight on the servo rail without a resistor"
+ ],
+ "never_cs": [
+  "síťové napětí kdekoli u ramene",
+  "LiPo / nechráněné Li-ion články",
+  "LED přímo na napájení serv bez rezistoru"
+ ],
+ "cable": "2-core 0.14–0.25 mm² (26–24 AWG) flexible cable, ≈1 m. Leave a 60–80 mm service loop at the wrist (wrist roll turns ±157°) and tie the cable to the servo cables along the forearm.",
+ "cable_cs": "Dvoužilový ohebný kabel 0,14–0,25 mm² (26–24 AWG), ≈1 m. U zápěstí nechte smyčku 60–80 mm (rotace zápěstí ±157°) a kabel přivažte k servokabelům podél předloktí.",
+ "ok": true
+}
