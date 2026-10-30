@@ -1,0 +1,51 @@
+<!--meta
+{"title":"PR-Bench: jak AI modely ovládají robota | printedrobotics.cz",
+ "description":"Náš vlastní benchmark: jak si jazykové modely vedou s fyzickými úkoly simulovaného robota SO-101. Stejné nástroje, stejné zadání, měřitelný výsledek.",
+ "ogTitle":"PR-Bench: jak AI modely ovládají robota",
+ "h":"PR-Bench",
+ "image":"assets/media/so101-poster.jpg","imageW":960,"imageH":540,"imageAlt":"Simulovaná robotická ruka SO-101 nad kostkou a miskou"}
+-->
+<!-- draft (tools/build.mjs: draft: true): noindex, mimo sitemap, nikde neodkazováno. Data: bench/results/sample.json (mock). Před zveřejněním: nahradit skutečným během z VPS (bench/run.mjs), odstranit draft. -->
+<section class="g doc-hero">
+<div class="a1 mono">Koncept · PR-Bench v0</div>
+<div class="a4" style="display:flex;flex-direction:column;gap:20px">
+<h1>PR-Bench: jak AI modely ovládají robota</h1>
+<p class="lead">Dáváme jazykovým modelům stejné úkoly, jaké řeší naši návštěvníci v simulátoru SO-101: přenést kostku do misky, postavit věž, roztřídit díly, zamávat. Model ovládá simulovanou ruku jen přes nástroje (klouby, pozice chapadla, stav scény), stejné jako v tlačítku Připojit AI. Úspěch posuzuje kontrola mise v simulátoru, ne člověk.</p>
+<p class="doc-note" id="prb-mock"><i aria-hidden="true"></i><span><b>Ukázková data – mock.</b> Tabulka zatím ukazuje skriptované testovací „modely“ z naší CI, ne skutečné AI modely. Slouží k ověření hodnocení a tohoto zobrazení.</span></p>
+</div>
+</section>
+
+<section class="section" id="vysledky">
+<div class="g rule">
+<div class="a1 mono">01 — Výsledky</div>
+<div class="a4 prose">
+<h2>Žebříček</h2>
+<div class="doc-t-wrap" tabindex="0" role="region" aria-label="Žebříček PR-Bench">
+<table class="doc-t" id="prb-table" data-src="{root}bench/results/sample.json">
+<caption class="sr-only">Výsledky modelů v PR-Bench, seřazené podle skóre</caption>
+<thead><tr><th scope="col">Model</th><th scope="col">Skóre</th><th scope="col">Úspěšnost</th><th scope="col">Cena</th><th scope="col">Kroky (průměr)</th><th scope="col">Datum</th></tr></thead>
+<tbody><tr><td colspan="6">Načítám výsledky…</td></tr></tbody>
+</table>
+</div>
+<p id="prb-meta" class="muted"></p>
+</div>
+</div>
+</section>
+
+<section class="section" id="metodika">
+<div class="g rule">
+<div class="a1 mono">02 — Metodika</div>
+<div class="a4 prose">
+<h2>Jak měříme</h2>
+<ul>
+<li><b>Stejné podmínky pro všechny:</b> stejné systémové zadání, stejné nástroje, teplota 0, stejné limity kroků, času a tokenů. Žádné ladění pro konkrétní model.</li>
+<li><b>12 úkolů:</b> mise 01–10 simulátoru SO-101 a dvě „pohybové“ úlohy (zamávat, nakreslit čtverec), každá třikrát s jiným rozestavením.</li>
+<li><b>Skóre 0–100:</b> úspěch 85 bodů, dílčí pokrok až 15 bodů, minus 5 bodů za každý odmítnutý nebezpečný pohyb (nejvýš 20). Cena a počet kroků se uvádějí zvlášť.</li>
+<li><b>Skrytá sada:</b> rozestavení odvozená z tajného klíče, který je jen na našem serveru, aby se modely nemohly úlohy „naučit nazpaměť“.</li>
+<li><b>Obraz jen pro multimodální modely</b> (schematický snímek scény); textové modely pracují jen s čísly a hodnotí se odděleně.</li>
+</ul>
+<p>Celá metodika (anglicky): <a href="https://github.com/artigrib/prlanding/blob/main/bench/SPEC.md">bench/SPEC.md</a>.</p>
+</div>
+</div>
+</section>
+<script src="{root}assets/bench-board.js" defer></script>
