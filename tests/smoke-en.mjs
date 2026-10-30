@@ -270,5 +270,18 @@ if (!process.env.SKIP_SIMS) {
   }, { locale: 'en-US' });
 }
 
+// ROBOTO ORIGIN showcase sim, English shell (draft): English UI, noindex, axe clean
+await check('origin sim draft (en)', '/en/sim/origin/?test=1', async (p, e) => {
+  await p.waitForFunction(() => window.__origin && (window.__origin.ready || window.__origin.error), null, { timeout: 90000 });
+  if (await p.evaluate(() => window.__origin.error)) e.push('sim error');
+  if ((await p.locator('meta[name="robots"]').getAttribute('content')) !== 'noindex,nofollow') e.push('not noindex');
+  if ((await p.locator('html').getAttribute('lang')) !== 'en') e.push('lang');
+  await noCzech(p, e);
+  await p.addScriptTag({ content: AXE });
+  const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
+  const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+  if (bad.length) e.push('axe: ' + bad.map(v => `${v.id} (${v.nodes.length}) ${v.nodes[0].target}`).join('; '));
+});
+
 await browser.close();
 process.exit(failed ? 1 : 0);

@@ -16,6 +16,8 @@ window.PR_ROBOTS = [
     repo: 'https://github.com/TheRobotStudio/SO-ARM100', docs: 'https://huggingface.co/docs/lerobot/so101',
     card: [['Osy', '5 + chapadlo'], ['Software', 'LeRobot']],
     specs: [['Stupně volnosti', '5 os + chapadlo'], ['Pohon', 'Feetech STS3215'], ['Napájení', '5 V'], ['Tisk', 'PLA+, vrstva 0,2 mm'], ['Doba tisku', '≈ 16,5 h za pár']],
+    license: { hw: 'Apache-2.0', sw: 'Apache-2.0', status: 'verified', checked: '2026-10-30',
+      sources: ['https://github.com/TheRobotStudio/SO-ARM100/blob/main/LICENSE', 'https://github.com/huggingface/lerobot/blob/main/LICENSE'] },
     related: ['hand', 'lekiwi', 'xle'] },
   { id: 'lekiwi', glb: true, name: 'LeKiwi', type: 'Mobilní manipulátor', cat: 'mobile', level: 'Střední', hw: 'Apache-2.0', sw: 'Apache-2.0',
     author: 'SIGRobotics UIUC', render: true, alt: 'Mobilní robot LeKiwi s omni koly a rukou SO-101',
@@ -26,6 +28,8 @@ window.PR_ROBOTS = [
     card: [['Pohon', '3× omni kolo'], ['Řízení', 'Raspberry Pi 5']],
     bom: [['Raspberry Pi 5', '1×'], ['Omni kolo', '3×'], ['Serva pohonu základny', '3×'], ['Ruka SO-101: serva a řídicí deska', '1 sada'], ['Napájení 5 V nebo 12 V', '1×'], ['RGB kamera', '2×']],
     specs: [['Pohon', '3× omni kolo'], ['Řízení', 'Raspberry Pi 5'], ['Ruka', 'SO-101'], ['Kamery', '2× RGB'], ['Varianty', '5 V a 12 V']],
+    license: { hw: 'Apache-2.0', sw: 'Apache-2.0', status: 'verified', checked: '2026-10-30',
+      sources: ['https://github.com/SIGRobotics-UIUC/LeKiwi/blob/main/LICENSE.txt', 'https://github.com/huggingface/lerobot/blob/main/LICENSE'] },
     related: ['xle', 'hand', 'so101'] },
   { id: 'xle', glb: true, name: 'XLeRobot', type: 'Dvouruký domácí robot', cat: 'mobile', level: 'Pokročilý', hw: 'Apache-2.0 (ověřujeme)', sw: 'Apache-2.0', preparing: true,
     author: 'Gaotian Wang a kol.', render: true, alt: 'Robot XLeRobot se dvěma rukama na vozíku',
@@ -176,6 +180,9 @@ window.PR_ROBOTS = [
     card: [['Hmotnost', 'do 150 g'], ['Pohon', '4× N10']],
     bom: [['Převodový motor N10', '4×'], ['Malenki Nano HV (přijímač + regulátory)', '1×'], ['Akumulátor LiPo 2S', '1×'], ['Vypínač', '1×'], ['Kolo', '4×'], ['Servo KingMax C507 (modul flipper)', '1×'], ['Vysílač FlySky (AFHDS 2A), např. FS-i6X', '1×'], ['Šrouby a matice', 'dle návodu']],
     specs: [['Hmotnostní třída', '150 g (UK antweight, US fairyweight)'], ['Půdorys', 'v limitu CCRL 15 × 15 cm'], ['Pohon', '4× N10, 4×4'], ['Zbraň', 'klín, flipper nebo chapadlo (moduly)'], ['Varianty', '4 motory, nebo 2 motory s řemenem'], ['Řízení', 'Malenki Nano HV, FlySky AFHDS 2A'], ['Napájení', 'LiPo 2S'], ['Tisk', 'PLA, PC nebo PA12; boční pancíř a držáky z TPU'], ['Doba tisku', '—']],
+    // Printables licence field was blank when fetched 2026-10-30 (data/components/svrn.json meta.project.licence)
+    license: { hw: 'CC-BY-4.0', status: 'unverified', checked: '2026-10-30',
+      sources: ['https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai'] },
     related: ['vert150', 'otto', 'exomy'] },
 
   { id: 'vert150', glb: true, render: true, sim: 'arena', credit: 'Vizualizace z modelu TheBlackfish, remix „150g vert“ od Muffin578 (CC BY-SA 4.0)', preparing: true, name: 'Vertikální spinner 150 g', type: 'Bojový robot 150 g', cat: 'combat', level: 'Střední', hw: 'CC BY-SA 4.0 nebo BY-NC-SA 4.0 (ověřujeme s autory)', sw: '—',
@@ -187,6 +194,9 @@ window.PR_ROBOTS = [
     card: [['Hmotnost', 'do 150 g'], ['Zbraň', 'vertikální spinner']],
     bom: [['Převodový motor N20 (nebo N10)', '2×'], ['Malenki Nano (přijímač + regulátory)', '1×'], ['Střídavý motor BE1806 (zbraň)', '1×'], ['Regulátor ZTW Mantis Slim 15A (zbraň)', '1×'], ['Akumulátor LiPo 2S', '1×'], ['Vypínač', '1×'], ['Kolo Pololu', '2×'], ['Vysílač FlySky (AFHDS 2A), např. FS-i6X', '1×'], ['Filament PETG', '≈ 54 g']],
     specs: [['Hmotnostní třída', '150 g (UK antweight, US fairyweight)'], ['Půdorys', 'v limitu CCRL 15 × 15 cm'], ['Pohon', '2× N20, dvě kola'], ['Zbraň', 'vertikální spinner, BE1806'], ['Řízení', 'Malenki Nano + ZTW Mantis Slim 15A'], ['Napájení', 'LiPo 2S'], ['Tisk', 'PETG, tištěné ostří'], ['Doba tisku', '≈ 2,1 h (54 g)'], ['Bezpečnost', 'jen v uzavřené aréně, failsafe povinný']],
+    // two candidate licences until the authors confirm: the derivation takes the stricter one (NC)
+    license: { hw: ['CC-BY-SA-4.0', 'CC-BY-NC-SA-4.0'], status: 'unverified', checked: '2026-10-30',
+      sources: ['https://www.printables.com/model/1146226-vertical-spinner-battlebot-antweight-150-g', 'https://www.thingiverse.com/thing:4835459'] },
     related: ['svrn', 'otto', 'sawppy'] }
 ];
 // Browser demos linked from product pages (r.sim). colorParam: the sim reads ?color= (so101 does not yet).
@@ -259,3 +269,103 @@ window.PR_LICENSES = [
   ['CERN-OHL-W / -S 2.0', 'c', 'Ano, s podmínkou', 'Zdroje upravené konstrukce zveřejňujeme'],
   ['CC BY-NC / vlastní NC', 'n', 'Ne', 'Pouze s písemným svolením autora']
 ];
+
+// ---------- licence -> rights ----------
+// r.license = { hw, sw?, docs?, policy?, status, checked, sources[] }; each value is an SPDX id, an array of
+// candidate ids (unconfirmed: the stricter one wins) or 'own' (our original design). Rights are derived, never
+// typed in, so they cannot drift from the licence. Values: 'yes' | 'conditions' | 'no' | 'ask'.
+//   sell_prints       print and sell the project's parts
+//   sell_kits         sell a kit (prints + hardware + firmware/software as shipped)
+//   renders_from_cad  publish our renders made from the project's CAD on a commercial site
+//   accessories       sell our own accessories designed to fit (no copying of their CAD)
+//   guide             publish our own guide (own text and photos; quotes follow the doc licence)
+//   plan              publish a parts-buying plan (we link suppliers, we sell nothing)
+// Classes: own | permissive | copyleft (GPL, LGPL, CC BY-SA, CERN-OHL-W/-S) | nd | nc | proprietary | unknown.
+window.PR_LICENSE_CLASS = function (id) {
+  var s = String(id == null ? '' : id).trim().toUpperCase().replace(/[\s_]+/g, '-');
+  if (!s || s === '—' || s === '-') return 'unknown';
+  if (s === 'OWN') return 'own';
+  if (/PROPRIETARY|ALL-RIGHTS|LICENSEREF/.test(s)) return 'proprietary';
+  if (/(^|-)NC(-|$)/.test(s) || /NONCOMMERCIAL/.test(s)) return 'nc';
+  if (/(^|-)ND(-|$)/.test(s)) return 'nd';
+  if (/^(A?GPL|LGPL|CERN-OHL-[WS])|^CC-BY-SA|^MPL|^EUPL|^TAPR-OHL/.test(s)) return 'copyleft';
+  if (/^(MIT|APACHE|BSD|ISC|ZLIB|0BSD|UNLICENSE|CC0|CC-BY(-[0-9.]+)?$|CERN-OHL-P|SOLDERPAD)/.test(s)) return 'permissive';
+  return 'unknown';
+};
+(function () {
+  var ORDER = ['own', 'permissive', 'copyleft', 'nd', 'unknown', 'nc', 'proprietary'];   // later = stricter
+  var Y = 'yes', C = 'conditions', N = 'no', A = 'ask';
+  // per class: [sell_prints, renders_from_cad, accessories, kit part]
+  var HW = {
+    own: [Y, Y, Y, Y], permissive: [Y, Y, Y, Y],
+    copyleft: [C, C, Y, C],           // share-alike: modified design files published under the same licence
+    nd: [C, A, Y, C],                 // verbatim copies only; a render may count as an adaptation
+    unknown: [A, A, Y, A], nc: [N, N, Y, N], proprietary: [N, N, Y, N]
+  };
+  var SW = { own: Y, permissive: Y, copyleft: C, nd: C, unknown: A, nc: N, proprietary: N };   // shipping firmware/software in a kit
+  var RANK = { yes: 0, conditions: 1, ask: 2, no: 3 };
+  function strictest(v) {
+    var list = Array.isArray(v) ? v : [v], best = null;
+    list.forEach(function (x) { var c = window.PR_LICENSE_CLASS(x); if (best === null || ORDER.indexOf(c) > ORDER.indexOf(best)) best = c; });
+    return best || 'unknown';
+  }
+  function worse(a, b) { return RANK[a] >= RANK[b] ? a : b; }
+  window.PR_DERIVE_RIGHTS = function (lic) {
+    lic = lic || {};
+    var hw = strictest(lic.hw), sw = lic.sw == null || lic.sw === '—' ? null : strictest(lic.sw);
+    var h = HW[hw];
+    var kit = sw ? worse(h[3], SW[sw]) : h[3];
+    if (lic.policy) kit = worse(kit, SW[strictest(lic.policy)]);
+    return {
+      class: hw, sw_class: sw,
+      sell_prints: h[0], sell_kits: kit, renders_from_cad: h[1], accessories: h[2],
+      guide: Y, plan: Y,
+      unverified: lic.status !== 'verified',
+      trademark: !!lic.trademark   // names/logos need the owner's permission whatever the licence says
+    };
+  };
+  window.PR_RIGHTS = function (r) { return window.PR_DERIVE_RIGHTS(r.license || { hw: r.hw, sw: r.sw }); };
+})();
+
+// Robots of the arena (sim/arena) that are not catalogue kits: licence of our own models.
+window.PR_ARENA_LICENSES = {
+  // original designs, printedrobotics.cz; published as CC BY 4.0 (tools/robots-cad/kosa.py, klepeto.py headers)
+  kosa: { hw: 'own', status: 'verified', checked: '2026-10-30', published: 'CC-BY-4.0', sources: ['tools/robots-cad/kosa.py'] },
+  klepeto: { hw: 'own', status: 'verified', checked: '2026-10-30', published: 'CC-BY-4.0', sources: ['tools/robots-cad/klepeto.py'] }
+};
+
+// Showcases: open projects we present but do not sell (no kit page, no order form). Draft: not rendered
+// anywhere yet; the simulation (sim/origin/) is noindex and unlinked. Every number names its upstream source.
+window.PR_SHOWCASE = [
+  { id: 'origin', showcase: true, buy: false, sim: 'origin', name: 'ROBOTO ORIGIN', type: 'Humanoid v plné velikosti', cat: 'legged', level: 'Pokročilý',
+    author: 'RoboParty (Shanghai RoboParty Technology Co., Ltd.)',
+    badge: 'Ukázka · otevřený hardware CERN-OHL-W-2.0 · software GPL-3.0',
+    short: 'Otevřený humanoid s 23 klouby z frézovaného hliníku: konstrukce, elektronika, trénink chůze i nasazení zveřejněné jako open source.',
+    lead: 'Prototyp humanoida, který šanghajská RoboParty navrhla za čtyři měsíce a zveřejnila celý: CAD, desky plošných spojů, kusovník, model pro simulaci, trénink v Isaac Lab a nasazení v ROS 2 včetně naučených politik. Podle autorů jde sestavit z dílů z Taobao a zakázkové výroby. Ukazujeme ho jako inspiraci – díly ani sady k němu neprodáváme a s autory nejsme spojeni.',
+    note: 'Konstrukce je frézovaný hliník; tisknou se jen kalibrační přípravky, takže „tiskové“ sady tu nedávají smysl.',
+    repo: 'https://github.com/Roboparty/roboto_origin', docs: 'https://roboparty.com/roboto_origin/doc',
+    upstream: { commit: 'c71fd9287d28104dca111d7c25b908fa3f45f8e4', date: '2026-08-18', checked: '2026-10-30' },
+    // [label, value, source path in Roboparty/roboto_origin @ commit above]
+    specs: [
+      ['Stupně volnosti', '23 (nohy 2× 6, pas 1, ruce 2× 5)', 'modules/rpo_description/mjcf/rpo.xml'],
+      ['Pohony', '14× Damiao DM-4340P (48 V), 9× DM-10010L', 'assets/BOM_EN.md (v1.0.1); rpo_hardware 散件清单 V1.1.3'],
+      ['Napájení', 'Li-ion 48 V, 15 Ah', 'assets/BOM_EN.md'],
+      ['Řídicí počítač', 'RDK X5 8 GB', 'assets/BOM_EN.md; rpo_hardware 散件清单 V1.1.3'],
+      ['Sběrnice', 'CAN, 4 linky (6 + 7 + 5 + 5 motorů)', 'modules/roboparty_deploy/src/inference/robots/rpo/robot.yaml'],
+      ['Konstrukce', 'CNC hliník 6061/7075, černý elox; ocelová táhla', 'modules/rpo_hardware/V2.0/…/A2_CNCBOM.xlsx'],
+      ['Hmotnost modelu', '≈ 33,8 kg (součet hmot v MJCF, bez krytů)', 'modules/rpo_description/mjcf/rpo.xml'],
+      ['Výška modelu', '≈ 1,06 m (MJCF, natažené nohy, bez krytů)', 'modules/rpo_description (spočítáno z meshů)'],
+      ['Chůze', 'RL politika (ONNX), 50 Hz, příkaz vpřed −0,4 až 0,6 m/s', 'modules/roboparty_deploy/…/configs/default.yaml'],
+      ['Software', 'ROS 2 Humble, Isaac Lab 2.1, MuJoCo sim2sim', 'README.md'],
+      ['Díly dle autora', '49 713 CNY (kusovník v1.0.1, 5. 1. 2026)', 'assets/BOM_EN.md']
+    ],
+    license: { hw: 'CERN-OHL-W-2.0', sw: 'GPL-3.0-only', docs: 'CC-BY-SA-4.0', policy: 'GPL-3.0-only', trademark: true,
+      status: 'verified', checked: '2026-10-30',
+      notes: 'Popis robota (MJCF, meshe), CAD, DPS a kusovník: CERN-OHL-W-2.0; software a firmware: GPL-3.0-only (orangepi-build GPL-2.0, usb2can Apache-2.0); dokumentace: CC BY-SA 4.0; trénink: BSD-3-Clause, parkour část CC BY-NC 4.0; díly dodavatelů nejsou licencované. Názvy RoboParty, RPO a Roboto Origin jsou ochranné známky.',
+      sources: ['https://github.com/Roboparty/roboto_origin/blob/main/LICENSES.md', 'https://github.com/Roboparty/rpo_hardware/blob/main/LICENSES.md',
+        'https://github.com/Roboparty/rpo_description/blob/main/README.md', 'https://github.com/Roboparty/rpo_hardware/blob/main/TRADEMARKS.md'] } }
+];
+
+// derived rights on every entry that carries a licence (catalogue kits and showcases)
+window.PR_ROBOTS.concat(window.PR_SHOWCASE).forEach(function (r) { r.rights = window.PR_RIGHTS(r); });
+Object.keys(window.PR_ARENA_LICENSES).forEach(function (k) { window.PR_ARENA_LICENSES[k].rights = window.PR_DERIVE_RIGHTS(window.PR_ARENA_LICENSES[k]); });

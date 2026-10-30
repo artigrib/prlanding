@@ -1,0 +1,27 @@
+ROBOTO ORIGIN simulation — printedrobotics.cz
+============================================
+
+Draft showcase page (sim/origin/, en/sim/origin/): noindex, not in the sitemap, not linked yet.
+
+Our code and third-party components are kept apart:
+
+A) printedrobotics.cz code (this folder, except vendor/): app.js, core.js, src/policy.js, scene.xml,
+   origin.css, index.html, tools/ (decimate.py, pages.mjs), tests/. It loads the components below as data or
+   modules; it contains no RoboParty code.
+
+B) vendor/roboto_origin/ — RoboParty ROBOTO ORIGIN robot description, meshes and walking policy.
+   Robot description and meshes: CERN Open Hardware Licence v2 – Weakly Reciprocal (CERN-OHL-W-2.0).
+   Policy and its deployment config: GNU GPL v3 only.
+   Exact upstream commit, file list, licence texts and our modifications: vendor/roboto_origin/NOTICE.txt.
+   We are not affiliated with RoboParty; RoboParty, RPO and Roboto Origin are their marks.
+
+C) vendor/onnxruntime-web/ — ONNX Runtime Web 1.22.0, Microsoft (npm onnxruntime-web@1.22.0, published
+   2025-05-09): dist/ort.wasm.min.mjs, dist/ort-wasm-simd-threaded.mjs, dist/ort-wasm-simd-threaded.wasm,
+   unmodified. Licence: MIT (vendor/onnxruntime-web/LICENSE, from github.com/microsoft/onnxruntime tag v1.22.0;
+   the npm tarball ships no LICENSE file); third-party notices: vendor/onnxruntime-web/ThirdPartyNotices.txt.
+   SHA-256: ort.wasm.min.mjs            6ef726f355b791129f7ddf3f62e7877a16b9b777abe87004b8ab306e6b9cf265
+            ort-wasm-simd-threaded.mjs  30dd851d9c00622940500f71ddd2ff8820c5cb65270816080175b958705385a8
+            ort-wasm-simd-threaded.wasm 71aef04959c5c1b6de461b6538e2058e306610034a85aad2742d0c7fd4533fe4
+
+D) MuJoCo 3.17.0 WebAssembly (Apache-2.0) and three.js r186 (MIT): the site's existing vendored copies in
+   ../so101/vendor/mujoco/ and ../../vendor/three/, shared, not duplicated. See ../so101/NOTICE.txt.

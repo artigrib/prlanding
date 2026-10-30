@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ROBOTO ORIGIN in simulation – an open humanoid in your browser | printedrobotics.cz</title>
+<meta name="description" content="The open-source ROBOTO ORIGIN humanoid (RoboParty) in a MuJoCo physics simulation: walking driven by its trained policy, joint sliders, push it with a click.">
+<!-- draft: noindex, not in the sitemap and not linked from any page until the owner publishes it -->
+<meta name="robots" content="noindex,nofollow">
+<link rel="canonical" href="https://printedrobotics.cz/en/sim/origin/">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E8461E'/%3E%3C/svg%3E">
+<link rel="preload" href="../../../sim/origin/../so101/vendor/mujoco/mujoco.wasm" as="fetch" type="application/wasm" crossorigin>
+<link rel="modulepreload" href="../../../vendor/three/three.module.min.js">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../sim/origin/origin.css">
+<script type="importmap">{"imports":{"three":"../../../vendor/three/three.module.min.js","three/addons/":"../../../vendor/three/addons/"}}</script>
+</head>
+<body>
+<header class="bar">
+  <div class="brand"><i aria-hidden="true"></i><a href="../../../en/">printedrobotics</a></div>
+  <span class="bar-t mono">ROBOTO ORIGIN · simulation</span>
+  <nav class="lang" aria-label="Jazyk / Language"><a href="../../../sim/origin/" lang="cs" hreflang="cs">CZ</a><a href="./" aria-current="page" lang="en" hreflang="en">EN</a></nav>
+</header>
+<p class="sr-only" id="sr" role="status" aria-live="polite"></p>
+<main class="sim">
+  <section class="stage" aria-label="3D simulation of a humanoid robot">
+    <canvas id="c" aria-label="The ROBOTO ORIGIN humanoid on a grid floor. Walk with W A S D or the joystick; click the robot to push it."></canvas>
+    <div class="hud" id="hud" hidden><span class="hud-dot" id="hud-dot" aria-hidden="true"></span><span id="hud-text"></span></div>
+    <p class="hint mono" id="hint" hidden>Drag to orbit · scroll to zoom · click the robot to push it</p>
+    <div class="loader" id="loader"><div class="loader-in">
+      <p class="mono" role="status">Loading the simulation…</p>
+      <div class="prog" aria-hidden="true"><b id="prog"></b></div>
+      <p class="mono muted">MuJoCo, the robot model and the trained walking policy (≈ 22 MB, ≈ 8 MB compressed) · this takes a while on slow connections</p>
+    </div></div>
+    <div class="fail" id="fail" hidden><div class="fail-in">
+      <p class="mono">The simulation did not start</p><h2>This browser cannot run the simulation.</h2><p id="fail-msg">The simulation needs WebAssembly and WebGL. Try a current Chrome, Firefox, Safari or Edge, or a computer instead of a phone.</p>
+    </div></div>
+  </section>
+  <aside class="panel" aria-label="Controls">
+    <section>
+      <p class="mono">Showcase · open hardware</p>
+      <h1>ROBOTO ORIGIN</h1>
+      <p class="ink2">A full-size humanoid by RoboParty of Shanghai: 23 joints, machined aluminium, and the complete CAD, electronics, training and deployment published as open source. In the simulation it walks with the policy its authors trained and released.</p>
+      <p class="note mono-s">A showcase, not a product: we do not sell parts or kits for this robot.</p>
+    </section>
+    <section aria-labelledby="mode-h">
+      <h2 class="mono sec-h" id="mode-h">Mode</h2>
+      <div class="seg" role="radiogroup" aria-labelledby="mode-h">
+        <label><input type="radio" name="mode" id="mode-walk" value="walk" checked> <span>Walk (trained policy)</span></label>
+        <label><input type="radio" name="mode" id="mode-stand" value="stand"> <span>On the gantry (joints by hand)</span></label>
+      </div>
+      <p class="note mono-s" id="nopolicy" hidden></p>
+      <div id="walkbox" class="walkbox">
+        <div class="pad" id="pad" role="img" aria-label="Joystick: up walks forward, sideways turns"><span class="knob" id="knob"></span></div>
+        <div class="walk-side">
+          <p class="mono-s muted">Keys: W/S forward and back · A/D turn · Q/E sidestep · a gamepad works too</p>
+          <p class="mono-s cmd" id="cmd" aria-live="off"></p>
+        </div>
+      </div>
+      <div class="row-b">
+        <button type="button" class="btn btn-o" id="shove">Push</button>
+        <button type="button" class="btn btn-o" id="drop">Drop from height</button>
+        <button type="button" class="btn btn-o" id="standup">Stand up</button>
+        <button type="button" class="btn btn-o" id="view">View</button>
+      </div>
+      <label class="chk"><input type="checkbox" id="explode"> Exploded view</label>
+    </section>
+    <section aria-labelledby="joints-h">
+      <div class="sec-row"><h2 class="mono sec-h" id="joints-h">Joints (23)</h2><button type="button" class="btn btn-o mini" id="pose">Default pose</button></div>
+      <p class="mono-s muted" id="joints-note"></p>
+      <fieldset class="joints" id="joints"><legend class="sr-only">Joints (23)</legend></fieldset>
+    </section>
+    <details class="about"><summary>About the simulation and licences</summary><p class="mono-s">Model, meshes and walking policy: <a href="https://github.com/Roboparty/roboto_origin">RoboParty roboto_origin</a> (robot description CERN-OHL-W-2.0, policy and software GPL-3.0). We simplified the meshes for the browser; everything else is unchanged – <a href="../../../sim/origin/NOTICE.txt">licences, changes and exact version</a>. Physics by <a href="https://mujoco.org/">MuJoCo</a>; the policy runs on ONNX Runtime Web. We are not affiliated with RoboParty; ROBOTO ORIGIN and RoboParty are their marks. The simulation is simplified; the real robot behaves differently.</p></details>
+  </aside>
+</main>
+<noscript><p class="nojs">The simulation needs JavaScript.</p></noscript>
+<script type="module" src="../../../sim/origin/app.js"></script>
+</body>
+</html>

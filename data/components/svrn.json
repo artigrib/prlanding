@@ -14,6 +14,12 @@
   },
   "oss_vat_uplift": 0.017,
   "affiliate_links": false,
+  "license": {
+   "hw": "CC-BY-4.0",
+   "status": "unverified",
+   "checked": "2026-10-30",
+   "sources": ["https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai"]
+  },
   "project": {
    "name": "Project SVRN",
    "author": "Shoverobotics (Jordan Gell)",

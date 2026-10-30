@@ -1,0 +1,170 @@
+[
+ {
+  "mesh": "base_link.msh",
+  "faces_in": 49999,
+  "faces_out": 9999,
+  "verts_out": 7349,
+  "bbox_dev_mm": 2.99
+ },
+ {
+  "mesh": "left_ankle_pitch_link.msh",
+  "faces_in": 1336,
+  "faces_out": 1200,
+  "verts_out": 602,
+  "bbox_dev_mm": 0.04
+ },
+ {
+  "mesh": "left_ankle_roll_link.msh",
+  "faces_in": 23038,
+  "faces_out": 4606,
+  "verts_out": 2156,
+  "bbox_dev_mm": 0.35
+ },
+ {
+  "mesh": "left_arm_pitch_link.msh",
+  "faces_in": 7432,
+  "faces_out": 1486,
+  "verts_out": 724,
+  "bbox_dev_mm": 0.3
+ },
+ {
+  "mesh": "left_arm_roll_link.msh",
+  "faces_in": 4020,
+  "faces_out": 1199,
+  "verts_out": 643,
+  "bbox_dev_mm": 0.11
+ },
+ {
+  "mesh": "left_arm_yaw_link.msh",
+  "faces_in": 20252,
+  "faces_out": 4048,
+  "verts_out": 1888,
+  "bbox_dev_mm": 0.37
+ },
+ {
+  "mesh": "left_elbow_pitch_link.msh",
+  "faces_in": 4020,
+  "faces_out": 1199,
+  "verts_out": 643,
+  "bbox_dev_mm": 0.11
+ },
+ {
+  "mesh": "left_elbow_yaw_link.msh",
+  "faces_in": 12820,
+  "faces_out": 2562,
+  "verts_out": 1164,
+  "bbox_dev_mm": 0.47
+ },
+ {
+  "mesh": "left_knee_link.msh",
+  "faces_in": 46974,
+  "faces_out": 9394,
+  "verts_out": 4537,
+  "bbox_dev_mm": 0.35
+ },
+ {
+  "mesh": "left_thigh_pitch_link.msh",
+  "faces_in": 50000,
+  "faces_out": 9999,
+  "verts_out": 6228,
+  "bbox_dev_mm": 0.92
+ },
+ {
+  "mesh": "left_thigh_roll_link.msh",
+  "faces_in": 50000,
+  "faces_out": 9999,
+  "verts_out": 5901,
+  "bbox_dev_mm": 0.37
+ },
+ {
+  "mesh": "left_thigh_yaw_link.msh",
+  "faces_in": 50000,
+  "faces_out": 9999,
+  "verts_out": 6403,
+  "bbox_dev_mm": 0.47
+ },
+ {
+  "mesh": "right_ankle_pitch_link.msh",
+  "faces_in": 1336,
+  "faces_out": 1200,
+  "verts_out": 602,
+  "bbox_dev_mm": 0.04
+ },
+ {
+  "mesh": "right_ankle_roll_link.msh",
+  "faces_in": 20894,
+  "faces_out": 4178,
+  "verts_out": 1956,
+  "bbox_dev_mm": 0.32
+ },
+ {
+  "mesh": "right_arm_pitch_link.msh",
+  "faces_in": 7432,
+  "faces_out": 1486,
+  "verts_out": 724,
+  "bbox_dev_mm": 0.3
+ },
+ {
+  "mesh": "right_arm_roll_link.msh",
+  "faces_in": 4020,
+  "faces_out": 1199,
+  "verts_out": 643,
+  "bbox_dev_mm": 0.11
+ },
+ {
+  "mesh": "right_arm_yaw_link.msh",
+  "faces_in": 20252,
+  "faces_out": 4048,
+  "verts_out": 1888,
+  "bbox_dev_mm": 0.4
+ },
+ {
+  "mesh": "right_elbow_pitch_link.msh",
+  "faces_in": 4020,
+  "faces_out": 1199,
+  "verts_out": 643,
+  "bbox_dev_mm": 0.11
+ },
+ {
+  "mesh": "right_elbow_yaw_link.msh",
+  "faces_in": 12820,
+  "faces_out": 2562,
+  "verts_out": 1164,
+  "bbox_dev_mm": 0.52
+ },
+ {
+  "mesh": "right_knee_link.msh",
+  "faces_in": 44646,
+  "faces_out": 8928,
+  "verts_out": 3669,
+  "bbox_dev_mm": 0.51
+ },
+ {
+  "mesh": "right_thigh_pitch_link.msh",
+  "faces_in": 50000,
+  "faces_out": 9998,
+  "verts_out": 6093,
+  "bbox_dev_mm": 0.84
+ },
+ {
+  "mesh": "right_thigh_roll_link.msh",
+  "faces_in": 50000,
+  "faces_out": 9999,
+  "verts_out": 5836,
+  "bbox_dev_mm": 0.25
+ },
+ {
+  "mesh": "right_thigh_yaw_link.msh",
+  "faces_in": 50000,
+  "faces_out": 9998,
+  "verts_out": 6370,
+  "bbox_dev_mm": 0.46
+ },
+ {
+  "mesh": "torso_link.msh",
+  "faces_in": 50000,
+  "faces_out": 9999,
+  "verts_out": 6688,
+  "bbox_dev_mm": 0.53
+ }
+]
