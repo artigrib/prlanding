@@ -80,6 +80,7 @@
               "cz",
               "cz_nonvat",
               "cn_ioss",
+              "non_eu",
               "per_vendor",
               "none"
             ]
@@ -455,6 +456,9 @@
                     "check_label",
                     "out_of_stock"
                   ]
+                },
+                "reviews": {
+                  "$ref": "#/$defs/reviews"
                 }
               }
             }
@@ -488,6 +492,76 @@
         "type": "number",
         "minimum": 0
       }
+    },
+    "reviews": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "rating",
+            "count",
+            "checked",
+            "signals"
+          ],
+          "properties": {
+            "rating": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 5
+            },
+            "count": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "checked": {
+              "$ref": "#/$defs/date"
+            },
+            "url": {
+              "$ref": "#/$defs/url"
+            },
+            "signals": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "type",
+                  "note_cs",
+                  "note_en"
+                ],
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "variant_mismatch",
+                      "shipping_time",
+                      "quality",
+                      "missing_parts",
+                      "positive"
+                    ]
+                  },
+                  "note_cs": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "note_en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "description": "Buyer reviews on the listing, summarised by us (never copied verbatim). count 0 = the listing has no reviews; null = could not be read."
     }
   }
 }

@@ -1,9 +1,13 @@
-// SO-101 purchase plan: pure functions over data/components/so101.json (no DOM, no network).
-// Used by the /plan/so101/ page (assets/plan/plan.js), the build check (tools/check-components.mjs),
+// Purchase plans: pure functions over data/components/<robot>.json (so101.json, svrn.json; no DOM, no network).
+// Used by the /plan/<robot>/ pages (assets/plan/plan.js), the build check (tools/check-components.mjs),
 // unit tests (tests/plan-core.test.mjs) and the MCP bridge (copied to backend/bridge/src/plan/ by tools/build.mjs).
 // We are not a seller: a plan lists what to buy where; the user orders and pays each shop.
+// One model for every robot: configs (lines of component + source), optional choice groups (data.options,
+// e.g. the SVRN front module), printing (self | service), build_time stages, arrivals, and a part check that
+// is either servo-variant based (data.variants.arms/codes, SO-101) or rule based (data.variants.checks, SVRN).
 
 const STATUSES = ['verified', 'carried', 'unverified', 'estimate'];
+const REVIEW_SIGNALS = ['variant_mismatch', 'shipping_time', 'quality', 'missing_parts', 'positive'];
 const round2 = (x) => Math.round(x * 100) / 100;
 
 /* ---------------- data checks ---------------- */
@@ -68,26 +72,49 @@ export function checkData(data, schema) {
       if (s.flag && (!s.flag_reason || !s.flag_reason_cs)) errors.push(`${where}: flag "${s.flag}" needs flag_reason and flag_reason_cs`);
       if (s.flag === 'mislabeled' && s.recommend) errors.push(`${where}: a mislabeled source cannot be recommended`);
       if (s.price != null && !s.currency) errors.push(`${where}: price without currency`);
+      if (s.reviews) {
+        const r = s.reviews;
+        if (r.checked > gen) errors.push(`${where}: reviews checked ${r.checked} is after meta.generated ${gen}`);
+        if (r.count === 0 && (r.rating != null || r.signals.length)) errors.push(`${where}: reviews with count 0 cannot have a rating or signals`);
+        for (const g of r.signals) if (!REVIEW_SIGNALS.includes(g.type) || !g.note_cs || !g.note_en) errors.push(`${where}: bad review signal`);
+      }
     }
   }
+  // config lines and option lines share the same checks
+  const lineErrors = (where, l) => {
+    const c = comps[l.component];
+    if (!c) { errors.push(`${where}: unknown component ${l.component}`); return; }
+    const s = c.sources.find((x) => x.id === l.source);
+    if (!s) { errors.push(`${where}: ${l.component} has no source "${l.source}"`); return; }
+    if (!s.recommend) errors.push(`${where}: ${l.component} uses a source we do not recommend (${s.id})`);
+    if (s.price == null) errors.push(`${where}: ${l.component} / ${s.id} has no price`);
+    if (l.arm && !(data.variants.arms || {})[l.arm]) errors.push(`${where}: unknown arm ${l.arm}`);
+  };
   for (const [cid, cfg] of Object.entries(data.configs)) {
-    for (const a of cfg.arms) if (!data.variants.arms[a]) errors.push(`config ${cid}: unknown arm "${a}"`);
-    for (const l of cfg.lines) {
-      const c = comps[l.component];
-      if (!c) { errors.push(`config ${cid}: unknown component ${l.component}`); continue; }
-      const s = c.sources.find((x) => x.id === l.source);
-      if (!s) { errors.push(`config ${cid}: ${l.component} has no source "${l.source}"`); continue; }
-      if (!s.recommend) errors.push(`config ${cid}: ${l.component} uses a source we do not recommend (${s.id})`);
-      if (s.price == null) errors.push(`config ${cid}: ${l.component} / ${s.id} has no price`);
-      if (l.arm && !data.variants.arms[l.arm]) errors.push(`config ${cid}: unknown arm ${l.arm}`);
-    }
+    for (const a of cfg.arms || []) if (!(data.variants.arms || {})[a]) errors.push(`config ${cid}: unknown arm "${a}"`);
+    for (const l of cfg.lines) lineErrors(`config ${cid}`, l);
     if (cfg.alternative) {
       const c = comps[cfg.alternative.component];
       if (!c || !c.sources.find((x) => x.id === cfg.alternative.source)) errors.push(`config ${cid}: bad alternative`);
     }
   }
+  for (const [k, opt] of Object.entries(data.options || {})) {
+    if (!opt.values[opt.default]) errors.push(`option ${k}: default "${opt.default}" is not one of its values`);
+    for (const [v, val] of Object.entries(opt.values)) for (const l of val.lines) lineErrors(`option ${k}=${v}`, l);
+  }
   for (const k of data.printing.service.sources) if (!data.suppliers[k]) errors.push(`printing.service: unknown supplier ${k}`);
-  for (const arm of Object.values(data.variants.arms)) for (const j of arm.joints) for (const code of j.codes) {
+  for (const [id, ck] of Object.entries(data.variants.checks || {})) {
+    if (!comps[ck.component]) errors.push(`variants.checks.${id}: unknown component ${ck.component}`);
+    for (const r of [{ re: ck.identify }, ...ck.good, ...ck.bad, ...(ck.warn || [])]) {
+      try { new RegExp(r.re, 'i'); } catch { errors.push(`variants.checks.${id}: bad regex ${r.re}`); }
+    }
+  }
+  for (const a of data.arrivals) if (!a.guide_stage && !a.link) errors.push(`arrival ${a.id}: needs guide_stage or link`);
+  for (const n of [...(data.notes || []), ...(data.safety || [])]) for (const src of n.sources || []) {
+    if (!/^https:\/\//.test(src.url)) errors.push(`note ${n.id}: source without https URL`);
+    if (!src.checked || src.checked > gen) errors.push(`note ${n.id}: source checked date missing or after meta.generated`);
+  }
+  for (const arm of Object.values(data.variants.arms || {})) for (const j of arm.joints) for (const code of j.codes) {
     const v = data.variants.codes[code];
     if (!v) errors.push(`variants: unknown code ${code}`);
     else if (v.voltage_v !== arm.voltage_v) errors.push(`variants: ${code} (${v.voltage_v} V) on a ${arm.voltage_v} V arm`);
@@ -97,7 +124,7 @@ export function checkData(data, schema) {
 
 /* ---------------- plan ---------------- */
 
-export const CONFIGS = ['follower_12v', 'pair'];
+export const CONFIGS = ['follower_12v', 'pair'];   // SO-101; every data file lists its own in data.configs
 export const PRINT = ['self', 'service'];
 
 export function toEur(data, price, currency) {
@@ -110,15 +137,21 @@ export function toEur(data, price, currency) {
 
 const maxRange = (a, b) => [Math.max(a[0], b[0]), Math.max(a[1], b[1])];
 
+const pickReviews = (r) => (r ? { rating: r.rating, count: r.count, checked: r.checked, url: r.url || null, signals: r.signals.map((g) => ({ ...g })) } : null);
+const fill = (t, vars) => String(t).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
+
 /**
  * Build a purchase plan.
- * @param {object} data  data/components/so101.json
- * @param {{robot?: 'follower_12v'|'pair', print?: 'self'|'service'}} opts
+ * @param {object} data  data/components/<robot>.json
+ * @param {{robot?: string, config?: string, print?: 'self'|'service', [option: string]: string}} opts
+ *   robot/config = a key of data.configs (SO-101: follower_12v | pair; SVRN: robot_only | starter);
+ *   any key of data.options (SVRN: module = flipper | wedge | grabber) picks that option's value.
  */
 export function buildPlan(data, opts = {}) {
-  const robot = opts.robot || 'follower_12v', print = opts.print || 'self';
+  const configs = Object.keys(data.configs);
+  const robot = opts.config || opts.robot || configs[0], print = opts.print || 'self';
   const cfg = data.configs[robot];
-  if (!cfg) throw new RangeError(`unknown robot config "${robot}" (use ${CONFIGS.join(' or ')})`);
+  if (!cfg) throw new RangeError(`unknown robot config "${robot}" (use ${configs.join(' or ')})`);
   if (!PRINT.includes(print)) throw new RangeError(`unknown print option "${print}" (use ${PRINT.join(' or ')})`);
   const comps = Object.fromEntries(data.components.map((c) => [c.id, c]));
   const fx = data.meta.fx_czk_per_eur, oss = data.meta.oss_vat_uplift;
@@ -126,7 +159,17 @@ export function buildPlan(data, opts = {}) {
   const warnings = [];
   let oldest = null, newest = null;
 
-  for (const l of cfg.lines) {
+  // chosen options (e.g. SVRN front module): their lines join the config's lines
+  const options = {}, optLines = [];
+  let extraGrams = 0;
+  for (const [k, opt] of Object.entries(data.options || {})) {
+    const v = opts[k] || opt.default, val = opt.values[v];
+    if (!val) throw new RangeError(`unknown ${k} "${v}" (use ${Object.keys(opt.values).join(', ')})`);
+    options[k] = v; optLines.push(...val.lines); extraGrams += val.print_grams || 0;
+  }
+  const printGrams = cfg.print_grams + extraGrams;
+
+  for (const l of [...cfg.lines, ...optLines]) {
     const c = comps[l.component];
     const s = c.sources.find((x) => x.id === l.source);
     const sup = data.suppliers[s.supplier];
@@ -139,45 +182,55 @@ export function buildPlan(data, opts = {}) {
     const alternatives = c.sources.filter((x) => x.id !== s.id).map((x) => ({
       id: x.id, supplier: x.supplier, label: x.label, url: x.url, price: x.price, currency: x.currency, per: x.per,
       checked: x.checked, status: x.status, recommend: x.recommend, flag: x.flag || null,
-      flag_reason: x.flag_reason || null, flag_reason_cs: x.flag_reason_cs || null
+      flag_reason: x.flag_reason || null, flag_reason_cs: x.flag_reason_cs || null, reviews: pickReviews(x.reviews)
     }));
     const line = {
       component: c.id, name: c.name, name_cs: c.name_cs, qty: l.qty, packs, per: s.per || 1, arm: l.arm || null,
       source: s.id, label: s.label, url: s.url, price: s.price, currency: s.currency, unit_eur: round2(unit), subtotal_eur: subtotal,
       checked: s.checked, status: s.status, stock: s.stock, eta_days: eta,
       flag: s.flag || null, flag_reason: s.flag_reason || null, flag_reason_cs: s.flag_reason_cs || null,
+      note: s.note_cs ? s.note : null, note_cs: s.note_cs || null, reviews: pickReviews(s.reviews),
       alternatives
     };
+    for (const g of (s.reviews && s.reviews.signals) || []) if (g.type === 'variant_mismatch' || g.type === 'missing_parts')
+      warnings.push({ component: c.id, source: s.id, flag: 'reviews_' + g.type, reason: g.note_en, reason_cs: g.note_cs, reviews_checked: s.reviews.checked });
     if (s.flag) warnings.push({ component: c.id, source: s.id, flag: s.flag, reason: s.flag_reason, reason_cs: s.flag_reason_cs });
     for (const a of alternatives) if (a.flag === 'mislabeled') warnings.push({ component: c.id, source: a.id, flag: a.flag, reason: a.flag_reason, reason_cs: a.flag_reason_cs, not_recommended: true });
     if (!groups.has(s.supplier)) groups.set(s.supplier, { supplier: s.supplier, name: sup.name, name_cs: sup.name_cs || sup.name, country: sup.country, url: sup.url, vat: sup.vat, lines: [] });
     groups.get(s.supplier).lines.push(line);
   }
 
-  // printed parts
-  const arms = cfg.arms.length;
+  // printed parts. units = printed sets (SO-101: arms; SVRN: one robot)
+  const arms = cfg.print_units || (cfg.arms || []).length || 1;
+  const R = data.meta.robot;
+  const legacy = !!cfg.arms;   // SO-101 wording and component ids
   if (print === 'self') {
     const p = data.printing.self;
-    const eur = round2((cfg.print_grams / 1000) * p.filament_czk_per_kg / fx);
+    const eur = round2((printGrams / 1000) * p.filament_czk_per_kg / fx);
+    const mat = p.material || 'PLA+';
     groups.set('self_print', {
       supplier: 'self_print', name: 'Printed by you', name_cs: 'Tisknete sami', country: '—', url: p.stl_url, vat: 'none', estimate: true,
-      lines: [{ component: cfg.arms.includes('leader') ? 'so101.printed.follower+leader' : 'so101.printed.follower', name: `Filament PLA+ ≈ ${cfg.print_grams} g (estimate)`, name_cs: `Filament PLA+ ≈ ${cfg.print_grams} g (odhad)`,
-        qty: 1, packs: 1, per: 1, arm: null, source: 'filament', label: 'PLA+', url: p.stl_url, price: null, currency: 'EUR', unit_eur: eur, subtotal_eur: eur,
-        checked: data.meta.generated, status: p.status, stock: '', eta_days: [0, 0], flag: null, flag_reason: null, flag_reason_cs: null, alternatives: [], print_hours: buildTime(data, arms, 'self').print_hours }],
+      lines: [{ component: legacy ? (cfg.arms.includes('leader') ? 'so101.printed.follower+leader' : 'so101.printed.follower') : `${R}.printed`,
+        name: `Filament ${mat} ≈ ${printGrams} g (estimate)`, name_cs: `Filament ${mat} ≈ ${printGrams} g (odhad)`,
+        qty: 1, packs: 1, per: 1, arm: null, source: 'filament', label: mat, url: p.stl_url, price: null, currency: 'EUR', unit_eur: eur, subtotal_eur: eur,
+        checked: data.meta.generated, status: p.status, stock: '', eta_days: [0, 0], flag: null, flag_reason: null, flag_reason_cs: null, note: null, note_cs: null, reviews: null, alternatives: [], print_hours: buildTime(data, arms, 'self').print_hours }],
       shipping_override: [0, 0]
     });
   } else {
     const p = data.printing.service;
-    const lo = p.price_eur_per_arm[0] * arms, hi = p.price_eur_per_arm[1] * arms;
+    const per = p.price_eur_per_unit || p.price_eur_per_arm;
+    const lo = per[0] * arms, hi = per[1] * arms;
     const sups = p.sources.map((k) => data.suppliers[k]);
     const ship = sups.reduce((r, s) => [Math.min(r[0], s.shipping_eur[0]), Math.max(r[1], s.shipping_eur[1])], [Infinity, 0]);
     groups.set('print_service', {
       supplier: 'print_service', name: 'Print service (quote)', name_cs: 'Tiskový servis (nabídka)', country: sups.map((s) => s.country).join(' / '), url: sups[0].url, vat: 'cz', estimate: true,
       services: p.sources.map((k) => ({ id: k, name: data.suppliers[k].name, url: data.suppliers[k].url })),
-      lines: [{ component: 'so101.printed', name: `Printed parts, ${arms} arm${arms > 1 ? 's' : ''} (estimate)`, name_cs: `Tištěné díly, ${arms === 1 ? '1 ruka' : arms + ' ruce'} (odhad)`,
+      lines: [{ component: `${R}.printed`,
+        name: p.line_name ? fill(p.line_name, { n: arms }) : `Printed parts, ${arms} arm${arms > 1 ? 's' : ''} (estimate)`,
+        name_cs: p.line_name_cs ? fill(p.line_name_cs, { n: arms }) : `Tištěné díly, ${arms === 1 ? '1 ruka' : arms + ' ruce'} (odhad)`,
         qty: arms, packs: arms, per: 1, arm: null, source: 'quote', label: sups.map((s) => s.name).join(' / '), url: sups[0].url, price: null, currency: 'EUR',
         unit_eur: null, subtotal_eur: null, range_eur: [lo, hi], checked: data.meta.generated, status: p.status, stock: '', eta_days: p.eta_days,
-        flag: null, flag_reason: null, flag_reason_cs: null, alternatives: [] }],
+        flag: null, flag_reason: null, flag_reason_cs: null, note: null, note_cs: null, reviews: null, alternatives: [] }],
       shipping_override: ship
     });
   }
@@ -192,7 +245,7 @@ export function buildPlan(data, opts = {}) {
       const r = l.range_eur || [l.subtotal_eur, l.subtotal_eur];
       gLo += r[0]; gHi += r[1];
       if (g.vat === 'eu_oss') taxHi += r[1] * oss;
-      if (g.vat === 'cn_ioss' && sup && sup.duty_eur_per_line) taxHi += sup.duty_eur_per_line;
+      if ((g.vat === 'cn_ioss' || g.vat === 'non_eu') && sup && sup.duty_eur_per_line) taxHi += sup.duty_eur_per_line;
       lineEta = maxRange(lineEta, l.eta_days);
     }
     const ship = g.shipping_override || (sup ? sup.shipping_eur : [0, 0]);
@@ -220,7 +273,7 @@ export function buildPlan(data, opts = {}) {
   const roundCzk = (r) => [Math.floor((r[0] * fx) / 10) * 10, Math.ceil((r[1] * fx) / 10) * 10];
   const landed = roundEur([totLo, totHi]);
   return {
-    robot, print, config: { id: robot, name: cfg.name, name_cs: cfg.name_cs, arms: cfg.arms },
+    robot, robot_id: R, print, options, config: { id: robot, name: cfg.name, name_cs: cfg.name_cs, arms: cfg.arms || [] },
     seller_of_record: 'each supplier (we are not the seller and never place orders)',
     affiliate_links: !!data.meta.affiliate_links,
     groups: out,
@@ -228,18 +281,29 @@ export function buildPlan(data, opts = {}) {
       goods_eur: [round2(goodsLo), round2(goodsHi)],
       landed_eur: landed,
       landed_czk: roundCzk([totLo, totHi]),
-      includes: 'goods incl. VAT, EU OSS VAT uplift (up to +1.7 %), CN duty where applicable, shipping estimate',
+      includes: 'goods incl. VAT, EU OSS VAT uplift (up to +1.7 %), non-EU duty where applicable, shipping estimate',
       fx_czk_per_eur: fx
     },
     eta_days: eta,
     checked: { oldest, newest },
     warnings,
-    variants: requiredVariants(data, cfg.arms),
-    tools: data.tools.filter((t) => !t.only_print || t.only_print === print),
+    variants: cfg.arms ? requiredVariants(data, cfg.arms) : [],
+    checks: partChecks(data),
+    tools: data.tools.filter((t) => (!t.only_print || t.only_print === print) && (!t.only_config || t.only_config === robot)),
+    tools_note: data.tools_note || null, tools_note_cs: data.tools_note_cs || null,
     build_time: build,
-    arrivals: data.arrivals,
+    arrivals: data.arrivals.filter((a) => (!a.only_config || a.only_config === robot) && (!a.only_option || Object.entries(a.only_option).every(([k, v]) => [].concat(v).includes(options[k])))),
+    notes: (data.notes || []).filter((n) => !n.only_option || Object.entries(n.only_option).every(([k, v]) => [].concat(v).includes(options[k]))),
+    safety: data.safety || [],
     alternative
   };
+}
+
+/** Rule-based part checks (data.variants.checks), summarised for the page and the MCP tool. */
+export function partChecks(data) {
+  return Object.entries((data.variants && data.variants.checks) || {}).map(([id, c]) => ({
+    id, component: c.component, name: c.name, name_cs: c.name_cs, need: c.need, need_cs: c.need_cs, avoid: c.avoid, avoid_cs: c.avoid_cs, status: c.status
+  }));
 }
 
 /**
@@ -250,17 +314,18 @@ export function buildPlan(data, opts = {}) {
 export function buildTime(data, arms, print = 'self') {
   const bt = data.build_time;
   const stages = bt.stages.filter((st) => !st.only_print || st.only_print === print).map((st) => {
-    const h = st.h_per_arm ? [st.h_per_arm[0] * arms, st.h_per_arm[1] * arms] : st.h;
-    return { id: st.id, name: st.name, name_cs: st.name_cs, hours: [round2(h[0]), round2(h[1])], optional: !!st.optional, per_arm: st.h_per_arm || null };
+    const pa = st.h_per_arm || st.h_per_unit;
+    const h = pa ? [pa[0] * arms, pa[1] * arms] : st.h;
+    return { id: st.id, name: st.name, name_cs: st.name_cs, hours: [round2(h[0]), round2(h[1])], optional: !!st.optional, per_arm: pa || null };
   });
   const lo = stages.reduce((a, st) => a + st.hours[0], 0), hi = stages.reduce((a, st) => a + st.hours[1], 0);
-  const printer = print === 'self' ? round2(bt.printer_h_per_arm * arms) : 0;
+  const printer = print === 'self' ? round2((bt.printer_h_per_unit ?? bt.printer_h_per_arm) * arms) : 0;
   return {
     status: 'estimate', arms, print,
     stages,
     work_hours: [Math.round(lo), Math.ceil(hi)],
     print_hours: [printer, printer],
-    guide: bt.guide
+    guide: bt.guide, guide_external: /^https:/.test(bt.guide.en)
   };
 }
 
@@ -290,6 +355,7 @@ export function parseListing(text) {
  * @param {string} expect  a code ("C018"), an arm ("follower_12v" | "leader") or an arm joint ("leader:1")
  */
 export function checkPartVariant(data, text, expect) {
+  if (data.variants.checks) return checkPartSpec(data, text, expect);
   const V = data.variants;
   let allowed, voltage, ratios, label;
   const e = String(expect || '').trim();
@@ -343,4 +409,44 @@ export function checkPartVariant(data, text, expect) {
   };
 }
 
-export { STATUSES };
+/**
+ * Rule-based check of a listing against one part of a robot (data.variants.checks; SVRN: esc, motor, servo, lipo).
+ * Each check has regexes: identify (is this the kind of part), good (signals of the right spec),
+ * bad (signals of a wrong spec, with a reason) and warn (things to double-check). Only parses the given text.
+ */
+export function checkPartSpec(data, text, expect) {
+  const checks = data.variants.checks;
+  const id = String(expect || '').trim().replace(/^[a-z0-9]+:/, '');
+  const ck = checks[id];
+  if (!ck) throw new RangeError(`unknown part "${expect}": use ${Object.keys(checks).join(', ')}`);
+  const t = String(text || '').slice(0, 5000);
+  const hit = (re) => { const m = new RegExp(re, 'i').exec(t); return m ? m[0] : null; };
+  const identified = !!hit(ck.identify);
+  const good = ck.good.map((g) => ({ ...g, m: hit(g.re) })).filter((g) => g.m);
+  const bad = ck.bad.map((g) => ({ ...g, m: hit(g.re) })).filter((g) => g.m);
+  const warnings = (ck.warn || []).map((g) => ({ ...g, m: hit(g.re) })).filter((g) => g.m)
+    .map((g) => ({ code: 'check', found: g.m, detail: g.reason, detail_cs: g.reason_cs }));
+  const voltages = [...new Set([...t.matchAll(/(?<![\d.,])(\d{1,2}(?:[.,]\d)?)\s*V(?![a-zA-Z])/g)].map((m) => Number(m[1].replace(',', '.'))))];
+  let verdict;
+  if (good.length && bad.length) verdict = 'check_selection';
+  else if (bad.length) verdict = 'mismatch';
+  else if (good.length) verdict = identified ? 'match' : 'likely';
+  else verdict = 'unknown';
+  const mismatches = bad.map((b) => ({ field: 'spec', expected: ck.need, found: b.m, reason: b.reason, reason_cs: b.reason_cs }));
+  const ADVICE = {
+    match: ['The listing shows the spec this part needs. Still check the label or datasheet when it arrives.', 'Inzerát uvádí parametry, které díl potřebuje. Po doručení je stejně zkontrolujte na štítku nebo v datasheetu.'],
+    likely: ['The spec fits, but the text does not clearly say what part it is. Check the listing title.', 'Parametry sedí, ale z textu není jasné, o jaký díl jde. Zkontrolujte název inzerátu.'],
+    check_selection: ['The listing mentions both a fitting and an unsuitable option. Make sure you select the right one.', 'Inzerát zmiňuje vhodnou i nevhodnou variantu. Ověřte, že vybíráte tu správnou.'],
+    mismatch: ['This listing does not fit this part. Do not order it for this robot.', 'Tento inzerát pro tento díl nesedí. Pro tohoto robota ho neobjednávejte.'],
+    unknown: [`Not enough information in the text. Look for: ${ck.need}`, `V textu chybí údaje. Hledejte: ${ck.need_cs}`]
+  };
+  const why = bad[0] ? [' ' + bad[0].reason, ' ' + bad[0].reason_cs] : ['', ''];
+  return {
+    expected: { label: ck.name, codes: [], voltage_v: ck.voltage_v ?? null, gear_ratios: [], need: ck.need, need_cs: ck.need_cs },
+    found: { codes: [], voltages, ratios: [], signals: good.map((g) => g.what), problems: bad.map((b) => b.m) },
+    verdict, ok: verdict === 'match' || verdict === 'likely', mismatches, warnings,
+    advice: ADVICE[verdict][0] + why[0], advice_cs: ADVICE[verdict][1] + why[1]
+  };
+}
+
+export { STATUSES, REVIEW_SIGNALS };

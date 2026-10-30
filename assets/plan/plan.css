@@ -1,4 +1,4 @@
-/* /plan/so101/: purchase plan. Tokens from assets/site.css (light site). */
+/* /plan/<robot>/ (so101, svrn): purchase plan. Tokens from assets/site.css (light site). */
 :root{--warn:#B42318;--warn-bg:#FEF3F2;--ok:#1E6B3A;--ok-bg:#EEF7F0;--amber:#8A5300;--amber-bg:#FFF6E5}
 .plan-stamp{margin:0;display:inline-flex;align-self:flex-start;gap:6px;font-family:var(--mono);font-size:14px;padding:6px 10px;border:1px solid var(--ink)}
 .plan-cfg{display:flex;flex-direction:column;gap:24px}
@@ -79,8 +79,25 @@
 .plan-track input{min-height:44px;padding:8px 10px;border:1px solid var(--line-2);font:inherit;font-family:var(--mono);font-size:15px;background:#fff;color:var(--ink)}
 .plan-next{display:flex;flex-direction:column;gap:10px;max-width:46rem;border:2px solid var(--ok);background:var(--ok-bg);padding:16px}
 .plan-wait{margin:0;max-width:46rem}
+/* buyer reviews: our paraphrased signals per source */
+.plan-rv{display:block;color:var(--ink-2);font-size:13px;line-height:1.45}
+.plan-rv-warn{color:var(--warn)}
+.rv-sig{display:inline}
+.rv-variant_mismatch,.rv-missing_parts{color:var(--warn);font-weight:500}
+/* verify / changed notes and the safety block (data-driven, dated sources) */
+.plan-notes{display:flex;flex-direction:column;gap:12px;max-width:52rem;margin-top:8px}
+.plan-note{border-left:4px solid var(--amber);background:var(--amber-bg);padding:12px 14px;display:flex;flex-direction:column;gap:6px;font-size:15px}
+.plan-note-changed{border-color:var(--ok);background:var(--ok-bg)}
+.plan-note b{font-weight:500}
+.plan-note p{margin:0}
+.plan-src{font-size:13px;color:var(--ink-2);overflow-wrap:anywhere}
+.plan-safety{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px}
+.plan-safety b{font-weight:600}
+.plan-safety-box{border:2px solid var(--warn);padding:clamp(16px,2.4vw,28px);display:flex;flex-direction:column;gap:12px;max-width:52rem}
+.plan-safety-box h2{margin:0;color:var(--warn)}
+.plan-form-3{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media (max-width:860px){
-  .plan-form,.plan-kpi,.plan-arr,.plan-track{grid-template-columns:minmax(0,1fr)}
+  .plan-form,.plan-form-3,.plan-kpi,.plan-arr,.plan-track{grid-template-columns:minmax(0,1fr)}
   .plan-kpi{gap:14px}
   .plan-line{grid-template-columns:minmax(0,1fr) auto;gap:6px 12px}
   .pl-chk{grid-column:1 / -1;order:5}
