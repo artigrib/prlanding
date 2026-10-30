@@ -10,7 +10,7 @@
 //                keeps working; a visitor's saved choice wins)
 //   hf-space.js  tiny shim loaded by every page: links back to the website (../../sada/…, ../../) point at
 //                https://printedrobotics.cz (English pages when the sim runs in English) and open in a new
-//                tab (a Space runs in an iframe); adds one small, dismissible "real kit" link. No tracking.
+//                tab (a Space runs in an iframe); adds one small, dismissible "build the real robot" link. No tracking.
 //   README.md    Space card (YAML front-matter: sdk static, tags, licence) with attributions
 //   LICENSE.md   licences of everything in the Space
 import fs from 'node:fs';
@@ -87,6 +87,7 @@ function shim({ kitText, side = 'left' }) {
       if (en()) {
         var m = /^\\/sada\\/([^/]+)\\/?$/.exec(p);
         if (m) p = '/en/kit/' + m[1] + '/';
+        else if ((m = /^\\/plan\\/([a-z0-9]+)\\/?$/.exec(p))) p = '/en/plan/' + m[1] + '/';
         else if (p === '/' || p === '/index.html') p = '/en/';
         else if (p === '/kviz.html') p = '/en/quiz/';
       }
@@ -206,8 +207,8 @@ function buildSo101() {
   copy(path.join(ROOT, 'vendor/three'), path.join(D, 'vendor/three'));   // the site's shared three.js (importmap)
   for (const f of walk(path.join(D, 'sim/so101')).filter((f) => f.endsWith('.html'))) injectShim(f, D);
   write(path.join(D, 'hf-space.js'), shim({ kitText: {
-    en: { path: '/en/kit/so101/', text: 'Get the real SO-101 kit · more at printedrobotics.cz', close: 'Dismiss' },
-    cs: { path: '/sada/so101/', text: 'Skutečná stavebnice SO-101 · více na printedrobotics.cz', close: 'Zavřít' }
+    en: { path: '/en/plan/so101/', text: 'Build a real SO-101: what to buy and where · printedrobotics.cz', close: 'Dismiss' },
+    cs: { path: '/plan/so101/', text: 'Postavte si skutečnou SO-101: co koupit a kde · printedrobotics.cz', close: 'Zavřít' }
   } }));
   write(path.join(D, 'index.html'), entry({ title: 'SO-101 robot arm simulator', target: 'sim/so101/',
     description: 'Try the SO-101 robot arm in your browser: MuJoCo physics, five missions, teach by demonstration and LeRobot export.' }));

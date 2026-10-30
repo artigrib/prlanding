@@ -80,13 +80,13 @@ export class Explode {
       <div class="jn"><label for="ux-ex-r">Rozložení</label><output for="ux-ex-r" id="ux-ex-o"></output>
         <input type="range" id="ux-ex-r" min="0" max="100" step="1"></div>
       <ul class="ux-ex-leg">
-        <li><i class="pr" aria-hidden="true"></i><span><b>${this.nPrinted} tištěných dílů</b> – vytiskneme je pro vás</span></li>
+        <li><i class="pr" aria-hidden="true"></i><span><b>${this.nPrinted} tištěných dílů</b> – soubory STL jsou volně k dispozici</span></li>
         <li><i class="sv" aria-hidden="true"></i><span><b>${this.nServo}× servo Feetech STS3215</b> – kupované, plus řídicí deska, kabely a šrouby M2/M3</span></li>
       </ul>
       <p class="ux-ex-hover mono-s" aria-live="polite">Najeďte nebo klepněte na díl a uvidíte jeho název.</p>
       <div class="ux-ex-b">
         <button type="button" class="btn btn-o" id="ux-ex-play">Jak se skládá <span aria-hidden="true">▶</span></button>
-        <a class="btn btn-act" href="../../sada/so101/">Tyto díly vám vytiskneme <span aria-hidden="true">→</span></a>
+        <a class="btn btn-act" href="../../plan/so101/">Co koupit a kde <span aria-hidden="true">→</span></a>
       </div>
       <p class="ux-ex-step" id="ux-ex-step" aria-live="polite" hidden></p>
       <p class="mono-s muted ux-ex-note">Pořadí podle montážního návodu SO-101 (LeRobot), zjednodušeně – jen díly, které jsou v modelu.</p>`;

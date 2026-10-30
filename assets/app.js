@@ -22,7 +22,7 @@
   }
   function $(sel) { return document.querySelector(sel); }
   function qs(name) { var m = new RegExp('[?&]' + name + '=([^&]+)').exec(location.search); return m ? decodeURIComponent(m[1]) : null; }
-  function status(r) { return r.preparing ? 'Připravujeme' : 'Předobjednávka'; }
+  function status(r) { return r.preparing ? 'Připravujeme' : 'Postavte si'; }
 
   /* contact: shown wherever a slot exists, only once an address is configured */
   function contactHtml() { return CFG.CONTACT_EMAIL ? '<a href="mailto:' + esc(CFG.CONTACT_EMAIL) + '">' + esc(CFG.CONTACT_EMAIL) + '</a>' : ''; }
@@ -98,7 +98,7 @@
   function softForm(kind, robot) {
     var t = kind === 'price'
       ? ['Zatím nevíte?', 'Pošleme vám jeden e-mail, až budeme znát cenu a termín.', 'Dejte mi vědět']
-      : ['Novinky a ceny e-mailem', 'Nové sady a spuštění prodeje. Nejvýš jednou za měsíc, odhlásíte se jedním klikem.', 'Odebírat'];
+      : ['Novinky e-mailem', 'Nové návody a simulace. Nejvýš jednou za měsíc, odhlásíte se jedním klikem.', 'Odebírat'];
     return '<form class="soft" novalidate data-soft="' + kind + '"' + (robot ? ' data-robot="' + esc(robot) + '"' : '') + '>' +
       '<b>' + t[0] + '</b><span class="muted">' + t[1] + '</span>' +
       '<span class="soft-row"><label class="sr-only" for="soft-' + kind + '">E-mail</label>' +
@@ -265,20 +265,17 @@
   /* ---------- product ---------- */
   if (page === 'product') {
     var r = byId[document.body.getAttribute('data-robot')] || byId.so101;
-    var TIERS = [['parts', 'Tištěné díly', 'Hardware si obstaráte sami.'], ['kit', 'Kompletní sada', 'Díly a veškerý hardware dle kusovníku.', 1], ['tested', 'Sada s oživením', 'Elektronika nastavená a otestovaná.']];
     var MATS = r.mats || [['pla', 'PLA+', 'Standard'], ['petg', 'PETG', 'Odolnější teplu']];
     function oneOf(v, list, d) { return list.indexOf(v) >= 0 ? v : d; }
     // configuration lives in the URL so it can be shared and handed over from the quiz
     var st = {
       setup: oneOf(qs('setup'), ['pair', 'single'], 'pair'),
-      tier: oneOf(qs('tier'), ['parts', 'kit', 'tested'], 'kit'),
       color: oneOf(qs('color'), C.map(function (c) { return c.id; }), 'white'),
       material: oneOf(qs('material'), MATS.map(function (m) { return m[0]; }), MATS[0][0])
     };
     function syncUrl() {
       var q = [];
       if (r.setups && st.setup !== 'pair') q.push('setup=' + st.setup);
-      if (st.tier !== 'kit') q.push('tier=' + st.tier);
       if (st.color !== 'white') q.push('color=' + st.color);
       if (st.material !== MATS[0][0]) q.push('material=' + st.material);
       try { history.replaceState(null, '', location.pathname + (q.length ? '?' + q.join('&') : '') + location.hash); } catch (e) {}
@@ -317,19 +314,17 @@
     /* not yet available: no configurator, just notify + alternative */
     if (r.preparing) {
       $('#p-status span').textContent = 'Připravujeme · ověřujeme licenci s autory';
-      $('#top-cta').firstChild.textContent = 'Dejte mi vědět ';
       set('#po-btn-t', 'Dejte mi vědět');
-      $('#sbar .btn').textContent = 'Dejte mi vědět';
       document.querySelectorAll('[data-hide-prep]').forEach(function (el) { el.hidden = true; });
       $('#prep-info').hidden = false;
       set('#sec1-label', '01 — Upozornění na dostupnost');
       var alt = byId[r.related[0]] && !byId[r.related[0]].preparing ? byId[r.related[0]] : byId.lekiwi;
-      $('#prep-alt').innerHTML = '<a href="' + href(alt.id) + '">' + tile(alt, 'white') + '<span><span class="mono">Mezitím k dispozici</span><b>' + esc(alt.name) + '</b><span class="muted">' + esc(alt.short) + '</span></span></a>';
+      $('#prep-alt').innerHTML = '<a href="' + href(alt.id) + '">' + tile(alt, 'white') + '<span><span class="mono">Mezitím si můžete postavit</span><b>' + esc(alt.name) + '</b><span class="muted">' + esc(alt.short) + '</span></span></a>';
       $('#po-note').placeholder = 'Na co se těšíte?';
       set('#jump-po', 'Upozornění');
       set('#po-consent-t', 'Souhlasím se zpracováním e-mailu za účelem zaslání upozornění na dostupnost.');
     }
-    set('#po-title', r.preparing ? 'Upozornění na dostupnost' : 'Nezávazná předobjednávka');
+    set('#po-title', r.preparing ? 'Upozornění na dostupnost' : 'Hotová sada: dejte mi vědět');
     /* browser demo (sim/arena): prerendered by tools/build.mjs; the chosen colour follows the visitor where the sim reads ?color= */
     var SIM = r.sim && (window.PR_SIMS || {})[r.sim], simA = $('#sim-cta'), colorChosen = !!qs('color');
     function simHref() {
@@ -344,7 +339,6 @@
       $('#top-cta').parentNode.appendChild(simA);
     }
     if (SIM) simA.href = simHref();
-    if (!r.preparing) { var tc = $('#top-cta'); var sd = document.createElement('div'); sd.innerHTML = softForm('price', r.name); tc.parentNode.appendChild(sd.firstChild); }
     $('#po-prep').hidden = true;
 
     var mode3d = false, viewer = null;
@@ -353,20 +347,16 @@
       return list.map(function (o) { return '<button type="button" class="' + cls + '" data-k="' + key + '" data-v="' + o[0] + '" aria-pressed="' + (st[key] === o[0]) + '">' + fmt(o) + '</button>'; }).join('');
     }
     function colorObj() { return C.filter(function (c) { return c.id === st.color; })[0]; }
-    function tierName() { return TIERS.filter(function (t) { return t[0] === st.tier; })[0][1]; }
-    function summary() { return (r.setups ? (st.setup === 'pair' ? 'Pár · ' : 'Follower · ') : '') + tierName() + ' · ' + colorObj().name + ' · ' + MATS.filter(function (m) { return m[0] === st.material; })[0][1]; }
     function renderBuy() {
       var pair = r.setups && st.setup === 'pair';
-      $('#setups-wrap').hidden = !r.setups || r.preparing;
       $('#setups').innerHTML = btns([['pair', 'Pár', 'Leader + follower'], ['single', 'Follower', 'Jedna ruka']], 'setup', 'opt', function (o) { return o[1] + '<span>' + o[2] + '</span>'; });
-      $('#tiers').innerHTML = btns(TIERS, 'tier', 'tier', function (o) { return '<i aria-hidden="true"></i><span><b>' + o[1] + '</b>' + (o[3] ? '<span class="badge">Doporučujeme</span>' : '') + '<small>' + o[2] + '</small></span>'; });
       $('#colors').innerHTML = C.map(function (c) { return '<button type="button" class="sw" data-k="color" data-v="' + c.id + '" aria-pressed="' + (st.color === c.id) + '" aria-label="' + c.name + '"><i style="background:' + c.hex + '" aria-hidden="true"></i></button>'; }).join('');
       set('#color-name', colorObj().name);
       $('#mats').innerHTML = btns(MATS, 'material', 'opt', function (o) { return o[1] + '<span>' + o[2] + '</span>'; });
-      var sum = r.preparing ? r.type + ' · ' + r.level : summary();
+      var sum = r.type + ' · ' + r.level;
       set('#summary', sum); set('#sb-sum', sum);
-      var items = window.PR_BOX(r, st.tier, pair);
-      set('#box-title', tierName() + ' · ' + items.length + ' položek');
+      var items = window.PR_BOX(r, 'kit', pair);
+      set('#box-title', 'Podle kusovníku projektu · ' + items.length + ' položek');
       $('#box').innerHTML = items.map(function (it, i) { return '<li><span class="n">' + (i < 9 ? '0' : '') + (i + 1) + '</span><span>' + esc(it[0]) + '</span><span class="q">' + esc(it[1]) + '</span><span class="t">' + it[2] + '</span></li>'; }).join('');
       set('#box-note', window.PR_BOX_NOTE(r));
     }
@@ -389,7 +379,7 @@
       var sk = Object.keys(sp), sst = 0; sk.forEach(function (k) { sst += +(sp[k] && sp[k].stars) || 0; });
       var sn = document.createElement('p'); sn.className = 'note-bar'; sn.id = 'sim-note';
       sn.innerHTML = '<i aria-hidden="true"></i><span>' + (sk.length ? '<span>Přicházíte ze simulace: ' + sk.length + ' ' + (sk.length === 1 ? 'mise' : sk.length < 5 ? 'mise' : 'misí') + ', ' + sst + ' ★.</span> ' : '<span>Přicházíte ze simulace.</span> ') +
-        '<span>' + (r.preparing ? 'Sada ještě není v prodeji – nechte e-mail a napíšeme vám jako prvním.' : 'Sada se zatím jen předobjednává: nezávazně, cenu a termín vám napíšeme e-mailem jako prvním.') + '</span></span>';
+        '<span>Hotovou sadu zatím nenabízíme. Nechte e-mail a napíšeme vám, pokud ji nabídneme.</span></span>';
       var qn0 = $('#quiz-note'); qn0.parentNode.insertBefore(sn, qn0.nextSibling);
     }
 
@@ -496,9 +486,9 @@
       if (!consent.checked) { $('#po-consent-err').hidden = false; consent.setAttribute('aria-invalid', 'true'); consent.focus(); return; }
       $('#po-consent-err').hidden = true; consent.removeAttribute('aria-invalid');
       var qty = parseInt(form.qty.value, 10) || 1;
-      var payload = { _subject: (r.preparing ? 'Upozornění: ' : 'Předobjednávka: ') + r.name + (qty > 1 ? ' ×' + qty : ''), email: email.value.trim(), note: form.note.value, robot: r.name,
-        configuration: r.preparing ? '' : summary(), setup: r.setups ? st.setup : '', tier: st.tier, color: st.color, material: st.material, qty: qty,
-        school: form.school.checked ? 'ano' : '', ico: form.ico.value.trim(), type: r.preparing ? 'notify' : 'preorder', source: fromQuiz ? 'kviz' : fromSim ? 'simulace' : 'web', page: location.href };
+      var payload = { _subject: 'Upozornění: ' + r.name + (qty > 1 ? ' ×' + qty : ''), email: email.value.trim(), note: form.note.value, robot: r.name,
+        configuration: '', setup: r.setups ? st.setup : '', tier: '', color: '', material: '', qty: qty,
+        school: form.school.checked ? 'ano' : '', ico: form.ico.value.trim(), type: 'notify', source: fromQuiz ? 'kviz' : fromSim ? 'simulace' : 'web', page: location.href };
       btn.disabled = true; msg.hidden = false; msg.textContent = 'Odesíláme…';
       send(payload).then(function () { done(payload); })
         .catch(function (er) { msg.textContent = er && er.message === 'no-endpoint' ? NO_ENDPOINT_MSG : 'Odeslání se nezdařilo. Zkuste to prosím znovu.'; btn.disabled = false; });
@@ -508,19 +498,17 @@
 
     /* success: what happens next + one more thing to do */
     function done(p) {
-      var steps = r.preparing
-        ? [['Teď', 'Jste na seznamu. Nic dalšího dělat nemusíte.'], ['Až sadu spustíme', 'Pošleme jeden e-mail na ' + p.email + ' s cenou a termínem.'], ['Kdykoli', 'Odhlásíte se odpovědí na kterýkoli náš e-mail.']]
-        : [['Do 2 pracovních dnů', 'Pošleme na ' + p.email + ' cenu a termín expedice pro ' + p.configuration + (p.qty > 1 ? ', ' + p.qty + ' ks' : '') + '.'], ['Po vašem potvrzení', p.school ? 'Vystavíme fakturu na školu nebo firmu' + (p.ico ? ' (IČO ' + p.ico + ')' : '') + ' se splatností. Do té doby nic neplatíte a můžete zrušit.' : 'Pošleme platební odkaz. Do té doby nic neplatíte a můžete zrušit.'], ['Tisk a kompletace', 'Díly vytiskneme, sadu zkompletujeme a pošleme s číslem zásilky.']];
+      var steps = [['Teď', 'Jste na seznamu. Nic dalšího dělat nemusíte.'], ['Pokud sadu nabídneme', 'Pošleme jeden e-mail na ' + p.email + ' s cenou a termínem.'], ['Kdykoli', 'Odhlásíte se odpovědí na kterýkoli náš e-mail.']];
       var shareUrl = SITE + 'sada/' + r.id + '/';
       $('#po-wrap').innerHTML = '<div class="form-ok" role="status" tabindex="-1" id="po-ok"><span class="mono">Hotovo</span><b>Děkujeme, máme to.</b>' +
         '<ol class="next">' + steps.map(function (s) { return '<li><span class="mono">' + esc(s[0]) + '</span><span>' + esc(s[1]) + '</span></li>'; }).join('') + '</ol>' +
         (CFG.CONTACT_EMAIL ? '<span class="ink2" style="font-size:15px">Dotaz? ' + contactHtml() + '</span>' : '') +
-        '<div style="display:flex;flex-wrap:wrap;gap:8px"><button type="button" class="btn btn-o" id="share">Poslat odkaz kamarádovi</button><a class="btn btn-o" href="#dalsi">Co k tomu přikoupit ↓</a></div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:8px"><button type="button" class="btn btn-o" id="share">Poslat odkaz kamarádovi</button><a class="btn btn-o" href="#dalsi">Podobní roboti ↓</a></div>' +
         '<span class="mono" id="share-msg" role="status" aria-live="polite"></span></div>';
       $('#po-ok').focus();
       $('#share').addEventListener('click', function () {
         var m = $('#share-msg');
-        if (navigator.share) { navigator.share({ title: 'Stavebnice pro ' + r.name, url: shareUrl }).catch(function () {}); return; }
+        if (navigator.share) { navigator.share({ title: r.name + ' – printedrobotics.cz', url: shareUrl }).catch(function () {}); return; }
         (navigator.clipboard ? navigator.clipboard.writeText(shareUrl) : Promise.reject()).then(function () { m.textContent = 'Odkaz zkopírován.'; }, function () { m.textContent = shareUrl; });
       });
       $('#sbar').remove();
@@ -611,7 +599,6 @@
     function cfg(b, a) {
       var q = ['z=kviz'];
       if (b.preparing) return '?' + q.join('&');
-      if (a[0] === 'none' && (b._cs || b).level !== 'Začátečník') q.push('tier=tested');
       return '?' + q.join('&');
     }
     var step = 0, ans = [], editing = false;
@@ -631,13 +618,13 @@
         root.innerHTML = '<div class="g" style="padding-top:24px;row-gap:8px"><div class="a1 mono">Výsledek · upravit odpověď</div><div class="a4 chips">' + ans.map(function (id, i) { return '<button type="button" class="chip" data-edit="' + i + '"><span class="mono">' + (i + 1) + '</span>' + label(i, id) + ' <span aria-hidden="true">✎</span><span class="sr-only"> — změnit</span></button>'; }).join('') + '</div></div>' +
           '<div class="g" style="margin-top:clamp(24px,5vw,72px);row-gap:24px"><div class="a1 hide-s" style="display:flex;flex-direction:column;gap:12px"><span class="mono">Doporučujeme</span></div>' +
           '<div class="a4" style="display:flex;flex-direction:column;gap:56px"><div class="res">' + tile(b, 'white', '', true) +
-          '<div style="display:flex;flex-direction:column;gap:14px"><div class="card-meta mono"><span>' + b.level + '</span><span>' + status(b) + '</span></div><span class="muted" style="font-size:17px">Doporučujeme stavebnici pro</span><h1 class="p-name" style="margin-top:-6px" tabindex="-1" id="q-h">' + esc(b.name) + '</h1>' +
-          '<ul class="reasons">' + REASONS[b.id].map(function (t) { return '<li><span>' + t + '</span></li>'; }).join('') + (/tier=tested/.test(c) ? '<li><span>Doporučujeme Sadu s oživením — elektroniku nastavíme za vás</span></li>' : '') + '</ul>' +
-          '<a class="btn btn-act" href="' + href(b.id) + c + '#predobjednavka">' + (b.preparing ? 'Dejte mi vědět' : 'Předobjednat') + ' <span aria-hidden="true">→</span></a>' +
+          '<div style="display:flex;flex-direction:column;gap:14px"><div class="card-meta mono"><span>' + b.level + '</span><span>' + status(b) + '</span></div><span class="muted" style="font-size:17px">Doporučujeme postavit si</span><h1 class="p-name" style="margin-top:-6px" tabindex="-1" id="q-h">' + esc(b.name) + '</h1>' +
+          '<ul class="reasons">' + REASONS[b.id].map(function (t) { return '<li><span>' + t + '</span></li>'; }).join('') + '</ul>' +
+          '<a class="btn btn-act" href="' + href(b.id) + c + (b.preparing ? '#predobjednavka">Dejte mi vědět' : '#obsah">Co budete potřebovat') + ' <span aria-hidden="true">→</span></a>' +
           '<a class="btn btn-o" href="' + href(b.id) + c + '">Detail sady <span aria-hidden="true">→</span></a></div></div>' +
           '<div><div class="mono" style="border-top:1px solid var(--ink);padding-top:12px;margin-bottom:16px">Také by vás mohlo bavit</div><div class="alts">' +
           res.slice(1).map(function (id) { var x = byId[id]; return '<a href="' + href(x.id) + cfg(x, ans) + '">' + tile(x, 'white') + '<span><b style="font-size:21px;font-weight:500;letter-spacing:-.03em;display:block">' + esc(x.name) + '</b><span class="muted" style="font-size:15px">' + (x.preparing ? 'Připravujeme' : x.level) + ' · ' + esc(x.type) + '</span></span></a>'; }).join('') +
-          '</div></div>' + (b.preparing ? '' : softForm('price', b.name)) + '<button type="button" id="restart" class="linkbtn" style="align-self:flex-start">Začít kvíz znovu</button></div></div>';
+          '</div></div>' + '<button type="button" id="restart" class="linkbtn" style="align-self:flex-start">Začít kvíz znovu</button></div></div>';
         $('#q-h').focus();
       }
     }

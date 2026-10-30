@@ -222,19 +222,19 @@ function kitPage(r0, L) {
   // search-intent title (≤ ~60 chars) and a description cut at a word boundary to ≤ 155 chars
   let title, desc, ogTitle;
   if (L === 'en') {
-    const t1 = `${r.name} kit: ${r.type.toLowerCase()} | printedrobotics.cz`;
-    title = t1.length <= 64 ? t1 : `${r.name} kit | printedrobotics.cz`;
+    const t1 = `Build ${r.name}: ${r.type.toLowerCase()} | printedrobotics.cz`;
+    title = t1.length <= 64 ? t1 : `Build ${r.name} | printedrobotics.cz`;
     desc = clip(r.preparing
-      ? `We’re preparing a ${r.name} kit. ${r.short} Leave your email and you’ll be the first to know.`
-      : `${r.name} kit: printed parts and the hardware from the bill of materials in one box. ${r.short}`, 155);
-    ogTitle = `Kit for ${r.name}`;
+      ? `${r.name}: we’re checking the licence and the bill of materials with the authors. ${r.short} Leave your email and you’ll be the first to know.`
+      : `Build ${r.name} from the open-source project: what you need from the bill of materials, the guide and the licence. ${r.short}`, 155);
+    ogTitle = `Build ${r.name}`;
   } else {
-    const t1 = `${r.name} – stavebnice: ${r.type.toLowerCase()} | printedrobotics.cz`;
-    title = t1.length <= 64 ? t1 : `${r.name} – stavebnice | printedrobotics.cz`;
+    const t1 = `${r.name} – postavte si: ${r.type.toLowerCase()} | printedrobotics.cz`;
+    title = t1.length <= 64 ? t1 : `${r.name} – postavte si | printedrobotics.cz`;
     desc = clip(r.preparing
-      ? `${r.name} připravujeme jako stavebnici. ${r.short} Nechte e-mail, dáme vědět jako prvním.`
-      : `Stavebnice ${r.name}: vytištěné díly a hardware podle kusovníku v jedné krabici. ${r.short}`, 155);
-    ogTitle = 'Stavebnice pro ' + r.name;
+      ? `${r.name}: licenci a kusovník ověřujeme s autory. ${r.short} Nechte e-mail, dáme vědět jako prvním.`
+      : `Postavte si ${r.name} z otevřeného projektu: co budete potřebovat podle kusovníku, návod a licence. ${r.short}`, 155);
+    ogTitle = 'Postavte si ' + r.name;
   }
   const H = root;
   // unknown values ('—') are omitted, same list as the runtime page
@@ -243,11 +243,15 @@ function kitPage(r0, L) {
   const simCta = sim ? `<a class="sim-cta" id="sim-cta" href="${root}${sim.path}${sim.robotParam ? '?robot=' + r.id : ''}"><span><b>${esc(sim.label)}</b><small>${esc(sim.note)}</small></span><span aria-hidden="true">→</span></a>\n` : '';
   // SO-101, SVRN: purchase plan (the user buys from suppliers directly; the waitlist below stays)
   const PLAN_NOTE = { so101: 'Co koupit u kterých dodavatelů, ceny s dopravou a kontrola variant serv', svrn: 'Co koupit u kterých dodavatelů, ceny s dopravou, kontrola desky, serva a LiPo' };
-  const planCta = PLAN_NOTE[r.id] ? `<a class="sim-cta" id="plan-cta" href="${root}plan/${r.id}/"><span><b>Plán nákupu dílů</b><small>${PLAN_NOTE[r.id]}</small></span><span aria-hidden="true">→</span></a>\n` : '';
+  // primary CTA: the buying plan where one exists, else the browser sim, else the project's own guide; the waitlist is a text link below
+  const planCta = PLAN_NOTE[r.id] ? `<a class="btn btn-act" id="plan-cta" href="${root}plan/${r.id}/">Plán nákupu dílů <span aria-hidden="true">→</span></a>\n<p class="mono" style="margin:-4px 0 0">${PLAN_NOTE[r.id]}</p>\n` : '';
+  const simHref = sim ? `${root}${sim.path}${sim.robotParam ? '?robot=' + r.id : ''}` : '';
+  const primaryCta = planCta || (sim ? `<a class="btn btn-act" id="sim-cta" href="${simHref}">${esc(sim.label)} <span aria-hidden="true">→</span></a>\n`
+    : `<a class="btn btn-act" id="docs-cta" href="${esc(r.docs)}" rel="noopener">Návod projektu ↗</a>\n`);
   const noSw = D.PR_NO_SW(r);
   const prerender = {
     specs: specs.map(x => `<div><dt>${esc(x[0])}</dt><dd>${esc(x[1])}</dd></div>`).join(''),
-    // same list app.js shows for the default configuration (Kompletní sada, pair)
+    // same list app.js shows (everything from the bill of materials, pair)
     box: D.PR_BOX(r, 'kit', !!r.setups).map((b, i) => `<li><span class="n">${String(i + 1).padStart(2, '0')}</span><span>${esc(b[0])}</span><span class="q">${esc(b[1])}</span><span class="t">${esc(b[2])}</span></li>`).join(''),
     related: r.related.map(id => byId[id]).filter(Boolean).map(x => `<a href="${H}sada/${x.id}/"><b>${esc(x.name)}</b><span class="muted" style="font-size:15px">${esc(x.short)}</span></a>`).join('')
   };
@@ -256,10 +260,10 @@ function kitPage(r0, L) {
   const faq = L === 'en' ? D.PR_FAQ(r).map(f => f.map(x => I.PRI18N.t(x))) : D.PR_FAQ(r);
   if (L === 'en' && faq.some(f => f.some(x => CZ.test(x)))) throw new Error('FAQ not translated: ' + r.id + '\n' + faq.flat().filter(x => CZ.test(x)).join('\n'));
   const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(f => ({ '@type': 'Question', name: f[0], acceptedAnswer: { '@type': 'Answer', text: f[1] } })) };
-  // Product without offers, prices or ratings: nothing is for sale yet
+  // Product without offers, prices, ratings or our brand: we sell nothing, the design belongs to its authors
   const ld = {
-    '@context': 'https://schema.org', '@type': 'Product', name: L === 'en' ? `Kit for ${r.name}` : `Stavebnice pro ${r.name}`, description: r.lead, category: r.type,
-    image: img, url, brand: { '@type': 'Brand', name: 'printedrobotics.cz' }, isBasedOn: r.repo,
+    '@context': 'https://schema.org', '@type': 'Product', name: r.name, description: r.lead, category: r.type,
+    image: img, url, isBasedOn: r.repo,
     additionalProperty: specs.map(s => ({ '@type': 'PropertyValue', name: s[0], value: s[1] }))
   };
   if (L === 'en') ld.inLanguage = 'en';
@@ -307,8 +311,13 @@ function kitPage(r0, L) {
     .replace('id="l-docs" href="#"', `id="l-docs" href="${esc(r.docs)}"`)
     .replace(/(<p class="ink2" style="margin-top:8px" id="safety">)[^<]*(<\/p>)/, `$1${D.PR_SAFETY(r).map(esc).join('<br>')}$2`)
     .replace('<span class="h2" id="specs-title">Parametry</span>', `<span class="h2" id="specs-title">Parametry · ${specs.length}</span>`)
-    .replace('<!--sim-cta-->\n', simCta + planCta)
-    .replace('<b id="po-title" style="font-weight:500;font-size:19px;display:block"></b>', `<b id="po-title" style="font-weight:500;font-size:19px;display:block">${r.preparing ? 'Upozornění na dostupnost' : 'Nezávazná předobjednávka'}</b>`)
+    .replace('<!--primary-cta-->\n', primaryCta)
+    .replace('<!--sim-cta-->\n', planCta ? simCta : '')
+    // sticky bar repeats the primary CTA
+    .replace('<a class="btn btn-act" href="#predobjednavka" tabindex="-1">Dejte mi vědět</a>', () => planCta ? `<a class="btn btn-act" href="${root}plan/${r.id}/" tabindex="-1">Plán nákupu dílů</a>`
+      : sim ? `<a class="btn btn-act" href="${simHref}" tabindex="-1">${esc(sim.label)}</a>` : `<a class="btn btn-act" href="${esc(r.docs)}" rel="noopener" tabindex="-1">Návod projektu ↗</a>`)
+    .replace('<!--box-plan-->\n', PLAN_NOTE[r.id] ? `<p style="margin:16px 0 0"><a class="step-a" href="${root}plan/${r.id}/" id="box-plan">Plán nákupu: kde koupit, za kolik a na co si dát pozor</a></p>\n` : '')
+    .replace('<b id="po-title" style="font-weight:500;font-size:19px;display:block"></b>', `<b id="po-title" style="font-weight:500;font-size:19px;display:block">${r.preparing ? 'Upozornění na dostupnost' : 'Hotová sada: dejte mi vědět'}</b>`)
     // hero, crumb and meta line so the page reads right without scripts (app.js rewrites the same nodes)
     .replace('<div class="tile" id="p-tile"></div>', `<div class="tile" id="p-tile"><img src="${root}img/${r.id}_white.jpg" alt="${esc(r.alt)}" fetchpriority="high" width="1200" height="900"></div>`)
     .replace('<span id="crumb-cat"></span>', `<span id="crumb-cat">${esc(D.PR_CATS[r.cat])}</span>`)
@@ -320,22 +329,19 @@ function kitPage(r0, L) {
     .replace('<span id="p-credit"></span>', `<span id="p-credit">${esc(r.credit || (r.render ? 'Vizualizace z CAD projektu' : ''))}</span>`)
     .replace('<p class="ink2" style="margin:6px 0 0;font-size:17px;line-height:1.5" id="p-lead"></p>', `<p class="ink2" style="margin:6px 0 0;font-size:17px;line-height:1.5" id="p-lead">${esc(r.lead)}</p>`);
   if (r.preparing) {
-    // not for sale yet: the static page must not offer a pre-order (app.js applies the same state)
+    // still checking licence/BOM with the authors: availability alert instead of the parts list (app.js applies the same state)
     html = html
-      .replace('<span>Předobjednávka · cenu a termín potvrdíme e-mailem</span>', '<span>Připravujeme · ověřujeme licenci s autory</span>')
-      .replace('href="#predobjednavka">Předobjednat <span aria-hidden="true">↓</span>', 'href="#predobjednavka">Dejte mi vědět <span aria-hidden="true">↓</span>')
+      .replace('<span>Nic neprodáváme · díly koupíte přímo u dodavatelů</span>', '<span>Připravujeme · ověřujeme licenci s autory</span>')
       .replace('<div id="prep-info" class="prep" hidden>', '<div id="prep-info" class="prep">')
-      .replace('id="sec1-label">01 — Konfigurace a předobjednávka<', 'id="sec1-label">01 — Upozornění na dostupnost<')
-      .replace('<span id="po-btn-t">Předobjednat</span>', '<span id="po-btn-t">Dejte mi vědět</span>')
+      .replace('id="sec1-label">02 — Hotová sada<', 'id="sec1-label">01 — Upozornění na dostupnost<')
       .replace(/ data-hide-prep>/g, ' data-hide-prep hidden>')
-      .replace('<fieldset id="setups-wrap">', '<fieldset id="setups-wrap" hidden>')
-      .replace('id="jump-po">Konfigurace<', 'id="jump-po">Upozornění<')
-      .replace('<a class="btn btn-act" href="#predobjednavka" tabindex="-1">Předobjednat</a>', '<a class="btn btn-act" href="#predobjednavka" tabindex="-1">Dejte mi vědět</a>')
-      .replace('za účelem vyřízení předobjednávky.</span>', 'za účelem zaslání upozornění na dostupnost.</span>')
-      .replace('placeholder="Např. otázka ke kompletaci"', 'placeholder="Na co se těšíte?"');
-    if (!html.includes('Dejte mi vědět <span')) throw new Error('template changed (preparing): ' + r.id);
+      .replace(/ data-hide-prep style=/g, ' data-hide-prep hidden style=')
+      .replace('id="jump-po">Hotová sada<', 'id="jump-po">Upozornění<')
+      .replace('za účelem upozornění na hotovou sadu.</span>', 'za účelem zaslání upozornění na dostupnost.</span>')
+      .replace('placeholder="Co by v hotové sadě mělo být?"', 'placeholder="Na co se těšíte?"');
+    if (!html.includes('Připravujeme · ověřujeme') || !html.includes('01 — Upozornění na dostupnost')) throw new Error('template changed (preparing): ' + r.id);
   }
-  if (!html.includes(`data-robot="${r.id}"`) || !html.includes('og:image') || html.includes('<!--sim-cta-->') || !html.includes('id="l-hw">')) throw new Error('template changed: ' + r.id);
+  if (!html.includes(`data-robot="${r.id}"`) || !html.includes('og:image') || html.includes('<!--sim-cta-->') || html.includes('<!--primary-cta-->') || !html.includes('id="l-hw">')) throw new Error('template changed: ' + r.id);
   html = wireI18n(html, L, page, PATH.kit('cs', r.id), PATH.kit('en', r.id), root);
   if (L === 'en') {
     html = enLinks(translateHtml(html.replace('<html lang="cs">', '<html lang="en">')), page);
@@ -408,7 +414,7 @@ ${fig}
 </div>`;
 }
 // home: catalogue cards in the static HTML (scripts re-render the same cards with filters)
-const cards = R.map((r, i) => `<a class="card" href="sada/${r.id}/"><div class="tile"><span class="tag${r.preparing ? ' tag-p' : ''}">${r.preparing ? 'Připravujeme' : 'Předobjednávka'}</span><img src="img/${r.id}_white.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
+const cards = R.map((r, i) => `<a class="card" href="sada/${r.id}/"><div class="tile"><span class="tag${r.preparing ? ' tag-p' : ''}">${r.preparing ? 'Připravujeme' : 'Postavte si'}</span><img src="img/${r.id}_white.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
   `<span class="card-meta"><span class="mono" style="color:var(--ink)">${no(i)}</span><span class="mono">${esc(r.preparing ? 'Připravujeme' : r.level)}</span></span>` +
   `<span><h3>${esc(r.name)}</h3><span class="type">${esc(r.type)}</span></span><span class="spec1">${r.card.map(c => esc(c[1])).join(' · ')}</span>` +
   `<p class="desc">${esc(r.short)}</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>`).join('\n');
@@ -429,7 +435,7 @@ if (!home.includes('<!--/hero-new-->') || !home.includes('<!--/build-tl-->')) th
 // Czech home gets its hreflang pair + switcher; the English home is rendered from it
 if (home.includes('<!--/cards-->')) {
   home = wireI18n(setAlternates(home, '', 'en/'), 'cs', 'index.html', '', 'en/', '');
-  const enCards = W.en.PR_ROBOTS.map((r, i) => `<a class="card" href="sada/${r.id}/"><div class="tile"><span class="tag${r.preparing ? ' tag-p' : ''}">${r.preparing ? 'Připravujeme' : 'Předobjednávka'}</span><img src="img/${r.id}_white.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
+  const enCards = W.en.PR_ROBOTS.map((r, i) => `<a class="card" href="sada/${r.id}/"><div class="tile"><span class="tag${r.preparing ? ' tag-p' : ''}">${r.preparing ? 'Připravujeme' : 'Postavte si'}</span><img src="img/${r.id}_white.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
     `<span class="card-meta"><span class="mono" style="color:var(--ink)">${no(i)}</span><span class="mono">${esc(r.preparing ? 'Připravujeme' : r.level)}</span></span>` +
     `<span><h3>${esc(r.name)}</h3><span class="type">${esc(r.type)}</span></span><span class="spec1">${r.card.map(c => esc(c[1])).join(' · ')}</span>` +
     `<p class="desc">${esc(r.short)}</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>`).join('\n');
@@ -439,14 +445,14 @@ if (home.includes('<!--/cards-->')) {
     .replace('<html lang="cs">', '<html lang="en">')
     .replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->/, `<div class="cards" id="cards">\n${enCards}\n${W.en.PR_SHOWCASE.map(r => showCard(r, 'en')).join('\n')}\n</div><!--/cards-->`)
     .replace(/<title>[^<]*<\/title>/, '<title>printedrobotics.cz — try a robot in your browser, then build it</title>')
-    .replace(/<meta name="description" content="[^"]*">/, '<meta name="description" content="Try the SO-101 robot arm in a physics simulation right in your browser, and combat robots in the arena. Then we print the parts, add the hardware from the bill of materials and ship it all in one box.">')
+    .replace(/<meta name="description" content="[^"]*">/, '<meta name="description" content="Try the SO-101 robot arm in a physics simulation right in your browser, and combat robots in the arena. Then we tell you what to buy and where, and guide you through the build.">')
     .replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${SITE}en/">`)
     .replace(/<meta property="og:title" content="[^"]*">/, '<meta property="og:title" content="Try a robot in your browser, then build it">')
-    .replace(/<meta property="og:description" content="[^"]*">/, '<meta property="og:description" content="Free SO-101 arm simulation and a combat robot arena in your browser. Open-source robot kits: we print, assemble and ship.">')
+    .replace(/<meta property="og:description" content="[^"]*">/, '<meta property="og:description" content="Free SO-101 arm simulation and a combat robot arena in your browser. Open-source robots: what to buy and where, a build guide and LeRobot practice on a virtual arm.">')
     .replace(/<meta property="og:url" content="[^"]*">/, `<meta property="og:url" content="${SITE}en/">`)
     .replace(/<meta property="og:image:alt" content="[^"]*">/, '<meta property="og:image:alt" content="The simulated SO-101 robot arm carrying a cube into a bowl">')
     .replace('<meta property="og:locale" content="cs_CZ">', '<meta property="og:locale" content="en_GB">')
-    .replace(/"description":"Stavebnice open-source robotů: tisk dílů, kompletace hardwaru a doprava po ČR a EU\."/, '"description":"Open-source robot kits: printed parts, hardware assembly and shipping within Czechia and the EU."')
+    .replace(/"description":"Open-source roboty: simulace v prohlížeči, plán nákupu dílů u dodavatelů a návody ke stavbě\. Nic neprodáváme\."/, '"description":"Open-source robots: browser simulations, a parts buying plan with suppliers and build guides. We sell nothing."')
     .replace(/<body data-page="home"/, `<body data-page="home" data-root="${root}"`);
   en = fillPhotos(en, 'en');
   en = en.replace(/<!--build-tl-->[\s\S]*?<!--\/build-tl-->/, `<!--build-tl-->\n${buildTimeline('en')}\n<!--/build-tl-->`);

@@ -154,7 +154,7 @@ window.PR_ROBOTS = [
   { id: 'osr', mats: [['pla', 'PLA+', 'Kryty a stožár'], ['petg', 'PETG', 'Odolnější teplu']], credit: 'Vizualizace z modelu JPL / Caltech (Apache-2.0)',  glb: true, name: 'Open Source Rover', type: 'Rover', cat: 'mobile', level: 'Pokročilý', hw: 'Apache-2.0', sw: 'Apache-2.0',
     author: 'JPL / Caltech', render: true, alt: 'Šestikolový hliníkový rover podle projektu NASA JPL Open Source Rover',
     short: 'Velký šestikolový rover z hliníkové stavebnice goBILDA, podle projektu NASA JPL Open Source Rover.',
-    lead: 'Šestikolový marsovský rover podle projektu NASA JPL Open Source Rover: hliníková konstrukce, odpružení rocker-bogie a čtyři řízená kola. Raspberry Pi a ROS 2 z něj dělají robustní platformu pro výuku i výzkum v terénu. Na rozdíl od ostatních sad je to hlavně kompletace hardwaru — tiskneme krycí desky těla v barvě dle výběru a hlavu stožáru.',
+    lead: 'Šestikolový marsovský rover podle projektu NASA JPL Open Source Rover: hliníková konstrukce, odpružení rocker-bogie a čtyři řízená kola. Raspberry Pi a ROS 2 z něj dělají robustní platformu pro výuku i výzkum v terénu. Na rozdíl od ostatních projektů je to hlavně montáž hardwaru — tisknou se jen krycí desky těla a hlava stožáru.',
     bomCost: '≈ 1 600 USD', printTime: '—', software: 'ROS 2 (Python), Raspberry Pi',
     repo: 'https://github.com/nasa-jpl/open-source-rover', docs: 'https://github.com/nasa-jpl/osr-rover-code',
     card: [['Kola', '6, rocker-bogie'], ['Motory', '10']],
@@ -222,12 +222,12 @@ window.PR_SAFETY = function (r) {
     if (/spinner|rotuj/i.test(all)) w.push('Rotující zbraň může vážně zranit a vymrštit úlomky: mimo arénu ji vždy zajistěte a nikdy ji neroztáčejte v ruce ani na stole.');
     if (/flipper/i.test(all)) w.push('Flipper se pohybuje prudce: při manipulaci s robotem mějte prsty mimo jeho dráhu.');
   }
-  w.push('Hardware z této sady napájejte jen zdrojem uvedeným v návodu projektu.');
+  w.push('Hardware napájejte jen zdrojem uvedeným v návodu projektu.');
   return w;
 };
 // Parameters shown on the product page and in JSON-LD; unknown values ('—' or empty) are left out.
-// "Obsah krabice": what one tier contains (used by app.js for the live list and tools/build.mjs for the static page).
-// tier: 'parts' | 'kit' | 'tested'; pair: leader + follower (robots with r.setups). Items: [name, qty, kind].
+// "Co budete potřebovat": what you buy or print yourself, per the project's bill of materials (app.js and tools/build.mjs).
+// We sell nothing: tier 'parts' = printed parts only, 'kit' = everything; pair: leader + follower (robots with r.setups). Items: [name, qty, kind].
 window.PR_BOX = function (r, tier, pair) {
   var items = [['Tištěné díly podle STL projektu' + (r.setups ? (pair ? ' — leader i follower' : ' — follower') : ''), pair ? '2 sady' : '1 sada', 'Tisk']];
   if (tier !== 'parts') {
@@ -237,22 +237,20 @@ window.PR_BOX = function (r, tier, pair) {
       if (pair) { items.push(['Servo Feetech STS3215 7,4 V, převod 1/191', '2×', 'Hardware']); items.push(['Servo Feetech STS3215 7,4 V, převod 1/147', '3×', 'Hardware']); }
       items.push(['Řídicí deska serv', pair ? '2×' : '1×', 'Hardware'], ['Zdroj 5 V', pair ? '2×' : '1×', 'Hardware'], ['Kabel USB-C', '2×', 'Hardware'], ['Svěrky ke stolu', pair ? '4×' : '2×', 'Hardware']);
     } else { (r.bom || []).forEach(function (b) { if (r.setups && !pair && /leader/i.test(b[0]) && !/follower/i.test(b[0])) return; items.push([b[0], b[1], 'Hardware']); }); }
-    items.push(['Spojovací materiál, roztříděný po krocích', '1 sada', 'Hardware']);
+    items.push(['Spojovací materiál podle návodu projektu', '—', 'Hardware']);
   }
-  if (tier === 'tested') items.push(['Nastavení elektroniky a funkční test', '—', 'Servis']);
-  items.push(['Tištěný návod a bezpečnostní informace', '1×', 'Návod']);
   return items;
 };
-window.PR_BOX_NOTE = function (r) { return r.id === 'so101' ? 'Počty dle kusovníku projektu SO-ARM100 (follower 7,4 V, zdroj 5 V). Follower s 12V servy: 6× C018 a zdroj 12 V / 5 A.' : 'Položky dle kusovníku projektu; přesné počty potvrdíme před expedicí.'; };
+window.PR_BOX_NOTE = function (r) { return r.id === 'so101' ? 'Počty dle kusovníku projektu SO-ARM100 (follower 7,4 V, zdroj 5 V). Follower s 12V servy: 6× C018 a zdroj 12 V / 5 A.' : 'Položky dle kusovníku projektu; přesné počty a varianty ověřte v jeho dokumentaci.'; };
 // FAQ of a kit page (app.js renders it, tools/build.mjs pre-renders it and adds it as FAQPage structured data).
 window.PR_FAQ = function (r) {
   return [
-    ['Zvládnu sestavení bez zkušeností?', 'Náročnost této sady: ' + r.level + '. Díly jsou roztříděné po krocích a návod vede krok za krokem. Pokud si nejste jistí, zvolte Sadu s oživením — elektroniku nastavíme za vás.'],
-    ['Jak funguje předobjednávka?', 'Předobjednávka je nezávazná. Ozveme se e-mailem s cenou a termínem; platíte až po potvrzení objednávky.'],
-    ['Je to originální produkt autorů projektu?', 'Ne. Sadu vyrábíme podle otevřené dokumentace projektu ' + r.name + ' (' + r.author + ', licence ' + r.hw + '). Autoři s námi nejsou spojeni a produkt neschválili.'],
+    ['Zvládnu sestavení bez zkušeností?', 'Náročnost tohoto projektu: ' + r.level + '. Návod projektu vede krok za krokem; odkaz najdete v sekci Licence a bezpečnost.'],
+    ['Můžu si robota koupit u vás?', 'Ne, nic neprodáváme. Díly koupíte přímo u dodavatelů podle kusovníku projektu (sekce Co budete potřebovat). Hotovou sadu možná nabídneme později; chcete-li o ní vědět, nechte e-mail ve formuláři nahoře.'],
+    ['Jste spojeni s autory projektu?', 'Ne. Vycházíme z otevřené dokumentace projektu ' + r.name + ' (' + r.author + ', licence ' + r.hw + '). Autoři s námi nejsou spojeni a tuto stránku neschválili.'],
     ['Jaký software budu potřebovat?', r.cat === 'combat' ? 'Žádný. Robot se ovládá RC vysílačem FlySky; přijímač Malenki Nano s ním jen spárujete, programovat nic nemusíte. Návod projektu najdete v sekci Licence a bezpečnost.' : r.software + '. Software je open-source a zdarma; odkaz na návod projektu najdete v sekci Licence a bezpečnost.'],
-    ['Je sada vhodná pro děti?', 'Není to hračka. Obsahuje malé díly a elektroniku a je určena osobám od 14 let; mladší pouze pod dohledem dospělého, například ve škole nebo kroužku.'],
-    ['Objednáváme pro školu nebo kroužek. Jde to na fakturu?', 'Ano. Do formuláře napište počet sad a IČO, cenu za více kusů a fakturu na školu pošleme spolu s potvrzením.']
+    ['Je stavba vhodná pro děti?', 'Není to hračka. Robot obsahuje malé díly a elektroniku; stavba je určena osobám od 14 let, mladším pouze pod dohledem dospělého, například ve škole nebo kroužku.'],
+    ['Jsme škola nebo kroužek. Co nám nabízíte?', 'Nic neprodáváme ani nefakturujeme. Zdarma je hodina se simulací SO-101 a pracovní list na stránce Pro školy; díly koupíte u dodavatelů podle kusovníku projektu.']
   ];
 };
 window.PR_SPECS = function (r) {

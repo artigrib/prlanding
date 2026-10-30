@@ -225,8 +225,15 @@ await check('kit svrn links the buying plan', '/sada/svrn/', async p => {
 await check('kit so101 + home link the buying plan, waitlist stays', '/sada/so101/', async p => {
   if ((await p.locator('#plan-cta').getAttribute('href')) !== '../../plan/so101/') throw new Error('kit plan link');
   if (!(await p.locator('#predobjednavka form, #predobjednavka').count())) throw new Error('waitlist gone');
+  // referral model: no configurator or tiers, "what you'll need" links the plan, the form is interest in a future kit
+  if (await p.locator('#tiers').count() || await p.locator('#colors').isVisible()) throw new Error('kit configurator still offered');
+  // CTA hierarchy: the buying plan is the primary button, the kit waitlist only a text link; parts list comes before the form
+  if (!/btn-act/.test(await p.locator('#plan-cta').getAttribute('class')) || /btn/.test(await p.locator('#top-cta').getAttribute('class'))) throw new Error('CTA hierarchy');
+  if (!(await p.evaluate(() => document.querySelector('#obsah').compareDocumentPosition(document.querySelector('#predobjednavka')) & 4))) throw new Error('what-you-need must come before the kit form');
+  if ((await p.locator('#box-plan').getAttribute('href')) !== '../../plan/so101/') throw new Error('what-you-need → plan link');
+  if (!/Co budete potřebovat/.test(await p.locator('#obsah summary').innerText()) || !/Dejte mi vědět/.test(await p.locator('#po-btn').innerText())) throw new Error('kit page copy');
   const home = await (await p.request.get(BASE + '/')).text();
-  if (!/href="plan\/so101\/" data-cta="plan">Plán nákupu dílů</.test(home) || !/href="sada\/so101\/">Sada SO-101</.test(home)) throw new Error('home step 03 links');
+  if (!/href="plan\/so101\/" data-cta="plan">Plán nákupu dílů</.test(home) || !/href="sada\/so101\/">Stránka SO-101</.test(home)) throw new Error('home step 03 links');
 });
 await check('legacy sada.html redirects', '/sada.html?r=svrn', async p => {
   await p.waitForURL(/\/sada\/svrn\/$/);
