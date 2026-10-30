@@ -334,14 +334,17 @@ window.PR_ARENA_LICENSES = {
   klepeto: { hw: 'own', status: 'verified', checked: '2026-10-30', published: 'CC-BY-4.0', sources: ['tools/robots-cad/klepeto.py'] }
 };
 
-// Showcases: open projects we present but do not sell (no kit page, no order form). Draft: not rendered
-// anywhere yet; the simulation (sim/origin/) is noindex and unlinked. Every number names its upstream source.
+// Showcases: open projects we present but do not sell (no kit page, no order form). The catalogue shows them
+// after the kits with a card that links to the simulation (sim/<r.sim>/). Every number names its upstream source.
 window.PR_SHOWCASE = [
-  { id: 'origin', showcase: true, buy: false, sim: 'origin', name: 'ROBOTO ORIGIN', type: 'Humanoid v plné velikosti', cat: 'legged', level: 'Pokročilý',
-    author: 'RoboParty (Shanghai RoboParty Technology Co., Ltd.)',
+  { id: 'origin', showcase: true, buy: false, sim: 'origin', name: 'ROBOTO ORIGIN', type: 'Humanoidní robot', cat: 'legged', level: 'Pokročilý',
+    author: 'RoboParty',   // legal name as in the upstream README: Shanghai RoboParty Technology Co., Ltd. (city of the team not stated as a fact here)
+    alt: 'Humanoid ROBOTO ORIGIN v simulaci: černá hliníková kostra se 23 klouby na podlaze s mřížkou',
+    card: [['Licence', 'CERN-OHL-W-2.0 · GPL-3.0'], ['Klouby', '23']],
+    notAffiliated: 'Nejsme s RoboParty spojeni, díly neprodáváme.',
     badge: 'Ukázka · otevřený hardware CERN-OHL-W-2.0 · software GPL-3.0',
     short: 'Otevřený humanoid s 23 klouby z frézovaného hliníku: konstrukce, elektronika, trénink chůze i nasazení zveřejněné jako open source.',
-    lead: 'Prototyp humanoida, který šanghajská RoboParty navrhla za čtyři měsíce a zveřejnila celý: CAD, desky plošných spojů, kusovník, model pro simulaci, trénink v Isaac Lab a nasazení v ROS 2 včetně naučených politik. Podle autorů jde sestavit z dílů z Taobao a zakázkové výroby. Ukazujeme ho jako inspiraci – díly ani sady k němu neprodáváme a s autory nejsme spojeni.',
+    lead: 'Prototyp humanoida, který podle autorů vznikl za čtyři měsíce. RoboParty zveřejnila CAD, desky plošných spojů, kusovník, model pro simulaci, trénink v Isaac Lab a nasazení v ROS 2 včetně naučených politik. Podle autorů jde sestavit z dílů z Taobao a zakázkové výroby. Ukazujeme ho jako inspiraci – díly ani sady k němu neprodáváme a s autory nejsme spojeni.',
     note: 'Konstrukce je frézovaný hliník; tisknou se jen kalibrační přípravky, takže „tiskové“ sady tu nedávají smysl.',
     repo: 'https://github.com/Roboparty/roboto_origin', docs: 'https://roboparty.com/roboto_origin/doc',
     upstream: { commit: 'c71fd9287d28104dca111d7c25b908fa3f45f8e4', date: '2026-08-18', checked: '2026-10-30' },
@@ -353,8 +356,6 @@ window.PR_SHOWCASE = [
       ['Řídicí počítač', 'RDK X5 8 GB', 'assets/BOM_EN.md; rpo_hardware 散件清单 V1.1.3'],
       ['Sběrnice', 'CAN, 4 linky (6 + 7 + 5 + 5 motorů)', 'modules/roboparty_deploy/src/inference/robots/rpo/robot.yaml'],
       ['Konstrukce', 'CNC hliník 6061/7075, černý elox; ocelová táhla', 'modules/rpo_hardware/V2.0/…/A2_CNCBOM.xlsx'],
-      ['Hmotnost modelu', '≈ 33,8 kg (součet hmot v MJCF, bez krytů)', 'modules/rpo_description/mjcf/rpo.xml'],
-      ['Výška modelu', '≈ 1,06 m (MJCF, natažené nohy, bez krytů)', 'modules/rpo_description (spočítáno z meshů)'],
       ['Chůze', 'RL politika (ONNX), 50 Hz, příkaz vpřed −0,4 až 0,6 m/s', 'modules/roboparty_deploy/…/configs/default.yaml'],
       ['Software', 'ROS 2 Humble, Isaac Lab 2.1, MuJoCo sim2sim', 'README.md'],
       ['Díly dle autora', '49 713 CNY (kusovník v1.0.1, 5. 1. 2026)', 'assets/BOM_EN.md']

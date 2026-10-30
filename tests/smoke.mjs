@@ -454,16 +454,24 @@ for (const vp of [{ width: 360, height: 780 }, { width: 1440, height: 900 }]) {
   });
 }
 
-// ROBOTO ORIGIN showcase sim (draft): loads, noindex, not in the sitemap, not linked, axe clean, no horizontal scroll
+// ROBOTO ORIGIN showcase sim (published): loads with the policy, indexable, in the sitemap, linked from the catalogue
+// card and the news list, honest notes, axe clean, no horizontal scroll
 for (const vp of [{ width: 360, height: 780 }, { width: 1440, height: 900 }]) {
-  await check(`origin sim draft ${vp.width}px`, '/sim/origin/?test=1', async p => {
+  await check(`origin sim ${vp.width}px`, '/sim/origin/?test=1', async p => {
     await p.setViewportSize(vp);
     await p.waitForFunction(() => window.__origin && (window.__origin.ready || window.__origin.error), null, { timeout: 90000 });
     if (await p.evaluate(() => window.__origin.error)) throw new Error('sim error');
     if (!(await p.evaluate(() => window.__origin.policy))) throw new Error('walking policy did not load');
-    if ((await p.locator('meta[name="robots"]').getAttribute('content')) !== 'noindex,nofollow') throw new Error('not noindex');
+    if ((await p.locator('meta[name="robots"]').getAttribute('content')) !== 'index,follow') throw new Error('not indexable');
+    if (!/origin_poster\.jpg$/.test(await p.locator('meta[property="og:image"]').getAttribute('content'))) throw new Error('og:image');
     if ((await p.locator('#joints input[type=range]').count()) !== 23) throw new Error('joint sliders');
-    if (!/neprodáváme/.test(await p.locator('.panel').innerText())) throw new Error('showcase note missing');
+    const panel = (await p.locator('.panel').innerText()).replace(/\s+/g, ' ');
+    for (const t of ['neprodáváme', 'S RoboParty nejsme nijak spojeni', 'Fyzika je přibližná', 'natrénovala a zveřejnila RoboParty', 'grafickou kartou'])
+      if (!panel.includes(t)) throw new Error('honest note missing: ' + t);
+    // simplified mode is offered on slow devices; the toggle itself must work
+    if (await p.evaluate(() => window.__origin.slow()) && !(await p.locator('#simple').isVisible())) throw new Error('slow device but no simplified-mode toggle');
+    if (!(await p.evaluate(() => window.__origin.simple(true)))) throw new Error('simplified mode');
+    await p.evaluate(() => window.__origin.simple(false));
     await p.addScriptTag({ content: AXE });
     const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
     const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
@@ -471,9 +479,11 @@ for (const vp of [{ width: 360, height: 780 }, { width: 1440, height: 900 }]) {
     if ((await p.evaluate(() => document.documentElement.scrollWidth)) > vp.width) throw new Error('horizontal scroll');
     if (vp.width > 400) {
       const sm = await (await p.request.get(BASE + '/sitemap.xml')).text();
-      if (/sim\/origin/.test(sm)) throw new Error('origin sim in the sitemap');
-      for (const path of ['/', '/en/', '/navody/', '/sada/so101/', '/sim/so101/', '/plan/so101/'])
-        if (/sim\/origin/.test(await (await p.request.get(BASE + path)).text())) throw new Error('origin sim linked from ' + path);
+      if (!/sim\/origin\//.test(sm) || !/en\/sim\/origin\//.test(sm)) throw new Error('origin sim not in the sitemap');
+      const home = await (await p.request.get(BASE + '/')).text();
+      if (!/<a class="card card-show" href="sim\/origin\/"[\s\S]*?Nejsme s RoboParty spojeni[\s\S]*?Vyzkoušet v simulaci/.test(home)) throw new Error('catalogue showcase card');
+      if (!/<li><time datetime="2026-10-30">[^<]*<\/time><span><b>Humanoid ROBOTO ORIGIN v prohlížeči<\/b>[\s\S]*?<a href="sim\/origin\/">/.test(home)) throw new Error('news item');
+      if (/sada\/origin|predobjednavka[^"]*origin/.test(home)) throw new Error('buy path for the showcase');
     }
   });
 }

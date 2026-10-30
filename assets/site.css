@@ -603,6 +603,9 @@ ol.steps,ul.soon,ol.news,ul.bots,ul.ticks{list-style:none;margin:0;padding:0}
 /* one status tag everywhere (catalogue cards, combat band, "Připravujeme"): solid = can be ordered, dashed = coming */
 .tag,.bot-st,.soon-t{font-family:var(--mono);font-size:12px;line-height:1.35;padding:3px 8px;background:#fff;color:var(--ink);border:1px solid var(--ink)}
 .tag-p,.bot-st-p,.soon-t{border-style:dashed}
+/* showcase cards (PR_SHOWCASE): open projects we present, not kits */
+.tag-s{background:var(--ink);color:#fff}
+.card-show .desc .mono-s{display:block;margin-top:6px}
 .band .bot-st{color:var(--ink)}
 /* combat band: the orange CTA keeps the site-wide black text (white on orange fails AA) */
 .band .btn-act,.band .btn-act:hover,.band .btn-act:active{color:var(--ink)}

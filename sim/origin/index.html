@@ -5,9 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ROBOTO ORIGIN v simulaci – otevřený humanoid v prohlížeči | printedrobotics.cz</title>
 <meta name="description" content="Otevřený humanoid ROBOTO ORIGIN (RoboParty) ve fyzikální simulaci MuJoCo: chůze řízená naučenou politikou, klouby na posuvnících, strčení myší.">
-<!-- draft: noindex, not in the sitemap and not linked from any page until the owner publishes it -->
-<meta name="robots" content="noindex,nofollow">
+<meta name="robots" content="index,follow">
 <link rel="canonical" href="https://printedrobotics.cz/sim/origin/">
+<link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sim/origin/">
+<link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/sim/origin/">
+<link rel="alternate" hreflang="x-default" href="https://printedrobotics.cz/sim/origin/">
+<meta property="og:title" content="ROBOTO ORIGIN v simulaci">
+<meta property="og:description" content="Otevřený humanoid RoboParty chodí v prohlížeči: naučená politika chůze, 23 kloubů, strčení myší.">
+<meta property="og:url" content="https://printedrobotics.cz/sim/origin/">
+<meta property="og:image" content="https://printedrobotics.cz/img/origin_poster.jpg">
+<meta property="og:locale" content="cs_CZ">
 <meta name="theme-color" content="#FFFFFF">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E8461E'/%3E%3C/svg%3E">
 <link rel="preload" href="../so101/vendor/mujoco/mujoco.wasm" as="fetch" type="application/wasm" crossorigin>
@@ -43,8 +50,10 @@
     <section>
       <p class="mono">Ukázka · otevřený hardware</p>
       <h1>ROBOTO ORIGIN</h1>
-      <p class="ink2">Humanoid v plné velikosti od šanghajské RoboParty: 23 kloubů, frézovaný hliník, kompletní CAD, elektronika, trénink i nasazení zveřejněné jako open source. V simulaci chodí politika, kterou autoři natrénovali a zveřejnili.</p>
-      <p class="note mono-s">Ukázka, ne produkt: díly ani sady k tomuto robotovi neprodáváme.</p>
+      <p class="ink2">Humanoidní robot od RoboParty: 23 kloubů a konstrukce z frézovaného hliníku. Podle autorů je jako open source zveřejněný celý vývoj: konstrukce, elektronika, trénink i nasazení. V simulaci chodí politika, kterou autoři natrénovali a zveřejnili.</p>
+      <p class="note mono-s">Ukázka, ne produkt: díly ani sady k tomuto robotovi neprodáváme. S RoboParty nejsme nijak spojeni.</p>
+      <p class="mono-s muted honest">Fyzika je přibližná a skutečný robot se chová jinak. Chůzi řídí politika, kterou natrénovala a zveřejnila RoboParty; my ji jen spouštíme v prohlížeči. Doporučujeme počítač s grafickou kartou.</p>
+      <div class="perf" id="perf" hidden><p class="mono-s">Výkon: grafika tohoto zařízení je slabší, stíny jsme vypnuli.</p><label class="chk" id="simple-wrap" hidden><input type="checkbox" id="simple"> Zjednodušený režim (nižší rozlišení, bez mřížky)</label></div>
     </section>
     <section aria-labelledby="mode-h">
       <h2 class="mono sec-h" id="mode-h">Režim</h2>

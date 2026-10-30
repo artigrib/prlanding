@@ -141,6 +141,7 @@ function enLinks(html, page, base = page) {
     if (k) p = PATH.kit('en', k[1]);
     else if (p === '' || p === 'index.html') p = 'en/';
     else if (p === 'kviz.html') p = 'en/quiz/';
+    else if (p === 'sim/origin/') p = 'en/sim/origin/';   // the origin sim has its own English shell
     else if (p.startsWith('sim/')) { const sp = new URLSearchParams(q); sp.set('lang', 'en'); q = '?' + sp.toString(); }
     else if (CONTENT_EN[p]) p = CONTENT_EN[p];
     else if (base === page) return m;
@@ -411,8 +412,13 @@ const cards = R.map((r, i) => `<a class="card" href="sada/${r.id}/"><div class="
   `<span class="card-meta"><span class="mono" style="color:var(--ink)">${no(i)}</span><span class="mono">${esc(r.preparing ? 'Připravujeme' : r.level)}</span></span>` +
   `<span><h3>${esc(r.name)}</h3><span class="type">${esc(r.type)}</span></span><span class="spec1">${r.card.map(c => esc(c[1])).join(' · ')}</span>` +
   `<p class="desc">${esc(r.short)}</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>`).join('\n');
+// showcases (PR_SHOWCASE): open projects we present but do not sell; the card links to the simulation, no kit page
+const showCard = (r, L) => `<a class="card card-show" href="sim/${r.sim}/" data-showcase="${r.id}"><div class="tile"><span class="tag tag-s">${L === 'en' ? 'Showcase' : 'Ukázka'}</span><img src="img/${r.id}_poster.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
+  `<span class="card-meta"><span class="mono" style="color:var(--ink)">OH</span><span class="mono">${L === 'en' ? 'Open hardware' : 'Otevřený hardware'}</span></span>` +
+  `<span><h3>${esc(r.name)}</h3><span class="type">${esc(r.type)}</span></span><span class="spec1">${r.card.map(c => esc(c[1])).join(' · ')}</span>` +
+  `<p class="desc">${esc(r.short)} <span class="mono-s">${esc(r.notAffiliated)}</span></p><span class="go">${L === 'en' ? 'Try it in the simulator' : 'Vyzkoušet v simulaci'} <span aria-hidden="true">→</span></span></a>`;
 let home = read('index.html');
-home = home.replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->|<div class="cards" id="cards"><\/div>/, `<div class="cards" id="cards">\n${cards}\n</div><!--/cards-->`)
+home = home.replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->|<div class="cards" id="cards"><\/div>/, `<div class="cards" id="cards">\n${cards}\n${W.cs.PR_SHOWCASE.map(r => showCard(r, 'cs')).join('\n')}\n</div><!--/cards-->`)
   .replace(/<noscript><p>Pro katalog zapněte JavaScript[\s\S]*?<\/noscript>\n?/, '')
   .replace(/id="robot-count">\d+</, `id="robot-count">${R.length}<`).replace(/id="robot-count2">\d+</, `id="robot-count2">${R.length}<`);
 if (!home.includes('<!--/cards-->')) throw new Error('index.html: cards placeholder not found');
@@ -431,7 +437,7 @@ if (home.includes('<!--/cards-->')) {
   const meta = (re, v) => en => en.replace(re, v);
   let en = home
     .replace('<html lang="cs">', '<html lang="en">')
-    .replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->/, `<div class="cards" id="cards">\n${enCards}\n</div><!--/cards-->`)
+    .replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->/, `<div class="cards" id="cards">\n${enCards}\n${W.en.PR_SHOWCASE.map(r => showCard(r, 'en')).join('\n')}\n</div><!--/cards-->`)
     .replace(/<title>[^<]*<\/title>/, '<title>printedrobotics.cz — try a robot in your browser, then build it</title>')
     .replace(/<meta name="description" content="[^"]*">/, '<meta name="description" content="Try the SO-101 robot arm in a physics simulation right in your browser, and combat robots in the arena. Then we print the parts, add the hardware from the bill of materials and ship it all in one box.">')
     .replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${SITE}en/">`)
@@ -587,7 +593,7 @@ ${en ? `<script src="${root}assets/data.en.js"></script>\n<script src="${root}as
 for (const c of CONTENT) { contentPage(c, 'cs'); contentPage(c, 'en'); }
 
 // sitemap with hreflang pairs; sim/so101 is an indexable landing page, sim/arena is noindex
-const pairs = [['', fs.existsSync('en/index.html') ? 'en/' : null], ['kviz.html', 'en/quiz/'], ...R.map(r => [PATH.kit('cs', r.id), PATH.kit('en', r.id)]), ...CONTENT.filter(c => !c.draft).map(c => [c.cs, c.en]), ['sim/so101/', read('sim/so101/index.html').includes('hreflang="en"') ? 'sim/so101/?lang=en' : null]];
+const pairs = [['', fs.existsSync('en/index.html') ? 'en/' : null], ['kviz.html', 'en/quiz/'], ...R.map(r => [PATH.kit('cs', r.id), PATH.kit('en', r.id)]), ...CONTENT.filter(c => !c.draft).map(c => [c.cs, c.en]), ['sim/so101/', read('sim/so101/index.html').includes('hreflang="en"') ? 'sim/so101/?lang=en' : null], ['sim/origin/', 'en/sim/origin/']];
 const loc = (u, alt) => `  <url><loc>${SITE}${u}</loc>${alt ? `<xhtml:link rel="alternate" hreflang="cs" href="${SITE}${alt[0]}"/><xhtml:link rel="alternate" hreflang="en" href="${SITE}${alt[1]}"/>` : ''}</url>`;
 const urls = [];
 for (const [cs, en] of pairs) { urls.push(loc(cs, en && [cs, en])); if (en) urls.push(loc(en, [cs, en])); }

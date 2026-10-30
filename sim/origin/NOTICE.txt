@@ -1,7 +1,7 @@
 ROBOTO ORIGIN simulation — printedrobotics.cz
 ============================================
 
-Draft showcase page (sim/origin/, en/sim/origin/): noindex, not in the sitemap, not linked yet.
+Showcase page (sim/origin/, en/sim/origin/), published 2026-10-30; linked from the catalogue card and the news list.
 
 Our code and third-party components are kept apart:
 
