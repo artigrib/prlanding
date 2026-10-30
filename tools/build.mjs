@@ -10,7 +10,7 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 import { checkComponents } from './check-components.mjs';
-import { buildTime } from '../assets/plan/plan-core.mjs';
+import { buildTime, screwTable } from '../assets/plan/plan-core.mjs';
 
 // component data (purchase plans): fail the build on a source without URL/date/status
 {
@@ -36,7 +36,29 @@ function btTokens(L) {
   return tok;
 }
 const BT = { cs: btTokens('cs'), en: btTokens('en') };
-const expandBt = (s, L, where) => s.replace(/\{bt:([a-z0-9_]+)\}/g, (m, k) => { if (!(k in BT[L])) throw new Error(`${where}: unknown build-time token ${m}`); return BT[L][k]; });
+// screws per arm: one table (data/components/so101.json screws, from the official assembly steps) for the plan page,
+// the MCP tool, the assembly guide and the checklist. {sc:table} = the guide's table, {sc:f_m2} … = totals.
+function scTokens(L) {
+  const en = L === 'en', t = screwTable(SO101, ['follower_74v', 'leader']);
+  const [f, l] = t.arms, pick = (o, k) => (en ? o[k] : o[k + '_cs'] || o[k]);
+  const ids = [...new Set([...f.rows, ...l.rows].map(r => r.id))];
+  const cell = (a, id) => { const r = a.rows.find(x => x.id === id); return r ? `<td>${r.m2}</td><td>${r.m3}</td>` : '<td>—</td><td>—</td>'; };
+  const name = id => pick([...f.rows, ...l.rows].find(r => r.id === id), 'name');
+  const det = id => [...new Set([f, l].map(a => a.rows.find(r => r.id === id)).filter(Boolean).map(r => pick(r, 'detail')))];
+  const H = en ? ['Step', 'Follower M2×6', 'Follower M3×6', 'Leader M2×6', 'Leader M3×6', 'What the screws hold (official steps)', 'Total per arm', 'Screws per arm from the official assembly steps']
+    : ['Krok', 'Follower M2×6', 'Follower M3×6', 'Leader M2×6', 'Leader M3×6', 'Co šrouby drží (oficiální postup)', 'Celkem na ruku', 'Šrouby na ruku podle oficiálního postupu'];
+  const table = `<div class="doc-t-wrap" tabindex="0" role="region" aria-label="${H[7]}"><table class="doc-t" data-testid="screw-table">
+<thead><tr><th scope="col">${H[0]}</th><th scope="col">${H[1]}</th><th scope="col">${H[2]}</th><th scope="col">${H[3]}</th><th scope="col">${H[4]}</th><th scope="col">${H[5]}</th></tr></thead>
+<tbody>
+${ids.map(id => `<tr><th scope="row">${esc(name(id))}</th>${cell(f, id)}${cell(l, id)}<td>${det(id).map(esc).join('<br>')}</td></tr>`).join('\n')}
+<tr><th scope="row">${H[6]}</th><td><b>${f.m2}</b></td><td><b>${f.m3}</b></td><td><b>${l.m2}</b></td><td><b>${l.m3}</b></td><td></td></tr>
+</tbody></table></div>`;
+  return { table, f_m2: f.m2, f_m3: f.m3, l_m2: l.m2, l_m3: l.m3, pair_m2: t.total.m2, pair_m3: t.total.m3, counting: esc(pick(t, 'counting')), included: esc(pick(t, 'included_note')) };
+}
+let SC_ = null;
+const SC = L => (SC_ ||= { cs: scTokens('cs'), en: scTokens('en') })[L];   // lazy: esc() is defined further down
+const expandBt = (s, L, where) => s.replace(/\{bt:([a-z0-9_]+)\}/g, (m, k) => { if (!(k in BT[L])) throw new Error(`${where}: unknown build-time token ${m}`); return BT[L][k]; })
+  .replace(/\{sc:([a-z0-9_]+)\}/g, (m, k) => { if (!(k in SC(L))) throw new Error(`${where}: unknown screw token ${m}`); return SC(L)[k]; });
 
 const SITE = 'https://printedrobotics.cz/';
 const read = f => fs.readFileSync(f, 'utf8');

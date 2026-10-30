@@ -93,10 +93,18 @@ export function checkData(data, schema) {
   for (const [cid, cfg] of Object.entries(data.configs)) {
     for (const a of cfg.arms || []) if (!(data.variants.arms || {})[a]) errors.push(`config ${cid}: unknown arm "${a}"`);
     for (const l of cfg.lines) lineErrors(`config ${cid}`, l);
-    if (cfg.alternative) {
-      const c = comps[cfg.alternative.component];
-      if (!c || !c.sources.find((x) => x.id === cfg.alternative.source)) errors.push(`config ${cid}: bad alternative`);
+    for (const alt of [].concat(cfg.alternative || [], cfg.alternatives || [])) {
+      const c = comps[alt.component];
+      if (!c || !c.sources.find((x) => x.id === alt.source)) errors.push(`config ${cid}: bad alternative ${alt.component}`);
+      if (alt.still_needed && (!alt.still_needed_cs || alt.still_needed.length !== alt.still_needed_cs.length)) errors.push(`config ${cid}: alternative ${alt.component} needs still_needed_cs of the same length`);
     }
+  }
+  // screw table: every arm points to a screw list, rows have counts
+  if (data.screws) {
+    for (const [a, arm] of Object.entries(data.variants.arms || {})) if (!data.screws.arms[arm.screws]) errors.push(`variants.arms.${a}: unknown screw list "${arm.screws}"`);
+    for (const [k, rows] of Object.entries(data.screws.arms)) for (const r of rows)
+      if (!Number.isInteger(r.m2) || !Number.isInteger(r.m3) || !r.detail || !r.detail_cs) errors.push(`screws.${k}.${r.id}: needs integer m2/m3 and detail/detail_cs`);
+    if (!/^https:\/\//.test(data.screws.source.url) || data.screws.checked > gen) errors.push('screws: source needs an https URL and a checked date not after meta.generated');
   }
   for (const [k, opt] of Object.entries(data.options || {})) {
     if (!opt.values[opt.default]) errors.push(`option ${k}: default "${opt.default}" is not one of its values`);
@@ -124,7 +132,7 @@ export function checkData(data, schema) {
 
 /* ---------------- plan ---------------- */
 
-export const CONFIGS = ['follower_12v', 'pair'];   // SO-101; every data file lists its own in data.configs
+export const CONFIGS = ['pair_74v', 'pair', 'follower_74v', 'follower_12v'];   // SO-101 (first = default); every data file lists its own in data.configs
 export const PRINT = ['self', 'service'];
 
 export function toEur(data, price, currency) {
@@ -143,9 +151,10 @@ const fill = (t, vars) => String(t).replace(/\{(\w+)\}/g, (m, k) => (k in vars ?
 /**
  * Build a purchase plan.
  * @param {object} data  data/components/<robot>.json
- * @param {{robot?: string, config?: string, print?: 'self'|'service', [option: string]: string}} opts
- *   robot/config = a key of data.configs (SO-101: follower_12v | pair; SVRN: robot_only | starter);
- *   any key of data.options (SVRN: module = flipper | wedge | grabber) picks that option's value.
+ * @param {{robot?: string, config?: string, print?: 'self'|'service', sources?: Object<string,string>, [option: string]: string}} opts
+ *   robot/config = a key of data.configs (SO-101: pair_74v | pair | follower_74v | follower_12v; SVRN: robot_only | starter);
+ *   any key of data.options (SVRN: module = flipper | wedge | grabber) picks that option's value;
+ *   sources = { component id: source id } swaps a line to another recommended, priced source (e.g. when one is on backorder).
  */
 export function buildPlan(data, opts = {}) {
   const configs = Object.keys(data.configs);
@@ -169,9 +178,12 @@ export function buildPlan(data, opts = {}) {
   }
   const printGrams = cfg.print_grams + extraGrams;
 
+  const swaps = opts.sources || {};
   for (const l of [...cfg.lines, ...optLines]) {
     const c = comps[l.component];
-    const s = c.sources.find((x) => x.id === l.source);
+    const want = swaps[l.component];
+    const swap = want && want !== l.source ? c.sources.find((x) => x.id === want && x.recommend && x.price != null) : null;
+    const s = swap || c.sources.find((x) => x.id === l.source);
     const sup = data.suppliers[s.supplier];
     const packs = Math.ceil(l.qty / (s.per || 1));
     const unit = toEur(data, s.price, s.currency);
@@ -181,7 +193,8 @@ export function buildPlan(data, opts = {}) {
     if (!newest || s.checked > newest) newest = s.checked;
     const alternatives = c.sources.filter((x) => x.id !== s.id).map((x) => ({
       id: x.id, supplier: x.supplier, label: x.label, url: x.url, price: x.price, currency: x.currency, per: x.per,
-      checked: x.checked, status: x.status, recommend: x.recommend, flag: x.flag || null,
+      checked: x.checked, status: x.status, recommend: x.recommend, flag: x.flag || null, stock: x.stock || null,
+      selectable: !!(x.recommend && x.price != null && x.flag !== 'out_of_stock'),
       flag_reason: x.flag_reason || null, flag_reason_cs: x.flag_reason_cs || null, reviews: pickReviews(x.reviews)
     }));
     const line = {
@@ -190,6 +203,7 @@ export function buildPlan(data, opts = {}) {
       checked: s.checked, status: s.status, stock: s.stock, eta_days: eta,
       flag: s.flag || null, flag_reason: s.flag_reason || null, flag_reason_cs: s.flag_reason_cs || null,
       note: s.note_cs ? s.note : null, note_cs: s.note_cs || null, reviews: pickReviews(s.reviews),
+      default_source: l.source, swapped: !!swap,
       alternatives
     };
     for (const g of (s.reviews && s.reviews.signals) || []) if (g.type === 'variant_mismatch' || g.type === 'missing_parts')
@@ -262,12 +276,26 @@ export function buildPlan(data, opts = {}) {
 
   const build = buildTime(data, arms, print);
 
-  let alternative = null;
-  if (cfg.alternative) {
-    const c = comps[cfg.alternative.component], s = c.sources.find((x) => x.id === cfg.alternative.source);
-    alternative = { component: c.id, name: c.name, name_cs: c.name_cs, label: s.label, url: s.url, price: s.price, currency: s.currency,
-      price_eur: round2(toEur(data, s.price, s.currency)), checked: s.checked, status: s.status, note: cfg.alternative.note, note_cs: cfg.alternative.note_cs };
-  }
+  // ready-made alternatives (bundles, kits, printed parts): price, a landed estimate for non-EU imports, what is still needed
+  const alternatives = [].concat(cfg.alternative || [], cfg.alternatives || []).map((alt) => {
+    const c = comps[alt.component], s = c.sources.find((x) => x.id === alt.source), sup = data.suppliers[s.supplier];
+    const price_eur = round2(toEur(data, s.price, s.currency));
+    let landed = null;
+    if (alt.import) {
+      const im = alt.import, ship = sup.shipping_eur;
+      // low: price already final, no fees; high: import VAT on goods + duty + shipping, plus the carrier's clearance fee
+      const hi = (price_eur + ship[1]) * (1 + im.duty_rate[1]) * (1 + im.vat_rate) + im.clearance_eur[1];
+      landed = { eur: [Math.floor(price_eur + ship[0] + im.clearance_eur[0]), Math.ceil(hi)], status: im.status, note: im.note, note_cs: im.note_cs };
+    } else if (sup.vat === 'eu_oss') {
+      landed = { eur: [Math.floor(price_eur + sup.shipping_eur[0]), Math.ceil(price_eur * (1 + oss) + sup.shipping_eur[1])], status: 'estimate', note: null, note_cs: null };
+    }
+    return { component: c.id, name: c.name, name_cs: c.name_cs, label: s.label, url: s.url, price: s.price, currency: s.currency,
+      price_eur, checked: s.checked, status: s.status, stock: s.stock || null, supplier: s.supplier, note: alt.note, note_cs: alt.note_cs,
+      landed, still_needed: alt.still_needed || [], still_needed_cs: alt.still_needed_cs || [], contents_source: alt.contents_source || null };
+  });
+  const alternative = alternatives[0] || null;
+  const screws = cfg.arms && data.screws ? screwTable(data, cfg.arms) : null;
+  const noteVars = data.screws ? screwVars(data) : {};
 
   const roundEur = (r) => [Math.floor(r[0]), Math.ceil(r[1])];
   const roundCzk = (r) => [Math.floor((r[0] * fx) / 10) * 10, Math.ceil((r[1] * fx) / 10) * 10];
@@ -293,10 +321,34 @@ export function buildPlan(data, opts = {}) {
     tools_note: data.tools_note || null, tools_note_cs: data.tools_note_cs || null,
     build_time: build,
     arrivals: data.arrivals.filter((a) => (!a.only_config || a.only_config === robot) && (!a.only_option || Object.entries(a.only_option).every(([k, v]) => [].concat(v).includes(options[k])))),
-    notes: (data.notes || []).filter((n) => !n.only_option || Object.entries(n.only_option).every(([k, v]) => [].concat(v).includes(options[k]))),
+    notes: (data.notes || []).filter((n) => !n.only_option || Object.entries(n.only_option).every(([k, v]) => [].concat(v).includes(options[k])))
+      .map((n) => ({ ...n, text: fill(n.text, noteVars), text_cs: fill(n.text_cs, noteVars) })),
     safety: data.safety || [],
-    alternative
+    screws,
+    alternative, alternatives
   };
+}
+
+/**
+ * Screws per arm (data.screws, from the official assembly steps): rows per joint and totals, for the plan page,
+ * the MCP tool, the assembly guide and the checklist (tools/build.mjs expands {sc:…} tokens from this).
+ * @param {string[]} arms  arm ids from data.variants.arms (e.g. ['follower_74v', 'leader'])
+ */
+export function screwTable(data, arms) {
+  const S = data.screws;
+  const per = arms.map((a) => {
+    const kind = data.variants.arms[a].screws, rows = S.arms[kind];
+    return { arm: a, kind, rows: rows.map((r) => ({ ...r })), m2: rows.reduce((t, r) => t + r.m2, 0), m3: rows.reduce((t, r) => t + r.m3, 0) };
+  });
+  return {
+    sizes: S.sizes, status: S.status, checked: S.checked, source: S.source, counting: S.counting, counting_cs: S.counting_cs,
+    included: S.included, included_note: S.included_note, included_note_cs: S.included_note_cs,
+    arms: per, total: { m2: per.reduce((t, a) => t + a.m2, 0), m3: per.reduce((t, a) => t + a.m3, 0) }
+  };
+}
+function screwVars(data) {
+  const sum = (k, f) => data.screws.arms[k].reduce((t, r) => t + r[f], 0);
+  return { f_m2: sum('follower', 'm2'), f_m3: sum('follower', 'm3'), l_m2: sum('leader', 'm2'), l_m3: sum('leader', 'm3') };
 }
 
 /** Rule-based part checks (data.variants.checks), summarised for the page and the MCP tool. */
@@ -359,7 +411,8 @@ export function checkPartVariant(data, text, expect) {
   const V = data.variants;
   let allowed, voltage, ratios, label;
   const e = String(expect || '').trim();
-  const mJoint = /^(follower_12v|leader):([1-6])$/.exec(e);
+  const mJoint = /^([a-z0-9_]+):([1-6])$/.exec(e);
+  if (mJoint && !V.arms[mJoint[1]]) throw new RangeError(`unknown arm "${mJoint[1]}" (use ${Object.keys(V.arms).join(', ')})`);
   const code = e.toUpperCase();
   if (V.codes[code]) { allowed = [code]; voltage = V.codes[code].voltage_v; label = code; }
   else if (mJoint) {
@@ -395,8 +448,8 @@ export function checkPartVariant(data, text, expect) {
   else verdict = 'unknown';
 
   const ADVICE = {
-    match: ['The listing names the right variant. Still read the label on every servo when it arrives.', 'Inzerát uvádí správnou variantu. Po doručení stejně zkontrolujte štítek na každém servu.'],
-    likely: ['Voltage and gear ratio fit, but no variant code is named. Ask the seller or check the label on arrival.', 'Napětí a převod sedí, ale kód varianty chybí. Zeptejte se prodejce nebo zkontrolujte štítek po doručení.'],
+    match: ['The listing names the right variant. When the servos arrive, keep the parcel separate and label every servo straight away.', 'Inzerát uvádí správnou variantu. Po doručení držte balík zvlášť a každé servo hned popište.'],
+    likely: ['Voltage and gear ratio fit, but no variant code is named. Ask the seller for the code before ordering.', 'Napětí a převod sedí, ale kód varianty chybí. Před objednáním se zeptejte prodejce na kód.'],
     check_selection: ['The listing offers several variants. Make sure the option you select is the right one.', 'Inzerát nabízí více variant. Ověřte, že vybíráte tu správnou.'],
     mismatch: ['This listing does not match the variant you need. Do not order it for this joint.', 'Tento inzerát neodpovídá potřebné variantě. Pro tento kloub ho neobjednávejte.'],
     inconsistent: ['The listing contradicts itself (the code and the ratio or voltage disagree). We do not recommend it.', 'Inzerát si odporuje (kód nesedí s převodem nebo napětím). Nedoporučujeme.'],

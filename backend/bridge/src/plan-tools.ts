@@ -15,20 +15,20 @@ export const PLAN_TOOLS = ['get_build_plan', 'check_part_variant'] as const;
 
 export const PlanInputs = {
   get_build_plan: z.object({
-    robot: z.enum(['follower_12v', 'pair', 'svrn']).default('follower_12v').describe('SO-101: follower_12v = one 12 V follower arm, pair = 7.4 V leader + 12 V follower. svrn = Project SVRN 150 g combat robot'),
+    robot: z.enum(['pair_74v', 'pair', 'follower_74v', 'follower_12v', 'svrn']).default('pair_74v').describe('SO-101: pair_74v = 7.4 V leader + 7.4 V follower (standard, default), pair = 7.4 V leader + 12 V follower, follower_74v / follower_12v = one follower arm only (no leader: after calibration it can only replay recorded motion). svrn = Project SVRN 150 g combat robot'),
     print: z.enum(['self', 'service']).default('self').describe('self = user prints the parts; service = print service quote (estimate)'),
     config: z.enum(['robot_only', 'starter']).optional().describe('svrn only: robot_only (default) or starter = robot + FlySky transmitter + LiPo charger'),
     module: z.enum(['flipper', 'wedge', 'grabber']).optional().describe('svrn only: front module (default flipper); flipper and grabber add a servo')
   }).strict().refine((a) => a.robot === 'svrn' || (a.config === undefined && a.module === undefined), { message: 'config and module apply only to robot "svrn"' }),
   check_part_variant: z.object({
     listing_text: z.string().min(1).max(5000).describe('Listing title or description the user pasted'),
-    expected: z.string().regex(/^(C0(01|18|44|46|47)|follower_12v|leader|(follower_12v|leader):[1-6]|svrn:(esc|motor|servo|lipo))$/)
-      .describe('SO-101: a servo code (C018, C001, C044, C046, C047), an arm (follower_12v, leader) or an arm joint such as leader:1. SVRN: svrn:esc (Malenki HV), svrn:motor (N10), svrn:servo (8.4 V / 2S), svrn:lipo (2S JST-SYP)')
+    expected: z.string().regex(/^(C0(01|18|44|46|47)|follower_74v|follower_12v|leader|(follower_74v|follower_12v|leader):[1-6]|svrn:(esc|motor|servo|lipo))$/)
+      .describe('SO-101: a servo code (C018, C001, C044, C046, C047), an arm (follower_74v, follower_12v, leader) or an arm joint such as leader:1. SVRN: svrn:esc (Malenki HV), svrn:motor (N10), svrn:servo (8.4 V / 2S), svrn:lipo (2S JST-SYP)')
   }).strict()
 };
 
 const DESC = {
-  get_build_plan: 'Parts buying plan from printedrobotics.cz data for the SO-101 arm or the Project SVRN combat robot (robot "svrn", with config and module): lines grouped by supplier with quantity, price, source link, checked date, status and buyer-review signals, landed-cost range to CZ (VAT, EU OSS uplift, shipping estimate), ETA, required servo variants (SO-101) or part checks (SVRN), notes to verify, safety (SVRN: LiPo handling, charging, storage, shipping; not a toy, adult supervision), tools and a build-time estimate. Read-only. The user buys directly from each supplier: never place orders, fill carts or handle payments. Quote prices with their checked date and relay the safety items for SVRN.',
+  get_build_plan: 'Parts buying plan from printedrobotics.cz data for the SO-101 arm or the Project SVRN combat robot (robot "svrn", with config and module): lines grouped by supplier with quantity, price, source link, checked date, status and buyer-review signals, landed-cost range to CZ (VAT, EU OSS uplift, shipping estimate), ETA, required servo variants (SO-101) or part checks (SVRN), screws per arm (SO-101, from the official assembly steps; whether they come with the servos is unverified), ready-made kit alternatives with a landed estimate and what is still needed, notes to verify, safety (SVRN: LiPo handling, charging, storage, shipping; not a toy, adult supervision), tools and a build-time estimate. Read-only. The user buys directly from each supplier: never place orders, fill carts or handle payments. Quote prices with their checked date and relay the safety items for SVRN.',
   check_part_variant: 'Check a shop listing (title or text) against what a part needs. SO-101: the STS3215 servo variant of a joint (code, voltage, gear ratio). SVRN: svrn:esc (Malenki HV for 4x N10), svrn:motor (N10, one rpm), svrn:servo (rated for 8.4 V, the Malenki has no BEC), svrn:lipo (2S, JST-SYP). Returns match, likely, check_selection, mismatch, inconsistent (the listing contradicts itself) or unknown. Read-only; it only parses the given text and does not fetch pages.'
 };
 

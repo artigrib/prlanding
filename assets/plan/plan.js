@@ -20,11 +20,11 @@ const S = {
     qty: 'ks', ordered: 'Objednáno', open: 'Otevřít u dodavatele', alt: 'Další zdroje', notRec: 'nedoporučujeme',
     ship: 'Doprava', vat: { eu_oss: 'cena s DPH (DE 19 %), při OSS až +1,7 %', cz: 'cena s 21 % DPH', cz_nonvat: 'konečná cena (neplátce DPH)', cn_ioss: 'DPH přes IOSS, clo 3 € za položku', non_eu: 'dovoz mimo EU: DPH a clo 3 € za položku', per_vendor: 'DPH podle zvoleného dodavatele', none: '' },
     landed: 'Celkem s dopravou', subtotal: 'Zboží', status: { verified: 'ověřeno', carried: 'převzato', unverified: 'neověřeno', estimate: 'odhad' },
-    joint: 'Kloub', code: 'Kód', volt: 'Napětí', ratio: 'Převod', follower_12v: 'Follower 12 V', leader: 'Leader 7,4 V',
+    joint: 'Kloub', code: 'Kód', volt: 'Napětí', ratio: 'Převod', follower_12v: 'Follower 12 V', follower_74v: 'Follower 7,4 V', leader: 'Leader 7,4 V',
     jn: { shoulder_pan: 'základna', shoulder_lift: 'rameno', elbow_flex: 'loket', wrist_flex: 'zápěstí', wrist_roll: 'rotace zápěstí', gripper: 'chapadlo' },
     flagsH: 'Zdroje, které nedoporučujeme nebo kde je třeba dát pozor', allJoints: 'všechny klouby', jointN: (a, j, n) => `${a}, kloub ${j} (${n})`,
     verdict: { match: 'Sedí', likely: 'Pravděpodobně sedí', check_selection: 'Zkontrolujte vybranou variantu', mismatch: 'Nesedí', inconsistent: 'Nedoporučujeme: inzerát si odporuje', unknown: 'Nelze určit' },
-    found: 'V textu', none: 'nic', tools: 'Šrouby a páky serv jsou součástí balení serv.', time: (p, w) => `${p ? `Tisk ${p} h (tiskárna běží sama) a ` : ''}${w} h práce podle etap návodu. Je to odhad, ne slib.`, guide: 'Návod na sestavení', stage: 'Etapa', optStage: 'volitelné', guideFor: 'v návodu: etapa',
+    found: 'V textu', none: 'nic', tools: 'Šrouby a horny serv: viz tabulka šroubů.', time: (p, w) => `${p ? `Tisk ${p} h (tiskárna běží sama) a ` : ''}${w} h práce podle etap návodu. Je to odhad, ne slib.`, guide: 'Návod na sestavení', stage: 'Etapa', optStage: 'volitelné', guideFor: 'v návodu: etapa',
     printNote: 'Tisk', track: 'Číslo zásilky', trackHint: 'jen u vás v prohlížeči', optional: 'volitelné',
     altH: 'Alternativa pro pár', altNote: 'Cena bez dopravy a cla, převzato', service: 'Nabídku udělá', checked: 'ověřeno',
     req: 'nutné', opt: 'volitelné', backorder: 'Sklad', printed_by_you: 'Soubory STL', fx: 'Kurz',
@@ -32,7 +32,13 @@ const S = {
     rv: (d) => `Co píšou kupující (k ${d})`, rvNone: 'zatím žádné recenze', rvNull: 'recenze se nepodařilo přečíst', rvCount: (n) => `${n} ${n === 1 ? 'recenze' : n < 5 ? 'recenze' : 'recenzí'}`,
     rvType: { variant_mismatch: 'jiná varianta', shipping_time: 'doručení', quality: 'kvalita', missing_parts: 'chybějící díly', positive: 'kladně' },
     noteLevel: { verify: 'Ověřte', changed: 'Změna', info: 'Info' }, guideExt: 'návod projektu',
-    found2: 'V textu nalezeno', problems: 'Problém'
+    found2: 'V textu nalezeno', problems: 'Problém',
+    backorderNote: (d) => `Na objednávku${d ? ` do ${d}` : ''}. Nechcete čekat? V „Další zdroje“ můžete zvolit jiný zdroj.`,
+    useSrc: 'Použít tento zdroj', useDefault: 'Zpět na doporučený zdroj', swapped: 'Zvolili jste jiný než doporučený zdroj.',
+    altsH: 'Hotové sady a díly místo jednotlivých položek', landedEst: 'S dopravou a dovozem (odhad)', landedEu: 'S dopravou (odhad)', stillNeeded: 'Ještě budete potřebovat',
+    contents: 'Obsah sady podle', from: 'cena',
+    sc: { h: 'Šrouby na ruku', part: 'Kloub', total: 'Celkem', follower: 'Follower', leader: 'Leader', pair: 'Pro celý plán', src: 'Zdroj' },
+    cfgNote: 'Bez leaderu ruku po kalibraci rozhýbete jen přehráním nahraného pohybu (lerobot-replay), například datasetu z návodu se simulací. Teleoperace a vlastní ukázky potřebují leader.'
   },
   en: {
     total: 'Total incl. VAT and shipping', goods: 'goods', eta: 'Delivery', days: 'days', slowest: 'set by the slowest line',
@@ -40,11 +46,11 @@ const S = {
     qty: 'pcs', ordered: 'Ordered', open: 'Open at supplier', alt: 'Other sources', notRec: 'not recommended',
     ship: 'Shipping', vat: { eu_oss: 'price incl. VAT (DE 19 %), up to +1.7 % with OSS', cz: 'price incl. 21 % VAT', cz_nonvat: 'final price (not a VAT payer)', cn_ioss: 'VAT via IOSS, 3 € duty per line', non_eu: 'non-EU import: VAT and 3 € duty per line', per_vendor: 'VAT depends on the vendor', none: '' },
     landed: 'Landed', subtotal: 'Goods', status: { verified: 'verified', carried: 'carried', unverified: 'unverified', estimate: 'estimate' },
-    joint: 'Joint', code: 'Code', volt: 'Voltage', ratio: 'Gear ratio', follower_12v: 'Follower 12 V', leader: 'Leader 7.4 V',
+    joint: 'Joint', code: 'Code', volt: 'Voltage', ratio: 'Gear ratio', follower_12v: 'Follower 12 V', follower_74v: 'Follower 7.4 V', leader: 'Leader 7.4 V',
     jn: { shoulder_pan: 'base', shoulder_lift: 'shoulder', elbow_flex: 'elbow', wrist_flex: 'wrist', wrist_roll: 'wrist roll', gripper: 'gripper' },
     flagsH: 'Sources we do not recommend or that need care', allJoints: 'all joints', jointN: (a, j, n) => `${a}, joint ${j} (${n})`,
     verdict: { match: 'Matches', likely: 'Probably matches', check_selection: 'Check the selected variant', mismatch: 'Does not match', inconsistent: 'Not recommended: the listing contradicts itself', unknown: 'Cannot tell' },
-    found: 'Found', none: 'nothing', tools: 'Servo screws and horns come with the servos.', time: (p, w) => `${p ? `Printing ${p} h (unattended) and ` : ''}${w} h of work across the guide’s stages. This is an estimate, not a promise.`, guide: 'Assembly guide', stage: 'Stage', optStage: 'optional', guideFor: 'guide: stage',
+    found: 'Found', none: 'nothing', tools: 'Servo screws and horns: see the screw table.', time: (p, w) => `${p ? `Printing ${p} h (unattended) and ` : ''}${w} h of work across the guide’s stages. This is an estimate, not a promise.`, guide: 'Assembly guide', stage: 'Stage', optStage: 'optional', guideFor: 'guide: stage',
     printNote: 'Print', track: 'Tracking number', trackHint: 'stored only in your browser', optional: 'optional',
     altH: 'Alternative for a pair', altNote: 'Price without shipping and duty, carried', service: 'Get a quote from', checked: 'checked',
     req: 'required', opt: 'optional', backorder: 'Stock', printed_by_you: 'STL files', fx: 'FX',
@@ -52,7 +58,13 @@ const S = {
     rv: (d) => `What buyers say (as of ${d})`, rvNone: 'no reviews yet', rvNull: 'reviews could not be read', rvCount: (n) => `${n} review${n === 1 ? '' : 's'}`,
     rvType: { variant_mismatch: 'wrong variant', shipping_time: 'delivery', quality: 'quality', missing_parts: 'missing parts', positive: 'positive' },
     noteLevel: { verify: 'Verify', changed: 'Changed', info: 'Info' }, guideExt: 'project guide',
-    found2: 'Found in the text', problems: 'Problem'
+    found2: 'Found in the text', problems: 'Problem',
+    backorderNote: (d) => `On backorder${d ? ` until ${d}` : ''}. Don’t want to wait? Pick another source under “Other sources”.`,
+    useSrc: 'Use this source', useDefault: 'Back to the recommended source', swapped: 'You picked a source other than the recommended one.',
+    altsH: 'Ready-made kits and parts instead of single lines', landedEst: 'Landed incl. import (estimate)', landedEu: 'Landed (estimate)', stillNeeded: 'You will still need',
+    contents: 'Kit contents per', from: 'price',
+    sc: { h: 'Screws per arm', part: 'Joint', total: 'Total', follower: 'Follower', leader: 'Leader', pair: 'For the whole plan', src: 'Source' },
+    cfgNote: 'Without a leader, after calibration you can only move the arm by replaying recorded motion (lerobot-replay), for example a dataset from the simulation guide. Teleoperation and your own demonstrations need a leader.'
   }
 }[L];
 
@@ -66,7 +78,7 @@ const CZK = L === 'en' ? ' CZK' : ' Kč';
 const money = (price, cur) => cur === 'CZK' ? `${nf.format(price)}${CZK}` : cur === 'EUR' ? eur(price) : `${nf.format(price)} ${cur}`;
 const stock = (t) => L === 'en' ? t : String(t)
   .replace(/^Backorder: (\d+) expected (\d{4}-\d\d-\d\d)$/, (m, n, d) => `na objednávku, naskladnění ${date(d)}`)
-  .replace(/^Available$/, 'skladem').replace(/^In store \/ 1–2 days$/, 'na prodejně / 1–2 dny').replace(/^>(\d+) pcs$/, '>$1 ks')
+  .replace(/^Available$/, 'skladem').replace(/^Available \(rarely stocked\)$/, 'skladem (zřídka naskladňováno)').replace(/^In store \/ 1–2 days$/, 'na prodejně / 1–2 dny').replace(/^>(\d+) pcs$/, '>$1 ks')
   .replace(/^Not shown$/, 'neuvedeno').replace(/ sold$/, ' prodáno')
   .replace(/^In stock \((\d+) pcs\)$/, 'skladem ($1 ks)').replace(/^In stock$/, 'skladem').replace(/^Out of stock$/, 'vyprodáno');
 // the assembly guide: ours (relative path with #stage anchors) or the original project's page (absolute, no anchors)
@@ -78,8 +90,8 @@ const badge = (st, d) => `<span class="pb pb-${esc(st)}">${esc(S.status[st] || s
 /* ---------- local state (guarded: private mode, blocked storage, previews) ---------- */
 function load() { try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch { return {}; } }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* storage unavailable: page still works */ } }
-const state = Object.assign({ ordered: {}, arrived: {}, tracking: {} }, load());
-for (const k of ['ordered', 'arrived', 'tracking']) if (!state[k] || typeof state[k] !== 'object') state[k] = {};
+const state = Object.assign({ ordered: {}, arrived: {}, tracking: {}, src: {} }, load());
+for (const k of ['ordered', 'arrived', 'tracking', 'src']) if (!state[k] || typeof state[k] !== 'object') state[k] = {};
 
 let data;
 try {
@@ -157,18 +169,20 @@ function reviews(r) {
   return `<small class="plan-rv${warn ? ' plan-rv-warn' : ''}" data-testid="plan-reviews">${head} ${body}${r.url && r.count ? ` <a href="${esc(r.url)}" rel="noopener">${L === 'en' ? 'listing' : 'inzerát'}</a>` : ''}</small>`;
 }
 
+const backorder = (t) => { const m = /^Backorder: \d+ expected (\d{4}-\d\d-\d\d)$/.exec(t || ''); return m ? date(m[1]) : /^Backorder/.test(t || '') ? '' : null; };
 function line(l, gi) {
-  const k = `${state.robot}|${l.component}|${l.source}`;
+  const k = `${current.robot}|${l.component}|${l.source}`;
   const id = `ord-${gi}-${l.component.replace(/[^a-z0-9]/gi, '-')}`;
   const price = l.range_eur ? `${rng(l.range_eur, ' €')} <span class="muted">(${S.est})</span>`
     : l.price == null ? eur(l.subtotal_eur)
     : `${money(l.price, l.currency)}${l.per > 1 ? ` / ${l.per} ${S.qty}` : ` ${S.perPiece}`} · <b>${eur(l.subtotal_eur)}</b>`;
   const qty = l.per > 1 ? `${l.qty} ${S.qty} <span class="muted">(${l.packs}× ${l.per})</span>` : `${l.qty} ${S.qty}`;
   const alts = l.alternatives.length ? `<details class="plan-alts"><summary>${S.alt} (${l.alternatives.length})</summary><ul>${l.alternatives.map((a) =>
-    `<li>${a.recommend ? '' : `<span class="pb pb-no">${S.notRec}</span> `}<a href="${esc(a.url)}" rel="noopener">${esc(a.label)}</a> · ${a.price == null ? '—' : money(a.price, a.currency) + (a.per > 1 ? ` / ${a.per} ${S.qty}` : '')} ${badge(a.status, a.checked)}${a.flag ? `<br><span class="plan-flag">${esc(L === 'cs' ? a.flag_reason_cs : a.flag_reason)}</span>` : ''}${a.reviews ? '<br>' + reviews(a.reviews) : ''}</li>`).join('')}</ul></details>` : '';
+    `<li>${a.recommend ? '' : `<span class="pb pb-no">${S.notRec}</span> `}<a href="${esc(a.url)}" rel="noopener">${esc(a.label)}</a> · ${a.price == null ? '—' : money(a.price, a.currency) + (a.per > 1 ? ` / ${a.per} ${S.qty}` : '')} ${badge(a.status, a.checked)}${a.stock ? ` <span class="muted">${S.backorder}: ${esc(stock(a.stock))}</span>` : ''}${a.flag ? `<br><span class="plan-flag">${esc(L === 'cs' ? a.flag_reason_cs : a.flag_reason)}</span>` : ''}${a.reviews ? '<br>' + reviews(a.reviews) : ''}${a.selectable ? `<br><button type="button" class="btn-link" data-swap="${esc(l.component)}" data-src="${esc(a.id === l.default_source ? '' : a.id)}">${a.id === l.default_source ? S.useDefault : S.useSrc}<span class="sr-only"> (${esc(a.label)})</span></button>` : ''}</li>`).join('')}</ul></details>` : '';
+  const bo = backorder(l.stock);
   return `<li class="plan-line">
 <span class="pl-chk"><input type="checkbox" id="${id}" data-k="${esc(k)}"${state.ordered[k] ? ' checked' : ''}><label for="${id}">${S.ordered}</label></span>
-<span class="pl-name"><b>${esc(pick(l, 'name'))}</b>${l.stock ? `<small>${S.backorder}: ${esc(stock(l.stock))}</small>` : ''}${l.flag ? `<span class="plan-flag">${esc(L === 'cs' ? l.flag_reason_cs : l.flag_reason)}</span>` : ''}${l.print_hours ? `<small>${S.printNote}: ${rng(l.print_hours)} ${S.h} (${S.est})</small>` : ''}${l.note_cs ? `<small>${esc(pick(l, 'note'))}</small>` : ''}${reviews(l.reviews)}</span>
+<span class="pl-name"><b>${esc(pick(l, 'name'))}</b>${l.stock ? `<small>${S.backorder}: ${esc(stock(l.stock))}</small>` : ''}${bo != null && l.alternatives.some((a) => a.selectable) ? `<span class="plan-flag" data-testid="plan-backorder">${esc(S.backorderNote(bo))}</span>` : ''}${l.swapped ? `<small data-testid="plan-swapped">${S.swapped}</small>` : ''}${l.flag ? `<span class="plan-flag">${esc(L === 'cs' ? l.flag_reason_cs : l.flag_reason)}</span>` : ''}${l.print_hours ? `<small>${S.printNote}: ${rng(l.print_hours)} ${S.h} (${S.est})</small>` : ''}${l.note_cs ? `<small>${esc(pick(l, 'note'))}</small>` : ''}${reviews(l.reviews)}</span>
 <span class="pl-qty">${qty}</span>
 <span class="pl-price">${price}</span>
 <span class="pl-src">${badge(l.status, l.checked)} <a href="${esc(l.url)}" rel="noopener">${l.source === 'filament' ? S.printed_by_you : S.open}<span class="sr-only"> (${esc(pick(l, 'name'))})</span></a></span>
@@ -187,8 +201,28 @@ ${S.vat[g.vat] ? `<p class="pg-vat">${esc(S.vat[g.vat])}</p>` : ''}
 ${g.services ? `<p class="pg-vat">${S.service}: ${g.services.map((s) => `<a href="${esc(s.url)}" rel="noopener">${esc(s.name)}</a>`).join(' · ')}</p>` : ''}
 </header>
 <ul class="plan-lines">${g.lines.map((l) => line(l, gi)).join('')}</ul></section>`).join('');
-  const a = p.alternative;
-  $('plan-alt').innerHTML = a ? `<aside class="plan-altbox"><b>${S.altH}: ${esc(pick(a, 'name'))}</b><p>${esc(pick(a, 'note'))}</p><p>${money(a.price, a.currency)} (≈ ${eur(a.price_eur)}) · ${S.altNote} ${date(a.checked)} · <a href="${esc(a.url)}" rel="noopener">${esc(a.label)}</a></p></aside>` : '';
+  const alts = p.alternatives || (p.alternative ? [p.alternative] : []);
+  $('plan-alt').innerHTML = alts.length ? `<h3>${S.altsH}</h3>` + alts.map((a) => `<aside class="plan-altbox" data-testid="plan-alt"><b>${esc(pick(a, 'name'))}</b><p>${esc(pick(a, 'note'))}</p>
+<p>${S.from} ${money(a.price, a.currency)}${a.currency !== 'EUR' ? ` (≈ ${eur(a.price_eur)})` : ''} ${badge(a.status, a.checked)}${a.stock ? ` · ${S.backorder}: ${esc(stock(a.stock))}` : ''} · <a href="${esc(a.url)}" rel="noopener">${esc(a.label)}</a></p>
+${a.landed ? `<p><b>${a.landed.note ? S.landedEst : S.landedEu}: ${rng(a.landed.eur, ' €')}</b>${a.landed.note ? ` · ${esc(pick(a.landed, 'note'))}` : ''}</p>` : ''}
+${a.still_needed.length ? `<p>${S.stillNeeded}:</p><ul>${(L === 'cs' ? a.still_needed_cs : a.still_needed).map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
+${a.contents_source ? `<p class="plan-src">${S.contents} <a href="${esc(a.contents_source.url)}" rel="noopener">${esc(a.contents_source.label)}</a> (${S.checkedOn} ${date(a.contents_source.checked)})</p>` : ''}</aside>`).join('') : '';
+}
+
+function renderScrews(p) {
+  const el = $('plan-screws');
+  if (!el) return;
+  if (!p.screws) { el.innerHTML = ''; return; }
+  const sc = p.screws, kinds = [...new Map(sc.arms.map((a) => [a.kind, a])).values()];
+  const rowsBy = (k) => kinds.find((a) => a.kind === k).rows;
+  const ids = [...new Set(kinds.flatMap((a) => a.rows.map((r) => r.id)))];
+  const cell = (k, id, f) => { const r = rowsBy(k).find((x) => x.id === id); return r ? `<td title="${esc(pick(r, 'detail'))}">${r[f]}</td>` : '<td>—</td>'; };
+  const head = kinds.map((a) => `<th scope="col">${S.sc[a.kind]} M2×6</th><th scope="col">${S.sc[a.kind]} M3×6</th>`).join('');
+  const nameOf = (id) => { for (const a of kinds) { const r = a.rows.find((x) => x.id === id); if (r) return pick(r, 'name'); } return id; };
+  el.innerHTML = `<h3 id="sroubky">${S.sc.h}</h3><div class="doc-t-wrap"><table class="doc-t plan-vt" data-testid="plan-screws"><thead><tr><th scope="col">${S.sc.part}</th>${head}</tr></thead>
+<tbody>${ids.map((id) => `<tr><th scope="row">${esc(nameOf(id))}</th>${kinds.map((a) => cell(a.kind, id, 'm2') + cell(a.kind, id, 'm3')).join('')}</tr>`).join('')}
+<tr><th scope="row">${S.sc.total}</th>${kinds.map((a) => `<td><b>${a.m2}</b></td><td><b>${a.m3}</b></td>`).join('')}</tr></tbody></table></div>
+<p class="src">${S.sc.pair}: <b>${sc.total.m2}× M2×6</b>, <b>${sc.total.m3}× M3×6</b>. ${esc(pick(sc, 'counting'))} ${esc(pick(sc, 'included_note'))} ${badge(sc.included === 'unverified' ? 'unverified' : 'verified')} · ${S.sc.src}: <a href="${esc(sc.source.url)}" rel="noopener">${esc(sc.source.label)}</a> (${S.checkedOn} ${date(sc.checked)})</p>`;
 }
 
 function renderTools(p) {
@@ -204,23 +238,27 @@ function renderTools(p) {
 
 function renderArrivals(p) {
   $('plan-arrivals').innerHTML = p.arrivals.map((a) => {
-    const k = `${state.robot}|${a.id}`;
+    const k = `${p.robot}|${a.id}`;
     const g = a.link ? `<a class="arr-g" href="${esc(linkUrl(a.link))}"${/^https:/.test(linkUrl(a.link)) ? ' rel="noopener"' : ''}>${esc(pick(a.link, 'label'))}</a>`
       : `<a class="arr-g" href="${guideUrl(a.guide_stage)}">${S.guideFor} ${esc(a.guide_stage.slice(1))}</a>`;
     return `<li><input type="checkbox" id="arr-${a.id}" data-a="${esc(k)}"${state.arrived[k] ? ' checked' : ''}><label for="arr-${a.id}">${esc(pick(a, 'name'))}</label>${g}</li>`;
   }).join('');
   const groups = p.groups.filter((g) => g.supplier !== 'none' && g.supplier !== 'self_print');
   $('plan-tracking').innerHTML = groups.map((g, i) => {
-    const k = `${state.robot}|${g.supplier}`;
+    const k = `${p.robot}|${g.supplier}`;
     return `<div class="field"><label for="trk-${i}">${S.track}: ${esc(pick(g, 'name'))} <span class="muted">(${S.optional}, ${S.trackHint})</span></label><input id="trk-${i}" type="text" inputmode="text" autocomplete="off" spellcheck="false" maxlength="64" data-t="${esc(k)}" value="${esc(state.tracking[k] || '')}"></div>`;
   }).join('');
   updateNext(p);
 }
 
 function updateNext(p) {
-  const need = p.arrivals.filter((a) => a.needed_for_wizard).every((a) => state.arrived[`${state.robot}|${a.id}`]);
+  const need = p.arrivals.filter((a) => a.needed_for_wizard).every((a) => state.arrived[`${p.robot}|${a.id}`]);
   $('plan-next').hidden = !need;
   $('plan-wait').hidden = need;
+  // follower-only: say honestly what the first motion can be without a leader
+  const solo = p.config.arms.length === 1 && /^follower/.test(p.config.arms[0]);
+  for (const el of document.querySelectorAll('[data-solo]')) el.hidden = el.dataset.solo === '1' ? !solo : solo;
+  if ($('plan-cfgnote')) { $('plan-cfgnote').hidden = !solo; $('plan-cfgnote').textContent = solo ? S.cfgNote : ''; }
 }
 
 // data-driven boxes: "verify / changed" notes and the safety block, each with dated sources
@@ -231,11 +269,26 @@ function renderNotes(p) {
 }
 
 let current;
+// SO-101: two radio groups (robot = pair | follower, fv = 74v | 12v) pick one of data.configs
+const configOf = (o) => !('fv' in o) ? o.robot : o.robot === 'pair' ? (o.fv === '12v' ? 'pair' : 'pair_74v') : `follower_${o.fv}`;
 function render() {
   const opts = Object.fromEntries(OPTS.map((n) => [n, state[n]]));
+  const cfg = configOf(opts);
+  delete opts.fv; opts.robot = cfg;
+  if (!state.src[cfg] || typeof state.src[cfg] !== 'object') state.src[cfg] = {};
+  opts.sources = state.src[cfg];
   current = buildPlan(data, opts);
-  renderSummary(current); renderVariants(current); renderGroups(current); renderTools(current); renderArrivals(current); renderNotes(current);
+  renderSummary(current); renderVariants(current); renderGroups(current); renderTools(current); renderScrews(current); renderArrivals(current); renderNotes(current);
 }
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-swap]');
+  if (!b) return;
+  const m = state.src[current.robot] || (state.src[current.robot] = {});
+  if (b.dataset.src) m[b.dataset.swap] = b.dataset.src; else delete m[b.dataset.swap];
+  save(); render();
+  const again = document.querySelector(`.plan-line input[data-k^="${CSS.escape(current.robot + '|' + b.dataset.swap + '|')}"]`);
+  if (again) again.focus();
+});
 
 document.addEventListener('change', (e) => {
   const t = e.target;

@@ -117,3 +117,7 @@
   .plan-grp{break-inside:auto}
 }
 .plan-arr .arr-g{font-size:13px;color:var(--mute);white-space:nowrap;min-height:24px;display:inline-flex;align-items:center}
+.btn-link{background:none;border:0;padding:4px 0;min-height:24px;font:inherit;font-size:14px;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.btn-link:hover{text-decoration-thickness:2px}
+.plan-altbox ul{margin:0;padding-left:20px;color:var(--ink-2)}
+.plan-cfgnote{margin:0;font-size:15px}

@@ -20,7 +20,10 @@
    "sw": "Apache-2.0",
    "status": "verified",
    "checked": "2026-10-30",
-   "sources": ["https://github.com/TheRobotStudio/SO-ARM100/blob/main/LICENSE", "https://github.com/huggingface/lerobot/blob/main/LICENSE"]
+   "sources": [
+    "https://github.com/TheRobotStudio/SO-ARM100/blob/main/LICENSE",
+    "https://github.com/huggingface/lerobot/blob/main/LICENSE"
+   ]
   }
  },
  "suppliers": {
@@ -180,6 +183,54 @@
    }
   },
   "arms": {
+   "follower_74v": {
+    "voltage_v": 7.4,
+    "screws": "follower",
+    "joints": [
+     {
+      "joint": 1,
+      "name": "shoulder_pan",
+      "codes": [
+       "C001"
+      ]
+     },
+     {
+      "joint": 2,
+      "name": "shoulder_lift",
+      "codes": [
+       "C001"
+      ]
+     },
+     {
+      "joint": 3,
+      "name": "elbow_flex",
+      "codes": [
+       "C001"
+      ]
+     },
+     {
+      "joint": 4,
+      "name": "wrist_flex",
+      "codes": [
+       "C001"
+      ]
+     },
+     {
+      "joint": 5,
+      "name": "wrist_roll",
+      "codes": [
+       "C001"
+      ]
+     },
+     {
+      "joint": 6,
+      "name": "gripper",
+      "codes": [
+       "C001"
+      ]
+     }
+    ]
+   },
    "follower_12v": {
     "voltage_v": 12,
     "joints": [
@@ -231,7 +282,8 @@
        "C047"
       ]
      }
-    ]
+    ],
+    "screws": "follower"
    },
    "leader": {
     "voltage_v": 7.4,
@@ -278,7 +330,8 @@
        "C046"
       ]
      }
-    ]
+    ],
+    "screws": "leader"
    }
   },
   "rules": [
@@ -291,47 +344,66 @@
   ],
   "how_to_verify": [
    "On the listing, find the exact code (C018, C001, C044, C046) together with voltage and gear ratio; with a variant selector, check the selected option, not the title.",
-   "When the servos arrive, read the label on every servo before setting IDs and sort them by joint.",
-   "In the servo wizard, the model and voltage are checked before IDs are written."
+   "Keep every parcel of servos separate and label each servo (code from the listing or box, L/F, joint) as soon as it arrives. We have not yet confirmed on real servos that the code or gear ratio is printed on the servo itself; if it is, check it too.",
+   "LeRobot (lerobot-setup-motors) only checks that it talks to an STS3215 before writing an ID; it cannot tell the voltage or gear ratio. Our servo wizard shows that check only as practice on virtual servos."
   ],
   "how_to_verify_cs": [
    "V inzerátu najděte přesný kód (C018, C001, C044, C046) spolu s napětím a převodem; u výběru variant kontrolujte zvolenou možnost, ne nadpis.",
-   "Po doručení přečtěte štítek na každém servu ještě před nastavením ID a roztřiďte je podle kloubů.",
-   "V průvodci nastavením serv se model a napětí kontrolují před zápisem ID."
+   "Každý balík serv držte zvlášť a hned po doručení každé servo popište (kód z inzerátu nebo krabičky, L/F, kloub). Zda je kód nebo převod vytištěný přímo na servu, jsme na skutečných kusech zatím neověřili; pokud ano, zkontrolujte i ten.",
+   "LeRobot (lerobot-setup-motors) před zápisem ID ověří jen to, že mluví se servem STS3215; napětí ani převod nepozná. Náš průvodce nastavením serv tuto kontrolu ukazuje jen nanečisto na virtuálních servech."
   ]
  },
  "configs": {
-  "follower_12v": {
-   "name": "Follower only, 12 V",
-   "name_cs": "Jen follower, 12 V",
+  "pair_74v": {
+   "name": "Pair: leader + follower, 7.4 V follower (standard)",
+   "name_cs": "Pár: leader + follower, follower 7,4 V (standard)",
    "arms": [
-    "follower_12v"
+    "follower_74v",
+    "leader"
    ],
    "lines": [
     {
-     "component": "so101.servo.c018",
+     "component": "so101.servo.c001",
      "qty": 6,
      "source": "eckstein",
-     "arm": "follower_12v"
+     "arm": "follower_74v"
+    },
+    {
+     "component": "so101.servo.c001",
+     "qty": 1,
+     "source": "eckstein",
+     "arm": "leader"
+    },
+    {
+     "component": "so101.servo.c044",
+     "qty": 2,
+     "source": "openelab",
+     "arm": "leader"
+    },
+    {
+     "component": "so101.servo.c046",
+     "qty": 3,
+     "source": "eckstein",
+     "arm": "leader"
     },
     {
      "component": "so101.bus_board",
-     "qty": 1,
+     "qty": 2,
      "source": "eckstein"
     },
     {
-     "component": "so101.psu_12v",
-     "qty": 1,
-     "source": "eckstein"
+     "component": "so101.psu_5v",
+     "qty": 2,
+     "source": "eckstein_waveshare"
     },
     {
      "component": "so101.usb_c",
-     "qty": 1,
+     "qty": 2,
      "source": "alza"
     },
     {
      "component": "so101.clamps",
-     "qty": 2,
+     "qty": 4,
      "source": "hornbach"
     },
     {
@@ -340,11 +412,35 @@
      "source": "none"
     }
    ],
-   "print_grams": 350
+   "print_grams": 700,
+   "alternatives": [
+    {
+     "component": "so101.bundle.eckstein_standard",
+     "source": "eckstein",
+     "note": "EU shop, 7.4 V standard pair with printed parts (PLA/PETG-CF), 2 Waveshare boards, 2 USB-C cables, 2× 5 V 4 A supplies and 4 clamps (shop’s contents list). Price = configurator sum of leader + follower; the page also shows “from 228 €”: check the final total.",
+     "note_cs": "Obchod v EU, standardní pár 7,4 V s tištěnými díly (PLA/PETG-CF), 2 deskami Waveshare, 2 kabely USB-C, 2 zdroji 5 V 4 A a 4 svěrkami (podle popisu obchodu). Cena = součet leaderu a followeru v konfigurátoru; stránka uvádí i „od 228 €“: konečnou cenu ověřte.",
+     "still_needed": [
+      "Phillips screwdrivers #0 and #1",
+      "Check whether the arms come assembled or as parts (not clear on the page)"
+     ],
+     "still_needed_cs": [
+      "Křížové šroubováky PH0 a PH1",
+      "Ověřte, zda jsou ruce smontované, nebo v dílech (ze stránky není jasné)"
+     ]
+    },
+    {
+     "component": "so101.printed.follower",
+     "source": "eckstein",
+     "note": "Printed parts only: follower set from 29.99 €, leader set 29.99 € (PLA; PETG-CF up to 34.99 €). Buy the servos and electronics from this plan.",
+     "note_cs": "Jen tištěné díly: sada followeru od 29,99 €, leaderu 29,99 € (PLA; PETG-CF až 34,99 €). Serva a elektroniku kupte podle tohoto plánu.",
+     "still_needed": [],
+     "still_needed_cs": []
+    }
+   ]
   },
   "pair": {
-   "name": "Pair: leader + follower (12 V follower)",
-   "name_cs": "Pár: leader + follower (follower 12 V)",
+   "name": "Pair: leader + follower, 12 V follower",
+   "name_cs": "Pár: leader + follower, follower 12 V",
    "arms": [
     "follower_12v",
     "leader"
@@ -387,7 +483,7 @@
     {
      "component": "so101.psu_5v",
      "qty": 1,
-     "source": "eckstein"
+     "source": "eckstein_waveshare"
     },
     {
      "component": "so101.usb_c",
@@ -406,12 +502,141 @@
     }
    ],
    "print_grams": 700,
-   "alternative": {
-    "component": "so101.bundle.seeed_pro",
-    "source": "aliexpress",
-    "note": "One parcel with the official Seeed mix of servos (lowest wrong-variant risk). Ships from China: 2–4 weeks.",
-    "note_cs": "Jeden balík s oficiální sestavou serv od Seeedu (nejnižší riziko špatné varianty). Posílá se z Číny: 2–4 týdny."
-   }
+   "alternatives": [
+    {
+     "component": "so101.bundle.seeed_pro",
+     "source": "aliexpress",
+     "note": "One parcel with the official Seeed mix of servos (lowest wrong-variant risk). Ships from China: 2–4 weeks.",
+     "note_cs": "Jeden balík s oficiální sestavou serv od Seeedu (nejnižší riziko špatné varianty). Posílá se z Číny: 2–4 týdny.",
+     "import": {
+      "vat_rate": 0.21,
+      "duty_rate": [
+       0,
+       0.027
+      ],
+      "clearance_eur": [
+       0,
+       25
+      ],
+      "status": "estimate",
+      "note": "Over 150 €: no IOSS. If the price does not include VAT, you pay 21 % import VAT, duty under the tariff (servo motors 8501 ≈ 2.7 %, our assumption) and the carrier’s clearance fee on delivery. Range is our estimate.",
+      "note_cs": "Nad 150 € neplatí IOSS. Pokud cena DPH neobsahuje, zaplatíte při doručení 21 % DPH z dovozu, clo podle sazebníku (servomotory 8501 ≈ 2,7 %, náš předpoklad) a poplatek dopravce za proclení. Rozpětí je náš odhad."
+     },
+     "still_needed": [
+      "Printed parts (or the Seeed printed variant, +931 CZK)",
+      "Power supplies 5 V ≥4 A and 12 V ≥5 A (the kit list at Botland names none)",
+      "Phillips screwdrivers #0 and #1",
+      "Screws: the kit list names 8; check what comes with the servos"
+     ],
+     "still_needed_cs": [
+      "Tištěné díly (nebo varianta Seeed s díly, +931 Kč)",
+      "Zdroje 5 V ≥4 A a 12 V ≥5 A (seznam sady u obchodu Botland žádný neuvádí)",
+      "Křížové šroubováky PH0 a PH1",
+      "Šrouby: seznam sady uvádí 8 ks; zkontrolujte, co přijde se servy"
+     ],
+     "contents_source": {
+      "label": "Botland: SO-ARM101 Pro Servo Motor Kit (contents)",
+      "url": "https://botland.store/robot-arms/29177-so-arm101-pro-servo-motor-kit-a-set-of-servo-motors-for-building-the-lerobot-arm-seeedstudio-114993667.html",
+      "checked": "2026-10-30"
+     }
+    },
+    {
+     "component": "so101.bundle.eckstein_pro",
+     "source": "eckstein",
+     "note": "EU shop, kit with printed parts in PETG-CF/PA6-GF, 2 boards, USB-C cables, a 5 V 4 A and a 12 V 5 A supply and clamps (shop’s contents list). Price = configurator sum of leader + follower; the page shows a placeholder base price.",
+     "note_cs": "Obchod v EU, sada s tištěnými díly (PETG-CF/PA6-GF), 2 deskami, kabely USB-C, zdroji 5 V 4 A a 12 V 5 A a svěrkami (podle popisu obchodu). Cena = součet leaderu a followeru v konfigurátoru; základní cena na stránce je zástupná.",
+     "still_needed": [
+      "Phillips screwdrivers #0 and #1",
+      "Check whether the arms come assembled or as parts (not clear on the page)"
+     ],
+     "still_needed_cs": [
+      "Křížové šroubováky PH0 a PH1",
+      "Ověřte, zda jsou ruce smontované, nebo v dílech (ze stránky není jasné)"
+     ]
+    }
+   ]
+  },
+  "follower_74v": {
+   "name": "Follower only, 7.4 V (standard)",
+   "name_cs": "Jen follower, 7,4 V (standard)",
+   "arms": [
+    "follower_74v"
+   ],
+   "lines": [
+    {
+     "component": "so101.servo.c001",
+     "qty": 6,
+     "source": "eckstein",
+     "arm": "follower_74v"
+    },
+    {
+     "component": "so101.bus_board",
+     "qty": 1,
+     "source": "eckstein"
+    },
+    {
+     "component": "so101.psu_5v",
+     "qty": 1,
+     "source": "eckstein_waveshare"
+    },
+    {
+     "component": "so101.usb_c",
+     "qty": 1,
+     "source": "alza"
+    },
+    {
+     "component": "so101.clamps",
+     "qty": 2,
+     "source": "hornbach"
+    },
+    {
+     "component": "so101.fasteners",
+     "qty": 1,
+     "source": "none"
+    }
+   ],
+   "print_grams": 350
+  },
+  "follower_12v": {
+   "name": "Follower only, 12 V",
+   "name_cs": "Jen follower, 12 V",
+   "arms": [
+    "follower_12v"
+   ],
+   "lines": [
+    {
+     "component": "so101.servo.c018",
+     "qty": 6,
+     "source": "eckstein",
+     "arm": "follower_12v"
+    },
+    {
+     "component": "so101.bus_board",
+     "qty": 1,
+     "source": "eckstein"
+    },
+    {
+     "component": "so101.psu_12v",
+     "qty": 1,
+     "source": "eckstein"
+    },
+    {
+     "component": "so101.usb_c",
+     "qty": 1,
+     "source": "alza"
+    },
+    {
+     "component": "so101.clamps",
+     "qty": 2,
+     "source": "hornbach"
+    },
+    {
+     "component": "so101.fasteners",
+     "qty": 1,
+     "source": "none"
+    }
+   ],
+   "print_grams": 350
   }
  },
  "printing": {
@@ -449,8 +674,8 @@
   },
   {
    "id": "pc",
-   "name": "Computer with USB and Python 3.10+ (LeRobot)",
-   "name_cs": "Počítač s USB a Pythonem 3.10+ (LeRobot)",
+   "name": "Computer with USB and Python 3.12 (LeRobot 0.6.1 requires ≥ 3.12)",
+   "name_cs": "Počítač s USB a Pythonem 3.12 (LeRobot 0.6.1 vyžaduje ≥ 3.12)",
    "required": true
   },
   {
@@ -471,6 +696,18 @@
    "id": "caliper",
    "name": "Calliper (optional, for checking fits)",
    "name_cs": "Posuvné měřítko (volitelné, na kontrolu lícování)",
+   "required": false
+  },
+  {
+   "id": "screws_kit",
+   "name": "Assortment of M2×6 and M3×6 Phillips screws (backup if the servo boxes have too few; counts in the screw table)",
+   "name_cs": "Sortiment křížových šroubů M2×6 a M3×6 (záloha, kdyby jich v krabičkách serv bylo málo; počty v tabulce šroubů)",
+   "required": false
+  },
+  {
+   "id": "camera",
+   "name": "USB camera (only for recording demonstrations and training later; first motion needs none)",
+   "name_cs": "USB kamera (jen pro pozdější nahrávání ukázek a učení; k prvnímu pohybu není potřeba)",
    "required": false
   }
  ],
@@ -556,8 +793,8 @@
  "arrivals": [
   {
    "id": "servos",
-   "name": "Servos (label checked for every one)",
-   "name_cs": "Serva (štítek zkontrolován u každého)",
+   "name": "Servos (each parcel kept separate and labelled)",
+   "name_cs": "Serva (každý balík zvlášť a popsaný)",
    "needed_for_wizard": true,
    "guide_stage": "e0"
   },
@@ -572,14 +809,14 @@
    "id": "psu",
    "name": "Power supply(ies)",
    "name_cs": "Napájecí zdroj(e)",
-   "needed_for_wizard": false,
+   "needed_for_wizard": true,
    "guide_stage": "e4"
   },
   {
    "id": "usb",
    "name": "USB-C data cable(s)",
    "name_cs": "Datový kabel (kabely) USB-C",
-   "needed_for_wizard": false,
+   "needed_for_wizard": true,
    "guide_stage": "e2"
   },
   {
@@ -626,9 +863,9 @@
     {
      "id": "eckstein",
      "supplier": "eckstein",
-     "label": "Eckstein",
+     "label": "Eckstein – Feetech STS3215 12 V 30 kg (HAN ST-3215-C018)",
      "country": "DE",
-     "url": "https://eckstein-shop.de/?k=2378&lang=eng",
+     "url": "https://eckstein-shop.de/feetech-st-3215-c018-servo-en",
      "price": 26.45,
      "currency": "EUR",
      "per": 1,
@@ -729,9 +966,9 @@
     {
      "id": "eckstein",
      "supplier": "eckstein",
-     "label": "Eckstein (STS3215 7.4 V 19 kg / 'SO-ARM101' listing; code not shown)",
+     "label": "Eckstein – Feetech STS3215 7.4 V 19 kg (HAN STS3215-C001)",
      "country": "DE",
-     "url": "https://eckstein-shop.de/?k=2378&lang=eng",
+     "url": "https://eckstein-shop.de/Feetech-STS3215-74V-19kgcm-plastic-case-metal-gear-magnetic-code-dual-shaft-TTL-serial-servo",
      "price": 24.35,
      "currency": "EUR",
      "per": 1,
@@ -745,17 +982,18 @@
      "checked": "2026-10-30",
      "status": "verified",
      "recommend": true,
-     "note": "Variant code not shown on category page – confirm C001",
-     "flag": "variant_not_shown",
-     "flag_reason": "Variant code not shown on the category page: confirm C001 / 1/345 on the product page and the label.",
-     "flag_reason_cs": "Kód varianty není v kategorii vidět: ověřte C001 / 1/345 na stránce produktu a na štítku.",
+     "note": "C001 identified by the manufacturer number on the product page (30 Oct 2026)",
+     "flag": "check_label",
+     "flag_reason": "The product page names STS3215-C001 (manufacturer number) but no gear ratio: check 1/345 on the box or label.",
+     "flag_reason_cs": "Stránka produktu uvádí STS3215-C001 (číslo výrobce), ale ne převod: ověřte 1/345 na krabičce nebo štítku.",
      "reviews": {
       "rating": null,
       "count": 0,
       "checked": "2026-10-30",
       "signals": [],
       "url": "https://eckstein-shop.de/Feetech-STS3215-74V-19kgcm-plastic-case-metal-gear-magnetic-code-dual-shaft-TTL-serial-servo"
-     }
+     },
+     "note_cs": "C001 podle čísla výrobce na stránce produktu (30. 10. 2026)"
     },
     {
      "id": "openelab",
@@ -1033,7 +1271,7 @@
    "specs": {
     "interface": "USB-C (CH343/CH9102-class USB-UART; chip unverified)",
     "jumpers": "Waveshare: both jumpers on 'B' (USB) per LeRobot docs",
-    "power_in": "DC barrel 5.5×2.1 mm (unverified for all variants)"
+    "power_in": "DC 5.5 × 2.1 mm jack + screw terminals; maker: 9–12.6 V matching the servos (the SO-101 BOM still uses 5 V for 7.4 V servos)"
    },
    "constraints": [
     "Board must be rated for the servo voltage used (12 V follower) – Waveshare board is sold for ST/SC servos incl. 12 V (rating unverified).",
@@ -1049,7 +1287,7 @@
      "supplier": "eckstein",
      "label": "Eckstein",
      "country": "DE",
-     "url": "https://eckstein-shop.de/?k=2378&lang=eng",
+     "url": "https://eckstein-shop.de/WaveShare-Serial-Bus-Servo-Driver-Board-for-ST-SC-Serial-Bus-Servos-EN",
      "price": 5.95,
      "currency": "EUR",
      "per": 1,
@@ -1112,7 +1350,7 @@
      "eta_days": null,
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
      "checked": "2026-10-30",
-     "status": "verified",
+     "status": "carried",
      "recommend": true,
      "note": "README list price, not checked on Amazon",
      "reviews": null
@@ -1122,8 +1360,8 @@
   {
    "id": "so101.psu_12v",
    "group": "SO-101",
-   "name": "Power supply 12 V ≥5 A, EU plug, CE",
-   "name_cs": "Zdroj 12 V ≥5 A, EU zástrčka, CE",
+   "name": "Power supply 12 V ≥5 A, DC 5.5 × 2.1 mm, EU plug, CE",
+   "name_cs": "Zdroj 12 V ≥5 A, DC 5,5 × 2,1 mm, EU zástrčka, CE",
    "role": "Follower (12 V servos)",
    "role_cs": "Napájení followeru (12V serva)",
    "specs": {
@@ -1142,7 +1380,7 @@
      "supplier": "eckstein",
      "label": "Eckstein – SENGOOG SG-1205000B68",
      "country": "DE",
-     "url": "https://eckstein-shop.de/?k=2378&lang=eng",
+     "url": "https://eckstein-shop.de/sengoog-12v5a-wandnetzteil-eu-stecker-ce_1",
      "price": 11.99,
      "currency": "EUR",
      "per": 1,
@@ -1162,14 +1400,16 @@
       "checked": "2026-10-30",
       "signals": [],
       "url": "https://eckstein-shop.de/sengoog-12v5a-wandnetzteil-eu-stecker-ce_1"
-     }
+     },
+     "note": "Plug size not stated on the page: the board needs DC 5.5 × 2.1 mm. Ask the shop or use the board’s screw terminals.",
+     "note_cs": "Velikost konektoru stránka neuvádí: deska potřebuje DC 5,5 × 2,1 mm. Ověřte u obchodu, nebo použijte šroubovací svorky desky."
     },
     {
      "id": "eckstein_gaofande",
      "supplier": "eckstein",
      "label": "Eckstein – Gaofande 12 V 5 A",
      "country": "DE",
-     "url": "https://eckstein-shop.de/?k=2378&lang=eng",
+     "url": "https://eckstein-shop.de/gaofande-12v5a-eu-wandnetzteil-gfd-a9-ce_1",
      "price": 13.99,
      "currency": "EUR",
      "per": 1,
@@ -1189,15 +1429,17 @@
       "checked": "2026-10-30",
       "signals": [],
       "url": "https://eckstein-shop.de/gaofande-12v5a-eu-wandnetzteil-gfd-a9-ce_1"
-     }
+     },
+     "note": "Plug size not stated on the page (board: DC 5.5 × 2.1 mm).",
+     "note_cs": "Velikost konektoru stránka neuvádí (deska: DC 5,5 × 2,1 mm)."
     }
    ]
   },
   {
    "id": "so101.psu_5v",
    "group": "SO-101",
-   "name": "Power supply 5 V ≥4 A, EU plug, CE/GS",
-   "name_cs": "Zdroj 5 V ≥4 A, EU zástrčka, CE/GS",
+   "name": "Power supply 5 V ≥4 A, DC 5.5 × 2.1 mm, EU plug, CE",
+   "name_cs": "Zdroj 5 V ≥4 A, DC 5,5 × 2,1 mm, EU zástrčka, CE",
    "role": "Leader (and 7.4 V follower)",
    "role_cs": "Napájení leaderu (7,4V serva)",
    "specs": {
@@ -1208,38 +1450,11 @@
    "substitutes": [],
    "sources": [
     {
-     "id": "eckstein",
-     "supplier": "eckstein",
-     "label": "Eckstein – QITA/BOYAXUAN 5 V 4 A EU",
-     "country": "DE",
-     "url": "https://eckstein-shop.de/?k=2378&lang=eng",
-     "price": 9.99,
-     "currency": "EUR",
-     "per": 1,
-     "stock": "Available",
-     "delivery": "1–3 days",
-     "eta_days": [
-      1,
-      3
-     ],
-     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
-     "status": "verified",
-     "recommend": true,
-     "reviews": {
-      "rating": null,
-      "count": 0,
-      "checked": "2026-10-30",
-      "signals": [],
-      "url": "https://eckstein-shop.de/boyaxuan-5v4a-eu-wandnetzteil-usb-hub-gs_1"
-     }
-    },
-    {
      "id": "eckstein_waveshare",
      "supplier": "eckstein",
-     "label": "Eckstein – Waveshare 5 V 4 A",
+     "label": "Eckstein – Waveshare 5 V 4 A, DC 5.5 × 2.1 mm",
      "country": "DE",
-     "url": "https://eckstein-shop.de/?k=2378&lang=eng",
+     "url": "https://eckstein-shop.de/WaveShare-Power-Supply-5V-4A-for-Jetson-Nano-55x21mm-DC-Jack-EN",
      "price": 9.65,
      "currency": "EUR",
      "per": 1,
@@ -1259,15 +1474,46 @@
       "checked": "2026-10-30",
       "signals": [],
       "url": "https://eckstein-shop.de/WaveShare-Power-Supply-5V-4A-for-Jetson-Nano-55x21mm-DC-Jack-EN"
-     }
+     },
+     "note": "Plug 5.5 × 2.1 mm stated on the page",
+     "note_cs": "Konektor 5,5 × 2,1 mm uveden na stránce"
+    },
+    {
+     "id": "eckstein",
+     "supplier": "eckstein",
+     "label": "Eckstein – QITA/BOYAXUAN 5 V 4 A EU",
+     "country": "DE",
+     "url": "https://eckstein-shop.de/?k=2378&lang=eng",
+     "price": 9.99,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Available",
+     "delivery": "1–3 days",
+     "eta_days": [
+      1,
+      3
+     ],
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": false,
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://eckstein-shop.de/boyaxuan-5v4a-eu-wandnetzteil-usb-hub-gs_1"
+     },
+     "note": "No product page found (category only); plug size not confirmed",
+     "note_cs": "Stránku produktu jsme nenašli (jen kategorie); konektor neověřen"
     }
    ]
   },
   {
    "id": "so101.usb_c",
    "group": "SO-101",
-   "name": "USB-A/C → USB-C data cable, ~1 m",
-   "name_cs": "Datový kabel USB-A/C → USB-C, ~1 m",
+   "name": "USB-C data cable, ~1 m (C–C; A–C if your computer has no USB-C)",
+   "name_cs": "Datový kabel USB-C, ~1 m (C–C; počítač bez USB-C: A–C)",
    "role": "PC ↔ bus board",
    "role_cs": "Počítač ↔ řídicí deska",
    "specs": {},
@@ -1279,7 +1525,7 @@
     {
      "id": "alza",
      "supplier": "alza",
-     "label": "Alza – AlzaPower Core USB-A → USB-C 3.2 Gen1 1 m",
+     "label": "Alza – AlzaPower Core USB-C ↔ USB-C 3.2 Gen1, 1 m",
      "country": "CZ",
      "url": "https://www.alza.cz/alzapower-core-usb-c-31-gen1-1m-white-d5472814.htm",
      "price": 199,
@@ -1381,12 +1627,12 @@
   {
    "id": "so101.fasteners",
    "group": "SO-101",
-   "name": "Servo screws and horns",
-   "name_cs": "Šrouby a páky serv",
+   "name": "Screws M2×6 and M3×6 (see the screw table) and servo horns",
+   "name_cs": "Šrouby M2×6 a M3×6 (viz tabulka šroubů) a horny serv",
    "role": "Assembly",
-   "role_cs": "Součástí balení serv",
+   "role_cs": "Montáž",
    "specs": {
-    "note": "SO-101 BOM lists no separate fasteners; screws and horns ship with each STS3215 (README). Seeed kit adds 8 screws + 8 pins."
+    "note": "The official bill of materials lists no screws; counts per arm in data.screws (from the official assembly guide). Horns come with each STS3215. Seeed kit lists 8 screws + 8 pins."
    },
    "constraints": [
     "No bearings in the official SO-101 BOM (the servos carry the joints)."
@@ -1396,7 +1642,7 @@
     {
      "id": "none",
      "supplier": "none",
-     "label": "Included with servos",
+     "label": "Included with the servos? Not confirmed",
      "country": "—",
      "url": "https://github.com/TheRobotStudio/SO-ARM100",
      "price": 0,
@@ -1407,9 +1653,11 @@
      "eta_days": null,
      "vat_customs": "—",
      "checked": "2026-10-30",
-     "status": "verified",
+     "status": "unverified",
      "recommend": true,
-     "reviews": null
+     "reviews": null,
+     "note": "Not confirmed: check the servo boxes; otherwise buy an M2/M3 assortment (see tools)",
+     "note_cs": "Neověřeno: zkontrolujte krabičky serv; jinak kupte sortiment M2/M3 (viz nářadí)"
     }
    ]
   },
@@ -1438,7 +1686,7 @@
      "eta_days": null,
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
      "checked": "2026-10-30",
-     "status": "verified",
+     "status": "carried",
      "recommend": true,
      "note": "README list price",
      "reviews": null
@@ -1516,6 +1764,80 @@
       "signals": [],
       "url": "https://openelab.io/pl/products/seeed-studio-so-101-pro-servo-motor-kit-lerobot"
      }
+    }
+   ]
+  },
+  {
+   "id": "so101.bundle.eckstein_standard",
+   "group": "SO-101",
+   "name": "Eckstein SO-ARM101 Standard 7.4 V dual-arm kit (with printed parts)",
+   "name_cs": "Eckstein SO-ARM101 Standard 7,4 V, sada pro pár (s tištěnými díly)",
+   "role": "Bundle for a 7.4 V pair",
+   "role_cs": "Sada pro pár 7,4 V",
+   "specs": {
+    "item": "ER01050"
+   },
+   "constraints": [],
+   "substitutes": [],
+   "sources": [
+    {
+     "id": "eckstein",
+     "supplier": "eckstein",
+     "label": "Eckstein – SO-ARM101 Standard dual-arm 7.4 V (ER01050)",
+     "country": "DE",
+     "url": "https://eckstein-shop.de/lerobot-soarm101-standard-dual-arm-7-4v_1",
+     "price": 422.99,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Available (rarely stocked)",
+     "delivery": "1–3 days",
+     "eta_days": [
+      1,
+      3
+     ],
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-30",
+     "status": "estimate",
+     "recommend": true,
+     "note": "Configurator sum of leader PLA (223.99 €) + follower PLA (from 199 €); the page also shows “from 228 €” – check the final total",
+     "note_cs": "Součet leaderu PLA (223,99 €) a followeru PLA (od 199 €) v konfigurátoru; stránka uvádí i „od 228 €“ – konečnou cenu ověřte"
+    }
+   ]
+  },
+  {
+   "id": "so101.bundle.eckstein_pro",
+   "group": "SO-101",
+   "name": "Eckstein SO-ARM101 Pro 12 V dual-arm kit (with printed parts)",
+   "name_cs": "Eckstein SO-ARM101 Pro 12 V, sada pro pár (s tištěnými díly)",
+   "role": "Bundle for a pair with a 12 V follower",
+   "role_cs": "Sada pro pár s followerem 12 V",
+   "specs": {
+    "item": "ER01060"
+   },
+   "constraints": [],
+   "substitutes": [],
+   "sources": [
+    {
+     "id": "eckstein",
+     "supplier": "eckstein",
+     "label": "Eckstein – SO-ARM101 Pro dual-arm 12 V (ER01060)",
+     "country": "DE",
+     "url": "https://eckstein-shop.de/lerobot-soarm101-pro-dual-arm-12v_1",
+     "price": 462.99,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Available (rarely stocked)",
+     "delivery": "1–3 days",
+     "eta_days": [
+      1,
+      3
+     ],
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-30",
+     "status": "estimate",
+     "recommend": true,
+     "note": "Sum of leader PLA (223.99 €) + follower PETG-CF 12 V (239 €) in the configurator",
+     "note_cs": "Součet leaderu PLA (223,99 €) a followeru PETG-CF 12 V (239 €) v konfigurátoru"
     }
    ]
   },
@@ -1623,6 +1945,28 @@
      "recommend": true,
      "note": "No minimum order; quote needs upload",
      "reviews": null
+    },
+    {
+     "id": "eckstein",
+     "supplier": "eckstein",
+     "label": "Eckstein – SO-ARM 101 follower printed parts (ED-SO014)",
+     "country": "DE",
+     "url": "https://eckstein-shop.de/the-robot-studio-so-arm-101-follower-3d-print-structural-parts_3",
+     "price": 29.99,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Available (rarely stocked)",
+     "delivery": "1–3 days",
+     "eta_days": [
+      1,
+      3
+     ],
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": true,
+     "note": "From 29.99 € (PLA) to 34.99 € (PETG-CF); no screws",
+     "note_cs": "Od 29,99 € (PLA) do 34,99 € (PETG-CF); bez šroubů"
     }
    ]
   },
@@ -1680,10 +2024,230 @@
      "recommend": true,
      "note": "No minimum order; quote needs upload",
      "reviews": null
+    },
+    {
+     "id": "eckstein",
+     "supplier": "eckstein",
+     "label": "Eckstein – SO-ARM 101 leader printed parts (ED-SO013)",
+     "country": "DE",
+     "url": "https://eckstein-shop.de/the-robot-studio-so-arm-101-leader-3d-print-structural-parts",
+     "price": 29.99,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Available (rarely stocked)",
+     "delivery": "1–3 days",
+     "eta_days": [
+      1,
+      3
+     ],
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": true,
+     "note": "PLA black 29.99 €; no screws",
+     "note_cs": "PLA černá 29,99 €; bez šroubů"
     }
    ],
    "other_options": [
     "Same as follower (Seeed/OpenELAB pair sets, Prusa Center, Craftcloud) (unverified, 2026-10-29)"
+   ]
+  }
+ ],
+ "screws": {
+  "sizes": [
+   "M2×6",
+   "M3×6"
+  ],
+  "status": "verified",
+  "checked": "2026-10-30",
+  "source": {
+   "label": "Hugging Face: LeRobot – SO-101 (Step-by-Step Assembly)",
+   "url": "https://huggingface.co/docs/lerobot/so101"
+  },
+  "counting": "Our count from the official text. \"4 M3x6mm screws on each side / on both sides\" is counted as 4 per side (8); if your parts take only 4 in total, you need 16 fewer M3×6 per arm.",
+  "counting_cs": "Náš součet z oficiálního textu. „4 M3x6mm screws on each side / on both sides“ počítáme jako 4 z každé strany (8); kdyby díly braly jen 4 celkem, potřebujete o 16 šroubů M3×6 na ruku méně.",
+  "included": "unverified",
+  "included_note": "Whether the screws come with the servos is not confirmed: the official bill of materials lists no screws. Check each servo box when it arrives.",
+  "included_note_cs": "Zda jsou šrouby v balení serv, není ověřené: oficiální kusovník šrouby neuvádí. Po doručení zkontrolujte krabičky serv.",
+  "arms": {
+   "follower": [
+    {
+     "id": "j1",
+     "joint": 1,
+     "name": "Joint 1 · base",
+     "name_cs": "Kloub 1 · základna",
+     "m2": 6,
+     "m3": 9,
+     "detail": "servo 4× M2 (2 top, 2 bottom), motor holder 2× M2; horn 1× M3, shoulder part 4× M3 top + 4× M3 bottom",
+     "detail_cs": "servo 4× M2 (2 shora, 2 zespodu), držák serva 2× M2; horn 1× M3, díl ramene 4× M3 shora + 4× M3 zespodu"
+    },
+    {
+     "id": "j2",
+     "joint": 2,
+     "name": "Joint 2 · shoulder",
+     "name_cs": "Kloub 2 · rameno",
+     "m2": 4,
+     "m3": 9,
+     "detail": "servo 4× M2; horn 1× M3, upper arm 4× M3 on each side",
+     "detail_cs": "servo 4× M2; horn 1× M3, horní rameno 4× M3 z každé strany"
+    },
+    {
+     "id": "j3",
+     "joint": 3,
+     "name": "Joint 3 · elbow",
+     "name_cs": "Kloub 3 · loket",
+     "m2": 4,
+     "m3": 9,
+     "detail": "servo 4× M2; horn 1× M3, forearm 4× M3 on each side",
+     "detail_cs": "servo 4× M2; horn 1× M3, předloktí 4× M3 z každé strany"
+    },
+    {
+     "id": "j4",
+     "joint": 4,
+     "name": "Joint 4 · wrist flex",
+     "name_cs": "Kloub 4 · náklon zápěstí",
+     "m2": 4,
+     "m3": 1,
+     "detail": "servo 4× M2; horn 1× M3",
+     "detail_cs": "servo 4× M2; horn 1× M3"
+    },
+    {
+     "id": "j5",
+     "joint": 5,
+     "name": "Joint 5 · wrist roll",
+     "name_cs": "Kloub 5 · rotace zápěstí",
+     "m2": 2,
+     "m3": 9,
+     "detail": "servo 2× M2 (front); single horn 1× M3, wrist to servo 4: 4× M3 on each side",
+     "detail_cs": "servo 2× M2 (zepředu); jediný horn 1× M3, zápěstí k servu 4: 4× M3 z každé strany"
+    },
+    {
+     "id": "gripper",
+     "joint": 6,
+     "name": "Gripper (follower)",
+     "name_cs": "Chapadlo (follower)",
+     "m2": 4,
+     "m3": 13,
+     "detail": "fixed jaw to the wrist horn 4× M3; servo 2× M2 on each side; horn 1× M3; moving jaw 4× M3 on each side",
+     "detail_cs": "pevná čelist na horn zápěstí 4× M3; servo 2× M2 z každé strany; horn 1× M3; pohyblivá čelist 4× M3 z každé strany"
+    }
+   ],
+   "leader": [
+    {
+     "id": "j1",
+     "joint": 1,
+     "name": "Joint 1 · base",
+     "name_cs": "Kloub 1 · základna",
+     "m2": 6,
+     "m3": 9,
+     "detail": "servo 4× M2 (2 top, 2 bottom), motor holder 2× M2; horn 1× M3, shoulder part 4× M3 top + 4× M3 bottom",
+     "detail_cs": "servo 4× M2 (2 shora, 2 zespodu), držák serva 2× M2; horn 1× M3, díl ramene 4× M3 shora + 4× M3 zespodu"
+    },
+    {
+     "id": "j2",
+     "joint": 2,
+     "name": "Joint 2 · shoulder",
+     "name_cs": "Kloub 2 · rameno",
+     "m2": 4,
+     "m3": 9,
+     "detail": "servo 4× M2; horn 1× M3, upper arm 4× M3 on each side",
+     "detail_cs": "servo 4× M2; horn 1× M3, horní rameno 4× M3 z každé strany"
+    },
+    {
+     "id": "j3",
+     "joint": 3,
+     "name": "Joint 3 · elbow",
+     "name_cs": "Kloub 3 · loket",
+     "m2": 4,
+     "m3": 9,
+     "detail": "servo 4× M2; horn 1× M3, forearm 4× M3 on each side",
+     "detail_cs": "servo 4× M2; horn 1× M3, předloktí 4× M3 z každé strany"
+    },
+    {
+     "id": "j4",
+     "joint": 4,
+     "name": "Joint 4 · wrist flex",
+     "name_cs": "Kloub 4 · náklon zápěstí",
+     "m2": 4,
+     "m3": 1,
+     "detail": "servo 4× M2; horn 1× M3",
+     "detail_cs": "servo 4× M2; horn 1× M3"
+    },
+    {
+     "id": "j5",
+     "joint": 5,
+     "name": "Joint 5 · wrist roll",
+     "name_cs": "Kloub 5 · rotace zápěstí",
+     "m2": 2,
+     "m3": 9,
+     "detail": "servo 2× M2 (front); single horn 1× M3, wrist to servo 4: 4× M3 on each side",
+     "detail_cs": "servo 2× M2 (zepředu); jediný horn 1× M3, zápěstí k servu 4: 4× M3 z každé strany"
+    },
+    {
+     "id": "handle",
+     "joint": 6,
+     "name": "Handle and trigger (leader)",
+     "name_cs": "Rukojeť a spoušť (leader)",
+     "m2": 5,
+     "m3": 9,
+     "detail": "leader holder to the wrist 4× M3; handle 1× M2; servo 2× M2 on each side; horn 1× M3; trigger 4× M3",
+     "detail_cs": "držák leaderu na zápěstí 4× M3; rukojeť 1× M2; servo 2× M2 z každé strany; horn 1× M3; spoušť 4× M3"
+    }
+   ]
+  }
+ },
+ "tools_note": "Screws: whether they come with the servos is not confirmed. See the screw table for counts per arm.",
+ "tools_note_cs": "Šrouby: zda jsou v balení serv, není ověřené. Počty na ruku jsou v tabulce šroubů.",
+ "notes": [
+  {
+   "id": "scope",
+   "level": "info",
+   "title": "What this plan covers",
+   "title_cs": "Co plán pokrývá",
+   "text": "Everything up to the first motion (calibration and teleoperation). Recording demonstrations and training later needs a USB camera, which is listed under tools as optional.",
+   "text_cs": "Vše po první pohyb (kalibrace a teleoperace). Pro pozdější nahrávání ukázek a učení potřebujete USB kameru; je mezi nářadím jako volitelná."
+  },
+  {
+   "id": "power_plug",
+   "level": "verify",
+   "title": "Power supply and board: voltage and plug",
+   "title_cs": "Zdroj a deska: napětí a konektor",
+   "text": "The Waveshare board takes a DC 5.5 × 2.1 mm plug (or wires in its screw terminals). Waveshare states 9–12.6 V “matching the servo voltage”; the official SO-101 bill of materials still powers the 7.4 V servos from 5 V. A 12 V 5 A supply fits the 12 V follower. Two of our 12 V supply pages do not state the plug size: check it before ordering.",
+   "text_cs": "Deska Waveshare má vstup DC 5,5 × 2,1 mm (nebo šroubovací svorky). Waveshare uvádí 9–12,6 V „podle napětí serv“; oficiální kusovník SO-101 přesto napájí 7,4V serva zdrojem 5 V. Zdroj 12 V 5 A odpovídá followeru 12 V. U dvou 12V zdrojů stránka obchodu velikost konektoru neuvádí: před objednáním ji ověřte.",
+   "sources": [
+    {
+     "label": "Eckstein: Waveshare Serial Bus Servo Driver Board",
+     "label_cs": "Eckstein: Waveshare Serial Bus Servo Driver Board",
+     "url": "https://eckstein-shop.de/WaveShare-Serial-Bus-Servo-Driver-Board-for-ST-SC-Serial-Bus-Servos-EN",
+     "checked": "2026-10-30"
+    },
+    {
+     "label": "Waveshare wiki: Bus Servo Adapter (A)",
+     "url": "https://www.waveshare.com/wiki/Bus_Servo_Adapter_(A)",
+     "checked": "2026-10-30"
+    },
+    {
+     "label": "SO-ARM100 README (bill of materials)",
+     "label_cs": "SO-ARM100 README (kusovník)",
+     "url": "https://github.com/TheRobotStudio/SO-ARM100",
+     "checked": "2026-10-30"
+    }
+   ]
+  },
+  {
+   "id": "screws",
+   "level": "verify",
+   "title": "Screws: counts known, source not confirmed",
+   "title_cs": "Šrouby: počty známe, původ neověřen",
+   "text": "Per arm the official assembly steps use {f_m2}× M2×6 and up to {f_m3}× M3×6 on the follower and {l_m2}× M2×6 and up to {l_m3}× M3×6 on the leader (screw table in the assembly guide). The bill of materials lists no screws and we have not confirmed that they come with the servos.",
+   "text_cs": "Podle oficiálního postupu potřebuje follower {f_m2}× M2×6 a až {f_m3}× M3×6, leader {l_m2}× M2×6 a až {l_m3}× M3×6 (tabulka šroubů v návodu na sestavení). Kusovník šrouby neuvádí a že jsou v balení serv, jsme neověřili.",
+   "sources": [
+    {
+     "label": "LeRobot – SO-101 assembly",
+     "label_cs": "LeRobot – SO-101, sestavení",
+     "url": "https://huggingface.co/docs/lerobot/so101",
+     "checked": "2026-10-30"
+    }
    ]
   }
  ]

@@ -74,7 +74,7 @@ test('plan totals: follower 12 V, self-printed', () => {
 
 test('plan totals: pair, self-printed and print service', () => {
   const p = buildPlan(data, { robot: 'pair', print: 'self' });
-  assert.deepEqual(p.totals.landed_eur, [388, 414]);
+  assert.deepEqual(p.totals.landed_eur, [388, 413]);
   assert.deepEqual(p.variants.map((v) => v.arm), ['follower_12v', 'leader']);
   const servos = p.groups.flatMap((g) => g.lines).filter((l) => /servo\.c0/.test(l.component));
   assert.equal(sum(servos.map((l) => l.qty)), 12);
@@ -87,6 +87,53 @@ test('plan totals: pair, self-printed and print service', () => {
   assert.ok(s.totals.landed_eur[0] > p.totals.landed_eur[0]);
   // every priced line links to a source with a date and status
   for (const g of p.groups) for (const l of g.lines) { assert.match(l.url, /^https:\/\//); assert.match(l.checked, /^\d{4}-\d\d-\d\d$/); assert.ok(l.status); }
+});
+
+test('default plan is the standard pair; follower 7.4 V and 12 V configs both exist', () => {
+  const p = buildPlan(data, {});
+  assert.equal(p.robot, 'pair_74v');
+  assert.deepEqual(p.variants.map((v) => [v.arm, v.voltage_v]), [['follower_74v', 7.4], ['leader', 7.4]]);
+  const servos = p.groups.flatMap((g) => g.lines).filter((l) => /servo\.c0/.test(l.component));
+  assert.equal(sum(servos.filter((l) => l.component === 'so101.servo.c001').map((l) => l.qty)), 7, '6 follower + 1 leader C001');
+  assert.ok(!p.groups.flatMap((g) => g.lines).some((l) => l.component === 'so101.psu_12v'), 'no 12 V supply in a 7.4 V pair');
+  assert.equal(p.groups.flatMap((g) => g.lines).find((l) => l.component === 'so101.psu_5v').qty, 2);
+  const f = buildPlan(data, { robot: 'follower_74v' });
+  assert.deepEqual(f.variants[0].joints.map((j) => j.codes), Array(6).fill(['C001']));
+  assert.deepEqual(f.totals.landed_eur, [191, 209]);
+  assert.equal(checkPartVariant(data, 'STS3215-C001 7.4V 1/345', 'follower_74v:3').verdict, 'match');
+  assert.equal(checkPartVariant(data, 'STS3215-C018 12V 1/345', 'follower_74v').verdict, 'mismatch');
+});
+
+test('screw table: per joint and per arm, one source for plan, guide and checklist', () => {
+  const p = buildPlan(data, { robot: 'pair_74v' });
+  assert.deepEqual(p.screws.arms.map((a) => [a.kind, a.m2, a.m3]), [['follower', 24, 50], ['leader', 25, 46]]);
+  assert.deepEqual(p.screws.total, { m2: 49, m3: 96 });
+  assert.equal(p.screws.included, 'unverified', 'screws with the servos are not confirmed');
+  assert.equal(buildPlan(data, { robot: 'follower_12v' }).screws.total.m3, 50);
+  assert.match(p.notes.find((n) => n.id === 'screws').text_cs, /follower 24× M2×6 a až 50× M3×6/);
+});
+
+test('a backordered line can be swapped to another recommended source', () => {
+  const p = buildPlan(data, { robot: 'pair', sources: { 'so101.servo.c018': 'openelab' } });
+  const l = p.groups.flatMap((g) => g.lines).find((x) => x.component === 'so101.servo.c018');
+  assert.equal(l.source, 'openelab'); assert.equal(l.swapped, true); assert.equal(l.default_source, 'eckstein');
+  // a source we do not recommend is ignored
+  const q = buildPlan(data, { robot: 'pair_74v', sources: { 'so101.servo.c001': 'openelab' } });
+  assert.equal(q.groups.flatMap((g) => g.lines).find((x) => x.component === 'so101.servo.c001').source, 'eckstein');
+});
+
+test('kit alternatives: landed estimate with import VAT and what is still needed', () => {
+  const p = buildPlan(data, { robot: 'pair' });
+  const seeed = p.alternatives.find((a) => /seeed/.test(a.component));
+  assert.ok(seeed.landed.eur[1] > seeed.price_eur * 1.21, 'import VAT and fees above 150 €');
+  assert.ok(seeed.still_needed_cs.some((t) => /Zdroje/.test(t)));
+  assert.ok(buildPlan(data, {}).alternatives.some((a) => /eckstein_standard/.test(a.component)));
+});
+
+test('next step needs servos, board, power supply and USB cable; Python 3.12', () => {
+  assert.deepEqual(data.arrivals.filter((a) => a.needed_for_wizard).map((a) => a.id).sort(), ['board', 'psu', 'servos', 'usb']);
+  assert.match(data.tools.find((t) => t.id === 'pc').name, /Python 3\.12/);
+  assert.ok(data.tools.some((t) => t.id === 'camera' && !t.required));
 });
 
 test('plan rejects unknown options', () => {
