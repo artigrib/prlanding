@@ -37,6 +37,12 @@
     <canvas id="c" aria-label="Humanoid ROBOTO ORIGIN na podlaze s mřížkou. Chůze klávesami W A S D nebo joystickem, kliknutím do robota do něj strčíte."></canvas>
     <div class="hud" id="hud" hidden><span class="hud-dot" id="hud-dot" aria-hidden="true"></span><span id="hud-text"></span></div>
     <p class="hint mono" id="hint" hidden>Táhněte pro otočení pohledu · kolečko pro přiblížení · kliknutím do robota do něj strčíte</p>
+    <!-- touch / narrow screens: drive controls on the canvas, in the thumb zone (CSS shows them only there) -->
+    <div class="touch" id="touch" data-hud="Řídí naučená politika chůze · levý joystick chůze, pravý otáčení">
+      <div class="tpad tpad-move" id="tpad-move" role="img" aria-label="Chůze: nahoru vpřed, dolů vzad, do stran krok vlevo a vpravo"><span class="knob" id="tknob-move"></span></div>
+      <div class="tpad tpad-turn" id="tpad-turn" role="img" aria-label="Otáčení: táhněte vlevo nebo vpravo"><span class="tturn-l" aria-hidden="true">⟲</span><span class="tturn-r" aria-hidden="true">⟳</span><span class="knob" id="tknob-turn"></span></div>
+      <button type="button" class="tbtn" id="t-standup">Postavit</button>
+    </div>
     <div class="loader" id="loader"><div class="loader-in">
       <p class="mono" role="status">Načítáme simulaci…</p>
       <div class="prog" aria-hidden="true"><b id="prog"></b></div>

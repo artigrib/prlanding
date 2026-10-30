@@ -20,7 +20,8 @@ const T = {
     ogTitle: 'ROBOTO ORIGIN v simulaci', ogDesc: 'Otevřený humanoid RoboParty chodí v prohlížeči: naučená politika chůze, 23 kloubů, strčení myší.', locale: 'cs_CZ',
     perf: 'Výkon: grafika tohoto zařízení je slabší, stíny jsme vypnuli.', simple: 'Zjednodušený režim (nižší rozlišení, bez mřížky)',
     mode: 'Režim', walk: 'Chůze (naučená politika)', stand: 'Na stojanu (klouby ručně)',
-    padLabel: 'Joystick: nahoru vpřed, do stran otáčení', keys: 'Klávesy: W/S vpřed a vzad · A/D otáčení · Q/E krok do strany · gamepad funguje také',
+    padLabel: 'Joystick: nahoru vpřed, do stran otáčení',
+    tMove: 'Chůze: nahoru vpřed, dolů vzad, do stran krok vlevo a vpravo', touchHud: 'Řídí naučená politika chůze · levý joystick chůze, pravý otáčení', tTurn: 'Otáčení: táhněte vlevo nebo vpravo', tUp: 'Postavit', keys: 'Klávesy: W/S vpřed a vzad · A/D otáčení · Q/E krok do strany · gamepad funguje také',
     shove: 'Strčit', drop: 'Pustit z výšky', standup: 'Postavit', view: 'Pohled', explode: 'Rozložený pohled', pose: 'Výchozí póza',
     joints: 'Klouby (23)', about: 'O simulaci a licence',
     aboutP: `Model, sítě a politika chůze: <a href="https://github.com/Roboparty/roboto_origin">RoboParty roboto_origin</a> (popis robota CERN-OHL-W-2.0, politika a software GPL-3.0). Sítě jsme zjednodušili pro prohlížeč, zbytek je beze změny – <a href="NOTICE.txt">licence, změny a přesná verze</a>. Fyzika <a href="https://mujoco.org/">MuJoCo</a>, politika běží přes ONNX Runtime Web. Nejsme s RoboParty nijak spojeni; ROBOTO ORIGIN a RoboParty jsou jejich označení. Simulace je zjednodušená, skutečný robot se chová jinak.`,
@@ -43,7 +44,8 @@ const T = {
     ogTitle: 'ROBOTO ORIGIN in simulation', ogDesc: 'RoboParty’s open humanoid walks in your browser: trained walking policy, 23 joints, push it with a click.', locale: 'en_GB',
     perf: 'Performance: this device has weaker graphics, so shadows are off.', simple: 'Simplified mode (lower resolution, no grid)',
     mode: 'Mode', walk: 'Walk (trained policy)', stand: 'On the gantry (joints by hand)',
-    padLabel: 'Joystick: up walks forward, sideways turns', keys: 'Keys: W/S forward and back · A/D turn · Q/E sidestep · a gamepad works too',
+    padLabel: 'Joystick: up walks forward, sideways turns',
+    tMove: 'Walk: up forward, down back, sideways to sidestep', touchHud: 'Walking policy in control · left stick walks, right control turns', tTurn: 'Turn: drag left or right', tUp: 'Stand up', keys: 'Keys: W/S forward and back · A/D turn · Q/E sidestep · a gamepad works too',
     shove: 'Push', drop: 'Drop from height', standup: 'Stand up', view: 'View', explode: 'Exploded view', pose: 'Default pose',
     joints: 'Joints (23)', about: 'About the simulation and licences',
     aboutP: `Model, meshes and walking policy: <a href="https://github.com/Roboparty/roboto_origin">RoboParty roboto_origin</a> (robot description CERN-OHL-W-2.0, policy and software GPL-3.0). We simplified the meshes for the browser; everything else is unchanged – <a href="../../../sim/origin/NOTICE.txt">licences, changes and exact version</a>. Physics by <a href="https://mujoco.org/">MuJoCo</a>; the policy runs on ONNX Runtime Web. We are not affiliated with RoboParty; ROBOTO ORIGIN and RoboParty are their marks. The simulation is simplified; the real robot behaves differently.`,
@@ -92,6 +94,12 @@ for (const L of ['cs', 'en']) {
     <canvas id="c" aria-label="${t.canvas}"></canvas>
     <div class="hud" id="hud" hidden><span class="hud-dot" id="hud-dot" aria-hidden="true"></span><span id="hud-text"></span></div>
     <p class="hint mono" id="hint" hidden>${t.hint}</p>
+    <!-- touch / narrow screens: drive controls on the canvas, in the thumb zone (CSS shows them only there) -->
+    <div class="touch" id="touch" data-hud="${t.touchHud}">
+      <div class="tpad tpad-move" id="tpad-move" role="img" aria-label="${t.tMove}"><span class="knob" id="tknob-move"></span></div>
+      <div class="tpad tpad-turn" id="tpad-turn" role="img" aria-label="${t.tTurn}"><span class="tturn-l" aria-hidden="true">⟲</span><span class="tturn-r" aria-hidden="true">⟳</span><span class="knob" id="tknob-turn"></span></div>
+      <button type="button" class="tbtn" id="t-standup">${t.tUp}</button>
+    </div>
     <div class="loader" id="loader"><div class="loader-in">
       <p class="mono" role="status">${t.loading}</p>
       <div class="prog" aria-hidden="true"><b id="prog"></b></div>

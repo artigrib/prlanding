@@ -495,5 +495,55 @@ for (const vp of [{ width: 360, height: 780 }, { width: 1440, height: 900 }]) {
   });
 }
 
+// ROBOTO ORIGIN on phones: drive sticks sit on the canvas in the first screen (portrait + landscape) and drive the robot
+for (const vp of [{ width: 390, height: 844 }, { width: 844, height: 390 }]) {
+  await check(`origin touch sticks ${vp.width}x${vp.height}`, '/sim/origin/?test=1', async p => {
+    await p.setViewportSize(vp);
+    await p.waitForFunction(() => window.__origin && (window.__origin.ready || window.__origin.error), null, { timeout: 90000 });
+    await p.evaluate(() => window.__origin.pause(true));
+    for (const id of ['#tpad-move', '#tpad-turn', '#t-standup']) {
+      const b = await p.locator(id).boundingBox();
+      if (!b || b.y < 0 || b.y + b.height > vp.height || b.x < 0 || b.x + b.width > vp.width) throw new Error(id + ' not in the first screen: ' + JSON.stringify(b));
+    }
+    if (await p.locator('#pad').isVisible()) throw new Error('panel joystick still shown on a phone');
+    if ((await p.evaluate(() => window.scrollY)) !== 0) throw new Error('page scrolled');
+    const drag = (sel, dx, dy, type) => p.evaluate(([sel, dx, dy, type]) => {
+      const el = document.querySelector(sel), r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const ev = (t, x, y) => el.dispatchEvent(new PointerEvent(t, { pointerId: 7, pointerType: 'touch', isPrimary: true, clientX: x, clientY: y, bubbles: true, cancelable: true }));
+      if (type !== 'up') { ev('pointerdown', cx, cy); ev('pointermove', cx + dx, cy + dy); } else ev('pointerup', cx, cy);
+    }, [sel, dx, dy, type]);
+    await drag('#tpad-move', 0, -60);                       // stick up = walk forward
+    await p.evaluate(() => window.__origin.advance(1));
+    let c = (await p.evaluate(() => window.__origin.state())).cmd;
+    if (!(c.vx > 0.3)) throw new Error('forward stick did not command vx: ' + JSON.stringify(c));
+    await drag('#tpad-move', 0, 0, 'up');
+    await drag('#tpad-turn', -70, 0);                       // turn control left = turn left (+yaw)
+    await p.evaluate(() => window.__origin.advance(1));
+    c = (await p.evaluate(() => window.__origin.state())).cmd;
+    if (!(c.yaw > 0.4) || Math.abs(c.vx) > 0.05) throw new Error('turn control: ' + JSON.stringify(c));
+    await drag('#tpad-turn', 0, 0, 'up');
+    await p.evaluate(() => window.__origin.advance(1));
+    c = (await p.evaluate(() => window.__origin.state())).cmd;
+    if (Math.abs(c.yaw) > 0.05) throw new Error('release did not stop: ' + JSON.stringify(c));
+    // the canvas outside the sticks still orbits (the sticks do not cover it)
+    const hit = await p.evaluate(() => { const r = document.getElementById('c').getBoundingClientRect(); return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2).id; });
+    if (hit !== 'c') throw new Error('canvas centre covered by ' + hit);
+    const pc = await p.locator('#tpad-move').evaluate(e => getComputedStyle(e).touchAction);
+    if (pc !== 'none') throw new Error('stick touch-action ' + pc);
+    await p.addScriptTag({ content: AXE });
+    const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
+    const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    if (bad.length) throw new Error('axe: ' + bad.map(v => `${v.id} (${v.nodes.length}) ${v.nodes[0].target}`).join('; '));
+    if ((await p.evaluate(() => document.documentElement.scrollWidth)) > vp.width) throw new Error('horizontal scroll');
+  });
+}
+// desktop: no touch overlay, the panel joystick stays
+await check('origin desktop keeps the panel joystick', '/sim/origin/?test=1', async p => {
+  await p.setViewportSize({ width: 1440, height: 900 });
+  await p.waitForFunction(() => window.__origin && (window.__origin.ready || window.__origin.error), null, { timeout: 90000 });
+  if (await p.locator('#tpad-move').isVisible()) throw new Error('touch overlay on desktop');
+  if (!(await p.locator('#pad').isVisible())) throw new Error('panel joystick missing');
+});
+
 await browser.close();
 process.exit(failed ? 1 : 0);
