@@ -135,7 +135,7 @@
       'Spojovací materiál, roztříděný po krocích': 'Fasteners, sorted by assembly step',
       'Nastavení elektroniky a funkční test': 'Electronics setup and function test',
       'Tištěný návod a bezpečnostní informace': 'Printed guide and safety information',
-      'Počty dle kusovníku projektu SO-ARM100.': 'Quantities per the SO-ARM100 bill of materials.',
+      'Počty dle kusovníku projektu SO-ARM100 (follower 7,4 V, zdroj 5 V). Follower s 12V servy: 6× C018 a zdroj 12 V / 5 A.': 'Quantities per the SO-ARM100 bill of materials (7.4 V follower, 5 V supply). Follower with 12 V servos: 6× C018 and a 12 V / 5 A supply.',
       'Položky dle kusovníku projektu; přesné počty potvrdíme před expedicí.': 'Items per the project’s bill of materials; we confirm exact quantities before shipping.',
       'Zvládnu sestavení bez zkušeností?': 'Can I build it with no experience?',
       'Jak funguje předobjednávka?': 'How does the pre-order work?',

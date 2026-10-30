@@ -66,31 +66,33 @@
 <p>All servos are Feetech STS3215, but the gear ratio differs. The follower has six identical servos; the leader has three different ratios so it is easy to guide by hand yet holds its own weight.<sup><a href="#sources">1</a></sup> A mix-up is the most common mistake, and it only shows once the arm is assembled.</p>
 <div class="doc-t-wrap" tabindex="0" role="region" aria-label="Servo gear ratio per joint">
 <table class="doc-t">
-<thead><tr><th scope="col">ID</th><th scope="col">Joint (LeRobot name)</th><th scope="col">Follower</th><th scope="col">Leader</th></tr></thead>
+<thead><tr><th scope="col">ID</th><th scope="col">Joint (LeRobot name)</th><th scope="col">Follower 7.4 V (standard)</th><th scope="col">Follower 12 V</th><th scope="col">Leader (always 7.4 V)</th></tr></thead>
 <tbody>
-<tr><td class="n">1</td><th scope="row">Base rotation (shoulder_pan)</th><td>1/345 (C001)</td><td>1/191 (C044)</td></tr>
-<tr><td class="n">2</td><th scope="row">Shoulder (shoulder_lift)</th><td>1/345 (C001)</td><td>1/345 (C001)</td></tr>
-<tr><td class="n">3</td><th scope="row">Elbow (elbow_flex)</th><td>1/345 (C001)</td><td>1/191 (C044)</td></tr>
-<tr><td class="n">4</td><th scope="row">Wrist pitch (wrist_flex)</th><td>1/345 (C001)</td><td>1/147 (C046)</td></tr>
-<tr><td class="n">5</td><th scope="row">Wrist roll (wrist_roll)</th><td>1/345 (C001)</td><td>1/147 (C046)</td></tr>
-<tr><td class="n">6</td><th scope="row">Gripper (gripper)</th><td>1/345 (C001)</td><td>1/147 (C046)</td></tr>
+<tr><td class="n">1</td><th scope="row">Base rotation (shoulder_pan)</th><td>1/345 (C001)</td><td>1/345 (C018)</td><td>1/191 (C044)</td></tr>
+<tr><td class="n">2</td><th scope="row">Shoulder (shoulder_lift)</th><td>1/345 (C001)</td><td>1/345 (C018)</td><td>1/345 (C001)</td></tr>
+<tr><td class="n">3</td><th scope="row">Elbow (elbow_flex)</th><td>1/345 (C001)</td><td>1/345 (C018)</td><td>1/191 (C044)</td></tr>
+<tr><td class="n">4</td><th scope="row">Wrist pitch (wrist_flex)</th><td>1/345 (C001)</td><td>1/345 (C018)</td><td>1/147 (C046)</td></tr>
+<tr><td class="n">5</td><th scope="row">Wrist roll (wrist_roll)</th><td>1/345 (C001)</td><td>1/345 (C018)</td><td>1/147 (C046)</td></tr>
+<tr><td class="n">6</td><th scope="row">Gripper (gripper)</th><td>1/345 (C001)</td><td>1/345 (C018)</td><td>1/147 (C046)</td></tr>
+<tr><th scope="row" colspan="2">Power supply</th><td>5 V (≥ 4 A)</td><td>12 V (≥ 5 A)</td><td>5 V (≥ 4 A)</td></tr>
 </tbody>
 </table>
 </div>
-<p class="src">Ratios from the official LeRobot guide, codes C001, C044 and C046 from the SO-ARM100 bill of materials.<sup><a href="#sources">1, 2</a></sup> For a pair: 7× 1/345, 2× 1/191, 3× 1/147. We haven’t yet checked on real units whether the code or ratio is marked on the servo itself; if you can’t find a marking, confirm with the seller and label the servos straight away.</p>
-<p><b>Voltage:</b> the 7.4 V servos run from a 5 V supply. The follower can also be built with stronger 12 V servos; it then needs a 12 V supply rated at least 5 A. The SO-101 leader always uses 7.4 V servos.<sup><a href="#sources">2</a></sup></p>
+<p class="src">Ratios from the official LeRobot guide, codes C001, C044 and C046 from the SO-ARM100 bill of materials, C018 from the maker’s number on the shop page.<sup><a href="#sources">1, 2</a></sup> For a pair with the standard follower: 7× C001 (1/345), 2× C044 (1/191), 3× C046 (1/147). With a 12 V follower: 6× C018, and for the leader 1× C001, 2× C044, 3× C046. The <a href="{root}en/plan/so101/">buying plan</a> covers both.</p>
+<p><b>Label them as you unpack.</b> Keep every parcel of servos separate and label each servo straight away: the code from the listing or box, L/F and the joint number. We haven’t yet checked on real units whether the code or ratio is printed on the servo itself; if it is, check that too. We will add a photo of the marking after our own build.</p>
+<p><b>Voltage:</b> the 7.4 V servos run from a 5 V supply. The follower can also be built with stronger 12 V servos (C018); it then needs a 12 V supply rated at least 5 A. The SO-101 leader always uses 7.4 V servos.<sup><a href="#sources">2</a></sup> <b>Never mix</b> 12 V and 7.4 V servos on one bus or one power supply.</p>
 <h3>Checklist</h3>
 <ul class="chk">
-<li>Servos sorted into leader and follower and labelled with the joint number from the table.</li>
+<li>Every parcel of servos kept separate, servos labelled (code, L/F, joint number from the table).</li>
 <li>The supply matches the servos: 5 V for 7.4 V servos, 12 V (5 A+) only for 12 V follower servos.</li>
 <li>2 servo driver boards, 2 USB-C cables, clamps.</li>
-<li>Phillips #0 and #1 screwdrivers, M2×6 and M3×6 screws.</li>
+<li>Phillips #0 and #1 screwdrivers. Screws for a pair: {sc:pair_m2}× M2×6 and up to {sc:pair_m3}× M3×6 (<a href="#screws">table in stage 3</a>).</li>
 <li>You’ve looked through the <a href="{root}en/kit/so101/">exploded view</a> or the Assembly animation.</li>
 </ul>
 <h3>When it doesn’t work</h3>
 <ul>
 <li class="fix"><b>I can’t tell the gear ratio.</b> Don’t guess from the looks; the servos look the same. Ask the seller or the kit supplier.</li>
-<li class="fix"><b>Screws are missing.</b> The SO-ARM100 bill of materials doesn’t list screws separately; the official guide only uses M2×6 and M3×6.<sup><a href="#sources">1, 2</a></sup> In our kit they are in the fasteners bag sorted by step.</li>
+<li class="fix"><b>Screws are missing.</b> The SO-ARM100 bill of materials doesn’t list screws separately; the official guide only uses M2×6 and M3×6.<sup><a href="#sources">1, 2</a></sup> We haven’t confirmed that the screws come with the servos. The <a href="#screws">table in stage 3</a> shows how many each arm needs; as a backup, buy an assortment of M2×6 and M3×6 Phillips screws with some spares. In our kit they are in the fasteners bag sorted by step.</li>
 </ul>
 </div>
 </div>
@@ -109,12 +111,21 @@
 <li>Supports everywhere, except slopes steeper than 45° to the horizontal. <b>No supports in screw holes with a horizontal axis.</b></li>
 <li>No need to orient anything: all leader or follower parts are in a single file, already oriented Z-up to minimise supports. There are files for 220 × 220 mm beds (Ender) and 205 × 250 mm beds (Prusa).</li>
 </ul>
-<p><b>Gauges first.</b> The Gauges folder has test prints: a gauge for the STS3215 servo (Gauge 0 and Gauge tight) or for a 4×2 Lego brick. If gauge 0 doesn’t fit, fix your printer settings before printing a whole arm.<sup><a href="#sources">2</a></sup></p>
+<p><b>Gauges first.</b> The Gauges folder has test prints: a gauge for the STS3215 servo (Gauge 0 and Gauge tight) or for a 4×2 Lego brick. If gauge 0 doesn’t fit, fix your printer settings before printing a whole arm.<sup><a href="#sources">2</a></sup> <b>Servos not here yet?</b> Print the Lego gauge: almost every home has a 4×2 brick, and printing doesn’t have to wait for the parcel.</p>
+<h3 id="what-to-print">What to print</h3>
+<p>Paths in the <a href="https://github.com/TheRobotStudio/SO-ARM100">SO-ARM100 repository</a> (checked 30 Oct 2026). Pick one of each pair of gauges and one arm file per arm to suit your bed:<sup><a href="#sources">2</a></sup></p>
+<ul>
+<li>Servo gauge: <a href="https://github.com/TheRobotStudio/SO-ARM100/blob/main/STL/Gauges/Gauge_0.STL"><code>STL/Gauges/Gauge_0.STL</code></a> and <a href="https://github.com/TheRobotStudio/SO-ARM100/blob/main/STL/Gauges/Gauge_tight_1.STL"><code>Gauge_tight_1.STL</code></a>; or Lego: <a href="https://github.com/TheRobotStudio/SO-ARM100/blob/main/STL/Gauges/Lego_Size_Test_02_zero.STL"><code>Lego_Size_Test_02_zero.STL</code></a> and <a href="https://github.com/TheRobotStudio/SO-ARM100/blob/main/STL/Gauges/Lego_Size_Test_02_minuspoint1.STL"><code>Lego_Size_Test_02_minuspoint1.STL</code></a>.</li>
+<li>Follower: <a href="https://github.com/TheRobotStudio/SO-ARM100/blob/main/STL/SO101/Follower/Ender_Follower_SO101.stl"><code>STL/SO101/Follower/Ender_Follower_SO101.stl</code></a> (220 × 220 mm bed) or <a href="https://github.com/TheRobotStudio/SO-ARM100/blob/main/STL/SO101/Follower/Prusa_Follower_SO101.stl"><code>Prusa_Follower_SO101.stl</code></a> (205 × 250 mm).</li>
+<li>Leader: <a href="https://github.com/TheRobotStudio/SO-ARM100/blob/main/STL/SO101/Leader/Ender_Leader_SO101.stl"><code>STL/SO101/Leader/Ender_Leader_SO101.stl</code></a> or <a href="https://github.com/TheRobotStudio/SO-ARM100/blob/main/STL/SO101/Leader/Prusa_Leader_SO101.stl"><code>Prusa_Leader_SO101.stl</code></a>.</li>
+<li>Plate for the driver board, 1 per arm: <a href="https://github.com/TheRobotStudio/SO-ARM100/blob/main/STL/SO101/Individual/WaveShare_Mounting_Plate_SO101.stl"><code>STL/SO101/Individual/WaveShare_Mounting_Plate_SO101.stl</code></a> (for the Seeed board <code>Seeedstudio_Mounting_Plate_SO101.stl</code>). The repository lists it with the common parts; we haven’t checked whether the whole-arm file contains it, so plan it as a separate print.</li>
+</ul>
+<p class="src">For Bambu Lab A1 mini printers the same folders have <code>BambuLabA1mini_…_SO101.stl</code> files. Single parts are in <code>STL/SO101/Individual</code>.</p>
 <h3>Checklist</h3>
 <ul class="chk">
 <li>Printer calibrated, bed clean and dry.</li>
 <li>Gauge 0 fits the servo (or Lego brick) as in the repository’s video.</li>
-<li>Leader and follower files printed for your bed size.</li>
+<li>Leader and follower files printed for your bed size, plus 2 plates for the driver boards.</li>
 <li>Supports removed, screw holes and servo pockets clean.</li>
 </ul>
 <h3>When it doesn’t work</h3>
@@ -133,19 +144,23 @@
 <div class="a4 prose">
 <h2>Every servo gets its own ID, before assembly</h2>
 <p class="stage-meta"><span>Time <b>{bt:e2} h including installing LeRobot (estimate)</b></span><span>Difficulty <b>easy</b></span></p>
-<p><b>Dry run:</b> go through the whole process (port, IDs, calibration, test) in the <a href="{root}sim/so101/nastaveni/?lang=en">servo setup dry run</a>. Out of the box the emulated servos all have ID 1, like the real ones, and the wizard can simulate typical faults too.</p>
-<p>Installation from the official guide (Python 3.12):<sup><a href="#sources">3, 1</a></sup></p>
-<pre tabindex="0"><code>conda create -y -n lerobot python=3.12
-conda activate lerobot
-git clone https://github.com/huggingface/lerobot.git
-cd lerobot
-pip install -e ".[core_scripts]"
-pip install -e ".[feetech]"</code></pre>
-<p>Find the port of each driver board with <code>lerobot-find-port</code> (it asks you to unplug the USB cable). On Linux you may need to grant access to the port: <code>sudo chmod 666 /dev/ttyACM0</code>.<sup><a href="#sources">1</a></sup></p>
-<p>Then for the follower (and the same for the leader with <code>--teleop.type=so101_leader</code> and <code>--teleop.port</code>):<sup><a href="#sources">1</a></sup></p>
+<p>LeRobot sets up the real servos with <code>lerobot-setup-motors</code> (below). <b>Dry run:</b> you can go through the whole process (port, IDs, calibration, test) first in the <a href="{root}sim/so101/nastaveni/?lang=en">servo setup dry run</a>. Out of the box the emulated servos all have ID 1, like the real ones, and the wizard can simulate typical faults too.</p>
+<p id="install">Installation: Python 3.12 and LeRobot 0.6.1 from PyPI. All our SO-101 guides use the same steps (assembly, <a href="{root}en/guides/so101-lerobot-first-steps/">first steps</a> and <a href="{root}en/guides/so101-lerobot-simulation/">simulation</a>); we pin the version we tested against the virtual arm.<sup><a href="#sources">3, 1</a></sup></p>
+<pre tabindex="0"><code>python3.12 -m venv .venv-lerobot
+source .venv-lerobot/bin/activate
+pip install "lerobot[feetech,core-scripts]==0.6.1"</code></pre>
+<p class="src">Windows: <code>py -3.12 -m venv .venv-lerobot</code> and <code>.venv-lerobot\Scripts\activate</code>. The official guide recommends a conda environment (Miniforge); that works the same way, with <code>conda create -n lerobot python=3.12</code> instead of <code>venv</code>. You need <code>ffmpeg</code> only later, for recording camera video, not for the first motion (Linux <code>sudo apt install ffmpeg</code>, macOS <code>brew install ffmpeg</code>).</p>
+<p>Find the port of each driver board with <code>lerobot-find-port</code> (it asks you to unplug the USB cable). On Linux it looks like <code>/dev/ttyACM0</code>, on macOS <code>/dev/tty.usbmodem…</code>, on Windows <code>COM3</code>. In the examples below we write <code>/dev/ttyACM0</code> for the follower and <code>/dev/ttyACM1</code> for the leader: replace them with yours. On Linux you may need to grant access to the port: <code>sudo chmod 666 /dev/ttyACM0</code>.<sup><a href="#sources">1</a></sup></p>
+<p class="src">Our note on Windows: if no new COM port shows up in Device Manager after you plug in the board, the USB-to-serial driver is missing. Waveshare boards use WCH chips (CH343 or CH340); we haven’t checked which one your board has, so read the marking on the chip and get the driver from WCH.</p>
+<p>Then the follower and the leader (only the one you are setting up is connected):<sup><a href="#sources">1</a></sup></p>
 <pre tabindex="0"><code>lerobot-setup-motors \
     --robot.type=so101_follower \
-    --robot.port=/dev/tty.usbmodem585A0076841  # &lt;- paste here the port found at previous step</code></pre>
+    --robot.port=/dev/ttyACM0      # follower port from lerobot-find-port
+
+lerobot-setup-motors \
+    --teleop.type=so101_leader \
+    --teleop.port=/dev/ttyACM1     # leader port from lerobot-find-port</code></pre>
+<p class="src">Before writing an ID, LeRobot only checks that it is talking to an STS3215; it cannot tell the voltage or the gear ratio. Keep track of the variant with the labels from stage 0.</p>
 <p>The script prompts “Connect the controller board to the 'gripper' motor only and press enter.” Connect <b>only one servo</b>, with nothing else daisy-chained to it. It starts with the gripper (ID 6) and ends with the base rotation (ID 1).<sup><a href="#sources">1</a></sup></p>
 <h3>Checklist</h3>
 <ul class="chk">
@@ -177,6 +192,10 @@ pip install -e ".[feetech]"</code></pre>
 <p class="stage-meta"><span>Time <b>{bt:e3_arm} h per arm, {bt:e3} h per pair (estimate)</b></span><span>Difficulty <b>hard</b></span></p>
 <p>Steps and screws are from the official guide, which has a short video for each joint.<sup><a href="#sources">1</a></sup> Play an animation in the official order on the <a href="{root}en/kit/so101/">SO-101</a> page with the Assembly button, or in the <a href="{root}sim/so101/?lang=en">simulation</a> under “What the arm is made of”.</p>
 <p><b>General rules.</b> The official guide uses just two screw sizes: <b>M2×6</b> (the smallest) mostly to hold servos and holders, and <b>M3×6</b> for the horns (the servo’s rotating disc) and the parts fixed to them. On servos with two horns only the top one gets a screw; the bottom horn has none.<sup><a href="#sources">1</a></sup></p>
+<h3 id="screws">Screws per arm</h3>
+<p>How many screws each step uses, added up from the steps of the official guide.<sup><a href="#sources">1</a></sup> The <a href="{root}en/plan/so101/">buying plan</a> and the checklist use the same table.</p>
+{sc:table}
+<p class="src">For a pair: {sc:pair_m2}× M2×6 and up to {sc:pair_m3}× M3×6. {sc:counting} {sc:included} Keep some spares: small screws get lost easily.</p>
 <figure class="doc-fig"><picture><source type="image/webp" srcset="{root}img/assembly/so101/03-horns-600.webp 600w, {root}img/assembly/so101/03-horns-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="{root}img/assembly/so101/03-horns-1200.jpg" srcset="{root}img/assembly/so101/03-horns-600.jpg 600w, {root}img/assembly/so101/03-horns-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="An STS3215 servo with both horns highlighted in orange, the top horn with an M3×6 screw in the middle and a reference mark" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 4 – A servo with two horns: the top one is secured with 1× M3×6, the bottom one gets no screw. The mark is only for orientation; the official guide prescribes no horn zero position, calibration in stage 5 sets it (render from the CAD model).</figcaption></figure>
 
 <h3>Joint 1: base rotation (ID 1)</h3>
@@ -195,14 +214,14 @@ pip install -e ".[feetech]"</code></pre>
 <li>Attach the upper arm with 4× M3×6 on each side.</li>
 </ul>
 <figure class="doc-fig"><picture><source type="image/webp" srcset="{root}img/assembly/so101/07-j2-servo-600.webp 600w, {root}img/assembly/so101/07-j2-servo-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="{root}img/assembly/so101/07-j2-servo-1200.jpg" srcset="{root}img/assembly/so101/07-j2-servo-600.jpg 600w, {root}img/assembly/so101/07-j2-servo-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="Joint 2: servo 2 slides into the holder on the shoulder from above, 4 M2×6 screws" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 8 – Joint 2: servo 2 slid in from the top, 4× M2×6 (render from the CAD model).</figcaption></figure>
-<figure class="doc-fig"><picture><source type="image/webp" srcset="{root}img/assembly/so101/08-j2-upper-arm-600.webp 600w, {root}img/assembly/so101/08-j2-upper-arm-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="{root}img/assembly/so101/08-j2-upper-arm-1200.jpg" srcset="{root}img/assembly/so101/08-j2-upper-arm-600.jpg 600w, {root}img/assembly/so101/08-j2-upper-arm-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="Joint 2: the upper arm goes onto the horn of servo 2, M3×6 screws" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 9 – Joint 2: the upper arm onto servo 2, 4× M3×6 on each side (render from the CAD model).</figcaption></figure>
+<figure class="doc-fig"><picture><source type="image/webp" srcset="{root}img/assembly/so101/08-j2-upper-arm-600.webp 600w, {root}img/assembly/so101/08-j2-upper-arm-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="{root}img/assembly/so101/08-j2-upper-arm-1200.jpg" srcset="{root}img/assembly/so101/08-j2-upper-arm-600.jpg 600w, {root}img/assembly/so101/08-j2-upper-arm-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="Joint 2: the upper arm goes onto the horn of servo 2, M3×6 screws" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 9 – Joint 2: the upper arm onto servo 2, 8× M3×6 (4 on each side) (render from the CAD model).</figcaption></figure>
 <h3>Joint 3: elbow (ID 3)</h3>
 <ul>
 <li>Both horns, top one M3×6. Insert servo 3 and fix it with 4× M2×6.</li>
 <li>Attach the forearm to servo 3 with 4× M3×6 on each side.</li>
 </ul>
 <figure class="doc-fig"><picture><source type="image/webp" srcset="{root}img/assembly/so101/09-j3-servo-600.webp 600w, {root}img/assembly/so101/09-j3-servo-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="{root}img/assembly/so101/09-j3-servo-1200.jpg" srcset="{root}img/assembly/so101/09-j3-servo-600.jpg 600w, {root}img/assembly/so101/09-j3-servo-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="Joint 3: servo 3 goes into the top end of the upper arm, 4 M2×6 screws" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 10 – Joint 3: servo 3 into the upper arm, 4× M2×6 (render from the CAD model).</figcaption></figure>
-<figure class="doc-fig"><picture><source type="image/webp" srcset="{root}img/assembly/so101/10-j3-forearm-600.webp 600w, {root}img/assembly/so101/10-j3-forearm-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="{root}img/assembly/so101/10-j3-forearm-1200.jpg" srcset="{root}img/assembly/so101/10-j3-forearm-600.jpg 600w, {root}img/assembly/so101/10-j3-forearm-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="Joint 3: the forearm goes onto the horn of servo 3, M3×6 screws" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 11 – Joint 3: the forearm onto servo 3, 4× M3×6 on each side (render from the CAD model).</figcaption></figure>
+<figure class="doc-fig"><picture><source type="image/webp" srcset="{root}img/assembly/so101/10-j3-forearm-600.webp 600w, {root}img/assembly/so101/10-j3-forearm-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="{root}img/assembly/so101/10-j3-forearm-1200.jpg" srcset="{root}img/assembly/so101/10-j3-forearm-600.jpg 600w, {root}img/assembly/so101/10-j3-forearm-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="Joint 3: the forearm goes onto the horn of servo 3, M3×6 screws" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 11 – Joint 3: the forearm onto servo 3, 8× M3×6 (4 on each side) (render from the CAD model).</figcaption></figure>
 <h3>Joint 4: wrist pitch (ID 4)</h3>
 <ul>
 <li>Both horns, top one M3×6. <b>First</b> slide on motor holder 4, <b>then</b> slide in servo 4 and fix it with 4× M2×6.</li>
@@ -214,15 +233,15 @@ pip install -e ".[feetech]"</code></pre>
 <li>This servo takes <b>only one horn</b>; secure it with an M3×6.</li>
 <li>Fix the wrist to servo 4 with M3×6 screws on both sides (official wording: “4 M3x6mm screws on both sides”).</li>
 </ul>
-<figure class="doc-fig"><picture><source type="image/webp" srcset="{root}img/assembly/so101/12-j5-wrist-600.webp 600w, {root}img/assembly/so101/12-j5-wrist-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="{root}img/assembly/so101/12-j5-wrist-1200.jpg" srcset="{root}img/assembly/so101/12-j5-wrist-600.jpg 600w, {root}img/assembly/so101/12-j5-wrist-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="Joint 5: servo 5 in the wrist part, and the whole wrist goes onto servo 4, M2×6 and M3×6 screws" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 13 – Joint 5: servo 5 into the wrist, 2× M2×6 from the front (1), the wrist onto servo 4 with M3×6 on both sides (2) (render from the CAD model).</figcaption></figure>
+<figure class="doc-fig"><picture><source type="image/webp" srcset="{root}img/assembly/so101/12-j5-wrist-600.webp 600w, {root}img/assembly/so101/12-j5-wrist-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="{root}img/assembly/so101/12-j5-wrist-1200.jpg" srcset="{root}img/assembly/so101/12-j5-wrist-600.jpg 600w, {root}img/assembly/so101/12-j5-wrist-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="Joint 5: servo 5 in the wrist part, and the whole wrist goes onto servo 4, M2×6 and M3×6 screws" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 13 – Joint 5: servo 5 into the wrist, 2× M2×6 from the front (1), the wrist onto servo 4 with 8× M3×6, 4 on each side (2) (render from the CAD model).</figcaption></figure>
 <h3>Follower gripper (ID 6)</h3>
 <ul>
 <li>Attach the gripper to the wrist horn with 4× M3×6.</li>
 <li>Insert the gripper servo, 2× M2×6 on each side. Both horns, top one M3×6.</li>
 <li>Attach the moving jaw with 4× M3×6 on both sides.</li>
 </ul>
-<figure class="doc-fig"><picture><source type="image/webp" srcset="{root}img/assembly/so101/13-gripper-600.webp 600w, {root}img/assembly/so101/13-gripper-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="{root}img/assembly/so101/13-gripper-1200.jpg" srcset="{root}img/assembly/so101/13-gripper-600.jpg 600w, {root}img/assembly/so101/13-gripper-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="Gripper: the fixed jaw goes onto the horn of servo 5 and servo 6 drops in from above, M3×6 and M2×6 screws" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 14 – Follower gripper: the fixed jaw onto the wrist horn, 4× M3×6 (1), servo 6 with 2× M2×6 on each side (2) (render from the CAD model).</figcaption></figure>
-<figure class="doc-fig"><picture><source type="image/webp" srcset="{root}img/assembly/so101/14-moving-jaw-600.webp 600w, {root}img/assembly/so101/14-moving-jaw-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="{root}img/assembly/so101/14-moving-jaw-1200.jpg" srcset="{root}img/assembly/so101/14-moving-jaw-600.jpg 600w, {root}img/assembly/so101/14-moving-jaw-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="Gripper: the moving jaw goes onto the horn of servo 6, M3×6 screws" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 15 – Follower gripper: the moving jaw, 4× M3×6 on both sides. The leader handle is not in the model, so it is not drawn (render from the CAD model).</figcaption></figure>
+<figure class="doc-fig"><picture><source type="image/webp" srcset="{root}img/assembly/so101/13-gripper-600.webp 600w, {root}img/assembly/so101/13-gripper-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="{root}img/assembly/so101/13-gripper-1200.jpg" srcset="{root}img/assembly/so101/13-gripper-600.jpg 600w, {root}img/assembly/so101/13-gripper-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="Gripper: the fixed jaw goes onto the horn of servo 5 and servo 6 drops in from above, M3×6 and M2×6 screws" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 14 – Follower gripper: the fixed jaw onto the wrist horn, 4× M3×6 (1), servo 6 with 4× M2×6, 2 on each side (2) (render from the CAD model).</figcaption></figure>
+<figure class="doc-fig"><picture><source type="image/webp" srcset="{root}img/assembly/so101/14-moving-jaw-600.webp 600w, {root}img/assembly/so101/14-moving-jaw-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="{root}img/assembly/so101/14-moving-jaw-1200.jpg" srcset="{root}img/assembly/so101/14-moving-jaw-600.jpg 600w, {root}img/assembly/so101/14-moving-jaw-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="Gripper: the moving jaw goes onto the horn of servo 6, M3×6 screws" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 15 – Follower gripper: the moving jaw, 8× M3×6, 4 on each side. The leader handle is not in the model, so it is not drawn (render from the CAD model).</figcaption></figure>
 <h3>Leader handle (ID 6)</h3>
 <ul>
 <li>Leader holder onto the wrist with 4× M3×6, handle to the holder with 1× M2×6.</li>
@@ -236,6 +255,7 @@ pip install -e ".[feetech]"</code></pre>
 <li>Servo 5 has only one horn.</li>
 <li>Cables run freely and nothing gets pinched when you move each joint end to end (by hand, unpowered).</li>
 <li>No screw is longer than 6 mm and none is over-tightened into the plastic.</li>
+<li>Screws as in the <a href="#screws">table</a>: follower {sc:f_m2}× M2×6 and up to {sc:f_m3}× M3×6, leader {sc:l_m2}× M2×6 and up to {sc:l_m3}× M3×6.</li>
 </ul>
 <h3>When it doesn’t work</h3>
 <ul>
@@ -259,6 +279,7 @@ pip install -e ".[feetech]"</code></pre>
 <figure class="doc-fig"><picture><source type="image/webp" srcset="{root}img/assembly/so101/15-plate-600.webp 600w, {root}img/assembly/so101/15-plate-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="{root}img/assembly/so101/15-plate-1200.jpg" srcset="{root}img/assembly/so101/15-plate-600.jpg 600w, {root}img/assembly/so101/15-plate-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="The printed plate for the driver board goes onto the back of the arm’s base" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 16 – The Waveshare board plate on the back of the base (render from the CAD model).</figcaption></figure>
 <figure class="doc-fig"><picture><source type="image/webp" srcset="{root}img/assembly/so101/16-daisy-chain-600.webp 600w, {root}img/assembly/so101/16-daisy-chain-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="{root}img/assembly/so101/16-daisy-chain-1200.jpg" srcset="{root}img/assembly/so101/16-daisy-chain-600.jpg 600w, {root}img/assembly/so101/16-daisy-chain-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="The assembled arm with an orange cable running from the driver board through servos 1, 2, 3, 4 and 5 to servo 6" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 17 – The servo chain: board → ID 1 → 2 → 3 → 4 → 5 → 6. The cable route is schematic and the board is drawn (render from the CAD model).</figcaption></figure>
 <p><b>Power:</b> each arm has its own board and its own supply. 7.4 V servos on a 5 V supply, 12 V follower servos on a 12 V supply (5 A or more).<sup><a href="#sources">2</a></sup> Our note: never connect a 12 V supply to an arm with 7.4 V servos; it is above their rated voltage.</p>
+<p><b>Connector:</b> the Waveshare board has a <b>DC 5.5 × 2.1 mm</b> power jack and screw terminals next to it. The maker states a 9–12.6 V input “matching the servo voltage”; the official SO-101 bill of materials still powers the 7.4 V servos from a 5 V 4 A supply with a 5.5 × 2.1 mm plug, and ready-made kits do the same.<sup><a href="#sources">2, 6</a></sup> A 12 V 5 A supply for the 12 V follower is within the board’s range. The supply powers the servos; USB only carries the data.</p>
 <h3>Checklist</h3>
 <ul class="chk">
 <li>Chain: board → ID 1 → 2 → 3 → 4 → 5 → 6, all connectors clicked in.</li>
@@ -269,6 +290,7 @@ pip install -e ".[feetech]"</code></pre>
 <h3>When it doesn’t work</h3>
 <ul>
 <li class="fix"><b>Some servo doesn’t respond.</b> A loose cable in the chain cuts off every servo after it. Try the “Loose cable” fault with diagnostics in the dry run.</li>
+<li class="fix"><b>The supply’s plug doesn’t fit the board.</b> The jack is 5.5 × 2.1 mm; 5.5 × 2.5 mm plugs sit loose or only work now and then. Use a supply with a 5.5 × 2.1 mm plug, or a jack-to-screw-terminal adapter (5.5 × 2.1 mm socket on a terminal block) and wire it to the board’s terminals. Check the polarity marked at the terminals: plus to plus. Our note: never use a supply with a different voltage from the servos, even if the plug fits.</li>
 <li class="fix"><b>Servos reset or weaken under load.</b> Our note: check that the supply matches the bill of materials and that its connector holds; the dry run has a “Wrong power supply” fault for this.</li>
 </ul>
 </div>
@@ -285,23 +307,28 @@ pip install -e ".[feetech]"</code></pre>
 <pre tabindex="0"><code># Use the port of your follower arm, and give the arm a unique name with --robot.id
 lerobot-calibrate \
     --robot.type=so101_follower \
-    --robot.port=/dev/tty.usbmodem58760431551 \
+    --robot.port=/dev/ttyACM0 \
     --robot.id=my_awesome_follower_arm</code></pre>
 <p>Leader:</p>
 <pre tabindex="0"><code># Use the port of your leader arm, and give the arm a unique name with --teleop.id
 lerobot-calibrate \
     --teleop.type=so101_leader \
-    --teleop.port=/dev/tty.usbmodem58760431551 \
+    --teleop.port=/dev/ttyACM1 \
     --teleop.id=my_awesome_leader_arm</code></pre>
 <p>The procedure: first move all joints to the <b>middle of their range</b>, press Enter, then move each joint through its full range.<sup><a href="#sources">1</a></sup> According to the LeRobot code, wrist roll isn’t calibrated by range; it gets the full turn.<sup><a href="#sources">5</a></sup> Then teleoperate:<sup><a href="#sources">4</a></sup></p>
 <pre tabindex="0"><code>lerobot-teleoperate \
     --robot.type=so101_follower \
-    --robot.port=/dev/tty.usbmodem58760431541 \
+    --robot.port=/dev/ttyACM0 \
     --robot.id=my_awesome_follower_arm \
     --teleop.type=so101_leader \
-    --teleop.port=/dev/tty.usbmodem58760431551 \
+    --teleop.port=/dev/ttyACM1 \
     --teleop.id=my_awesome_leader_arm</code></pre>
-<p>Replace the ports with yours from stage 2, and use the same arm IDs in every later command.</p>
+<p>Replace <code>/dev/ttyACM0</code> (follower) and <code>/dev/ttyACM1</code> (leader) with your ports from stage 2 (macOS <code>/dev/tty.usbmodem…</code>, Windows <code>COM3</code> and so on). The official guide’s examples use the same port for both arms; each arm has its own. Use the same arm IDs in every later command.</p>
+<p id="follower-only"><b>Only a follower?</b> Teleoperation needs a leader. After calibrating the follower you can move it by replaying recorded motion, for example an episode from the guide <a href="{root}en/guides/so101-lerobot-simulation/#prehrani">LeRobot against a virtual arm</a>:</p>
+<pre tabindex="0"><code>lerobot-replay \
+    --robot.type=so101_follower --robot.port=/dev/ttyACM0 --robot.id=my_awesome_follower_arm \
+    --dataset.repo_id=local/so101_sil --dataset.root=$HOME/so101_sil_dataset --dataset.episode=0</code></pre>
+<p class="src">Our note: we haven’t yet tested replaying a virtual-arm dataset on a real arm. The first time, hold the arm, keep the power supply within reach and keep the arm’s reach clear. Your own demonstrations and training need a leader.</p>
 <p><b>Dry run with the real LeRobot:</b> you can go through calibration, teleoperation and recording a dataset against a virtual arm before you build, see <a href="{root}en/guides/so101-lerobot-simulation/">Before the parts arrive: LeRobot against a virtual arm</a>. Use different IDs for the virtual arms than for the real ones.</p>
 <h3>Checklist</h3>
 <ul class="chk">
@@ -342,7 +369,7 @@ lerobot-calibrate \
 </table>
 </div>
 <p class="src">The servo emulation is simplified, and we haven’t yet verified the wizard’s speed limits on real servos. A model trained only on simulation data isn’t enough for a real arm.</p>
-<p>Next step after your first teleoperation: <a href="{root}en/guides/so101-lerobot-first-steps/#uceni">recording demonstrations and training</a>.</p>
+<p>Next step after your first teleoperation: <a href="{root}en/guides/so101-lerobot-first-steps/#learning">recording demonstrations and training</a>.</p>
 </div>
 </div>
 </section>
@@ -353,9 +380,10 @@ lerobot-calibrate \
 <ol class="a4 prose src">
 <li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/so101">LeRobot – SO-101</a> (servo ratios, IDs, joint assembly, calibration). Checked 29 Oct 2026.</li>
 <li>The Robot Studio: <a href="https://github.com/TheRobotStudio/SO-ARM100">SO-ARM100 on GitHub</a> (bill of materials, servo and supply variants, print settings, gauges). Checked 29 Oct 2026.</li>
-<li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/installation">LeRobot – Installation</a>. Checked 29 Oct 2026.</li>
+<li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/installation">LeRobot – Installation</a> and <a href="https://pypi.org/project/lerobot/0.6.1/">LeRobot 0.6.1 on PyPI</a> (Python ≥ 3.12). Checked 30 Oct 2026.</li>
 <li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/il_robots">LeRobot – Getting started with real-world robots</a> (teleoperation). Checked 29 Oct 2026.</li>
 <li>LeRobot source code: <a href="https://github.com/huggingface/lerobot/blob/main/src/lerobot/robots/so_follower/so_follower.py">so_follower.py</a> and <a href="https://github.com/huggingface/lerobot/blob/main/src/lerobot/motors/motors_bus.py">motors_bus.py</a> (calibration, gripper limit). Main branch, 29 Oct 2026.</li>
+<li>Waveshare and Eckstein: <a href="https://www.waveshare.com/wiki/Bus_Servo_Adapter_(A)">Bus Servo Adapter (A) wiki</a> and the <a href="https://eckstein-shop.de/WaveShare-Serial-Bus-Servo-Driver-Board-for-ST-SC-Serial-Bus-Servos-EN">Serial Bus Servo Driver Board at Eckstein</a> (5.5 × 2.1 mm power jack, 9–12.6 V input). Checked 30 Oct 2026.</li>
 </ol>
 </div>
 </section>
