@@ -103,7 +103,7 @@ window.PR_EN = {
       specs: [['Degrees of freedom', '22 (legs 2× 6, arms 2× 5) + grippers'], ['Height', '0.8 m'], ['Weight', '16 kg'], ['Actuators', '22× BLDC with printed cycloidal gearbox'], ['Control', 'Intel N95, CAN bus'], ['Runtime', '≈ 30 min (6S 4000 mAh)'], ['Print', 'PLA, desktop printer'], ['Walking', 'RL policy, sim2real']] },
     osr: { mats: [['pla', 'PLA+', 'Covers and mast'], ['petg', 'PETG', 'More heat-resistant']], credit: 'Render from the JPL / Caltech model (Apache-2.0)', alt: 'Six-wheel aluminium rover based on the NASA JPL Open Source Rover',
       short: 'Large six-wheel rover built from the goBILDA aluminium system, based on the NASA JPL Open Source Rover.',
-      lead: 'Six-wheel Mars rover based on the NASA JPL Open Source Rover: aluminium frame, rocker-bogie suspension and four steered wheels. A Raspberry Pi and ROS 2 make it a robust platform for teaching and outdoor research. Unlike our other kits, this is mostly hardware assembly — we print the body cover panels in your colour and the mast head.',
+      lead: 'Six-wheel Mars rover based on the NASA JPL Open Source Rover: aluminium frame, rocker-bogie suspension and four steered wheels. A Raspberry Pi and ROS 2 make it a robust platform for teaching and outdoor research. Unlike the other projects, this is mostly hardware assembly — only the body cover panels and the mast head are printed.',
       bomCost: '≈ 1,600 USD',
       card: [['Wheels', '6, rocker-bogie'], ['Motors', '10']],
       bom: [['goBILDA 5203 Yellow Jacket motor with encoder', '6×'], ['goBILDA 2000 servo (wheel steering)', '4×'], ['Wasteland 144 mm wheel', '6×'], ['RoboClaw 2x7A controller', '3×'], ['Raspberry Pi 3/4/5', '1×'], ['PCA9685 PWM driver', '1×'], ['Printed circuit boards (brain + motor)', '2×'], ['goBILDA aluminium extrusions and connectors', '1 set'], ['Body cover panels (laser-cut, 3 mm)', '1 set'], ['4S LiPo battery', '1×']],
@@ -198,7 +198,7 @@ window.PR_EN_APPLY = function () {
       if (/spinner|rotuj/i.test(all)) w.push('A spinning weapon can cause serious injury and throw debris: always lock it outside the arena and never spin it up in your hand or on a table.');
       if (/flipper/i.test(all)) w.push('The flipper moves violently: keep your fingers out of its path when handling the robot.');
     }
-    w.push('Power the hardware in this kit only from the supply specified in the project instructions.');
+    w.push('Power the hardware only from the supply specified in the project instructions.');
     return w;
   };
   W.PR_SPECS = function (r) {
