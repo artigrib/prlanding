@@ -10,12 +10,17 @@ Layers (each one alone should stop the malicious-input tests in tests/test_sandb
      interfaces except a down loopback, so no network at all. If the namespace cannot be created
      run_cad refuses to run (fail closed) unless allow_no_netns=True is passed (tests only print a
      warning then).
-  4. when started as root: setgid/setuid nobody before exec, job dir chowned to nobody
+  4. when started as root: setgid/setuid nobody before exec. The work dir stays root-owned with mode
+     0733 (nobody may create files in it but not list it); the launcher needs no CAP_CHOWN /
+     CAP_DAC_OVERRIDE for that. Leftover processes of uid nobody are killed before and after a run.
   5. in the child: policy re-check, audit hook (no sockets/subprocess/exec/ctypes/writes outside the
      job dir), minimal builtins, import allowlist
   6. wall-clock timeout: the whole process group is SIGKILLed
 On the VPS the worker itself runs in a locked-down container (README.md, "Worker isolation"):
 this module is the inner fence, not the only one.
+
+FORGE_CAD_REQUIRE_DROP=1 (forge-cad): refuse to run unless the launcher is root, so the child really
+drops to uid nobody (the container sees nothing but its own /tmp and the socket directory).
 
 FORGE_NETNS=external (set only in the forge-cad container, which has `network_mode: none`): Docker's
 default seccomp profile does not let an unprivileged process create namespaces, so layer 3 is then
@@ -89,6 +94,9 @@ def only_loopback(dev_file="/proc/net/dev"):
 
 def run_cad(source, job_dir, timeout_s=None, mem_mb=None, allow_no_netns=False, density_g_cm3=1.24):
     t0 = time.monotonic()
+    if os.environ.get("FORGE_CAD_REQUIRE_DROP") == "1" and os.geteuid() != 0:
+        return {"ok": False, "stage": "isolation", "errors": ["FORGE_CAD_REQUIRE_DROP=1 but the launcher is not root (cannot drop to nobody)"],
+                "report": None, "files": {}, "stdout": "", "elapsed_s": 0.0}
     if os.environ.get("FORGE_NETNS") == "external":
         if not only_loopback():
             return {"ok": False, "stage": "isolation", "errors": ["FORGE_NETNS=external but a network interface is visible (refusing to run)"],
@@ -115,6 +123,7 @@ def run_cad(source, job_dir, timeout_s=None, mem_mb=None, allow_no_netns=False, 
     try:
         return _run(source, job_dir, work, timeout_s, mem_mb, allow_no_netns, density_g_cm3, res, t0)
     finally:
+        kill_uid(NOBODY)
         shutil.rmtree(work, ignore_errors=True)
 
 
@@ -122,8 +131,8 @@ def _run(source, job_dir, work, timeout_s, mem_mb, allow_no_netns, density_g_cm3
     with open(os.path.join(work, "design.py"), "w", encoding="utf-8") as f:
         f.write(source)
     if os.geteuid() == 0:
-        os.chown(work, NOBODY, NOBODY)
-        os.chmod(work, 0o700)
+        kill_uid(NOBODY)
+        os.chmod(work, 0o733)
     netns_required = not allow_no_netns
     env = {"PATH": "/usr/bin:/bin", "HOME": work, "LANG": "C.UTF-8", "OMP_NUM_THREADS": "1",
            "OPENBLAS_NUM_THREADS": "1", "MPLBACKEND": "Agg"}
@@ -188,6 +197,24 @@ def _run(source, job_dir, work, timeout_s, mem_mb, allow_no_netns, density_g_cm3
     res["files"]["report"] = os.path.join(job_dir, "report.json")
     res.update(ok=True, stage="done")
     return res
+
+
+def kill_uid(uid):
+    """SIGKILL every process of `uid` (strays a sandbox child may have left). Root only; a helper drops to
+    `uid` and kill(-1) then reaches exactly that uid's processes, so no CAP_KILL is needed."""
+    if os.geteuid() != 0 or os.environ.get("FORGE_CAD_REQUIRE_DROP") != "1":
+        return  # only inside the forge-cad container (on a shared dev host this would hit unrelated processes)
+    pid = os.fork()
+    if pid == 0:
+        try:
+            os.setgroups([])
+            os.setgid(uid)
+            os.setuid(uid)
+            os.kill(-1, signal.SIGKILL)
+        except OSError:
+            pass
+        os._exit(0)
+    os.waitpid(pid, 0)
 
 
 def cleanup(job_dir):

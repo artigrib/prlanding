@@ -15,11 +15,14 @@ Configuration (environment only; nothing here can be changed by a job or a model
 Logs: fixed lines only (job id prefix, status); never request text, never keys.
 """
 import glob
+import ipaddress
 import json
 import os
 import re
 import shutil
+import socket
 import sys
+import threading
 import time
 
 from .agent import Agent
@@ -89,12 +92,67 @@ def cleanup(jobs_dir, days):
             os.remove(p)
 
 
+def egress_guard(cad_socket, host="openrouter.ai", port=443):
+    """Process-wide network fence for the worker (audit hook, also covers any library in this process):
+    DNS lookups only for `host`, TCP connects only to addresses that lookup returned (port 443), unix
+    sockets only to the CAD socket. Code-level, not network-level: see README "Worker egress"."""
+    allowed_ips = set()
+    real_getaddrinfo = socket.getaddrinfo
+
+    def hook(event, args):
+        if event == "socket.getaddrinfo":
+            h, p = args[0], args[1]
+            if isinstance(h, bytes):
+                h = h.decode("ascii", "replace")
+            if h != host or p not in (port, str(port), "https"):
+                raise PermissionError("egress: lookup not allowed")
+        elif event == "socket.connect":
+            sock, addr = args
+            if sock.family == socket.AF_UNIX:
+                if addr != cad_socket:
+                    raise PermissionError("egress: unix socket not allowed")
+                return
+            ip, p = addr[0], addr[1]
+            if p != port or ip not in allowed_ips:
+                raise PermissionError("egress: destination not allowed")
+        elif event in ("socket.bind", "socket.sendto", "socket.sendmsg") and args and getattr(args[0], "family", None) != socket.AF_UNIX:
+            raise PermissionError("egress: not allowed")
+
+    def resolving_getaddrinfo(h, p, *a, **k):
+        res = real_getaddrinfo(h, p, *a, **k)
+        for r in res:
+            try:
+                allowed_ips.add(str(ipaddress.ip_address(r[4][0])))
+            except ValueError:
+                pass
+        return res
+
+    socket.getaddrinfo = resolving_getaddrinfo
+    sys.addaudithook(hook)
+
+
+def heartbeat(jobs_dir, every_s=20):
+    """Liveness for the api (it refuses new jobs when the file is older than 2 minutes), also during a job."""
+    def loop():
+        while True:
+            try:
+                tmp = os.path.join(jobs_dir, ".worker.heartbeat.tmp")
+                with open(tmp, "w") as f:
+                    f.write(str(int(time.time())))
+                os.replace(tmp, os.path.join(jobs_dir, "worker.heartbeat"))
+            except OSError:
+                pass
+            time.sleep(every_s)
+    threading.Thread(target=loop, daemon=True).start()
+
+
 def run_one(cfg, llm, cad, jid):
     agent = Agent(cfg, llm, cad, Ledger(cfg["jobs_dir"]))
     return agent.run(jid, os.path.join(cfg["jobs_dir"], jid))
 
 
 def main():
+    os.umask(0o007)  # files shared with the api through the group (api uid 1000, worker uid 1002, gid 1000)
     cfg = config()
     jobs = cfg["jobs_dir"]
     if not os.environ.get("OPENROUTER_API_KEY", "").strip():
@@ -104,12 +162,13 @@ def main():
     llm = OpenRouterClient.from_env(cfg["prices"])  # removes the key from os.environ
     cad = CadClient(cfg["cad_socket"]) if cfg["cad_socket"] else LocalCad(jobs)
     os.makedirs(os.path.join(jobs, "queue"), exist_ok=True)
+    if os.environ.get("FORGE_EGRESS_GUARD", "1") == "1":
+        egress_guard(cfg["cad_socket"])
+    heartbeat(jobs)
     log(msg="forge-worker ready", model=cfg["model"], cad="socket" if cfg["cad_socket"] else "local", sweep=cfg["sweep"])
     last_clean = 0.0
     while True:
         try:
-            with open(os.path.join(jobs, "worker.heartbeat"), "w") as f:
-                f.write(str(int(time.time())))
             if time.time() - last_clean > 3600:
                 cleanup(jobs, cfg["retention_days"])
                 last_clean = time.time()

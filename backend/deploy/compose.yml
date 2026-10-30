@@ -34,7 +34,7 @@ services:
       AMPLITUDE_API_KEY: ${AMPLITUDE_API_KEY:-}
       COUNTRY_HEADER: ${COUNTRY_HEADER:-}
       # Forge job API (backend/api/src/forge.ts). FORGE_ENABLED=1 only when the deploy starts the forge
-      # services (OPENROUTER_API_KEY set); tokens are "label:sha256" entries, never the tokens themselves.
+      # services (FORGE_ENABLE=1 and an OpenRouter key); tokens are "label:sha256" entries, never the tokens themselves.
       FORGE_ENABLED: ${FORGE_ENABLED:-0}
       FORGE_INVITE_TOKENS: ${FORGE_INVITE_TOKENS:-}
       FORGE_DAILY_USD: ${FORGE_DAILY_USD:-5}
@@ -82,10 +82,11 @@ services:
     logging: *logging
     networks: [web]
 
-  # Forge (backend/forge, see its README "VPS deployment"). Started only when the deploy has an
-  # OpenRouter key (COMPOSE_PROFILES gets "forge"); otherwise neither container exists. Both: no ports,
-  # non-root, read-only root filesystem (writable: the shared job volume and a size-capped /tmp), all
-  # capabilities dropped, no-new-privileges, cpu/memory/pids limits, no Docker socket, no host mounts.
+  # Forge (backend/forge, README "Stage 1 on the VPS"). Started only when the owner set FORGE_ENABLE=1 AND
+  # an OpenRouter key exists (COMPOSE_PROFILES gets "forge"); otherwise neither container exists. Both: no
+  # ports, read-only root filesystem, size-capped /tmp, no-new-privileges, cpu/mem/pids limits, no Docker
+  # socket, no host mounts. Separate uids: api 1000, forge-worker 1002 (group 1000 for the job volume),
+  # forge-cad's sandbox children run as nobody.
   forge-cad:
     profiles: [forge]
     image: ${FORGE_IMAGE:-ghcr.io/artigrib/prlanding-forge:unset}
@@ -97,14 +98,19 @@ services:
     network_mode: none
     environment:
       FORGE_NETNS: external
-      FORGE_JOBS_DIR: /jobs
-      FORGE_CAD_SOCKET: /jobs/.cad/cad.sock
+      FORGE_CAD_REQUIRE_DROP: "1"
+      FORGE_CAD_SOCKET: /sock/cad.sock
+      FORGE_CAD_SOCK_GID: "1000"
+    # Only the socket directory: no job data, no queue, no spend ledger, nothing of the api.
     volumes:
-      - forge_jobs:/jobs
-    user: "1000:1000"
+      - forge_cad_sock:/sock
+    # The launcher is root WITHOUT DAC override (only CHOWN/SETUID/SETGID) so that every untrusted CAD child
+    # drops to uid nobody, which can write nothing but its own temporary work dir in /tmp.
+    user: "0:0"
     read_only: true
     tmpfs: ["/tmp:size=512m,mode=1777"]
     cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID]
     security_opt: ["no-new-privileges:true"]
     mem_limit: 2g
     cpus: 1.0
@@ -126,11 +132,12 @@ services:
       FORGE_MODEL_LIGHT: ${FORGE_MODEL_LIGHT:-anthropic/claude-haiku-4.5}
       FORGE_DAILY_USD: ${FORGE_DAILY_USD:-5}
       FORGE_JOBS_DIR: /jobs
-      FORGE_CAD_SOCKET: /jobs/.cad/cad.sock
+      FORGE_CAD_SOCKET: /sock/cad.sock
       FORGE_SWEEP: quick
     volumes:
       - forge_jobs:/jobs
-    user: "1000:1000"
+      - forge_cad_sock:/sock
+    user: "1002:1000"
     read_only: true
     tmpfs: ["/tmp:size=256m,mode=1777"]
     cap_drop: [ALL]
@@ -139,7 +146,9 @@ services:
     cpus: 1.0
     pids_limit: 128
     logging: *logging
-    # Egress for OpenRouter only (the worker listens on nothing; the only URL in its code is OpenRouter's).
+    # Egress: needs HTTPS to OpenRouter. Enforced in the process (audit-hook fence: DNS only for openrouter.ai,
+    # connects only to its addresses on 443, unix socket only to the CAD socket); not at network level (the
+    # stack may not create networks). Host firewall option: backend/forge/README.md "Worker egress".
     networks: [web]
 
 networks:
@@ -154,5 +163,8 @@ networks:
 volumes:
   api_data:
   # Forge jobs: queue, per-job events/state/artifacts, daily spend ledger. Shared by api, forge-worker
-  # and forge-cad (all uid 1000). The worker deletes jobs after FORGE_RETENTION_DAYS (14).
+  # and forge-worker only (api uid 1000, worker uid 1002, shared gid 1000); forge-cad never mounts it.
+  # The worker deletes jobs after FORGE_RETENTION_DAYS (14).
   forge_jobs:
+  # Only the CAD unix socket (root:1000, 0750 dir / 0660 socket). Mounted by forge-cad and forge-worker.
+  forge_cad_sock:

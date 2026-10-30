@@ -77,7 +77,9 @@ class OpenRouterClient:
         except (ValueError, KeyError, IndexError, TypeError):
             raise LLMError("response", "OpenRouter: unexpected response") from None
         u = data.get("usage") or {}
-        usage = {"prompt_tokens": int(u.get("prompt_tokens") or 0), "completion_tokens": int(u.get("completion_tokens") or 0)}
+        # cross-check: never count fewer output tokens than the answer's size implies (≈ 4 bytes per token)
+        floor_out = len(json.dumps(msg, ensure_ascii=False).encode()) // 4
+        usage = {"prompt_tokens": int(u.get("prompt_tokens") or 0), "completion_tokens": max(int(u.get("completion_tokens") or 0), floor_out)}
         if isinstance(u.get("cost"), (int, float)):
             usage.update(cost_usd=float(u["cost"]), cost_source="openrouter")
         else:

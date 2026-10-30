@@ -38,6 +38,9 @@ export interface ForgeConfig {
   pollMs?: number;
   heartbeatMs?: number;
   maxStreamMs?: number;
+  maxStreamsTotal?: number;
+  /** Refuse new jobs when <jobsDir>/worker.heartbeat is older than this (ms); 0 = do not check. */
+  heartbeatMaxAgeMs?: number;
   now?: () => number;
 }
 
@@ -85,7 +88,7 @@ function readJson(path: string): Record<string, unknown> | null {
 
 function writeAtomic(path: string, data: string): void {
   const tmp = `${path}.${randomBytes(4).toString('hex')}.tmp`;
-  writeFileSync(tmp, data, { mode: 0o640 });
+  writeFileSync(tmp, data, { mode: 0o660 }); // group = the forge-worker (another uid, same gid)
   renameSync(tmp, path);
 }
 
@@ -101,6 +104,7 @@ export class Forge {
   private authFail: RateLimiter;
   private streams = new Map<string, number>();
   private origins: Set<string>;
+  private streamsTotal = 0;
 
   constructor(cfg: ForgeConfig) {
     this.cfg = {
@@ -113,6 +117,8 @@ export class Forge {
       pollMs: 400,
       heartbeatMs: 15_000,
       maxStreamMs: 20 * 60_000,
+      maxStreamsTotal: 50,
+      heartbeatMaxAgeMs: 120_000,
       now: Date.now,
       ...cfg,
     } as Forge['cfg'];
@@ -120,7 +126,7 @@ export class Forge {
     this.perToken = new RateLimiter(this.cfg.perTokenPerMinute, 100_000, 60_000, 10_000, now);
     this.authFail = new RateLimiter(this.cfg.authFailuresPerMinute, 100_000, 60_000, 50_000, now);
     this.origins = new Set(cfg.allowedOrigins);
-    mkdirSync(join(this.cfg.jobsDir, 'queue'), { recursive: true });
+    mkdirSync(join(this.cfg.jobsDir, 'queue'), { recursive: true, mode: 0o2770 });
     this.loadIndex();
   }
 
@@ -165,6 +171,16 @@ export class Forge {
     let n = 0;
     for (const m of this.jobs.values()) if (m.label === label && day(m.created) === d) n++;
     return n;
+  }
+
+  workerAlive(): boolean {
+    if (!this.cfg.heartbeatMaxAgeMs) return true;
+    try {
+      const t = Number(readFileSync(join(this.cfg.jobsDir, 'worker.heartbeat'), 'utf8').trim()) * 1000;
+      return Number.isFinite(t) && this.cfg.now() - t < this.cfg.heartbeatMaxAgeMs;
+    } catch {
+      return false;
+    }
   }
 
   spentToday(): number {
@@ -236,7 +252,7 @@ export class Forge {
     }
     if (parts.length === 4 && parts[3] === 'events' && req.method === 'GET') {
       const n = this.streams.get(label) ?? 0;
-      if (n >= 3) return send(429, { error: 'streams' });
+      if (n >= 3 || this.streamsTotal >= this.cfg.maxStreamsTotal) return send(429, { error: 'streams' });
       const last = Number.parseInt(String(req.headers['last-event-id'] ?? url.searchParams.get('from') ?? '0'), 10);
       return this.stream(req, res, jobDir, Number.isFinite(last) && last > 0 ? last : 0, label, cors ?? {});
     }
@@ -283,6 +299,7 @@ export class Forge {
     if (text.length < 8 || text.length > this.cfg.maxRequestChars) return send(400, { error: 'length', min: 8, max: this.cfg.maxRequestChars });
     const lang = body.lang === 'en' ? 'en' : 'cs';
     if (this.spentToday() >= this.cfg.dailyUsd) return send(503, { error: 'budget_daily' });
+    if (!this.workerAlive()) return send(503, { error: 'worker_down' });
     if (this.active(label)) return send(409, { error: 'busy', active: this.active(label) });
     if (this.jobsToday(label) >= this.cfg.jobsPerTokenPerDay) return send(429, { error: 'quota', jobs_per_day: this.cfg.jobsPerTokenPerDay });
     const queued = readdirSync(join(this.cfg.jobsDir, 'queue')).filter((f) => f.endsWith('.json')).length;
@@ -291,7 +308,7 @@ export class Forge {
     const id = randomBytes(16).toString('hex');
     const created = this.cfg.now();
     const dir = join(this.cfg.jobsDir, id);
-    mkdirSync(dir, { mode: 0o750 });
+    mkdirSync(dir, { mode: 0o2770 }); // setgid: the worker's files inherit the shared group
     writeAtomic(join(dir, 'meta.json'), JSON.stringify({ id, label, created }));
     writeAtomic(join(dir, 'state.json'), JSON.stringify({ status: 'queued', step: null, cost_usd: 0, tokens: 0 }));
     writeAtomic(join(this.cfg.jobsDir, 'queue', `${id}.json`), JSON.stringify({ id, request: text, lang, created: new Date(created).toISOString() }));
@@ -363,6 +380,7 @@ export class Forge {
 
   private stream(req: IncomingMessage, res: ServerResponse, jobDir: string, from: number, label: string, cors: Record<string, string>): void {
     this.streams.set(label, (this.streams.get(label) ?? 0) + 1);
+    this.streamsTotal++;
     res.writeHead(200, {
       ...cors,
       'Content-Type': 'text/event-stream; charset=utf-8',
@@ -383,6 +401,7 @@ export class Forge {
       clearInterval(poll);
       clearInterval(beat);
       this.streams.set(label, Math.max(0, (this.streams.get(label) ?? 1) - 1));
+      this.streamsTotal = Math.max(0, this.streamsTotal - 1);
       res.end();
     };
     const tick = (): void => {

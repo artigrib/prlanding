@@ -251,9 +251,13 @@ jobs:
         env:
           K: ${{ secrets.OPENROUTER_SECRET || secrets.OPENROUTER_API_KEY }}
           DIGEST: ${{ needs.build.outputs.forge }}
+          ENABLE: ${{ vars.FORGE_ENABLE }}
         run: |
-          # Fixed lines only; the key is only tested for presence.
-          if [ -z "$K" ]; then
+          # Fixed lines only; the key is only tested for presence. The forge ships OFF: it starts only when the
+          # owner sets the repository/environment variable FORGE_ENABLE=1 in addition to the key.
+          if [ "$ENABLE" != 1 ]; then
+            echo "enabled=0" >> "$GITHUB_OUTPUT"; echo "::notice::forge: disabled (FORGE_ENABLE not set)"
+          elif [ -z "$K" ]; then
             echo "enabled=0" >> "$GITHUB_OUTPUT"; echo "::notice::forge: disabled (no key)"
           elif [ -z "$DIGEST" ]; then
             echo "enabled=0" >> "$GITHUB_OUTPUT"; echo "::warning::forge: disabled (no image)"
@@ -269,7 +273,7 @@ jobs:
           BRIDGE_DIGEST: ${{ needs.build.outputs.bridge }}
           FORGE_DIGEST: ${{ steps.forge.outputs.enabled == '1' && needs.build.outputs.forge || '' }}
           # Forge (optional; no key = the forge services are not started). Passed on stdin as base64.
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_SECRET || secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_API_KEY: ${{ vars.FORGE_ENABLE == '1' && (secrets.OPENROUTER_SECRET || secrets.OPENROUTER_API_KEY) || '' }}
           FORGE_INVITE_TOKENS: ${{ secrets.FORGE_INVITE_TOKENS }}
           FORGE_DAILY_USD: ${{ vars.FORGE_DAILY_USD }}
           FORGE_MODEL: ${{ vars.FORGE_MODEL }}

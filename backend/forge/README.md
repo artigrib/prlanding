@@ -127,14 +127,14 @@ uncertainty and `"verify": "ověřit na tisku"`.
 ## Stage 1 on the VPS
 
 ```
-browser (/lab/) ──fetch, Authorization: Bearer <invite token>──► api  /forge/*  (backend/api/src/forge.ts)
+browser (/lab/) ──fetch, Authorization: Bearer <invite token>──► api  /forge/*  (backend/api/src/forge.ts, uid 1000)
       ▲                                                               │ queue/<id>.json, <id>/meta.json, state.json
-      └──── SSE (fetch stream) ◄── tails <id>/events.ndjson ◄─────────┤            shared volume forge_jobs:/jobs
+      └──── SSE (fetch stream) ◄── tails <id>/events.ndjson ◄─────────┤   volume forge_jobs:/jobs (api + worker only, gid 1000)
                                                                       ▼
-                       forge-worker (agent loop, MuJoCo checks) ── claims a job, writes events/state/out/
-                          │  unix socket /jobs/.cad/cad.sock              │ only egress: OpenRouter (HTTPS)
-                          ▼                                               ▼
-                       forge-cad (run_cad sandbox server, network_mode: none)
+            forge-worker (uid 1002; agent loop, MuJoCo checks) ── claims a job, writes events/state/out/, spend ledger
+                 │  {"source"} ──► unix socket /sock/cad.sock ──► results (STEP/STL bytes + report), validated by the worker
+                 ▼                       (volume forge_cad_sock, the only thing forge-cad mounts)       │ egress: OpenRouter only
+            forge-cad (network_mode: none; launcher root w/o DAC override; each CAD child runs as nobody)
 ```
 
 **Containers** (`backend/deploy/compose.yml`, profile `forge`; one image `ghcr.io/artigrib/prlanding-forge`):
@@ -142,32 +142,48 @@ browser (/lab/) ──fetch, Authorization: Bearer <invite token>──► api  
 | | forge-worker | forge-cad |
 | --- | --- | --- |
 | command | `python -m forge.worker` | `python -m forge.cad_service serve` |
-| network | `printedrobotics_web` (egress to OpenRouter only; listens on nothing) | **none** (`network_mode: none`) |
+| network | `printedrobotics_web` (egress fenced to OpenRouter in-process; listens on nothing) | **none** (`network_mode: none`) |
 | ports | none | none |
-| user / fs | uid 1000, read-only root, writable: `/jobs` volume + 256 MB `/tmp` | uid 1000, read-only root, `/jobs` + 512 MB `/tmp` |
-| privileges | `cap_drop: ALL`, `no-new-privileges`, default seccomp, no Docker socket, no host mounts | same |
-| limits | 1 CPU, 1.5 GB, 128 pids | 1 CPU, 2 GB, 64 pids (+ per-run rlimits, 90 s timeout) |
+| volumes | `forge_jobs:/jobs`, `forge_cad_sock:/sock` | **only** `forge_cad_sock:/sock` (no job data, queue, ledger or api data) |
+| user | uid 1002, gid 1000 (shares `/jobs` with the api through the group; own uid) | launcher uid 0 with `cap_drop: ALL` + `cap_add: [CHOWN, SETUID, SETGID]` (no DAC override); **every CAD child runs as nobody (65534)** (`FORGE_CAD_REQUIRE_DROP=1`, refuses otherwise) |
+| fs | read-only root, 256 MB `/tmp` | read-only root, 512 MB `/tmp` (the child can write only its own 0733 work dir there) |
+| privileges | `cap_drop: ALL`, `no-new-privileges`, default seccomp, no Docker socket, no host mounts | same, except the three caps above |
+| limits | 1 CPU, 1.5 GB, 128 pids | 1 CPU, 2 GB, 64 pids (+ per-run rlimits, 90 s timeout; strays of uid nobody killed before/after each run) |
 | secrets | `OPENROUTER_API_KEY` (read once, removed from the environment) | none |
 
-**What isolates `run_cad` here.** gVisor/nsjail are *not* used (not installed on the VPS; adding `runtime: runsc`
-later is a one-line change). Docker's default seccomp profile blocks the unprivileged network namespace that
-`sandbox.run_cad` creates on a developer machine, so the "no network" layer comes from the container instead:
-`forge-cad` runs with `network_mode: none` and `FORGE_NETNS=external`. Before every run `run_cad` checks
-`/proc/net/dev`; it refuses to run if any interface other than loopback is visible. The other layers are
-unchanged: AST policy, a separate process with rlimits and an empty environment, an audit hook, a minimal
-builtins table and the wall-clock kill. The container layer adds a non-root user, a read-only root
-filesystem, no capabilities, no-new-privileges and pids/memory caps.
+**What isolates `run_cad` here.** gVisor/nsjail are *not* used (they are not installed on the VPS; adding
+`runtime: runsc` later is a one-line change). The fence for untrusted CAD code is the OS, not the Python layers.
+OpenCASCADE's native readers and writers do file I/O in C++, where neither the AST policy nor the audit hook can
+see it. So:
 
-**Worker egress.** The worker needs HTTPS to OpenRouter and shares our existing network for that (the stack must not
-create networks). Its code has one URL (`llm.OPENROUTER_URL`, not configurable). The LLM has no tool that
-reaches the network or the file system, and CAD code runs in the network-less `forge-cad`. A network-level
-egress allowlist (proxy) is a possible follow-up.
+1. The CAD container mounts no job data at all, only the socket directory (root:1000, 0750).
+2. Each child runs as uid `nobody` in a fresh root-owned 0733 work dir under `/tmp`. It has no capabilities and
+   no network (`network_mode: none`; `run_cad` refuses to run if `/proc/net/dev` shows any interface except
+   loopback). On a read-only root filesystem, the only thing it can write is its own scratch directory.
+3. Results go back to the worker over the socket as bytes: `part.step`, `part.stl` (≤ 24 MB each) and the report
+   computed by the launcher. The worker checks file signatures (STEP header, binary/ASCII STL structure), sizes
+   and report types, and writes them itself under fixed names into `<job>/cad/<NN>/`.
+4. Defence in depth: the policy now also denies OCCT class names (`Package_Class`), static `*_s` methods,
+   `.wrapped`, `Perform`, `Transfer`, `*Writer` and `*Reader`. The rlimits, empty environment, audit hook,
+   minimal builtins and wall-clock kill are unchanged.
+
+**Worker egress.** The worker needs HTTPS to OpenRouter and uses our existing network for it (the stack must not
+create networks). The restriction is **in-process, not network-level**. At start the worker installs an audit-hook
+fence (`worker.egress_guard`) that applies to every library in the process. It allows DNS lookups only for
+`openrouter.ai`, TCP connects only to the addresses that lookup returned (port 443), and unix connects only to
+the CAD socket; everything else raises. The code has one URL (`llm.OPENROUTER_URL`, not configurable), and the
+LLM has no network or file tool. For a network-level fence the owner can add a host firewall rule. The worker has
+a fixed container name, so its IP can be found with `docker inspect`. Example: `DOCKER-USER` rules that allow the
+worker's IP only to the resolved OpenRouter addresses on tcp/443 (plus DNS) and drop everything else. This is not
+automated because it touches the host firewall, which this deploy never does.
 
 **Job API** (`backend/api/src/forge.ts`, on only when `FORGE_ENABLED=1` and `FORGE_INVITE_TOKENS` has entries):
 `GET /forge/me`, `POST /forge/jobs {request, lang}`, `GET /forge/jobs/<id>`, `GET /forge/jobs/<id>/events` (SSE),
 `GET /forge/jobs/<id>/artifacts[/<name>]`, `POST /forge/jobs/<id>/cancel`. Limits: 8–1200 characters, no control or
 bidi characters, 8 KB body; 60 requests/min per token; 10 failed auths/min per IP; 5 jobs per token per day; one
-queued or running job per token; 5 queued jobs in total; no new job once the day's spend reached `FORGE_DAILY_USD`.
+queued or running job per token; 5 queued jobs in total; no new job once the day's spend reached `FORGE_DAILY_USD`
+or while the worker heartbeat (`/jobs/worker.heartbeat`, written every 20 s, also during a job) is older than 2 min;
+at most 3 SSE streams per token and 50 in total.
 Tokens are stored as `label:sha256` only and never logged. The page reads the SSE stream with `fetch()`, so the
 token never appears in a URL. Artifacts are an allowlist of names, always `Content-Disposition: attachment`; HTML
 drafts are served as `text/plain` with `CSP: sandbox`. A job is visible only to the token that created it.
@@ -177,7 +193,8 @@ The edge proxy needs nothing special: Caddy flushes `text/event-stream` response
 (600 000), `FORGE_MAX_TURNS` (24), `FORGE_MAX_CAD` (12 run_cad calls), `FORGE_JOB_TIMEOUT_S` (900); per day
 `FORGE_DAILY_USD` (5). The worker checks them before every LLM call: what is spent, plus a worst-case reserve for
 that call, must stay under each cap. Cost comes from OpenRouter's `usage.cost`; if that is missing, the worker
-estimates it from the token counts with deliberately high prices (`FORGE_PRICE_*`). When a cap is hit the job
+estimates it from the token counts with deliberately high prices (`FORGE_PRICE_*`). Output tokens are never counted
+below the answer's size / 4 bytes. The ledger lives on the job volume, which the CAD container cannot reach. When a cap is hit the job
 ends with status `budget` and a clear message. Spend per day lives in `/jobs/spend/<date>.json`.
 
 **Prompt-injection posture.** The system prompts are fixed strings in `agent.py`. The user's text reaches a model
@@ -201,7 +218,11 @@ turns it into a draft PR from their own checkout or a Claude session. That means
 renderer), and copying the files like `pipeline.publish()` with `draft: true`. The page stays noindex and unlinked
 until someone has printed and fitted the part.
 
-**Owner setup** (GitHub → Settings → Environments → `production`):
+**Owner setup** (GitHub → Settings → Environments → `production`, or repository level):
+
+* **The forge ships disabled.** It starts only when the variable `FORGE_ENABLE` is `1` *and* the key secret exists.
+  Without `FORGE_ENABLE=1` the deploy prints `forge: disabled (FORGE_ENABLE not set)`, does not send the key to the
+  server, and removes any forge containers.
 
 * secret `OPENROUTER_SECRET` (repository or `production` environment; `OPENROUTER_API_KEY` is accepted as a fallback name), passed to the worker as env `OPENROUTER_API_KEY`: without it the deploy prints `forge: disabled (no key)` and the forge
   containers are not started (or are removed); everything else deploys as before.

@@ -71,6 +71,7 @@ def main(argv=None):
     if not os.environ.get("OPENROUTER_API_KEY", "").strip():
         print("eval: refused (no key)")
         return 2
+    os.umask(0o007)  # same sharing rules as the worker (group 1000 with the api)
     env = dict(os.environ, FORGE_MODEL=a.model, **({"FORGE_MODEL_LIGHT": a.light} if a.light else {}))
     cfg = config(env)
     jobs = cfg["jobs_dir"]

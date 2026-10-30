@@ -30,6 +30,7 @@ const statsToken = env.STATS_TOKEN && env.STATS_TOKEN.length >= 24 ? env.STATS_T
 const forgeTokens = parseTokens(env.FORGE_INVITE_TOKENS);
 let forge: Forge | undefined;
 if (env.FORGE_ENABLED === '1' && forgeTokens.length > 0) {
+  process.umask(0o007); // forge files are shared with the worker through the group, never world-readable
   try {
     forge = new Forge({
       jobsDir: env.FORGE_JOBS_DIR ?? '/jobs',

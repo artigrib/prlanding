@@ -111,14 +111,24 @@ guard_no_public_ports() {
   for svc in $FORGE_SERVICES; do
     block=$(awk -v s="  $svc:" '$0 == s {on=1; next} on && /^  [a-z]/ {on=0} on && /^[a-z]/ {on=0} on' "$ROOT/compose.yml")
     [ -n "$block" ] || continue
-    if printf '%s\n' "$block" | grep -qE '^[[:space:]]*(ports|expose|cap_add):'; then
-      die "compose.yml: $svc must not publish ports or add capabilities; refusing"
+    if printf '%s\n' "$block" | grep -qE '^[[:space:]]*(ports|expose):'; then
+      die "compose.yml: $svc must not publish ports; refusing"
+    fi
+    # capabilities: none for the worker; forge-cad only CHOWN/SETUID/SETGID (to drop CAD children to nobody)
+    if printf '%s\n' "$block" | grep -qE '^[[:space:]]*cap_add:'; then
+      [ "$svc" = forge-cad ] || die "compose.yml: $svc must not add capabilities; refusing"
+      printf '%s\n' "$block" | grep -E '^[[:space:]]*cap_add:' | grep -qxE '[[:space:]]*cap_add:[[:space:]]*\[(CHOWN|SETUID|SETGID)(,[[:space:]]*(CHOWN|SETUID|SETGID))*\][[:space:]]*' \
+        || die "compose.yml: forge-cad may add only CHOWN/SETUID/SETGID; refusing"
     fi
     printf '%s\n' "$block" | grep -qE '^[[:space:]]*read_only:[[:space:]]*true' || die "compose.yml: $svc must have a read-only root filesystem; refusing"
   done
   if awk '$0 == "  forge-cad:" {on=1; next} on && /^  [a-z]/ {on=0} on' "$ROOT/compose.yml" | grep -q . \
      && ! awk '$0 == "  forge-cad:" {on=1; next} on && /^  [a-z]/ {on=0} on' "$ROOT/compose.yml" | grep -qE '^[[:space:]]*network_mode:[[:space:]]*"?none'; then
     die "compose.yml: forge-cad must have network_mode none; refusing"
+  fi
+  # forge-cad must never see the job volume
+  if awk '$0 == "  forge-cad:" {on=1; next} on && /^  [a-z]/ {on=0} on' "$ROOT/compose.yml" | grep -q 'forge_jobs'; then
+    die "compose.yml: forge-cad must not mount the job volume; refusing"
   fi
 }
 

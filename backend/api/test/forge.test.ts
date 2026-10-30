@@ -20,6 +20,9 @@ let base: string;
 let dir: string;
 let jobs: string;
 let clock = Date.parse('2026-10-30T10:00:00Z');
+function beat(ageS = 0): void {
+  writeFileSync(join(jobs, 'worker.heartbeat'), String(Math.floor(clock / 1000) - ageS));
+}
 
 before(async () => {
   dir = mkdtempSync(join(tmpdir(), 'pr-forge-'));
@@ -39,6 +42,7 @@ before(async () => {
     heartbeatMs: 50,
     now: () => clock,
   });
+  beat();
   server = createApi({ store, version: 't', allowedOrigins: [ORIGIN], trustProxy: true, forge });
   await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
   base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
@@ -132,6 +136,7 @@ test('daily job quota per token', async () => {
   }
   assert.equal((await create(T1)).status, 429);
   clock += 86_400_000; // next UTC day
+  beat();
   const r = await create(T1);
   assert.equal(r.status, 202);
   finish(((await r.json()) as { id: string }).id);
@@ -214,6 +219,7 @@ test('cancel: a queued job is removed from the queue and ends at once; a running
   assert.equal((await fetch(`${base}/forge/jobs/${id}/cancel`, { method: 'POST', headers: H(T2) })).status, 409);
 
   clock += 86_400_000; // bob's daily quota (3) is used up today
+  beat();
   const r2 = await create(T2);
   const id2 = ((await r2.json()) as { id: string }).id;
   // the worker claimed it
@@ -223,6 +229,16 @@ test('cancel: a queued job is removed from the queue and ends at once; a running
   assert.deepEqual(await c2.json(), { id: id2, status: 'cancelling' });
   assert.ok(existsSync(join(jobs, id2, 'cancel')));
   finish(id2, 'cancelled');
+});
+
+test('no new jobs while the worker heartbeat is stale', async () => {
+  beat(600);
+  const r = await create(T1);
+  assert.equal(r.status, 503);
+  assert.deepEqual(await r.json(), { error: 'worker_down' });
+  rmSync(join(jobs, 'worker.heartbeat'));
+  assert.equal((await create(T1)).status, 503);
+  beat();
 });
 
 test('queue cap', async () => {

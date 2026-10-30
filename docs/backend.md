@@ -185,9 +185,9 @@ networking, and `remote-deploy.sh` refuses to run a compose file that would (`gu
    fresh).
 6. **Analytics secrets** (optional, each sink stays off while its secrets are empty): see
    "Owner setup" in [docs/analytics/events.md](analytics/events.md).
-7. **Forge** (optional; off while the key is empty, the deploy then prints
-   `forge: disabled (no key)`): secrets `OPENROUTER_SECRET` (fallback name `OPENROUTER_API_KEY`) and
-   `FORGE_INVITE_TOKENS` (repository or environment `production`), optional variables `FORGE_DAILY_USD`, `FORGE_MODEL`, `FORGE_MODEL_LIGHT`. Mint invite
+7. **Forge** (ships disabled: it starts only with the variable `FORGE_ENABLE=1` plus the key; otherwise the deploy
+   prints `forge: disabled (FORGE_ENABLE not set)` or `forge: disabled (no key)`): secrets `OPENROUTER_SECRET` (fallback name `OPENROUTER_API_KEY`) and
+   `FORGE_INVITE_TOKENS` (repository or environment `production`), variable `FORGE_ENABLE=1`, optional variables `FORGE_DAILY_USD`, `FORGE_MODEL`, `FORGE_MODEL_LIGHT`. Mint invite
    tokens locally with `node backend/api/scripts/forge-token.mjs <label>`. Details: "Owner setup" in
    [backend/forge/README.md](../backend/forge/README.md#stage-1-on-the-vps).
 

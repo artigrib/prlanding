@@ -417,24 +417,73 @@ class WorkerAndCadService(unittest.TestCase):
         self.assertIsNone(worker.claim(self.jobs))  # the others are invalid or have no job dir
 
     def test_handle_validation(self):
-        self.assertEqual(cad_service.handle({"job": "../x", "iter": 1, "source": ""}, self.jobs)["stage"], "request")
-        self.assertEqual(cad_service.handle({"job": JID, "iter": 1, "source": ""}, self.jobs)["errors"], ["unknown job"])
-        self.assertEqual(cad_service.handle({"job": JID, "iter": 500, "source": ""}, self.jobs)["stage"], "request")
+        self.assertEqual(cad_service.handle({"source": 5})["stage"], "request")
+        r = cad_service.handle({"source": "import os\n"})
+        self.assertEqual(r["stage"], "policy")
+        self.assertEqual(r["files_b64"], {})
 
-    def test_socket_roundtrip(self):
+    def _good_result(self):
+        import base64
+        rep = json.load(open(os.path.join(EX, "report.json")))
+        files = {n: base64.b64encode(open(os.path.join(EX, n), "rb").read()).decode() for n in ("part.step", "part.stl")}
+        return {"ok": True, "stage": "done", "errors": [], "report": rep, "files_b64": files}
+
+    def test_worker_validates_cad_results(self):
+        import base64
+        good = self._good_result()
+        data, rep = cad_service.validate(good)
+        self.assertTrue(data["part.step"].startswith(b"ISO-10303-21;"))
+        for bad in (dict(good, files_b64=dict(good["files_b64"], **{"../../spend/x.json": "e30="})),
+                    dict(good, files_b64={**good["files_b64"], "part.step": base64.b64encode(b"<html>").decode()}),
+                    dict(good, files_b64={**good["files_b64"], "part.stl": base64.b64encode(b"not an stl").decode()}),
+                    dict(good, report={**good["report"], "size_mm": ["x", 1, 2]}),
+                    dict(good, report="nope")):
+            with self.assertRaises((ValueError, TypeError)):
+                cad_service.validate(bad)
+
+    def test_socket_roundtrip_writes_only_fixed_names(self):
         os.makedirs(os.path.join(self.jobs, JID))
-        sock = os.path.join(self.jobs, ".cad", "cad.sock")
-        threading.Thread(target=cad_service.serve, args=(sock, self.jobs), daemon=True).start()
+        sock = os.path.join(self.jobs, "sock", "cad.sock")
+        threading.Thread(target=cad_service.serve, args=(sock, os.getgid()), daemon=True).start()
         for _ in range(50):
             if os.path.exists(sock):
                 break
             time.sleep(0.05)
-        self.assertEqual(oct(os.stat(sock).st_mode & 0o777), "0o600")
-        r = cad_service.CadClient(sock).run(JID, 1, "import os\n")
+        self.assertEqual(oct(os.stat(sock).st_mode & 0o777), "0o660")
+        self.assertEqual(oct(os.stat(os.path.dirname(sock)).st_mode & 0o777), "0o750")
+        c = cad_service.CadClient(sock)
+        r = c.run(JID, 1, "import os\n", self.jobs)
         self.assertEqual(r["stage"], "policy")
-        self.assertTrue(os.path.isdir(os.path.join(self.jobs, JID, "cad", "01")))
-        r = cad_service.CadClient(os.path.join(self.jobs, "nope.sock")).run(JID, 1, "x")
+        self.assertFalse(os.path.exists(os.path.join(self.jobs, JID, "cad")))
+        self.assertEqual(c.run("../x", 1, "x", self.jobs)["stage"], "request")
+        if sandbox.netns_available():
+            r = c.run(JID, 2, "from build123d import *\nresult = Box(10, 10, 4)\n", self.jobs)
+            self.assertTrue(r["ok"], r)
+            self.assertEqual(sorted(os.listdir(os.path.join(self.jobs, JID, "cad", "02"))), ["design.py", "part.step", "part.stl", "report.json"])
+        r = cad_service.CadClient(os.path.join(self.jobs, "nope.sock")).run(JID, 1, "x", self.jobs)
         self.assertEqual(r["stage"], "service")
+
+    def test_require_drop_refuses_non_root_launcher(self):
+        os.environ["FORGE_CAD_REQUIRE_DROP"] = "1"
+        real = os.geteuid
+        try:
+            os.geteuid = lambda: 1000
+            r = sandbox.run_cad("from build123d import *\nresult = Box(1, 1, 1)\n", os.path.join(self.jobs, "x"))
+        finally:
+            os.geteuid = real
+            del os.environ["FORGE_CAD_REQUIRE_DROP"]
+        self.assertEqual(r["stage"], "isolation")
+
+    def test_worker_egress_guard(self):
+        import subprocess
+        code = ("import socket, sys\nsys.path.insert(0, %r)\nfrom forge.worker import egress_guard\negress_guard('/sock/cad.sock')\n"
+                "out = []\n"
+                "for f in (lambda: socket.getaddrinfo('example.com', 443), lambda: socket.create_connection(('127.0.0.1', 443), 1),\n"
+                "          lambda: socket.socket(socket.AF_UNIX).connect('/tmp/other.sock'), lambda: socket.getaddrinfo('openrouter.ai', 80)):\n"
+                "    try:\n        f(); out.append('allowed')\n    except PermissionError:\n        out.append('blocked')\n    except OSError:\n        out.append('oserror')\n"
+                "print(','.join(out))\n") % FORGE
+        r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=60)
+        self.assertEqual(r.stdout.strip(), "blocked,blocked,blocked,blocked", r.stderr[-500:])
 
     def test_external_netns_requires_loopback_only(self):
         p = os.path.join(self.jobs, "dev")
