@@ -25,7 +25,7 @@ const strings = {
   'Natočte ruku ke kostce': 'Turn the arm towards the cube',
   'Táhněte pro otočení pohledu · kolečko nebo dva prsty pro přiblížení': 'Drag to rotate the view · scroll or pinch to zoom',
   'Načítáme simulaci…': 'Loading the simulation…',
-  'Simulace ≈ 8,4 MB, z toho fyzikální engine MuJoCo 5,3 MB · na pomalém připojení to chvíli trvá': 'Simulation ≈ 8.4 MB, of which the MuJoCo physics engine is 5.3 MB · takes a moment on a slow connection',
+  'Fyzikální engine MuJoCo (5,3 MB), celá simulace ≈ 8,4 MB · na pomalém připojení to chvíli trvá': 'MuJoCo physics engine (5.3 MB), the whole simulation ≈ 8.4 MB · takes a moment on a slow connection',
   'Simulace se nespustila': 'The simulation didn’t start', 'Tenhle prohlížeč simulaci nezvládne.': 'This browser can’t run the simulation.',
   'Simulace potřebuje WebAssembly a WebGL. Zkuste aktuální Chrome, Firefox, Safari nebo Edge, případně počítač místo telefonu.': 'The simulation needs WebAssembly and WebGL. Try a current Chrome, Firefox, Safari or Edge, or a computer instead of a phone.',
   'Simulace potřebuje WebAssembly a WebGL.': 'The simulation needs WebAssembly and WebGL.',
