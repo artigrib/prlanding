@@ -49,7 +49,7 @@
 <div class="a4" style="display:flex;flex-direction:column;gap:20px">
 <h1>SO-101 parts buying plan</h1>
 <p class="lead">You buy the parts yourself, directly from suppliers. We tell you what to buy, where, what it costs with shipping, when it arrives and how to spot the right servo variant. We sell nothing and never order for you.</p>
-<p class="plan-stamp" id="plan-stamp">Prices checked as of <span id="stamp-date">—</span></p>
+<p class="plan-stamp" id="plan-stamp">Oldest price check in this plan: <span id="stamp-date">—</span></p>
 <noscript><p class="doc-note"><i aria-hidden="true"></i><span>The plan is calculated in your browser. Turn on JavaScript, or see the <a href="../../../data/components/so101.json">price and source data</a>.</span></p></noscript>
 </div>
 </section>
@@ -61,8 +61,13 @@
 <form id="plan-form" class="plan-form">
 <fieldset>
 <legend>What are you building</legend>
-<label class="plan-opt"><input type="radio" name="robot" value="follower_12v" checked><span><b>Follower only, 12 V</b><small>The working arm for sim-to-real. No leader (teleoperation) arm.</small></span></label>
-<label class="plan-opt"><input type="radio" name="robot" value="pair"><span><b>Pair: leader + follower</b><small>A 7.4 V leader arm and a 12 V follower. For teleoperation and data collection.</small></span></label>
+<label class="plan-opt"><input type="radio" name="robot" value="pair" checked><span><b>Pair: leader + follower</b><small>The control arm (leader, always 7.4 V) and the working arm (follower). Teleoperation, data collection and learning. This is what the guide follows.</small></span></label>
+<label class="plan-opt"><input type="radio" name="robot" value="follower"><span><b>Follower only</b><small>No control arm. After calibration you can only move it by replaying recorded motion; you can add a leader later.</small></span></label>
+</fieldset>
+<fieldset>
+<legend>Follower servos</legend>
+<label class="plan-opt"><input type="radio" name="fv" value="74v" checked><span><b>7.4 V (standard)</b><small>6× C001 (1/345), 5 V supply. The SO-ARM100 bill of materials finds them sufficient; both arms use the same supply type.</small></span></label>
+<label class="plan-opt"><input type="radio" name="fv" value="12v"><span><b>12 V (stronger)</b><small>6× C018 (1/345, 30 kg·cm), 12 V ≥5 A supply. The leader stays 7.4 V on 5 V: do not swap the supplies.</small></span></label>
 </fieldset>
 <fieldset>
 <legend>Printed parts</legend>
@@ -70,6 +75,7 @@
 <label class="plan-opt"><input type="radio" name="print" value="service"><span><b>Print service</b><small>Upload the STLs and get a quote.</small></span></label>
 </fieldset>
 </form>
+<p class="plan-cfgnote" id="plan-cfgnote" hidden></p>
 <div class="plan-sum" id="plan-sum" aria-live="polite"></div>
 </div>
 </div>
@@ -106,6 +112,7 @@
 <div class="a1 mono">03 — Buying plan</div>
 <div class="a4">
 <div class="plan-bar no-print"><button type="button" class="btn btn-o" id="print-btn">Print the plan</button><span class="muted">Ticks are saved only in your browser.</span></div>
+<div class="plan-notes" id="plan-notes"></div>
 <div id="plan-groups"></div>
 <div id="plan-alt"></div>
 <p class="src">All links are plain links to the shops. None of them is an affiliate link and we get nothing for recommending a shop.</p>
@@ -122,6 +129,7 @@
 <h3 id="cas-stavby">Build time estimate</h3>
 <p id="plan-time"></p>
 <ul id="plan-stages"></ul>
+<div id="plan-screws"></div>
 </div>
 </div>
 </section>
@@ -134,11 +142,12 @@
 <ul class="plan-arr" id="plan-arrivals"></ul>
 <div class="plan-track" id="plan-tracking"></div>
 <div class="plan-next" id="plan-next" hidden>
-<b>Servos and board are here. Next step:</b>
-<a class="sim-cta" href="../../../sim/so101/nastaveni/?lang=en"><span><b>1. Servo setup</b><small>IDs and calibration wizard, first as a dry run on the virtual arm</small></span><span aria-hidden="true">→</span></a>
-<a class="sim-cta" href="../../../en/guides/so101-lerobot-first-steps/"><span><b>2. SO-101 and LeRobot guide</b><small>Install, port, calibration and teleoperation</small></span><span aria-hidden="true">→</span></a>
+<b>Servos, board, power supply and USB cable are here. Next step:</b>
+<a class="sim-cta" href="../../../en/guides/so101-assembly/#e2"><span><b>1. Servo IDs in LeRobot</b><small>Install and <code>lerobot-setup-motors</code>, one servo at a time, before assembly (guide, stage 2)</small></span><span aria-hidden="true">→</span></a>
+<a class="sim-cta" href="../../../sim/so101/nastaveni/?lang=en"><span><b>Practice run (optional)</b><small>IDs and calibration wizard on the virtual arm; LeRobot sets up the real servos</small></span><span aria-hidden="true">→</span></a>
+<a class="sim-cta" href="../../../en/guides/so101-lerobot-first-steps/"><span><b>2. SO-101 and LeRobot guide</b><small>Port, calibration and teleoperation</small></span><span aria-hidden="true">→</span></a>
 </div>
-<p class="plan-wait muted" id="plan-wait">Once the servos and the board arrive, the next step appears here: servo setup. Meanwhile, try the whole LeRobot workflow on a virtual arm: <a href="../../../en/guides/so101-lerobot-simulation/">Before the parts arrive: LeRobot against a virtual arm</a>.</p>
+<p class="plan-wait muted" id="plan-wait">Once the servos, the board, the power supply and the USB cable arrive, the next step appears here: writing the servo IDs. Meanwhile, try the whole LeRobot workflow on a virtual arm: <a href="../../../en/guides/so101-lerobot-simulation/">Before the parts arrive: LeRobot against a virtual arm</a>.</p>
 </div>
 </div>
 </section>

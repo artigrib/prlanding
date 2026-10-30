@@ -105,11 +105,25 @@ await check('plan so101: totals, variant guard, checker, local state', '/plan/so
   p.on('request', r => { const u = new URL(r.url()); if (u.origin !== new URL(BASE).origin && !IGNORE.test(r.url())) offsite.push(r.url()); });
   await p.waitForSelector('#plan[data-ready="1"]');
   const total = async () => (await p.locator('[data-testid=plan-total-eur]').innerText()).trim();
+  // default: the standard pair (7.4 V follower); the follower-voltage group switches to the 12 V pair
+  if (await total() !== '373–398 €') throw new Error('default pair total ' + await total());
+  if (!(await p.locator('[data-testid=plan-screws]').count()) || !/49× M2×6[\s\S]*96× M3×6/.test(await p.locator('#plan-screws').innerText())) throw new Error('screw table');
+  if ((await p.locator('[data-testid=plan-alt]').count()) < 1) throw new Error('kit alternatives');
+  await p.check('input[name=robot][value=follower]'); await p.check('input[name=fv][value="12v"]');
   if (await total() !== '206–224 €') throw new Error('follower total ' + await total());
+  if (!(await p.locator('#plan-cfgnote').isVisible()) || !/lerobot-replay/.test(await p.locator('#plan-cfgnote').innerText())) throw new Error('follower-only note');
+  if (!(await p.locator('[data-testid=plan-backorder]').count())) throw new Error('backorder note on the C018 line');
   if (!/^\d\d\.\d\d\.20\d\d$/.test(await p.locator('#stamp-date').innerText())) throw new Error('price stamp date');
   if (!/Pozor na variantu/.test((await p.locator('.plan-warn h2').innerText()).replace(/\s+/g, ' '))) throw new Error('variant warning');
   await p.check('input[name=robot][value=pair]');
-  if (await total() !== '388–414 €') throw new Error('pair total ' + await total());
+  if (await total() !== '388–413 €') throw new Error('pair total ' + await total());
+  // a backordered line can be swapped to another recommended source and back
+  await p.locator('.plan-line', { hasText: 'C018' }).locator('summary').first().click();
+  await p.locator('.plan-line', { hasText: 'C018' }).locator('button[data-swap]').first().click();
+  if (!(await p.locator('[data-testid=plan-swapped]').count())) throw new Error('source swap');
+  await p.locator('.plan-line', { hasText: 'C018' }).locator('summary').first().click();
+  await p.locator('.plan-line', { hasText: 'C018' }).locator('button[data-swap][data-src=""]').click();
+  if (await p.locator('[data-testid=plan-swapped]').count() || await total() !== '388–413 €') throw new Error('swap back');
   if (!/OpenELAB[\s\S]*1\/191/.test(await p.locator('#variant-flags').innerText()) || !(await p.locator('#variant-flags .pb-no').count())) throw new Error('OpenELAB C001 not flagged nedoporučujeme');
   if ((await p.locator('.plan-grp').count()) < 4) throw new Error('supplier groups');
   if (!/\/navody\/so101-sestaveni\/$/.test(await p.locator('[data-testid=plan-guide-link]').evaluate(a => a.href))) throw new Error('build time not linked to the guide');
@@ -126,9 +140,11 @@ await check('plan so101: totals, variant guard, checker, local state', '/plan/so
   await p.fill('#trk-0', 'TEST123');
   if (await p.locator('#plan-next').isVisible()) throw new Error('next step shown too early');
   await p.check('#arr-servos'); await p.check('#arr-board');
-  if (!(await p.locator('#plan-next').isVisible())) throw new Error('next step not shown after servos+board');
-  const next = await p.locator('#plan-next a').evaluateAll(as => as.map(a => new URL(a.href).pathname));
-  if (next[0] !== '/sim/so101/nastaveni/' || next[1] !== '/navody/so101-lerobot-prvni-kroky/') throw new Error('next links ' + next);
+  if (await p.locator('#plan-next').isVisible()) throw new Error('next step shown without power supply and USB cable');
+  await p.check('#arr-psu'); await p.check('#arr-usb');
+  if (!(await p.locator('#plan-next').isVisible())) throw new Error('next step not shown after servos+board+psu+usb');
+  const next = await p.locator('#plan-next a').evaluateAll(as => as.map(a => new URL(a.href).pathname + new URL(a.href).hash));
+  if (next[0] !== '/navody/so101-sestaveni/#e2' || next[1] !== '/sim/so101/nastaveni/' || next[2] !== '/navody/so101-lerobot-prvni-kroky/') throw new Error('next links ' + next);
   await p.reload(); await p.waitForSelector('#plan[data-ready="1"]');
   if (!(await p.locator('input[name=robot][value=pair]').isChecked())) throw new Error('config not restored');
   if (!(await p.locator('.plan-line input[type=checkbox]').first().isChecked()) || (await p.inputValue('#trk-0')) !== 'TEST123') throw new Error('local state not restored');

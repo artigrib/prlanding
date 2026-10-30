@@ -27,7 +27,11 @@ test('bridge copies of the data and the plan core match the site sources (run no
 
 test('core: plan totals and variant check through the bridge copy', () => {
   assert.deepEqual(buildPlan(PLAN_DATA, { robot: 'follower_12v', print: 'self' }).totals.landed_eur, [206, 224]);
-  assert.deepEqual(buildPlan(PLAN_DATA, { robot: 'pair', print: 'self' }).totals.landed_eur, [388, 414]);
+  assert.deepEqual(buildPlan(PLAN_DATA, { robot: 'pair', print: 'self' }).totals.landed_eur, [388, 413]);
+  assert.deepEqual(buildPlan(PLAN_DATA, { robot: 'pair_74v', print: 'self' }).totals.landed_eur, [373, 398]);
+  assert.deepEqual(buildPlan(PLAN_DATA, { robot: 'follower_74v', print: 'self' }).screws.total, { m2: 24, m3: 50 });
+  assert.equal(PlanInputs.get_build_plan.parse({}).robot, 'pair_74v', 'default = the standard pair, as on the page');
+  assert.equal(PlanInputs.check_part_variant.safeParse({ listing_text: 'x', expected: 'follower_74v:2' }).success, true);
   assert.equal(checkPartVariant(PLAN_DATA, 'STS3215 C001 7.4V 1/191', 'leader:2').verdict, 'inconsistent');
   assert.deepEqual(buildPlan(PLAN_DATA_SVRN, { robot: 'robot_only', module: 'flipper', print: 'self' }).totals.landed_eur, [103, 106]);
   assert.deepEqual(buildPlan(PLAN_DATA_SVRN, { robot: 'starter', module: 'flipper', print: 'self' }).totals.landed_eur, [241, 248]);
@@ -63,7 +67,8 @@ test('MCP: tools are listed read-only and return structured plans', async () => 
   assert.ok(s.groups.some((g: any) => g.supplier === 'print_service'));
   assert.equal(s.variants.length, 2);
   const d: any = await client.callTool({ name: 'get_build_plan', arguments: {} });
-  assert.equal(d.structuredContent.robot, 'follower_12v');
+  assert.equal(d.structuredContent.robot, 'pair_74v');
+  assert.deepEqual(d.structuredContent.screws.total, { m2: 49, m3: 96 });
   const v: any = await client.callTool({ name: 'check_part_variant', arguments: { listing_text: 'Feetech STS3215-C018 12V 1:345', expected: 'follower_12v:1' } });
   assert.equal(v.structuredContent.ok, true);
   assert.equal(v.structuredContent.variant_ok, true);

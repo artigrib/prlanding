@@ -66,7 +66,7 @@ Positions use the robot base frame: x forward, y left, z up, origin at the base 
 | `start_mission` | Reset the scene and start a mission | `mission_id` |
 | `check_mission` | Mission state: `idle`, `running`, `success` or `failed` | — |
 | `reset_scene` | Reset the arm and the objects | — |
-| `get_build_plan` | SO-101 parts buying plan: lines grouped by supplier, prices with checked date and status, landed-cost range to CZ, ETA, servo variants per joint, tools, build-time estimate. No `session` needed | `robot` (`follower_12v`/`pair`), `print` (`self`/`service`) |
+| `get_build_plan` | SO-101 parts buying plan: lines grouped by supplier, prices with checked date and status, landed-cost range to CZ, ETA, servo variants per joint, tools, build-time estimate. No `session` needed | `robot` (`pair_74v` default / `pair` / `follower_74v` / `follower_12v`), `print` (`self`/`service`) |
 | `check_part_variant` | Check a shop listing's text against the servo variant a joint needs: `match`, `likely`, `check_selection`, `mismatch`, `inconsistent` or `unknown`. No `session` needed | `listing_text`, `expected` (`C018`, `leader`, `leader:1`, …) |
 
 ### Purchase plan tools (read-only)
