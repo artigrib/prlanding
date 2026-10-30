@@ -42,8 +42,8 @@ cd prlanding
 
 python3.12 -m venv .venv-lerobot
 source .venv-lerobot/bin/activate
-pip install "lerobot[feetech,dataset]==0.6.1"</code></pre>
-<p>We pin the LeRobot version we tested. A newer one will most likely work too, but parameter names may differ.</p>
+pip install "lerobot[feetech,core-scripts]==0.6.1"</code></pre>
+<p>It is the same install as in the <a href="{root}en/guides/so101-assembly/#install">SO-101 assembly</a> and <a href="{root}en/guides/so101-lerobot-first-steps/">first steps</a> guides, so you can keep the environment for the real arm (<code>core-scripts</code> includes <code>dataset</code>; our test run on 30 Oct used the narrower <code>[feetech,dataset]</code>, <code>core-scripts</code> adds packages for hardware and visualisation). We pin the LeRobot version we tested. A newer one will most likely work too, but parameter names may differ.</p>
 <p class="src">Our note: on Linux, pip downloads PyTorch with the CUDA libraries (over 4 GB). The virtual arm needs no GPU; to save space, install the CPU build first as described on <a href="https://pytorch.org/get-started/locally/">pytorch.org</a>.</p>
 </div>
 </div>

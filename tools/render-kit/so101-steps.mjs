@@ -44,6 +44,8 @@ const ALL = ORDER;
 // servo centres and horn centres at the assembly pose (all joints 0), MuJoCo world frame, mm
 const SC = { 1: [27, 0, 44], 2: [70, 0, 104], 3: [85, 0, 230], 4: [220, 0, 235], 5: [275, 12, 235], 6: [316, 0, 242] };
 const M2 = (n) => `${n}× M2×6`, M3 = (n) => `${n}× M3×6`;
+// "4 M3x6mm screws on each side" in the official guide = 4 + 4: the legend says so, with a dot on each side
+const M2s = (n) => `${2 * n}× M2×6 (${n}+${n})`, M3s = (n) => `${2 * n}× M3×6 (${n}+${n})`;
 
 // camera families: one framing per joint group, the same azimuth / elevation everywhere
 const CAM = {
@@ -79,13 +81,13 @@ export const STEPS = [
     tags: [{ id: 2, at: { mm: [76, -10, 110] }, off: [90, -30] }],
     screws: [{ label: M2(4), at: [{ mm: [58, -20, 98] }, { mm: [82, -20, 98] }] }] },
   { id: '08-j2-upper-arm', stage: 'e3', ...CAM.j2, done: before('upper'), add: [{ part: P.upper, dir: [0, 0, 1], dist: 0.07 }],
-    screws: [{ label: M3(4), at: [{ mm: [69, -24, 117] }] }] },
+    screws: [{ label: M3s(4), at: [{ mm: [69, -24, 117] }, { mm: [69, 24, 117] }] }] },
   // ---- joint 3 ----
   { id: '09-j3-servo', stage: 'e3', ...CAM.j3, done: before('s3'), add: [{ part: P.s3, dir: [0, 0, 1], dist: 0.06 }],
     tags: [{ id: 3, at: { mm: [85, -10, 236] }, off: [-90, -40] }],
     screws: [{ label: M2(4), at: [{ mm: [62, -20, 236] }, { mm: [106, -20, 236] }] }] },
   { id: '10-j3-forearm', stage: 'e3', ...CAM.j3, done: before('fore'), add: [{ part: P.fore, dir: [1, 0, 0], dist: 0.11 }],
-    screws: [{ label: M3(4), at: [{ mm: [97, -24, 229] }] }] },
+    screws: [{ label: M3s(4), at: [{ mm: [97, -24, 229] }, { mm: [97, 24, 229] }] }] },
   // ---- joint 4 ----
   { id: '11-j4-holder-servo', stage: 'e3', ...CAM.j45, done: before('wrHolder'), add: [{ part: P.wrHolder, dir: [0, 0, 1], dist: 0.05 }, { part: P.s4, dir: [1, 0, 0], dist: 0.06 }],
     tags: [{ id: 4, at: { mm: [228, -10, 240] }, off: [40, -80] }],
@@ -93,13 +95,13 @@ export const STEPS = [
   // ---- joint 5 ----
   { id: '12-j5-wrist', stage: 'e3', ...CAM.j45, done: before('s5'), add: [{ part: P.s5, dir: [1, 0, 0], dist: 0.06 }, { part: P.wrist, dir: [1, 0, 0], dist: 0.06 }],
     tags: [{ id: 5, at: { mm: [280, 0, 245] }, off: [60, -70] }],
-    screws: [{ label: M2(2), at: [{ mm: [296, 10, 228] }] }, { label: M3(4), at: [{ mm: [232, -26, 234] }] }] },
+    screws: [{ label: M2(2), at: [{ mm: [296, 10, 228] }] }, { label: M3s(4), at: [{ mm: [232, -26, 234] }, { mm: [232, 26, 234] }] }] },
   // ---- gripper ----
   { id: '13-gripper', stage: 'e3', ...CAM.grip, frame: before('mjaw'), zoom: 0.62, done: before('jaw'), add: [{ part: P.jaw, dir: [1, 0, 0], dist: 0.05 }, { part: P.s6, dir: [0, 0, 1], dist: 0.06 }],
     tags: [{ id: 6, at: { mm: [316, -10, 250] }, off: [60, -70] }],
-    screws: [{ label: M3(4), at: [{ mm: [297, 0, 234] }] }, { label: M2(4), at: [{ mm: [316, -22, 230] }] }] },
+    screws: [{ label: M3(4), at: [{ mm: [297, 0, 234] }] }, { label: M2s(2), at: [{ mm: [316, -22, 230] }, { mm: [316, 22, 230] }] }] },
   { id: '14-moving-jaw', stage: 'e3', ...CAM.grip, done: before('mjaw'), add: [{ part: P.mjaw, dir: [0, 0, 1], dist: 0.05 }],
-    screws: [{ label: M3(4), at: [{ mm: [317, -22, 255] }] }] },
+    screws: [{ label: M3s(4), at: [{ mm: [317, -22, 255] }, { mm: [317, 22, 255] }] }] },
   // ---- stage 4: electronics ----
   { id: '15-plate', stage: 'e4', ...CAM.j1, frame: ALL, zoom: 0.62, done: before('plate'), add: [{ part: P.plate, dir: [-1, 0, 0], dist: 0.06 }] },
   { id: '16-daisy-chain', stage: 'e4', ...CAM.arm, done: ALL,

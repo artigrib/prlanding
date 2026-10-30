@@ -276,7 +276,9 @@ window.renderStep = async (s) => {
     g.fillStyle = INK; g.font = `600 ${17 * u}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('ID ' + t.id, bx + w / 2, by + h / 2 + 0.5 * u);
   }
   if (callouts.length) {
-    const rowH = 44 * u, pad = 16 * u, w = 250 * u, h = pad * 2 + rowH * callouts.length - 8 * u, bx = 28 * u, by = H - h - 28 * u;
+    g.font = `600 ${20 * u}px ${FONT}`;
+    const textW = Math.max(...callouts.map((cl) => g.measureText(cl.label).width));
+    const rowH = 44 * u, pad = 16 * u, w = Math.max(250 * u, pad + 44 * u + 30 * u + 22 * u + textW + pad), h = pad * 2 + rowH * callouts.length - 8 * u, bx = 28 * u, by = H - h - 28 * u;
     g.fillStyle = 'rgba(255,255,255,0.92)'; g.beginPath(); g.roundRect(bx, by, w, h, 6 * u); g.fill();
     callouts.forEach((cl, i) => {
       const cy = by + pad + rowH * i + 18 * u;

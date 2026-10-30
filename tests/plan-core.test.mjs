@@ -111,6 +111,14 @@ test('screw table: per joint and per arm, one source for plan, guide and checkli
   assert.equal(p.screws.included, 'unverified', 'screws with the servos are not confirmed');
   assert.equal(buildPlan(data, { robot: 'follower_12v' }).screws.total.m3, 50);
   assert.match(p.notes.find((n) => n.id === 'screws').text_cs, /follower 24× M2×6 a až 50× M3×6/);
+  // the guide and the checklist are generated from the same table (tools/build.mjs {sc:…})
+  for (const f of ['navody/so101-sestaveni/index.html', 'en/guides/so101-assembly/index.html']) {
+    const g = fs.readFileSync(new URL('../' + f, import.meta.url), 'utf8');
+    assert.match(g, /data-testid="screw-table"/, f);
+    assert.match(g, /<td><b>24<\/b><\/td><td><b>50<\/b><\/td><td><b>25<\/b><\/td><td><b>46<\/b><\/td>/, f);
+  }
+  assert.match(fs.readFileSync(new URL('../navody/so101-sestaveni/kontrolni-seznam/index.html', import.meta.url), 'utf8'), /follower 24× M2×6 a 50× M3×6/);
+  assert.match(fs.readFileSync(new URL('../en/guides/so101-assembly/checklist/index.html', import.meta.url), 'utf8'), /follower 24× M2×6 and 50× M3×6/);
 });
 
 test('a backordered line can be swapped to another recommended source', () => {

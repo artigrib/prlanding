@@ -12,10 +12,10 @@ window.PR_ROBOTS = [
     author: 'The Robot Studio a Hugging Face', render: true, alt: 'Robotická ruka SO-101',
     short: 'Ruka s pěti osami a chapadlem pro AI a teleoperaci s knihovnou LeRobot. Pár ovládací + výkonná ruka.',
     lead: 'Ruka s pěti osami a chapadlem pro učení robotů a teleoperaci. Ovládací ruku (leader) vedete vlastní rukou, výkonná ruka (follower) pohyb opakuje – a s knihovnou LeRobot se úlohu naučí sama.',
-    bomCost: '≈ 130 USD / ruka', printTime: '≈ 16,5 h za pár', software: 'LeRobot (Python)', setups: true,
+    bomCost: '≈ 130 USD / ruka (ceny v USA podle kusovníku projektu, bez dopravy a DPH; pro ČR viz plán nákupu)', printTime: '≈ 16,5 h za pár', software: 'LeRobot (Python)', setups: true,
     repo: 'https://github.com/TheRobotStudio/SO-ARM100', docs: 'https://huggingface.co/docs/lerobot/so101',
     card: [['Osy', '5 + chapadlo'], ['Software', 'LeRobot']],
-    specs: [['Stupně volnosti', '5 os + chapadlo'], ['Pohon', 'Feetech STS3215'], ['Napájení', '5 V'], ['Tisk', 'PLA+, vrstva 0,2 mm'], ['Doba tisku', '≈ 16,5 h za pár']],
+    specs: [['Stupně volnosti', '5 os + chapadlo'], ['Pohon', 'Feetech STS3215'], ['Napájení', '5 V (serva 7,4 V); follower s 12V servy: 12 V'], ['Tisk', 'PLA+, vrstva 0,2 mm'], ['Doba tisku', '≈ 16,5 h za pár']],
     license: { hw: 'Apache-2.0', sw: 'Apache-2.0', status: 'verified', checked: '2026-10-30',
       sources: ['https://github.com/TheRobotStudio/SO-ARM100/blob/main/LICENSE', 'https://github.com/huggingface/lerobot/blob/main/LICENSE'] },
     related: ['hand', 'lekiwi', 'xle'] },
@@ -243,7 +243,7 @@ window.PR_BOX = function (r, tier, pair) {
   items.push(['Tištěný návod a bezpečnostní informace', '1×', 'Návod']);
   return items;
 };
-window.PR_BOX_NOTE = function (r) { return r.id === 'so101' ? 'Počty dle kusovníku projektu SO-ARM100.' : 'Položky dle kusovníku projektu; přesné počty potvrdíme před expedicí.'; };
+window.PR_BOX_NOTE = function (r) { return r.id === 'so101' ? 'Počty dle kusovníku projektu SO-ARM100 (follower 7,4 V, zdroj 5 V). Follower s 12V servy: 6× C018 a zdroj 12 V / 5 A.' : 'Položky dle kusovníku projektu; přesné počty potvrdíme před expedicí.'; };
 // FAQ of a kit page (app.js renders it, tools/build.mjs pre-renders it and adds it as FAQPage structured data).
 window.PR_FAQ = function (r) {
   return [
