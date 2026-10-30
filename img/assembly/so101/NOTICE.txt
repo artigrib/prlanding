@@ -1,0 +1,17 @@
+SO-101 assembly step images (img/assembly/so101/) — printedrobotics.cz
+=======================================================================
+
+Rendered by printedrobotics.cz with tools/render-kit/so101-steps.mjs (three.js, headless Chromium).
+No frames from third-party videos or photos are used.
+
+Geometry: SO-101 robot model from MuJoCo Menagerie, robotstudio_so101
+          https://github.com/google-deepmind/mujoco_menagerie/tree/main/robotstudio_so101
+          Origin: The Robot Studio SO-ARM100 / SO101 (https://github.com/TheRobotStudio/SO-ARM100)
+          Licence: Apache License 2.0 (copy: sim/so101/model/LICENSE)
+          The meshes are the ones bundled in sim/so101/model/visual/so101_visual.glb (see sim/so101/NOTICE.txt),
+          placed with the body / geom poses of sim/so101/model/so101.xml, all joints at 0.
+
+Changes / additions by printedrobotics.cz: colours, camera, exploded "ghost" positions and arrows; the horns
+of the STS3215 servo are separated from its body for highlighting. Screws (M2×6, M3×6 as named in the
+official LeRobot guide), the driver board and the cable are schematic 2D symbols drawn by printedrobotics.cz;
+their positions are indicative, not exact hole positions.
