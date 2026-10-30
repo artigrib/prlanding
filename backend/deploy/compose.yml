@@ -108,7 +108,10 @@ services:
     # drops to uid nobody, which can write nothing but its own temporary work dir in /tmp.
     user: "0:0"
     read_only: true
-    tmpfs: ["/tmp:size=512m,mode=1777"]
+    # /tmp is root-owned 0711: nobody cannot create files in it, only inside its own 0733 work dir (which the
+    # launcher removes after each run, together with anything nobody left there); /dev/shm is tiny.
+    tmpfs: ["/tmp:size=512m,mode=0711"]
+    shm_size: 1m
     cap_drop: [ALL]
     cap_add: [CHOWN, SETUID, SETGID]
     security_opt: ["no-new-privileges:true"]

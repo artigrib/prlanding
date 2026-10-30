@@ -146,9 +146,9 @@ browser (/lab/) ──fetch, Authorization: Bearer <invite token>──► api  
 | ports | none | none |
 | volumes | `forge_jobs:/jobs`, `forge_cad_sock:/sock` | **only** `forge_cad_sock:/sock` (no job data, queue, ledger or api data) |
 | user | uid 1002, gid 1000 (shares `/jobs` with the api through the group; own uid) | launcher uid 0 with `cap_drop: ALL` + `cap_add: [CHOWN, SETUID, SETGID]` (no DAC override); **every CAD child runs as nobody (65534)** (`FORGE_CAD_REQUIRE_DROP=1`, refuses otherwise) |
-| fs | read-only root, 256 MB `/tmp` | read-only root, 512 MB `/tmp` (the child can write only its own 0733 work dir there) |
+| fs | read-only root, 256 MB `/tmp` | read-only root, 512 MB `/tmp` mode 0711 (nobody cannot create files there; the child writes only its own 0733 work dir, which is emptied as nobody and removed after each run) |
 | privileges | `cap_drop: ALL`, `no-new-privileges`, default seccomp, no Docker socket, no host mounts | same, except the three caps above |
-| limits | 1 CPU, 1.5 GB, 128 pids | 1 CPU, 2 GB, 64 pids (+ per-run rlimits, 90 s timeout; strays of uid nobody killed before/after each run) |
+| limits | 1 CPU, 1.5 GB, 128 pids | 1 CPU, 2 GB, 64 pids, `/dev/shm` 1 MB (+ per-run rlimits, 90 s timeout; strays of uid nobody killed before/after each run, also on timeout) |
 | secrets | `OPENROUTER_API_KEY` (read once, removed from the environment) | none |
 
 **What isolates `run_cad` here.** gVisor/nsjail are *not* used (they are not installed on the VPS; adding
@@ -160,9 +160,10 @@ see it. So:
 2. Each child runs as uid `nobody` in a fresh root-owned 0733 work dir under `/tmp`. It has no capabilities and
    no network (`network_mode: none`; `run_cad` refuses to run if `/proc/net/dev` shows any interface except
    loopback). On a read-only root filesystem, the only thing it can write is its own scratch directory.
-3. Results go back to the worker over the socket as bytes: `part.step`, `part.stl` (≤ 24 MB each) and the report
-   computed by the launcher. The worker checks file signatures (STEP header, binary/ASCII STL structure), sizes
-   and report types, and writes them itself under fixed names into `<job>/cad/<NN>/`.
+3. Results go back to the worker over the socket as bytes: `part.step`, `part.stl` (≤ 24 MB each) and the child's
+   small info dict. The privileged launcher never parses the output files. The worker checks file signatures
+   (STEP header, binary/ASCII STL structure), sizes and info types, writes the files itself under fixed names into
+   `<job>/cad/<NN>/`, and computes the geometry report (trimesh) itself.
 4. Defence in depth: the policy now also denies OCCT class names (`Package_Class`), static `*_s` methods,
    `.wrapped`, `Perform`, `Transfer`, `*Writer` and `*Reader`. The rlimits, empty environment, audit hook,
    minimal builtins and wall-clock kill are unchanged.

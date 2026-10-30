@@ -7,9 +7,10 @@ touch job data. On the VPS the CAD step runs in its own container:
     so it cannot see other jobs, the queue, the spend ledger or anything of the api,
   * the server runs as root with only CAP_CHOWN/SETUID/SETGID (no DAC override) and every run's child drops
     to uid nobody (FORGE_CAD_REQUIRE_DROP=1); the child can write only its private temporary work dir.
-The server sends results back over the socket (STEP/STL bytes, base64, size-capped, plus the geometry report
-it computed). The worker validates them (file signatures, sizes, report types) and writes them under fixed
-names into <jobs>/<job>/cad/<NN>/ itself.
+The server sends results back over the socket (STEP/STL bytes, base64, size-capped, plus the child's small
+info dict: OCC volume/validity and `meta`). The privileged launcher never parses the output files: the worker
+validates them (file signatures, sizes, info types), writes them under fixed names into <jobs>/<job>/cad/<NN>/
+and computes the geometry report (trimesh) itself.
 
     python3 -m forge.cad_service serve            # forge-cad container
     CadClient(socket_path).run(job_id, n, source, jobs_dir)   # forge-worker
@@ -27,6 +28,7 @@ import sys
 import tempfile
 import time
 
+from .geometry import geometry_report
 from .sandbox import run_cad
 
 JOB_RE = re.compile(r"^[0-9a-f]{32}$")
@@ -46,7 +48,7 @@ def handle(req):
         return {"ok": False, "stage": "request", "errors": ["bad request"]}
     run = tempfile.mkdtemp(prefix="forge-run-")
     try:
-        res = run_cad(src, run)
+        res = run_cad(src, run, report=False)
         files = {}
         if res.get("ok"):
             for name in ("part.step", "part.stl"):
@@ -55,7 +57,7 @@ def handle(req):
                     return {"ok": False, "stage": "export", "errors": [f"{name} missing or larger than {MAX_FILE // 2**20} MB"]}
                 with open(p, "rb") as f:
                     files[name] = base64.b64encode(f.read()).decode("ascii")
-        out = {k: res.get(k) for k in ("ok", "stage", "errors", "report", "elapsed_s")}
+        out = {k: res.get(k) for k in ("ok", "stage", "errors", "child", "elapsed_s")}
         out["stdout"] = str(res.get("stdout") or "")[-4000:]
         out["files_b64"] = files
         return out
@@ -122,7 +124,7 @@ def _num(v):
 
 
 def validate(res):
-    """Worker-side checks of what came back from the CAD container. Returns (files dict, report) or raises ValueError."""
+    """Worker-side checks of what came back from the CAD container. Returns (files dict, child info) or raises ValueError."""
     files = res.get("files_b64")
     if not isinstance(files, dict) or set(files) != {"part.step", "part.stl"}:
         raise ValueError("unexpected file set")
@@ -135,18 +137,15 @@ def validate(res):
         raise ValueError("part.step is not a STEP file")
     if not _stl_ok(data["part.stl"]):
         raise ValueError("part.stl is not an STL file")
-    rep = res.get("report")
-    if not isinstance(rep, dict) or len(json.dumps(rep)) > 256 * 1024:
-        raise ValueError("bad report")
-    size = rep.get("size_mm")
-    if not (isinstance(size, list) and len(size) == 3 and all(_num(v) and 0 <= v < 5000 for v in size)):
-        raise ValueError("bad report: size_mm")
-    for k in ("mass_print_g", "volume_mm3"):
-        if k in rep and not _num(rep[k]):
-            raise ValueError(f"bad report: {k}")
-    if not isinstance(rep.get("meta", {}), dict):
-        raise ValueError("bad report: meta")
-    return data, rep
+    child = res.get("child")
+    if not isinstance(child, dict) or len(json.dumps(child)) > 256 * 1024 or child.get("ok") is not True:
+        raise ValueError("bad child info")
+    if not isinstance(child.get("meta", {}), dict):
+        raise ValueError("bad child info: meta")
+    for k in ("occ_volume_mm3", "occ_area_mm2", "n_solids"):
+        if k in child and not _num(child[k]):
+            raise ValueError(f"bad child info: {k}")
+    return data, child
 
 
 class CadClient:
@@ -172,7 +171,7 @@ class CadClient:
             return {"ok": False, "stage": str(res.get("stage"))[:20], "errors": [str(e)[:600] for e in (res.get("errors") or [])][:8],
                     "stdout": str(res.get("stdout") or "")[-1500:]}
         try:
-            data, rep = validate(res)
+            data, child = validate(res)
         except (ValueError, TypeError) as e:
             return {"ok": False, "stage": "validate", "errors": [f"result rejected by the worker: {e}"]}
         d = cad_dir(jobs_dir, job_id, n)
@@ -182,6 +181,10 @@ class CadClient:
                 f.write(b)
         with open(os.path.join(d, "design.py"), "w", encoding="utf-8") as f:
             f.write(source)
+        try:
+            rep = geometry_report(os.path.join(d, "part.stl"), child)
+        except Exception as e:  # noqa: BLE001
+            return {"ok": False, "stage": "report", "errors": [f"report failed: {type(e).__name__}"]}
         with open(os.path.join(d, "report.json"), "w") as f:
             json.dump(rep, f, indent=1)
         return {"ok": True, "stage": "done", "errors": [], "report": rep, "stdout": str(res.get("stdout") or "")[-1500:],

@@ -424,20 +424,27 @@ class WorkerAndCadService(unittest.TestCase):
 
     def _good_result(self):
         import base64
-        rep = json.load(open(os.path.join(EX, "report.json")))
-        files = {n: base64.b64encode(open(os.path.join(EX, n), "rb").read()).decode() for n in ("part.step", "part.stl")}
-        return {"ok": True, "stage": "done", "errors": [], "report": rep, "files_b64": files}
+        with open(os.path.join(EX, "report.json")) as f:
+            rep = json.load(f)
+        files = {}
+        for n in ("part.step", "part.stl"):
+            with open(os.path.join(EX, n), "rb") as f:
+                files[n] = base64.b64encode(f.read()).decode()
+        child = {"ok": True, "occ_volume_mm3": rep["volume_mm3"], "n_solids": 1, "occ_valid": True, "meta": rep["meta"]}
+        return {"ok": True, "stage": "done", "errors": [], "child": child, "files_b64": files}
 
     def test_worker_validates_cad_results(self):
         import base64
         good = self._good_result()
-        data, rep = cad_service.validate(good)
+        data, child = cad_service.validate(good)
         self.assertTrue(data["part.step"].startswith(b"ISO-10303-21;"))
         for bad in (dict(good, files_b64=dict(good["files_b64"], **{"../../spend/x.json": "e30="})),
                     dict(good, files_b64={**good["files_b64"], "part.step": base64.b64encode(b"<html>").decode()}),
                     dict(good, files_b64={**good["files_b64"], "part.stl": base64.b64encode(b"not an stl").decode()}),
-                    dict(good, report={**good["report"], "size_mm": ["x", 1, 2]}),
-                    dict(good, report="nope")):
+                    dict(good, child={**good["child"], "occ_volume_mm3": "x"}),
+                    dict(good, child={**good["child"], "meta": []}),
+                    dict(good, child={**good["child"], "ok": False}),
+                    dict(good, child="nope")):
             with self.assertRaises((ValueError, TypeError)):
                 cad_service.validate(bad)
 
@@ -460,6 +467,7 @@ class WorkerAndCadService(unittest.TestCase):
             r = c.run(JID, 2, "from build123d import *\nresult = Box(10, 10, 4)\n", self.jobs)
             self.assertTrue(r["ok"], r)
             self.assertEqual(sorted(os.listdir(os.path.join(self.jobs, JID, "cad", "02"))), ["design.py", "part.step", "part.stl", "report.json"])
+            self.assertEqual(r["report"]["n_solids"], 1)  # computed by the worker from the validated STL
         r = cad_service.CadClient(os.path.join(self.jobs, "nope.sock")).run(JID, 1, "x", self.jobs)
         self.assertEqual(r["stage"], "service")
 

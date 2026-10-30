@@ -92,7 +92,9 @@ def only_loopback(dev_file="/proc/net/dev"):
     return names <= {"lo"}
 
 
-def run_cad(source, job_dir, timeout_s=None, mem_mb=None, allow_no_netns=False, density_g_cm3=1.24):
+def run_cad(source, job_dir, timeout_s=None, mem_mb=None, allow_no_netns=False, density_g_cm3=1.24, report=True):
+    """report=False (forge-cad launcher): skip the trimesh geometry report and return the child's info as res["child"];
+    the worker computes the report itself, so the privileged launcher never parses the child's output files."""
     t0 = time.monotonic()
     if os.environ.get("FORGE_CAD_REQUIRE_DROP") == "1" and os.geteuid() != 0:
         return {"ok": False, "stage": "isolation", "errors": ["FORGE_CAD_REQUIRE_DROP=1 but the launcher is not root (cannot drop to nobody)"],
@@ -121,20 +123,20 @@ def run_cad(source, job_dir, timeout_s=None, mem_mb=None, allow_no_netns=False, 
     # copied back to job_dir afterwards
     work = tempfile.mkdtemp(prefix="forge-cad-", dir=os.environ.get("FORGE_SANDBOX_TMP") or None)
     try:
-        return _run(source, job_dir, work, timeout_s, mem_mb, allow_no_netns, density_g_cm3, res, t0)
+        return _run(source, job_dir, work, timeout_s, mem_mb, allow_no_netns, density_g_cm3, res, t0, report)
     finally:
-        kill_uid(NOBODY)
+        kill_uid(NOBODY, clean=work)
         shutil.rmtree(work, ignore_errors=True)
 
 
-def _run(source, job_dir, work, timeout_s, mem_mb, allow_no_netns, density_g_cm3, res, t0):
+def _run(source, job_dir, work, timeout_s, mem_mb, allow_no_netns, density_g_cm3, res, t0, report=True):
     with open(os.path.join(work, "design.py"), "w", encoding="utf-8") as f:
         f.write(source)
     if os.geteuid() == 0:
         kill_uid(NOBODY)
         os.chmod(work, 0o733)
     netns_required = not allow_no_netns
-    env = {"PATH": "/usr/bin:/bin", "HOME": work, "LANG": "C.UTF-8", "OMP_NUM_THREADS": "1",
+    env = {"PATH": "/usr/bin:/bin", "HOME": work, "TMPDIR": work, "LANG": "C.UTF-8", "OMP_NUM_THREADS": "1",
            "OPENBLAS_NUM_THREADS": "1", "MPLBACKEND": "Agg"}
     proc = subprocess.Popen(
         [sys.executable, "-I", CHILD, work], cwd=work, env=env,
@@ -150,6 +152,9 @@ def _run(source, job_dir, work, timeout_s, mem_mb, allow_no_netns, density_g_cm3
             os.killpg(proc.pid, signal.SIGKILL)
         except ProcessLookupError:
             pass
+        except PermissionError:
+            # forge-cad: the launcher has no CAP_KILL and the child is uid nobody: kill it as nobody
+            kill_uid(NOBODY)
         out, _ = proc.communicate()
     res["stdout"] = (out or b"")[-8000:].decode("utf-8", "replace")
     res["elapsed_s"] = round(time.monotonic() - t0, 3)
@@ -187,6 +192,9 @@ def _run(source, job_dir, work, timeout_s, mem_mb, allow_no_netns, density_g_cm3
         res.update(stage="export", errors=["STEP/STL missing"])
         return res
     res["files"] = {"step": step, "stl": stl, "design": os.path.join(job_dir, "design.py")}
+    if not report:
+        res.update(ok=True, stage="done", child=child)
+        return res
     try:
         res["report"] = geometry_report(stl, child, density_g_cm3=density_g_cm3)
     except Exception as e:  # noqa: BLE001
@@ -199,11 +207,19 @@ def _run(source, job_dir, work, timeout_s, mem_mb, allow_no_netns, density_g_cm3
     return res
 
 
-def kill_uid(uid):
-    """SIGKILL every process of `uid` (strays a sandbox child may have left). Root only; a helper drops to
-    `uid` and kill(-1) then reaches exactly that uid's processes, so no CAP_KILL is needed."""
+def kill_uid(uid, clean=None):
+    """SIGKILL every process of `uid` (strays a sandbox child may have left) and, if `clean` is given, delete what
+    that uid left inside that directory (its own subdirectories, which root without DAC override cannot remove).
+    Root only; a helper drops to `uid`, so kill(-1) reaches exactly that uid's processes (no CAP_KILL needed)."""
     if os.geteuid() != 0 or os.environ.get("FORGE_CAD_REQUIRE_DROP") != "1":
         return  # only inside the forge-cad container (on a shared dev host this would hit unrelated processes)
+    # root owns `clean` (mode 0733: nobody may not list it), so the names are listed here, before the drop
+    leftovers = []
+    if clean:
+        try:
+            leftovers = [os.path.join(clean, n) for n in os.listdir(clean)]
+        except OSError:
+            leftovers = []
     pid = os.fork()
     if pid == 0:
         try:
@@ -213,6 +229,9 @@ def kill_uid(uid):
             os.kill(-1, signal.SIGKILL)
         except OSError:
             pass
+        for p in leftovers:
+            if os.path.isdir(p) and not os.path.islink(p):
+                shutil.rmtree(p, ignore_errors=True)
         os._exit(0)
     os.waitpid(pid, 0)
 
