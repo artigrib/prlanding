@@ -107,10 +107,14 @@ guard_no_public_ports() {
     die "compose.yml has a privileged/host-namespace container or the Docker socket; refusing"
   fi
   # The forge services publish no ports at all, keep a read-only root filesystem, and forge-cad has no network.
-  local svc block
+  local svc block norm
+  # Check the normalised config compose will actually run (all profiles), falling back to the raw file.
+  norm=$(COMPOSE_PROFILES=bridge,forge dc config 2>/dev/null || true)
+  [ -n "$norm" ] || norm=$(cat "$ROOT/compose.yml")
   for svc in $FORGE_SERVICES; do
-    block=$(awk -v s="  $svc:" '$0 == s {on=1; next} on && /^  [a-z]/ {on=0} on && /^[a-z]/ {on=0} on' "$ROOT/compose.yml")
+    block=$(awk -v s="  $svc:" '$0 == s {on=1; next} on && /^  [^ ]/ {on=0} on && /^[^ ]/ {on=0} on' <<<"$norm")
     [ -n "$block" ] || continue
+    say "guard: $svc keys: $(grep -oE '^    [a-z_]+:' <<<"$block" | tr -d ' :' | paste -sd, -)"
     if grep -qE '^[[:space:]]*(ports|expose):' <<<"$block"; then
       die "compose.yml: $svc must not publish ports; refusing"
     fi
@@ -123,7 +127,7 @@ guard_no_public_ports() {
     grep -qE '^[[:space:]]*read_only:[[:space:]]*true' <<<"$block" || die "compose.yml: $svc must have a read-only root filesystem; refusing"
   done
   local cad
-  cad=$(awk '$0 == "  forge-cad:" {on=1; next} on && /^  [a-z]/ {on=0} on' "$ROOT/compose.yml")
+  cad=$(awk '$0 == "  forge-cad:" {on=1; next} on && /^  [^ ]/ {on=0} on && /^[^ ]/ {on=0} on' <<<"$norm")
   if [ -n "$cad" ] && ! grep -qE '^[[:space:]]*network_mode:[[:space:]]*"?none' <<<"$cad"; then
     die "compose.yml: forge-cad must have network_mode none; refusing"
   fi
