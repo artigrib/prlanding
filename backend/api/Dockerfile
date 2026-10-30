@@ -10,8 +10,9 @@ ENV NODE_ENV=production \
 WORKDIR /app
 COPY package.json ./
 COPY src ./src
-# /data is the SQLite volume; a fresh named volume inherits this ownership.
-RUN mkdir -p /data && chown node:node /data
+# /data is the SQLite volume, /jobs the forge job volume (shared with forge-worker, uid 1002, through gid 1000);
+# a fresh named volume inherits this ownership.
+RUN mkdir -p /data /jobs && chown node:node /data /jobs && chmod 2770 /jobs
 USER node
 EXPOSE 8081
 VOLUME ["/data"]

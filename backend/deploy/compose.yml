@@ -1,6 +1,7 @@
 # Docker Compose project "printedrobotics" on vps1 (installed to the deploy root by deploy-backend.yml).
 # api and bridge sit on the external network printedrobotics_web (reached there by the external edge
 # proxy) and are published on 127.0.0.1 only (deploy health checks). See docs/backend.md.
+# forge-worker / forge-cad (profile "forge") publish nothing; forge-cad has no network at all.
 # Image references come from release.env (written by remote-deploy.sh), secrets from secrets.env
 # (generated on the server, never in GitHub). Never run `docker compose config` in CI logs.
 name: printedrobotics
@@ -32,10 +33,17 @@ services:
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-}
       AMPLITUDE_API_KEY: ${AMPLITUDE_API_KEY:-}
       COUNTRY_HEADER: ${COUNTRY_HEADER:-}
+      # Forge job API (backend/api/src/forge.ts). FORGE_ENABLED=1 only when the deploy starts the forge
+      # services (FORGE_ENABLE=1 and an OpenRouter key); tokens are "label:sha256" entries, never the tokens themselves.
+      FORGE_ENABLED: ${FORGE_ENABLED:-0}
+      FORGE_INVITE_TOKENS: ${FORGE_INVITE_TOKENS:-}
+      FORGE_DAILY_USD: ${FORGE_DAILY_USD:-5}
+      FORGE_JOBS_DIR: /jobs
     ports:
       - "127.0.0.1:18181:8081"
     volumes:
       - api_data:/data
+      - forge_jobs:/jobs
     read_only: true
     tmpfs: [/tmp]
     cap_drop: [ALL]
@@ -74,6 +82,78 @@ services:
     logging: *logging
     networks: [web]
 
+  # Forge (backend/forge, README "Stage 1 on the VPS"). Started only when the owner set FORGE_ENABLE=1 AND
+  # an OpenRouter key exists (COMPOSE_PROFILES gets "forge"); otherwise neither container exists. Both: no
+  # ports, read-only root filesystem, size-capped /tmp, no-new-privileges, cpu/mem/pids limits, no Docker
+  # socket, no host mounts. Separate uids: api 1000, forge-worker 1002 (group 1000 for the job volume),
+  # forge-cad's sandbox children run as nobody.
+  forge-cad:
+    profiles: [forge]
+    image: ${FORGE_IMAGE:-ghcr.io/artigrib/prlanding-forge:unset}
+    container_name: printedrobotics-forge-cad-1
+    command: ["python", "-m", "forge.cad_service", "serve"]
+    restart: unless-stopped
+    # The CAD sandbox has no network at all (not even our docker network). run_cad checks that only
+    # loopback is visible before every run (FORGE_NETNS=external) and refuses otherwise.
+    network_mode: none
+    environment:
+      FORGE_NETNS: external
+      FORGE_CAD_REQUIRE_DROP: "1"
+      FORGE_CAD_SOCKET: /sock/cad.sock
+      FORGE_CAD_SOCK_GID: "1000"
+    # Only the socket directory: no job data, no queue, no spend ledger, nothing of the api.
+    volumes:
+      - forge_cad_sock:/sock
+    # The launcher is root WITHOUT DAC override (only CHOWN/SETUID/SETGID) so that every untrusted CAD child
+    # drops to uid nobody, which can write nothing but its own temporary work dir in /tmp.
+    user: "0:0"
+    read_only: true
+    # /tmp is root-owned 0711: nobody cannot create files in it, only inside its own 0733 work dir (which the
+    # launcher removes after each run, together with anything nobody left there); /dev/shm is tiny.
+    tmpfs: ["/tmp:size=512m,mode=0711"]
+    shm_size: 1m
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 2g
+    cpus: 1.0
+    pids_limit: 64
+    logging: *logging
+
+  forge-worker:
+    profiles: [forge]
+    image: ${FORGE_IMAGE:-ghcr.io/artigrib/prlanding-forge:unset}
+    container_name: printedrobotics-forge-worker-1
+    command: ["python", "-m", "forge.worker"]
+    restart: unless-stopped
+    depends_on: [forge-cad]
+    environment:
+      # The only place the OpenRouter key goes. The worker removes it from its environment after reading
+      # it, and run_cad children get an empty environment anyway.
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      FORGE_MODEL: ${FORGE_MODEL:-anthropic/claude-opus-5.5}
+      FORGE_MODEL_LIGHT: ${FORGE_MODEL_LIGHT:-anthropic/claude-haiku-4.5}
+      FORGE_DAILY_USD: ${FORGE_DAILY_USD:-5}
+      FORGE_JOBS_DIR: /jobs
+      FORGE_CAD_SOCKET: /sock/cad.sock
+      FORGE_SWEEP: quick
+    volumes:
+      - forge_jobs:/jobs
+      - forge_cad_sock:/sock
+    user: "1002:1000"
+    read_only: true
+    tmpfs: ["/tmp:size=256m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 1536m
+    cpus: 1.0
+    pids_limit: 128
+    logging: *logging
+    # Egress: needs HTTPS to OpenRouter. Enforced in the process (audit-hook fence: DNS only for openrouter.ai,
+    # connects only to its addresses on 443, unix socket only to the CAD socket); not at network level (the
+    # stack may not create networks). Host firewall option: backend/forge/README.md "Worker egress".
+    networks: [web]
+
 networks:
   # Stable, externally managed network. remote-deploy.sh creates it once if missing; compose never
   # creates, removes or recreates it (no `compose down` anywhere), so other projects' containers
@@ -85,3 +165,9 @@ networks:
 
 volumes:
   api_data:
+  # Forge jobs: queue, per-job events/state/artifacts, daily spend ledger. Shared by api, forge-worker
+  # and forge-worker only (api uid 1000, worker uid 1002, shared gid 1000); forge-cad never mounts it.
+  # The worker deletes jobs after FORGE_RETENTION_DAYS (14).
+  forge_jobs:
+  # Only the CAD unix socket (root:1000, 0750 dir / 0660 socket). Mounted by forge-cad and forge-worker.
+  forge_cad_sock:

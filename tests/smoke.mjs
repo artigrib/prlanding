@@ -313,6 +313,58 @@ await check('forge lab replay', '/lab/', async p => {
   if (st.length !== 7 || st.some((s) => !['ok', 'warn', 'skipped'].includes(s))) throw new Error('steps: ' + st.join(','));
   if ((await p.locator('.shots img').count()) < 5) throw new Error('render thumbnails missing');
 });
+// forge lab live panel against a MOCKED api (no server, no LLM): token only in the Authorization header, never in a URL;
+// SSE progress, CAD attempts, cost so far, downloads; the "AI draft, simulation only" label is shown
+await check('forge lab live (mocked api)', '/lab/', async p => {
+  const TOKEN = 'pr_forge_smoke_token_0123456789abcdef';
+  const ID = 'ab'.repeat(16);
+  const seen = [];
+  const json = (route, body, status = 200) => route.fulfill({ status, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(body) });
+  const steps = [['parse', 'Parse request', 'Rozbor zadání'], ['mount', 'Pick mount point', 'Výběr místa uchycení'], ['cad', 'CAD in sandbox', 'CAD v sandboxu'],
+    ['checks', 'Checks (simulation)', 'Kontroly (simulace)'], ['parts', 'Parts and power', 'Díly a napájení'], ['render', 'Renders', 'Vizualizace'], ['guide', 'Guide draft', 'Koncept návodu']]
+    .map(([id, title, title_cs]) => ({ id, title, title_cs }));
+  let seq = 0;
+  const ev = (o, usd) => `id: ${++seq}\nevent: forge\ndata: ${JSON.stringify({ seq, ...o, cost: { cost_usd: usd, tokens: seq * 1000 } })}\n\n`;
+  let sse = ev({ type: 'start', steps }, 0);
+  for (const [id, st, sum] of [['parse', 'ok', 'robot so101'], ['mount', 'ok', '3 mount points'], ['cad', 'warn', 'cad-01: failed at policy'], ['cad', 'ok', 'cad-02: 33×12×20 mm'],
+    ['checks', 'warn', 'cad-02 on gripper_cam_face'], ['parts', 'ok', '1 component'], ['render', 'ok', 'render spec written'], ['guide', 'ok', 'draft guide CZ + EN']]) {
+    sse += ev({ type: 'step', step: id, status: 'running' }, seq * 0.01) + ev({ type: 'step', step: id, status: st, summary: sum }, seq * 0.01);
+  }
+  sse += ev({ type: 'end', status: 'done', message: 'finished', artifacts: ['bundle.zip', 'part.stl'] }, 0.42);
+  await p.route('https://api.printedrobotics.cz/**', async (route) => {
+    const r = route.request(), u = new URL(r.url());
+    seen.push({ url: r.url(), method: r.method(), auth: r.headers()['authorization'] || '' });
+    if (r.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': 'GET, POST' } });
+    if (u.pathname === '/forge/me') return json(route, { label: 'smoke', jobs_today: 0, jobs_per_day: 5, active: null, spent_today_usd: 0, daily_usd: 5 });
+    if (u.pathname === '/forge/jobs' && r.method() === 'POST') {
+      const b = JSON.parse(r.postData() || '{}');
+      if (!/baterk/.test(b.request) || b.lang !== 'cs') return json(route, { error: 'request' }, 400);
+      return json(route, { id: ID, status: 'queued' }, 202);
+    }
+    if (u.pathname === `/forge/jobs/${ID}/events`) return route.fulfill({ status: 200, headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'text/event-stream' }, body: sse });
+    if (u.pathname === `/forge/jobs/${ID}/artifacts`) return json(route, { id: ID, artifacts: ['bundle.zip', 'checks.json', 'part.step', 'part.stl'] });
+    if (u.pathname === `/forge/jobs/${ID}/artifacts/bundle.zip`) return route.fulfill({ status: 200, headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/zip' }, body: 'PK' });
+    return json(route, { error: 'not_found' }, 404);
+  });
+  if (!/návrh AI, ověřeno pouze v simulaci/.test(await p.locator('main').innerText())) throw new Error('missing AI/simulation label');
+  await p.fill('#tok', TOKEN);
+  await p.click('#tok-save');
+  await p.waitForSelector('#jobform:not([hidden])');
+  await p.fill('#prompt', 'SO-101 s baterkou na chapadle');
+  await p.click('#go');
+  await p.waitForFunction(() => window.__forgeLive && window.__forgeLive.ended, null, { timeout: 15000 });
+  const st = await p.locator('#lsteps .lstep').evaluateAll((els) => els.map((e) => e.dataset.s));
+  if (st.join(',') !== 'ok,ok,ok,warn,ok,ok,ok') throw new Error('live steps: ' + st.join(','));
+  if (!/CAD pokusy: 2/.test(await p.locator('#cad-n').innerText())) throw new Error('CAD attempts not counted');
+  if (!/\$0\.42/.test(await p.locator('#cost').innerText())) throw new Error('cost so far not shown');
+  await p.waitForSelector('#arts button.main');
+  const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#arts button.main')]);
+  if (dl.suggestedFilename() !== 'bundle.zip') throw new Error('bundle download name ' + dl.suggestedFilename());
+  if (seen.some((x) => x.url.includes(TOKEN))) throw new Error('token in a URL');
+  if (seen.filter((x) => x.method !== 'OPTIONS').some((x) => x.auth !== 'Bearer ' + TOKEN)) throw new Error('api call without the token header');
+  if (!seen.some((x) => x.url.endsWith('/events') && x.auth === 'Bearer ' + TOKEN)) throw new Error('SSE without the token header');
+  if ((await p.locator('.step').count()) !== 7) throw new Error('replay disturbed by the live panel');
+});
 // build log template: draft, noindex, not in the sitemap and not linked from any page
 await check('build log draft: noindex, unlinked', '/stavba/so101/', async p => {
   if ((await p.locator('meta[name="robots"]').getAttribute('content')) !== 'noindex,nofollow') throw new Error('not noindex');

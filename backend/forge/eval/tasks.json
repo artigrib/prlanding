@@ -1,0 +1,18 @@
+{
+ "$comment": "In-house forge eval: typical SO-101 add-ons with automatic graders (backend/forge/eval/graders.py). Mount ids come from forge/mounts/so101.json, which has three interfaces today (gripper_cam_face, gripper_outer_face, forearm_clamp). Tasks that would ideally sit elsewhere (upper arm, base, moving jaw) use the closest existing interface; the request text says so, so a model is not graded on a mount we cannot simulate.",
+ "version": 1,
+ "tasks": [
+  {"id": "flashlight", "request": "SO-101 with a small flashlight on the gripper: a holder for a 10 mm white LED aimed at the jaw tips, powered from USB 5 V.",
+   "lang": "en", "mounts": ["gripper_cam_face"], "max_mass_g": 15, "max_bbox_mm": [60, 40, 50], "min_wall_mm": 1.2, "require_collision_free": false},
+  {"id": "wrist-camera-bracket", "request": "A bracket for a small 32 x 32 mm USB camera board (2x M2 holes, 28 mm pitch) on the SO-101 wrist, looking at the jaw tips.",
+   "lang": "en", "mounts": ["gripper_cam_face"], "max_mass_g": 20, "max_bbox_mm": [60, 50, 60], "min_wall_mm": 1.2, "require_collision_free": false},
+  {"id": "cable-clip", "request": "A clip that guides the servo cable along the SO-101 forearm (use the forearm band clamp area), for a 3-wire cable up to 4 mm thick.",
+   "lang": "en", "mounts": ["forearm_clamp"], "max_mass_g": 12, "max_bbox_mm": [40, 70, 70], "min_wall_mm": 1.2, "require_collision_free": false},
+  {"id": "tool-holder", "request": "A small holder for a 6 mm hex key / screwdriver that rides on the SO-101 forearm band clamp (the base has no mount point yet).",
+   "lang": "en", "mounts": ["forearm_clamp"], "max_mass_g": 25, "max_bbox_mm": [50, 80, 80], "min_wall_mm": 1.2, "require_collision_free": false},
+  {"id": "camera-mast-clamp", "request": "A clamp on the SO-101 forearm that holds an 8 mm carbon rod as a short mast for a phone or camera (rod not printed).",
+   "lang": "en", "mounts": ["forearm_clamp"], "max_mass_g": 30, "max_bbox_mm": [60, 80, 90], "min_wall_mm": 1.2, "require_collision_free": false},
+  {"id": "fingertip-pad", "request": "A simple fingertip pad for the fixed jaw of the SO-101 (outer face, attached with double-sided tape), with a ribbed grip surface.",
+   "lang": "en", "mounts": ["gripper_outer_face"], "max_mass_g": 8, "max_bbox_mm": [20, 40, 50], "min_wall_mm": 1.2, "require_collision_free": false}
+ ]
+}

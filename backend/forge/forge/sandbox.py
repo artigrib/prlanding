@@ -10,12 +10,22 @@ Layers (each one alone should stop the malicious-input tests in tests/test_sandb
      interfaces except a down loopback, so no network at all. If the namespace cannot be created
      run_cad refuses to run (fail closed) unless allow_no_netns=True is passed (tests only print a
      warning then).
-  4. when started as root: setgid/setuid nobody before exec, job dir chowned to nobody
+  4. when started as root: setgid/setuid nobody before exec. The work dir stays root-owned with mode
+     0733 (nobody may create files in it but not list it); the launcher needs no CAP_CHOWN /
+     CAP_DAC_OVERRIDE for that. Leftover processes of uid nobody are killed before and after a run.
   5. in the child: policy re-check, audit hook (no sockets/subprocess/exec/ctypes/writes outside the
      job dir), minimal builtins, import allowlist
   6. wall-clock timeout: the whole process group is SIGKILLed
 On the VPS the worker itself runs in a locked-down container (README.md, "Worker isolation"):
 this module is the inner fence, not the only one.
+
+FORGE_CAD_REQUIRE_DROP=1 (forge-cad): refuse to run unless the launcher is root, so the child really
+drops to uid nobody (the container sees nothing but its own /tmp and the socket directory).
+
+FORGE_NETNS=external (set only in the forge-cad container, which has `network_mode: none`): Docker's
+default seccomp profile does not let an unprivileged process create namespaces, so layer 3 is then
+provided by the container. run_cad still tries the unshare, and before every run checks that the
+process sees no network interface except loopback (/proc/net/dev); if it sees one it refuses to run.
 """
 import json
 import os
@@ -71,8 +81,29 @@ def netns_available():
         return False
 
 
-def run_cad(source, job_dir, timeout_s=None, mem_mb=None, allow_no_netns=False, density_g_cm3=1.24):
+def only_loopback(dev_file="/proc/net/dev"):
+    """True if the only network interface this process can see is loopback (or there is none)."""
+    try:
+        with open(dev_file, encoding="ascii", errors="replace") as f:
+            lines = f.read().splitlines()[2:]
+    except OSError:
+        return False
+    names = {ln.split(":", 1)[0].strip() for ln in lines if ":" in ln}
+    return names <= {"lo"}
+
+
+def run_cad(source, job_dir, timeout_s=None, mem_mb=None, allow_no_netns=False, density_g_cm3=1.24, report=True):
+    """report=False (forge-cad launcher): skip the trimesh geometry report and return the child's info as res["child"];
+    the worker computes the report itself, so the privileged launcher never parses the child's output files."""
     t0 = time.monotonic()
+    if os.environ.get("FORGE_CAD_REQUIRE_DROP") == "1" and os.geteuid() != 0:
+        return {"ok": False, "stage": "isolation", "errors": ["FORGE_CAD_REQUIRE_DROP=1 but the launcher is not root (cannot drop to nobody)"],
+                "report": None, "files": {}, "stdout": "", "elapsed_s": 0.0}
+    if os.environ.get("FORGE_NETNS") == "external":
+        if not only_loopback():
+            return {"ok": False, "stage": "isolation", "errors": ["FORGE_NETNS=external but a network interface is visible (refusing to run)"],
+                    "report": None, "files": {}, "stdout": "", "elapsed_s": 0.0}
+        allow_no_netns = True
     timeout_s = timeout_s or DEFAULTS["timeout_s"]
     mem_mb = mem_mb or DEFAULTS["mem_mb"]
     res = {"ok": False, "stage": "policy", "errors": [], "report": None, "files": {}, "stdout": "", "elapsed_s": 0.0}
@@ -92,19 +123,20 @@ def run_cad(source, job_dir, timeout_s=None, mem_mb=None, allow_no_netns=False, 
     # copied back to job_dir afterwards
     work = tempfile.mkdtemp(prefix="forge-cad-", dir=os.environ.get("FORGE_SANDBOX_TMP") or None)
     try:
-        return _run(source, job_dir, work, timeout_s, mem_mb, allow_no_netns, density_g_cm3, res, t0)
+        return _run(source, job_dir, work, timeout_s, mem_mb, allow_no_netns, density_g_cm3, res, t0, report)
     finally:
+        kill_uid(NOBODY, clean=work)
         shutil.rmtree(work, ignore_errors=True)
 
 
-def _run(source, job_dir, work, timeout_s, mem_mb, allow_no_netns, density_g_cm3, res, t0):
+def _run(source, job_dir, work, timeout_s, mem_mb, allow_no_netns, density_g_cm3, res, t0, report=True):
     with open(os.path.join(work, "design.py"), "w", encoding="utf-8") as f:
         f.write(source)
     if os.geteuid() == 0:
-        os.chown(work, NOBODY, NOBODY)
-        os.chmod(work, 0o700)
+        kill_uid(NOBODY)
+        os.chmod(work, 0o733)
     netns_required = not allow_no_netns
-    env = {"PATH": "/usr/bin:/bin", "HOME": work, "LANG": "C.UTF-8", "OMP_NUM_THREADS": "1",
+    env = {"PATH": "/usr/bin:/bin", "HOME": work, "TMPDIR": work, "LANG": "C.UTF-8", "OMP_NUM_THREADS": "1",
            "OPENBLAS_NUM_THREADS": "1", "MPLBACKEND": "Agg"}
     proc = subprocess.Popen(
         [sys.executable, "-I", CHILD, work], cwd=work, env=env,
@@ -120,6 +152,9 @@ def _run(source, job_dir, work, timeout_s, mem_mb, allow_no_netns, density_g_cm3
             os.killpg(proc.pid, signal.SIGKILL)
         except ProcessLookupError:
             pass
+        except PermissionError:
+            # forge-cad: the launcher has no CAP_KILL and the child is uid nobody: kill it as nobody
+            kill_uid(NOBODY)
         out, _ = proc.communicate()
     res["stdout"] = (out or b"")[-8000:].decode("utf-8", "replace")
     res["elapsed_s"] = round(time.monotonic() - t0, 3)
@@ -157,6 +192,9 @@ def _run(source, job_dir, work, timeout_s, mem_mb, allow_no_netns, density_g_cm3
         res.update(stage="export", errors=["STEP/STL missing"])
         return res
     res["files"] = {"step": step, "stl": stl, "design": os.path.join(job_dir, "design.py")}
+    if not report:
+        res.update(ok=True, stage="done", child=child)
+        return res
     try:
         res["report"] = geometry_report(stl, child, density_g_cm3=density_g_cm3)
     except Exception as e:  # noqa: BLE001
@@ -167,6 +205,35 @@ def _run(source, job_dir, work, timeout_s, mem_mb, allow_no_netns, density_g_cm3
     res["files"]["report"] = os.path.join(job_dir, "report.json")
     res.update(ok=True, stage="done")
     return res
+
+
+def kill_uid(uid, clean=None):
+    """SIGKILL every process of `uid` (strays a sandbox child may have left) and, if `clean` is given, delete what
+    that uid left inside that directory (its own subdirectories, which root without DAC override cannot remove).
+    Root only; a helper drops to `uid`, so kill(-1) reaches exactly that uid's processes (no CAP_KILL needed)."""
+    if os.geteuid() != 0 or os.environ.get("FORGE_CAD_REQUIRE_DROP") != "1":
+        return  # only inside the forge-cad container (on a shared dev host this would hit unrelated processes)
+    # root owns `clean` (mode 0733: nobody may not list it), so the names are listed here, before the drop
+    leftovers = []
+    if clean:
+        try:
+            leftovers = [os.path.join(clean, n) for n in os.listdir(clean)]
+        except OSError:
+            leftovers = []
+    pid = os.fork()
+    if pid == 0:
+        try:
+            os.setgroups([])
+            os.setgid(uid)
+            os.setuid(uid)
+            os.kill(-1, signal.SIGKILL)
+        except OSError:
+            pass
+        for p in leftovers:
+            if os.path.isdir(p) and not os.path.islink(p):
+                shutil.rmtree(p, ignore_errors=True)
+        os._exit(0)
+    os.waitpid(pid, 0)
 
 
 def cleanup(job_dir):

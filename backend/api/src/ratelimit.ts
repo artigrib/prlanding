@@ -19,6 +19,12 @@ export class RateLimiter {
     this.windowStart = now();
   }
 
+  /** True if `key` still has room in the current window (does not count a hit). */
+  peek(key: string): boolean {
+    if (this.now() - this.windowStart >= this.windowMs) return true;
+    return (this.hits.get(key) ?? 0) < this.perKey;
+  }
+
   allow(key: string): boolean {
     const t = this.now();
     if (t - this.windowStart >= this.windowMs) {

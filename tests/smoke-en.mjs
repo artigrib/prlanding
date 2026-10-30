@@ -213,6 +213,15 @@ await check('en quiz', '/en/quiz/', async (p, e) => {
 });
 await check('en 404', '/en/kit/no-such-kit/', async (p, e) => { await p.waitForSelector('#nf-cards a'); await isLang(p, e, 'en'); await noCzech(p, e); },
   { allow404: true, route: [/\/en\/kit\/no-such-kit\/$/, r => r.fulfill({ status: 404, contentType: 'text/html', body: fs.readFileSync(path.join(ROOT, '404.html')) })] });
+await check('en lab (forge, ?lang=en)', '/lab/?lang=en', async (p, e) => {
+  await p.waitForFunction(() => window.__lab && window.__lab.done, null, { timeout: 30000 });
+  await isLang(p, e, 'en');
+  await noCzech(p, e, '#live');
+  if ((await p.locator('h1').innerText()).trim() !== 'CAD forge: from a request to a part') e.push('h1 not English');
+  if (!/AI draft, verified in simulation only/.test(await p.locator('main').innerText())) e.push('missing the AI/simulation label');
+  const steps = await p.locator('#steps .step h2').allInnerTexts();
+  if (steps.some((s) => /[ěřůčšžťďň]/i.test(s))) e.push('replay step titles not English');
+});
 await check('cs kit stays Czech, no banner for cs browser', '/sada/so101/', async (p, e) => {
   await p.waitForSelector('#faq-list details'); await isLang(p, e, 'cs');
   if (await p.locator('.lang-banner').count()) e.push('banner shown to a Czech browser');

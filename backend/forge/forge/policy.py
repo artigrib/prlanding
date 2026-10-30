@@ -48,6 +48,21 @@ DENIED_ATTRS = frozenset({
 # file I/O by name prefix (build123d export_*/import_* write and read through native code, which
 # the child's audit hook cannot see; the child does the exporting itself)
 DENIED_PREFIXES = ("export", "import", "write", "read", "save", "load", "dump")
+# OpenCASCADE (OCP) classes and static methods are reachable as attributes of build123d. Their file
+# readers/writers do I/O in C++ (no Python audit event), so code may not name them at all:
+#   OCCT class names look like Package_Class (XCAFApp_Application, STEPCAFControl_Writer, TDocStd_Document),
+#   static methods end in _s (GetApplication_s), `.wrapped` is the raw OCCT handle of any shape.
+# ALL_CAPS enum members with underscores (CenterOf.BOUNDING_BOX) stay allowed. This is defence in depth:
+# the real fence for native I/O is the OS (the child runs as uid nobody in a container that sees only
+# its own temporary work directory; see sandbox.py).
+DENIED_OCCT_ATTRS = frozenset({"wrapped", "Perform", "Transfer", "TransferRoots", "AddShape", "InitDocument", "Main"})
+
+
+def _occt_name(n):
+    return ("_" in n and n[:1].isupper() and any(c.islower() for c in n)) or n.endswith("_s") or n in DENIED_OCCT_ATTRS \
+        or n.endswith(("Writer", "Reader"))
+
+
 DENIED_NODES = (
     ast.ClassDef, ast.Global, ast.Nonlocal, ast.AsyncFunctionDef, ast.AsyncFor, ast.AsyncWith,
     ast.Await, ast.Yield, ast.YieldFrom,
@@ -94,17 +109,17 @@ def check_source(src):
             for a in node.names:
                 if a.name.startswith("_") or (a.asname or "").startswith("_"):
                     err(node, f"import of private name '{a.name}'")
-                elif a.name != "*" and (a.name in DENIED_NAMES or a.name.lower().startswith(DENIED_PREFIXES)):
+                elif a.name != "*" and (a.name in DENIED_NAMES or a.name.lower().startswith(DENIED_PREFIXES) or _occt_name(a.name)):
                     err(node, f"import of '{a.name}' is not allowed")
         elif isinstance(node, ast.Name):
             if node.id.startswith("_"):
                 err(node, f"name '{node.id}' starts with an underscore")
-            elif node.id in DENIED_NAMES or node.id.lower().startswith(DENIED_PREFIXES):
+            elif node.id in DENIED_NAMES or node.id.lower().startswith(DENIED_PREFIXES) or _occt_name(node.id):
                 err(node, f"name '{node.id}' is not allowed")
         elif isinstance(node, ast.Attribute):
             if node.attr.startswith("_"):
                 err(node, f"attribute '.{node.attr}' starts with an underscore")
-            elif node.attr in DENIED_ATTRS or node.attr.lower().startswith(DENIED_PREFIXES):
+            elif node.attr in DENIED_ATTRS or node.attr.lower().startswith(DENIED_PREFIXES) or _occt_name(node.attr):
                 err(node, f"attribute '.{node.attr}' is not allowed")
         elif isinstance(node, (ast.FunctionDef, ast.Lambda)):
             if isinstance(node, ast.FunctionDef):

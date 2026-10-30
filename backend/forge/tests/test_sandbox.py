@@ -37,6 +37,15 @@ MALICIOUS = {
     "globals()": "g = globals()",
     "vars()": "v = vars()",
     "type()": "t = type(1)",
+    # native OCCT writers/readers do file I/O in C++ (no Python audit event): the names themselves are denied
+    "OCCT STEP writer": "import build123d\napp = build123d.XCAFApp_Application.GetApplication_s()\n"
+                        "doc = build123d.TDocStd_Document(build123d.TCollection_ExtendedString('x'))\napp.InitDocument(doc)\n"
+                        "st = build123d.XCAFDoc_DocumentTool.ShapeTool_s(doc.Main())\nbox = build123d.Box(2, 2, 2)\n"
+                        "st.AddShape(box.wrapped)\nw = build123d.STEPCAFControl_Writer()\nw.Transfer(doc)\n"
+                        "w.Perform(doc, '/jobs/spend/' + 'poison.step')\nresult = box",
+    "OCCT via star import": "from build123d import *\nw = STEPControl_Writer()\nresult = Box(1, 1, 1)",
+    "OCCT reader": "from build123d import *\nr = STEPCAFControl_Reader()\nresult = Box(1, 1, 1)",
+    "raw handle": "from build123d import *\nh = Box(1, 1, 1).wrapped\nresult = Box(1, 1, 1)",
     "class def": "class A:\n    pass",
     "global": "def f():\n    global x\n    x = 1",
     "generator frame": "def g():\n    yield 1\nf = g().gi_frame.f_globals",

@@ -1,7 +1,8 @@
-# Build, push and deploy the printedrobotics.cz backend (api + optional bridge; TLS is terminated by an external edge proxy) to vps1.
+# Build, push and deploy the printedrobotics.cz backend (api + optional bridge + optional forge; TLS is terminated by an external edge proxy) to vps1.
 #
-#   test   -> unit tests, typecheck, compose validation
-#   build  -> images to GHCR (ghcr.io/artigrib/prlanding-api, -bridge), tagged with the commit sha
+#   test   -> unit tests, typecheck, compose validation + lint (no public ports, no host network, forge isolation)
+#   build  -> images to GHCR (ghcr.io/artigrib/prlanding-api, -bridge, -forge), tagged with the commit sha.
+#             A failed forge image build never blocks the api/bridge deploy (the forge is then skipped).
 #   deploy -> DNS gate for HTTPS sites, pinned SSH, remote-deploy.sh (disk guard, pull by digest,
 #             compose up --wait, internal health check, automatic rollback), external HTTPS check
 #
@@ -16,6 +17,9 @@ on:
       - 'backend/bridge/**'
       - 'backend/deploy/**'
       - '!backend/deploy/ops-request'
+      - 'backend/forge/forge/**'
+      - 'backend/forge/Dockerfile*'
+      - 'backend/forge/requirements.txt'
       - '.github/workflows/deploy-backend.yml'
   workflow_dispatch:
 
@@ -69,8 +73,14 @@ jobs:
           API_IMAGE=example.invalid/api:test docker compose -f "$d/compose.yml" config -q \
             || { echo "::error::compose.yml is invalid"; exit 1; }
           COMPOSE_PROFILES=bridge API_IMAGE=example.invalid/api:test docker compose -f "$d/compose.yml" config -q
+          COMPOSE_PROFILES=bridge,forge API_IMAGE=example.invalid/api:test docker compose -f "$d/compose.yml" config -q
           bash -n backend/deploy/remote-deploy.sh
           echo "::notice::compose.yml and remote-deploy.sh are valid"
+      - name: Lint compose file (ports, host network, forge isolation)
+        run: |
+          # The resolved config goes straight into the linter, never into the log.
+          COMPOSE_PROFILES=bridge,forge API_IMAGE=example.invalid/api:test \
+            docker compose -f backend/deploy/compose.yml config --format json 2>/dev/null | node backend/deploy/compose-lint.mjs
 
   build:
     needs: test
@@ -82,6 +92,7 @@ jobs:
     outputs:
       api: ${{ steps.api.outputs.digest }}
       bridge: ${{ steps.bridge.outputs.digest }}
+      forge: ${{ steps.forge.outputs.digest }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -115,8 +126,25 @@ jobs:
           tags: ${{ env.IMAGE_PREFIX }}bridge:${{ github.sha }}
           cache-from: type=gha,scope=bridge
           cache-to: type=gha,scope=bridge,mode=max
+      - name: Build and push forge (worker + CAD sandbox)
+        id: forge
+        continue-on-error: true
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: backend/forge/Dockerfile
+          push: true
+          provenance: false
+          build-args: APP_VERSION=${{ github.sha }}
+          tags: ${{ env.IMAGE_PREFIX }}forge:${{ github.sha }}
+          cache-from: type=gha,scope=forge
+          cache-to: type=gha,scope=forge,mode=max
       - name: Summary
-        run: echo "::notice::images pushed to GHCR for ${GITHUB_SHA::12}"
+        env:
+          FORGE_OK: ${{ steps.forge.outcome }}
+        run: |
+          echo "::notice::images pushed to GHCR for ${GITHUB_SHA::12}"
+          [ "$FORGE_OK" = success ] || echo "::warning::forge image build failed; the forge will be skipped in this deploy"
 
   deploy:
     needs: [test, build]
@@ -218,12 +246,38 @@ jobs:
             >/dev/null 2>&1 || { echo "::error::Could not upload deploy files (SSH failed)"; exit 1; }
           echo "::notice::deploy files uploaded"
 
+      - name: Forge on or off
+        id: forge
+        env:
+          K: ${{ secrets.OPENROUTER_SECRET || secrets.OPENROUTER_API_KEY }}
+          DIGEST: ${{ needs.build.outputs.forge }}
+          ENABLE: ${{ vars.FORGE_ENABLE }}
+        run: |
+          # Fixed lines only; the key is only tested for presence. The forge ships OFF: it starts only when the
+          # owner sets the repository/environment variable FORGE_ENABLE=1 in addition to the key.
+          if [ "$ENABLE" != 1 ]; then
+            echo "enabled=0" >> "$GITHUB_OUTPUT"; echo "::notice::forge: disabled (FORGE_ENABLE not set)"
+          elif [ -z "$K" ]; then
+            echo "enabled=0" >> "$GITHUB_OUTPUT"; echo "::notice::forge: disabled (no key)"
+          elif [ -z "$DIGEST" ]; then
+            echo "enabled=0" >> "$GITHUB_OUTPUT"; echo "::warning::forge: disabled (no image)"
+          else
+            echo "enabled=1" >> "$GITHUB_OUTPUT"; echo "::notice::forge: enabled"
+          fi
+
       - name: Deploy on the server
         env:
           U: ${{ secrets.VPS_USER }}
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
           API_DIGEST: ${{ needs.build.outputs.api }}
           BRIDGE_DIGEST: ${{ needs.build.outputs.bridge }}
+          FORGE_DIGEST: ${{ steps.forge.outputs.enabled == '1' && needs.build.outputs.forge || '' }}
+          # Forge (optional; no key = the forge services are not started). Passed on stdin as base64.
+          OPENROUTER_API_KEY: ${{ vars.FORGE_ENABLE == '1' && (secrets.OPENROUTER_SECRET || secrets.OPENROUTER_API_KEY) || '' }}
+          FORGE_INVITE_TOKENS: ${{ secrets.FORGE_INVITE_TOKENS }}
+          FORGE_DAILY_USD: ${{ vars.FORGE_DAILY_USD }}
+          FORGE_MODEL: ${{ vars.FORGE_MODEL }}
+          FORGE_MODEL_LIGHT: ${{ vars.FORGE_MODEL_LIGHT }}
           ACTOR: ${{ github.actor }}
           # Analytics sinks (optional; empty = off). Passed on stdin as base64, never on a command line.
           CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}
@@ -234,15 +288,17 @@ jobs:
         run: |
           api="${IMAGE_PREFIX}api@${API_DIGEST}"
           bridge=""; [ -n "$BRIDGE_DIGEST" ] && bridge="${IMAGE_PREFIX}bridge@${BRIDGE_DIGEST}"
+          forge=""; [ -n "$FORGE_DIGEST" ] && forge="${IMAGE_PREFIX}forge@${FORGE_DIGEST}"
           set +e
           stdin() {
             printf '%s\n' "$TOKEN"
-            for n in CLICKHOUSE_URL CLICKHOUSE_USER CLICKHOUSE_PASSWORD AMPLITUDE_API_KEY COUNTRY_HEADER; do
+            for n in CLICKHOUSE_URL CLICKHOUSE_USER CLICKHOUSE_PASSWORD AMPLITUDE_API_KEY COUNTRY_HEADER \
+                     OPENROUTER_API_KEY FORGE_INVITE_TOKENS FORGE_DAILY_USD FORGE_MODEL FORGE_MODEL_LIGHT; do
               printf '%s=%s\n' "$n" "$(printf '%s' "${!n}" | base64 -w0)"
             done
           }
           out=$(stdin | ssh -o StrictHostKeyChecking=$STRICT -l "$U" vps \
-            "ACTION=deploy API_IMAGE='$api' BRIDGE_IMAGE='$bridge' APP_VERSION='$GITHUB_SHA' GHCR_USER='$ACTOR' bash /opt/printedrobotics/incoming/remote-deploy.sh" 2>/dev/null)
+            "ACTION=deploy API_IMAGE='$api' BRIDGE_IMAGE='$bridge' FORGE_IMAGE='$forge' APP_VERSION='$GITHUB_SHA' GHCR_USER='$ACTOR' bash /opt/printedrobotics/incoming/remote-deploy.sh" 2>/dev/null)
           rc=$?
           set -e
           # Only the fixed STATUS/WARN/ERROR lines from remote-deploy.sh are shown.

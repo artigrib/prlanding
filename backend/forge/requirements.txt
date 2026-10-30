@@ -4,3 +4,4 @@ trimesh==5.2.0
 mujoco==3.17.0
 numpy==2.5.3
 rtree==1.3.0
+networkx==3.6.1   # trimesh mesh.section() (tools/measure_so101.py --check in tests/test_pipeline.py)

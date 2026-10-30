@@ -1,0 +1,64 @@
+# backend/forge: sandbox tests (malicious CAD inputs), the stage-1 agent with a MOCK LLM (budget caps,
+# tool dispatch, prompt-injection posture, bundle) and the deterministic stage-0 pipeline. No API key,
+# no network calls to any LLM: the agent tests replay tests/fixtures/flashlight_script.json.
+name: forge-tests
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/forge/**'
+      - 'sim/so101/model/**'
+      - 'data/components/**'
+      - '.github/workflows/forge-tests.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'backend/forge/**'
+      - 'sim/so101/model/**'
+      - 'data/components/**'
+      - '.github/workflows/forge-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: forge-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  forge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.13'
+      - name: Install
+        run: |
+          sudo apt-get install -y --no-install-recommends libgl1 >/dev/null
+          pip install --quiet -r backend/forge/requirements.txt
+          # run_cad needs an unprivileged user + network namespace (fail closed otherwise); Ubuntu runners
+          # restrict them through AppArmor by default.
+          sudo sysctl -q -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+      - name: Sandbox
+        working-directory: backend/forge
+        run: python3 -m unittest tests.test_sandbox
+      - name: Agent (mock LLM)
+        working-directory: backend/forge
+        run: python3 -m unittest tests.test_agent
+      - name: Stage-0 pipeline (deterministic re-run)
+        working-directory: backend/forge
+        run: |
+          # test output only (no secrets exist in this job); failures are also surfaced as annotations
+          set +e
+          python3 -m unittest tests.test_pipeline > /tmp/pipeline.log 2>&1; rc=$?
+          cat /tmp/pipeline.log
+          if [ "$rc" != 0 ]; then
+            grep -E '^(FAIL|ERROR):|Error:|Error\b|^AssertionError|^[-+] ' /tmp/pipeline.log | head -40 | cut -c1-300 | sed 's/^/::error::pipeline: /'
+          fi
+          exit $rc

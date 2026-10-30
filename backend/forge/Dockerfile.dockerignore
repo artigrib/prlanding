@@ -1,0 +1,11 @@
+# Build context is the repo root; send only what the forge image copies.
+*
+!backend/forge/requirements.txt
+!backend/forge/forge
+!backend/forge/designs
+!backend/forge/templates
+!backend/forge/eval
+!sim/so101/model
+!data/components
+**/__pycache__
+**/*.pyc
