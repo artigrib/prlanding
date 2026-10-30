@@ -128,6 +128,30 @@ export function checkData(data, schema) {
     if (!v) errors.push(`variants: unknown code ${code}`);
     else if (v.voltage_v !== arm.voltage_v) errors.push(`variants: ${code} (${v.voltage_v} V) on a ${arm.voltage_v} V arm`);
   }
+  // ready-made kits: dated https sources, known shop and parts, a correct servo mix when verified, stored landed cost = computed
+  const kitIds = new Set();
+  for (const k of data.kits || []) {
+    const where = `kit ${k.id}`;
+    if (kitIds.has(k.id)) errors.push(`${where}: duplicate id`);
+    kitIds.add(k.id);
+    if (!/^https:\/\//.test(k.url)) errors.push(`${where}: needs an https URL`);
+    if (!k.checked || k.checked > gen) errors.push(`${where}: checked date missing or after meta.generated ${gen}`);
+    if (!data.suppliers[k.seller]) { errors.push(`${where}: unknown seller "${k.seller}"`); continue; }
+    if (k.price[0] > k.price[1]) errors.push(`${where}: price range low > high`);
+    for (const c of k.configs) if (!data.configs[c]) errors.push(`${where}: unknown config ${c}`);
+    for (const x of [...k.includes, ...k.missing]) if (!comps[x.component]) errors.push(`${where}: unknown component ${x.component}`);
+    for (const x of k.missing) { const c = comps[x.component]; if (c && !c.sources.some((s) => s.recommend && s.price != null)) errors.push(`${where}: missing ${x.component} has no priced recommended source`); }
+    if (k.missing_other.length !== k.missing_other_cs.length) errors.push(`${where}: missing_other_cs must match missing_other`);
+    if ((k.printed === 'included') === !!k.missing_print) errors.push(`${where}: printed "${k.printed}" contradicts missing_print`);
+    if (k.reviews && k.reviews.checked > gen) errors.push(`${where}: reviews checked after meta.generated`);
+    if (k.status === 'verified') for (const c of k.configs) {
+      const v = kitVariantCheck(data, k, data.configs[c].arms || []);
+      if (!v.ok) errors.push(`${where}: servo mix does not fit ${c}: ${JSON.stringify(v.problems)}`);
+    }
+    let landed = null;
+    try { landed = kitLanded(data, k).eur; } catch (e) { errors.push(`${where}: ${e.message}`); }
+    if (landed && JSON.stringify(landed) !== JSON.stringify(k.landed_eur_cz)) errors.push(`${where}: landed_eur_cz ${JSON.stringify(k.landed_eur_cz)} != computed ${JSON.stringify(landed)}`);
+  }
   return errors;
 }
 
@@ -301,7 +325,7 @@ export function buildPlan(data, opts = {}) {
   const roundEur = (r) => [Math.floor(r[0]), Math.ceil(r[1])];
   const roundCzk = (r) => [Math.floor((r[0] * fx) / 10) * 10, Math.ceil((r[1] * fx) / 10) * 10];
   const landed = roundEur([totLo, totHi]);
-  return {
+  const plan = {
     robot, robot_id: R, print, options, config: { id: robot, name: cfg.name, name_cs: cfg.name_cs, arms: cfg.arms || [] },
     seller_of_record: 'each supplier (we are not the seller and never place orders)',
     affiliate_links: !!data.meta.affiliate_links,
@@ -328,6 +352,137 @@ export function buildPlan(data, opts = {}) {
     screws,
     alternative, alternatives
   };
+  // ready-made kits vs. parts bought separately (SO-101: data.kits), compared against this plan's own total
+  plan.kits = data.kits ? compareKits(data, plan) : null;
+  return plan;
+}
+
+/* ---------------- ready-made kits ---------------- */
+
+/** EU low-value import limit: up to 150 € VAT goes through IOSS at checkout; above it there is no IOSS. */
+export const IOSS_LIMIT_EUR = 150;
+const KIT_BLOCKERS = ['not_verified', 'variant_mismatch', 'out_of_stock', 'business_only', 'no_cz_shipping'];
+
+/**
+ * Landed cost of a kit delivered to CZ, in EUR [low, high].
+ * EU seller: price incl. VAT + shipping, plus the OSS uplift (DE 19 % → CZ 21 %) on the high end.
+ * Non-EU import (kit.import), customs value = goods + shipping:
+ *   ≤ 150 € → IOSS: VAT charged at checkout, plus the flat EU duty per line (supplier.duty_eur_per_line);
+ *   > 150 € → no IOSS: 21 % import VAT on (value + duty), the duty and the carrier's clearance fee.
+ *   import.price_includes_vat: true (seller ships duty paid), false (VAT always due), null (unknown → low end without it).
+ */
+export function kitLanded(data, kit) {
+  const sup = data.suppliers[kit.seller];
+  const p = kit.price.map((x) => toEur(data, x, kit.currency));
+  const ship = kit.shipping_eur || sup.shipping_eur;
+  const value = [p[0] + ship[0], p[1] + ship[1]];
+  if (!kit.import) {
+    const up = sup.vat === 'eu_oss' ? data.meta.oss_vat_uplift : 0;
+    return { eur: [Math.floor(value[0]), Math.ceil(p[1] * (1 + up) + ship[1])], basis: sup.vat === 'eu_oss' ? 'eu_oss' : 'domestic', status: sup.shipping_status };
+  }
+  const im = kit.import, duty = sup.duty_eur_per_line || 0;
+  const bound = (v, i) => {
+    if (v <= IOSS_LIMIT_EUR) return v + duty;
+    const d = im.duty_rate[i], fee = im.clearance_eur[i];
+    const vatDue = im.price_includes_vat === false || (im.price_includes_vat == null && i === 1);
+    return v * (1 + d) * (vatDue ? 1 + im.vat_rate : 1) + fee;
+  };
+  return { eur: [Math.floor(bound(value[0], 0)), Math.ceil(bound(value[1], 1))], basis: value[1] > IOSS_LIMIT_EUR ? 'import_vat' : 'ioss', status: im.status || 'estimate' };
+}
+
+/** Does a kit's servo mix (kit.servos: per arm voltage, gear-ratio counts, optional code counts) fit the arms? */
+export function kitVariantCheck(data, kit, arms) {
+  const problems = [];
+  for (const a of arms) {
+    const arm = data.variants.arms[a], have = (kit.servos || {})[a];
+    if (!have) { problems.push({ arm: a, issue: 'missing_arm' }); continue; }
+    if (have.voltage_v !== arm.voltage_v) problems.push({ arm: a, issue: 'voltage', expected: arm.voltage_v, found: have.voltage_v });
+    const need = {};
+    for (const j of arm.joints) { const r = data.variants.codes[j.codes[0]].gear_ratio; need[r] = (need[r] || 0) + 1; }
+    for (const r of new Set([...Object.keys(need), ...Object.keys(have.ratios || {})]))
+      if ((need[r] || 0) !== ((have.ratios || {})[r] || 0)) problems.push({ arm: a, issue: 'gear_ratio', ratio: r, expected: need[r] || 0, found: (have.ratios || {})[r] || 0 });
+    if (have.codes) {
+      const allowed = new Set(arm.joints.flatMap((j) => j.codes));
+      for (const [c, n] of Object.entries(have.codes)) {
+        const v = data.variants.codes[c];
+        if (!allowed.has(c) || !v) problems.push({ arm: a, issue: 'code', code: c });
+        else if ((have.ratios || {})[v.gear_ratio] == null || n > have.ratios[v.gear_ratio]) problems.push({ arm: a, issue: 'code_ratio', code: c });
+      }
+    }
+  }
+  return { ok: problems.length === 0, codes_named: arms.every((a) => !!((kit.servos || {})[a] || {}).codes), problems };
+}
+
+/**
+ * Kits for the plan's configuration, each with its landed cost, what is still missing (priced from this plan's own
+ * sources: e.g. power supplies, printed parts per the chosen print option) and a total; plus the recommendation.
+ * Recommendation = the cheapest total (upper bound, then lower) among kits that are verified, have the right servo mix,
+ * are in stock, sell to consumers and are not known to skip CZ; the kit is recommended only when that total is not above
+ * the parts plan's upper bound. Never by commission: there are no affiliate links.
+ */
+export function compareKits(data, plan) {
+  const cfg = data.configs[plan.robot], arms = cfg.arms || [];
+  const comps = Object.fromEntries(data.components.map((c) => [c.id, c]));
+  const parts = plan.totals.landed_eur;
+  const printGroup = plan.groups.find((g) => g.supplier === 'self_print' || g.supplier === 'print_service');
+  const printCost = printGroup ? printGroup.landed_eur : [0, 0];
+  const kits = data.kits.filter((k) => k.configs.includes(plan.robot)).map((k) => {
+    const landed = kitLanded(data, k);
+    const variant = kitVariantCheck(data, k, arms);
+    // missing parts: the source this plan uses for that component (else its first recommended priced source), shipping once per shop
+    const missing = [], shipBy = new Map();
+    let mLo = 0, mHi = 0;
+    for (const m of k.missing) {
+      const c = comps[m.component];
+      const line = cfg.lines.find((l) => l.component === m.component);
+      const s = (line && c.sources.find((x) => x.id === line.source)) || c.sources.find((x) => x.recommend && x.price != null);
+      const sup = data.suppliers[s.supplier];
+      const eur = round2(toEur(data, s.price, s.currency) * Math.ceil(m.qty / (s.per || 1)));
+      mLo += eur; mHi += eur * (sup.vat === 'eu_oss' ? 1 + data.meta.oss_vat_uplift : 1);
+      shipBy.set(s.supplier, sup.shipping_eur);
+      missing.push({ component: c.id, name: c.name, name_cs: c.name_cs, qty: m.qty, source: s.id, label: s.label, url: s.url, supplier: s.supplier, eur });
+    }
+    for (const sh of shipBy.values()) { mLo += sh[0]; mHi += sh[1]; }
+    if (k.missing_print) {
+      mLo += printCost[0]; mHi += printCost[1];
+      missing.push({ component: arms.includes('leader') ? 'so101.printed.follower+leader' : 'so101.printed.follower', name: 'Printed parts (per your print option)', name_cs: 'Tištěné díly (podle zvoleného tisku)',
+        qty: Math.max(1, arms.length), source: plan.print, label: printGroup ? printGroup.name : '', url: null, supplier: printGroup ? printGroup.supplier : null, eur_range: printCost });
+    }
+    const missingEur = [Math.floor(mLo), Math.ceil(mHi)];
+    const total = [landed.eur[0] + missingEur[0], landed.eur[1] + missingEur[1]];
+    const blockers = [];
+    if (k.status !== 'verified') blockers.push('not_verified');
+    if (!variant.ok) blockers.push('variant_mismatch');
+    if (k.in_stock === false) blockers.push('out_of_stock');
+    if (k.buyers === 'business_only') blockers.push('business_only');
+    if (k.ships_cz === 'no') blockers.push('no_cz_shipping');
+    const sup = data.suppliers[k.seller];
+    return {
+      id: k.id, name: k.name, name_cs: k.name_cs, seller: k.seller, seller_name: sup.name, country: sup.country, url: k.url,
+      price: k.price, currency: k.currency, price_eur: k.price.map((x) => round2(toEur(data, x, k.currency))), price_note: k.price_note || null, price_note_cs: k.price_note_cs || null,
+      landed_eur: landed.eur, landed_basis: landed.basis, import: k.import ? { ...k.import } : null,
+      missing, missing_eur: missingEur, missing_other: k.missing_other, missing_other_cs: k.missing_other_cs,
+      total_eur: total, includes: k.includes.map((x) => ({ ...x })), printed: k.printed, assembled: k.assembled,
+      variant, ships_cz: k.ships_cz, buyers: k.buyers, in_stock: k.in_stock, stock: k.stock, eta_days: k.eta_days || null,
+      checked: k.checked, status: k.status, note: k.note, note_cs: k.note_cs, reviews: pickReviews(k.reviews),
+      eligible: blockers.length === 0, blockers
+    };
+  });
+  kits.sort((a, b) => b.eligible - a.eligible || a.total_eur[1] - b.total_eur[1] || a.total_eur[0] - b.total_eur[0]);
+  const best = kits.find((k) => k.eligible) || null;
+  let recommendation;
+  if (!best) recommendation = { choice: 'parts', reason: kits.length ? 'no_eligible_kit' : 'no_kit', kit: null, parts_eur: parts };
+  else if (best.total_eur[1] <= parts[1]) recommendation = { choice: 'kit', reason: 'kit_cheaper_or_equal', kit: best.id, kit_total_eur: best.total_eur, parts_eur: parts, difference_eur: parts[1] - best.total_eur[1] };
+  else recommendation = { choice: 'parts', reason: 'parts_cheaper', kit: best.id, kit_total_eur: best.total_eur, parts_eur: parts, difference_eur: best.total_eur[1] - parts[1] };
+  recommendation.basis = 'cheapest landed total (upper bound) among verified, in-stock kits with the right servo mix that sell to consumers; compared with the parts plan total for the same print option; no affiliate links';
+  return { config: plan.robot, print: plan.print, kits, best: best ? best.id : null, recommendation };
+}
+
+/** "Ready-made kits from X €": the lowest landed cost of an eligible kit for any of the given configurations (default: all). */
+export function kitsFromEur(data, configs = Object.keys(data.configs)) {
+  const ok = (data.kits || []).filter((k) => k.status === 'verified' && k.in_stock !== false && k.buyers !== 'business_only' && k.ships_cz !== 'no'
+    && k.configs.some((c) => configs.includes(c) && kitVariantCheck(data, k, data.configs[c].arms || []).ok));
+  return ok.length ? Math.min(...ok.map((k) => kitLanded(data, k).eur[0])) : null;
 }
 
 /**
@@ -409,6 +564,7 @@ export function parseListing(text) {
  */
 export function checkPartVariant(data, text, expect) {
   if (data.variants.checks) return checkPartSpec(data, text, expect);
+  if (/^kit:/.test(String(expect || '').trim())) return checkKitListing(data, text, String(expect).trim().slice(4));
   const V = data.variants;
   let allowed, voltage, ratios, label;
   const e = String(expect || '').trim();
@@ -463,6 +619,84 @@ export function checkPartVariant(data, text, expect) {
   };
 }
 
+/** Servo counts in kit listing text: "2 × 1:191", "1:345 x6", "3× STS3215 1/147", "1 × C001", "C018 x 6". */
+export function parseKitListing(text) {
+  let t = String(text || '').slice(0, 5000);
+  const ratios = {}, codes = {};
+  const add = (o, k, n) => { o[k] = (o[k] || 0) + Number(n); };
+  const R = '1\\s*[:/]\\s*(345|191|147)(?!\\d)', C = '(?:STS?-?3215-?)?C0?(001|018|044|046|047|01|18|44|46|47)(?!\\d)', X = '\\s*[×xX*]\\s*';
+  const take = (re, f) => { t = t.replace(new RegExp(re, 'g'), (...m) => { f(m); return ' '; }); };
+  const code = (c) => 'C0' + c.replace(/^0/, '').padStart(2, '0');
+  // codes first, then ratios; the gap between a count and its ratio may not hold another count or a code
+  const gap = (n) => `(?:(?!\\d{1,2}${X}|C0?\\d{2}|1\\s*[:/]\\s*\\d{3})[^\\n;]){0,${n}}?`;
+  take(`(?<![\\d.,])(\\d{1,2})${X}${gap(20)}${C}`, (m) => add(codes, code(m[2]), m[1]));
+  take(`${C}${X}(\\d{1,2})(?!\\d)`, (m) => add(codes, code(m[1]), m[2]));
+  take(`(?<![\\d.,])(\\d{1,2})${X}${gap(40)}${R}`, (m) => add(ratios, '1/' + m[2], m[1]));
+  take(`${R}\\)?${X}(\\d{1,2})(?!\\d)`, (m) => add(ratios, '1/' + m[1], m[2]));
+  const { voltages } = parseListing(text);
+  return { ratios, codes, voltages };
+}
+
+/**
+ * Check a ready-made kit listing (pasted text) against a configuration's servo mix, e.g. expect "pair" (7.4 V leader + 12 V follower).
+ * Counts gear ratios and codes over the whole kit, checks the follower voltage, and names a kit from our data
+ * when the text contains its URL or item number.
+ */
+export function checkKitListing(data, text, config) {
+  const cfg = data.configs[config];
+  if (!cfg || !cfg.arms) throw new RangeError(`unknown kit config "${config}" (use kit:${Object.keys(data.configs).join(', kit:')})`);
+  const V = data.variants;
+  const need = {}, allowed = new Set(), volts = new Set();
+  for (const a of cfg.arms) {
+    volts.add(V.arms[a].voltage_v);
+    for (const j of V.arms[a].joints) { const r = V.codes[j.codes[0]].gear_ratio; need[r] = (need[r] || 0) + 1; j.codes.forEach((c) => allowed.add(c)); }
+  }
+  const f = parseKitListing(text);
+  // counted ratios + ratios of counted codes (their text spans never overlap)
+  for (const [c, n] of Object.entries(f.codes)) if (V.codes[c]) f.ratios[V.codes[c].gear_ratio] = (f.ratios[V.codes[c].gear_ratio] || 0) + n;
+  const t = String(text || '');
+  // a kit from our data: its URL, or its shop item number in the name, e.g. "(ER01050)" (not "ER01050-F")
+  const item = (k) => (/\(([A-Z]{2}\d{5}(?:-[A-Z0-9]+)?)\)/.exec(k.name) || [])[1];
+  const known = (data.kits || []).find((k) => t.includes(k.url) || (item(k) && new RegExp(`(?<![A-Z0-9-])${item(k)}(?![A-Z0-9-])`).test(t)));
+  const mismatches = [], warnings = [];
+  const fr = Object.keys(f.ratios);
+  const ratioExact = fr.length > 0 && Object.keys(need).every((r) => f.ratios[r] === need[r]) && fr.every((r) => need[r]);
+  for (const r of fr) if (!need[r] || f.ratios[r] > need[r]) mismatches.push({ field: 'gear_ratio', ratio: r, expected: need[r] || 0, found: f.ratios[r] });
+  for (const c of Object.keys(f.codes)) if (!allowed.has(c)) mismatches.push({ field: 'code', expected: [...allowed], found: c });
+  const wants12 = volts.has(12);
+  if (wants12 && f.voltages.length && !f.voltages.includes(12)) mismatches.push({ field: 'voltage_v', expected: [...volts], found: f.voltages });
+  if (!wants12 && f.voltages.includes(12)) {
+    if (f.voltages.includes(7.4)) warnings.push({ code: 'multiple_variants', detail: 'The listing mentions 7.4 V and 12 V: make sure you select the 7.4 V follower.', detail_cs: 'Inzerát zmiňuje 7,4 V i 12 V: ověřte, že vybíráte follower 7,4 V.' });
+    else mismatches.push({ field: 'voltage_v', expected: [...volts], found: f.voltages });
+  }
+  if (wants12 && !f.voltages.includes(12) && !f.codes.C018 && !f.codes.C047) warnings.push({ code: 'no_voltage', detail: 'The text does not say the follower is 12 V.', detail_cs: 'Text neuvádí, že follower je 12 V.' });
+  if (fr.length && !ratioExact && !mismatches.length) warnings.push({ code: 'incomplete', detail: 'Some servos in the kit are not described in the text.', detail_cs: 'Část serv sady text nepopisuje.' });
+  if (known && known.status === 'verified' && !kitVariantCheck(data, known, cfg.arms).ok) mismatches.push({ field: 'kit', expected: config, found: known.id });
+  const multi = warnings.some((w) => w.code === 'multiple_variants');
+  let verdict;
+  if (mismatches.length) verdict = 'mismatch';
+  else if (multi) verdict = 'check_selection';
+  else if (ratioExact && (wants12 ? f.voltages.includes(12) || f.codes.C018 : true)) verdict = 'match';
+  else if (fr.length || Object.keys(f.codes).length || (known && known.configs.includes(config))) verdict = 'likely';
+  else verdict = 'unknown';
+  const mix = Object.entries(need).map(([r, n]) => `${n}× ${r}`).join(', ');
+  const ADVICE = {
+    match: [`The kit’s servo mix fits (${mix}). Label every servo when it arrives.`, `Serva v sadě sedí (${mix}). Po doručení každé servo popište.`],
+    likely: [`Nothing contradicts the mix this configuration needs (${mix}), but the text does not show all of it. Ask the seller for the per-joint list.`, `Nic neodporuje potřebné sestavě (${mix}), ale text ji neukazuje celou. Zeptejte se prodejce na seznam po kloubech.`],
+    check_selection: ['The listing offers several variants. Make sure the option you select is the right one.', 'Inzerát nabízí více variant. Ověřte, že vybíráte tu správnou.'],
+    mismatch: [`This kit does not have the servo mix this configuration needs (${mix}).`, `Tato sada nemá sestavu serv, kterou konfigurace potřebuje (${mix}).`],
+    inconsistent: ['', ''],
+    unknown: [`Not enough information in the text. Look for the servo list: ${mix}${wants12 ? ', follower 12 V' : ''}.`, `V textu chybí údaje. Hledejte seznam serv: ${mix}${wants12 ? ', follower 12 V' : ''}.`]
+  };
+  return {
+    expected: { label: `kit:${config}`, codes: [...allowed], voltage_v: wants12 ? 12 : 7.4, gear_ratios: Object.keys(need), ratio_counts: need },
+    found: { codes: Object.keys(f.codes), voltages: f.voltages, ratios: fr, ratio_counts: f.ratios, code_counts: f.codes },
+    verdict, ok: verdict === 'match' || verdict === 'likely', mismatches, warnings,
+    known_kit: known ? { id: known.id, name: known.name, status: known.status, checked: known.checked, configs: known.configs } : null,
+    advice: ADVICE[verdict][0], advice_cs: ADVICE[verdict][1]
+  };
+}
+
 /**
  * Rule-based check of a listing against one part of a robot (data.variants.checks; SVRN: esc, motor, servo, lipo).
  * Each check has regexes: identify (is this the kind of part), good (signals of the right spec),
@@ -503,4 +737,4 @@ export function checkPartSpec(data, text, expect) {
   };
 }
 
-export { STATUSES, REVIEW_SIGNALS };
+export { STATUSES, REVIEW_SIGNALS, KIT_BLOCKERS };

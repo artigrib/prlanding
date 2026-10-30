@@ -10,7 +10,7 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 import { checkComponents } from './check-components.mjs';
-import { buildTime, screwTable } from '../assets/plan/plan-core.mjs';
+import { buildTime, screwTable, kitsFromEur } from '../assets/plan/plan-core.mjs';
 
 // component data (purchase plans): fail the build on a source without URL/date/status
 {
@@ -242,7 +242,9 @@ function kitPage(r0, L) {
   const sim = r.sim && D.PR_SIMS[r.sim];
   const simCta = sim ? `<a class="sim-cta" id="sim-cta" href="${root}${sim.path}${sim.robotParam ? '?robot=' + r.id : ''}"><span><b>${esc(sim.label)}</b><small>${esc(sim.note)}</small></span><span aria-hidden="true">→</span></a>\n` : '';
   // SO-101, SVRN: purchase plan (the user buys from suppliers directly; the waitlist below stays)
-  const PLAN_NOTE = { so101: 'Co koupit u kterých dodavatelů, ceny s dopravou a kontrola variant serv', svrn: 'Co koupit u kterých dodavatelů, ceny s dopravou, kontrola desky, serva a LiPo' };
+  // SO-101: "ready-made kits from X € for a pair" = the lowest landed cost of an eligible pair kit in data.kits (same rule as the plan page)
+  const kitFrom = kitsFromEur(SO101, ['pair_74v', 'pair']);
+  const PLAN_NOTE = { so101: 'Co koupit u kterých dodavatelů, ceny s dopravou a kontrola variant serv' + (kitFrom != null ? ` · hotové sady od ${kitFrom} € za pár` : ''), svrn: 'Co koupit u kterých dodavatelů, ceny s dopravou, kontrola desky, serva a LiPo' };
   // primary CTA: the buying plan where one exists, else the browser sim, else the project's own guide; the waitlist is a text link below
   const planCta = PLAN_NOTE[r.id] ? `<a class="btn btn-act" id="plan-cta" href="${root}plan/${r.id}/">Plán nákupu dílů <span aria-hidden="true">→</span></a>\n<p class="mono" style="margin:-4px 0 0">${PLAN_NOTE[r.id]}</p>\n` : '';
   const simHref = sim ? `${root}${sim.path}${sim.robotParam ? '?robot=' + r.id : ''}` : '';

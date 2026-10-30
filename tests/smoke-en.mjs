@@ -147,6 +147,8 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
     const next = await p.locator('#plan-next a').evaluateAll(as => as.map(a => new URL(a.href).pathname + new URL(a.href).search));
     if (next[0] !== '/en/guides/so101-assembly/' || next[1] !== '/sim/so101/nastaveni/?lang=en' || next[2] !== '/en/guides/so101-lerobot-first-steps/') e.push('next-step links: ' + next.join(', '));
     if (!/Screws per arm/.test(await p.locator('#plan-screws').innerText())) e.push('screw table');
+    if (!/Ready-made kit vs\. parts separately/.test(await p.locator('#plan-kits h2').innerText())) e.push('kits heading');
+    if ((await p.locator('[data-testid=plan-kit-rec]').getAttribute('data-choice')) !== 'parts') e.push('kit rec (self print, 12 V pair)');
     await p.addScriptTag({ content: AXE });
     const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
     const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');

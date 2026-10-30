@@ -250,6 +250,7 @@
       [/^Přicházíte ze simulace: (\d+) (?:mise|misí), (\d+) ★\.$/, function (m, n, s) { return 'You’re coming from the simulator: ' + n + (n === '1' ? ' mission' : ' missions') + ', ' + s + ' ★.'; }],
       [/^(\d+) (sada|sady|sad)$/, function (m, n) { return n + (n === '1' ? ' kit' : ' kits'); }],
       [/^(\d+) položek$/, '$1 items'],
+      [/^hotové sady od (\d+) € za pár$/, 'ready-made kits from $1 € for a pair'],
       [/^Parametry · (\d+)$/, 'Specifications · $1'],
       [/^Obr\. (\d+) — (.*)$/, 'Fig. $1 — $2'],
       // homepage section labels: the number changes when sections are added, the label does not

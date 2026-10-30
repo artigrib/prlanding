@@ -121,3 +121,26 @@
 .btn-link:hover{text-decoration-thickness:2px}
 .plan-altbox ul{margin:0;padding-left:20px;color:var(--ink-2)}
 .plan-cfgnote{margin:0;font-size:15px}
+/* ready-made kit vs. parts separately (top of the SO-101 plan) */
+.plan-kits{display:flex;flex-direction:column;gap:14px;border-top:1px solid var(--ink);padding-top:20px}
+.plan-kits:empty{display:none}
+.plan-kits h2{margin:0;font-weight:500;font-size:clamp(22px,2.4vw,28px);letter-spacing:-.02em}
+.pk-rec{margin:0;font-size:17px;line-height:1.5;max-width:52rem}
+.pk-rec b{font-weight:600}
+.pk-cmp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gutter)}
+.pk-col{border:1px solid var(--line-2);padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0;background:#fff}
+.pk-col.pk-win{border-color:var(--ok);box-shadow:inset 0 0 0 1px var(--ok)}
+.pk-col h3{margin:0;font-family:var(--mono);font-size:13px;font-weight:400;color:var(--mute)}
+.pk-win h3::after{content:" ✓";color:var(--ok)}
+.pk-name{margin:0;font-weight:500;overflow-wrap:anywhere}
+.pk-col dl{margin:0;display:flex;flex-direction:column;gap:4px}
+.pk-col dl>div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line-2);padding:4px 0;font-size:15px}
+.pk-col dt{color:var(--ink-2)}
+.pk-col dd{margin:0;text-align:right}
+.pk-col dd b{font-weight:600;font-size:18px}
+.pk-mh{margin:4px 0 0;font-weight:500;font-size:15px}
+.pk-miss{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:15px}
+.pk-all{font-size:15px}
+.pk-all li{line-height:1.5}
+.pk-off>b a{color:var(--ink-2)}
+@media (max-width:860px){.pk-cmp{grid-template-columns:1fr}.plan-kits .pk-all{order:0}}

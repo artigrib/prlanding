@@ -109,6 +109,17 @@ await check('plan so101: totals, variant guard, checker, local state', '/plan/so
   if (await total() !== '373–398 €') throw new Error('default pair total ' + await total());
   if (!(await p.locator('[data-testid=plan-screws]').count()) || !/49× M2×6[\s\S]*96× M3×6/.test(await p.locator('#plan-screws').innerText())) throw new Error('screw table');
   if ((await p.locator('[data-testid=plan-alt]').count()) < 1) throw new Error('kit alternatives');
+  // ready-made kit vs. parts: self-printed parts are cheaper; with a print service the kit wins
+  const rec = p.locator('[data-testid=plan-kit-rec]');
+  if ((await rec.getAttribute('data-choice')) !== 'parts' || !/levněji/.test(await rec.innerText())) throw new Error('kit rec (self print): ' + await rec.innerText());
+  await p.check('input[name=print][value=service]');
+  const recText = async () => (await rec.innerText()).replace(/\s+/g, ' ');
+  if ((await rec.getAttribute('data-choice')) !== 'kit' || !/Pro většinu lidí doporučujeme hotovou sadu Eckstein/.test(await recText())) throw new Error('kit rec (service): ' + await rec.getAttribute('data-choice') + ' ' + JSON.stringify(await rec.innerText()));
+  if (!/^\d+–\d+ €$/.test((await p.locator('[data-testid=plan-kit-total]').innerText()).trim())) throw new Error('kit total');
+  await p.check('input[name=fv][value="12v"]');
+  if ((await rec.getAttribute('data-kit')) !== 'eckstein_pro_pair' || (await p.locator('[data-testid=plan-kit]').count()) < 4) throw new Error('12 V pair kits');
+  if (!/vyprodáno/.test(await p.locator('[data-testid=plan-kit][data-kit=seeed_pro_openelab]').textContent())) throw new Error('sold-out kit not marked');
+  await p.check('input[name=fv][value="74v"]'); await p.check('input[name=print][value=self]');
   await p.check('input[name=robot][value=follower]'); await p.check('input[name=fv][value="12v"]');
   if (await total() !== '206–224 €') throw new Error('follower total ' + await total());
   if (!(await p.locator('#plan-cfgnote').isVisible()) || !/lerobot-replay/.test(await p.locator('#plan-cfgnote').innerText())) throw new Error('follower-only note');

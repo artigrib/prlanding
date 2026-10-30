@@ -240,6 +240,255 @@
         }
       }
     },
+    "kits_note": {
+      "type": "string"
+    },
+    "kits": {
+      "type": "array",
+      "description": "Ready-made kits compared with buying the parts separately (plan-core compareKits). landed_eur_cz must equal plan-core kitLanded(); servo mix of a verified kit must fit each listed config. No affiliate links.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "name_cs",
+          "seller",
+          "url",
+          "configs",
+          "price",
+          "currency",
+          "servos",
+          "includes",
+          "missing",
+          "missing_print",
+          "missing_other",
+          "missing_other_cs",
+          "assembled",
+          "printed",
+          "ships_cz",
+          "buyers",
+          "in_stock",
+          "stock",
+          "import",
+          "landed_eur_cz",
+          "checked",
+          "status",
+          "note",
+          "note_cs",
+          "reviews"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name_cs": {
+            "type": "string",
+            "minLength": 1
+          },
+          "seller": {
+            "type": "string",
+            "description": "key of suppliers"
+          },
+          "url": {
+            "$ref": "#/$defs/url"
+          },
+          "configs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "price": {
+            "$ref": "#/$defs/range"
+          },
+          "currency": {
+            "enum": [
+              "EUR",
+              "CZK",
+              "RON"
+            ]
+          },
+          "price_note": {
+            "type": "string"
+          },
+          "price_note_cs": {
+            "type": "string"
+          },
+          "servos": {
+            "type": "object",
+            "description": "per arm id: voltage, gear-ratio counts, optional code counts (only when the listing names codes)",
+            "additionalProperties": {
+              "type": "object",
+              "required": [
+                "voltage_v",
+                "ratios"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "voltage_v": {
+                  "type": "number"
+                },
+                "ratios": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "codes": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          },
+          "includes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/kit_item"
+            }
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/kit_item"
+            },
+            "description": "components still to buy, priced from the plan's source for that component"
+          },
+          "missing_print": {
+            "type": "boolean",
+            "description": "printed parts not included: add the chosen print option's cost"
+          },
+          "missing_other": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "missing_other_cs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assembled": {
+            "enum": [
+              "yes",
+              "no",
+              "unknown"
+            ]
+          },
+          "printed": {
+            "enum": [
+              "included",
+              "not_included"
+            ]
+          },
+          "ships_cz": {
+            "enum": [
+              "yes",
+              "no",
+              "unverified"
+            ]
+          },
+          "buyers": {
+            "enum": [
+              "consumers",
+              "business_only"
+            ]
+          },
+          "in_stock": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "stock": {
+            "type": "string"
+          },
+          "eta_days": {
+            "$ref": "#/$defs/range"
+          },
+          "shipping_eur": {
+            "$ref": "#/$defs/range"
+          },
+          "import": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "vat_rate",
+                  "duty_rate",
+                  "clearance_eur",
+                  "price_includes_vat",
+                  "note",
+                  "note_cs"
+                ],
+                "properties": {
+                  "vat_rate": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "duty_rate": {
+                    "$ref": "#/$defs/range"
+                  },
+                  "clearance_eur": {
+                    "$ref": "#/$defs/range"
+                  },
+                  "price_includes_vat": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "status": {
+                    "$ref": "#/$defs/status"
+                  },
+                  "note": {
+                    "type": "string"
+                  },
+                  "note_cs": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "landed_eur_cz": {
+            "$ref": "#/$defs/range"
+          },
+          "checked": {
+            "$ref": "#/$defs/date"
+          },
+          "status": {
+            "$ref": "#/$defs/status"
+          },
+          "note": {
+            "type": "string"
+          },
+          "note_cs": {
+            "type": "string"
+          },
+          "reviews": {
+            "$ref": "#/$defs/reviews"
+          }
+        }
+      }
+    },
     "printing": {
       "type": "object",
       "required": [
@@ -495,6 +744,23 @@
         "unverified",
         "estimate"
       ]
+    },
+    "kit_item": {
+      "type": "object",
+      "required": [
+        "component",
+        "qty"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "component": {
+          "type": "string"
+        },
+        "qty": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
     },
     "range": {
       "type": "array",
