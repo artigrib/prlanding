@@ -5,9 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ROBOTO ORIGIN in simulation – an open humanoid in your browser | printedrobotics.cz</title>
 <meta name="description" content="The open-source ROBOTO ORIGIN humanoid (RoboParty) in a MuJoCo physics simulation: walking driven by its trained policy, joint sliders, push it with a click.">
-<!-- draft: noindex, not in the sitemap and not linked from any page until the owner publishes it -->
-<meta name="robots" content="noindex,nofollow">
+<meta name="robots" content="index,follow">
 <link rel="canonical" href="https://printedrobotics.cz/en/sim/origin/">
+<link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sim/origin/">
+<link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/sim/origin/">
+<link rel="alternate" hreflang="x-default" href="https://printedrobotics.cz/sim/origin/">
+<meta property="og:title" content="ROBOTO ORIGIN in simulation">
+<meta property="og:description" content="RoboParty’s open humanoid walks in your browser: trained walking policy, 23 joints, push it with a click.">
+<meta property="og:url" content="https://printedrobotics.cz/en/sim/origin/">
+<meta property="og:image" content="https://printedrobotics.cz/img/origin_poster.jpg">
+<meta property="og:locale" content="en_GB">
 <meta name="theme-color" content="#FFFFFF">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E8461E'/%3E%3C/svg%3E">
 <link rel="preload" href="../../../sim/origin/../so101/vendor/mujoco/mujoco.wasm" as="fetch" type="application/wasm" crossorigin>
@@ -44,7 +51,9 @@
       <p class="mono">Showcase · open hardware</p>
       <h1>ROBOTO ORIGIN</h1>
       <p class="ink2">A full-size humanoid by RoboParty of Shanghai: 23 joints, machined aluminium, and the complete CAD, electronics, training and deployment published as open source. In the simulation it walks with the policy its authors trained and released.</p>
-      <p class="note mono-s">A showcase, not a product: we do not sell parts or kits for this robot.</p>
+      <p class="note mono-s">A showcase, not a product: we do not sell parts or kits for this robot. We are not affiliated with RoboParty.</p>
+      <p class="mono-s muted honest">The physics is approximate and the real robot behaves differently. Walking is driven by the policy RoboParty trained and published; we only run it in the browser. A computer with a graphics card is recommended.</p>
+      <div class="perf" id="perf" hidden><p class="mono-s">Performance: this device has weaker graphics, so shadows are off.</p><label class="chk" id="simple-wrap" hidden><input type="checkbox" id="simple"> Simplified mode (lower resolution, no grid)</label></div>
     </section>
     <section aria-labelledby="mode-h">
       <h2 class="mono sec-h" id="mode-h">Mode</h2>

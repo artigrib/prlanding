@@ -140,6 +140,9 @@ window.PR_EN = {
   // showcases (data.js PR_SHOWCASE): translated fields only; sources and licences stay as in data.js
   showcase: {
     origin: { type: 'Full-size humanoid', level: 'Advanced',
+      alt: 'The ROBOTO ORIGIN humanoid in simulation: a black aluminium frame with 23 joints on a grid floor',
+      card: [['Licence', 'CERN-OHL-W-2.0 · GPL-3.0'], ['Joints', '23']],
+      notAffiliated: 'We are not affiliated with RoboParty and do not sell parts.',
       badge: 'Showcase · open hardware CERN-OHL-W-2.0 · software GPL-3.0',
       short: 'An open humanoid with 23 joints in machined aluminium: mechanics, electronics, walking training and deployment published as open source.',
       lead: 'A humanoid prototype that RoboParty of Shanghai designed in four months and published in full: CAD, circuit boards, bill of materials, the simulation model, Isaac Lab training and ROS 2 deployment including trained policies. According to the authors it can be built from Taobao parts and made-to-order machining. We show it as inspiration – we do not sell parts or kits for it and we are not affiliated with the authors.',
@@ -179,7 +182,7 @@ window.PR_EN_APPLY = function () {
   (W.PR_SHOWCASE || []).forEach(function (r) {
     var e = EN.showcase[r.id]; if (!e) return;
     var cs = {}; Object.keys(r).forEach(function (k) { cs[k] = r[k]; }); r._cs = cs;
-    ['type', 'level', 'badge', 'short', 'lead', 'note'].forEach(function (k) { if (e[k]) r[k] = e[k]; });
+    ['type', 'level', 'badge', 'short', 'lead', 'note', 'alt', 'card', 'notAffiliated'].forEach(function (k) { if (e[k]) r[k] = e[k]; });
     r.specs = r.specs.map(function (s, i) { return [e.specLabels[i] || s[0], e.specValues[i] || s[1], s[2]]; });
     r.license = Object.assign({}, r.license, { notes: e.licenseNotes });
   });

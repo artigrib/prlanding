@@ -1,5 +1,5 @@
 // ROBOTO ORIGIN simulation page (printedrobotics.cz code; the robot model, meshes and policy are RoboParty's,
-// see NOTICE.txt). Draft showcase: noindex and not linked from the site yet.
+// see NOTICE.txt). Showcase: linked from the catalogue (PR_SHOWCASE card) and the home news list.
 // One script for both languages: <html lang="cs"> (sim/origin/) and <html lang="en"> (en/sim/origin/).
 
 import { loadOrigin, OriginSim, GROUPS, hasWebGL } from './core.js';
@@ -77,6 +77,9 @@ class Page {
     }
     sim.onPolicyError = () => { $('mode-walk').disabled = true; $('mode-stand').checked = true; $('nopolicy').textContent = S.noPolicy; $('nopolicy').hidden = false; this.syncMode(); };
     sim.onFall = () => { $('sr').textContent = S.fell; };
+    sim.onLowQuality = () => { $('perf').hidden = false; };
+    sim.onSlow = () => { $('perf').hidden = false; $('simple-wrap').hidden = false; };
+    $('simple').addEventListener('change', (e) => sim.setSimple(e.target.checked));
     sim.onFrame = (dt) => this.input(dt);
     sim.onAfter = () => this.render();
     this.syncMode();
@@ -203,6 +206,8 @@ class Page {
       state: () => { const q = sim.d.qpos; return { t: sim.d.time, x: q[0], y: q[1], z: q[2], fallen: sim.fallen, mode: sim.mode, policyMs: sim.policyMs, ticks: sim.policyTicks }; },
       fps: () => sim.fps,
       lowQ: () => !!sim.lowQ,
+      slow: () => !!sim.slowOffered,
+      simple: (on) => { sim.setSimple(on); return sim.simple; },
       render: () => { sim.sync(); sim.renderer.render(sim.scene, sim.camera); }
     };
   }

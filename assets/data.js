@@ -334,11 +334,14 @@ window.PR_ARENA_LICENSES = {
   klepeto: { hw: 'own', status: 'verified', checked: '2026-10-30', published: 'CC-BY-4.0', sources: ['tools/robots-cad/klepeto.py'] }
 };
 
-// Showcases: open projects we present but do not sell (no kit page, no order form). Draft: not rendered
-// anywhere yet; the simulation (sim/origin/) is noindex and unlinked. Every number names its upstream source.
+// Showcases: open projects we present but do not sell (no kit page, no order form). The catalogue shows them
+// after the kits with a card that links to the simulation (sim/<r.sim>/). Every number names its upstream source.
 window.PR_SHOWCASE = [
   { id: 'origin', showcase: true, buy: false, sim: 'origin', name: 'ROBOTO ORIGIN', type: 'Humanoid v plné velikosti', cat: 'legged', level: 'Pokročilý',
     author: 'RoboParty (Shanghai RoboParty Technology Co., Ltd.)',
+    alt: 'Humanoid ROBOTO ORIGIN v simulaci: černá hliníková kostra se 23 klouby na podlaze s mřížkou',
+    card: [['Licence', 'CERN-OHL-W-2.0 · GPL-3.0'], ['Klouby', '23']],
+    notAffiliated: 'Nejsme s RoboParty spojeni, díly neprodáváme.',
     badge: 'Ukázka · otevřený hardware CERN-OHL-W-2.0 · software GPL-3.0',
     short: 'Otevřený humanoid s 23 klouby z frézovaného hliníku: konstrukce, elektronika, trénink chůze i nasazení zveřejněné jako open source.',
     lead: 'Prototyp humanoida, který šanghajská RoboParty navrhla za čtyři měsíce a zveřejnila celý: CAD, desky plošných spojů, kusovník, model pro simulaci, trénink v Isaac Lab a nasazení v ROS 2 včetně naučených politik. Podle autorů jde sestavit z dílů z Taobao a zakázkové výroby. Ukazujeme ho jako inspiraci – díly ani sady k němu neprodáváme a s autory nejsme spojeni.',

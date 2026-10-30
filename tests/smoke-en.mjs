@@ -271,11 +271,16 @@ if (!process.env.SKIP_SIMS) {
   }, { locale: 'en-US' });
 }
 
-// ROBOTO ORIGIN showcase sim, English shell (draft): English UI, noindex, axe clean
-await check('origin sim draft (en)', '/en/sim/origin/?test=1', async (p, e) => {
+// ROBOTO ORIGIN showcase sim, English shell: English UI, indexable, honest notes, linked from the English home, axe clean
+await check('origin sim (en)', '/en/sim/origin/?test=1', async (p, e) => {
   await p.waitForFunction(() => window.__origin && (window.__origin.ready || window.__origin.error), null, { timeout: 90000 });
   if (await p.evaluate(() => window.__origin.error)) e.push('sim error');
-  if ((await p.locator('meta[name="robots"]').getAttribute('content')) !== 'noindex,nofollow') e.push('not noindex');
+  if ((await p.locator('meta[name="robots"]').getAttribute('content')) !== 'index,follow') e.push('not indexable');
+  const panel = (await p.locator('.panel').innerText()).replace(/\s+/g, ' ');
+  for (const t of ['not affiliated with RoboParty', 'physics is approximate', 'RoboParty trained and published', 'graphics card']) if (!panel.includes(t)) e.push('honest note missing: ' + t);
+  const home = await (await p.request.get(BASE + '/en/')).text();
+  if (!/<a class="card card-show" href="\.\.\/en\/sim\/origin\/"[\s\S]*?not affiliated with RoboParty[\s\S]*?Try it in the simulator/.test(home)) e.push('English catalogue showcase card');
+  if (!/<b>The ROBOTO ORIGIN humanoid in your browser<\/b>[\s\S]*?<a href="\.\.\/en\/sim\/origin\/">/.test(home)) e.push('English news item');
   if ((await p.locator('html').getAttribute('lang')) !== 'en') e.push('lang');
   await noCzech(p, e);
   await p.addScriptTag({ content: AXE });
