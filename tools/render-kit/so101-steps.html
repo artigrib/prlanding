@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="cs"><head><meta charset="utf-8"><title>SO-101 assembly steps</title>
+<style>html,body{margin:0;background:#EEEEEB}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"../../vendor/three/three.module.min.js","three/addons/":"../../vendor/three/addons/"}}</script>
+</head><body>
+<script type="module">
+// Assembly-step illustrations of the SO-101, driven by tools/render-kit/so101-steps.mjs.
+// Geometry: sim/so101/model/visual/so101_visual.glb (original Menagerie STLs, raw STL frame) placed with the
+// body / geom poses of sim/so101/model/so101.xml (MuJoCo Menagerie robotstudio_so101, Apache-2.0).
+// No screws in the model: fasteners are drawn as flat glyphs with the sizes the guide names (M2×6, M3×6).
+//   await setup()                -> parts list
+//   await renderStep(spec)       -> { '1200.webp': dataURL, '1200.jpg': …, '600.webp': …, '600.jpg': … }
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+
+const BG = '#EEEEEB', ACC = '#E8461E', ACC_D = '#B8380F', INK = '#0E0E0E', GREY = '#ADADA7', GREY_SERVO = '#4E4E4A';
+const FONT = "'Inter','Helvetica Neue',Arial,sans-serif";
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.VSMShadowMap;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(BG);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.8;
+const key = new THREE.DirectionalLight(0xffffff, 1.5);
+key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 10; key.shadow.blurSamples = 20; key.shadow.bias = -0.0003;
+scene.add(key, key.target, new THREE.HemisphereLight(0xffffff, 0xd8d8d2, 0.6));
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), new THREE.ShadowMaterial({ opacity: 0.12 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+const camera = new THREE.PerspectiveCamera(22, 4 / 3, 0.005, 20);
+
+const M = {
+  grey: new THREE.MeshStandardMaterial({ color: GREY, roughness: 0.7 }),
+  servo: new THREE.MeshStandardMaterial({ color: GREY_SERVO, roughness: 0.55 }),
+  acc: new THREE.MeshStandardMaterial({ color: ACC, roughness: 0.5 }),
+  accServo: new THREE.MeshStandardMaterial({ color: ACC_D, roughness: 0.5 }),
+  ghost: new THREE.MeshBasicMaterial({ color: ACC, transparent: true, opacity: 0.16, depthWrite: false }),
+  edge: new THREE.LineBasicMaterial({ color: 0x2a2a28, transparent: true, opacity: 0.55 }),
+  edgeGhost: new THREE.LineBasicMaterial({ color: ACC_D, transparent: true, opacity: 0.45 })
+};
+
+// ---------- model ----------
+const root = new THREE.Group(); root.rotation.x = -Math.PI / 2; scene.add(root);   // MuJoCo z-up -> three y-up
+const geo = {}, edges = {}, bodies = {}, joints = {}, parts = {};
+const v3 = (s) => (s || '0 0 0').trim().split(/\s+/).map(Number);
+const quat = (s) => { const q = v3(s || '1 0 0 0'); return new THREE.Quaternion(q[1], q[2], q[3], q[0]).normalize(); };
+
+const TOPZ = 0.0150;
+function split(g, ref) {
+  // servo with horn vs. the horn-less servo mesh (same STL frame): triangles with a vertex the horn-less mesh
+  // does not have are the horns (positions compared on a 0.1 mm grid)
+  const k = (a, i) => `${Math.round(a.getX(i) * 1e4)},${Math.round(a.getY(i) * 1e4)},${Math.round(a.getZ(i) * 1e4)}`;
+  const rp = ref.attributes.position, have = new Set();
+  for (let i = 0; i < rp.count; i++) have.add(k(rp, i));
+  const p = g.attributes.position, idx = g.index.array, bodyI = [], hornI = [];
+  // the top horn is in both meshes: a disc of r ≤ 10.3 mm around the output shaft (x 12.5, y 0) above the case top
+  const top = (i) => Math.hypot(p.getX(i) - 0.0125, p.getY(i)) < 0.0103 && p.getZ(i) > TOPZ;
+  const out = (i) => !have.has(k(p, i));
+  for (let t = 0; t < idx.length; t += 3) {
+    const a = idx[t], b = idx[t + 1], c = idx[t + 2];
+    (out(a) || out(b) || out(c) || (top(a) && top(b) && top(c)) ? hornI : bodyI).push(a, b, c);
+  }
+  const mk = (I) => { const n = new THREE.BufferGeometry(); n.setAttribute('position', p); n.setIndex(I); return n.toNonIndexed(); };
+  return [mk(bodyI), mk(hornI)];
+}
+function finish(g) { g = g.index ? g.toNonIndexed() : g; g.computeVertexNormals(); g.computeBoundingBox(); return g; }
+
+window.setup = async () => {
+  const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
+  await MeshoptDecoder.ready;
+  const gltf = await loader.loadAsync('../../sim/so101/model/visual/so101_visual.glb');
+  gltf.scene.updateMatrixWorld(true);
+  const raw = {};
+  gltf.scene.traverse((o) => {
+    if (!o.isMesh) return;
+    // dequantize to float32 in the raw STL frame (the node matrix undoes the quantization)
+    const a = o.geometry.attributes.position, f = new Float32Array(a.count * 3), w = new THREE.Vector3();
+    for (let i = 0; i < a.count; i++) { w.fromBufferAttribute(a, i).applyMatrix4(o.matrixWorld); f[3 * i] = w.x; f[3 * i + 1] = w.y; f[3 * i + 2] = w.z; }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(f, 3)); g.setIndex(new THREE.BufferAttribute(o.geometry.index.array, 1));
+    g.computeBoundingBox(); raw[o.name] = g;
+  });
+  const [sBody, sHorn] = split(raw.sts3215_03a_v1, raw.sts3215_03a_no_horn_v1);
+  for (const [n, g] of Object.entries(raw)) if (n !== 'sts3215_03a_v1') geo[n] = finish(g);
+  geo.sts3215_03a_v1 = finish(sBody); geo.sts3215_horn = finish(sHorn);
+  for (const [n, g] of Object.entries(geo)) edges[n] = new THREE.EdgesGeometry(g, 32);
+
+  const xml = new DOMParser().parseFromString(await (await fetch('../../sim/so101/model/so101.xml')).text(), 'text/xml');
+  const walk = (el, parent) => {
+    const name = el.getAttribute('name');
+    const b = new THREE.Group(); b.position.fromArray(v3(el.getAttribute('pos'))); b.quaternion.copy(quat(el.getAttribute('quat')));
+    parent.add(b);
+    const j = new THREE.Group(); b.add(j); bodies[name] = j;   // joint rotation (hinge about local z) lives in j
+    if (el.querySelector(':scope > joint')) joints[name] = j;
+    for (const g of el.querySelectorAll(':scope > geom[mesh]')) {
+      const mesh = g.getAttribute('mesh');
+      if (mesh === 'wrist_roll_follower_so101_camera_mount' || /gripper_part/.test(mesh)) continue;
+      const holder = new THREE.Group(); holder.position.fromArray(v3(g.getAttribute('pos'))); holder.quaternion.copy(quat(g.getAttribute('quat')));
+      j.add(holder);
+      const key = name + ':' + mesh, servo = /^sts3215/.test(mesh);
+      const p = parts[key] = { key, body: name, mesh, servo, holder, objs: [] };
+      const add = (gn, kind) => {
+        const m = new THREE.Mesh(geo[gn], M.grey); m.castShadow = m.receiveShadow = true; m.userData.kind = kind;
+        const l = new THREE.LineSegments(edges[gn], M.edge);
+        holder.add(m, l); p.objs.push(m, l);
+        if (kind === 'horn') p.horn = m;
+      };
+      add(mesh, servo ? 'servo' : 'print');
+      if (mesh === 'sts3215_03a_v1') add('sts3215_horn', 'horn');
+    }
+    for (const c of el.querySelectorAll(':scope > body')) walk(c, j);
+  };
+  walk(xml.querySelector('worldbody > body'), root);
+  return Object.keys(parts);
+};
+
+// ---------- helpers ----------
+const tmpBox = new THREE.Box3();
+function partBoxLocal(p) { const b = new THREE.Box3(); for (const o of p.objs) if (o.isMesh) b.union(o.geometry.boundingBox); return b; }
+/** world point (three frame) of an anchor: {mm:[x,y,z]} (MuJoCo world frame, millimetres) | {joint: body} | {part: key, f:[u,v,w]} (fractions of the part's own box) | {world:[x,y,z]} (MuJoCo frame) */
+function anchor(a) {
+  if (a.mm) return new THREE.Vector3(a.mm[0] / 1000, a.mm[2] / 1000, -a.mm[1] / 1000);
+  if (a.joint) return bodies[a.joint].getWorldPosition(new THREE.Vector3());
+  if (a.part) {
+    const p = parts[a.part], b = partBoxLocal(p), f = a.f || [0.5, 0.5, 0.5];
+    const v = new THREE.Vector3(b.min.x + f[0] * (b.max.x - b.min.x), b.min.y + f[1] * (b.max.y - b.min.y), b.min.z + f[2] * (b.max.z - b.min.z));
+    return v.applyMatrix4(p.holder.matrixWorld);
+  }
+  return new THREE.Vector3(a.world[0], a.world[2], -a.world[1]);
+}
+const mj2three = (d) => new THREE.Vector3(d[0], d[2], -d[1]);
+function worldBox(list) {
+  const box = new THREE.Box3();
+  for (const p of list) for (const o of p.objs) if (o.isMesh) box.union(tmpBox.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld));
+  return box;
+}
+
+// ---------- render one step ----------
+let ghosts = [];
+window.renderStep = async (s) => {
+  for (const g of ghosts) g.parent.remove(g); ghosts = [];
+  const pose = s.pose || [0, 0, 0, 0, 0, 0];
+  ['shoulder', 'upper_arm', 'lower_arm', 'wrist', 'gripper', 'moving_jaw_so101_v1'].forEach((b, i) => joints[b].rotation.set(0, 0, pose[i]));
+  root.position.set(0, 0, 0);
+  root.updateMatrixWorld(true);
+  const done = new Set(s.done || []), add = new Map((s.add || []).map((a) => [a.part, a]));
+  for (const p of Object.values(parts)) {
+    const on = done.has(p.key) || add.has(p.key) || !!(s.solo && s.solo.includes(p.key));
+    p.holder.visible = on;
+    if (!on) continue;
+    const hot = add.has(p.key) || (s.hot || []).includes(p.key);
+    for (const o of p.objs) {
+      if (o.isLineSegments) continue;
+      const k = o.userData.kind;
+      o.material = k === 'horn' ? (s.hornHot ? M.acc : hot ? M.accServo : M.servo) : k === 'servo' ? (hot ? M.accServo : M.servo) : (hot ? M.acc : M.grey);
+      if (k === 'horn' && s.noHorn) o.visible = false; else o.visible = true;
+    }
+  }
+  // ghosts at the exploded position + arrow endpoints
+  const arrows = [];
+  for (const [k, a] of add) {
+    const p = parts[k]; if (!a.dir) continue;
+    const off = mj2three(a.dir).normalize().multiplyScalar(a.dist || 0.05);
+    const g = new THREE.Group();
+    for (const o of p.objs) {
+      if (!o.visible) continue;
+      const c = o.isMesh ? new THREE.Mesh(o.geometry, M.ghost) : new THREE.LineSegments(o.geometry, M.edgeGhost);
+      c.matrixAutoUpdate = false; c.matrix.copy(o.matrixWorld); c.matrix.premultiply(new THREE.Matrix4().makeTranslation(off.x, off.y, off.z));
+      g.add(c);
+    }
+    scene.add(g); ghosts.push(g);
+    const c = worldBox([p]).getCenter(new THREE.Vector3());
+    arrows.push([c.clone().add(off), c.clone().add(off.clone().multiplyScalar(0.18))]);
+  }
+  // camera: fixed azimuth / elevation family, framed on s.frame (part keys) or on everything visible
+  const frameParts = (s.frame || [...done, ...add.keys(), ...(s.solo || [])]).map((k) => parts[k]);
+  const box = worldBox(frameParts);
+  for (const [k, a] of add) if (a.dir) { const off = mj2three(a.dir).normalize().multiplyScalar(a.dist || 0.05); box.union(tmpBox.copy(worldBox([parts[k]])).translate(off)); }
+  const c = box.getCenter(new THREE.Vector3()), r = box.getSize(new THREE.Vector3()).length() / 2;
+  const az = THREE.MathUtils.degToRad(s.az ?? 40), el = THREE.MathUtils.degToRad(s.el ?? 24);
+  const d = (r / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2))) * (s.zoom ?? 0.82);
+  camera.position.set(c.x + d * Math.cos(el) * Math.sin(az), c.y + d * Math.sin(el), c.z + d * Math.cos(el) * Math.cos(az));
+  camera.lookAt(c);
+  if (s.pan) { const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0), up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
+    camera.position.addScaledVector(right, s.pan[0] * r).addScaledVector(up, s.pan[1] * r); }
+  ground.visible = s.ground !== false;
+  key.position.set(c.x - 0.12, c.y + 0.8, c.z + 0.22); key.target.position.copy(c);
+  const sc = Math.max(0.25, r * 2.5); Object.assign(key.shadow.camera, { left: -sc, right: sc, top: sc, bottom: -sc, near: 0.05, far: 3 }); key.shadow.camera.updateProjectionMatrix();
+
+  const W = 2400, H = 1800;
+  renderer.setPixelRatio(1); renderer.setSize(W, H, false);
+  camera.aspect = W / H; camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+  renderer.render(scene, camera);
+
+  // ---------- 2D overlay at 2400 px (drawn on a copy, then downscaled) ----------
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const g = cv.getContext('2d'); g.drawImage(renderer.domElement, 0, 0);
+  const px = (v) => { const p = v.clone().project(camera); return [(p.x + 1) / 2 * W, (1 - p.y) / 2 * H]; };
+  const u = W / 1200;   // overlay sizes are given for the 1200 px output
+  // motion arrows: dashed trail + head
+  for (const [from, to] of arrows) {
+    const [x0, y0] = px(from), [x1, y1] = px(to), ang = Math.atan2(y1 - y0, x1 - x0);
+    g.save(); g.strokeStyle = ACC; g.lineWidth = 3.2 * u; g.lineCap = 'round'; g.setLineDash([2 * u, 9 * u]);
+    g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1 - Math.cos(ang) * 14 * u, y1 - Math.sin(ang) * 14 * u); g.stroke(); g.setLineDash([]);
+    g.fillStyle = ACC; g.beginPath(); g.moveTo(x1, y1);
+    g.lineTo(x1 - Math.cos(ang - 0.42) * 22 * u, y1 - Math.sin(ang - 0.42) * 22 * u);
+    g.lineTo(x1 - Math.cos(ang + 0.42) * 22 * u, y1 - Math.sin(ang + 0.42) * 22 * u); g.closePath(); g.fill(); g.restore();
+  }
+  const dot = (x, y, txt, fill = INK, col = '#fff', R = 15) => {
+    g.beginPath(); g.arc(x, y, R * u, 0, 7); g.fillStyle = fill; g.fill(); g.lineWidth = 2.5 * u; g.strokeStyle = '#fff'; g.stroke();
+    g.fillStyle = col; g.font = `600 ${R * 1.15 * u}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, x, y + 0.5 * u);
+  };
+  // zero / alignment mark on a horn: short line across the horn face, from its centre along the given direction
+  for (const z of s.marks || []) {
+    const c0 = anchor(z.at), dir = mj2three(z.dir).normalize(), [x0, y0] = px(c0), [x1, y1] = px(c0.clone().addScaledVector(dir, z.len || 0.009));
+    g.strokeStyle = '#fff'; g.lineWidth = 7 * u; g.lineCap = 'round'; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+    g.strokeStyle = INK; g.lineWidth = 3.5 * u; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+  }
+  // board glyph (no mesh in the model): flat rectangle with a connector row, placed at an anchor
+  if (s.board) {
+    const [x, y] = px(anchor(s.board.at)), w = 120 * u, h = 74 * u, bx = x - w / 2 + (s.board.off?.[0] || 0) * u, by = y - h / 2 + (s.board.off?.[1] || 0) * u;
+    g.fillStyle = '#2E3A33'; g.strokeStyle = '#fff'; g.lineWidth = 2.5 * u; g.beginPath(); g.roundRect(bx, by, w, h, 6 * u); g.fill(); g.stroke();
+    g.fillStyle = '#E9E9E4'; for (let i = 0; i < 4; i++) g.fillRect(bx + 14 * u + i * 24 * u, by + 12 * u, 16 * u, 10 * u);
+    g.fillStyle = '#9CA39E'; g.fillRect(bx + w - 30 * u, by + h - 26 * u, 20 * u, 14 * u);
+    s.board.px = [bx + w / 2, by + h / 2];
+  }
+  // cable path (daisy chain): polyline through anchors, rounded
+  const cable = s.cable || (s.cableBoard && ['board', s.cableBoard]);
+  if (cable) {
+    const pts = cable.map((a) => (a === 'board' ? s.board.px : px(anchor(a))));
+    g.save(); g.strokeStyle = '#fff'; g.lineWidth = 9 * u; g.lineJoin = g.lineCap = 'round';
+    const path = () => { g.beginPath(); g.moveTo(...pts[0]); for (let i = 1; i < pts.length; i++) { const [xa, ya] = pts[i - 1], [xb, yb] = pts[i]; g.quadraticCurveTo(xa + (xb - xa) * 0.5 + (yb - ya) * 0.12, ya + (yb - ya) * 0.5 - (xb - xa) * 0.12, xb, yb); } };
+    path(); g.stroke(); g.strokeStyle = ACC; g.lineWidth = 4.5 * u; path(); g.stroke(); g.restore();
+  }
+  // numbered callouts on the model + legend with screw glyphs (sizes only; legend text is language-neutral)
+  const callouts = s.screws || [];
+  callouts.forEach((cl, i) => { for (const a of [].concat(cl.at)) { const [x, y] = px(anchor(a)); dot(x, y, String(i + 1)); } });
+  for (const d of s.dots || []) { const [x, y] = px(anchor(d.at)); dot(x, y, d.n, d.acc ? ACC : INK, '#fff', d.r || 15); }
+  // servo ID tags (language-neutral: just the number)
+  for (const t of s.tags || []) {
+    const [x, y] = px(anchor(t.at)), [dx, dy] = t.off || [40, -40];
+    g.strokeStyle = INK; g.lineWidth = 1.6 * u; g.beginPath(); g.moveTo(x, y); g.lineTo(x + dx * u, y + dy * u); g.stroke();
+    g.beginPath(); g.arc(x, y, 3.5 * u, 0, 7); g.fillStyle = INK; g.fill();
+    const w = 54 * u, h = 30 * u, bx = x + dx * u - w / 2, by = y + dy * u - h / 2;
+    g.fillStyle = '#fff'; g.strokeStyle = INK; g.lineWidth = 2 * u; g.beginPath(); g.roundRect(bx, by, w, h, 4 * u); g.fill(); g.stroke();
+    g.fillStyle = INK; g.font = `600 ${17 * u}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('ID ' + t.id, bx + w / 2, by + h / 2 + 0.5 * u);
+  }
+  if (callouts.length) {
+    const rowH = 44 * u, pad = 16 * u, w = 250 * u, h = pad * 2 + rowH * callouts.length - 8 * u, bx = 28 * u, by = H - h - 28 * u;
+    g.fillStyle = 'rgba(255,255,255,0.92)'; g.beginPath(); g.roundRect(bx, by, w, h, 6 * u); g.fill();
+    callouts.forEach((cl, i) => {
+      const cy = by + pad + rowH * i + 18 * u;
+      dot(bx + pad + 15 * u, cy, String(i + 1));
+      // screw glyph: head + threaded shank, M3 thicker / bigger head than M2, both 6 mm long
+      const m3 = /M3/.test(cl.label), sx = bx + pad + 44 * u, shaftW = (m3 ? 6 : 4) * u, headW = (m3 ? 15 : 11) * u, len = 30 * u;
+      g.fillStyle = INK; g.beginPath(); g.roundRect(sx, cy - headW / 2, 7 * u, headW, 2 * u); g.fill();
+      g.fillRect(sx + 7 * u, cy - shaftW / 2, len, shaftW);
+      g.strokeStyle = '#fff'; g.lineWidth = 1.2 * u; for (let t = sx + 11 * u; t < sx + 7 * u + len - 2 * u; t += 4 * u) { g.beginPath(); g.moveTo(t, cy - shaftW / 2); g.lineTo(t + 2 * u, cy + shaftW / 2); g.stroke(); }
+      g.fillStyle = INK; g.font = `600 ${20 * u}px ${FONT}`; g.textAlign = 'left'; g.textBaseline = 'middle';
+      g.fillText(cl.label, sx + len + 22 * u, cy + 1 * u);
+    });
+  }
+  // outputs
+  const out = {};
+  for (const w of [1200, 600]) {
+    const o = document.createElement('canvas'); o.width = w; o.height = Math.round(w * H / W);
+    const og = o.getContext('2d'); og.imageSmoothingQuality = 'high';
+    // two-pass downscale for the small size (sharper than one big step)
+    if (w === 600) { const mid = document.createElement('canvas'); mid.width = 1200; mid.height = 900; const mg = mid.getContext('2d'); mg.imageSmoothingQuality = 'high'; mg.drawImage(cv, 0, 0, 1200, 900); og.drawImage(mid, 0, 0, w, o.height); }
+    else og.drawImage(cv, 0, 0, w, o.height);
+    out[w + '.webp'] = o.toDataURL('image/webp', s.qWebp || 0.82);
+    out[w + '.jpg'] = o.toDataURL('image/jpeg', s.qJpg || 0.84);
+  }
+  return out;
+};
+// world (MuJoCo frame, mm) boxes and joint origins / axes for writing step specs: await info(pose)
+window.info = (pose = [0, 0, 0, 0, 0, 0]) => {
+  ['shoulder', 'upper_arm', 'lower_arm', 'wrist', 'gripper', 'moving_jaw_so101_v1'].forEach((b, i) => joints[b].rotation.set(0, 0, pose[i]));
+  root.updateMatrixWorld(true);
+  const mm = (v) => [v.x, -v.z, v.y].map((x) => Math.round(x * 1000));
+  const o = { parts: {}, joints: {} };
+  for (const p of Object.values(parts)) { const b = worldBox([p]); o.parts[p.key] = [mm(b.min), mm(b.max)]; }
+  for (const [n, j] of Object.entries(joints)) { const ax = new THREE.Vector3(0, 0, 1).transformDirection(j.matrixWorld); o.joints[n] = [mm(j.getWorldPosition(new THREE.Vector3())), [ax.x, -ax.z, ax.y].map((x) => +x.toFixed(2))]; }
+  return o;
+};
+window.ready = true;
+</script>
+</body></html>
