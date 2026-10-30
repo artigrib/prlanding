@@ -105,11 +105,11 @@ await check('plan so101: totals, variant guard, checker, local state', '/plan/so
   p.on('request', r => { const u = new URL(r.url()); if (u.origin !== new URL(BASE).origin && !IGNORE.test(r.url())) offsite.push(r.url()); });
   await p.waitForSelector('#plan[data-ready="1"]');
   const total = async () => (await p.locator('[data-testid=plan-total-eur]').innerText()).trim();
-  if (await total() !== '205–223 €') throw new Error('follower total ' + await total());
+  if (await total() !== '206–224 €') throw new Error('follower total ' + await total());
   if (!/^\d\d\.\d\d\.20\d\d$/.test(await p.locator('#stamp-date').innerText())) throw new Error('price stamp date');
   if (!/Pozor na variantu/.test((await p.locator('.plan-warn h2').innerText()).replace(/\s+/g, ' '))) throw new Error('variant warning');
   await p.check('input[name=robot][value=pair]');
-  if (await total() !== '386–412 €') throw new Error('pair total ' + await total());
+  if (await total() !== '388–414 €') throw new Error('pair total ' + await total());
   if (!/OpenELAB[\s\S]*1\/191/.test(await p.locator('#variant-flags').innerText()) || !(await p.locator('#variant-flags .pb-no').count())) throw new Error('OpenELAB C001 not flagged nedoporučujeme');
   if ((await p.locator('.plan-grp').count()) < 4) throw new Error('supplier groups');
   if (!/\/navody\/so101-sestaveni\/$/.test(await p.locator('[data-testid=plan-guide-link]').evaluate(a => a.href))) throw new Error('build time not linked to the guide');

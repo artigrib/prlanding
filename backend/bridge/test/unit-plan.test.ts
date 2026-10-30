@@ -26,8 +26,8 @@ test('bridge copies of the data and the plan core match the site sources (run no
 });
 
 test('core: plan totals and variant check through the bridge copy', () => {
-  assert.deepEqual(buildPlan(PLAN_DATA, { robot: 'follower_12v', print: 'self' }).totals.landed_eur, [205, 223]);
-  assert.deepEqual(buildPlan(PLAN_DATA, { robot: 'pair', print: 'self' }).totals.landed_eur, [386, 412]);
+  assert.deepEqual(buildPlan(PLAN_DATA, { robot: 'follower_12v', print: 'self' }).totals.landed_eur, [206, 224]);
+  assert.deepEqual(buildPlan(PLAN_DATA, { robot: 'pair', print: 'self' }).totals.landed_eur, [388, 414]);
   assert.equal(checkPartVariant(PLAN_DATA, 'STS3215 C001 7.4V 1/191', 'leader:2').verdict, 'inconsistent');
   assert.deepEqual(buildPlan(PLAN_DATA_SVRN, { robot: 'robot_only', module: 'flipper', print: 'self' }).totals.landed_eur, [103, 106]);
   assert.deepEqual(buildPlan(PLAN_DATA_SVRN, { robot: 'starter', module: 'flipper', print: 'self' }).totals.landed_eur, [241, 248]);

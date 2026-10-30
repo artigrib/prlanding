@@ -2,7 +2,7 @@
  "$schema": "./so101.schema.json",
  "meta": {
   "robot": "so101",
-  "generated": "2026-10-29",
+  "generated": "2026-10-30",
   "fx_czk_per_eur": 24.2,
   "fx_ron_per_eur": 5.09,
   "fx_note": "Assumption: CNB daily rate not fetched; update before use.",
@@ -632,16 +632,23 @@
      "price": 26.45,
      "currency": "EUR",
      "per": 1,
-     "stock": "Backorder: 147 expected 2026-11-18",
+     "stock": "Backorder: 141 expected 2026-11-18",
      "delivery": "3–4 weeks",
      "eta_days": [
       21,
       28
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
-     "recommend": true
+     "recommend": true,
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://eckstein-shop.de/feetech-st-3215-c018-servo-en"
+     }
     },
     {
      "id": "openelab",
@@ -656,10 +663,17 @@
      "delivery": "unverified",
      "eta_days": null,
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
      "recommend": true,
-     "note": "Warehouse not stated on listing"
+     "note": "Warehouse not stated on listing",
+     "reviews": {
+      "rating": null,
+      "count": null,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://openelab.io/cs/products/feetech-sts3215-c018-servo-12v"
+     }
     },
     {
      "id": "aliexpress",
@@ -682,7 +696,14 @@
      "recommend": true,
      "flag": "check_label",
      "flag_reason": "Multi-variant listing: pick 12 V, 1/345 (C018/C047).",
-     "flag_reason_cs": "Inzerát s více variantami: vyberte 12 V, 1/345 (C018/C047)."
+     "flag_reason_cs": "Inzerát s více variantami: vyberte 12 V, 1/345 (C018/C047).",
+     "reviews": {
+      "rating": null,
+      "count": null,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.aliexpress.com/item/1005009214017320.html"
+     }
     }
    ]
   },
@@ -721,13 +742,20 @@
       3
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
      "recommend": true,
      "note": "Variant code not shown on category page – confirm C001",
      "flag": "variant_not_shown",
      "flag_reason": "Variant code not shown on the category page: confirm C001 / 1/345 on the product page and the label.",
-     "flag_reason_cs": "Kód varianty není v kategorii vidět: ověřte C001 / 1/345 na stránce produktu a na štítku."
+     "flag_reason_cs": "Kód varianty není v kategorii vidět: ověřte C001 / 1/345 na stránce produktu a na štítku.",
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://eckstein-shop.de/Feetech-STS3215-74V-19kgcm-plastic-case-metal-gear-magnetic-code-dual-shaft-TTL-serial-servo"
+     }
     },
     {
      "id": "openelab",
@@ -742,13 +770,20 @@
      "delivery": "unverified",
      "eta_days": null,
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
      "recommend": false,
      "note": "Listing text says 1/191 – contradicts C001 spec",
      "flag": "mislabeled",
      "flag_reason": "Listing text shows C001 as 1/191 (C001 is 1/345). Seen 2026-10-29.",
-     "flag_reason_cs": "Inzerát uvádí C001 jako 1/191 (C001 má 1/345). Zjištěno 29. 10. 2026."
+     "flag_reason_cs": "Inzerát uvádí C001 jako 1/191 (C001 má 1/345). Zjištěno 29. 10. 2026.",
+     "reviews": {
+      "rating": null,
+      "count": null,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://openelab.io/cs/products/feetech-sts3215-c001-servo"
+     }
     },
     {
      "id": "sigmanortec",
@@ -766,10 +801,17 @@
       2
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
      "recommend": true,
-     "note": "≈39 € – expensive; page date stamp looked stale"
+     "note": "≈39 € – expensive; page date stamp looked stale",
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://sigmanortec.ro/en/servo-smart-serial-sts3215-360-degrees-19kg-12-bit-encoder-74v"
+     }
     },
     {
      "id": "aliexpress",
@@ -792,7 +834,14 @@
      "recommend": true,
      "flag": "check_label",
      "flag_reason": "Variant selector: choose the exact code per piece.",
-     "flag_reason_cs": "Výběr varianty: zvolte přesný kód pro každý kus."
+     "flag_reason_cs": "Výběr varianty: zvolte přesný kód pro každý kus.",
+     "reviews": {
+      "rating": null,
+      "count": null,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.aliexpress.com/item/1005009355550327.html"
+     }
     }
    ]
   },
@@ -827,13 +876,20 @@
      "delivery": "unverified",
      "eta_days": null,
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
      "recommend": true,
      "note": "Only EU listing found for C044",
      "flag": "check_label",
      "flag_reason": "Same shop mislabels C001; check that the ratio on the listing and the label matches.",
-     "flag_reason_cs": "Stejný obchod má chybný popis u C001; zkontrolujte převod v inzerátu i na štítku."
+     "flag_reason_cs": "Stejný obchod má chybný popis u C001; zkontrolujte převod v inzerátu i na štítku.",
+     "reviews": {
+      "rating": null,
+      "count": null,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://openelab.io/cs/products/feetech-sts3215-c044-servo-7"
+     }
     },
     {
      "id": "aliexpress",
@@ -856,7 +912,14 @@
      "recommend": true,
      "flag": "check_label",
      "flag_reason": "Variant selector: choose the exact code per piece.",
-     "flag_reason_cs": "Výběr varianty: zvolte přesný kód pro každý kus."
+     "flag_reason_cs": "Výběr varianty: zvolte přesný kód pro každý kus.",
+     "reviews": {
+      "rating": null,
+      "count": null,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.aliexpress.com/item/1005009355550327.html"
+     }
     }
    ]
   },
@@ -883,16 +946,23 @@
      "price": 22.35,
      "currency": "EUR",
      "per": 1,
-     "stock": "Backorder: 32 expected 2026-11-04",
-     "delivery": "7–9 days",
+     "stock": "Backorder: 38 expected 2026-11-04",
+     "delivery": "10–12 days",
      "eta_days": [
-      7,
-      9
+      10,
+      12
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
-     "recommend": true
+     "recommend": true,
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://eckstein-shop.de/feetech/servo-sts3215-C046-7-4v-19kg-0-360-magnetencoder_1"
+     }
     },
     {
      "id": "openelab",
@@ -907,12 +977,19 @@
      "delivery": "unverified",
      "eta_days": null,
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
      "recommend": true,
      "flag": "check_label",
      "flag_reason": "Same shop mislabels C001; check that the ratio on the listing and the label matches.",
-     "flag_reason_cs": "Stejný obchod má chybný popis u C001; zkontrolujte převod v inzerátu i na štítku."
+     "flag_reason_cs": "Stejný obchod má chybný popis u C001; zkontrolujte převod v inzerátu i na štítku.",
+     "reviews": {
+      "rating": null,
+      "count": null,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://openelab.io/cs/products/feetech-sts3215-c046-servo"
+     }
     },
     {
      "id": "aliexpress",
@@ -935,7 +1012,14 @@
      "recommend": true,
      "flag": "check_label",
      "flag_reason": "Variant selector: choose the exact code per piece.",
-     "flag_reason_cs": "Výběr varianty: zvolte přesný kód pro každý kus."
+     "flag_reason_cs": "Výběr varianty: zvolte přesný kód pro každý kus.",
+     "reviews": {
+      "rating": null,
+      "count": null,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.aliexpress.com/item/1005009355550327.html"
+     }
     }
    ]
   },
@@ -969,16 +1053,23 @@
      "price": 5.95,
      "currency": "EUR",
      "per": 1,
-     "stock": "Backorder: 82 expected 2026-10-30",
-     "delivery": "2–4 days",
+     "stock": "Available",
+     "delivery": "1–3 days",
      "eta_days": [
-      2,
-      4
+      1,
+      3
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
-     "recommend": true
+     "recommend": true,
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://eckstein-shop.de/WaveShare-Serial-Bus-Servo-Driver-Board-for-ST-SC-Serial-Bus-Servos-EN"
+     }
     },
     {
      "id": "aliexpress",
@@ -998,7 +1089,14 @@
      "vat_customs": "Non-EU (China) via AliExpress: VAT collected at checkout through IOSS (parcel ≤150 €). Since 1 Jul 2026 an EU flat customs duty of 3 € per tariff line applies to ≤150 € parcels (to Jul 2028); whether AliExpress shows it in the price is unverified. Over 150 €: normal import duty + VAT + carrier clearance fee.",
      "checked": "2026-10-27",
      "status": "carried",
-     "recommend": true
+     "recommend": true,
+     "reviews": {
+      "rating": null,
+      "count": null,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.aliexpress.com/item/1005012794471621.html"
+     }
     },
     {
      "id": "amazon_fr",
@@ -1013,10 +1111,11 @@
      "delivery": "unverified",
      "eta_days": null,
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
      "recommend": true,
-     "note": "README list price, not checked on Amazon"
+     "note": "README list price, not checked on Amazon",
+     "reviews": null
     }
    ]
   },
@@ -1054,9 +1153,16 @@
       3
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
-     "recommend": true
+     "recommend": true,
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://eckstein-shop.de/sengoog-12v5a-wandnetzteil-eu-stecker-ce_1"
+     }
     },
     {
      "id": "eckstein_gaofande",
@@ -1074,9 +1180,16 @@
       3
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
-     "recommend": true
+     "recommend": true,
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://eckstein-shop.de/gaofande-12v5a-eu-wandnetzteil-gfd-a9-ce_1"
+     }
     }
    ]
   },
@@ -1110,9 +1223,16 @@
       3
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
-     "recommend": true
+     "recommend": true,
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://eckstein-shop.de/boyaxuan-5v4a-eu-wandnetzteil-usb-hub-gs_1"
+     }
     },
     {
      "id": "eckstein_waveshare",
@@ -1123,16 +1243,23 @@
      "price": 9.65,
      "currency": "EUR",
      "per": 1,
-     "stock": "Backorder: 8 expected 2026-11-13",
-     "delivery": "~3 weeks",
+     "stock": "Available",
+     "delivery": "1–3 days",
      "eta_days": [
-      16,
-      21
+      1,
+      3
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
-     "recommend": true
+     "recommend": true,
+     "reviews": {
+      "rating": null,
+      "count": 0,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://eckstein-shop.de/WaveShare-Power-Supply-5V-4A-for-Jetson-Nano-55x21mm-DC-Jack-EN"
+     }
     }
    ]
   },
@@ -1152,10 +1279,10 @@
     {
      "id": "alza",
      "supplier": "alza",
-     "label": "Alza – AlzaPower Core USB-C 3.2 Gen1 1 m",
+     "label": "Alza – AlzaPower Core USB-A → USB-C 3.2 Gen1 1 m",
      "country": "CZ",
-     "url": "https://www.alza.cz/EN/alzapower-core-usb-c-31-gen1-1m-white-d5472814.htm",
-     "price": 179,
+     "url": "https://www.alza.cz/alzapower-core-usb-c-31-gen1-1m-white-d5472814.htm",
+     "price": 199,
      "currency": "CZK",
      "per": 1,
      "stock": ">10 pcs",
@@ -1165,9 +1292,18 @@
       2
      ],
      "vat_customs": "CZ seller: price incl. 21 % VAT unless seller is a non-VAT payer (then price is final). No customs.",
-     "checked": "2026-10-27",
-     "status": "carried",
-     "recommend": true
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": true,
+     "note": "Original /EN/ link unavailable as of 30 Oct; replaced with the Czech page of the same product (title now: USB-A to USB-C 3.2 Gen 1, 1 m).",
+     "note_cs": "Původní odkaz /EN/ nedostupné k 30.10.; nahrazen českou stránkou téhož produktu (nadpis nyní: USB-A na USB-C 3.2 Gen 1, 1 m).",
+     "reviews": {
+      "rating": 4.7,
+      "count": 2096,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.alza.cz/alzapower-core-usb-c-31-gen1-1m-white-d5472814.htm"
+     }
     },
     {
      "id": "aliexpress",
@@ -1188,7 +1324,14 @@
      "checked": "2026-10-27",
      "status": "carried",
      "recommend": true,
-     "note": "Check data-capable variant"
+     "note": "Check data-capable variant",
+     "reviews": {
+      "rating": null,
+      "count": null,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.aliexpress.com/item/1005009819673094.html"
+     }
     }
    ]
   },
@@ -1219,9 +1362,16 @@
       2
      ],
      "vat_customs": "CZ seller: price incl. 21 % VAT unless seller is a non-VAT payer (then price is final). No customs.",
-     "checked": "2026-10-27",
-     "status": "carried",
-     "recommend": true
+     "checked": "2026-10-30",
+     "status": "verified",
+     "recommend": true,
+     "reviews": {
+      "rating": 3.9,
+      "count": 14,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.hornbach.cz/p/kutilske-sverky-sada-50-200-mm-2dilna/7472832/"
+     }
     }
    ],
    "other_options": [
@@ -1256,9 +1406,10 @@
      "delivery": "—",
      "eta_days": null,
      "vat_customs": "—",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
-     "recommend": true
+     "recommend": true,
+     "reviews": null
     }
    ]
   },
@@ -1286,10 +1437,11 @@
      "delivery": "unverified",
      "eta_days": null,
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
      "recommend": true,
-     "note": "README list price"
+     "note": "README list price",
+     "reviews": null
     }
    ]
   },
@@ -1328,7 +1480,14 @@
      "checked": "2026-10-27",
      "status": "carried",
      "recommend": true,
-     "note": "Standard (7.4 V follower) kit 6386.72 CZK; Seeed printed-parts variant +931.28 CZK"
+     "note": "Standard (7.4 V follower) kit 6386.72 CZK; Seeed printed-parts variant +931.28 CZK",
+     "reviews": {
+      "rating": null,
+      "count": null,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.aliexpress.com/item/1005008883199466.html"
+     }
     },
     {
      "id": "openelab",
@@ -1343,13 +1502,20 @@
      "delivery": "China warehouse if OOS",
      "eta_days": null,
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
      "recommend": false,
      "note": "Printed skeleton add-on 38.80 €; assembled arm 388.45 €",
      "flag": "out_of_stock",
      "flag_reason": "Sold out on 2026-10-29.",
-     "flag_reason_cs": "Vyprodáno k 29. 10. 2026."
+     "flag_reason_cs": "Vyprodáno k 29. 10. 2026.",
+     "reviews": {
+      "rating": null,
+      "count": null,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://openelab.io/pl/products/seeed-studio-so-101-pro-servo-motor-kit-lerobot"
+     }
     }
    ]
   },
@@ -1387,7 +1553,14 @@
      "vat_customs": "Non-EU (China) via AliExpress: VAT collected at checkout through IOSS (parcel ≤150 €). Since 1 Jul 2026 an EU flat customs duty of 3 € per tariff line applies to ≤150 € parcels (to Jul 2028); whether AliExpress shows it in the price is unverified. Over 150 €: normal import duty + VAT + carrier clearance fee.",
      "checked": "2026-10-27",
      "status": "carried",
-     "recommend": true
+     "recommend": true,
+     "reviews": {
+      "rating": null,
+      "count": null,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://www.aliexpress.com/item/1005008883199466.html"
+     }
     },
     {
      "id": "openelab_printed",
@@ -1402,9 +1575,16 @@
      "delivery": "unverified",
      "eta_days": null,
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
-     "recommend": true
+     "recommend": true,
+     "reviews": {
+      "rating": null,
+      "count": null,
+      "checked": "2026-10-30",
+      "signals": [],
+      "url": "https://openelab.io/pl/products/seeed-studio-so-101-pro-servo-motor-kit-lerobot"
+     }
     },
     {
      "id": "prusa",
@@ -1419,10 +1599,11 @@
      "delivery": "unverified",
      "eta_days": null,
      "vat_customs": "CZ seller: price incl. 21 % VAT unless seller is a non-VAT payer (then price is final). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
      "recommend": true,
-     "note": "Price not published for this part set; CZ shipping 99 Kč"
+     "note": "Price not published for this part set; CZ shipping 99 Kč",
+     "reviews": null
     },
     {
      "id": "craftcloud",
@@ -1437,10 +1618,11 @@
      "delivery": "per vendor",
      "eta_days": null,
      "vat_customs": "Depends on chosen vendor (EU vendor = EU VAT; non-EU = import)",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
      "recommend": true,
-     "note": "No minimum order; quote needs upload"
+     "note": "No minimum order; quote needs upload",
+     "reviews": null
     }
    ]
   },
@@ -1474,10 +1656,11 @@
      "delivery": "unverified",
      "eta_days": null,
      "vat_customs": "CZ seller: price incl. 21 % VAT unless seller is a non-VAT payer (then price is final). No customs.",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
      "recommend": true,
-     "note": "Price not published for this part set; CZ shipping 99 Kč"
+     "note": "Price not published for this part set; CZ shipping 99 Kč",
+     "reviews": null
     },
     {
      "id": "craftcloud",
@@ -1492,10 +1675,11 @@
      "delivery": "per vendor",
      "eta_days": null,
      "vat_customs": "Depends on chosen vendor (EU vendor = EU VAT; non-EU = import)",
-     "checked": "2026-10-29",
+     "checked": "2026-10-30",
      "status": "verified",
      "recommend": true,
-     "note": "No minimum order; quote needs upload"
+     "note": "No minimum order; quote needs upload",
+     "reviews": null
     }
    ],
    "other_options": [
