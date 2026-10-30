@@ -152,6 +152,18 @@
     0,
     0
    ]
+  },
+  "botland": {
+   "name": "Botland",
+   "country": "PL",
+   "url": "https://botland.store/",
+   "vat": "eu_oss",
+   "shipping_eur": [
+    8,
+    15
+   ],
+   "shipping_status": "estimate",
+   "shipping_note": "GLS from 8.07 € (seen 2026-10-30)"
   }
  },
  "variants": {
@@ -415,20 +427,6 @@
    "print_grams": 700,
    "alternatives": [
     {
-     "component": "so101.bundle.eckstein_standard",
-     "source": "eckstein",
-     "note": "EU shop, 7.4 V standard pair with printed parts (PLA/PETG-CF), 2 Waveshare boards, 2 USB-C cables, 2× 5 V 4 A supplies and 4 clamps (shop’s contents list). Price = configurator sum of leader + follower; the page also shows “from 228 €”: check the final total.",
-     "note_cs": "Obchod v EU, standardní pár 7,4 V s tištěnými díly (PLA/PETG-CF), 2 deskami Waveshare, 2 kabely USB-C, 2 zdroji 5 V 4 A a 4 svěrkami (podle popisu obchodu). Cena = součet leaderu a followeru v konfigurátoru; stránka uvádí i „od 228 €“: konečnou cenu ověřte.",
-     "still_needed": [
-      "Phillips screwdrivers #0 and #1",
-      "Check whether the arms come assembled or as parts (not clear on the page)"
-     ],
-     "still_needed_cs": [
-      "Křížové šroubováky PH0 a PH1",
-      "Ověřte, zda jsou ruce smontované, nebo v dílech (ze stránky není jasné)"
-     ]
-    },
-    {
      "component": "so101.printed.follower",
      "source": "eckstein",
      "note": "Printed parts only: follower set from 29.99 €, leader set 29.99 € (PLA; PETG-CF up to 34.99 €). Buy the servos and electronics from this plan.",
@@ -504,55 +502,12 @@
    "print_grams": 700,
    "alternatives": [
     {
-     "component": "so101.bundle.seeed_pro",
-     "source": "aliexpress",
-     "note": "One parcel with the official Seeed mix of servos (lowest wrong-variant risk). Ships from China: 2–4 weeks.",
-     "note_cs": "Jeden balík s oficiální sestavou serv od Seeedu (nejnižší riziko špatné varianty). Posílá se z Číny: 2–4 týdny.",
-     "import": {
-      "vat_rate": 0.21,
-      "duty_rate": [
-       0,
-       0.027
-      ],
-      "clearance_eur": [
-       0,
-       25
-      ],
-      "status": "estimate",
-      "note": "Over 150 €: no IOSS. If the price does not include VAT, you pay 21 % import VAT, duty under the tariff (servo motors 8501 ≈ 2.7 %, our assumption) and the carrier’s clearance fee on delivery. Range is our estimate.",
-      "note_cs": "Nad 150 € neplatí IOSS. Pokud cena DPH neobsahuje, zaplatíte při doručení 21 % DPH z dovozu, clo podle sazebníku (servomotory 8501 ≈ 2,7 %, náš předpoklad) a poplatek dopravce za proclení. Rozpětí je náš odhad."
-     },
-     "still_needed": [
-      "Printed parts (or the Seeed printed variant, +931 CZK)",
-      "Power supplies 5 V ≥4 A and 12 V ≥5 A (the kit list at Botland names none)",
-      "Phillips screwdrivers #0 and #1",
-      "Screws: the kit list names 8; check what comes with the servos"
-     ],
-     "still_needed_cs": [
-      "Tištěné díly (nebo varianta Seeed s díly, +931 Kč)",
-      "Zdroje 5 V ≥4 A a 12 V ≥5 A (seznam sady u obchodu Botland žádný neuvádí)",
-      "Křížové šroubováky PH0 a PH1",
-      "Šrouby: seznam sady uvádí 8 ks; zkontrolujte, co přijde se servy"
-     ],
-     "contents_source": {
-      "label": "Botland: SO-ARM101 Pro Servo Motor Kit (contents)",
-      "url": "https://botland.store/robot-arms/29177-so-arm101-pro-servo-motor-kit-a-set-of-servo-motors-for-building-the-lerobot-arm-seeedstudio-114993667.html",
-      "checked": "2026-10-30"
-     }
-    },
-    {
-     "component": "so101.bundle.eckstein_pro",
+     "component": "so101.printed.follower",
      "source": "eckstein",
-     "note": "EU shop, kit with printed parts in PETG-CF/PA6-GF, 2 boards, USB-C cables, a 5 V 4 A and a 12 V 5 A supply and clamps (shop’s contents list). Price = configurator sum of leader + follower; the page shows a placeholder base price.",
-     "note_cs": "Obchod v EU, sada s tištěnými díly (PETG-CF/PA6-GF), 2 deskami, kabely USB-C, zdroji 5 V 4 A a 12 V 5 A a svěrkami (podle popisu obchodu). Cena = součet leaderu a followeru v konfigurátoru; základní cena na stránce je zástupná.",
-     "still_needed": [
-      "Phillips screwdrivers #0 and #1",
-      "Check whether the arms come assembled or as parts (not clear on the page)"
-     ],
-     "still_needed_cs": [
-      "Křížové šroubováky PH0 a PH1",
-      "Ověřte, zda jsou ruce smontované, nebo v dílech (ze stránky není jasné)"
-     ]
+     "note": "Printed parts only: follower set from 29.99 €, leader set 29.99 € (PLA; PETG-CF up to 34.99 €). Buy the servos and electronics from this plan.",
+     "note_cs": "Jen tištěné díly: sada followeru od 29,99 €, leaderu 29,99 € (PLA; PETG-CF až 34,99 €). Serva a elektroniku kupte podle tohoto plánu.",
+     "still_needed": [],
+     "still_needed_cs": []
     }
    ]
   },
@@ -639,6 +594,872 @@
    "print_grams": 350
   }
  },
+ "kits_note": "Ready-made kits for the comparison at the top of the plan. landed_eur_cz is checked against plan-core kitLanded() by the data check. We pick the cheapest landed total among verified, in-stock kits with the right servo mix; no affiliate links.",
+ "kits": [
+  {
+   "id": "eckstein_standard_pair",
+   "name": "Eckstein SO-ARM101 Standard dual-arm kit 7.4 V (ER01050)",
+   "name_cs": "Eckstein SO-ARM101 Standard, sada pro pár 7,4 V (ER01050)",
+   "seller": "eckstein",
+   "url": "https://eckstein-shop.de/lerobot-soarm101-standard-dual-arm-7-4v_1",
+   "configs": [
+    "pair_74v"
+   ],
+   "price": [
+    422.99,
+    422.99
+   ],
+   "currency": "EUR",
+   "price_note": "Configurator: leader PLA 223.99 € + follower PLA 199 € (the follower alone, ER01050-F, is also 199 €). The page headline says “from 228 €”, which does not buy both arms: check the cart total.",
+   "price_note_cs": "Konfigurátor: leader PLA 223,99 € + follower PLA 199 € (samotný follower ER01050-F stojí také 199 €). Stránka uvádí „od 228 €“, za to ale obě ruce nekoupíte: konečnou cenu ověřte v košíku.",
+   "servos": {
+    "leader": {
+     "voltage_v": 7.4,
+     "ratios": {
+      "1/345": 1,
+      "1/191": 2,
+      "1/147": 3
+     }
+    },
+    "follower_74v": {
+     "voltage_v": 7.4,
+     "ratios": {
+      "1/345": 6
+     }
+    }
+   },
+   "includes": [
+    {
+     "component": "so101.servo.c001",
+     "qty": 7
+    },
+    {
+     "component": "so101.servo.c044",
+     "qty": 2
+    },
+    {
+     "component": "so101.servo.c046",
+     "qty": 3
+    },
+    {
+     "component": "so101.bus_board",
+     "qty": 2
+    },
+    {
+     "component": "so101.psu_5v",
+     "qty": 2
+    },
+    {
+     "component": "so101.usb_c",
+     "qty": 2
+    },
+    {
+     "component": "so101.clamps",
+     "qty": 4
+    },
+    {
+     "component": "so101.printed.follower",
+     "qty": 1
+    },
+    {
+     "component": "so101.printed.leader",
+     "qty": 1
+    }
+   ],
+   "missing": [],
+   "missing_print": false,
+   "assembled": "unknown",
+   "printed": "included",
+   "ships_cz": "unverified",
+   "buyers": "consumers",
+   "in_stock": true,
+   "stock": "Available (rarely stocked)",
+   "eta_days": [
+    1,
+    3
+   ],
+   "landed_eur_cz": [
+    430,
+    446
+   ],
+   "checked": "2026-10-30",
+   "status": "verified",
+   "note": "EU shop (DE). Servo mix per the page: leader 1× 1:345, 2× 1:191, 3× 1:147; follower 6× 1:345 (7.4 V platform). Codes are not named. Camera optional (+14.25 €).",
+   "note_cs": "Obchod v EU (DE). Serva podle stránky: leader 1× 1:345, 2× 1:191, 3× 1:147; follower 6× 1:345 (7,4 V). Kódy neuvádí. Kamera za příplatek (+14,25 €).",
+   "reviews": {
+    "rating": null,
+    "count": null,
+    "checked": "2026-10-30",
+    "signals": [],
+    "url": "https://eckstein-shop.de/lerobot-soarm101-standard-dual-arm-7-4v_1"
+   },
+   "missing_other": [
+    "Screws are not in the contents list (the servos usually come with theirs: check against the screw table)",
+    "Phillips screwdrivers #0 and #1",
+    "Whether the arms arrive assembled is not stated: plan for assembly"
+   ],
+   "missing_other_cs": [
+    "Šrouby v obsahu sady nejsou (serva je obvykle mají v balení: porovnejte s tabulkou šroubů)",
+    "Křížové šroubováky PH0 a PH1",
+    "Zda ruce přijdou smontované, stránka neuvádí: počítejte se stavbou"
+   ],
+   "import": null
+  },
+  {
+   "id": "eckstein_pro_pair",
+   "name": "Eckstein SO-ARM101 Pro dual-arm kit, 12 V follower (ER01060)",
+   "name_cs": "Eckstein SO-ARM101 Pro, sada pro pár s followerem 12 V (ER01060)",
+   "seller": "eckstein",
+   "url": "https://eckstein-shop.de/lerobot-soarm101-pro-dual-arm-12v_1",
+   "configs": [
+    "pair"
+   ],
+   "price": [
+    462.99,
+    462.99
+   ],
+   "currency": "EUR",
+   "price_note": "Configurator: leader PLA 223.99 € + follower PETG-CF 12 V 239 € (the follower alone, ER01060-01, is also 239 €). The page shows a placeholder “from 0.01 €”: check the cart total.",
+   "price_note_cs": "Konfigurátor: leader PLA 223,99 € + follower PETG-CF 12 V 239 € (samotný follower ER01060-01 stojí také 239 €). Stránka ukazuje zástupné „od 0,01 €“: konečnou cenu ověřte v košíku.",
+   "servos": {
+    "leader": {
+     "voltage_v": 7.4,
+     "ratios": {
+      "1/345": 1,
+      "1/191": 2,
+      "1/147": 3
+     }
+    },
+    "follower_12v": {
+     "voltage_v": 12,
+     "ratios": {
+      "1/345": 6
+     }
+    }
+   },
+   "includes": [
+    {
+     "component": "so101.servo.c018",
+     "qty": 6
+    },
+    {
+     "component": "so101.servo.c001",
+     "qty": 1
+    },
+    {
+     "component": "so101.servo.c044",
+     "qty": 2
+    },
+    {
+     "component": "so101.servo.c046",
+     "qty": 3
+    },
+    {
+     "component": "so101.bus_board",
+     "qty": 2
+    },
+    {
+     "component": "so101.psu_5v",
+     "qty": 1
+    },
+    {
+     "component": "so101.psu_12v",
+     "qty": 1
+    },
+    {
+     "component": "so101.usb_c",
+     "qty": 2
+    },
+    {
+     "component": "so101.clamps",
+     "qty": 4
+    },
+    {
+     "component": "so101.printed.follower",
+     "qty": 1
+    },
+    {
+     "component": "so101.printed.leader",
+     "qty": 1
+    }
+   ],
+   "missing": [],
+   "missing_print": false,
+   "assembled": "unknown",
+   "printed": "included",
+   "ships_cz": "unverified",
+   "buyers": "consumers",
+   "in_stock": true,
+   "stock": "Available (rarely stocked)",
+   "eta_days": [
+    1,
+    3
+   ],
+   "landed_eur_cz": [
+    470,
+    486
+   ],
+   "checked": "2026-10-30",
+   "status": "verified",
+   "note": "EU shop (DE). Leader 7.4 V: 1× 1:345, 2× 1:191, 3× 1:147; follower 6× STS3215 Pro 12 V 1:345 (30 kg·cm), 5 V 4 A and 12 V 5 A supplies. Codes are not named.",
+   "note_cs": "Obchod v EU (DE). Leader 7,4 V: 1× 1:345, 2× 1:191, 3× 1:147; follower 6× STS3215 Pro 12 V 1:345 (30 kg·cm), zdroje 5 V 4 A a 12 V 5 A. Kódy neuvádí.",
+   "reviews": {
+    "rating": null,
+    "count": null,
+    "checked": "2026-10-30",
+    "signals": [],
+    "url": "https://eckstein-shop.de/lerobot-soarm101-pro-dual-arm-12v_1"
+   },
+   "missing_other": [
+    "Screws are not in the contents list (the servos usually come with theirs: check against the screw table)",
+    "Phillips screwdrivers #0 and #1",
+    "Whether the arms arrive assembled is not stated: plan for assembly"
+   ],
+   "missing_other_cs": [
+    "Šrouby v obsahu sady nejsou (serva je obvykle mají v balení: porovnejte s tabulkou šroubů)",
+    "Křížové šroubováky PH0 a PH1",
+    "Zda ruce přijdou smontované, stránka neuvádí: počítejte se stavbou"
+   ],
+   "import": null
+  },
+  {
+   "id": "eckstein_standard_follower",
+   "name": "Eckstein SO-ARM101 Standard follower arm 7.4 V (ER01050-F)",
+   "name_cs": "Eckstein SO-ARM101 Standard, follower 7,4 V (ER01050-F)",
+   "seller": "eckstein",
+   "url": "https://eckstein-shop.de/SOARM101-LeRobot-OpenSource-6Axis-Robotic-Arm-Follower-Arm-Standard-Edition-74-V-Motor",
+   "configs": [
+    "follower_74v"
+   ],
+   "price": [
+    199,
+    199
+   ],
+   "currency": "EUR",
+   "price_note": "PLA black 199 €; other colours and PETG-CF up to 229 €.",
+   "price_note_cs": "PLA černá 199 €; jiné barvy a PETG-CF až 229 €.",
+   "servos": {
+    "follower_74v": {
+     "voltage_v": 7.4,
+     "ratios": {
+      "1/345": 6
+     }
+    }
+   },
+   "includes": [
+    {
+     "component": "so101.servo.c001",
+     "qty": 6
+    },
+    {
+     "component": "so101.bus_board",
+     "qty": 1
+    },
+    {
+     "component": "so101.psu_5v",
+     "qty": 1
+    },
+    {
+     "component": "so101.usb_c",
+     "qty": 1
+    },
+    {
+     "component": "so101.clamps",
+     "qty": 2
+    },
+    {
+     "component": "so101.printed.follower",
+     "qty": 1
+    }
+   ],
+   "missing": [],
+   "missing_print": false,
+   "assembled": "unknown",
+   "printed": "included",
+   "ships_cz": "unverified",
+   "buyers": "consumers",
+   "in_stock": true,
+   "stock": "Available",
+   "eta_days": [
+    1,
+    3
+   ],
+   "landed_eur_cz": [
+    207,
+    218
+   ],
+   "checked": "2026-10-30",
+   "status": "verified",
+   "note": "EU shop (DE). 6× STS3215 1:345 on the 7.4 V platform, Waveshare board, 5 V 4 A supply, USB-C cable, 2 clamps. Codes are not named.",
+   "note_cs": "Obchod v EU (DE). 6× STS3215 1:345 (7,4 V), deska Waveshare, zdroj 5 V 4 A, kabel USB-C, 2 svěrky. Kódy neuvádí.",
+   "reviews": {
+    "rating": null,
+    "count": null,
+    "checked": "2026-10-30",
+    "signals": [],
+    "url": "https://eckstein-shop.de/SOARM101-LeRobot-OpenSource-6Axis-Robotic-Arm-Follower-Arm-Standard-Edition-74-V-Motor"
+   },
+   "missing_other": [
+    "Screws are not in the contents list (the servos usually come with theirs: check against the screw table)",
+    "Phillips screwdrivers #0 and #1",
+    "Whether the arms arrive assembled is not stated: plan for assembly"
+   ],
+   "missing_other_cs": [
+    "Šrouby v obsahu sady nejsou (serva je obvykle mají v balení: porovnejte s tabulkou šroubů)",
+    "Křížové šroubováky PH0 a PH1",
+    "Zda ruce přijdou smontované, stránka neuvádí: počítejte se stavbou"
+   ],
+   "import": null
+  },
+  {
+   "id": "eckstein_pro_follower",
+   "name": "Eckstein SO-ARM101 Pro follower arm 12 V (ER01060-01)",
+   "name_cs": "Eckstein SO-ARM101 Pro, follower 12 V (ER01060-01)",
+   "seller": "eckstein",
+   "url": "https://eckstein-shop.de/so-arm101-pro-follower-arm-petg-cf-black_1",
+   "configs": [
+    "follower_12v"
+   ],
+   "price": [
+    239,
+    239
+   ],
+   "currency": "EUR",
+   "price_note": "PETG-CF black 239 €; PA6-GF up to 279 €.",
+   "price_note_cs": "PETG-CF černá 239 €; PA6-GF až 279 €.",
+   "servos": {
+    "follower_12v": {
+     "voltage_v": 12,
+     "ratios": {
+      "1/345": 6
+     }
+    }
+   },
+   "includes": [
+    {
+     "component": "so101.servo.c018",
+     "qty": 6
+    },
+    {
+     "component": "so101.bus_board",
+     "qty": 1
+    },
+    {
+     "component": "so101.psu_12v",
+     "qty": 1
+    },
+    {
+     "component": "so101.usb_c",
+     "qty": 1
+    },
+    {
+     "component": "so101.clamps",
+     "qty": 2
+    },
+    {
+     "component": "so101.printed.follower",
+     "qty": 1
+    }
+   ],
+   "missing": [],
+   "missing_print": false,
+   "assembled": "unknown",
+   "printed": "included",
+   "ships_cz": "unverified",
+   "buyers": "consumers",
+   "in_stock": true,
+   "stock": "Available",
+   "eta_days": [
+    1,
+    3
+   ],
+   "landed_eur_cz": [
+    247,
+    259
+   ],
+   "checked": "2026-10-30",
+   "status": "verified",
+   "note": "EU shop (DE). 6× STS3215 12 V 30 kg·cm, 12 V 5 A supply, board, USB-C, 2 clamps. This page gives no gear ratio; the shop’s dual-arm page states 1:345 for the same Pro follower.",
+   "note_cs": "Obchod v EU (DE). 6× STS3215 12 V 30 kg·cm, zdroj 12 V 5 A, deska, USB-C, 2 svěrky. Tato stránka převod neuvádí; stránka sady pro pár u stejného followeru Pro uvádí 1:345.",
+   "reviews": {
+    "rating": null,
+    "count": null,
+    "checked": "2026-10-30",
+    "signals": [],
+    "url": "https://eckstein-shop.de/so-arm101-pro-follower-arm-petg-cf-black_1"
+   },
+   "missing_other": [
+    "Screws are not in the contents list (the servos usually come with theirs: check against the screw table)",
+    "Phillips screwdrivers #0 and #1",
+    "Whether the arms arrive assembled is not stated: plan for assembly"
+   ],
+   "missing_other_cs": [
+    "Šrouby v obsahu sady nejsou (serva je obvykle mají v balení: porovnejte s tabulkou šroubů)",
+    "Křížové šroubováky PH0 a PH1",
+    "Zda ruce přijdou smontované, stránka neuvádí: počítejte se stavbou"
+   ],
+   "import": null
+  },
+  {
+   "id": "seeed_pro_openelab",
+   "name": "Seeed Studio SO-ARM101 Pro servo motor kit (OpenELAB)",
+   "name_cs": "Seeed Studio SO-ARM101 Pro, sada serv (OpenELAB)",
+   "seller": "openelab",
+   "url": "https://openelab.io/de/products/seeed-studio-so-101-pro-servo-motor-kit-lerobot",
+   "configs": [
+    "pair"
+   ],
+   "price": [
+    325.45,
+    325.45
+   ],
+   "currency": "EUR",
+   "price_note": "Sale price (regular 345.35 €); printed skeleton +38.80 €.",
+   "price_note_cs": "Akční cena (běžně 345,35 €); tištěná kostra +38,80 €.",
+   "servos": {
+    "leader": {
+     "voltage_v": 7.4,
+     "ratios": {
+      "1/345": 1,
+      "1/191": 2,
+      "1/147": 3
+     },
+     "codes": {
+      "C001": 1,
+      "C044": 2,
+      "C046": 3
+     }
+    },
+    "follower_12v": {
+     "voltage_v": 12,
+     "ratios": {
+      "1/345": 6
+     }
+    }
+   },
+   "includes": [
+    {
+     "component": "so101.servo.c018",
+     "qty": 6
+    },
+    {
+     "component": "so101.servo.c001",
+     "qty": 1
+    },
+    {
+     "component": "so101.servo.c044",
+     "qty": 2
+    },
+    {
+     "component": "so101.servo.c046",
+     "qty": 3
+    },
+    {
+     "component": "so101.bus_board",
+     "qty": 2
+    },
+    {
+     "component": "so101.usb_c",
+     "qty": 2
+    },
+    {
+     "component": "so101.clamps",
+     "qty": 4
+    }
+   ],
+   "missing": [
+    {
+     "component": "so101.psu_12v",
+     "qty": 1
+    },
+    {
+     "component": "so101.psu_5v",
+     "qty": 1
+    }
+   ],
+   "missing_print": true,
+   "assembled": "no",
+   "printed": "not_included",
+   "ships_cz": "yes",
+   "buyers": "consumers",
+   "in_stock": false,
+   "stock": "Sold out",
+   "landed_eur_cz": [
+    330,
+    341
+   ],
+   "checked": "2026-10-30",
+   "status": "verified",
+   "note": "EU seller (warehouses DE/US/CN). Leader codes per joint on the page: C044 joints 1 and 3, C001 joint 2, C046 joints 4–6; follower 6× 12 V 1:345. Out-of-stock items ship from China.",
+   "note_cs": "Prodejce v EU (sklady DE/US/CN). Kódy leaderu po kloubech: C044 klouby 1 a 3, C001 kloub 2, C046 klouby 4–6; follower 6× 12 V 1:345. Vyprodané zboží se posílá z Číny.",
+   "reviews": {
+    "rating": null,
+    "count": null,
+    "checked": "2026-10-30",
+    "signals": [],
+    "url": "https://openelab.io/de/products/seeed-studio-so-101-pro-servo-motor-kit-lerobot"
+   },
+   "missing_other": [
+    "Power supplies: the packing list names only power cables (the FAQ mentions 2 supplies), so we count them as missing",
+    "Phillips screwdrivers #0 and #1"
+   ],
+   "missing_other_cs": [
+    "Zdroje: seznam balení uvádí jen napájecí kabely (FAQ zmiňuje 2 zdroje), proto je počítáme jako chybějící",
+    "Křížové šroubováky PH0 a PH1"
+   ],
+   "import": null
+  },
+  {
+   "id": "seeed_pro_aliexpress",
+   "name": "Seeed Studio SO-ARM101 Pro servo motor kit (AliExpress, Seeed store)",
+   "name_cs": "Seeed Studio SO-ARM101 Pro, sada serv (AliExpress, obchod Seeed)",
+   "seller": "aliexpress",
+   "url": "https://www.aliexpress.com/item/1005008883199466.html",
+   "configs": [
+    "pair"
+   ],
+   "price": [
+    6918.4,
+    6918.4
+   ],
+   "currency": "CZK",
+   "price_note": "From our 27 Oct sheet; the page could not be re-opened on 30 Oct. Seeed printed-parts variant +931.28 CZK.",
+   "price_note_cs": "Z našeho přehledu z 27. 10.; 30. 10. se stránku nepodařilo znovu otevřít. Varianta s tištěnými díly Seeed +931,28 Kč.",
+   "servos": {
+    "leader": {
+     "voltage_v": 7.4,
+     "ratios": {
+      "1/345": 1,
+      "1/191": 2,
+      "1/147": 3
+     },
+     "codes": {
+      "C001": 1,
+      "C044": 2,
+      "C046": 3
+     }
+    },
+    "follower_12v": {
+     "voltage_v": 12,
+     "ratios": {
+      "1/345": 6
+     }
+    }
+   },
+   "includes": [
+    {
+     "component": "so101.servo.c018",
+     "qty": 6
+    },
+    {
+     "component": "so101.servo.c001",
+     "qty": 1
+    },
+    {
+     "component": "so101.servo.c044",
+     "qty": 2
+    },
+    {
+     "component": "so101.servo.c046",
+     "qty": 3
+    },
+    {
+     "component": "so101.bus_board",
+     "qty": 2
+    },
+    {
+     "component": "so101.usb_c",
+     "qty": 2
+    },
+    {
+     "component": "so101.clamps",
+     "qty": 4
+    }
+   ],
+   "missing": [
+    {
+     "component": "so101.psu_12v",
+     "qty": 1
+    },
+    {
+     "component": "so101.psu_5v",
+     "qty": 1
+    }
+   ],
+   "missing_print": true,
+   "assembled": "no",
+   "printed": "not_included",
+   "ships_cz": "yes",
+   "buyers": "consumers",
+   "in_stock": null,
+   "stock": "356 sold",
+   "eta_days": [
+    13,
+    25
+   ],
+   "landed_eur_cz": [
+    285,
+    381
+   ],
+   "checked": "2026-10-27",
+   "status": "carried",
+   "note": "Ships from China (2–4 weeks). Over 150 €: import VAT, duty and a clearance fee may be due on delivery.",
+   "note_cs": "Posílá se z Číny (2–4 týdny). Nad 150 € se při doručení může platit DPH z dovozu, clo a poplatek za proclení.",
+   "reviews": {
+    "rating": null,
+    "count": null,
+    "checked": "2026-10-30",
+    "signals": [],
+    "url": "https://www.aliexpress.com/item/1005008883199466.html"
+   },
+   "missing_other": [
+    "Power supplies: the packing list names only power cables (the FAQ mentions 2 supplies), so we count them as missing",
+    "Phillips screwdrivers #0 and #1"
+   ],
+   "missing_other_cs": [
+    "Zdroje: seznam balení uvádí jen napájecí kabely (FAQ zmiňuje 2 zdroje), proto je počítáme jako chybějící",
+    "Křížové šroubováky PH0 a PH1"
+   ],
+   "import": {
+    "vat_rate": 0.21,
+    "duty_rate": [
+     0,
+     0.027
+    ],
+    "clearance_eur": [
+     0,
+     25
+    ],
+    "price_includes_vat": null,
+    "status": "estimate",
+    "note": "Over 150 €: no IOSS. Unless the checkout already charges VAT, you pay 21 % import VAT on goods + shipping + duty, the duty (servo motors 8501 ≈ 2.7 %, our assumption) and the carrier’s clearance fee on delivery.",
+    "note_cs": "Nad 150 € neplatí IOSS. Pokud pokladna DPH už neúčtuje, zaplatíte při doručení 21 % DPH z dovozu ze zboží, dopravy a cla, clo (servomotory 8501 ≈ 2,7 %, náš předpoklad) a poplatek dopravce za proclení."
+   }
+  },
+  {
+   "id": "seeed_pro_botland",
+   "name": "Seeed Studio SO-ARM101 Pro servo motor kit (Botland, PL)",
+   "name_cs": "Seeed Studio SO-ARM101 Pro, sada serv (Botland, PL)",
+   "seller": "botland",
+   "url": "https://botland.store/robot-arms/29177-so-arm101-pro-servo-motor-kit-a-set-of-servo-motors-for-building-the-lerobot-arm-seeedstudio-114993667.html",
+   "configs": [
+    "pair"
+   ],
+   "price": [
+    321.5,
+    321.5
+   ],
+   "currency": "EUR",
+   "price_note": "321.50 € (270.17 € before VAT). The store sells to registered businesses only.",
+   "price_note_cs": "321,50 € (270,17 € bez DPH). Obchod prodává jen registrovaným firmám.",
+   "servos": {
+    "leader": {
+     "voltage_v": 7.4,
+     "ratios": {
+      "1/345": 1,
+      "1/191": 2,
+      "1/147": 3
+     }
+    },
+    "follower_12v": {
+     "voltage_v": 12,
+     "ratios": {
+      "1/345": 6
+     }
+    }
+   },
+   "includes": [
+    {
+     "component": "so101.servo.c018",
+     "qty": 6
+    },
+    {
+     "component": "so101.servo.c001",
+     "qty": 1
+    },
+    {
+     "component": "so101.servo.c044",
+     "qty": 2
+    },
+    {
+     "component": "so101.servo.c046",
+     "qty": 3
+    },
+    {
+     "component": "so101.bus_board",
+     "qty": 2
+    },
+    {
+     "component": "so101.usb_c",
+     "qty": 2
+    },
+    {
+     "component": "so101.clamps",
+     "qty": 4
+    }
+   ],
+   "missing": [
+    {
+     "component": "so101.psu_12v",
+     "qty": 1
+    },
+    {
+     "component": "so101.psu_5v",
+     "qty": 1
+    }
+   ],
+   "missing_print": true,
+   "assembled": "no",
+   "printed": "not_included",
+   "ships_cz": "unverified",
+   "buyers": "business_only",
+   "in_stock": true,
+   "stock": "In stock",
+   "landed_eur_cz": [
+    329,
+    342
+   ],
+   "checked": "2026-10-30",
+   "status": "verified",
+   "note": "EU shop (PL), business customers with a VAT ID only. Ratios per joint on the page match the leader; follower 6× 12 V 1:345. No printed parts, no camera.",
+   "note_cs": "Obchod v EU (PL), jen pro firmy s DIČ. Převody po kloubech odpovídají leaderu; follower 6× 12 V 1:345. Bez tištěných dílů a kamery.",
+   "reviews": {
+    "rating": null,
+    "count": null,
+    "checked": "2026-10-30",
+    "signals": [],
+    "url": "https://botland.store/robot-arms/29177-so-arm101-pro-servo-motor-kit-a-set-of-servo-motors-for-building-the-lerobot-arm-seeedstudio-114993667.html"
+   },
+   "missing_other": [
+    "Power supplies are not in the contents list",
+    "Phillips screwdrivers #0 and #1"
+   ],
+   "missing_other_cs": [
+    "Zdroje v obsahu sady nejsou",
+    "Křížové šroubováky PH0 a PH1"
+   ],
+   "import": null
+  },
+  {
+   "id": "wowrobo_diy_openelab",
+   "name": "WowRobo SO-ARM101 DIY kit, unassembled (OpenELAB)",
+   "name_cs": "WowRobo SO-ARM101, stavebnice k sestavení (OpenELAB)",
+   "seller": "openelab",
+   "url": "https://openelab.io/pl/products/wowrobo-robotics-so-arm101-diy",
+   "configs": [
+    "pair"
+   ],
+   "price": [
+    503.95,
+    503.95
+   ],
+   "currency": "EUR",
+   "price_note": "Unassembled kit with camera 503.95 €; printed parts + 12 servos only 409.45 €; assembled 577.45 €.",
+   "price_note_cs": "Stavebnice s kamerou 503,95 €; jen tištěné díly + 12 serv 409,45 €; smontovaná 577,45 €.",
+   "servos": {
+    "leader": {
+     "voltage_v": 7.4,
+     "ratios": {
+      "1/345": 1,
+      "1/191": 2,
+      "1/147": 3
+     },
+     "codes": {
+      "C001": 1,
+      "C044": 2,
+      "C046": 3
+     }
+    },
+    "follower_12v": {
+     "voltage_v": 12,
+     "ratios": {
+      "1/345": 6
+     },
+     "codes": {
+      "C018": 6
+     }
+    }
+   },
+   "includes": [
+    {
+     "component": "so101.servo.c018",
+     "qty": 6
+    },
+    {
+     "component": "so101.servo.c001",
+     "qty": 1
+    },
+    {
+     "component": "so101.servo.c044",
+     "qty": 2
+    },
+    {
+     "component": "so101.servo.c046",
+     "qty": 3
+    },
+    {
+     "component": "so101.bus_board",
+     "qty": 2
+    },
+    {
+     "component": "so101.psu_12v",
+     "qty": 1
+    },
+    {
+     "component": "so101.psu_5v",
+     "qty": 1
+    },
+    {
+     "component": "so101.usb_c",
+     "qty": 2
+    },
+    {
+     "component": "so101.clamps",
+     "qty": 4
+    },
+    {
+     "component": "so101.printed.follower",
+     "qty": 1
+    },
+    {
+     "component": "so101.printed.leader",
+     "qty": 1
+    }
+   ],
+   "missing": [],
+   "missing_print": false,
+   "assembled": "no",
+   "printed": "included",
+   "ships_cz": "yes",
+   "buyers": "consumers",
+   "in_stock": false,
+   "stock": "Sold out",
+   "landed_eur_cz": [
+    508,
+    523
+   ],
+   "checked": "2026-10-30",
+   "status": "verified",
+   "note": "EU seller (warehouses DE/US/CN). Codes on the page: leader C001 ×1, C044 ×2, C046 ×3; follower C018 ×6. 12 V 8 A and 5 V 6 A supplies, 2 boards, USB cables, 4 clamps, camera, PLA+ parts.",
+   "note_cs": "Prodejce v EU (sklady DE/US/CN). Kódy na stránce: leader C001 ×1, C044 ×2, C046 ×3; follower C018 ×6. Zdroje 12 V 8 A a 5 V 6 A, 2 desky, kabely USB, 4 svěrky, kamera, díly z PLA+.",
+   "reviews": {
+    "rating": null,
+    "count": null,
+    "checked": "2026-10-30",
+    "signals": [],
+    "url": "https://openelab.io/pl/products/wowrobo-robotics-so-arm101-diy"
+   },
+   "missing_other": [
+    "Screws are not specified",
+    "Phillips screwdrivers #0 and #1"
+   ],
+   "missing_other_cs": [
+    "Šrouby nejsou uvedeny",
+    "Křížové šroubováky PH0 a PH1"
+   ],
+   "import": null
+  }
+ ],
  "printing": {
   "self": {
    "filament_czk_per_kg": 450,
@@ -1690,154 +2511,6 @@
      "recommend": true,
      "note": "README list price",
      "reviews": null
-    }
-   ]
-  },
-  {
-   "id": "so101.bundle.seeed_pro",
-   "group": "SO-101",
-   "name": "Seeed Studio SO-ARM101 Arm Motor Kit Pro (no printed parts)",
-   "name_cs": "Seeed Studio SO-ARM101 Arm Motor Kit Pro (bez tištěných dílů)",
-   "role": "Bundle replacing all servos + 2 boards + cables + clamps for a pair",
-   "role_cs": "Sada serv, desek a kabelů pro pár",
-   "specs": {
-    "contents": "1× C001, 2× C044, 3× C046 (leader 7.4 V) + 6× STS3215 12 V 1/345 (follower), 2 driver boards, 2 USB-C cables, 4 clamps, 8 screws, 8 pins, power cables/splitters (OpenELAB listing)",
-    "psu": "PSUs included? Listing lists only power cables; FAQ mentions '2 zasilacze' – UNVERIFIED"
-   },
-   "constraints": [
-    "Cheapest checked route for a pair; one parcel; official Seeed composition (lowest wrong-variant risk)."
-   ],
-   "substitutes": [],
-   "sources": [
-    {
-     "id": "aliexpress",
-     "supplier": "aliexpress",
-     "label": "AliExpress – Seeedstudio official store",
-     "country": "CN",
-     "url": "https://www.aliexpress.com/item/1005008883199466.html",
-     "price": 6918.4,
-     "currency": "CZK",
-     "per": 1,
-     "stock": "356 sold",
-     "delivery": "11–23 Nov at check",
-     "eta_days": [
-      13,
-      25
-     ],
-     "vat_customs": "Non-EU (China) via AliExpress: VAT collected at checkout through IOSS (parcel ≤150 €). Since 1 Jul 2026 an EU flat customs duty of 3 € per tariff line applies to ≤150 € parcels (to Jul 2028); whether AliExpress shows it in the price is unverified. Over 150 €: normal import duty + VAT + carrier clearance fee.",
-     "checked": "2026-10-27",
-     "status": "carried",
-     "recommend": true,
-     "note": "Standard (7.4 V follower) kit 6386.72 CZK; Seeed printed-parts variant +931.28 CZK",
-     "reviews": {
-      "rating": null,
-      "count": null,
-      "checked": "2026-10-30",
-      "signals": [],
-      "url": "https://www.aliexpress.com/item/1005008883199466.html"
-     }
-    },
-    {
-     "id": "openelab",
-     "supplier": "openelab",
-     "label": "OpenELAB (EU)",
-     "country": "DE/CN",
-     "url": "https://openelab.io/pl/products/seeed-studio-so-101-pro-servo-motor-kit-lerobot",
-     "price": 325.45,
-     "currency": "EUR",
-     "per": 1,
-     "stock": "Sold out (2026-10-29)",
-     "delivery": "China warehouse if OOS",
-     "eta_days": null,
-     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
-     "status": "verified",
-     "recommend": false,
-     "note": "Printed skeleton add-on 38.80 €; assembled arm 388.45 €",
-     "flag": "out_of_stock",
-     "flag_reason": "Sold out on 2026-10-29.",
-     "flag_reason_cs": "Vyprodáno k 29. 10. 2026.",
-     "reviews": {
-      "rating": null,
-      "count": null,
-      "checked": "2026-10-30",
-      "signals": [],
-      "url": "https://openelab.io/pl/products/seeed-studio-so-101-pro-servo-motor-kit-lerobot"
-     }
-    }
-   ]
-  },
-  {
-   "id": "so101.bundle.eckstein_standard",
-   "group": "SO-101",
-   "name": "Eckstein SO-ARM101 Standard 7.4 V dual-arm kit (with printed parts)",
-   "name_cs": "Eckstein SO-ARM101 Standard 7,4 V, sada pro pár (s tištěnými díly)",
-   "role": "Bundle for a 7.4 V pair",
-   "role_cs": "Sada pro pár 7,4 V",
-   "specs": {
-    "item": "ER01050"
-   },
-   "constraints": [],
-   "substitutes": [],
-   "sources": [
-    {
-     "id": "eckstein",
-     "supplier": "eckstein",
-     "label": "Eckstein – SO-ARM101 Standard dual-arm 7.4 V (ER01050)",
-     "country": "DE",
-     "url": "https://eckstein-shop.de/lerobot-soarm101-standard-dual-arm-7-4v_1",
-     "price": 422.99,
-     "currency": "EUR",
-     "per": 1,
-     "stock": "Available (rarely stocked)",
-     "delivery": "1–3 days",
-     "eta_days": [
-      1,
-      3
-     ],
-     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
-     "status": "estimate",
-     "recommend": true,
-     "note": "Configurator sum of leader PLA (223.99 €) + follower PLA (from 199 €); the page also shows “from 228 €” – check the final total",
-     "note_cs": "Součet leaderu PLA (223,99 €) a followeru PLA (od 199 €) v konfigurátoru; stránka uvádí i „od 228 €“ – konečnou cenu ověřte"
-    }
-   ]
-  },
-  {
-   "id": "so101.bundle.eckstein_pro",
-   "group": "SO-101",
-   "name": "Eckstein SO-ARM101 Pro 12 V dual-arm kit (with printed parts)",
-   "name_cs": "Eckstein SO-ARM101 Pro 12 V, sada pro pár (s tištěnými díly)",
-   "role": "Bundle for a pair with a 12 V follower",
-   "role_cs": "Sada pro pár s followerem 12 V",
-   "specs": {
-    "item": "ER01060"
-   },
-   "constraints": [],
-   "substitutes": [],
-   "sources": [
-    {
-     "id": "eckstein",
-     "supplier": "eckstein",
-     "label": "Eckstein – SO-ARM101 Pro dual-arm 12 V (ER01060)",
-     "country": "DE",
-     "url": "https://eckstein-shop.de/lerobot-soarm101-pro-dual-arm-12v_1",
-     "price": 462.99,
-     "currency": "EUR",
-     "per": 1,
-     "stock": "Available (rarely stocked)",
-     "delivery": "1–3 days",
-     "eta_days": [
-      1,
-      3
-     ],
-     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
-     "status": "estimate",
-     "recommend": true,
-     "note": "Sum of leader PLA (223.99 €) + follower PETG-CF 12 V (239 €) in the configurator",
-     "note_cs": "Součet leaderu PLA (223,99 €) a followeru PETG-CF 12 V (239 €) v konfigurátoru"
     }
    ]
   },

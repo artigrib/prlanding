@@ -38,6 +38,15 @@ test('core: plan totals and variant check through the bridge copy', () => {
   assert.equal(checkPartVariant(PLAN_DATA_SVRN, 'Malenki Nano 1-2S', 'svrn:esc').verdict, 'mismatch');
 });
 
+test('core: kits and the recommendation through the bridge copy', () => {
+  const svc = buildPlan(PLAN_DATA, { robot: 'pair_74v', print: 'service' }).kits!;
+  assert.equal(svc.recommendation.choice, 'kit');
+  assert.equal(svc.recommendation.kit, 'eckstein_standard_pair');
+  assert.equal(buildPlan(PLAN_DATA, { robot: 'pair_74v', print: 'self' }).kits!.recommendation.reason, 'parts_cheaper');
+  assert.equal(buildPlan(PLAN_DATA_SVRN, { robot: 'robot_only', module: 'flipper', print: 'self' }).kits, null, 'SVRN has no kits');
+  assert.equal(checkPartVariant(PLAN_DATA, 'Leader: 1 × 1:345, 2 × 1:191, 3 × 1:147. Follower 6 × STS3215 Pro 12 V, 1:345', 'kit:pair').verdict, 'match');
+});
+
 test('input schemas are strict', () => {
   assert.equal(PlanInputs.get_build_plan.safeParse({ robot: 'pair', print: 'self' }).success, true);
   assert.equal(PlanInputs.get_build_plan.safeParse({ robot: 'pair', checkout: true }).success, false);
@@ -46,6 +55,8 @@ test('input schemas are strict', () => {
   assert.equal(PlanInputs.get_build_plan.safeParse({ robot: 'svrn', config: 'starter', module: 'grabber', print: 'service' }).success, true);
   assert.equal(PlanInputs.get_build_plan.safeParse({ robot: 'pair', module: 'flipper' }).success, false, 'module applies only to svrn');
   assert.equal(PlanInputs.get_build_plan.safeParse({ robot: 'svrn', module: 'spinner' }).success, false);
+  for (const e of ['kit:pair_74v', 'kit:pair', 'kit:follower_74v', 'kit:follower_12v']) assert.equal(PlanInputs.check_part_variant.safeParse({ listing_text: 'x', expected: e }).success, true);
+  assert.equal(PlanInputs.check_part_variant.safeParse({ listing_text: 'x', expected: 'kit:svrn' }).success, false);
   for (const e of ['svrn:esc', 'svrn:motor', 'svrn:servo', 'svrn:lipo']) assert.equal(PlanInputs.check_part_variant.safeParse({ listing_text: 'x', expected: e }).success, true);
   assert.equal(PlanInputs.check_part_variant.safeParse({ listing_text: 'x', expected: 'svrn:wheel' }).success, false);
 });
@@ -73,6 +84,20 @@ test('MCP: tools are listed read-only and return structured plans', async () => 
   assert.equal(v.structuredContent.ok, true);
   assert.equal(v.structuredContent.variant_ok, true);
   assert.equal(v.structuredContent.verdict, 'match');
+  // kits + recommendation in get_build_plan; kit listings in check_part_variant
+  const k = s.kits;
+  assert.equal(k.config, 'pair');
+  assert.equal(k.recommendation.choice, 'kit');
+  assert.equal(k.recommendation.kit, 'eckstein_pro_pair');
+  assert.match(k.recommendation.basis, /no affiliate/);
+  const seeed = k.kits.find((x: any) => x.id === 'seeed_pro_aliexpress');
+  assert.equal(seeed.landed_basis, 'import_vat');
+  assert.deepEqual(seeed.blockers, ['not_verified']);
+  assert.ok(k.kits.every((x: any) => /^https:/.test(x.url) && /^\d{4}-\d\d-\d\d$/.test(x.checked) && x.status));
+  const kv: any = await client.callTool({ name: 'check_part_variant', arguments: { listing_text: 'Eckstein ER01060 dual-arm kit', expected: 'kit:pair_74v' } });
+  assert.equal(kv.structuredContent.ok, true);
+  assert.equal(kv.structuredContent.variant_ok, false);
+  assert.equal(kv.structuredContent.known_kit.id, 'eckstein_pro_pair');
   const bad: any = await client.callTool({ name: 'check_part_variant', arguments: { listing_text: 'x', expected: 'gripper' } });
   assert.equal(bad.isError, true);
 });

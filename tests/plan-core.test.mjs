@@ -78,7 +78,7 @@ test('plan totals: pair, self-printed and print service', () => {
   assert.deepEqual(p.variants.map((v) => v.arm), ['follower_12v', 'leader']);
   const servos = p.groups.flatMap((g) => g.lines).filter((l) => /servo\.c0/.test(l.component));
   assert.equal(sum(servos.map((l) => l.qty)), 12);
-  assert.ok(p.alternative && /seeed/.test(p.alternative.component));
+  assert.ok(p.alternative && /printed/.test(p.alternative.component), 'printed parts as an alternative; complete kits live in data.kits');
   const s = buildPlan(data, { robot: 'pair', print: 'service' });
   const ps = s.groups.find((g) => g.supplier === 'print_service');
   assert.deepEqual(ps.goods_eur, [60, 150], '2 arms × 30–75 € estimate');
@@ -130,12 +130,12 @@ test('a backordered line can be swapped to another recommended source', () => {
   assert.equal(q.groups.flatMap((g) => g.lines).find((x) => x.component === 'so101.servo.c001').source, 'eckstein');
 });
 
-test('kit alternatives: landed estimate with import VAT and what is still needed', () => {
-  const p = buildPlan(data, { robot: 'pair' });
-  const seeed = p.alternatives.find((a) => /seeed/.test(a.component));
-  assert.ok(seeed.landed.eur[1] > seeed.price_eur * 1.21, 'import VAT and fees above 150 €');
-  assert.ok(seeed.still_needed_cs.some((t) => /Zdroje/.test(t)));
-  assert.ok(buildPlan(data, {}).alternatives.some((a) => /eckstein_standard/.test(a.component)));
+test('printed-part alternative: EU landed estimate, kits are compared separately', () => {
+  for (const robot of ['pair_74v', 'pair']) {
+    const a = buildPlan(data, { robot }).alternatives.find((x) => x.component === 'so101.printed.follower');
+    assert.ok(a && a.landed.eur[0] >= a.price_eur, robot);
+  }
+  assert.ok(!data.components.some((c) => /bundle/.test(c.id)), 'bundles moved to data.kits');
 });
 
 test('next step needs servos, board, power supply and USB cable; Python 3.12', () => {

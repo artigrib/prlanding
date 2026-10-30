@@ -38,6 +38,23 @@ const S = {
     altsH: 'Hotové sady a díly místo jednotlivých položek', landedEst: 'S dopravou a dovozem (odhad)', landedEu: 'S dopravou (odhad)', stillNeeded: 'Ještě budete potřebovat',
     contents: 'Obsah sady podle', from: 'cena',
     sc: { h: 'Šrouby na ruku', part: 'Kloub', total: 'Celkem', follower: 'Follower', leader: 'Leader', pair: 'Pro celý plán', src: 'Zdroj' },
+    kits: {
+      h: 'Hotová sada vs. díly zvlášť', planLink: 'Plán nákupu po dílech', kit: 'Hotová sada', parts: 'Díly zvlášť (plán níže)', total: 'Celkem s dopravou', orders: 'Objednávky', variants: 'Varianty serv', print: 'Tištěné díly', eta: 'Doručení',
+      one: '1 obchod', shops: (n) => `${n} ${n === 1 ? 'obchod' : n < 5 ? 'obchody' : 'obchodů'}`, ok: 'sestava ověřená v inzerátu', self: 'hlídáte sami u každého inzerátu',
+      printed: { included: 'v sadě', not_included: 'nejsou v sadě' }, printPlan: { self: 'tisknete sami', service: 'tiskový servis' },
+      recKit: (n) => `Pro většinu lidí doporučujeme hotovou sadu ${n}:`, recKitWhy: (t, p) => `jedna objednávka, ověřené varianty serv, celkem ${t} s dopravou. Díly zvlášť podle plánu níže vyjdou na ${p}.`,
+      recParts: (self) => self ? 'Když tisknete sami, vyjdou díly zvlášť levněji:' : 'Díly zvlášť vyjdou levněji:',
+      recPartsWhy: (p, t, n) => `${p} oproti ${t} za hotovou sadu ${n}. Sada je pohodlnější (jedna objednávka, ověřené varianty serv), ale dražší.`,
+      noKit: 'Pro tuto konfiguraci jsme hotovou sadu neověřili. Kupte díly podle plánu níže.',
+      noEligible: 'Hotovou sadu, kterou bychom teď mohli doporučit, pro tuto konfiguraci nemáme (vyprodáno, jen pro firmy nebo neověřeno). Kupte díly podle plánu níže.',
+      missing: 'Ještě dokoupíte', nothingMissing: 'Podle obsahu sady nic dalšího kupovat nemusíte.', alsoCheck: 'Zkontrolujte', toPlan: 'v plánu',
+      others: (n) => `Všechny sady pro tuto konfiguraci (${n})`, open: 'Otevřít u prodejce', landed: 'S dopravou do ČR', withMissing: 'i s tím, co chybí',
+      basis: { eu_oss: 'cena s DPH, při OSS až +1,7 %, doprava odhadem', domestic: 'cena s DPH, doprava odhadem', ioss: 'DPH přes IOSS, clo 3 € za položku', import_vat: 'nad 150 €: DPH z dovozu, clo a poplatek za proclení' },
+      blockers: { not_verified: 'cenu a obsah jsme znovu neověřili', variant_mismatch: 'nesprávná sestava serv', out_of_stock: 'vyprodáno', business_only: 'jen pro firmy', no_cz_shipping: 'nedoručuje do ČR' },
+      shipsCz: { yes: '', unverified: 'Doručení do ČR ověřte v košíku.', no: 'Nedoručuje do ČR.' }, assembled: { yes: 'smontovaná', no: 'k sestavení', unknown: 'zda je smontovaná, neuvádí' },
+      when: 'Plán po dílech níže se hodí pro vlastní výběr dodavatelů, jiné varianty (např. jiný materiál nebo 12 V jen pro follower) a když jsou sady vyprodané.',
+      honest: 'Doporučujeme podle nejnižší ceny s dopravou mezi ověřenými sadami se správnými servy, které jsou skladem. Ne podle provize: odkazy nejsou affiliate.'
+    },
     cfgNote: 'Bez leaderu ruku po kalibraci rozhýbete jen přehráním nahraného pohybu (lerobot-replay), například datasetu z návodu se simulací. Teleoperace a vlastní ukázky potřebují leader.'
   },
   en: {
@@ -64,6 +81,23 @@ const S = {
     altsH: 'Ready-made kits and parts instead of single lines', landedEst: 'Landed incl. import (estimate)', landedEu: 'Landed (estimate)', stillNeeded: 'You will still need',
     contents: 'Kit contents per', from: 'price',
     sc: { h: 'Screws per arm', part: 'Joint', total: 'Total', follower: 'Follower', leader: 'Leader', pair: 'For the whole plan', src: 'Source' },
+    kits: {
+      h: 'Ready-made kit vs. parts separately', planLink: 'Parts buying plan', kit: 'Ready-made kit', parts: 'Parts separately (plan below)', total: 'Landed total', orders: 'Orders', variants: 'Servo variants', print: 'Printed parts', eta: 'Delivery',
+      one: '1 shop', shops: (n) => `${n} shop${n === 1 ? '' : 's'}`, ok: 'mix verified on the listing', self: 'you check every listing',
+      printed: { included: 'included', not_included: 'not included' }, printPlan: { self: 'you print them', service: 'print service' },
+      recKit: (n) => `For most people we recommend the ready-made kit ${n}:`, recKitWhy: (t, p) => `one order, verified servo variants, ${t} landed. The parts plan below comes to ${p}.`,
+      recParts: (self) => self ? 'If you print the parts yourself, buying parts separately is cheaper:' : 'Buying parts separately is cheaper:',
+      recPartsWhy: (p, t, n) => `${p} against ${t} for the ready-made kit ${n}. The kit is easier (one order, verified servo variants) but costs more.`,
+      noKit: 'We have not verified a ready-made kit for this configuration. Buy the parts from the plan below.',
+      noEligible: 'No kit we could recommend right now for this configuration (sold out, business only or not verified). Buy the parts from the plan below.',
+      missing: 'You still need to buy', nothingMissing: 'Per the kit contents you need nothing else.', alsoCheck: 'Check', toPlan: 'in the plan',
+      others: (n) => `All kits for this configuration (${n})`, open: 'Open at seller', landed: 'Landed in CZ', withMissing: 'including what is missing',
+      basis: { eu_oss: 'price incl. VAT, up to +1.7 % with OSS, shipping estimated', domestic: 'price incl. VAT, shipping estimated', ioss: 'VAT via IOSS, 3 € duty per line', import_vat: 'over 150 €: import VAT, duty and a clearance fee' },
+      blockers: { not_verified: 'price and contents not re-checked', variant_mismatch: 'wrong servo mix', out_of_stock: 'sold out', business_only: 'business customers only', no_cz_shipping: 'does not ship to CZ' },
+      shipsCz: { yes: '', unverified: 'Check delivery to CZ in the cart.', no: 'Does not ship to CZ.' }, assembled: { yes: 'assembled', no: 'to assemble', unknown: 'assembly not stated' },
+      when: 'The parts plan below is for picking your own suppliers, other variants (e.g. another material, or 12 V for the follower only) and when kits are sold out.',
+      honest: 'We recommend by the lowest landed price among verified, in-stock kits with the right servos. Never by commission: no link is an affiliate link.'
+    },
     cfgNote: 'Without a leader, after calibration you can only move the arm by replaying recorded motion (lerobot-replay), for example a dataset from the simulation guide. Teleoperation and your own demonstrations need a leader.'
   }
 }[L];
@@ -180,7 +214,7 @@ function line(l, gi) {
   const alts = l.alternatives.length ? `<details class="plan-alts"><summary>${S.alt} (${l.alternatives.length})</summary><ul>${l.alternatives.map((a) =>
     `<li>${a.recommend ? '' : `<span class="pb pb-no">${S.notRec}</span> `}<a href="${esc(a.url)}" rel="noopener">${esc(a.label)}</a> · ${a.price == null ? '—' : money(a.price, a.currency) + (a.per > 1 ? ` / ${a.per} ${S.qty}` : '')} ${badge(a.status, a.checked)}${a.stock ? ` <span class="muted">${S.backorder}: ${esc(stock(a.stock))}</span>` : ''}${a.flag ? `<br><span class="plan-flag">${esc(L === 'cs' ? a.flag_reason_cs : a.flag_reason)}</span>` : ''}${a.reviews ? '<br>' + reviews(a.reviews) : ''}${a.selectable ? `<br><button type="button" class="btn-link" data-swap="${esc(l.component)}" data-src="${esc(a.id === l.default_source ? '' : a.id)}">${a.id === l.default_source ? S.useDefault : S.useSrc}<span class="sr-only"> (${esc(a.label)})</span></button>` : ''}</li>`).join('')}</ul></details>` : '';
   const bo = backorder(l.stock);
-  return `<li class="plan-line">
+  return `<li class="plan-line" id="pl-${esc(l.component.replace(/[^a-z0-9]/gi, '-'))}">
 <span class="pl-chk"><input type="checkbox" id="${id}" data-k="${esc(k)}"${state.ordered[k] ? ' checked' : ''}><label for="${id}">${S.ordered}</label></span>
 <span class="pl-name"><b>${esc(pick(l, 'name'))}</b>${l.stock ? `<small>${S.backorder}: ${esc(stock(l.stock))}</small>` : ''}${bo != null && l.alternatives.some((a) => a.selectable) ? `<span class="plan-flag" data-testid="plan-backorder">${esc(S.backorderNote(bo))}</span>` : ''}${l.swapped ? `<small data-testid="plan-swapped">${S.swapped}</small>` : ''}${l.flag ? `<span class="plan-flag">${esc(L === 'cs' ? l.flag_reason_cs : l.flag_reason)}</span>` : ''}${l.print_hours ? `<small>${S.printNote}: ${rng(l.print_hours)} ${S.h} (${S.est})</small>` : ''}${l.note_cs ? `<small>${esc(pick(l, 'note'))}</small>` : ''}${reviews(l.reviews)}</span>
 <span class="pl-qty">${qty}</span>
@@ -208,6 +242,46 @@ ${a.landed ? `<p><b>${a.landed.note ? S.landedEst : S.landedEu}: ${rng(a.landed.
 ${a.still_needed.length ? `<p>${S.stillNeeded}:</p><ul>${(L === 'cs' ? a.still_needed_cs : a.still_needed).map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
 ${a.contents_source ? `<p class="plan-src">${S.contents} <a href="${esc(a.contents_source.url)}" rel="noopener">${esc(a.contents_source.label)}</a> (${S.checkedOn} ${date(a.contents_source.checked)})</p>` : ''}</aside>`).join('') : '';
 }
+
+// "Ready-made kit vs. parts separately" (data.kits via plan-core compareKits): the recommendation for this configuration
+const anchor = (c) => '#pl-' + String(c).replace(/[^a-z0-9]/gi, '-');
+function renderKits(p) {
+  const el = $('plan-kits');
+  if (!el) return;
+  if (!p.kits) { el.innerHTML = ''; return; }
+  const K = S.kits, r = p.kits.recommendation, kits = p.kits.kits;
+  const best = kits.find((k) => k.id === p.kits.best);
+  const partsShops = p.groups.filter((g) => g.supplier !== 'none' && g.supplier !== 'self_print').length;
+  const E = (x) => rng(x, ' €');
+  let rec;
+  if (r.choice === 'kit') rec = `<b>${esc(K.recKit(pick(best, 'name')))}</b> ${esc(K.recKitWhy(E(best.total_eur), E(r.parts_eur)))}`;
+  else if (r.reason === 'parts_cheaper') rec = `<b>${esc(K.recParts(p.print === 'self'))}</b> ${esc(K.recPartsWhy(E(r.parts_eur), E(best.total_eur), pick(best, 'name')))}`;
+  else rec = esc(r.reason === 'no_kit' ? K.noKit : K.noEligible);
+  const missing = (k) => {
+    const items = k.missing.map((m) => `<li>${esc(pick(m, 'name'))}${m.qty > 1 && !m.eur_range ? ` · ${m.qty} ${S.qty}` : ''} · ${m.eur_range ? E(m.eur_range) : eur(m.eur)} <a href="${anchor(m.component)}">${K.toPlan}<span class="sr-only"> (${esc(pick(m, 'name'))})</span></a></li>`);
+    const other = (L === 'cs' ? k.missing_other_cs : k.missing_other).map((t) => `<li class="muted">${K.alsoCheck}: ${esc(t)}</li>`);
+    return `<p class="pk-mh">${K.missing}${k.missing.length ? ` <span class="muted">(${E(k.missing_eur)})</span>` : ''}:</p><ul class="pk-miss">${k.missing.length ? items.join('') : `<li>${K.nothingMissing}</li>`}${other.join('')}</ul>`;
+  };
+  const cmp = best ? `<div class="pk-cmp">
+<div class="pk-col${r.choice === 'kit' ? ' pk-win' : ''}" data-testid="plan-kit-best"><h3>${K.kit}</h3><p class="pk-name"><a href="${esc(best.url)}" rel="noopener">${esc(pick(best, 'name'))}</a> ${badge(best.status, best.checked)}</p>
+<dl><div><dt>${K.total}</dt><dd><b data-testid="plan-kit-total">${E(best.total_eur)}</b></dd></div><div><dt>${K.orders}</dt><dd>${k1(best)}</dd></div>
+<div><dt>${K.variants}</dt><dd>${K.ok}</dd></div><div><dt>${K.print}</dt><dd>${K.printed[best.printed]}</dd></div>${best.eta_days ? `<div><dt>${K.eta}</dt><dd>${rng(best.eta_days)} ${S.days}</dd></div>` : ''}</dl>
+${missing(best)}</div>
+<div class="pk-col${r.choice === 'parts' ? ' pk-win' : ''}"><h3>${K.parts}</h3><p class="pk-name"><a href="#nakup">${K.planLink}</a></p>
+<dl><div><dt>${K.total}</dt><dd><b>${E(p.totals.landed_eur)}</b></dd></div><div><dt>${K.orders}</dt><dd>${K.shops(partsShops)}</dd></div>
+<div><dt>${K.variants}</dt><dd>${K.self}</dd></div><div><dt>${K.print}</dt><dd>${K.printPlan[p.print]}</dd></div><div><dt>${K.eta}</dt><dd>${rng(p.eta_days)} ${S.days}</dd></div></dl></div>
+</div>` : '';
+  const row = (k) => `<li data-testid="plan-kit" data-kit="${esc(k.id)}"${k.eligible ? '' : ' class="pk-off"'}><b><a href="${esc(k.url)}" rel="noopener">${esc(pick(k, 'name'))}</a></b> ${badge(k.status, k.checked)}${k.blockers.map((b) => ` <span class="pb pb-no">${esc(K.blockers[b])}</span>`).join('')}
+<br>${money(k.price[0], k.currency)}${k.price[1] !== k.price[0] ? `–${money(k.price[1], k.currency)}` : ''}${k.currency !== 'EUR' ? ` (≈ ${eur(k.price_eur[0])})` : ''} · ${K.landed}: <b>${E(k.landed_eur)}</b> <span class="muted">(${esc(K.basis[k.landed_basis])})</span> · ${K.withMissing}: <b>${E(k.total_eur)}</b> · ${esc(K.assembled[k.assembled])}
+${k.price_note ? `<br><small>${esc(pick(k, 'price_note'))}</small>` : ''}<br><small>${esc(pick(k, 'note'))}${K.shipsCz[k.ships_cz] ? ' ' + esc(K.shipsCz[k.ships_cz]) : ''}</small>
+${k.import ? `<br><small>${esc(pick(k.import, 'note'))}</small>` : ''}${k.missing.length ? `<br><small>${K.missing}: ${k.missing.map((m) => esc(pick(m, 'name'))).join(', ')}</small>` : ''}${reviews(k.reviews)}</li>`;
+  el.innerHTML = `<h2 id="kits-h">${K.h}</h2>
+<p class="pk-rec" data-testid="plan-kit-rec" data-choice="${esc(r.choice)}" data-kit="${esc(r.kit || '')}">${rec}</p>
+${cmp}
+${kits.length ? `<details class="plan-alts pk-all"><summary>${K.others(kits.length)}</summary><ul>${kits.map(row).join('')}</ul></details>` : ''}
+<p class="src">${esc(K.when)} ${esc(K.honest)}</p>`;
+}
+const k1 = (k) => `${S.kits.one}${k.missing.some((m) => m.supplier && m.supplier !== 'self_print') ? ' + ' + S.kits.missing.toLowerCase() : ''}`;
 
 function renderScrews(p) {
   const el = $('plan-screws');
@@ -278,7 +352,7 @@ function render() {
   if (!state.src[cfg] || typeof state.src[cfg] !== 'object') state.src[cfg] = {};
   opts.sources = state.src[cfg];
   current = buildPlan(data, opts);
-  renderSummary(current); renderVariants(current); renderGroups(current); renderTools(current); renderScrews(current); renderArrivals(current); renderNotes(current);
+  renderSummary(current); renderKits(current); renderVariants(current); renderGroups(current); renderTools(current); renderScrews(current); renderArrivals(current); renderNotes(current);
 }
 document.addEventListener('click', (e) => {
   const b = e.target.closest('button[data-swap]');

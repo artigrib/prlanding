@@ -66,8 +66,8 @@ Positions use the robot base frame: x forward, y left, z up, origin at the base 
 | `start_mission` | Reset the scene and start a mission | `mission_id` |
 | `check_mission` | Mission state: `idle`, `running`, `success` or `failed` | — |
 | `reset_scene` | Reset the arm and the objects | — |
-| `get_build_plan` | SO-101 parts buying plan: lines grouped by supplier, prices with checked date and status, landed-cost range to CZ, ETA, servo variants per joint, tools, build-time estimate. No `session` needed | `robot` (`pair_74v` default / `pair` / `follower_74v` / `follower_12v`), `print` (`self`/`service`) |
-| `check_part_variant` | Check a shop listing's text against the servo variant a joint needs: `match`, `likely`, `check_selection`, `mismatch`, `inconsistent` or `unknown`. No `session` needed | `listing_text`, `expected` (`C018`, `leader`, `leader:1`, …) |
+| `get_build_plan` | SO-101 parts buying plan: lines grouped by supplier, prices with checked date and status, landed-cost range to CZ, ETA, servo variants per joint, tools, build-time estimate, and `kits`: ready-made kits with landed cost to CZ (import VAT over 150 €), what is still missing, and a kit-or-parts `recommendation` (cheapest landed total among verified, in-stock kits with the right servos; no affiliate links). No `session` needed | `robot` (`pair_74v` default / `pair` / `follower_74v` / `follower_12v`), `print` (`self`/`service`) |
+| `check_part_variant` | Check a shop listing's text against the servo variant a joint needs, or a kit listing against a configuration's whole servo mix: `match`, `likely`, `check_selection`, `mismatch`, `inconsistent` or `unknown`. No `session` needed | `listing_text`, `expected` (`C018`, `leader`, `leader:1`, … or `kit:pair_74v` / `kit:pair` / `kit:follower_74v` / `kit:follower_12v` for a whole kit listing) |
 
 ### Purchase plan tools (read-only)
 
