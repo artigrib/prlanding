@@ -3,7 +3,8 @@
   "private": true,
   "description": "printedrobotics.cz static site. Dev tooling only: the pages need no build step or dependencies.",
   "scripts": {
-    "test:unit": "node --test tests/*.test.mjs sim/so101/test/*.test.mjs sim/so101/tests/*.test.mjs sim/arena/tests/*.test.mjs",
+    "test:unit": "node --test tests/*.test.mjs sim/so101/test/*.test.mjs sim/so101/tests/*.test.mjs sim/arena/tests/*.test.mjs tools/sil/test/*.test.mjs",
+    "sil": "node tools/sil/so101-virtual.mjs",
     "test:e2e": "node sim/so101/tests/e2e.cjs && node sim/arena/tests/replay-e2e.cjs http://127.0.0.1:8123",
     "smoke": "node tests/smoke.mjs && node tests/smoke-en.mjs"
   },
