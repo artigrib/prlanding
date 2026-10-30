@@ -10,6 +10,9 @@
 //  - Homing_Offset is sign-magnitude with sign bit 11, positions with bit 15, load with bit 10.
 //  - EPROM (addresses < 40) is written with Lock = 0 (disable_torque writes Torque_Enable=0, Lock=0).
 //  - setup_motor writes ID to the *old* ID and expects the status reply from that old ID.
+//  - Torque_Limit (RAM) is loaded from Max_Torque_Limit (EPROM) at power-up and scales the output torque.
+//  - Response_Status_Level 0 answers only PING/READ; REG_WRITE + ACTION apply a buffered write.
+// Checked end to end against LeRobot 0.6.1 + feetech-servo-sdk 1.0.0 through a pty (tools/sil).
 // Factory values marked "emulated" below are plausible defaults, not verified against a datasheet.
 
 import {
@@ -43,6 +46,7 @@ export class Sts3215 {
     this.extraLoad = 0;     // 0..1, overheating fault (stalled / overloaded joint)
     this.setpoint = 2048;
     this.lastPresent = null;
+    this.pending = null;     // REG_WRITE buffer
     this.factory();
   }
 
@@ -87,6 +91,8 @@ export class Sts3215 {
     this.mem.fill(0);
     this.mem.set(this.saved);           // EPROM loads; RAM starts from defaults
     this.mem[REG.Lock[0]] = 1;          // write lock on after power-up (emulated)
+    this.mem.set(this.mem.subarray(16, 18), 48);   // Torque_Limit (RAM) starts from Max_Torque_Limit (EPROM)
+    this.pending = null;                // REG_WRITE buffer
     const p = this.presentFromQ(plant.q(this.index));
     this.setReg('Goal_Position', p);    // goal = where the horn is, so enabling torque does not jump
     this.setpoint = p; this.lastPresent = p;
@@ -159,7 +165,9 @@ export class Sts3215 {
         const step = vmax * dt, d = goal - this.setpoint;
         this.setpoint += Math.abs(d) <= step ? d : Math.sign(d) * step;
       } else this.setpoint = goal;
-      plant.setStrength(i, Math.min(1, volts / VARIANTS[this.variant].nominal));
+      // output torque: supply voltage and Torque_Limit (0.1 %; LeRobot lowers it for the gripper via Max_Torque_Limit)
+      const tl = Math.min(1000, fromBytes(m, 48, 2)) / 1000;
+      plant.setStrength(i, Math.min(1, volts / VARIANTS[this.variant].nominal) * tl);
       plant.drive(i, this.qFromPresent(Math.round(this.setpoint)));
     }
   }
@@ -171,11 +179,22 @@ export class Sts3215 {
       const [addr, len] = params;
       return [this.mem[65], Array.from(this.mem.subarray(addr, addr + len))];
     }
+    // Response_Status_Level 0: only PING and READ are answered (the level is read before the write,
+    // so the write that sets it to 0 is still answered at the old level, like the real servo)
+    const quiet = this.mem[REG.Response_Status_Level[0]] === 0;
     if (code === INST.WRITE) {
       this.write(params[0], params.slice(1), plant);
-      return [this.mem[65], []];
+      return quiet ? null : [this.mem[65], []];
     }
-    return null;   // REG_WRITE / ACTION are not used by LeRobot and not emulated
+    if (code === INST.REG_WRITE) {     // buffered write, applied by ACTION (scservo_sdk regWriteTxRx / action)
+      this.pending = { addr: params[0], data: params.slice(1) };
+      return quiet ? null : [this.mem[65], []];
+    }
+    if (code === INST.ACTION) {
+      if (this.pending) { const { addr, data } = this.pending; this.pending = null; this.write(addr, data, plant); }
+      return quiet ? null : [this.mem[65], []];
+    }
+    return null;   // unknown instruction: no reply
   }
 }
 
@@ -305,7 +324,7 @@ export class VirtualArm {
           // every servo answers; same IDs collide
           const ids = [...new Set(live.map((s) => s.id))].sort((a, b) => a - b);
           for (const id of ids) reply(live.filter((s) => s.id === id), (s) => s.execute(INST.PING, [], this.plant));
-        } else for (const s of live) s.execute(p.code, params, this.plant);   // broadcast WRITE: no reply
+        } else for (const s of live) s.execute(p.code, params, this.plant);   // broadcast WRITE / ACTION: no reply
       } else {
         reply(live.filter((s) => s.id === p.id), (s) => s.execute(p.code, params, this.plant));
       }

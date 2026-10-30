@@ -64,7 +64,8 @@ async function main() {
   const app = new MissionPage(sim);
   // [ux-hook:install] optional UX layer (src/ux.js: smart move, missions, replay, cameras, exploded view…).
   // The plain slider sim keeps working if it fails to load.
-  try { await (await import('./src/ux.js')).install(app, { THREE: ctx.THREE, mj: ctx.mj, TEST, objects: ctx.objects }); }
+  const MIRROR = new URLSearchParams(location.search).has('mirror');   // live LeRobot mirror: plain view, no mission UX
+  if (!MIRROR) try { await (await import('./src/ux.js')).install(app, { THREE: ctx.THREE, mj: ctx.mj, TEST, objects: ctx.objects }); }
   catch (e) { console.warn('UX layer disabled:', e); app.ux = null; sim.onRender = null; }
   $('loader').hidden = true;
   $('hud').hidden = false;
@@ -72,6 +73,22 @@ async function main() {
   $('sr').textContent = 'Simulace je připravena, ovládání je dostupné.';
   track('sim_loaded', { sim: 'so101', ms: Math.round(performance.now() - t0), detail: ctx.objects ? 'objects' : 'plain' });
   if (TEST) { window.__sim = app.api(); window.__sim.loadMs = Math.round(performance.now() - t0); }
+  // ?mirror=<port>: show the headless SIL runner's arm live (tools/sil/so101-virtual.mjs --mirror; localhost only)
+  if (MIRROR) {
+    try {
+      const M = await import('./src/mirror.js'), port = M.mirrorPort();
+      if (port) {
+        const en = document.documentElement.lang === 'en';
+        const tag = document.createElement('p');
+        tag.id = 'mirror-tag'; tag.setAttribute('role', 'status');
+        tag.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:50;margin:0;padding:6px 10px;border-radius:6px;font:600 13px/1.3 system-ui,sans-serif;background:#111;color:#fff;opacity:.9';
+        document.body.appendChild(tag);
+        const say = (s) => { tag.textContent = (en ? 'LeRobot mirror: ' : 'Zrcadlo LeRobot: ') + ({ live: en ? 'live' : 'živě', lost: en ? 'disconnected, retrying' : 'odpojeno, zkouším znovu', wait: en ? 'connecting…' : 'připojuji…' })[s]; };
+        say('wait');
+        window.__mirror = M.installMirror(sim, port, { onStatus: say });
+      }
+    } catch (e) { console.warn('mirror disabled:', e); }
+  }
   // free WASM heap objects (Embind handles are not garbage-collected)
   addEventListener('pagehide', (e) => { if (!e.persisted) sim.dispose(); });
 }

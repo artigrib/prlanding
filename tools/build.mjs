@@ -76,6 +76,7 @@ const CONTENT = [
   { id: 'combat', cs: 'navody/bojovi-roboti-150-g/', en: 'en/guides/combat-robots-150-g/', nav: 'navody' },
   { id: 'licence', cs: 'navody/licence-open-source-hardwaru/', en: 'en/guides/open-source-hardware-licences/', nav: 'navody' },
   { id: 'assembly', cs: 'navody/so101-sestaveni/', en: 'en/guides/so101-assembly/', nav: 'navody' },
+  { id: 'sil', cs: 'navody/so101-lerobot-simulace/', en: 'en/guides/so101-lerobot-simulation/', nav: 'navody' },
   { id: 'checklist', cs: 'navody/so101-sestaveni/kontrolni-seznam/', en: 'en/guides/so101-assembly/checklist/', nav: 'navody' },
   { id: 'plan', cs: 'plan/so101/', en: 'en/plan/so101/', nav: null },
   { id: 'plan-svrn', cs: 'plan/svrn/', en: 'en/plan/svrn/', nav: null },

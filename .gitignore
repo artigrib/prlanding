@@ -1,2 +1,4 @@
 dist-hf/
 node_modules/
+# SO-101 SIL guide (navody/so101-lerobot-simulace): Python env for LeRobot
+.venv-lerobot/

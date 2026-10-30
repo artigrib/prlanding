@@ -18,7 +18,7 @@ let failed = 0;
 const CONTENT_PAGES = [['pro-skoly/', 'en/for-schools/'], ['pro-skoly/pracovni-list/', 'en/for-schools/worksheet/'], ['navody/', 'en/guides/'],
   ['navody/so101-lerobot-prvni-kroky/', 'en/guides/so101-lerobot-first-steps/'], ['navody/bojovi-roboti-150-g/', 'en/guides/combat-robots-150-g/'],
   ['navody/licence-open-source-hardwaru/', 'en/guides/open-source-hardware-licences/'],
-  ['navody/so101-sestaveni/', 'en/guides/so101-assembly/'], ['navody/so101-sestaveni/kontrolni-seznam/', 'en/guides/so101-assembly/checklist/'],
+  ['navody/so101-sestaveni/', 'en/guides/so101-assembly/'], ['navody/so101-lerobot-simulace/', 'en/guides/so101-lerobot-simulation/'], ['navody/so101-sestaveni/kontrolni-seznam/', 'en/guides/so101-assembly/checklist/'],
   ['stavba/so101/', 'en/build/so101/'], ['plan/so101/', 'en/plan/so101/'], ['plan/svrn/', 'en/plan/svrn/'], ['navody/so101-baterka/', 'en/guides/so101-flashlight/']];
 const fail =(name, msg) => { failed++; console.log(`FAIL ${name}\n  ${msg}`); };
 

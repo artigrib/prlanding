@@ -100,6 +100,31 @@ jobs:
           fi
           node --test "${files[@]}"
 
+  sil-smoke:
+    # SO-101 software in the loop: start the headless virtual arm (MuJoCo WASM + emulated STS3215 bus on a pty)
+    # and drive it with the Feetech Python SDK that LeRobot uses. Full LeRobot runs are documented, not run in CI.
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Feetech SDK (the version LeRobot 0.6.1 pins)
+        run: python -m pip install -q feetech-servo-sdk==1.0.0 pyserial==3.5
+      - name: SIL unit + end-to-end tests (runner, pty, control, mirror)
+        run: node --test tools/sil/test/*.test.mjs
+      - name: Smoke - ping/read/write/sync read/sync write through the virtual serial port
+        run: |
+          node tools/sil/so101-virtual.mjs --quiet --follower-port "$RUNNER_TEMP/so101-follower" > "$RUNNER_TEMP/runner.log" 2>&1 &
+          python tools/sil/smoke.py "$RUNNER_TEMP/so101-follower"
+          kill %1 || true
+      - if: failure()
+        run: cat "$RUNNER_TEMP/runner.log" || true
+
   smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 20
