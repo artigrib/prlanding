@@ -1,0 +1,477 @@
+{
+ "schema": "prbench-results@1",
+ "bench_version": "v0",
+ "track": "control",
+ "score_version": "prbench-score@1",
+ "run_id": "sample-mock",
+ "date": "2026-10-30",
+ "set": "public",
+ "tasks": [
+  "m01-bowl",
+  "m02-stack",
+  "m03-sort",
+  "m04-ball",
+  "m05-trace",
+  "m06-line",
+  "m07-breakfast",
+  "m08-tidy",
+  "m09-workshop",
+  "m10-lab",
+  "b01-wave",
+  "b02-square"
+ ],
+ "seeds": 3,
+ "settings": {
+  "temperature": 0,
+  "budget": {
+   "maxSteps": 40,
+   "maxToolCallsPerStep": 8,
+   "maxWallS": 900,
+   "maxTokens": 400000,
+   "maxOutputTokens": 2048,
+   "settleS": 2
+  },
+  "vision": "auto"
+ },
+ "mock": true,
+ "max_usd": 2,
+ "spent_usd": 1.5936,
+ "stopped": null,
+ "models": [
+  {
+   "model": "mock/solve-bowl",
+   "served_models": [
+    "mock/solve-bowl"
+   ],
+   "vision": false,
+   "score": 8.3,
+   "episodes": 36,
+   "successes": 3,
+   "success_rate": 0.0833,
+   "mean_steps": 4.1,
+   "mean_sim_s": 4,
+   "mean_wall_s": 0.1,
+   "tokens": {
+    "prompt": 475621,
+    "completion": 6628
+   },
+   "cost_usd": 0.5021,
+   "cost_per_success_usd": 0.1674,
+   "safety_violations": 0,
+   "invalid_calls": 0,
+   "cost_sources": [
+    "mock"
+   ],
+   "per_task": {
+    "m01-bowl": {
+     "n": 3,
+     "successes": 3,
+     "score": 100
+    },
+    "m02-stack": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m03-sort": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m04-ball": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m05-trace": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m06-line": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m07-breakfast": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m08-tidy": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m09-workshop": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m10-lab": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "b01-wave": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "b02-square": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    }
+   }
+  },
+  {
+   "model": "mock/square",
+   "served_models": [
+    "mock/square"
+   ],
+   "vision": false,
+   "score": 8.3,
+   "episodes": 36,
+   "successes": 3,
+   "success_rate": 0.0833,
+   "mean_steps": 3.9,
+   "mean_sim_s": 2.3,
+   "mean_wall_s": 0,
+   "tokens": {
+    "prompt": 354541,
+    "completion": 22267
+   },
+   "cost_usd": 0.4436,
+   "cost_per_success_usd": 0.1479,
+   "safety_violations": 0,
+   "invalid_calls": 66,
+   "cost_sources": [
+    "mock"
+   ],
+   "per_task": {
+    "m01-bowl": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m02-stack": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m03-sort": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m04-ball": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m05-trace": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m06-line": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m07-breakfast": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m08-tidy": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m09-workshop": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m10-lab": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "b01-wave": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "b02-square": {
+     "n": 3,
+     "successes": 3,
+     "score": 100
+    }
+   }
+  },
+  {
+   "model": "mock/wave",
+   "served_models": [
+    "mock/wave"
+   ],
+   "vision": false,
+   "score": 8.1,
+   "episodes": 36,
+   "successes": 3,
+   "success_rate": 0.0833,
+   "mean_steps": 2,
+   "mean_sim_s": 10.5,
+   "mean_wall_s": 0.2,
+   "tokens": {
+    "prompt": 165991,
+    "completion": 7632
+   },
+   "cost_usd": 0.1965,
+   "cost_per_success_usd": 0.0655,
+   "safety_violations": 0,
+   "invalid_calls": 0,
+   "cost_sources": [
+    "mock"
+   ],
+   "per_task": {
+    "m01-bowl": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m02-stack": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m03-sort": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m04-ball": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m05-trace": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m06-line": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m07-breakfast": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m08-tidy": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m09-workshop": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m10-lab": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "b01-wave": {
+     "n": 3,
+     "successes": 3,
+     "score": 97.4
+    },
+    "b02-square": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    }
+   }
+  },
+  {
+   "model": "mock/fail",
+   "served_models": [
+    "mock/fail"
+   ],
+   "vision": false,
+   "score": 0,
+   "episodes": 36,
+   "successes": 0,
+   "success_rate": 0,
+   "mean_steps": 4,
+   "mean_sim_s": 2.8,
+   "mean_wall_s": 0.1,
+   "tokens": {
+    "prompt": 344942,
+    "completion": 6120
+   },
+   "cost_usd": 0.3694,
+   "cost_per_success_usd": null,
+   "safety_violations": 36,
+   "invalid_calls": 0,
+   "cost_sources": [
+    "mock"
+   ],
+   "per_task": {
+    "m01-bowl": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m02-stack": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m03-sort": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m04-ball": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m05-trace": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m06-line": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m07-breakfast": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m08-tidy": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m09-workshop": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m10-lab": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "b01-wave": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "b02-square": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    }
+   }
+  },
+  {
+   "model": "mock/idle",
+   "served_models": [
+    "mock/idle"
+   ],
+   "vision": false,
+   "score": 0,
+   "episodes": 36,
+   "successes": 0,
+   "success_rate": 0,
+   "mean_steps": 1,
+   "mean_sim_s": 2,
+   "mean_wall_s": 0,
+   "tokens": {
+    "prompt": 75871,
+    "completion": 1512
+   },
+   "cost_usd": 0.0819,
+   "cost_per_success_usd": null,
+   "safety_violations": 0,
+   "invalid_calls": 0,
+   "cost_sources": [
+    "mock"
+   ],
+   "per_task": {
+    "m01-bowl": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m02-stack": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m03-sort": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m04-ball": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m05-trace": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m06-line": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m07-breakfast": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m08-tidy": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m09-workshop": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "m10-lab": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "b01-wave": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    },
+    "b02-square": {
+     "n": 3,
+     "successes": 0,
+     "score": 0
+    }
+   }
+  }
+ ]
+}

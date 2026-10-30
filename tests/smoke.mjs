@@ -360,5 +360,31 @@ await check('arena svrn', '/sim/arena/?robot=svrn', async p => {
   if ((await p.locator('#pick > *').count()) < 2) throw new Error('robot menu not rendered');
 });
 
+// PR-Bench leaderboard draft: noindex, unlinked, renders the results JSON, mock data labelled, axe clean
+for (const vp of [{ width: 360, height: 780 }, { width: 1440, height: 900 }]) {
+  await check(`bench leaderboard draft ${vp.width}px`, '/bench/', async p => {
+    await p.setViewportSize(vp);
+    if ((await p.locator('meta[name="robots"]').getAttribute('content')) !== 'noindex,nofollow') throw new Error('not noindex');
+    await p.waitForSelector('#prb-table tbody th code');
+    const rows = await p.locator('#prb-table tbody tr').count();
+    if (rows < 3) throw new Error('leaderboard rows: ' + rows);
+    const first = await p.locator('#prb-table tbody tr').first().locator('td').allInnerTexts();
+    if (!/^\d+\/\d+ \(\d+ %\)$/.test(first[1]) || !/\$|US/.test(first[2])) throw new Error('row cells: ' + first.join(' | '));
+    if (!(await p.locator('#prb-mock').isVisible()) || !/ukázková\s+data\s+–\s+mock/i.test(await p.locator('#prb-mock').innerText())) throw new Error('mock data not labelled');
+    if (!/github\.com\/artigrib\/prlanding\/blob\/main\/bench\/SPEC\.md/.test(await p.locator('#metodika a').first().getAttribute('href'))) throw new Error('methodology link');
+    if (vp.width === 1440) {
+      const sm = await (await p.request.get(BASE + '/sitemap.xml')).text();
+      if (/\/bench\//.test(sm)) throw new Error('bench draft in the sitemap');
+      for (const path of ['/', '/navody/', '/sim/so101/', '/en/'])
+        if (/href="[^"]*bench\/"/.test(await (await p.request.get(BASE + path)).text())) throw new Error('bench draft linked from ' + path);
+    }
+    await p.addScriptTag({ content: AXE });
+    const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
+    const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    if (bad.length) throw new Error('axe: ' + bad.map(v => `${v.id} (${v.nodes.length}) ${v.nodes[0].target}`).join('; '));
+    if ((await p.evaluate(() => document.documentElement.scrollWidth)) > vp.width) throw new Error('horizontal scroll');
+  });
+}
+
 await browser.close();
 process.exit(failed ? 1 : 0);

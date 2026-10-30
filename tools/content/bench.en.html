@@ -1,0 +1,51 @@
+<!--meta
+{"title":"PR-Bench: how AI models drive a robot | printedrobotics.cz",
+ "description":"Our own benchmark: how language models do on physical tasks with the simulated SO-101 robot arm. Same tools, same prompt, a measurable result.",
+ "ogTitle":"PR-Bench: how AI models drive a robot",
+ "h":"PR-Bench",
+ "image":"assets/media/so101-poster.jpg","imageW":960,"imageH":540,"imageAlt":"The simulated SO-101 robot arm above a cube and a bowl"}
+-->
+<!-- draft (tools/build.mjs: draft: true): noindex, not in the sitemap, not linked anywhere. Data: bench/results/sample.json (mock). Before publishing: replace with a real run from the VPS (bench/run.mjs), remove draft. -->
+<section class="g doc-hero">
+<div class="a1 mono">Draft · PR-Bench v0</div>
+<div class="a4" style="display:flex;flex-direction:column;gap:20px">
+<h1>PR-Bench: how AI models drive a robot</h1>
+<p class="lead">We give language models the same tasks our visitors solve in the SO-101 simulator: put the cube in the bowl, build a tower, sort parts, wave. The model drives the simulated arm only through tools (joints, gripper position, scene state), the same ones behind the Connect AI button. Success is judged by the simulator's mission check, not by a person.</p>
+<p class="doc-note" id="prb-mock"><i aria-hidden="true"></i><span><b>Sample data – mock.</b> The table shows scripted test "models" from our CI, not real AI models. It is here to check the scoring and this page.</span></p>
+</div>
+</section>
+
+<section class="section" id="results">
+<div class="g rule">
+<div class="a1 mono">01 — Results</div>
+<div class="a4 prose">
+<h2>Leaderboard</h2>
+<div class="doc-t-wrap" tabindex="0" role="region" aria-label="PR-Bench leaderboard">
+<table class="doc-t" id="prb-table" data-src="{root}bench/results/sample.json">
+<caption class="sr-only">PR-Bench model results, sorted by score</caption>
+<thead><tr><th scope="col">Model</th><th scope="col">Score</th><th scope="col">Success</th><th scope="col">Cost</th><th scope="col">Steps (mean)</th><th scope="col">Date</th></tr></thead>
+<tbody><tr><td colspan="6">Loading results…</td></tr></tbody>
+</table>
+</div>
+<p id="prb-meta" class="muted"></p>
+</div>
+</div>
+</section>
+
+<section class="section" id="methodology">
+<div class="g rule">
+<div class="a1 mono">02 — Methodology</div>
+<div class="a4 prose">
+<h2>How we measure</h2>
+<ul>
+<li><b>Same conditions for everyone:</b> the same system prompt, the same tools, temperature 0, the same step, time and token limits. No tuning for a particular model.</li>
+<li><b>12 tasks:</b> missions 01–10 of the SO-101 simulator and two motion tasks (wave, draw a square), each three times with a different layout.</li>
+<li><b>Score 0–100:</b> success is worth 85 points, partial progress up to 15, minus 5 points for each refused unsafe motion (at most 20). Cost and steps are reported separately.</li>
+<li><b>Hidden set:</b> layouts derived from a secret that lives only on our server, so models cannot learn the tasks by heart.</li>
+<li><b>Images only for multimodal models</b> (a schematic view of the scene); text-only models work from numbers alone and are ranked separately.</li>
+</ul>
+<p>Full methodology: <a href="https://github.com/artigrib/prlanding/blob/main/bench/SPEC.md">bench/SPEC.md</a>.</p>
+</div>
+</div>
+</section>
+<script src="{root}assets/bench-board.js" defer></script>

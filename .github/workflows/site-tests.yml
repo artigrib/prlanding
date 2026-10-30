@@ -100,6 +100,22 @@ jobs:
           fi
           node --test "${files[@]}"
 
+  bench-mock:
+    # PR-Bench CONTROL harness with mock models only: no network, no keys (CI refuses real models)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: tools.json is generated from the bridge schemas
+        run: node bench/control/gen-tools.mjs --check
+      - name: Harness unit tests + mock end-to-end
+        run: node --test bench/tests/*.test.mjs
+      - name: Mock run through the CLI
+        run: node bench/run.mjs --models mock/solve-bowl,mock/fail --tasks m01-bowl,b01-wave --seeds 1 --max-usd 0.5 --out "$RUNNER_TEMP/bench"
+
   sil-smoke:
     # SO-101 software in the loop: start the headless virtual arm (MuJoCo WASM + emulated STS3215 bus on a pty)
     # and drive it with the Feetech Python SDK that LeRobot uses. Full LeRobot runs are documented, not run in CI.

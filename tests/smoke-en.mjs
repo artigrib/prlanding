@@ -19,7 +19,7 @@ const CONTENT_PAGES = [['pro-skoly/', 'en/for-schools/'], ['pro-skoly/pracovni-l
   ['navody/so101-lerobot-prvni-kroky/', 'en/guides/so101-lerobot-first-steps/'], ['navody/bojovi-roboti-150-g/', 'en/guides/combat-robots-150-g/'],
   ['navody/licence-open-source-hardwaru/', 'en/guides/open-source-hardware-licences/'],
   ['navody/so101-sestaveni/', 'en/guides/so101-assembly/'], ['navody/so101-lerobot-simulace/', 'en/guides/so101-lerobot-simulation/'], ['navody/so101-sestaveni/kontrolni-seznam/', 'en/guides/so101-assembly/checklist/'],
-  ['stavba/so101/', 'en/build/so101/'], ['plan/so101/', 'en/plan/so101/'], ['plan/svrn/', 'en/plan/svrn/'], ['navody/so101-baterka/', 'en/guides/so101-flashlight/']];
+  ['stavba/so101/', 'en/build/so101/'], ['plan/so101/', 'en/plan/so101/'], ['plan/svrn/', 'en/plan/svrn/'], ['navody/so101-baterka/', 'en/guides/so101-flashlight/'], ['bench/', 'en/bench/']];
 const fail =(name, msg) => { failed++; console.log(`FAIL ${name}\n  ${msg}`); };
 
 /* ---------- 1. static hreflang / sitemap checks ---------- */
@@ -168,6 +168,22 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
     if (!own.length || own.some(x => !x.startsWith('/en/'))) e.push('arrival links not English: ' + own.join(', '));
     const next = await p.locator('#plan-next a').evaluateAll(as => as.map(a => new URL(a.href)).filter(u => u.origin === location.origin).map(u => u.pathname + u.search));
     if (next[0] !== '/en/guides/combat-robots-150-g/' || !/lang=en/.test(next[1] || '')) e.push('next-step links: ' + next.join(', '));
+    await p.addScriptTag({ content: AXE });
+    const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
+    const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    if (bad.length) e.push('axe: ' + bad.map(v => `${v.id} (${v.nodes.length}) ${v.nodes[0].target}`).join('; '));
+    if (vp.width === 390 && (await p.evaluate(() => document.documentElement.scrollWidth)) > 390) e.push('horizontal scroll');
+  }, { viewport: vp });
+}
+// PR-Bench leaderboard draft (English): noindex, rendered from the results JSON, mock data labelled, axe clean
+for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
+  await check(`en bench leaderboard ${vp.width}px`, '/en/bench/', async (p, e) => {
+    if ((await p.locator('meta[name="robots"]').getAttribute('content')) !== 'noindex,nofollow') e.push('not noindex');
+    await p.waitForSelector('#prb-table tbody th code');
+    if ((await p.locator('#prb-table tbody tr').count()) < 3) e.push('leaderboard rows');
+    if (!/Sample\s+data\s+–\s+mock/.test(await p.locator('#prb-mock').innerText())) e.push('mock data not labelled');
+    if (!/^Run sample-mock · 12 tasks × 3 seeds/.test(await p.locator('#prb-meta').innerText())) e.push('meta line: ' + await p.locator('#prb-meta').innerText());
+    await noCzech(p, e);
     await p.addScriptTag({ content: AXE });
     const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
     const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');

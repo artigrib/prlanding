@@ -2,3 +2,6 @@ dist-hf/
 node_modules/
 # SO-101 SIL guide (navody/so101-lerobot-simulace): Python env for LeRobot
 .venv-lerobot/
+
+# PR-Bench run output (episode logs, replays; hidden-set logs must never be committed)
+bench/runs/
