@@ -184,9 +184,11 @@ jobs:
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
           npm run test:e2e
+      # on failure: screenshots + e2e.log (full output) + fail-NN.txt/.png (the failed check, page URL,
+      # window.__sim.ux() state and the page's last console lines) – the run log itself is often not downloadable
       - uses: actions/upload-artifact@v4
         if: failure() && matrix.suite == 'so101'
         with:
-          name: so101-e2e-screenshots
+          name: so101-e2e-diagnostics
           path: ${{ runner.temp }}/so101-e2e
-          retention-days: 7
+          retention-days: 14

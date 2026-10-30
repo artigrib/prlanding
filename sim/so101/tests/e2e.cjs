@@ -13,14 +13,43 @@ const OUT = process.argv[2] || path.join(require('os').tmpdir(), 'so101ux');
 fs.mkdirSync(OUT, { recursive: true });
 const ARGS = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'];
 let fails = 0;
-const ok = (cond, msg) => { console.log((cond ? 'ok   ' : 'FAIL ') + msg); if (!cond) fails++; };
+// ---- failure diagnostics (CI uploads OUT as an artifact when the job fails; the CI log is often not reachable) ----
+// e2e.log: the full output. fail-NN.txt: the failed check, page URL, window.__sim.ux() and the page's last console
+// lines. fail-NN.png: the page at that moment.
+const LOG = path.join(OUT, 'e2e.log');
+fs.writeFileSync(LOG, '');
+const log0 = console.log;
+console.log = (...a) => { log0(...a); try { fs.appendFileSync(LOG, a.map((x) => (typeof x === 'string' ? x : (x && x.stack) || JSON.stringify(x))).join(' ') + '\n'); } catch (e) { /* ignore */ } };
+let cur = null, nFail = 0, diag = Promise.resolve();
+function diagnose(msg) {
+  const page = cur, k = String(++nFail).padStart(2, '0');
+  diag = diag.then(async () => {
+    const lines = [`FAIL ${msg}`, `time ${new Date().toISOString()}`];
+    if (page && !page.isClosed()) {
+      lines.push(`url ${page.url()}`);
+      try {
+        const st = await Promise.race([page.evaluate(() => (window.__sim && window.__sim.ux ? window.__sim.ux() : null)), new Promise((r) => setTimeout(() => r('(page busy: no answer in 20 s)'), 20000))]);
+        lines.push('ux ' + JSON.stringify(st));
+      } catch (e) { lines.push('ux (failed) ' + e.message.split('\n')[0]); }
+      lines.push('--- last console lines', ...(page.cons || []));
+      try { await page.screenshot({ path: path.join(OUT, `fail-${k}.png`), timeout: 60000 }); } catch (e) { lines.push('screenshot failed: ' + e.message.split('\n')[0]); }
+    } else lines.push('(no open page)');
+    fs.writeFileSync(path.join(OUT, `fail-${k}.txt`), lines.join('\n') + '\n');
+  }).catch(() => {});
+}
+const ok = (cond, msg) => { console.log((cond ? 'ok   ' : 'FAIL ') + msg); if (!cond) { fails++; diagnose(msg); } };
 
 function freePort() { return new Promise((r) => { const s = net.createServer(); s.listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => r(p)); }); }); }
 
 async function open(browser, url, vp, touch) {
   const page = await browser.newPage({ viewport: vp, deviceScaleFactor: 1, hasTouch: !!touch, isMobile: !!touch });
-  page.on('pageerror', (e) => { console.log('PAGEERROR', e.message); fails++; });
-  page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) console.log('console.error', m.text()); });
+  page.cons = [];
+  page.on('pageerror', (e) => { console.log('PAGEERROR', e.message); fails++; page.cons.push('pageerror ' + e.message); diagnose('PAGEERROR ' + e.message); });
+  page.on('console', (m) => {
+    page.cons.push(`${m.type()} ${m.text()}`.slice(0, 500)); if (page.cons.length > 60) page.cons.shift();
+    if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) console.log('console.error', m.text());
+  });
+  cur = page;
   page.reqs = []; page.on('request', (r) => page.reqs.push(r.url()));
   await page.goto(url);
   await page.waitForFunction(() => window.__sim && (window.__sim.ready || window.__sim.error), null, { timeout: 300000 });
@@ -302,7 +331,9 @@ async function touchDrag(page, from, to, steps = 8) {
 
     // drawing mission: top-down view, paper-plane drag keeps the pen on the paper; finger trace → robot completes it
     {
-      await S(p, () => window.__sim.mission('trace')); await p.waitForTimeout(900);
+      // the camera tween advances in rendered frames (0.25-2.5 s each with software GL): wait for its end, not a fixed time
+      await S(p, () => window.__sim.mission('trace'));
+      await p.waitForFunction(() => !window.__sim._ux.cameras.tw, null, { timeout: 60000 }).catch(() => {});
       const top = await S(p, () => { const c = window.__sim._ux.app.camera, t = window.__sim._ux.app.controls.target; const d = c.position.clone().sub(t).normalize(); return d.y; });
       ok(top > 0.8, 'drawing mission starts with a steep top-down camera (' + top.toFixed(3) + ')');
       const corners = await S(p, () => window.__sim._ux.runner.m && [[0.215, 0.055], [0.2009, 0.0194], [0.1627, 0.017], [0.192, -0.0074], [0.1827, -0.0445]]);
@@ -370,7 +401,7 @@ async function touchDrag(page, from, to, steps = 8) {
     await p.waitForFunction(() => window.__sim.ux().hiDetail, null, { timeout: 120000 }).catch(() => {});
     ok((await ux(p)).hiDetail, 'high-detail GLB meshes swapped in');
     await S(p, () => window.__sim.explode(true));
-    await p.waitForTimeout(2500);
+    await p.waitForFunction(() => window.__sim.ux().explode > 0.3, null, { timeout: 60000 }).catch(() => {});   // animates per frame
     await shot(p, 'desk-08-explode');
     ok((await ux(p)).explode > 0.3, 'exploded view separates the parts');
     await S(p, () => window.__sim.assemble());
@@ -447,7 +478,7 @@ async function touchDrag(page, from, to, steps = 8) {
 
     // ---------------- onboarding (first visit) ----------------
     const o = await open(browser, base + '?test=1&onboard=1&detail=low', { width: 1280, height: 800 });
-    await o.waitForTimeout(1500);
+    await o.waitForFunction(() => { const c = document.querySelector('.ux-coach'); return c && !c.hidden; }, null, { timeout: 30000 }).catch(() => {});
     ok(await S(o, () => !document.querySelector('.ux-coach').hidden), 'onboarding is shown');
     await S(o, () => window.__sim._ux.onboarding.tick());
     const cover = await S(o, () => { const u = window.__sim._ux, r = document.querySelector('.ux-coach').getBoundingClientRect();
@@ -459,12 +490,12 @@ async function touchDrag(page, from, to, steps = 8) {
     await advanceUntil(o, () => window.__sim.ux().held === 'cube' && !window.__sim.ux().busy, 14, 1);
     a = await S(o, () => window.__sim.screen('bowl')); await o.mouse.click(a.x, a.y);
     await advanceUntil(o, () => window.__sim.ux().won, 16, 1);
-    await o.waitForTimeout(600);
+    await o.waitForFunction(() => { const g = document.getElementById('ux-wguide'); return !document.getElementById('win').hidden && g && !g.hidden; }, null, { timeout: 30000 }).catch(() => {});
     const stay = await S(o, () => ({ win: !document.getElementById('win').hidden, guide: !!document.getElementById('ux-wguide') && !document.getElementById('ux-wguide').hidden,
       cta: (() => { const c = document.getElementById('cta'); return !!c && c.offsetParent !== null; })(), coach: document.getElementById('ux-coach-h').textContent }));
     ok(stay.win && stay.guide && !stay.cta, 'first (guided) win card stays, offers "Teď ručně", no purchase CTA (' + JSON.stringify(stay) + ')');
     await o.click('#ux-wguide');
-    await o.waitForTimeout(400);
+    await o.waitForFunction(() => /Teď ručně/.test(document.getElementById('ux-coach-h').textContent), null, { timeout: 30000 }).catch(() => {});
     const step = await S(o, () => document.getElementById('ux-coach-h').textContent);
     ok(/Teď ručně/.test(step), 'guided first task advances to the hands-on step after the win (' + step + ')');
     await shot(o, 'desk-10-onboarding');
@@ -472,7 +503,7 @@ async function touchDrag(page, from, to, steps = 8) {
 
     // ---------------- phone onboarding (P0-2) ----------------
     const po = await open(browser, base + '?test=1&onboard=1&detail=low', { width: 390, height: 844 }, true);
-    await po.waitForTimeout(1500);
+    await po.waitForFunction(() => { const c = document.querySelector('.ux-coach'); return c && !c.hidden && !!c.closest('.ux-under'); }, null, { timeout: 30000 }).catch(() => {});
     const pr = await S(po, () => { const c = document.querySelector('.ux-coach'), r = c.getBoundingClientRect(), st = document.querySelector('.stage').getBoundingClientRect();
       return { inUnder: !!c.closest('.ux-under'), top: r.top, stageBottom: st.bottom, visible: !c.hidden }; });
     ok(pr.visible && pr.inUnder && pr.top >= pr.stageBottom - 1, 'P0-2: phone guide is a strip under the stage, not over it ' + JSON.stringify(pr));
@@ -506,7 +537,8 @@ async function touchDrag(page, from, to, steps = 8) {
     await S(ph, () => window.__sim.advance(0.3));
     await shot(ph, 'phone-05-win');
     await ph.close();
-  } catch (e) { console.log('FAIL exception', e); fails++; }
+  } catch (e) { console.log('FAIL exception', e); fails++; diagnose('exception ' + (e && e.message)); }
+  await diag;
   await browser.close(); srv.kill();
   console.log(fails ? `\n${fails} FAILED` : '\nALL OK', '— screenshots in', OUT);
   process.exit(fails ? 1 : 0);
