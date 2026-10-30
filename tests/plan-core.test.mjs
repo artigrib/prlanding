@@ -53,19 +53,19 @@ const sum = (xs) => xs.reduce((a, b) => a + b, 0);
 
 test('plan totals: follower 12 V, self-printed', () => {
   const p = buildPlan(data, { robot: 'follower_12v', print: 'self' });
-  // goods: 6×26.45 + 5.95 + 11.99 (Eckstein) + 179 Kč (Alza) + 179 Kč (Hornbach, pack of 2) + filament 350 g × 450 Kč/kg
+  // goods: 6×26.45 + 5.95 + 11.99 (Eckstein) + 199 Kč (Alza) + 179 Kč (Hornbach, pack of 2) + filament 350 g × 450 Kč/kg
   const fx = data.meta.fx_czk_per_eur;
-  const goods = 6 * 26.45 + 5.95 + 11.99 + 179 / fx + 179 / fx + (0.35 * 450) / fx;
+  const goods = 6 * 26.45 + 5.95 + 11.99 + 199 / fx + 179 / fx + (0.35 * 450) / fx;
   assert.ok(Math.abs(p.totals.goods_eur[0] - goods) < 0.05, `${p.totals.goods_eur[0]} vs ${goods}`);
   // landed = goods + shipping (Eckstein 8–15, Alza 0–3, Hornbach 0–4) + up to 1.7 % OSS VAT on the Eckstein part
   const eck = 6 * 26.45 + 5.95 + 11.99;
   const lo = goods + 8, hi = goods + eck * 0.017 + 15 + 3 + 4;
   assert.deepEqual(p.totals.landed_eur, [Math.floor(lo), Math.ceil(hi)]);
-  assert.deepEqual(p.totals.landed_eur, [205, 223]);
-  assert.deepEqual(p.totals.landed_czk, [4980, 5400]);
+  assert.deepEqual(p.totals.landed_eur, [206, 224]);
+  assert.deepEqual(p.totals.landed_czk, [5000, 5420]);
   assert.equal(Math.round(sum(p.groups.map((g) => g.landed_eur[0]))), Math.round(lo));
   assert.deepEqual(p.eta_days, [21, 28], 'C018 backorder sets the ETA');
-  assert.equal(p.checked.oldest, '2026-10-27');
+  assert.equal(p.checked.oldest, '2026-10-30');
   assert.ok(p.groups.find((g) => g.supplier === 'hornbach').lines[0].packs === 1, '2 clamps = 1 pack of 2');
   assert.deepEqual(p.variants.map((v) => v.arm), ['follower_12v']);
   assert.ok(p.tools.some((t) => t.id === 'printer'));
@@ -74,7 +74,7 @@ test('plan totals: follower 12 V, self-printed', () => {
 
 test('plan totals: pair, self-printed and print service', () => {
   const p = buildPlan(data, { robot: 'pair', print: 'self' });
-  assert.deepEqual(p.totals.landed_eur, [386, 412]);
+  assert.deepEqual(p.totals.landed_eur, [388, 414]);
   assert.deepEqual(p.variants.map((v) => v.arm), ['follower_12v', 'leader']);
   const servos = p.groups.flatMap((g) => g.lines).filter((l) => /servo\.c0/.test(l.component));
   assert.equal(sum(servos.map((l) => l.qty)), 12);
