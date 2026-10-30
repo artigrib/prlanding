@@ -80,10 +80,14 @@ test('ROBOTO ORIGIN showcase: copyleft hardware, trademark flag, no buy path', (
   assert.equal(o.rights.trademark, true);
   assert.ok(o.specs.every((s) => s.length === 3 && s[2]), 'every spec names its upstream source');
   assert.match(o.upstream.commit, /^[0-9a-f]{40}$/);
+  // only claims the cited upstream files state: no team city, no derived height/mass, no "full-size"
+  const allText = (x) => JSON.stringify([x.type, x.short, x.lead, x.note, x.alt, x.specs]);
+  assert.doesNotMatch(allText(o), /šanghaj|shanghai|peking|beijing|plné velikosti|výška|hmotnost/i);
   const en = load('en').PR_SHOWCASE.find((r) => r.id === 'origin');
   assert.equal(en.specs.length, o.specs.length);
   assert.equal(JSON.stringify(en.specs.map((s) => s[2])), JSON.stringify(o.specs.map((s) => s[2])));
   assert.equal(JSON.stringify(pick(en.rights)), JSON.stringify(pick(o.rights)));
+  assert.doesNotMatch(allText(en), /shanghai|beijing|full-size|height|mass/i);
   assert.ok(!/[ěščřžýáíéůú]/i.test(en.lead + en.short + en.specs.map((s) => s[0] + s[1]).join('')), 'English text has no Czech');
 });
 
