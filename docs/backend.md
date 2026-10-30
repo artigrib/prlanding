@@ -38,6 +38,7 @@ rotated at 10 MB × 3.
 | `POST /e` | Analytics batch from `assets/track.js` (only after consent), validated against `analytics/schema.json`, max 16 KB / 25 events; see [docs/analytics/events.md](analytics/events.md). The legacy body `{"e":"<name>"}` (max 256 bytes) is still counted. Returns 204. |
 | `OPTIONS /e` | CORS preflight. |
 | `GET /stats?days=30` | Daily aggregates. Needs `Authorization: Bearer <STATS_TOKEN>`. |
+| `/forge/*` | Invite-only forge job API (jobs, SSE progress, artifacts). Off unless the forge is deployed; see [backend/forge/README.md](../backend/forge/README.md#stage-1-on-the-vps). |
 
 Privacy design:
 - No cookies are read or set. The SQLite database holds only `(day, event, count)`. Analytics
@@ -184,6 +185,11 @@ networking, and `remote-deploy.sh` refuses to run a compose file that would (`gu
    fresh).
 6. **Analytics secrets** (optional, each sink stays off while its secrets are empty): see
    "Owner setup" in [docs/analytics/events.md](analytics/events.md).
+7. **Forge** (optional; off while the key is empty, the deploy then prints
+   `forge: disabled (no key)`): secrets `OPENROUTER_SECRET` (fallback name `OPENROUTER_API_KEY`) and
+   `FORGE_INVITE_TOKENS` (repository or environment `production`), optional variables `FORGE_DAILY_USD`, `FORGE_MODEL`, `FORGE_MODEL_LIGHT`. Mint invite
+   tokens locally with `node backend/api/scripts/forge-token.mjs <label>`. Details: "Owner setup" in
+   [backend/forge/README.md](../backend/forge/README.md#stage-1-on-the-vps).
 
 ## Analytics
 

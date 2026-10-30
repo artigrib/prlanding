@@ -1,12 +1,15 @@
 <!doctype html>
-<!-- /lab/: draft prototype, noindex, not linked from any page. Replays a forge job log (backend/forge) step by step.
-     The same applyEvent() will consume the live SSE stream (GET /forge/jobs/<id>/events, see backend/forge/README.md). -->
+<!-- /lab/: invite-only prototype, noindex, not linked from any page. CZ + EN (?lang=en).
+     1. Live: an invitee enters their token and a request; the forge worker (backend/forge, LLM + sandboxed tools) runs
+        the job and this page shows its progress from the api's SSE stream (GET /forge/jobs/<id>/events, read with fetch
+        so the token stays in a header and never in a URL), the cost so far, and the downloads.
+     2. Replay: the stage-0 demo job (lab/forge/<job>/job.json), step by step. -->
 <html lang="cs">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Forge lab (prototyp) | printedrobotics.cz</title>
-<meta name="description" content="Prototyp: přehrání úlohy CAD dílny (forge) krok za krokem.">
+<meta name="description" content="Prototyp: CAD dílna (forge) – návrh dílu pro robota pomocí AI, ověřený v simulaci.">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#FFFFFF">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E8461E'/%3E%3C/svg%3E">
@@ -14,84 +17,314 @@
 <style>
 .lab{padding:32px 0 64px}
 .lab h1{font-size:clamp(28px,4vw,44px);line-height:1.1;margin:8px 0 12px;font-weight:600;letter-spacing:-.01em}
-.lab .req{font-family:var(--mono);font-size:15px;background:var(--sand);border:1px solid var(--line);padding:12px 14px;margin:16px 0 8px}
-.lab .tag{display:inline-block;font-family:var(--mono);font-size:12px;background:var(--ink);color:#fff;padding:3px 8px;margin-right:6px}
+.lab h2.sec-h{font-size:24px;margin:40px 0 8px;font-weight:600}
+.lab .req{font-family:var(--mono);font-size:15px;background:var(--sand);border:1px solid var(--line);padding:12px 14px;margin:16px 0 8px;overflow-wrap:anywhere}
+.lab .tag{display:inline-block;font-family:var(--mono);font-size:12px;background:var(--ink);color:#fff;padding:3px 8px;margin:0 6px 6px 0}
 .lab .tag.warn{background:var(--accent);color:var(--ink)}
 .lab .bar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:20px 0}
 .lab .bar .btn{min-height:44px}
+.lab .lang{float:right;font-family:var(--mono);font-size:13px}
+.live{border:1px solid var(--ink);padding:16px;margin:24px 0}
+.live .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.live .row .field{flex:1 1 220px;min-width:0}
+.live .field input,.live .field textarea{width:100%;box-sizing:border-box}
+.live textarea{min-height:110px;resize:vertical}
+.live .btn{min-height:48px}
+.live .meta{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:13px;color:var(--ink-2);margin:12px 0 0}
+.live .arts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.live .arts button{font-family:var(--mono);font-size:13px;min-height:40px;padding:0 12px;border:1px solid var(--ink);background:#fff;color:var(--ink);cursor:pointer}
+.live .arts button.main{background:var(--accent);border-color:var(--accent);font-weight:600}
+.live .msg{margin:10px 0 0;overflow-wrap:anywhere}
 .steps{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
-.step{display:grid;grid-template-columns:40px minmax(0,1fr);gap:4px 14px;padding:16px 0;border-bottom:1px solid var(--line)}
-.step .dot{width:28px;height:28px;border:2px solid var(--line-2);border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:12px;color:var(--mute);background:#fff}
-.step[data-s="running"] .dot{border-color:var(--accent);animation:pulse 1s infinite}
-.step[data-s="ok"] .dot,.step[data-s="skipped"] .dot{background:var(--ink);border-color:var(--ink);color:#fff}
-.step[data-s="warn"] .dot{background:var(--accent);border-color:var(--accent);color:var(--ink)}
-.step[data-s="fail"] .dot{background:#8A1C0A;border-color:#8A1C0A;color:#fff}
-.step[data-s="pending"]{opacity:.45}
-.step h2{font-size:18px;margin:2px 0 0;font-weight:600}
-.step .sum{margin:4px 0 0;color:var(--ink-2);overflow-wrap:anywhere}
-.step .sec{font-family:var(--mono);font-size:12px;color:var(--mute)}
+.step,.lstep{display:grid;grid-template-columns:40px minmax(0,1fr);gap:4px 14px;padding:16px 0;border-bottom:1px solid var(--line)}
+.step .dot,.lstep .dot{width:28px;height:28px;border:2px solid var(--line-2);border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:12px;color:var(--mute);background:#fff}
+[data-s="running"] .dot{border-color:var(--accent);animation:pulse 1s infinite}
+[data-s="ok"] .dot,[data-s="skipped"] .dot{background:var(--ink);border-color:var(--ink);color:#fff}
+[data-s="warn"] .dot{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+[data-s="fail"] .dot{background:#8A1C0A;border-color:#8A1C0A;color:#fff}
+.step[data-s="pending"],.lstep[data-s="pending"]{opacity:.45}
+.step h2,.lstep h3{font-size:18px;margin:2px 0 0;font-weight:600}
+.step .sum,.lstep .sum{margin:4px 0 0;color:var(--ink-2);overflow-wrap:anywhere}
+.step .sec,.lstep .sec{font-family:var(--mono);font-size:12px;color:var(--mute)}
 .step details{margin-top:8px}
 .step pre{font-family:var(--mono);font-size:12px;background:var(--sand);border:1px solid var(--line);padding:10px;overflow:auto;max-height:280px;white-space:pre-wrap;overflow-wrap:anywhere}
 .shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px}
 .shots img{width:100%;height:auto;display:block;border:1px solid var(--line);background:var(--stone)}
 .lab .out{margin-top:28px}
 @keyframes pulse{50%{box-shadow:0 0 0 6px rgba(232,70,30,.18)}}
-@media (prefers-reduced-motion:reduce){.step[data-s="running"] .dot{animation:none}}
+@media (prefers-reduced-motion:reduce){[data-s="running"] .dot{animation:none}}
 </style>
 </head>
 <body>
 <header class="site-h"><div class="wrap"><div class="hbar"><div class="brand"><i aria-hidden="true"></i><a href="../">printedrobotics</a></div></div></div></header>
 <main id="obsah" class="wrap lab">
-<div class="mono">Forge lab · prototyp · noindex</div>
-<h1>CAD dílna: od zadání k dílu</h1>
-<p class="muted">Přehrání jedné úlohy krok za krokem: rozbor → uchycení → CAD → kontroly → díly → vizualizace → návod. Později tu poběží živě (SSE) z pracovníka na serveru.</p>
-<p><span class="tag warn">komunitní návrh – ověřeno pouze v simulaci</span><span class="tag" id="brain">…</span></p>
-<div class="req" id="req" aria-label="Zadání">…</div>
+<div class="mono"><span data-t="kicker">Forge lab · prototyp · noindex</span> <span class="lang"><a id="lang-link" href="?lang=en" hreflang="en" lang="en">English</a></span></div>
+<h1 data-t="h1">CAD dílna: od zadání k dílu</h1>
+<p class="muted" data-t="intro">Zadání v běžné řeči → AI navrhne díl pro SO-101 v CAD sandboxu, zkontroluje ho v simulaci (MuJoCo), vybere díly a připraví koncept návodu. Nic se nezveřejní automaticky.</p>
+<p><span class="tag warn" data-t="label">návrh AI, ověřeno pouze v simulaci</span></p>
+
+<section class="live" id="live" aria-labelledby="live-h">
+<h2 class="sec-h" id="live-h" data-t="liveH" style="margin-top:0">Živě (jen na pozvánku)</h2>
+<div class="row" id="tokrow">
+<label class="field"><span data-t="tokL">Pozvánkový token</span><input id="tok" type="password" autocomplete="off" spellcheck="false" maxlength="200" inputmode="text"></label>
+<button class="btn btn-o" id="tok-save" type="button" data-t="tokSave">Použít token</button>
+<button class="btn btn-o" id="tok-forget" type="button" data-t="tokForget" hidden>Zapomenout token</button>
+</div>
+<p class="mono muted" id="me" role="status" aria-live="polite"></p>
+<form id="jobform" hidden>
+<label class="field"><span data-t="promptL">Co má díl dělat?</span><textarea id="prompt" maxlength="1200" required data-tp="promptP" placeholder="Např.: SO-101 s baterkou na chapadle, napájení z USB"></textarea></label>
+<div class="bar"><button class="btn btn-act" id="go" type="submit"><span data-t="go">Spustit návrh</span> <span aria-hidden="true">→</span></button>
+<span class="mono muted" id="count">0 / 1200</span>
+<button class="btn btn-o" id="cancel" type="button" data-t="cancel" hidden>Zrušit úlohu</button></div>
+</form>
+<div class="meta" id="lmeta" hidden><span id="lstatus" role="status" aria-live="polite"></span><span id="cad-n"></span><span id="cost"></span></div>
+<ol class="steps" id="lsteps" aria-label="Průběh úlohy" data-ta="stepsA"></ol>
+<p class="msg" id="lmsg"></p>
+<div id="dl" hidden><h3 data-t="dlH">Ke stažení</h3><p class="muted" data-t="dlNote">Balíček obsahuje STEP/STL, zdrojový kód CAD, výsledky kontrol, díly a koncept návodu. Do webu se dostane jen přes ruční kontrolu a draft pull request.</p><div class="arts" id="arts"></div></div>
+</section>
+
+<h2 class="sec-h" data-t="replayH">Ukázka: přehrání hotové úlohy</h2>
+<p class="muted" data-t="replayP">Přehrání jedné úlohy krok za krokem: rozbor → uchycení → CAD → kontroly → díly → vizualizace → návod.</p>
+<p><span class="tag" id="brain">…</span></p>
+<div class="req" id="req" aria-label="Zadání" data-ta="reqA">…</div>
 <div class="bar">
-<button class="btn btn-act" id="play" type="button">Přehrát znovu <span aria-hidden="true">↻</span></button>
-<label class="mono"><input type="checkbox" id="fast"> rychle</label>
+<button class="btn btn-act" id="play" type="button"><span data-t="play">Přehrát znovu</span> <span aria-hidden="true">↻</span></button>
+<label class="mono"><input type="checkbox" id="fast"> <span data-t="fast">rychle</span></label>
 <span class="mono" id="status" role="status" aria-live="polite"></span>
 </div>
 <ol class="steps" id="steps"></ol>
 <div class="out" id="out" hidden>
-<h2>Výstup</h2>
+<h2 data-t="outH">Výstup</h2>
 <p id="outsum"></p>
-<p><a href="../navody/so101-baterka/">Koncept návodu (CZ)</a> · <a href="../en/guides/so101-flashlight/">Draft guide (EN)</a></p>
+<p><a href="../navody/so101-baterka/" data-t="guideCs">Koncept návodu (CZ)</a> · <a href="../en/guides/so101-flashlight/" lang="en">Draft guide (EN)</a></p>
 </div>
 </main>
 <script>
 (() => {
-  const JOB = new URLSearchParams(location.search).get('job') || 'so101-flashlight';
-  if (!/^[a-z0-9-]+$/.test(JOB)) return;
+  const API = 'https://api.printedrobotics.cz';
+  const EN = new URLSearchParams(location.search).get('lang') === 'en';
+  const T = {
+    kicker: ['Forge lab · prototyp · noindex', 'Forge lab · prototype · noindex'],
+    h1: ['CAD dílna: od zadání k dílu', 'CAD forge: from a request to a part'],
+    intro: ['Zadání v běžné řeči → AI navrhne díl pro SO-101 v CAD sandboxu, zkontroluje ho v simulaci (MuJoCo), vybere díly a připraví koncept návodu. Nic se nezveřejní automaticky.',
+      'A request in plain words → an AI designs a part for the SO-101 in a CAD sandbox, checks it in simulation (MuJoCo), picks parts and drafts a guide. Nothing is published automatically.'],
+    label: ['návrh AI, ověřeno pouze v simulaci', 'AI draft, verified in simulation only'],
+    liveH: ['Živě (jen na pozvánku)', 'Live (invite only)'],
+    tokL: ['Pozvánkový token', 'Invite token'],
+    tokSave: ['Použít token', 'Use token'],
+    tokForget: ['Zapomenout token', 'Forget token'],
+    promptL: ['Co má díl dělat?', 'What should the part do?'],
+    promptP: ['Např.: SO-101 s baterkou na chapadle, napájení z USB', 'E.g.: SO-101 with a flashlight on the gripper, USB powered'],
+    go: ['Spustit návrh', 'Start the design'],
+    cancel: ['Zrušit úlohu', 'Cancel the job'],
+    stepsA: ['Průběh úlohy', 'Job progress'],
+    dlH: ['Ke stažení', 'Downloads'],
+    dlNote: ['Balíček obsahuje STEP/STL, zdrojový kód CAD, výsledky kontrol, díly a koncept návodu. Do webu se dostane jen přes ruční kontrolu a draft pull request.',
+      'The bundle holds STEP/STL, the CAD source, the check results, the parts and a draft guide. It reaches the site only through a manual review and a draft pull request.'],
+    replayH: ['Ukázka: přehrání hotové úlohy', 'Example: replay of a finished job'],
+    replayP: ['Přehrání jedné úlohy krok za krokem: rozbor → uchycení → CAD → kontroly → díly → vizualizace → návod.',
+      'One job replayed step by step: parse → mount → CAD → checks → parts → renders → guide.'],
+    reqA: ['Zadání', 'Request'],
+    play: ['Přehrát znovu', 'Replay'],
+    fast: ['rychle', 'fast'],
+    outH: ['Výstup', 'Output'],
+    guideCs: ['Koncept návodu (CZ)', 'Draft guide (Czech)'],
+    // dynamic
+    running: ['běží…', 'running…'], step: ['Krok', 'Step'], done: ['Hotovo', 'Done'], data: ['data kroku', 'step data'],
+    shot: ['Vizualizace kroku', 'Render of step'], loadFail: ['Log se nepodařilo načíst', 'Could not load the log'],
+    tokBad: ['Token nebyl přijat.', 'The token was not accepted.'], tokRate: ['Příliš mnoho pokusů, zkuste to za minutu.', 'Too many attempts, try again in a minute.'],
+    off: ['Živá dílna teď není zapnutá.', 'The live forge is not switched on right now.'],
+    net: ['Server není dostupný.', 'The server cannot be reached.'],
+    me: ['Úloh dnes: {n} z {q} · dnešní útrata dílny ${s} z ${d}', 'Jobs today: {n} of {q} · forge spend today ${s} of ${d}'],
+    queued: ['Ve frontě…', 'Queued…'], cadN: ['CAD pokusy: {n}', 'CAD attempts: {n}'], cost: ['Cena zatím: ${c} · {t} tokenů', 'Cost so far: ${c} · {t} tokens'],
+    err: { length: ['Zadání musí mít 8–1200 znaků.', 'The request must be 8–1200 characters.'], characters: ['Zadání obsahuje nepovolené znaky.', 'The request contains characters that are not allowed.'],
+      busy: ['Jedna úloha už běží; počkejte na ni.', 'A job is already running; wait for it.'], quota: ['Dnešní počet úloh je vyčerpán.', 'Today\'s job quota is used up.'],
+      budget_daily: ['Dnešní rozpočet dílny je vyčerpán.', 'Today\'s forge budget is used up.'], queue_full: ['Fronta je plná, zkuste to později.', 'The queue is full, try again later.'] },
+    end: { done: ['Hotovo. Stáhněte si balíček; nic se nezveřejnilo.', 'Done. Download the bundle; nothing was published.'], budget: ['Zastaveno: limit nákladů.', 'Stopped: cost limit.'],
+      cancelled: ['Zrušeno.', 'Cancelled.'], timeout: ['Zastaveno: časový limit.', 'Stopped: time limit.'], refused: ['Zadání je mimo rozsah dílny.', 'The request is outside what the forge does.'],
+      failed: ['Úloha selhala.', 'The job failed.'] },
+  };
+  const t = (k) => (k.split('.').reduce((o, p) => o && o[p], T) || [k, k])[EN ? 1 : 0];
+  const fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]);
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const ICON = { pending: '·', running: '…', ok: '✓', warn: '!', fail: '×', skipped: '–' };
+
+  if (EN) {
+    document.documentElement.lang = 'en';
+    document.title = 'Forge lab (prototype) | printedrobotics.cz';
+    document.querySelectorAll('[data-t]').forEach((e) => { e.textContent = t(e.dataset.t); });
+    document.querySelectorAll('[data-tp]').forEach((e) => { e.placeholder = t(e.dataset.tp); });
+    document.querySelectorAll('[data-ta]').forEach((e) => { e.setAttribute('aria-label', t(e.dataset.ta)); });
+    $('lang-link').href = '?lang=cs'; $('lang-link').textContent = 'Česky'; $('lang-link').lang = 'cs'; $('lang-link').hreflang = 'cs';
+  }
+
+  /* ---------------- live (invite only) ---------------- */
+  const KEY = 'forge-token';
+  let token = '';
+  try { token = sessionStorage.getItem(KEY) || ''; } catch { /* storage off */ }
+  let jobId = null, lastSeq = 0, cadN = 0, ended = false, ctrl = null;
+  const auth = () => ({ Authorization: 'Bearer ' + token });
+  const api = (path, opt = {}) => fetch(API + path, { ...opt, headers: { ...auth(), ...(opt.headers || {}) }, credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer' });
+
+  function setToken(v) {
+    token = v;
+    try { v ? sessionStorage.setItem(KEY, v) : sessionStorage.removeItem(KEY); } catch { /* storage off */ }
+    $('tok').value = '';
+    $('tok-forget').hidden = !v;
+  }
+  async function me() {
+    if (!token) { $('jobform').hidden = true; $('me').textContent = ''; return; }
+    let r;
+    try { r = await api('/forge/me'); } catch { $('me').textContent = t('net'); return; }
+    if (r.status === 401) { setToken(''); $('me').textContent = t('tokBad'); return; }
+    if (r.status === 429) { $('me').textContent = t('tokRate'); return; }
+    if (r.status === 404) { $('me').textContent = t('off'); return; }
+    if (!r.ok) { $('me').textContent = t('net'); return; }
+    const m = await r.json();
+    $('me').textContent = fmt(t('me'), { n: m.jobs_today, q: m.jobs_per_day, s: Number(m.spent_today_usd).toFixed(2), d: Number(m.daily_usd).toFixed(2) });
+    $('jobform').hidden = false;
+    if (m.active && m.active !== jobId) attach(m.active);
+  }
+  $('tok-save').addEventListener('click', () => { const v = $('tok').value.trim(); if (v) { setToken(v); me(); } });
+  $('tok').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('tok-save').click(); } });
+  $('tok-forget').addEventListener('click', () => { setToken(''); $('jobform').hidden = true; $('me').textContent = ''; });
+  $('prompt').addEventListener('input', () => { $('count').textContent = `${$('prompt').value.length} / 1200`; });
+
+  $('jobform').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = $('prompt').value.trim();
+    $('lmsg').textContent = '';
+    if (text.length < 8) { $('lmsg').textContent = t('err.length'); return; }
+    $('go').disabled = true;
+    let r;
+    try { r = await api('/forge/jobs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ request: text, lang: EN ? 'en' : 'cs' }) }); }
+    catch { $('lmsg').textContent = t('net'); $('go').disabled = false; return; }
+    const b = await r.json().catch(() => ({}));
+    if (r.status === 202 && b.id) { attach(b.id); me(); return; }
+    $('go').disabled = false;
+    $('lmsg').textContent = (T.err[b.error] || T.end.failed)[EN ? 1 : 0];
+    if (b.error === 'busy' && b.active) attach(b.active);
+  });
+  $('cancel').addEventListener('click', async () => { if (jobId) { try { await api(`/forge/jobs/${jobId}/cancel`, { method: 'POST' }); } catch { /* the stream reports it */ } } });
+
+  function lrow(s, i) {
+    const li = document.createElement('li');
+    li.className = 'lstep'; li.id = 'ls-' + s.id; li.dataset.s = 'pending';
+    li.innerHTML = `<span class="dot" aria-hidden="true">${i + 1}</span><div><h3>${esc(EN ? s.title : s.title_cs)} <span class="sec">${esc(s.id)}</span></h3><p class="sum"></p></div>`;
+    return li;
+  }
+  function liveEvent(ev) {
+    if (typeof ev.seq === 'number') lastSeq = Math.max(lastSeq, ev.seq);
+    if (ev.cost) $('cost').textContent = fmt(t('cost'), { c: Number(ev.cost.cost_usd || 0).toFixed(2), t: ev.cost.tokens || 0 });
+    if (ev.type === 'start' && Array.isArray(ev.steps)) {
+      $('lsteps').innerHTML = '';
+      ev.steps.forEach((s, i) => $('lsteps').appendChild(lrow(s, i)));
+      $('lstatus').textContent = t('running');
+    } else if (ev.type === 'step') {
+      const li = $('ls-' + ev.step); if (!li) return;
+      li.dataset.s = ev.status;
+      li.querySelector('.dot').textContent = ICON[ev.status] || '·';
+      if (ev.status === 'running') { li.querySelector('.sum').textContent = t('running'); $('lstatus').textContent = t('step') + ': ' + li.querySelector('h3').firstChild.textContent.trim(); }
+      else {
+        if (ev.summary) li.querySelector('.sum').textContent = ev.summary;
+        if (ev.step === 'cad') { cadN++; $('cad-n').textContent = fmt(t('cadN'), { n: cadN }); }
+      }
+      if (ev.artifacts && ev.artifacts.length) artifacts();
+    } else if (ev.type === 'end') {
+      ended = true;
+      $('lstatus').textContent = ev.status;
+      $('lmsg').textContent = (T.end[ev.status] || T.end.failed)[EN ? 1 : 0] + (ev.status !== 'done' && ev.message ? ' (' + ev.message + ')' : '');
+      $('cancel').hidden = true; $('go').disabled = false;
+      artifacts(); me();
+      window.__forgeLive = { ended: true, status: ev.status, seq: lastSeq };
+    }
+  }
+  async function stream() {
+    for (let attempt = 0; attempt < 30 && !ended; attempt++) {
+      ctrl = new AbortController();
+      try {
+        const r = await api(`/forge/jobs/${jobId}/events`, { headers: lastSeq ? { 'Last-Event-ID': String(lastSeq) } : {}, signal: ctrl.signal });
+        if (!r.ok || !r.body) throw new Error('http ' + r.status);
+        const rd = r.body.getReader(), dec = new TextDecoder();
+        let buf = '';
+        for (;;) {
+          const { value, done } = await rd.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          let i;
+          while ((i = buf.indexOf('\n\n')) >= 0) {
+            const block = buf.slice(0, i); buf = buf.slice(i + 2);
+            const data = block.split('\n').filter((l) => l.startsWith('data: ')).map((l) => l.slice(6)).join('\n');
+            if (data) { try { liveEvent(JSON.parse(data)); } catch { /* skip a bad line */ } }
+          }
+        }
+      } catch { /* reconnect below */ }
+      if (!ended) await new Promise((res) => setTimeout(res, Math.min(1000 * (attempt + 1), 8000)));
+    }
+  }
+  function attach(id) {
+    if (ctrl) ctrl.abort();
+    jobId = id; lastSeq = 0; cadN = 0; ended = false;
+    $('lmeta').hidden = false; $('cancel').hidden = false; $('go').disabled = true;
+    $('lsteps').innerHTML = ''; $('arts').innerHTML = ''; $('dl').hidden = true; $('cad-n').textContent = ''; $('cost').textContent = '';
+    $('lstatus').textContent = t('queued'); $('lmsg').textContent = '';
+    stream();
+  }
+  async function artifacts() {
+    if (!jobId) return;
+    let list = [];
+    try { const r = await api(`/forge/jobs/${jobId}/artifacts`); if (r.ok) list = (await r.json()).artifacts || []; } catch { return; }
+    const order = (n) => (n === 'bundle.zip' ? 0 : n.startsWith('part.') ? 1 : 2);
+    list = list.filter((n) => !n.startsWith('renders/') || /-600\.jpg$/.test(n)).sort((a, b) => order(a) - order(b) || a.localeCompare(b));
+    $('arts').innerHTML = '';
+    for (const n of list) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = n; if (n === 'bundle.zip') b.className = 'main';
+      b.addEventListener('click', () => download(n));
+      $('arts').appendChild(b);
+    }
+    $('dl').hidden = list.length === 0;
+  }
+  async function download(name) {
+    const r = await api(`/forge/jobs/${jobId}/artifacts/${name}`);
+    if (!r.ok) return;
+    const url = URL.createObjectURL(await r.blob());
+    const a = document.createElement('a');
+    a.href = url; a.download = name.split('/').pop(); document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
+  if (token) { $('tok-forget').hidden = false; me(); }
+
+  /* ---------------- replay of a finished demo job ---------------- */
+  const JOB = new URLSearchParams(location.search).get('job') || 'so101-flashlight';
+  if (!/^[a-z0-9-]+$/.test(JOB)) return;
   let job = null, timer = null;
 
   function row(s, i) {
     const li = document.createElement('li');
     li.className = 'step'; li.id = 'st-' + s.id; li.dataset.s = 'pending';
-    li.innerHTML = `<span class="dot" aria-hidden="true">${i + 1}</span><div><h2>${esc(s.title_cs)} <span class="sec">${esc(s.id)}</span></h2><p class="sum"></p><div class="more"></div></div>`;
+    li.innerHTML = `<span class="dot" aria-hidden="true">${i + 1}</span><div><h2>${esc(EN ? s.title : s.title_cs)} <span class="sec">${esc(s.id)}</span></h2><p class="sum"></p><div class="more"></div></div>`;
     return li;
   }
-  // one event = one step state change; the replay and the future SSE stream both call this
+  // one event = one step state change
   function applyEvent(ev) {
     const li = $('st-' + ev.step); if (!li) return;
     li.dataset.s = ev.status;
     li.querySelector('.dot').textContent = ev.status === 'pending' ? li.querySelector('.dot').textContent : ICON[ev.status];
-    if (ev.status === 'running') { li.querySelector('.sum').textContent = 'běží…'; $('status').textContent = 'Krok: ' + li.querySelector('h2').firstChild.textContent.trim(); return; }
+    if (ev.status === 'running') { li.querySelector('.sum').textContent = t('running'); $('status').textContent = t('step') + ': ' + li.querySelector('h2').firstChild.textContent.trim(); return; }
     const sum = (ev.summary || '') + (ev.elapsed_s != null ? ` · ${ev.elapsed_s} s` : '');
     li.querySelector('.sum').textContent = sum;
     const more = li.querySelector('.more'); more.innerHTML = '';
     const imgs = (ev.artifacts || []).filter((a) => /-600\.jpg$/.test(a));
     if (imgs.length) {
       const d = document.createElement('div'); d.className = 'shots';
-      d.innerHTML = imgs.map((a) => `<img src="../${esc(job.images)}${esc(a.split('/').pop())}" alt="Vizualizace kroku ${esc(a.split('/').pop().replace('-600.jpg', ''))}" width="600" height="450" loading="lazy">`).join('');
+      d.innerHTML = imgs.map((a) => `<img src="../${esc(job.images)}${esc(a.split('/').pop())}" alt="${esc(t('shot'))} ${esc(a.split('/').pop().replace('-600.jpg', ''))}" width="600" height="450" loading="lazy">`).join('');
       more.appendChild(d);
     }
     if (ev.data) {
       const det = document.createElement('details');
-      det.innerHTML = `<summary class="mono">data kroku</summary><pre>${esc(JSON.stringify(ev.data, null, 1)).slice(0, 6000)}</pre>`;
+      det.innerHTML = `<summary class="mono">${esc(t('data'))}</summary><pre>${esc(JSON.stringify(ev.data, null, 1)).slice(0, 6000)}</pre>`;
       more.appendChild(det);
     }
   }
@@ -112,9 +345,11 @@
   }
   function finish() {
     const s = job.summary || {};
-    $('status').textContent = 'Hotovo';
+    $('status').textContent = t('done');
     $('out').hidden = false;
-    $('outsum').textContent = `Díl ${s.part_mass_print_g} g (s LED a kabelem +${s.added_mass_g} g), nejtenčí stěna ${s.min_wall_mm} mm, ${s.collision_free ? 'bez kolizí' : 'kontakt jen v úplně složených polohách'}; ${s.led}; USB 5 V + ${s.resistor_ohm} Ω ≈ ${s.current_ma_typ} mA.`;
+    $('outsum').textContent = EN
+      ? `Part ${s.part_mass_print_g} g (with LED and cable +${s.added_mass_g} g), thinnest wall ${s.min_wall_mm} mm, ${s.collision_free ? 'no collisions' : 'contact only in fully folded poses'}; ${s.led}; USB 5 V + ${s.resistor_ohm} Ω ≈ ${s.current_ma_typ} mA.`
+      : `Díl ${s.part_mass_print_g} g (s LED a kabelem +${s.added_mass_g} g), nejtenčí stěna ${s.min_wall_mm} mm, ${s.collision_free ? 'bez kolizí' : 'kontakt jen v úplně složených polohách'}; ${s.led}; USB 5 V + ${s.resistor_ohm} Ω ≈ ${s.current_ma_typ} mA.`;
     window.__lab = { done: true, steps: job.steps.length };
   }
   fetch(`forge/${JOB}/job.json`).then((r) => r.json()).then((j) => {
@@ -124,7 +359,7 @@
     $('play').addEventListener('click', replay);
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) $('fast').checked = true;
     replay();
-  }).catch((e) => { $('status').textContent = 'Log se nepodařilo načíst: ' + e.message; });
+  }).catch((e) => { $('status').textContent = t('loadFail') + ': ' + e.message; });
 })();
 </script>
 </body>

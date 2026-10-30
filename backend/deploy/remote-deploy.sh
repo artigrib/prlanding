@@ -2,11 +2,13 @@
 # Runs ON THE SERVER (piped by deploy-backend.yml / rollback-backend.yml over SSH).
 # Touches only the compose project "printedrobotics" and images named ghcr.io/artigrib/prlanding-*.
 #
-# Usage: ACTION=deploy|rollback|status|fixports [API_IMAGE=... BRIDGE_IMAGE=... APP_VERSION=...
+# Usage: ACTION=deploy|rollback|status|fixports [API_IMAGE=... BRIDGE_IMAGE=... FORGE_IMAGE=... APP_VERSION=...
 #        GHCR_USER=...] bash remote-deploy.sh
-#   deploy reads stdin: line 1 = GHCR token (may be empty), then optional analytics settings as
-#   NAME=<base64 value> lines (names in ANALYTICS_VARS; empty value = that sink off). They are written to
-#   $ROOT/analytics.env (0600) and replace the previous file, so removing a GitHub secret switches a sink off.
+#   deploy reads stdin: line 1 = GHCR token (may be empty), then optional settings as NAME=<base64 value>
+#   lines: analytics (names in ANALYTICS_VARS; empty value = that sink off) go to $ROOT/analytics.env,
+#   forge (names in FORGE_VARS) to $ROOT/forge.env (both 0600, replaced on every deploy, so removing a
+#   GitHub secret switches the feature off). The forge services start only with FORGE_IMAGE and a
+#   non-empty OPENROUTER_API_KEY; otherwise they are stopped and removed (only our two containers).
 #
 # Output contract: the only lines written to stdout are "STATUS ..." / "WARN ..." / "ERROR ..."
 # with fixed, low-sensitivity text; the workflow turns them into annotations. Actions logs are
@@ -29,12 +31,14 @@ die()  { echo "ERROR $*" >&3; exit 1; }
 dc() { docker compose -p "$PROJECT" --project-directory "$ROOT" -f "$ROOT/compose.yml" --env-file "$ROOT/.compose.env" "$@" </dev/null; }
 
 ANALYTICS_VARS="CLICKHOUSE_URL CLICKHOUSE_USER CLICKHOUSE_PASSWORD AMPLITUDE_API_KEY COUNTRY_HEADER"
+FORGE_VARS="OPENROUTER_API_KEY FORGE_INVITE_TOKENS FORGE_DAILY_USD FORGE_MODEL FORGE_MODEL_LIGHT"
+FORGE_SERVICES="forge-worker forge-cad"
 
 build_env() {
   # Combine generated secrets, analytics settings (from GitHub secrets) and the current release into the
   # file compose reads.
-  touch "$ROOT/analytics.env"; chmod 600 "$ROOT/analytics.env"
-  cat "$ROOT/secrets.env" "$ROOT/analytics.env" "$ROOT/release.env" > "$ROOT/.compose.env.tmp"
+  touch "$ROOT/analytics.env" "$ROOT/forge.env"; chmod 600 "$ROOT/analytics.env" "$ROOT/forge.env"
+  cat "$ROOT/secrets.env" "$ROOT/analytics.env" "$ROOT/forge.env" "$ROOT/release.env" > "$ROOT/.compose.env.tmp"
   chmod 600 "$ROOT/.compose.env.tmp"
   mv -f "$ROOT/.compose.env.tmp" "$ROOT/.compose.env"
 }
@@ -98,6 +102,28 @@ guard_no_public_ports() {
   if grep -qE '^[[:space:]]*network_mode:[[:space:]]*"?host|(^|[^0-9])(80|443):[0-9]+|^[[:space:]]{2}caddy:' "$ROOT/compose.yml"; then
     die "compose.yml would bind host 80/443, use host networking or run caddy; refusing"
   fi
+  # Nothing may be privileged, share the host pid/ipc namespace or mount the Docker socket.
+  if grep -qE '^[[:space:]]*(privileged:[[:space:]]*true|pid:[[:space:]]*"?host|ipc:[[:space:]]*"?host)|docker\.sock' "$ROOT/compose.yml"; then
+    die "compose.yml has a privileged/host-namespace container or the Docker socket; refusing"
+  fi
+  # The forge services publish no ports at all, keep a read-only root filesystem, and forge-cad has no network.
+  local svc block
+  for svc in $FORGE_SERVICES; do
+    block=$(awk -v s="  $svc:" '$0 == s {on=1; next} on && /^  [a-z]/ {on=0} on && /^[a-z]/ {on=0} on' "$ROOT/compose.yml")
+    [ -n "$block" ] || continue
+    if printf '%s\n' "$block" | grep -qE '^[[:space:]]*(ports|expose|cap_add):'; then
+      die "compose.yml: $svc must not publish ports or add capabilities; refusing"
+    fi
+    printf '%s\n' "$block" | grep -qE '^[[:space:]]*read_only:[[:space:]]*true' || die "compose.yml: $svc must have a read-only root filesystem; refusing"
+  done
+  if awk '$0 == "  forge-cad:" {on=1; next} on && /^  [a-z]/ {on=0} on' "$ROOT/compose.yml" | grep -q . \
+     && ! awk '$0 == "  forge-cad:" {on=1; next} on && /^  [a-z]/ {on=0} on' "$ROOT/compose.yml" | grep -qE '^[[:space:]]*network_mode:[[:space:]]*"?none'; then
+    die "compose.yml: forge-cad must have network_mode none; refusing"
+  fi
+}
+
+forge_on() { # forge enabled for the current release?
+  [ -n "$(release_var "$ROOT/release.env" FORGE_IMAGE)" ] && grep -q "^OPENROUTER_API_KEY='[^']" "$ROOT/forge.env" 2>/dev/null
 }
 
 
@@ -113,6 +139,16 @@ bring_up() {
     warn "compose up failed ($(classify_err "$err"))"
     return 1
   fi
+  # Forge separately: a forge problem never fails (or rolls back) the api/bridge release.
+  if forge_on; then
+    if ! err=$(COMPOSE_PROFILES="${profiles:+$profiles,}forge" dc up -d --wait --wait-timeout 120 $FORGE_SERVICES 2>&1); then
+      warn "forge: services did not start ($(classify_err "$err")); stopped"
+      COMPOSE_PROFILES=forge dc rm -s -f $FORGE_SERVICES || true
+    fi
+  else
+    # services of an inactive profile are not orphans for compose: stop and remove ours explicitly
+    COMPOSE_PROFILES=forge dc rm -s -f $FORGE_SERVICES || true
+  fi
 }
 
 
@@ -121,7 +157,7 @@ prune_old_images() {
   # Keep images referenced by the current and previous release; remove our other images only.
   local keep="" ref id f removed=0
   for f in "$ROOT/release.env" "$ROOT/release.prev.env"; do
-    for ref in $(release_var "$f" API_IMAGE) $(release_var "$f" BRIDGE_IMAGE); do
+    for ref in $(release_var "$f" API_IMAGE) $(release_var "$f" BRIDGE_IMAGE) $(release_var "$f" FORGE_IMAGE); do
       id=$(docker image inspect -f '{{.Id}}' "$ref" 2>/dev/null || true)
       [ -n "$id" ] && keep="$keep $id"
     done
@@ -176,24 +212,39 @@ classify_err() { # map a docker error to a fixed, non-sensitive reason
 }
 
 read_stdin() {
-  # Line 1: GHCR token. Then NAME=<base64> analytics lines. Values are never printed.
+  # Line 1: GHCR token. Then NAME=<base64> lines (analytics and forge settings). Values are never printed.
   GHCR_TOKEN=""
   IFS= read -r GHCR_TOKEN || true
-  local line name b64 val out="" on=""
+  local line name b64 val out="" fout="" on="" kind
   while IFS= read -r line; do
     name=${line%%=*}; b64=${line#*=}
-    case " $ANALYTICS_VARS " in *" $name "*) ;; *) continue;; esac
-    val=$(printf '%s' "$b64" | base64 -d 2>/dev/null) || { warn "analytics setting $name: not valid base64, ignored"; continue; }
+    case " $ANALYTICS_VARS " in *" $name "*) kind=analytics;; *)
+      case " $FORGE_VARS " in *" $name "*) kind=forge;; *) continue;; esac;; esac
+    val=$(printf '%s' "$b64" | base64 -d 2>/dev/null) || { warn "$kind setting $name: not valid base64, ignored"; continue; }
     # compose .env single-quoted literal: printable ASCII without space, quotes or backslash only
     if [ -n "$(printf '%s' "$val" | LC_ALL=C tr -d '!#-&(-[]-~')" ]; then
-      warn "analytics setting $name: unsupported characters, ignored"; continue
+      warn "$kind setting $name: unsupported characters, ignored"; continue
     fi
-    out="$out$name='$val'"$'\n'
+    if [ "$kind" = forge ]; then
+      fout="$fout$name='$val'"$'\n'
+    else
+      out="$out$name='$val'"$'\n'
+    fi
     [ -n "$val" ] && on="$on $name"
   done
   printf '%s' "$out" > "$ROOT/analytics.env.tmp"
   chmod 600 "$ROOT/analytics.env.tmp"
   mv -f "$ROOT/analytics.env.tmp" "$ROOT/analytics.env"
+  # forge: FORGE_ENABLED tells the api whether to serve /forge/* (worker present + key set)
+  local fen=0
+  case "$on" in *OPENROUTER_API_KEY*) [ -n "${FORGE_IMAGE:-}" ] && fen=1;; esac
+  printf '%sFORGE_ENABLED=%s\n' "$fout" "$fen" > "$ROOT/forge.env.tmp"
+  chmod 600 "$ROOT/forge.env.tmp"
+  mv -f "$ROOT/forge.env.tmp" "$ROOT/forge.env"
+  # (the workflow prints "forge: enabled" / "forge: disabled (no key)" itself)
+  if [ "$fen" = 1 ]; then
+    case "$on" in *FORGE_INVITE_TOKENS*) ;; *) warn "forge: no invite tokens set, the job API stays closed";; esac
+  fi
   local sinks="ndjson"
   case "$on" in *CLICKHOUSE_URL*) case "$on" in *CLICKHOUSE_USER*) case "$on" in *CLICKHOUSE_PASSWORD*) sinks="$sinks, clickhouse";; esac;; esac;; esac
   case "$on" in *AMPLITUDE_API_KEY*) sinks="$sinks, amplitude";; esac
@@ -206,7 +257,9 @@ pull_images() {
   # Public packages pull anonymously; otherwise log in with the job's short-lived token
   # in a throw-away docker config (nothing is stored on the server).
   local logged_in=0
-  for ref in "$API_IMAGE" ${BRIDGE_IMAGE:-}; do
+  local forge_ref=""
+  grep -q '^FORGE_ENABLED=1' "$ROOT/forge.env" 2>/dev/null && forge_ref="${FORGE_IMAGE:-}"
+  for ref in "$API_IMAGE" ${BRIDGE_IMAGE:-} $forge_ref; do
     if DOCKER_CONFIG="$tmp" docker pull "$ref"; then continue; fi
     if [ "$logged_in" = 0 ] && [ -n "$token" ] && [ -n "${GHCR_USER:-}" ]; then
       if err=$(printf '%s' "$token" | DOCKER_CONFIG="$tmp" docker login ghcr.io -u "$GHCR_USER" --password-stdin 2>&1); then
@@ -301,17 +354,22 @@ case "$API_IMAGE" in "$IMAGE_PREFIX"api@sha256:*) ;; *) die "unexpected api imag
 if [ -n "${BRIDGE_IMAGE:-}" ]; then
   case "$BRIDGE_IMAGE" in "$IMAGE_PREFIX"bridge@sha256:*) ;; *) die "unexpected bridge image reference";; esac
 fi
+if [ -n "${FORGE_IMAGE:-}" ]; then
+  case "$FORGE_IMAGE" in "$IMAGE_PREFIX"forge@sha256:*) ;; *) die "unexpected forge image reference";; esac
+fi
 case "${APP_VERSION:-}" in *[!0-9a-f]*|"") die "bad version";; esac
 
 disk_guard
 ensure_secrets
 read_stdin
 
+forge_img=""; grep -q '^FORGE_ENABLED=1' "$ROOT/forge.env" 2>/dev/null && forge_img="${FORGE_IMAGE:-}"
 {
   echo "APP_VERSION=$APP_VERSION"
   echo "API_IMAGE=$API_IMAGE"
   echo "BRIDGE_IMAGE=${BRIDGE_IMAGE:-}"
-  echo "COMPOSE_PROFILES=$([ -n "${BRIDGE_IMAGE:-}" ] && echo bridge || true)"
+  echo "FORGE_IMAGE=$forge_img"
+  echo "COMPOSE_PROFILES=$( { [ -n "${BRIDGE_IMAGE:-}" ] && echo bridge; [ -n "$forge_img" ] && echo forge; } | paste -sd, -)"
 } > "$ROOT/release.next.env"
 
 pull_images

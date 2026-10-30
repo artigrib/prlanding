@@ -5,6 +5,7 @@
 //                               legacy single event name (daily counter only). Never stores IPs or UAs.
 //   OPTIONS /e               -> CORS preflight (only for allowed origins)
 //   GET  /stats?days=N       -> daily aggregates; requires "Authorization: Bearer <STATS_TOKEN>"
+//   /forge/*                 -> invite-only forge job API (src/forge.ts); 404 when the forge is not enabled
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { timingSafeEqual, createHash } from 'node:crypto';
 import { CounterStore } from './store.ts';
@@ -12,6 +13,7 @@ import { RateLimiter } from './ratelimit.ts';
 import { isTrustedPeer, trustedCidrs } from './trusted-proxy.ts';
 import { BOT_UA, countryFrom, deviceClass, validateBatch, type Schema } from './analytics/validate.ts';
 import type { Sink } from './analytics/sinks.ts';
+import type { Forge } from './forge.ts';
 
 export const EVENTS: ReadonlySet<string> = new Set([
   'sim_start',
@@ -43,6 +45,7 @@ export interface ApiConfig {
   perIpPerMinute?: number;
   globalPerMinute?: number;
   analytics?: AnalyticsConfig;
+  forge?: Forge;
 }
 
 const SECURITY_HEADERS = {
@@ -250,6 +253,15 @@ export function createApi(cfg: ApiConfig): Server {
           data: cfg.store.query(days),
           sinks: cfg.analytics ? cfg.analytics.sinks.map((s) => s.stats()) : [],
         });
+        return;
+      }
+
+      if (path === '/forge' || path.startsWith('/forge/')) {
+        if (!cfg.forge) {
+          send(res, 404, { error: 'forge_disabled' });
+          return;
+        }
+        await cfg.forge.handle(req, res, url, clientKey(req, cfg.trustProxy));
         return;
       }
 

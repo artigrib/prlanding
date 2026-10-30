@@ -1,15 +1,18 @@
-# backend/forge: agentic CAD forge (stage 0 demo)
+# backend/forge: agentic CAD forge (stage 0 demo + stage 1 live agent)
 
 A request such as *„SO-101 s baterkou (flashlight)“* goes in. The forge picks a mount point on the robot,
 writes build123d CAD, checks the part (print, mass/torque, collisions in MuJoCo, power), picks real parts
 with dated sources, renders it in the assembly-guide style and drafts a guide section. Every step goes
-into a job log that the `/lab/` page replays. Later the same log is streamed live over SSE.
+into a job log: `/lab/` replays the stage-0 demo and streams live stage-1 jobs over SSE.
 
-**Stage 0 = no LLM.** The "brain" (`ScriptedBrain` in `forge/pipeline.py`) is deterministic rules
-plus a CAD source written by Claude (`designs/so101_flashlight.py`). That source goes through **the same
-`run_cad` sandbox an LLM will use**. An `LLMBrain` (OpenRouter) will implement the same methods
-(`parse`, `choose_mount`, `params`, `write_cad`, `pick_led`). The API key is added by the owner as a
-server secret. Nothing in this directory reads, stores or needs a key.
+**Stage 0 = no LLM** (`forge/pipeline.py`, `ScriptedBrain`): deterministic rules plus a CAD source written by
+Claude (`designs/so101_flashlight.py`), run through the same `run_cad` sandbox. It produced the published demo.
+
+**Stage 1 = LLM agent** (`forge/agent.py`, `forge/worker.py`): an LLM (OpenRouter) designs the part. Its only
+tools are `run_cad`, `list_mounts`, `check_fit`, `pick_components` and `render_steps` (`forge/tools.py`).
+It runs on the VPS in the `forge-worker` container behind the invite-only job API in `backend/api`, and the
+live `/lab/` page shows its progress. The OpenRouter key is a deploy secret of the worker container. Nothing in
+the repo or in CI reads it, and the tests use a mock LLM that replays a recorded tool-call script.
 
 Why `backend/forge/` and not `tools/`: it is a service that will run on the VPS as an isolated worker
 (like `backend/api`, `backend/bridge`). The site only gets its published outputs (draft pages, images,
@@ -32,7 +35,15 @@ lab replay, BOM delta). The render step reuses `tools/render-kit/so101-steps.htm
 | `designs/so101_flashlight.py` | The demo's CAD source (Claude-authored, parametric: LED Ø, tilt, toe, wall, …) |
 | `templates/guide.{cs,en}.html` | Guide section templates, filled from the job's numbers |
 | `examples/so101-flashlight/` | Published job outputs: `design.py`, `part.step`, `part.stl`, `led.stl`, `report.json`, `checks.json`, `electrical.json` |
-| `tests/` | `test_sandbox.py` (policy + malicious inputs), `test_pipeline.py` (deterministic re-run vs. published outputs) |
+| `forge/agent.py` | Stage-1 agent loop: parse (light model) → design loop with tools (main model) → guide (light model) → bundle; events, state, prompt-injection posture |
+| `forge/tools.py` | The five LLM tools, argument validation, result sanitising |
+| `forge/llm.py` | OpenRouter client (fixed URL, key from env, never logged) and `MockLLM` (replays a script) |
+| `forge/budget.py` | Per-job caps (USD, tokens, LLM calls, run_cad calls) and the daily USD ledger in `/jobs/spend/` |
+| `forge/worker.py` | Queue loop on the shared `/jobs` volume, one job at a time, retention cleanup |
+| `forge/cad_service.py` | `run_cad` over a unix socket: server in the `forge-cad` container (no network), client in the worker |
+| `eval/` | In-house model eval: task specs, graders, runner (`run.mjs`, manual on the VPS only) |
+| `Dockerfile` (+ `Dockerfile.dockerignore`) | One image for `forge-worker` and `forge-cad` (build context = repo root) |
+| `tests/` | `test_sandbox.py` (policy + malicious inputs), `test_pipeline.py` (deterministic re-run vs. published outputs), `test_agent.py` (mock LLM: flashlight script, caps, dispatch, injection, OpenRouter request shape, socket service) |
 
 Published into the site by `--publish`: `img/forge/so101-flashlight/*` (renders),
 `tools/content/forge-flashlight.{cs,en}.html` (guide draft; `draft: true` in `tools/build.mjs` → noindex,
@@ -48,6 +59,7 @@ pip install -r backend/forge/requirements.txt          # build123d, trimesh, muj
 cd backend/forge
 python3 -m unittest tests.test_sandbox -v               # ≈ 40 s
 python3 -m unittest tests.test_pipeline -v              # ≈ 2.5 min (full job without renders)
+python3 -m unittest tests.test_agent -v                 # ≈ 30 s (stage-1 agent with the MOCK LLM, no network)
 python3 -m forge.pipeline "SO-101 s baterkou" --job /tmp/forge-job            # + renders (needs node + Playwright)
 python3 -m forge.pipeline "SO-101 s baterkou" --job /tmp/forge-job --publish  # write the site outputs
 python3 tools/measure_so101.py [--check]                 # regenerate / verify the mount library (run from the repo root)
@@ -112,58 +124,114 @@ uncertainty and `"verify": "ověřit na tisku"`.
 * Power: USB 5 V (PC port or charger) + 120 Ω → 14 mA typ., ≤ 19 mA worst case. Alternative: buck module
   to 5 V from the servo PSU. No mains, no LiPo.
 
-## VPS deployment design (design only, nothing is deployed by this PR)
+## Stage 1 on the VPS
 
 ```
-browser ── POST /forge/jobs (invite token) ──► backend/api ──► queue (SQLite table, 1 row per job)
-   ▲                                              │
-   └── GET /forge/jobs/<id>/events (SSE) ◄────────┘◄── job events (append-only) ◄── forge-worker (container)
-                                                                                     │
-                                                       OpenRouter (LLM) ◄────────────┤ only egress
-                                                       GitHub (draft PR via API) ◄───┘ (separate step)
+browser (/lab/) ──fetch, Authorization: Bearer <invite token>──► api  /forge/*  (backend/api/src/forge.ts)
+      ▲                                                               │ queue/<id>.json, <id>/meta.json, state.json
+      └──── SSE (fetch stream) ◄── tails <id>/events.ndjson ◄─────────┤            shared volume forge_jobs:/jobs
+                                                                      ▼
+                       forge-worker (agent loop, MuJoCo checks) ── claims a job, writes events/state/out/
+                          │  unix socket /jobs/.cad/cad.sock              │ only egress: OpenRouter (HTTPS)
+                          ▼                                               ▼
+                       forge-cad (run_cad sandbox server, network_mode: none)
 ```
 
-**Worker container (`forge-worker`)**, its own image (`python:3.12-slim` + build123d/OCP, trimesh,
-mujoco; node + Playwright Chromium for renders in a second, render-only container if the image gets
-too big):
+**Containers** (`backend/deploy/compose.yml`, profile `forge`; one image `ghcr.io/artigrib/prlanding-forge`):
 
-* runs as a non-root user, `read_only: true` root filesystem, `tmpfs` for `/tmp` and the job dir only
-  (size-capped), `cap_drop: [ALL]`, `security_opt: [no-new-privileges:true]`, seccomp default profile.
-  Ideally under **gVisor** (`runtime: runsc`) so a kernel bug in OCP/MuJoCo native code is contained
-  too. Alternative: run `run_cad` children under **nsjail** with its own mount/pid/net namespaces.
-* `run_cad` keeps its in-process layers. `os.unshare` needs user namespaces inside the container (gVisor
-  and nsjail provide them). Otherwise the worker sets `FORGE_NETNS=external` and relies on the
-  container having **no network** for the CAD step: the CAD sandbox runs in a sidecar container with
-  `network_mode: none`, and the worker talks to it over a unix socket on a shared tmpfs.
-* limits: `cpus: 1.0`, `mem_limit: 2g`, `pids_limit: 128`; per job a wall-clock cap (CAD 90 s per
-  call, whole job 15 min) and a cap on run_cad calls per job (e.g. 12).
-* **no Docker socket**, no host network, no host volumes except the read-only model data baked into
-  the image; never binds 80/443 (Caddy stays the only public listener; the worker listens nowhere and
-  pulls jobs).
-* egress: the LLM container step may reach only `openrouter.ai` (egress proxy allowlist); the CAD
-  sandbox has no network at all. The OpenRouter key is a server-side secret (env from the deploy
-  secret store, never in the repo, never visible to CAD code since the child gets an empty env).
+| | forge-worker | forge-cad |
+| --- | --- | --- |
+| command | `python -m forge.worker` | `python -m forge.cad_service serve` |
+| network | `printedrobotics_web` (egress to OpenRouter only; listens on nothing) | **none** (`network_mode: none`) |
+| ports | none | none |
+| user / fs | uid 1000, read-only root, writable: `/jobs` volume + 256 MB `/tmp` | uid 1000, read-only root, `/jobs` + 512 MB `/tmp` |
+| privileges | `cap_drop: ALL`, `no-new-privileges`, default seccomp, no Docker socket, no host mounts | same |
+| limits | 1 CPU, 1.5 GB, 128 pids | 1 CPU, 2 GB, 64 pids (+ per-run rlimits, 90 s timeout) |
+| secrets | `OPENROUTER_API_KEY` (read once, removed from the environment) | none |
 
-**Queue and API (`backend/api`)**: `POST /forge/jobs {request}` with an invite token (header).
-Validates length/language and enqueues. Response: `{id}`. `GET /forge/jobs/<id>` returns the job.json.
-`GET /forge/jobs/<id>/events` is **SSE**. Each event is one step change (`{step, status, summary,
-data, artifacts}`), exactly what `/lab/` already replays (`applyEvent`). Caddy: `flush_interval -1` for
-the events route (same as the MCP SSE route). Artifacts (STL/STEP/renders) are served from the job store
-with `Content-Disposition: attachment`, never executed.
+**What isolates `run_cad` here.** gVisor/nsjail are *not* used (not installed on the VPS; adding `runtime: runsc`
+later is a one-line change). Docker's default seccomp profile blocks the unprivileged network namespace that
+`sandbox.run_cad` creates on a developer machine, so the "no network" layer comes from the container instead:
+`forge-cad` runs with `network_mode: none` and `FORGE_NETNS=external`. Before every run `run_cad` checks
+`/proc/net/dev`; it refuses to run if any interface other than loopback is visible. The other layers are
+unchanged: AST policy, a separate process with rlimits and an empty environment, an audit hook, a minimal
+builtins table and the wall-clock kill. The container layer adds a non-root user, a read-only root
+filesystem, no capabilities, no-new-privileges and pids/memory caps.
 
-**Budget caps**: per job a max LLM spend (e.g. $0.50, tokens counted from OpenRouter usage fields) and
-max run_cad calls. Per invite token a daily job count (e.g. 5/day). Globally a daily spend cap
-(e.g. $10/day) checked before every LLM call. When a cap is hit the job ends with `status: "budget"` and
-the SSE stream says so. Spend is logged per job (no request bodies in logs).
+**Worker egress.** The worker needs HTTPS to OpenRouter and shares our existing network for that (the stack must not
+create networks). Its code has one URL (`llm.OPENROUTER_URL`, not configurable). The LLM has no tool that
+reaches the network or the file system, and CAD code runs in the network-less `forge-cad`. A network-level
+egress allowlist (proxy) is a possible follow-up.
 
-**Invite tokens**: random 128-bit tokens stored hashed in the api's SQLite, each with a label, a daily
-quota and an expiry. Revocable. Rate limit per token and per IP (existing `ratelimit.ts`).
+**Job API** (`backend/api/src/forge.ts`, on only when `FORGE_ENABLED=1` and `FORGE_INVITE_TOKENS` has entries):
+`GET /forge/me`, `POST /forge/jobs {request, lang}`, `GET /forge/jobs/<id>`, `GET /forge/jobs/<id>/events` (SSE),
+`GET /forge/jobs/<id>/artifacts[/<name>]`, `POST /forge/jobs/<id>/cancel`. Limits: 8–1200 characters, no control or
+bidi characters, 8 KB body; 60 requests/min per token; 10 failed auths/min per IP; 5 jobs per token per day; one
+queued or running job per token; 5 queued jobs in total; no new job once the day's spend reached `FORGE_DAILY_USD`.
+Tokens are stored as `label:sha256` only and never logged. The page reads the SSE stream with `fetch()`, so the
+token never appears in a URL. Artifacts are an allowlist of names, always `Content-Disposition: attachment`; HTML
+drafts are served as `text/plain` with `CSP: sandbox`. A job is visible only to the token that created it.
+The edge proxy needs nothing special: Caddy flushes `text/event-stream` responses immediately.
 
-**Review via draft PR**: a finished job never goes live by itself. A separate, manually triggered
-step (or a maintainer clicking "propose") publishes it with `pipeline.publish()` into a branch and opens a
-**draft PR** through the GitHub API using a fine-grained token limited to this repo (contents + pull
-requests). The pages stay `draft: true` (noindex, unlinked, labelled "komunitní návrh – ověřeno pouze v
-simulaci") until a human has printed and fitted the part and removes the flag in review.
+**Budget caps** (worker env; the LLM cannot change them): per job `FORGE_JOB_USD` (1.50), `FORGE_JOB_TOKENS`
+(600 000), `FORGE_MAX_TURNS` (24), `FORGE_MAX_CAD` (12 run_cad calls), `FORGE_JOB_TIMEOUT_S` (900); per day
+`FORGE_DAILY_USD` (5). The worker checks them before every LLM call: what is spent, plus a worst-case reserve for
+that call, must stay under each cap. Cost comes from OpenRouter's `usage.cost`; if that is missing, the worker
+estimates it from the token counts with deliberately high prices (`FORGE_PRICE_*`). When a cap is hit the job
+ends with status `budget` and a clear message. Spend per day lives in `/jobs/spend/<date>.json`.
+
+**Prompt-injection posture.** The system prompts are fixed strings in `agent.py`. The user's text reaches a model
+only as a JSON-encoded data field in a message that says it is data. The parse step reduces it to a typed spec
+(whitelisted fields, cut strings) before the design model sees it. Tool calls are validated (known tool, known
+arguments, sizes), and tool results are sanitised (control/bidi characters removed, strings and lists cut)
+and wrapped as data. The final answer is parsed as JSON, and only whitelisted fields of the right type are used.
+Guide text is HTML-escaped. Unknown tools get an error result, and nothing a model writes changes caps, tools,
+models or URLs.
+
+**Models.** `FORGE_MODEL` (default `anthropic/claude-opus-5.5`, the owner's pick per CADGenBench) runs the design
+loop. `FORGE_MODEL_LIGHT` (default `anthropic/claude-haiku-4.5`) parses the request and writes the guide text.
+Both are OpenRouter model ids and can be changed with a repository variable.
+
+**Publishing: never automatic.** A finished job yields `out/bundle.zip`: STEP/STL, `design.py` and every attempt
+(`history/`), `report.json`, `checks.json`, `components.json`, `render_spec.json`, the draft guide (CZ + EN,
+HTML + Markdown, labelled "návrh AI, ověřeno pouze v simulaci"), `job.json`, `events.ndjson`, `PUBLISH.md` and
+`MANIFEST.sha256`. The server holds **no GitHub credentials**. An operator downloads the bundle in `/lab/` and
+turns it into a draft PR from their own checkout or a Claude session. That means checking the manifest, re-running
+`run_cad` and the checks (full sweep), rendering with `tools/render-kit/forge-render.mjs` (the worker image has no
+renderer), and copying the files like `pipeline.publish()` with `draft: true`. The page stays noindex and unlinked
+until someone has printed and fitted the part.
+
+**Owner setup** (GitHub → Settings → Environments → `production`):
+
+* secret `OPENROUTER_SECRET` (repository or `production` environment; `OPENROUTER_API_KEY` is accepted as a fallback name), passed to the worker as env `OPENROUTER_API_KEY`: without it the deploy prints `forge: disabled (no key)` and the forge
+  containers are not started (or are removed); everything else deploys as before.
+* secret `FORGE_INVITE_TOKENS`: comma-separated `label:sha256hex` entries. Mint one locally with
+  `node backend/api/scripts/forge-token.mjs <label>`; it prints the token for the invitee and the entry for the secret.
+  Shell alternative: `t=pr_forge_$(openssl rand -hex 24); echo "$t"; printf '%s' "$t" | sha256sum`.
+  To revoke a token, remove its entry and redeploy.
+* optional variables `FORGE_DAILY_USD` (default 5), `FORGE_MODEL`, `FORGE_MODEL_LIGHT`.
+
+## In-house eval (`eval/`): pick models by our tasks
+
+Six task specs in `eval/tasks.json`: the flashlight, a wrist camera bracket, a forearm cable clip, a tool holder, a
+camera-mast clamp and a fingertip pad. Each uses one of the three mount points in the library; tasks that ideally
+belong on the upper arm, the base or the moving jaw use the closest existing interface, and the request text says
+so. `eval/graders.py` grades each finished job automatically: job done, a valid single watertight solid,
+`check_fit` on the task's mount with no interference, wall ≥ 1.2 mm, mass bound and bounding-box bound.
+`eval/runner.py` runs every task through the real agent loop and reports pass rate, CAD iterations, tokens and
+$ cost. It prints fixed `eval: …` lines plus one JSON report (also saved to `/jobs/eval-reports/`); it never
+prints prompts or the key.
+
+Manual only, on the VPS (it refuses when `CI` is set or `--yes` is missing; there is no API route to it):
+
+```sh
+node backend/forge/eval/run.mjs --model anthropic/claude-opus-5.5 --yes            # runs inside printedrobotics-forge-worker-1
+node backend/forge/eval/run.mjs --model <id> --light <id> --tasks flashlight,cable-clip --yes
+```
+
+Spend goes into the same daily ledger as user jobs. Before each task the runner stops if `FORGE_DAILY_USD` has been
+reached, and every task has the normal per-job caps. CI only tests the graders, against the recorded mock
+flashlight job (`tests/test_agent.py`).
 
 ## What still needs physical verification
 

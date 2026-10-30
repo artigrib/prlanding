@@ -16,6 +16,11 @@ Layers (each one alone should stop the malicious-input tests in tests/test_sandb
   6. wall-clock timeout: the whole process group is SIGKILLed
 On the VPS the worker itself runs in a locked-down container (README.md, "Worker isolation"):
 this module is the inner fence, not the only one.
+
+FORGE_NETNS=external (set only in the forge-cad container, which has `network_mode: none`): Docker's
+default seccomp profile does not let an unprivileged process create namespaces, so layer 3 is then
+provided by the container. run_cad still tries the unshare, and before every run checks that the
+process sees no network interface except loopback (/proc/net/dev); if it sees one it refuses to run.
 """
 import json
 import os
@@ -71,8 +76,24 @@ def netns_available():
         return False
 
 
+def only_loopback(dev_file="/proc/net/dev"):
+    """True if the only network interface this process can see is loopback (or there is none)."""
+    try:
+        with open(dev_file, encoding="ascii", errors="replace") as f:
+            lines = f.read().splitlines()[2:]
+    except OSError:
+        return False
+    names = {ln.split(":", 1)[0].strip() for ln in lines if ":" in ln}
+    return names <= {"lo"}
+
+
 def run_cad(source, job_dir, timeout_s=None, mem_mb=None, allow_no_netns=False, density_g_cm3=1.24):
     t0 = time.monotonic()
+    if os.environ.get("FORGE_NETNS") == "external":
+        if not only_loopback():
+            return {"ok": False, "stage": "isolation", "errors": ["FORGE_NETNS=external but a network interface is visible (refusing to run)"],
+                    "report": None, "files": {}, "stdout": "", "elapsed_s": 0.0}
+        allow_no_netns = True
     timeout_s = timeout_s or DEFAULTS["timeout_s"]
     mem_mb = mem_mb or DEFAULTS["mem_mb"]
     res = {"ok": False, "stage": "policy", "errors": [], "report": None, "files": {}, "stdout": "", "elapsed_s": 0.0}
