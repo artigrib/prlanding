@@ -37,15 +37,11 @@
 <div class="a1 mono">02 — Instalace</div>
 <div class="a4 prose">
 <h2>Python 3.12 a LeRobot</h2>
-<p>Oficiální návod doporučuje Python 3.12 v prostředí conda (přes Miniforge); fungují i <code>uv</code> nebo <code>venv</code>.<sup><a href="#zdroje">3</a></sup> Pro SO-101 se instaluje i podpora serv Feetech:<sup><a href="#zdroje">1</a></sup></p>
-<pre tabindex="0"><code>conda create -y -n lerobot python=3.12
-conda activate lerobot
-conda install ffmpeg -c conda-forge
-git clone https://github.com/huggingface/lerobot.git
-cd lerobot
-pip install -e ".[core_scripts]"
-pip install -e ".[feetech]"</code></pre>
-<p class="src">Balíček <code>ffmpeg</code> je podle návodu potřeba ke čtení videa v datasetech; na některých platformách ho lze vynechat. Podrobnosti v instalačním návodu.<sup><a href="#zdroje">3</a></sup></p>
+<p>LeRobot vyžaduje Python 3.12 nebo novější.<sup><a href="#zdroje">3</a></sup> Všechny naše návody k SO-101 používají stejnou instalaci z PyPI s pevnou verzí 0.6.1, kterou jsme ověřili proti <a href="{root}navody/so101-lerobot-simulace/">virtuální ruce</a>; podpora serv Feetech je v ní zahrnutá:<sup><a href="#zdroje">1</a></sup></p>
+<pre tabindex="0"><code>python3.12 -m venv .venv-lerobot
+source .venv-lerobot/bin/activate
+pip install "lerobot[feetech,core-scripts]==0.6.1"</code></pre>
+<p class="src">Windows: <code>py -3.12 -m venv .venv-lerobot</code> a <code>.venv-lerobot\Scripts\activate</code>. Oficiální návod doporučuje prostředí conda (Miniforge) a instalaci z gitu; s conda prostředím funguje stejný příkaz <code>pip install</code>. Program <code>ffmpeg</code> je potřeba k videu v datasetech (nahrávání s kamerami): Linux <code>sudo apt install ffmpeg</code>, macOS <code>brew install ffmpeg</code>, conda <code>conda install ffmpeg -c conda-forge</code>.<sup><a href="#zdroje">3</a></sup></p>
 </div>
 </div>
 </section>

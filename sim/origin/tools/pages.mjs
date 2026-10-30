@@ -14,8 +14,11 @@ const T = {
     failK: 'Simulace se nespustila', failH: 'Tenhle prohlížeč simulaci nezvládne.',
     failP: 'Simulace potřebuje WebAssembly a WebGL. Zkuste aktuální Chrome, Firefox, Safari nebo Edge, případně počítač místo telefonu.',
     panel: 'Ovládání', kicker: 'Ukázka · otevřený hardware', h1: 'ROBOTO ORIGIN',
-    lead: 'Humanoid v plné velikosti od šanghajské RoboParty: 23 kloubů, frézovaný hliník, kompletní CAD, elektronika, trénink i nasazení zveřejněné jako open source. V simulaci chodí politika, kterou autoři natrénovali a zveřejnili.',
-    showcase: 'Ukázka, ne produkt: díly ani sady k tomuto robotovi neprodáváme.',
+    lead: 'Humanoidní robot od RoboParty: 23 kloubů a konstrukce z frézovaného hliníku. Podle autorů je jako open source zveřejněný celý vývoj: konstrukce, elektronika, trénink i nasazení. V simulaci chodí politika, kterou autoři natrénovali a zveřejnili.',
+    showcase: 'Ukázka, ne produkt: díly ani sady k tomuto robotovi neprodáváme. S RoboParty nejsme nijak spojeni.',
+    honest: 'Fyzika je přibližná a skutečný robot se chová jinak. Chůzi řídí politika, kterou natrénovala a zveřejnila RoboParty; my ji jen spouštíme v prohlížeči. Doporučujeme počítač s grafickou kartou.',
+    ogTitle: 'ROBOTO ORIGIN v simulaci', ogDesc: 'Otevřený humanoid RoboParty chodí v prohlížeči: naučená politika chůze, 23 kloubů, strčení myší.', locale: 'cs_CZ',
+    perf: 'Výkon: grafika tohoto zařízení je slabší, stíny jsme vypnuli.', simple: 'Zjednodušený režim (nižší rozlišení, bez mřížky)',
     mode: 'Režim', walk: 'Chůze (naučená politika)', stand: 'Na stojanu (klouby ručně)',
     padLabel: 'Joystick: nahoru vpřed, do stran otáčení', keys: 'Klávesy: W/S vpřed a vzad · A/D otáčení · Q/E krok do strany · gamepad funguje také',
     shove: 'Strčit', drop: 'Pustit z výšky', standup: 'Postavit', view: 'Pohled', explode: 'Rozložený pohled', pose: 'Výchozí póza',
@@ -34,8 +37,11 @@ const T = {
     failK: 'The simulation did not start', failH: 'This browser cannot run the simulation.',
     failP: 'The simulation needs WebAssembly and WebGL. Try a current Chrome, Firefox, Safari or Edge, or a computer instead of a phone.',
     panel: 'Controls', kicker: 'Showcase · open hardware', h1: 'ROBOTO ORIGIN',
-    lead: 'A full-size humanoid by RoboParty of Shanghai: 23 joints, machined aluminium, and the complete CAD, electronics, training and deployment published as open source. In the simulation it walks with the policy its authors trained and released.',
-    showcase: 'A showcase, not a product: we do not sell parts or kits for this robot.',
+    lead: 'A humanoid robot by RoboParty: 23 joints and a machined-aluminium frame. According to its authors the whole development is open source: mechanics, electronics, training and deployment. In the simulation it walks with the policy its authors trained and released.',
+    showcase: 'A showcase, not a product: we do not sell parts or kits for this robot. We are not affiliated with RoboParty.',
+    honest: 'The physics is approximate and the real robot behaves differently. Walking is driven by the policy RoboParty trained and published; we only run it in the browser. A computer with a graphics card is recommended.',
+    ogTitle: 'ROBOTO ORIGIN in simulation', ogDesc: 'RoboParty’s open humanoid walks in your browser: trained walking policy, 23 joints, push it with a click.', locale: 'en_GB',
+    perf: 'Performance: this device has weaker graphics, so shadows are off.', simple: 'Simplified mode (lower resolution, no grid)',
     mode: 'Mode', walk: 'Walk (trained policy)', stand: 'On the gantry (joints by hand)',
     padLabel: 'Joystick: up walks forward, sideways turns', keys: 'Keys: W/S forward and back · A/D turn · Q/E sidestep · a gamepad works too',
     shove: 'Push', drop: 'Drop from height', standup: 'Stand up', view: 'View', explode: 'Exploded view', pose: 'Default pose',
@@ -54,9 +60,16 @@ for (const L of ['cs', 'en']) {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${t.title}</title>
 <meta name="description" content="${t.desc}">
-<!-- draft: noindex, not in the sitemap and not linked from any page until the owner publishes it -->
-<meta name="robots" content="noindex,nofollow">
+<meta name="robots" content="index,follow">
 <link rel="canonical" href="https://printedrobotics.cz/${t.path}">
+<link rel="alternate" hreflang="cs" href="https://printedrobotics.cz/sim/origin/">
+<link rel="alternate" hreflang="en" href="https://printedrobotics.cz/en/sim/origin/">
+<link rel="alternate" hreflang="x-default" href="https://printedrobotics.cz/sim/origin/">
+<meta property="og:title" content="${t.ogTitle}">
+<meta property="og:description" content="${t.ogDesc}">
+<meta property="og:url" content="https://printedrobotics.cz/${t.path}">
+<meta property="og:image" content="https://printedrobotics.cz/img/origin_poster.jpg">
+<meta property="og:locale" content="${t.locale}">
 <meta name="theme-color" content="#FFFFFF">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E8461E'/%3E%3C/svg%3E">
 <link rel="preload" href="${S}../so101/vendor/mujoco/mujoco.wasm" as="fetch" type="application/wasm" crossorigin>
@@ -94,6 +107,8 @@ for (const L of ['cs', 'en']) {
       <h1>${t.h1}</h1>
       <p class="ink2">${t.lead}</p>
       <p class="note mono-s">${t.showcase}</p>
+      <p class="mono-s muted honest">${t.honest}</p>
+      <div class="perf" id="perf" hidden><p class="mono-s">${t.perf}</p><label class="chk" id="simple-wrap" hidden><input type="checkbox" id="simple"> ${t.simple}</label></div>
     </section>
     <section aria-labelledby="mode-h">
       <h2 class="mono sec-h" id="mode-h">${t.mode}</h2>

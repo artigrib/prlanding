@@ -12,10 +12,10 @@ window.PR_ROBOTS = [
     author: 'The Robot Studio a Hugging Face', render: true, alt: 'Robotická ruka SO-101',
     short: 'Ruka s pěti osami a chapadlem pro AI a teleoperaci s knihovnou LeRobot. Pár ovládací + výkonná ruka.',
     lead: 'Ruka s pěti osami a chapadlem pro učení robotů a teleoperaci. Ovládací ruku (leader) vedete vlastní rukou, výkonná ruka (follower) pohyb opakuje – a s knihovnou LeRobot se úlohu naučí sama.',
-    bomCost: '≈ 130 USD / ruka', printTime: '≈ 16,5 h za pár', software: 'LeRobot (Python)', setups: true,
+    bomCost: '≈ 130 USD / ruka (ceny v USA podle kusovníku projektu, bez dopravy a DPH; pro ČR viz plán nákupu)', printTime: '≈ 16,5 h za pár', software: 'LeRobot (Python)', setups: true,
     repo: 'https://github.com/TheRobotStudio/SO-ARM100', docs: 'https://huggingface.co/docs/lerobot/so101',
     card: [['Osy', '5 + chapadlo'], ['Software', 'LeRobot']],
-    specs: [['Stupně volnosti', '5 os + chapadlo'], ['Pohon', 'Feetech STS3215'], ['Napájení', '5 V'], ['Tisk', 'PLA+, vrstva 0,2 mm'], ['Doba tisku', '≈ 16,5 h za pár']],
+    specs: [['Stupně volnosti', '5 os + chapadlo'], ['Pohon', 'Feetech STS3215'], ['Napájení', '5 V (serva 7,4 V); follower s 12V servy: 12 V'], ['Tisk', 'PLA+, vrstva 0,2 mm'], ['Doba tisku', '≈ 16,5 h za pár']],
     license: { hw: 'Apache-2.0', sw: 'Apache-2.0', status: 'verified', checked: '2026-10-30',
       sources: ['https://github.com/TheRobotStudio/SO-ARM100/blob/main/LICENSE', 'https://github.com/huggingface/lerobot/blob/main/LICENSE'] },
     related: ['hand', 'lekiwi', 'xle'] },
@@ -241,7 +241,7 @@ window.PR_BOX = function (r, tier, pair) {
   }
   return items;
 };
-window.PR_BOX_NOTE = function (r) { return r.id === 'so101' ? 'Počty dle kusovníku projektu SO-ARM100.' : 'Položky dle kusovníku projektu; přesné počty a varianty ověřte v jeho dokumentaci.'; };
+window.PR_BOX_NOTE = function (r) { return r.id === 'so101' ? 'Počty dle kusovníku projektu SO-ARM100 (follower 7,4 V, zdroj 5 V). Follower s 12V servy: 6× C018 a zdroj 12 V / 5 A.' : 'Položky dle kusovníku projektu; přesné počty a varianty ověřte v jeho dokumentaci.'; };
 // FAQ of a kit page (app.js renders it, tools/build.mjs pre-renders it and adds it as FAQPage structured data).
 window.PR_FAQ = function (r) {
   return [
@@ -332,14 +332,17 @@ window.PR_ARENA_LICENSES = {
   klepeto: { hw: 'own', status: 'verified', checked: '2026-10-30', published: 'CC-BY-4.0', sources: ['tools/robots-cad/klepeto.py'] }
 };
 
-// Showcases: open projects we present but do not sell (no kit page, no order form). Draft: not rendered
-// anywhere yet; the simulation (sim/origin/) is noindex and unlinked. Every number names its upstream source.
+// Showcases: open projects we present but do not sell (no kit page, no order form). The catalogue shows them
+// after the kits with a card that links to the simulation (sim/<r.sim>/). Every number names its upstream source.
 window.PR_SHOWCASE = [
-  { id: 'origin', showcase: true, buy: false, sim: 'origin', name: 'ROBOTO ORIGIN', type: 'Humanoid v plné velikosti', cat: 'legged', level: 'Pokročilý',
-    author: 'RoboParty (Shanghai RoboParty Technology Co., Ltd.)',
+  { id: 'origin', showcase: true, buy: false, sim: 'origin', name: 'ROBOTO ORIGIN', type: 'Humanoidní robot', cat: 'legged', level: 'Pokročilý',
+    author: 'RoboParty',   // legal name as in the upstream README: Shanghai RoboParty Technology Co., Ltd. (city of the team not stated as a fact here)
+    alt: 'Humanoid ROBOTO ORIGIN v simulaci: černá hliníková kostra se 23 klouby na podlaze s mřížkou',
+    card: [['Licence', 'CERN-OHL-W-2.0 · GPL-3.0'], ['Klouby', '23']],
+    notAffiliated: 'Nejsme s RoboParty spojeni, díly neprodáváme.',
     badge: 'Ukázka · otevřený hardware CERN-OHL-W-2.0 · software GPL-3.0',
     short: 'Otevřený humanoid s 23 klouby z frézovaného hliníku: konstrukce, elektronika, trénink chůze i nasazení zveřejněné jako open source.',
-    lead: 'Prototyp humanoida, který šanghajská RoboParty navrhla za čtyři měsíce a zveřejnila celý: CAD, desky plošných spojů, kusovník, model pro simulaci, trénink v Isaac Lab a nasazení v ROS 2 včetně naučených politik. Podle autorů jde sestavit z dílů z Taobao a zakázkové výroby. Ukazujeme ho jako inspiraci – díly ani sady k němu neprodáváme a s autory nejsme spojeni.',
+    lead: 'Prototyp humanoida, který podle autorů vznikl za čtyři měsíce. RoboParty zveřejnila CAD, desky plošných spojů, kusovník, model pro simulaci, trénink v Isaac Lab a nasazení v ROS 2 včetně naučených politik. Podle autorů jde sestavit z dílů z Taobao a zakázkové výroby. Ukazujeme ho jako inspiraci – díly ani sady k němu neprodáváme a s autory nejsme spojeni.',
     note: 'Konstrukce je frézovaný hliník; tisknou se jen kalibrační přípravky, takže „tiskové“ sady tu nedávají smysl.',
     repo: 'https://github.com/Roboparty/roboto_origin', docs: 'https://roboparty.com/roboto_origin/doc',
     upstream: { commit: 'c71fd9287d28104dca111d7c25b908fa3f45f8e4', date: '2026-08-18', checked: '2026-10-30' },
@@ -351,8 +354,6 @@ window.PR_SHOWCASE = [
       ['Řídicí počítač', 'RDK X5 8 GB', 'assets/BOM_EN.md; rpo_hardware 散件清单 V1.1.3'],
       ['Sběrnice', 'CAN, 4 linky (6 + 7 + 5 + 5 motorů)', 'modules/roboparty_deploy/src/inference/robots/rpo/robot.yaml'],
       ['Konstrukce', 'CNC hliník 6061/7075, černý elox; ocelová táhla', 'modules/rpo_hardware/V2.0/…/A2_CNCBOM.xlsx'],
-      ['Hmotnost modelu', '≈ 33,8 kg (součet hmot v MJCF, bez krytů)', 'modules/rpo_description/mjcf/rpo.xml'],
-      ['Výška modelu', '≈ 1,06 m (MJCF, natažené nohy, bez krytů)', 'modules/rpo_description (spočítáno z meshů)'],
       ['Chůze', 'RL politika (ONNX), 50 Hz, příkaz vpřed −0,4 až 0,6 m/s', 'modules/roboparty_deploy/…/configs/default.yaml'],
       ['Software', 'ROS 2 Humble, Isaac Lab 2.1, MuJoCo sim2sim', 'README.md'],
       ['Díly dle autora', '49 713 CNY (kusovník v1.0.1, 5. 1. 2026)', 'assets/BOM_EN.md']

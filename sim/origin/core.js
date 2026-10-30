@@ -470,11 +470,25 @@ export class OriginSim {
   /** Slow GPU (software GL, old phones): after a few seconds under 24 FPS drop shadows and render at 1x. */
   quality() {
     this.fpsN = (this.fpsN || 0) + 1;
-    if (this.lowQ || this.fpsN < 3 || this.fps >= 24) return;
-    this.lowQ = true;
-    this.renderer.shadowMap.enabled = false;
-    this.renderer.setPixelRatio(1); this.resize();
-    this.scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; });
+    if (this.fpsN < 3) return;
+    if (!this.lowQ && this.fps < 24) {
+      this.lowQ = true;
+      this.renderer.shadowMap.enabled = false;
+      this.renderer.setPixelRatio(Math.min(1, this.renderer.getPixelRatio())); this.resize();
+      this.scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; });
+      this.onLowQuality && this.onLowQuality();
+    }
+    // still under ~15 FPS for 3 s in a row: offer the simplified mode (the page shows a toggle)
+    this.slowSec = this.fps < 15 ? (this.slowSec || 0) + 1 : 0;
+    if (this.slowSec >= 3 && !this.slowOffered) { this.slowOffered = true; this.onSlow && this.onSlow(); }
+  }
+
+  /** Simplified mode: render at 0.6x resolution, no floor grid, no shadows. */
+  setSimple(on) {
+    this.simple = !!on;
+    this.renderer.setPixelRatio(on ? 0.6 : 1);
+    this.grid.visible = !on;
+    this.resize();
   }
 
   policyFailed(e) {

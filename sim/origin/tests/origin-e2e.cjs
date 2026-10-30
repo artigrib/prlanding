@@ -26,7 +26,7 @@ const ok = (c, m) => { if (!c) throw new Error(m); };
       const err = await page.evaluate(() => window.__origin.error);
       ok(!err, 'sim error: ' + err);
       const info = await page.evaluate(() => ({ policy: window.__origin.policy, loadMs: window.__origin.loadMs, mode: window.__origin.mode(), robots: document.querySelector('meta[name=robots]').content }));
-      ok(info.robots === 'noindex,nofollow', 'not noindex');
+      ok(info.robots === 'index,follow', 'not indexable');
       ok(info.policy, 'policy did not load');
       ok(info.mode === 'walk', 'default mode ' + info.mode);
       // real-time FPS with the rAF loop running (software GL here)

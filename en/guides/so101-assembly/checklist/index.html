@@ -49,15 +49,17 @@
 <p class="no-print doc-note"><i aria-hidden="true"></i><span>Print it on A4 and keep it at the bench. Each point is explained, with fixes, in the <a href="../../../../en/guides/so101-assembly/">SO-101 assembly</a> guide.</span></p>
 <p class="no-print"><button type="button" class="btn btn-o" data-print>Print or save as PDF <span aria-hidden="true">⎙</span></button></p>
 <h1 style="margin:8px 0 0;font-weight:500;font-size:clamp(28px,4vw,44px);line-height:1.1;letter-spacing:-.03em">SO-101: build checklist</h1>
-<p class="src">Based on LeRobot (huggingface.co/docs/lerobot/so101) and SO-ARM100 (github.com/TheRobotStudio/SO-ARM100), as of 29 Oct 2026. Screws: M2×6 and M3×6 only.</p>
+<p class="src">Based on LeRobot (huggingface.co/docs/lerobot/so101) and SO-ARM100 (github.com/TheRobotStudio/SO-ARM100), as of 30 Oct 2026. Screws M2×6 and M3×6 only: follower 24× M2×6 and 50× M3×6, leader 25× M2×6 and 46× M3×6 (upper estimate, table in the guide, stage 3).</p>
 
 <div class="ws-box">
 <b>0 · Before you build</b>
 <ul class="chk">
 <li>Phillips #0 and #1 screwdrivers, clamps, a screw tray</li>
-<li>Follower: 6× 1/345 (C001). Leader: ID 1 and 3 = 1/191 (C044), ID 2 = 1/345 (C001), ID 4–6 = 1/147 (C046)</li>
-<li>Servos labelled (L/F + joint number)</li>
-<li>5 V supply for 7.4 V servos · 12 V (5 A+) only for 12 V follower servos</li>
+<li>Follower 7.4 V (standard): 6× 1/345 (C001), 5 V supply · or follower 12 V: 6× 1/345 (C018), 12 V 5 A+ supply</li>
+<li>Leader (always 7.4 V, 5 V supply): ID 1 and 3 = 1/191 (C044), ID 2 = 1/345 (C001), ID 4–6 = 1/147 (C046)</li>
+<li>Every servo parcel kept separate, servos labelled straight away (code, L/F, joint number)</li>
+<li>Never mix 12 V and 7.4 V servos on one bus or supply</li>
+<li>Screws for a pair: 49× M2×6, 96× M3×6 (whether they come with the servos is unverified)</li>
 </ul>
 </div>
 
@@ -66,7 +68,8 @@
 <ul class="chk">
 <li>PLA+, 15% infill, 0.4 nozzle / 0.2 mm layers (or 0.6 / 0.4)</li>
 <li>Supports yes, but not in horizontal screw holes</li>
-<li>Gauge 0 fits the servo</li>
+<li>Gauge 0 fits the servo (servos not here yet? Lego 4×2 gauge)</li>
+<li>Follower + leader for your bed (Ender_/Prusa_…_SO101.stl) + 2× WaveShare_Mounting_Plate_SO101.stl</li>
 <li>Supports removed, holes and pockets clean</li>
 </ul>
 </div>
@@ -74,7 +77,8 @@
 <div class="ws-box">
 <b>2 · Servo IDs (before assembly)</b>
 <ul class="chk">
-<li>LeRobot installed, ports of both boards written down</li>
+<li>LeRobot 0.6.1 (Python 3.12) installed</li>
+<li>Port F ______ · port L ______ (Linux /dev/ttyACM…, Windows COM…)</li>
 <li>Waveshare: both jumpers on channel B</li>
 <li>Only one servo on the board at a time, IDs in order 6 → 1</li>
 <li>A 3-pin cable plugged into every servo</li>
@@ -89,6 +93,7 @@
 <li>Gripper (F) / handle and trigger (L)</li>
 <li>Top horn M3×6, bottom horn without a screw, horn fully on the splines</li>
 <li>Cables don’t get pinched as joints move · screws only to resistance</li>
+<li>Screws F: 24× M2×6 + 50× M3×6 · L: 25× M2×6 + 46× M3×6</li>
 </ul>
 </div>
 
@@ -96,7 +101,7 @@
 <b>4 · Electronics</b>
 <ul class="chk">
 <li>Chain board → ID 1 → … → ID 6, connectors clicked in</li>
-<li>Right supply on the right arm, supply within reach</li>
+<li>Right supply on the right arm (5 V / 12 V), DC 5.5 × 2.1 mm plug fits, supply within reach</li>
 </ul>
 </div>
 

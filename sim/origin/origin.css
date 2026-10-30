@@ -97,3 +97,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   .bar{gap:12px}
   .bar-t{display:none}
 }
+.honest{margin:10px 0 0}
+.perf{margin-top:10px;padding:8px 10px;border:1px solid var(--line-2)}
+.perf p{color:var(--ink-2)}
+.perf .chk{min-height:40px;font-size:14px}

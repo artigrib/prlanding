@@ -13,15 +13,17 @@
 <p class="no-print doc-note"><i aria-hidden="true"></i><span>Vytiskněte na A4 a mějte u pracovního stolu. Vysvětlení každého bodu a řešení problémů najdete v návodu <a href="{root}navody/so101-sestaveni/">Sestavení SO-101</a>.</span></p>
 <p class="no-print"><button type="button" class="btn btn-o" data-print>Vytisknout nebo uložit jako PDF <span aria-hidden="true">⎙</span></button></p>
 <h1 style="margin:8px 0 0;font-weight:500;font-size:clamp(28px,4vw,44px);line-height:1.1;letter-spacing:-.03em">SO-101: kontrolní seznam ke stavbě</h1>
-<p class="src">Podle LeRobot (huggingface.co/docs/lerobot/so101) a SO-ARM100 (github.com/TheRobotStudio/SO-ARM100), stav k 29. 10. 2026. Šrouby: jen M2×6 a M3×6.</p>
+<p class="src">Podle LeRobot (huggingface.co/docs/lerobot/so101) a SO-ARM100 (github.com/TheRobotStudio/SO-ARM100), stav k 30. 10. 2026. Šrouby jen M2×6 a M3×6: follower {sc:f_m2}× M2×6 a {sc:f_m3}× M3×6, leader {sc:l_m2}× M2×6 a {sc:l_m3}× M3×6 (horní odhad, tabulka v návodu, etapa 3).</p>
 
 <div class="ws-box">
 <b>0 · Před stavbou</b>
 <ul class="chk">
 <li>Šroubováky PH0 a PH1, svěrky, přihrádky na šrouby</li>
-<li>Follower: 6× 1/345 (C001). Leader: ID 1 a 3 = 1/191 (C044), ID 2 = 1/345 (C001), ID 4–6 = 1/147 (C046)</li>
-<li>Serva popsaná (L/F + číslo kloubu)</li>
-<li>Zdroj 5 V pro serva 7,4 V · 12 V (5 A+) jen pro 12V serva followeru</li>
+<li>Follower 7,4 V (standard): 6× 1/345 (C001), zdroj 5 V · nebo follower 12 V: 6× 1/345 (C018), zdroj 12 V 5 A+</li>
+<li>Leader (vždy 7,4 V, zdroj 5 V): ID 1 a 3 = 1/191 (C044), ID 2 = 1/345 (C001), ID 4–6 = 1/147 (C046)</li>
+<li>Každý balík serv zvlášť, serva hned popsaná (kód, L/F, číslo kloubu)</li>
+<li>Nikdy nemíchat 12V a 7,4V serva na jedné sběrnici ani zdroji</li>
+<li>Šrouby pro pár: {sc:pair_m2}× M2×6, {sc:pair_m3}× M3×6 (zda jsou u serv, neověřeno)</li>
 </ul>
 </div>
 
@@ -30,7 +32,8 @@
 <ul class="chk">
 <li>PLA+, výplň 15 %, tryska 0,4 / vrstva 0,2 mm (nebo 0,6 / 0,4)</li>
 <li>Podpory ano, ale ne ve vodorovných otvorech pro šrouby</li>
-<li>Měrka 0 sedí na servo</li>
+<li>Měrka 0 sedí na servo (serva ještě nejsou? měrka na Lego 4×2)</li>
+<li>Follower + leader pro vaši podložku (Ender_/Prusa_…_SO101.stl) + 2× WaveShare_Mounting_Plate_SO101.stl</li>
 <li>Podpory odstraněné, otvory a lůžka čisté</li>
 </ul>
 </div>
@@ -38,7 +41,8 @@
 <div class="ws-box">
 <b>2 · ID serv (před montáží)</b>
 <ul class="chk">
-<li>LeRobot nainstalovaný, porty obou desek zapsané</li>
+<li>LeRobot 0.6.1 (Python 3.12) nainstalovaný</li>
+<li>Port F ______ · port L ______ (Linux /dev/ttyACM…, Windows COM…)</li>
 <li>Waveshare: obě propojky na kanálu B</li>
 <li>K desce vždy jen jedno servo, pořadí ID 6 → 1</li>
 <li>Do každého serva zapojený 3pinový kabel</li>
@@ -53,6 +57,7 @@
 <li>Chapadlo (F) / rukojeť a spoušť (L)</li>
 <li>Horní horn M3×6, spodní bez šroubu, horn dosedá celou drážkou</li>
 <li>Kabely se při pohybu kloubů nepřiskřípnou · šrouby jen do odporu</li>
+<li>Šrouby F: {sc:f_m2}× M2×6 + {sc:f_m3}× M3×6 · L: {sc:l_m2}× M2×6 + {sc:l_m3}× M3×6</li>
 </ul>
 </div>
 
@@ -60,7 +65,7 @@
 <b>4 · Elektronika</b>
 <ul class="chk">
 <li>Řetěz deska → ID 1 → … → ID 6, konektory zacvaknuté</li>
-<li>Správný zdroj u správné ruky, zdroj na dosah</li>
+<li>Správný zdroj u správné ruky (5 V / 12 V), konektor DC 5,5 × 2,1 mm sedí, zdroj na dosah</li>
 </ul>
 </div>
 

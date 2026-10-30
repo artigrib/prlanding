@@ -20,7 +20,7 @@
 <meta property="og:locale:alternate" content="cs_CZ">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" as="image" href="../../../img/so101_white.jpg" fetchpriority="high">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"SO-101","description":"Five-axis arm with a gripper for robot learning and teleoperation. You guide the leader arm by hand, the follower copies the motion – and with LeRobot it learns to do the task on its own.","category":"Robot arm","image":"https://printedrobotics.cz/img/so101_white.jpg","url":"https://printedrobotics.cz/en/kit/so101/","isBasedOn":"https://github.com/TheRobotStudio/SO-ARM100","additionalProperty":[{"@type":"PropertyValue","name":"Degrees of freedom","value":"5 axes + gripper"},{"@type":"PropertyValue","name":"Actuators","value":"Feetech STS3215"},{"@type":"PropertyValue","name":"Power","value":"5 V"},{"@type":"PropertyValue","name":"Print","value":"PLA+, 0.2 mm layers"},{"@type":"PropertyValue","name":"Print time","value":"≈ 16.5 h per pair"},{"@type":"PropertyValue","name":"Difficulty","value":"Beginner"},{"@type":"PropertyValue","name":"Software","value":"LeRobot (Python)"},{"@type":"PropertyValue","name":"Parts cost (author’s estimate)","value":"≈ 130 USD per arm"}],"inLanguage":"en"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"SO-101","description":"Five-axis arm with a gripper for robot learning and teleoperation. You guide the leader arm by hand, the follower copies the motion – and with LeRobot it learns to do the task on its own.","category":"Robot arm","image":"https://printedrobotics.cz/img/so101_white.jpg","url":"https://printedrobotics.cz/en/kit/so101/","isBasedOn":"https://github.com/TheRobotStudio/SO-ARM100","additionalProperty":[{"@type":"PropertyValue","name":"Degrees of freedom","value":"5 axes + gripper"},{"@type":"PropertyValue","name":"Actuators","value":"Feetech STS3215"},{"@type":"PropertyValue","name":"Power","value":"5 V (7.4 V servos); follower with 12 V servos: 12 V"},{"@type":"PropertyValue","name":"Print","value":"PLA+, 0.2 mm layers"},{"@type":"PropertyValue","name":"Print time","value":"≈ 16.5 h per pair"},{"@type":"PropertyValue","name":"Difficulty","value":"Beginner"},{"@type":"PropertyValue","name":"Software","value":"LeRobot (Python)"},{"@type":"PropertyValue","name":"Parts cost (author’s estimate)","value":"≈ 130 USD per arm (US prices from the project’s bill of materials, without shipping and VAT; for Czechia see the buying plan)"}],"inLanguage":"en"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I build it with no experience?","acceptedAnswer":{"@type":"Answer","text":"Difficulty of this project: Beginner. The project guide takes you through step by step; it is linked under Licence and safety."}},{"@type":"Question","name":"Can I buy the robot from you?","acceptedAnswer":{"@type":"Answer","text":"No, we sell nothing. You buy the parts directly from suppliers following the project’s bill of materials (the What you’ll need section). We may offer a ready-made kit later; if you want to hear about it, leave your email in the form above."}},{"@type":"Question","name":"Are you affiliated with the project’s authors?","acceptedAnswer":{"@type":"Answer","text":"No. We work from the open documentation of SO-101 (The Robot Studio and Hugging Face, licence Apache-2.0). The authors are not affiliated with us and have not endorsed this page."}},{"@type":"Question","name":"What software will I need?","acceptedAnswer":{"@type":"Answer","text":"LeRobot (Python). The software is open source and free; the project guide is linked under Licence and safety."}},{"@type":"Question","name":"Is building it suitable for children?","acceptedAnswer":{"@type":"Answer","text":"It’s not a toy. The robot contains small parts and electronics; building it is for ages 14 and up, younger children only under adult supervision, for example at school or in a club."}},{"@type":"Question","name":"We’re a school or club. What do you offer?","acceptedAnswer":{"@type":"Answer","text":"We don’t sell or invoice anything. The lesson with the SO-101 simulation and the worksheet on the For schools page are free; you buy the parts from suppliers following the project’s bill of materials."}}]}</script>
 <meta name="theme-color" content="#FFFFFF">
 <meta property="og:type" content="product">
@@ -79,27 +79,39 @@
 </div>
 <div style="display:flex;flex-direction:column;gap:12px">
 <p class="status" id="p-status"><i aria-hidden="true"></i><span>We sell nothing · you buy the parts directly from suppliers</span></p>
-<a class="btn btn-act" id="top-cta" href="#predobjednavka">Notify me <span aria-hidden="true">↓</span></a>
+<a class="btn btn-act" id="plan-cta" href="../../../en/plan/so101/">Parts buying plan <span aria-hidden="true">→</span></a>
+<p class="mono" style="margin:-4px 0 0">What to buy from which supplier, prices with shipping and a servo variant check</p>
 <a class="sim-cta" id="sim-cta" href="../../../sim/so101/?lang=en"><span><b>Try it in the simulator</b><small>Browser simulation · free · ≈ 8.4 MB</small></span><span aria-hidden="true">→</span></a>
-<a class="sim-cta" id="plan-cta" href="../../../en/plan/so101/"><span><b>Parts buying plan</b><small>What to buy from which supplier, prices with shipping and a servo variant check</small></span><span aria-hidden="true">→</span></a>
+<a class="step-a" id="top-cta" href="#predobjednavka" style="gap:6px">Let me know when a ready-made kit is available <span aria-hidden="true">↓</span></a>
 </div>
 </div>
 </div>
 <nav class="jump" aria-label="On this page">
-<a href="#predobjednavka" id="jump-po">Ready-made kit</a><a href="#obsah" data-hide-prep>What you’ll need</a><a href="#parametry">Specifications</a><a href="#media" id="jump-media" hidden>Videos and articles</a><a href="#faq">Questions</a><a href="#licence">Licence and safety</a>
+<a href="#obsah" data-hide-prep>What you’ll need</a><a href="#predobjednavka" id="jump-po">Ready-made kit</a><a href="#parametry">Specifications</a><a href="#media" id="jump-media" hidden>Videos and articles</a><a href="#faq">Questions</a><a href="#licence">Licence and safety</a>
 </nav>
+</section>
+
+<section id="obsah" class="wrap section" data-hide-prep>
+<details class="acc" data-mobile-open="1">
+<summary class="g rule"><span class="a1 mono" role="heading" aria-level="2">01 — What you’ll need</span><span class="a4" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="h2" id="box-title"></span><span class="acc-ico" aria-hidden="true">+</span></span></summary>
+<div class="g" style="margin-top:24px"><div class="a1 hide-s"></div><div class="a4">
+<ol class="box" id="box"><li><span class="n">01</span><span>Printed parts from the project’s STL files — leader and follower</span><span class="q">2 sets</span><span class="t">Print</span></li><li><span class="n">02</span><span>Feetech STS3215 servo, 7.4 V, 1/345 gearing</span><span class="q">7×</span><span class="t">Hardware</span></li><li><span class="n">03</span><span>Feetech STS3215 servo, 7.4 V, 1/191 gearing</span><span class="q">2×</span><span class="t">Hardware</span></li><li><span class="n">04</span><span>Feetech STS3215 servo, 7.4 V, 1/147 gearing</span><span class="q">3×</span><span class="t">Hardware</span></li><li><span class="n">05</span><span>Servo driver board</span><span class="q">2×</span><span class="t">Hardware</span></li><li><span class="n">06</span><span>5 V power supply</span><span class="q">2×</span><span class="t">Hardware</span></li><li><span class="n">07</span><span>USB-C cable</span><span class="q">2×</span><span class="t">Hardware</span></li><li><span class="n">08</span><span>Table clamps</span><span class="q">4×</span><span class="t">Hardware</span></li><li><span class="n">09</span><span>Fasteners per the project guide</span><span class="q">—</span><span class="t">Hardware</span></li></ol>
+<p class="mono" id="box-note" style="margin:16px 0 0">Quantities per the SO-ARM100 bill of materials (7.4 V follower, 5 V supply). Follower with 12 V servos: 6× C018 and a 12 V / 5 A supply.</p>
+<p style="margin:16px 0 0"><a class="step-a" href="../../../en/plan/so101/" id="box-plan">Buying plan: where to buy, what it costs and what to watch for</a></p>
+</div></div>
+</details>
 </section>
 
 <section id="predobjednavka" class="wrap section">
 <div class="g rule">
-<div class="a1 mono" role="heading" aria-level="2" id="sec1-label">01 — Ready-made kit</div>
+<div class="a1 mono" role="heading" aria-level="2" id="sec1-label">02 — Ready-made kit</div>
 <div class="a4s" style="display:flex;flex-direction:column;gap:28px">
 <p class="note-bar" id="quiz-note" hidden><i aria-hidden="true"></i><span>We picked this robot from your quiz answers.</span></p>
 <div id="prep-info" class="prep" hidden>
 <p class="ink2" style="margin:0;font-size:17px;max-width:38rem">We don’t offer this kit yet: we are verifying the licence of the design files and the bill of materials with the authors. We’ll publish the contents, colours and price once it’s clear we’re allowed to and able to deliver it. Leave your email and you’ll be the first to know.</p>
 <div class="prep-alt" id="prep-alt"></div>
 </div>
-<p class="ink2" id="kit-info" data-hide-prep style="margin:0;font-size:17px;max-width:38rem">We don’t offer a ready-made kit yet. What to buy is listed below under What you’ll need. If we ever offer a ready-made kit, we’ll write to you once – just leave your email.</p>
+<p class="ink2" id="kit-info" data-hide-prep style="margin:0;font-size:17px;max-width:38rem">We don’t offer a ready-made kit yet. What to buy is listed above under What you’ll need. If we ever offer a ready-made kit, we’ll write to you once – just leave your email.</p>
 <fieldset id="setups-wrap" hidden><legend>Setup</legend><div class="opts2" id="setups"></div></fieldset>
 <fieldset hidden><legend>Colour: <span id="color-name" style="color:var(--ink)"></span></legend><div class="swatches" id="colors"></div></fieldset>
 <fieldset hidden><legend>Material</legend><div class="opts2" id="mats"></div></fieldset>
@@ -131,21 +143,10 @@
 </div>
 </section>
 
-<section id="obsah" class="wrap section" data-hide-prep>
-<details class="acc" data-mobile-open="1">
-<summary class="g rule"><span class="a1 mono" role="heading" aria-level="2">02 — What you’ll need</span><span class="a4" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="h2" id="box-title"></span><span class="acc-ico" aria-hidden="true">+</span></span></summary>
-<div class="g" style="margin-top:24px"><div class="a1 hide-s"></div><div class="a4">
-<ol class="box" id="box"><li><span class="n">01</span><span>Printed parts from the project’s STL files — leader and follower</span><span class="q">2 sets</span><span class="t">Print</span></li><li><span class="n">02</span><span>Feetech STS3215 servo, 7.4 V, 1/345 gearing</span><span class="q">7×</span><span class="t">Hardware</span></li><li><span class="n">03</span><span>Feetech STS3215 servo, 7.4 V, 1/191 gearing</span><span class="q">2×</span><span class="t">Hardware</span></li><li><span class="n">04</span><span>Feetech STS3215 servo, 7.4 V, 1/147 gearing</span><span class="q">3×</span><span class="t">Hardware</span></li><li><span class="n">05</span><span>Servo driver board</span><span class="q">2×</span><span class="t">Hardware</span></li><li><span class="n">06</span><span>5 V power supply</span><span class="q">2×</span><span class="t">Hardware</span></li><li><span class="n">07</span><span>USB-C cable</span><span class="q">2×</span><span class="t">Hardware</span></li><li><span class="n">08</span><span>Table clamps</span><span class="q">4×</span><span class="t">Hardware</span></li><li><span class="n">09</span><span>Fasteners per the project guide</span><span class="q">—</span><span class="t">Hardware</span></li></ol>
-<p class="mono" id="box-note" style="margin:16px 0 0">Quantities per the SO-ARM100 bill of materials.</p>
-<p style="margin:16px 0 0"><a class="step-a" href="../../../en/plan/so101/" id="box-plan">Buying plan: where to buy, what it costs and what to watch for</a></p>
-</div></div>
-</details>
-</section>
-
 <section id="parametry" class="wrap section">
 <details class="acc">
 <summary class="g rule"><span class="a1 mono" role="heading" aria-level="2">03 — Specifications</span><span class="a4" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="h2" id="specs-title">Specifications · 8</span><span class="acc-ico" aria-hidden="true">+</span></span></summary>
-<div class="g" style="margin-top:24px"><div class="a1 hide-s"></div><dl class="a4 specs" id="specs"><div><dt>Degrees of freedom</dt><dd>5 axes + gripper</dd></div><div><dt>Actuators</dt><dd>Feetech STS3215</dd></div><div><dt>Power</dt><dd>5 V</dd></div><div><dt>Print</dt><dd>PLA+, 0.2 mm layers</dd></div><div><dt>Print time</dt><dd>≈ 16.5 h per pair</dd></div><div><dt>Difficulty</dt><dd>Beginner</dd></div><div><dt>Software</dt><dd>LeRobot (Python)</dd></div><div><dt>Parts cost (author’s estimate)</dt><dd>≈ 130 USD per arm</dd></div></dl></div>
+<div class="g" style="margin-top:24px"><div class="a1 hide-s"></div><dl class="a4 specs" id="specs"><div><dt>Degrees of freedom</dt><dd>5 axes + gripper</dd></div><div><dt>Actuators</dt><dd>Feetech STS3215</dd></div><div><dt>Power</dt><dd>5 V (7.4 V servos); follower with 12 V servos: 12 V</dd></div><div><dt>Print</dt><dd>PLA+, 0.2 mm layers</dd></div><div><dt>Print time</dt><dd>≈ 16.5 h per pair</dd></div><div><dt>Difficulty</dt><dd>Beginner</dd></div><div><dt>Software</dt><dd>LeRobot (Python)</dd></div><div><dt>Parts cost (author’s estimate)</dt><dd>≈ 130 USD per arm (US prices from the project’s bill of materials, without shipping and VAT; for Czechia see the buying plan)</dd></div></dl></div>
 </details>
 </section>
 
@@ -218,9 +219,9 @@
 </div>
 </footer>
 
-<aside class="sbar" id="sbar" aria-label="Ready-made kit" aria-hidden="true">
+<aside class="sbar" id="sbar" aria-label="Next step" aria-hidden="true">
 <div style="min-width:0"><b id="sb-name"></b><span id="sb-sum"></span></div>
-<a class="btn btn-act" href="#predobjednavka" tabindex="-1">Notify me</a>
+<a class="btn btn-act" href="../../../en/plan/so101/" tabindex="-1">Parts buying plan</a>
 </aside>
 
 <script src="../../../assets/config.js"></script>

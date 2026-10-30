@@ -160,6 +160,7 @@
     try {
       var u = new URL(href, location.href);
       if (u.origin !== location.origin) return href;
+      if (/^\/sim\/origin\/?$/.test(u.pathname)) return '/en/sim/origin/' + u.search + u.hash;   // own English shell
       if (/^\/sim\//.test(u.pathname)) { u.searchParams.set('lang', 'en'); return u.pathname + u.search + u.hash; }
       if (/^\/en\//.test(u.pathname)) return href;
       var m = /^\/sada\/([^/]+)\/?$/.exec(u.pathname);

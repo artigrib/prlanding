@@ -77,8 +77,8 @@ cd prlanding
 
 python3.12 -m venv .venv-lerobot
 source .venv-lerobot/bin/activate
-pip install "lerobot[feetech,dataset]==0.6.1"</code></pre>
-<p>Verzi LeRobotu držíme pevně na té, kterou jsme ověřili. S novější to nejspíš poběží také, jen se mohou lišit názvy parametrů.</p>
+pip install "lerobot[feetech,core-scripts]==0.6.1"</code></pre>
+<p>Je to stejná instalace jako v návodech <a href="../../navody/so101-sestaveni/#instalace">Sestavení SO-101</a> a <a href="../../navody/so101-lerobot-prvni-kroky/">první kroky</a>, takže prostředí pak použijete i se skutečnou rukou (<code>core-scripts</code> obsahuje i <code>dataset</code>; náš ověřovací běh 30. 10. používal užší <code>[feetech,dataset]</code>, <code>core-scripts</code> navíc přidává balíčky pro hardware a vizualizaci). Verzi LeRobotu držíme pevně na té, kterou jsme ověřili. S novější to nejspíš poběží také, jen se mohou lišit názvy parametrů.</p>
 <p class="src">Naše poznámka: pip na Linuxu stáhne PyTorch s knihovnami CUDA (přes 4 GB). Pro virtuální ruku grafická karta potřeba není; když chcete ušetřit místo, nainstalujte předem verzi pro procesor podle <a href="https://pytorch.org/get-started/locally/">pytorch.org</a>.</p>
 </div>
 </div>

@@ -174,7 +174,18 @@
           '<p class="desc">' + esc(r.short) + '</p>' +
           '<dl class="dl2">' + r.card.map(function (s) { return '<div><dt>' + esc(s[0]) + '</dt><dd>' + esc(s[1]) + '</dd></div>'; }).join('') + '</dl>' +
           '<span class="go">Detail sady <span aria-hidden="true">→</span></span></a>';
-      }).join('');
+      }).join('') + (window.PR_SHOWCASE || []).filter(function (r) { return filter === 'all' || r.cat === filter; }).map(showCard).join('');
+    }
+    // showcases: open projects we present but do not sell; the card opens the simulation (no kit page, no order form)
+    function showCard(r) {
+      var en = document.documentElement.lang === 'en';
+      return '<a class="card card-show" href="' + ROOT + 'sim/' + r.sim + '/" data-showcase="' + r.id + '"><div class="tile"><span class="tag tag-s">' + (en ? 'Showcase' : 'Ukázka') + '</span>' +
+        '<img src="' + ROOT + 'img/' + r.id + '_poster.jpg" alt="' + esc(r.alt) + '" loading="lazy" width="1200" height="900"></div>' +
+        '<span class="card-meta"><span class="mono" style="color:var(--ink)">OH</span><span class="mono">' + (en ? 'Open hardware' : 'Otevřený hardware') + '</span></span>' +
+        '<span><h3>' + esc(r.name) + '</h3><span class="type">' + esc(r.type) + '</span></span>' +
+        '<span class="spec1">' + r.card.map(function (s) { return esc(s[1]); }).join(' · ') + '</span>' +
+        '<p class="desc">' + esc(r.short) + ' <span class="mono-s">' + esc(r.notAffiliated) + '</span></p>' +
+        '<span class="go">' + (en ? 'Try it in the simulator' : 'Vyzkoušet v simulaci') + ' <span aria-hidden="true">→</span></span></a>';
     }
     $('#filters').addEventListener('click', function (e) {
       var b = e.target.closest('[data-f]'); if (!b) return;
@@ -303,9 +314,7 @@
     /* not yet available: no configurator, just notify + alternative */
     if (r.preparing) {
       $('#p-status span').textContent = 'Připravujeme · ověřujeme licenci s autory';
-      $('#top-cta').firstChild.textContent = 'Dejte mi vědět ';
       set('#po-btn-t', 'Dejte mi vědět');
-      $('#sbar .btn').textContent = 'Dejte mi vědět';
       document.querySelectorAll('[data-hide-prep]').forEach(function (el) { el.hidden = true; });
       $('#prep-info').hidden = false;
       set('#sec1-label', '01 — Upozornění na dostupnost');

@@ -141,6 +141,7 @@ function enLinks(html, page, base = page) {
     if (k) p = PATH.kit('en', k[1]);
     else if (p === '' || p === 'index.html') p = 'en/';
     else if (p === 'kviz.html') p = 'en/quiz/';
+    else if (p === 'sim/origin/') p = 'en/sim/origin/';   // the origin sim has its own English shell
     else if (p.startsWith('sim/')) { const sp = new URLSearchParams(q); sp.set('lang', 'en'); q = '?' + sp.toString(); }
     else if (CONTENT_EN[p]) p = CONTENT_EN[p];
     else if (base === page) return m;
@@ -242,7 +243,11 @@ function kitPage(r0, L) {
   const simCta = sim ? `<a class="sim-cta" id="sim-cta" href="${root}${sim.path}${sim.robotParam ? '?robot=' + r.id : ''}"><span><b>${esc(sim.label)}</b><small>${esc(sim.note)}</small></span><span aria-hidden="true">→</span></a>\n` : '';
   // SO-101, SVRN: purchase plan (the user buys from suppliers directly; the waitlist below stays)
   const PLAN_NOTE = { so101: 'Co koupit u kterých dodavatelů, ceny s dopravou a kontrola variant serv', svrn: 'Co koupit u kterých dodavatelů, ceny s dopravou, kontrola desky, serva a LiPo' };
-  const planCta = PLAN_NOTE[r.id] ? `<a class="sim-cta" id="plan-cta" href="${root}plan/${r.id}/"><span><b>Plán nákupu dílů</b><small>${PLAN_NOTE[r.id]}</small></span><span aria-hidden="true">→</span></a>\n` : '';
+  // primary CTA: the buying plan where one exists, else the browser sim, else the project's own guide; the waitlist is a text link below
+  const planCta = PLAN_NOTE[r.id] ? `<a class="btn btn-act" id="plan-cta" href="${root}plan/${r.id}/">Plán nákupu dílů <span aria-hidden="true">→</span></a>\n<p class="mono" style="margin:-4px 0 0">${PLAN_NOTE[r.id]}</p>\n` : '';
+  const simHref = sim ? `${root}${sim.path}${sim.robotParam ? '?robot=' + r.id : ''}` : '';
+  const primaryCta = planCta || (sim ? `<a class="btn btn-act" id="sim-cta" href="${simHref}">${esc(sim.label)} <span aria-hidden="true">→</span></a>\n`
+    : `<a class="btn btn-act" id="docs-cta" href="${esc(r.docs)}" rel="noopener">Návod projektu ↗</a>\n`);
   const noSw = D.PR_NO_SW(r);
   const prerender = {
     specs: specs.map(x => `<div><dt>${esc(x[0])}</dt><dd>${esc(x[1])}</dd></div>`).join(''),
@@ -306,7 +311,11 @@ function kitPage(r0, L) {
     .replace('id="l-docs" href="#"', `id="l-docs" href="${esc(r.docs)}"`)
     .replace(/(<p class="ink2" style="margin-top:8px" id="safety">)[^<]*(<\/p>)/, `$1${D.PR_SAFETY(r).map(esc).join('<br>')}$2`)
     .replace('<span class="h2" id="specs-title">Parametry</span>', `<span class="h2" id="specs-title">Parametry · ${specs.length}</span>`)
-    .replace('<!--sim-cta-->\n', simCta + planCta)
+    .replace('<!--primary-cta-->\n', primaryCta)
+    .replace('<!--sim-cta-->\n', planCta ? simCta : '')
+    // sticky bar repeats the primary CTA
+    .replace('<a class="btn btn-act" href="#predobjednavka" tabindex="-1">Dejte mi vědět</a>', () => planCta ? `<a class="btn btn-act" href="${root}plan/${r.id}/" tabindex="-1">Plán nákupu dílů</a>`
+      : sim ? `<a class="btn btn-act" href="${simHref}" tabindex="-1">${esc(sim.label)}</a>` : `<a class="btn btn-act" href="${esc(r.docs)}" rel="noopener" tabindex="-1">Návod projektu ↗</a>`)
     .replace('<!--box-plan-->\n', PLAN_NOTE[r.id] ? `<p style="margin:16px 0 0"><a class="step-a" href="${root}plan/${r.id}/" id="box-plan">Plán nákupu: kde koupit, za kolik a na co si dát pozor</a></p>\n` : '')
     .replace('<b id="po-title" style="font-weight:500;font-size:19px;display:block"></b>', `<b id="po-title" style="font-weight:500;font-size:19px;display:block">${r.preparing ? 'Upozornění na dostupnost' : 'Hotová sada: dejte mi vědět'}</b>`)
     // hero, crumb and meta line so the page reads right without scripts (app.js rewrites the same nodes)
@@ -324,7 +333,7 @@ function kitPage(r0, L) {
     html = html
       .replace('<span>Nic neprodáváme · díly koupíte přímo u dodavatelů</span>', '<span>Připravujeme · ověřujeme licenci s autory</span>')
       .replace('<div id="prep-info" class="prep" hidden>', '<div id="prep-info" class="prep">')
-      .replace('id="sec1-label">01 — Hotová sada<', 'id="sec1-label">01 — Upozornění na dostupnost<')
+      .replace('id="sec1-label">02 — Hotová sada<', 'id="sec1-label">01 — Upozornění na dostupnost<')
       .replace(/ data-hide-prep>/g, ' data-hide-prep hidden>')
       .replace(/ data-hide-prep style=/g, ' data-hide-prep hidden style=')
       .replace('id="jump-po">Hotová sada<', 'id="jump-po">Upozornění<')
@@ -332,7 +341,7 @@ function kitPage(r0, L) {
       .replace('placeholder="Co by v hotové sadě mělo být?"', 'placeholder="Na co se těšíte?"');
     if (!html.includes('Připravujeme · ověřujeme') || !html.includes('01 — Upozornění na dostupnost')) throw new Error('template changed (preparing): ' + r.id);
   }
-  if (!html.includes(`data-robot="${r.id}"`) || !html.includes('og:image') || html.includes('<!--sim-cta-->') || !html.includes('id="l-hw">')) throw new Error('template changed: ' + r.id);
+  if (!html.includes(`data-robot="${r.id}"`) || !html.includes('og:image') || html.includes('<!--sim-cta-->') || html.includes('<!--primary-cta-->') || !html.includes('id="l-hw">')) throw new Error('template changed: ' + r.id);
   html = wireI18n(html, L, page, PATH.kit('cs', r.id), PATH.kit('en', r.id), root);
   if (L === 'en') {
     html = enLinks(translateHtml(html.replace('<html lang="cs">', '<html lang="en">')), page);
@@ -409,8 +418,13 @@ const cards = R.map((r, i) => `<a class="card" href="sada/${r.id}/"><div class="
   `<span class="card-meta"><span class="mono" style="color:var(--ink)">${no(i)}</span><span class="mono">${esc(r.preparing ? 'Připravujeme' : r.level)}</span></span>` +
   `<span><h3>${esc(r.name)}</h3><span class="type">${esc(r.type)}</span></span><span class="spec1">${r.card.map(c => esc(c[1])).join(' · ')}</span>` +
   `<p class="desc">${esc(r.short)}</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>`).join('\n');
+// showcases (PR_SHOWCASE): open projects we present but do not sell; the card links to the simulation, no kit page
+const showCard = (r, L) => `<a class="card card-show" href="sim/${r.sim}/" data-showcase="${r.id}"><div class="tile"><span class="tag tag-s">${L === 'en' ? 'Showcase' : 'Ukázka'}</span><img src="img/${r.id}_poster.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
+  `<span class="card-meta"><span class="mono" style="color:var(--ink)">OH</span><span class="mono">${L === 'en' ? 'Open hardware' : 'Otevřený hardware'}</span></span>` +
+  `<span><h3>${esc(r.name)}</h3><span class="type">${esc(r.type)}</span></span><span class="spec1">${r.card.map(c => esc(c[1])).join(' · ')}</span>` +
+  `<p class="desc">${esc(r.short)} <span class="mono-s">${esc(r.notAffiliated)}</span></p><span class="go">${L === 'en' ? 'Try it in the simulator' : 'Vyzkoušet v simulaci'} <span aria-hidden="true">→</span></span></a>`;
 let home = read('index.html');
-home = home.replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->|<div class="cards" id="cards"><\/div>/, `<div class="cards" id="cards">\n${cards}\n</div><!--/cards-->`)
+home = home.replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->|<div class="cards" id="cards"><\/div>/, `<div class="cards" id="cards">\n${cards}\n${W.cs.PR_SHOWCASE.map(r => showCard(r, 'cs')).join('\n')}\n</div><!--/cards-->`)
   .replace(/<noscript><p>Pro katalog zapněte JavaScript[\s\S]*?<\/noscript>\n?/, '')
   .replace(/id="robot-count">\d+</, `id="robot-count">${R.length}<`).replace(/id="robot-count2">\d+</, `id="robot-count2">${R.length}<`);
 if (!home.includes('<!--/cards-->')) throw new Error('index.html: cards placeholder not found');
@@ -429,7 +443,7 @@ if (home.includes('<!--/cards-->')) {
   const meta = (re, v) => en => en.replace(re, v);
   let en = home
     .replace('<html lang="cs">', '<html lang="en">')
-    .replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->/, `<div class="cards" id="cards">\n${enCards}\n</div><!--/cards-->`)
+    .replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->/, `<div class="cards" id="cards">\n${enCards}\n${W.en.PR_SHOWCASE.map(r => showCard(r, 'en')).join('\n')}\n</div><!--/cards-->`)
     .replace(/<title>[^<]*<\/title>/, '<title>printedrobotics.cz — try a robot in your browser, then build it</title>')
     .replace(/<meta name="description" content="[^"]*">/, '<meta name="description" content="Try the SO-101 robot arm in a physics simulation right in your browser, and combat robots in the arena. Then we tell you what to buy and where, and guide you through the build.">')
     .replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${SITE}en/">`)
@@ -585,7 +599,7 @@ ${en ? `<script src="${root}assets/data.en.js"></script>\n<script src="${root}as
 for (const c of CONTENT) { contentPage(c, 'cs'); contentPage(c, 'en'); }
 
 // sitemap with hreflang pairs; sim/so101 is an indexable landing page, sim/arena is noindex
-const pairs = [['', fs.existsSync('en/index.html') ? 'en/' : null], ['kviz.html', 'en/quiz/'], ...R.map(r => [PATH.kit('cs', r.id), PATH.kit('en', r.id)]), ...CONTENT.filter(c => !c.draft).map(c => [c.cs, c.en]), ['sim/so101/', read('sim/so101/index.html').includes('hreflang="en"') ? 'sim/so101/?lang=en' : null]];
+const pairs = [['', fs.existsSync('en/index.html') ? 'en/' : null], ['kviz.html', 'en/quiz/'], ...R.map(r => [PATH.kit('cs', r.id), PATH.kit('en', r.id)]), ...CONTENT.filter(c => !c.draft).map(c => [c.cs, c.en]), ['sim/so101/', read('sim/so101/index.html').includes('hreflang="en"') ? 'sim/so101/?lang=en' : null], ['sim/origin/', 'en/sim/origin/']];
 const loc = (u, alt) => `  <url><loc>${SITE}${u}</loc>${alt ? `<xhtml:link rel="alternate" hreflang="cs" href="${SITE}${alt[0]}"/><xhtml:link rel="alternate" hreflang="en" href="${SITE}${alt[1]}"/>` : ''}</url>`;
 const urls = [];
 for (const [cs, en] of pairs) { urls.push(loc(cs, en && [cs, en])); if (en) urls.push(loc(en, [cs, en])); }

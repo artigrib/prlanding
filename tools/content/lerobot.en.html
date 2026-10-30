@@ -37,15 +37,11 @@
 <div class="a1 mono">02 — Installation</div>
 <div class="a4 prose">
 <h2>Python 3.12 and LeRobot</h2>
-<p>The official guide recommends Python 3.12 in a conda environment (via Miniforge); <code>uv</code> or <code>venv</code> also work.<sup><a href="#sources">3</a></sup> For the SO-101 you also install Feetech servo support:<sup><a href="#sources">1</a></sup></p>
-<pre tabindex="0"><code>conda create -y -n lerobot python=3.12
-conda activate lerobot
-conda install ffmpeg -c conda-forge
-git clone https://github.com/huggingface/lerobot.git
-cd lerobot
-pip install -e ".[core_scripts]"
-pip install -e ".[feetech]"</code></pre>
-<p class="src">According to the guide, <code>ffmpeg</code> is needed to decode video in datasets and can be skipped on some platforms. Details are in the installation guide.<sup><a href="#sources">3</a></sup></p>
+<p>LeRobot requires Python 3.12 or newer.<sup><a href="#sources">3</a></sup> All our SO-101 guides use the same install from PyPI, pinned to version 0.6.1, which we tested against the <a href="{root}en/guides/so101-lerobot-simulation/">virtual arm</a>; Feetech servo support is included:<sup><a href="#sources">1</a></sup></p>
+<pre tabindex="0"><code>python3.12 -m venv .venv-lerobot
+source .venv-lerobot/bin/activate
+pip install "lerobot[feetech,core-scripts]==0.6.1"</code></pre>
+<p class="src">Windows: <code>py -3.12 -m venv .venv-lerobot</code> and <code>.venv-lerobot\Scripts\activate</code>. The official guide recommends a conda environment (Miniforge) and installing from git; the same <code>pip install</code> works inside a conda environment. <code>ffmpeg</code> is needed for video in datasets (recording with cameras): Linux <code>sudo apt install ffmpeg</code>, macOS <code>brew install ffmpeg</code>, conda <code>conda install ffmpeg -c conda-forge</code>.<sup><a href="#sources">3</a></sup></p>
 </div>
 </div>
 </section>
