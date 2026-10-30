@@ -164,6 +164,9 @@
       if (/^\/en\//.test(u.pathname)) return href;
       var m = /^\/sada\/([^/]+)\/?$/.exec(u.pathname);
       if (m) return '/en/kit/' + m[1] + '/' + u.search + u.hash;
+      m = /^\/plan\/([a-z0-9]+)\/?$/.exec(u.pathname);
+      if (m) return '/en/plan/' + m[1] + '/' + u.search + u.hash;
+      if (u.pathname === '/navody/so101-sestaveni/') return '/en/guides/so101-assembly/' + u.search + u.hash;
       if (u.pathname === '/' || u.pathname === '/index.html') return '/en/' + u.search + u.hash;
       if (u.pathname === '/kviz.html') return '/en/quiz/' + u.search + u.hash;
     } catch (e) {}
