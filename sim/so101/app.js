@@ -64,8 +64,8 @@ async function main() {
   const app = new MissionPage(sim);
   // [ux-hook:install] optional UX layer (src/ux.js: smart move, missions, replay, cameras, exploded view…).
   // The plain slider sim keeps working if it fails to load.
-  const MIRROR = new URLSearchParams(location.search).has('mirror');   // live LeRobot mirror: plain view, no mission UX
-  if (!MIRROR) try { await (await import('./src/ux.js')).install(app, { THREE: ctx.THREE, mj: ctx.mj, TEST, objects: ctx.objects }); }
+  const MIRROR = new URLSearchParams(location.search).has('mirror');   // live LeRobot mirror (see below)
+  try { await (await import('./src/ux.js')).install(app, { THREE: ctx.THREE, mj: ctx.mj, TEST, objects: ctx.objects }); }
   catch (e) { console.warn('UX layer disabled:', e); app.ux = null; sim.onRender = null; }
   $('loader').hidden = true;
   $('hud').hidden = false;

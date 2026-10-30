@@ -172,7 +172,8 @@ class UX {
     idle(() => this.hd.start(), { timeout: 1500 });
     const q = new URLSearchParams(location.search);
     if (q.get('onboard') === '1') setTimeout(() => this.onboarding.start(), 600);
-    else if (!this.TEST && !q.has('mise')) setTimeout(() => this.onboarding.maybeStart(), 600);
+    else if (!this.TEST && !q.has('mise') && !q.has('mirror'))   // ?mirror: LeRobot drives the arm, no first-task guide
+      setTimeout(() => this.onboarding.maybeStart(), 600);
   }
 
   // ================= hooks called by app.js =================
