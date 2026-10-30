@@ -287,6 +287,32 @@ await check('bench checklist prints on one A4 page', '/navody/so101-sestaveni/ko
   const pages = (pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length;
   if (pages !== 1) throw new Error('checklist prints on ' + pages + ' pages');
 });
+// forge demo: guide draft and /lab/ replay are noindex, not in the sitemap, not linked from public pages
+await check('forge flashlight draft: noindex, labelled, unlinked', '/navody/so101-baterka/', async p => {
+  if ((await p.locator('meta[name="robots"]').getAttribute('content')) !== 'noindex,nofollow') throw new Error('not noindex');
+  const txt = await p.locator('main').innerText();
+  if (!/komunitní\s+návrh\s+–\s+ověřeno\s+pouze\s+v\s+simulaci/i.test(txt)) throw new Error('missing simulation-only label');
+  if (!/ověřit\s+na\s+tisku/.test(txt)) throw new Error('missing "ověřit na tisku"');
+  const imgs = await p.locator('main figure img').evaluateAll((els) => els.map((e) => e.complete && e.naturalWidth > 0 ? 1 : 0));
+  await p.evaluate(() => Promise.all([...document.images].map((i) => { i.loading = 'eager'; return i.decode().catch(() => {}); })));
+  const ok = await p.locator('main figure img').evaluateAll((els) => els.filter((e) => e.naturalWidth > 0).length);
+  if (imgs.length < 5 || ok < 5) throw new Error(`renders missing (${ok}/${imgs.length})`);
+  const sm = await (await p.request.get(BASE + '/sitemap.xml')).text();
+  if (/so101-baterka|so101-flashlight|\/lab\//.test(sm)) throw new Error('forge draft in the sitemap');
+  for (const path of ['/', '/navody/', '/navody/so101-sestaveni/', '/sada/so101/', '/en/', '/en/guides/'])
+    if (/so101-baterka|so101-flashlight|href="[^"]*lab\//.test(await (await p.request.get(BASE + path)).text())) throw new Error('forge draft linked from ' + path);
+  await p.setViewportSize({ width: 360, height: 740 });
+  if ((await p.evaluate(() => document.documentElement.scrollWidth)) > 360) throw new Error('horizontal scroll at 360 px');
+});
+await check('forge lab replay', '/lab/', async p => {
+  if ((await p.locator('meta[name="robots"]').getAttribute('content')) !== 'noindex,nofollow') throw new Error('not noindex');
+  await p.locator('#fast').check();
+  await p.locator('#play').click();
+  await p.waitForFunction(() => window.__lab && window.__lab.done, null, { timeout: 20000 });
+  const st = await p.locator('.step').evaluateAll((els) => els.map((e) => e.dataset.s));
+  if (st.length !== 7 || st.some((s) => !['ok', 'warn', 'skipped'].includes(s))) throw new Error('steps: ' + st.join(','));
+  if ((await p.locator('.shots img').count()) < 5) throw new Error('render thumbnails missing');
+});
 // build log template: draft, noindex, not in the sitemap and not linked from any page
 await check('build log draft: noindex, unlinked', '/stavba/so101/', async p => {
   if ((await p.locator('meta[name="robots"]').getAttribute('content')) !== 'noindex,nofollow') throw new Error('not noindex');

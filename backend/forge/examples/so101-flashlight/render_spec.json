@@ -1,0 +1,320 @@
+{
+ "setup": {
+  "cameraMount": true,
+  "shift": {
+   "camera_mount": [
+    0,
+    0.003,
+    0
+   ]
+  }
+ },
+ "parts": [
+  {
+   "key": "forge:holder",
+   "body": "gripper",
+   "stl": "part.stl"
+  },
+  {
+   "key": "forge:led",
+   "body": "gripper",
+   "stl": "led.stl",
+   "kind": "led"
+  }
+ ],
+ "steps": [
+  {
+   "id": "01-part",
+   "az": -220,
+   "el": 26,
+   "pose": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "solo": [
+    "forge:holder"
+   ],
+   "frame": [
+    "forge:holder"
+   ],
+   "zoom": 1.15,
+   "hot": [
+    "forge:holder"
+   ],
+   "ground": false
+  },
+  {
+   "id": "02-holder",
+   "az": -220,
+   "el": 26,
+   "pose": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "frame": [
+    "wrist:wrist_roll_pitch_so101_v2",
+    "wrist:sts3215_03a_no_horn_v1",
+    "gripper:wrist_roll_follower_so101_v1",
+    "gripper:sts3215_03a_v1",
+    "moving_jaw_so101_v1:moving_jaw_so101_v1",
+    "camera_mount:wrist_roll_follower_so101_camera_mount"
+   ],
+   "zoom": 0.9,
+   "done": [
+    "wrist:wrist_roll_pitch_so101_v2",
+    "wrist:sts3215_03a_no_horn_v1",
+    "gripper:wrist_roll_follower_so101_v1",
+    "gripper:sts3215_03a_v1",
+    "moving_jaw_so101_v1:moving_jaw_so101_v1"
+   ],
+   "add": [
+    {
+     "part": "forge:holder",
+     "dir": [
+      -0.0,
+      0.9988,
+      0.0487
+     ],
+     "dist": 0.03
+    }
+   ],
+   "screws": [
+    {
+     "label": "2\u00d7 M3",
+     "at": [
+      {
+       "mm": [
+        316.6,
+        27.0,
+        230.7
+       ]
+      },
+      {
+       "mm": [
+        316.6,
+        26.6,
+        238.7
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "03-camera",
+   "az": -220,
+   "el": 26,
+   "pose": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "frame": [
+    "wrist:wrist_roll_pitch_so101_v2",
+    "wrist:sts3215_03a_no_horn_v1",
+    "gripper:wrist_roll_follower_so101_v1",
+    "gripper:sts3215_03a_v1",
+    "moving_jaw_so101_v1:moving_jaw_so101_v1",
+    "camera_mount:wrist_roll_follower_so101_camera_mount"
+   ],
+   "zoom": 0.9,
+   "done": [
+    "wrist:wrist_roll_pitch_so101_v2",
+    "wrist:sts3215_03a_no_horn_v1",
+    "gripper:wrist_roll_follower_so101_v1",
+    "gripper:sts3215_03a_v1",
+    "moving_jaw_so101_v1:moving_jaw_so101_v1",
+    "forge:holder"
+   ],
+   "add": [
+    {
+     "part": "camera_mount:wrist_roll_follower_so101_camera_mount",
+     "dir": [
+      -0.0,
+      0.9988,
+      0.0487
+     ],
+     "dist": 0.035
+    }
+   ],
+   "screws": [
+    {
+     "label": "2\u00d7 M3 +3 mm",
+     "at": [
+      {
+       "mm": [
+        316.6,
+        27.0,
+        230.7
+       ]
+      },
+      {
+       "mm": [
+        316.6,
+        26.6,
+        238.7
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "04-led",
+   "az": -220,
+   "el": 26,
+   "pose": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "frame": [
+    "wrist:wrist_roll_pitch_so101_v2",
+    "wrist:sts3215_03a_no_horn_v1",
+    "gripper:wrist_roll_follower_so101_v1",
+    "gripper:sts3215_03a_v1",
+    "moving_jaw_so101_v1:moving_jaw_so101_v1",
+    "camera_mount:wrist_roll_follower_so101_camera_mount"
+   ],
+   "zoom": 0.9,
+   "done": [
+    "wrist:wrist_roll_pitch_so101_v2",
+    "wrist:sts3215_03a_no_horn_v1",
+    "gripper:wrist_roll_follower_so101_v1",
+    "gripper:sts3215_03a_v1",
+    "moving_jaw_so101_v1:moving_jaw_so101_v1",
+    "camera_mount:wrist_roll_follower_so101_camera_mount",
+    "forge:holder",
+    "forge:led"
+   ],
+   "hot": [
+    "forge:holder"
+   ],
+   "cones": [
+    {
+     "body": "gripper",
+     "apex": [
+      -28.0,
+      29.63,
+      -31.4
+     ],
+     "dir": [
+      0.0,
+      -0.4067,
+      -0.9135
+     ],
+     "len": 70.0,
+     "half": 25.0
+    }
+   ]
+  },
+  {
+   "id": "05-arm",
+   "az": -210,
+   "el": 18,
+   "pose": [
+    0.0,
+    -0.35,
+    0.55,
+    1.15,
+    0.0,
+    0.45
+   ],
+   "frame": [
+    "base:base_so101_v2",
+    "base:base_motor_holder_so101_v1",
+    "base:sts3215_03a_v1",
+    "base:waveshare_mounting_plate_so101_v2",
+    "shoulder:sts3215_03a_v1",
+    "shoulder:motor_holder_so101_base_v1",
+    "shoulder:rotation_pitch_so101_v1",
+    "upper_arm:sts3215_03a_v1",
+    "upper_arm:upper_arm_so101_v1",
+    "lower_arm:under_arm_so101_v1",
+    "lower_arm:motor_holder_so101_wrist_v1",
+    "lower_arm:sts3215_03a_v1",
+    "wrist:wrist_roll_pitch_so101_v2",
+    "wrist:sts3215_03a_no_horn_v1",
+    "gripper:wrist_roll_follower_so101_v1",
+    "gripper:sts3215_03a_v1",
+    "moving_jaw_so101_v1:moving_jaw_so101_v1",
+    "camera_mount:wrist_roll_follower_so101_camera_mount"
+   ],
+   "zoom": 0.7,
+   "done": [
+    "base:base_so101_v2",
+    "base:base_motor_holder_so101_v1",
+    "base:sts3215_03a_v1",
+    "base:waveshare_mounting_plate_so101_v2",
+    "shoulder:sts3215_03a_v1",
+    "shoulder:motor_holder_so101_base_v1",
+    "shoulder:rotation_pitch_so101_v1",
+    "upper_arm:sts3215_03a_v1",
+    "upper_arm:upper_arm_so101_v1",
+    "lower_arm:under_arm_so101_v1",
+    "lower_arm:motor_holder_so101_wrist_v1",
+    "lower_arm:sts3215_03a_v1",
+    "wrist:wrist_roll_pitch_so101_v2",
+    "wrist:sts3215_03a_no_horn_v1",
+    "gripper:wrist_roll_follower_so101_v1",
+    "gripper:sts3215_03a_v1",
+    "moving_jaw_so101_v1:moving_jaw_so101_v1",
+    "camera_mount:wrist_roll_follower_so101_camera_mount",
+    "forge:holder",
+    "forge:led"
+   ],
+   "hot": [
+    "forge:holder"
+   ],
+   "cones": [
+    {
+     "body": "gripper",
+     "apex": [
+      -28.0,
+      29.63,
+      -31.4
+     ],
+     "dir": [
+      0.0,
+      -0.4067,
+      -0.9135
+     ],
+     "len": 70.0,
+     "half": 25.0
+    }
+   ]
+  }
+ ],
+ "poses": {
+  "zero": {
+   "shoulder_pan": 0.0,
+   "shoulder_lift": 0.0,
+   "elbow_flex": 0.0,
+   "wrist_flex": 0.0,
+   "wrist_roll": 0.0,
+   "gripper": 0.0
+  },
+  "work": {
+   "shoulder_pan": 0.0,
+   "shoulder_lift": -0.35,
+   "elbow_flex": 0.55,
+   "wrist_flex": 1.15,
+   "wrist_roll": 0.0,
+   "gripper": 0.45
+  }
+ }
+}

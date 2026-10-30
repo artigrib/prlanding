@@ -1,0 +1,131 @@
+<!doctype html>
+<!-- /lab/: draft prototype, noindex, not linked from any page. Replays a forge job log (backend/forge) step by step.
+     The same applyEvent() will consume the live SSE stream (GET /forge/jobs/<id>/events, see backend/forge/README.md). -->
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Forge lab (prototyp) | printedrobotics.cz</title>
+<meta name="description" content="Prototyp: přehrání úlohy CAD dílny (forge) krok za krokem.">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E8461E'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.lab{padding:32px 0 64px}
+.lab h1{font-size:clamp(28px,4vw,44px);line-height:1.1;margin:8px 0 12px;font-weight:600;letter-spacing:-.01em}
+.lab .req{font-family:var(--mono);font-size:15px;background:var(--sand);border:1px solid var(--line);padding:12px 14px;margin:16px 0 8px}
+.lab .tag{display:inline-block;font-family:var(--mono);font-size:12px;background:var(--ink);color:#fff;padding:3px 8px;margin-right:6px}
+.lab .tag.warn{background:var(--accent);color:var(--ink)}
+.lab .bar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:20px 0}
+.lab .bar .btn{min-height:44px}
+.steps{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
+.step{display:grid;grid-template-columns:40px minmax(0,1fr);gap:4px 14px;padding:16px 0;border-bottom:1px solid var(--line)}
+.step .dot{width:28px;height:28px;border:2px solid var(--line-2);border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:12px;color:var(--mute);background:#fff}
+.step[data-s="running"] .dot{border-color:var(--accent);animation:pulse 1s infinite}
+.step[data-s="ok"] .dot,.step[data-s="skipped"] .dot{background:var(--ink);border-color:var(--ink);color:#fff}
+.step[data-s="warn"] .dot{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+.step[data-s="fail"] .dot{background:#8A1C0A;border-color:#8A1C0A;color:#fff}
+.step[data-s="pending"]{opacity:.45}
+.step h2{font-size:18px;margin:2px 0 0;font-weight:600}
+.step .sum{margin:4px 0 0;color:var(--ink-2);overflow-wrap:anywhere}
+.step .sec{font-family:var(--mono);font-size:12px;color:var(--mute)}
+.step details{margin-top:8px}
+.step pre{font-family:var(--mono);font-size:12px;background:var(--sand);border:1px solid var(--line);padding:10px;overflow:auto;max-height:280px;white-space:pre-wrap;overflow-wrap:anywhere}
+.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px}
+.shots img{width:100%;height:auto;display:block;border:1px solid var(--line);background:var(--stone)}
+.lab .out{margin-top:28px}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(232,70,30,.18)}}
+@media (prefers-reduced-motion:reduce){.step[data-s="running"] .dot{animation:none}}
+</style>
+</head>
+<body>
+<header class="site-h"><div class="wrap"><div class="hbar"><div class="brand"><i aria-hidden="true"></i><a href="../">printedrobotics</a></div></div></div></header>
+<main id="obsah" class="wrap lab">
+<div class="mono">Forge lab · prototyp · noindex</div>
+<h1>CAD dílna: od zadání k dílu</h1>
+<p class="muted">Přehrání jedné úlohy krok za krokem: rozbor → uchycení → CAD → kontroly → díly → vizualizace → návod. Později tu poběží živě (SSE) z pracovníka na serveru.</p>
+<p><span class="tag warn">komunitní návrh – ověřeno pouze v simulaci</span><span class="tag" id="brain">…</span></p>
+<div class="req" id="req" aria-label="Zadání">…</div>
+<div class="bar">
+<button class="btn btn-act" id="play" type="button">Přehrát znovu <span aria-hidden="true">↻</span></button>
+<label class="mono"><input type="checkbox" id="fast"> rychle</label>
+<span class="mono" id="status" role="status" aria-live="polite"></span>
+</div>
+<ol class="steps" id="steps"></ol>
+<div class="out" id="out" hidden>
+<h2>Výstup</h2>
+<p id="outsum"></p>
+<p><a href="../navody/so101-baterka/">Koncept návodu (CZ)</a> · <a href="../en/guides/so101-flashlight/">Draft guide (EN)</a></p>
+</div>
+</main>
+<script>
+(() => {
+  const JOB = new URLSearchParams(location.search).get('job') || 'so101-flashlight';
+  if (!/^[a-z0-9-]+$/.test(JOB)) return;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const ICON = { pending: '·', running: '…', ok: '✓', warn: '!', fail: '×', skipped: '–' };
+  let job = null, timer = null;
+
+  function row(s, i) {
+    const li = document.createElement('li');
+    li.className = 'step'; li.id = 'st-' + s.id; li.dataset.s = 'pending';
+    li.innerHTML = `<span class="dot" aria-hidden="true">${i + 1}</span><div><h2>${esc(s.title_cs)} <span class="sec">${esc(s.id)}</span></h2><p class="sum"></p><div class="more"></div></div>`;
+    return li;
+  }
+  // one event = one step state change; the replay and the future SSE stream both call this
+  function applyEvent(ev) {
+    const li = $('st-' + ev.step); if (!li) return;
+    li.dataset.s = ev.status;
+    li.querySelector('.dot').textContent = ev.status === 'pending' ? li.querySelector('.dot').textContent : ICON[ev.status];
+    if (ev.status === 'running') { li.querySelector('.sum').textContent = 'běží…'; $('status').textContent = 'Krok: ' + li.querySelector('h2').firstChild.textContent.trim(); return; }
+    const sum = (ev.summary || '') + (ev.elapsed_s != null ? ` · ${ev.elapsed_s} s` : '');
+    li.querySelector('.sum').textContent = sum;
+    const more = li.querySelector('.more'); more.innerHTML = '';
+    const imgs = (ev.artifacts || []).filter((a) => /-600\.jpg$/.test(a));
+    if (imgs.length) {
+      const d = document.createElement('div'); d.className = 'shots';
+      d.innerHTML = imgs.map((a) => `<img src="../${esc(job.images)}${esc(a.split('/').pop())}" alt="Vizualizace kroku ${esc(a.split('/').pop().replace('-600.jpg', ''))}" width="600" height="450" loading="lazy">`).join('');
+      more.appendChild(d);
+    }
+    if (ev.data) {
+      const det = document.createElement('details');
+      det.innerHTML = `<summary class="mono">data kroku</summary><pre>${esc(JSON.stringify(ev.data, null, 1)).slice(0, 6000)}</pre>`;
+      more.appendChild(det);
+    }
+  }
+  function replay() {
+    clearTimeout(timer);
+    $('steps').innerHTML = '';
+    job.steps.forEach((s, i) => $('steps').appendChild(row(s, i)));
+    $('out').hidden = true;
+    const evs = [];
+    for (const s of job.steps) { evs.push({ step: s.id, status: 'running' }); evs.push({ step: s.id, status: s.status, summary: s.summary, data: s.data, artifacts: s.artifacts, elapsed_s: s.elapsed_s }); }
+    let k = 0;
+    const tick = () => {
+      if (k >= evs.length) { finish(); return; }
+      applyEvent(evs[k++]);
+      timer = setTimeout(tick, $('fast').checked ? 60 : (evs[k - 1].status === 'running' ? 650 : 350));
+    };
+    tick();
+  }
+  function finish() {
+    const s = job.summary || {};
+    $('status').textContent = 'Hotovo';
+    $('out').hidden = false;
+    $('outsum').textContent = `Díl ${s.part_mass_print_g} g (s LED a kabelem +${s.added_mass_g} g), nejtenčí stěna ${s.min_wall_mm} mm, ${s.collision_free ? 'bez kolizí' : 'kontakt jen v úplně složených polohách'}; ${s.led}; USB 5 V + ${s.resistor_ohm} Ω ≈ ${s.current_ma_typ} mA.`;
+    window.__lab = { done: true, steps: job.steps.length };
+  }
+  fetch(`forge/${JOB}/job.json`).then((r) => r.json()).then((j) => {
+    job = j;
+    $('req').textContent = '„' + j.request + '“';
+    $('brain').textContent = 'brain: ' + j.brain.name;
+    $('play').addEventListener('click', replay);
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) $('fast').checked = true;
+    replay();
+  }).catch((e) => { $('status').textContent = 'Log se nepodařilo načíst: ' + e.message; });
+})();
+</script>
+</body>
+</html>

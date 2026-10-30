@@ -1,0 +1,351 @@
+{
+ "version": 1,
+ "request": "SO-101 s baterkou (flashlight)",
+ "brain": {
+  "name": "scripted-stage0",
+  "note": "Claude-authored build123d source and rules, run through the same run_cad tool an LLM will use; no LLM call."
+ },
+ "steps": [
+  {
+   "id": "parse",
+   "title": "Parse request",
+   "title_cs": "Rozbor zadání",
+   "status": "ok",
+   "summary": "robot so101, accessory flashlight",
+   "data": {
+    "robot": "so101",
+    "accessory": "flashlight",
+    "language": "cs",
+    "requirements": {
+     "moves_with": "gripper",
+     "aim": "jaw tips (gripperframe site)",
+     "led": "common 10 mm white LED",
+     "power": "low voltage only (no mains, no LiPo)",
+     "mass_max_g": 15,
+     "min_wall_mm": 1.2
+    }
+   },
+   "elapsed_s": 0.0
+  },
+  {
+   "id": "mount",
+   "title": "Pick mount point",
+   "title_cs": "Výběr místa uchycení",
+   "status": "ok",
+   "summary": "gripper_cam_face: 2× M3 holes, pitch 8.0 ± 0.6 mm (ověřit na tisku)",
+   "data": {
+    "chosen": "gripper_cam_face",
+    "ranked": [
+     {
+      "id": "gripper_cam_face",
+      "score": 4,
+      "why": [
+       "rotates with the gripper, so the light follows the jaws",
+       "existing screw holes (wrist-camera mount pair)"
+      ]
+     },
+     {
+      "id": "gripper_outer_face",
+      "score": 2,
+      "why": [
+       "rotates with the gripper, so the light follows the jaws",
+       "no holes: tape only"
+      ]
+     },
+     {
+      "id": "forearm_clamp",
+      "score": 0,
+      "why": [
+       "does not follow wrist roll"
+      ]
+     }
+    ],
+    "holes": [
+     {
+      "center": [
+       -5.0,
+       24.0,
+       -23.4
+      ],
+      "d_measured": 3.2,
+      "d_nominal": 3.2,
+      "axis": [
+       0,
+       -1,
+       0
+      ]
+     },
+     {
+      "center": [
+       3.1,
+       24.0,
+       -23.4
+      ],
+      "d_measured": 3.2,
+      "d_nominal": 3.2,
+      "axis": [
+       0,
+       -1,
+       0
+      ]
+     }
+    ],
+    "verify": "ověřit na tisku",
+    "tcp_gripper_mm": [
+     12.0,
+     -0.218,
+     -98.127
+    ],
+    "params": {
+     "led_d": 10.0,
+     "led_clear": 0.25,
+     "flange_d": 11.4,
+     "flange_h": 1.5,
+     "wall": 1.8,
+     "sleeve_len": 14.0,
+     "tilt_deg": 24.0,
+     "toe_deg": 0.0,
+     "plate_t": 3.0,
+     "hole_pitch": 8.0,
+     "hole_mid_x": -0.95,
+     "hole_z": -23.4,
+     "face_y": 24.0,
+     "hole_d": 3.4,
+     "slot_extra": 0.6,
+     "sleeve_x": -28.0,
+     "sleeve_z": -24.0
+    }
+   },
+   "elapsed_s": 0.2
+  },
+  {
+   "id": "cad",
+   "title": "CAD in sandbox",
+   "title_cs": "CAD v sandboxu",
+   "status": "ok",
+   "summary": "STEP + STL, 42.0×18.1×18.4 mm, 2.38 g PLA, watertight True",
+   "data": {
+    "report": {
+     "units": "mm",
+     "bbox_mm": [
+      [
+       -34.92,
+       24.0,
+       -33.21
+      ],
+      [
+       7.05,
+       42.1,
+       -14.79
+      ]
+     ],
+     "size_mm": [
+      41.97,
+      18.1,
+      18.42
+     ],
+     "volume_mm3": 2211.6,
+     "volume_mesh_mm3": 2211.6,
+     "area_mm2": 2238.0,
+     "density_g_cm3": 1.24,
+     "mass_solid_g": 2.74,
+     "mass_print_g": 2.38,
+     "mass_print_assumptions": "0.8 mm solid shell + 30 % infill",
+     "center_of_mass_mm": [
+      -19.51,
+      28.64,
+      -23.31
+     ],
+     "watertight": true,
+     "winding_consistent": true,
+     "euler_number": -4,
+     "triangles": 2596,
+     "n_solids": 1,
+     "occ_valid": true,
+     "wall": {
+      "min_wall_mm": 1.22,
+      "raw_min_mm": 0.19,
+      "p10_mm": 1.8,
+      "median_mm": 3.0,
+      "samples": 1500,
+      "method": "inward rays from surface samples, 2nd percentile"
+     }
+    },
+    "source_lines": 64,
+    "sandbox": {
+     "stage": "done",
+     "elapsed_s": 2.974
+    }
+   },
+   "artifacts": [
+    "design.py",
+    "part.step",
+    "part.stl",
+    "report.json"
+   ],
+   "elapsed_s": 3.8
+  },
+  {
+   "id": "checks",
+   "title": "Checks",
+   "title_cs": "Kontroly",
+   "status": "ok",
+   "summary": "wall 1.22 mm ≥ 1.2; +5.38 g; wrist_flex static +3.54 %; sweep 8644 poses: contact only where the robot itself is within 2.48 mm",
+   "data": {
+    "printability": {
+     "min_wall_mm": 1.22,
+     "wall_ok": true,
+     "overhang_area_mm2_over_45deg": 128.7,
+     "watertight": true,
+     "ok": true
+    },
+    "static_fit": {
+     "min_mm": 0.3,
+     "interference": false
+    },
+    "collision": {
+     "poses": 9900,
+     "poses_checked": 8644,
+     "poses_excluded_robot_self_contact": 1256,
+     "collision_free": false,
+     "collisions_only_where_robot_clearance_below_mm": 2.48,
+     "exact_min_mm": 0.02,
+     "hull_min_mm": -1.25,
+     "exact_poses_penetrating": 8
+    },
+    "torque_wrist_flex": {
+     "joint": "wrist_flex",
+     "max_static_nm_without": 0.1301,
+     "max_static_nm_with": 0.1347,
+     "delta_nm": 0.0046,
+     "delta_pct": 3.54,
+     "pct_of_stall_with": {
+      "C018 12 V (30 kg·cm)": 4.6,
+      "C001 7.4 V (16.5 kg·cm at 6 V)": 8.3
+     }
+    },
+    "added_mass_g": 5.38
+   },
+   "artifacts": [
+    "checks.json",
+    "model_with_part.xml"
+   ],
+   "elapsed_s": 108.5
+  },
+  {
+   "id": "parts",
+   "title": "Parts and power",
+   "title_cs": "Díly a napájení",
+   "status": "ok",
+   "summary": "TRU COMPONENTS 1577414, white LED 10 mm, 3250 mcd, 50°, 20 mA; USB 5 V + 120 Ω → 14.2 mA (max 18.8 mA)",
+   "data": {
+    "led": {
+     "id": "so101.ext.flashlight.led10",
+     "name": "TRU COMPONENTS 1577414, white LED 10 mm, 3250 mcd, 50°, 20 mA",
+     "source": "https://www.conrad.com/en/p/tru-components-1577414-led-wired-white-circular-10-mm-3250-mcd-50-20-ma-1577414.html",
+     "checked": "2026-10-30"
+    },
+    "power": {
+     "recommended": "usb5v",
+     "resistor_ohm": 120.0,
+     "current_ma": {
+      "min": 9.6,
+      "typ": 14.2,
+      "max": 18.8
+     },
+     "alternative": "buck5v"
+    },
+    "never": [
+     "mains voltage anywhere near the arm",
+     "LiPo / bare Li-ion cells",
+     "LED straight on the servo rail without a resistor"
+    ]
+   },
+   "artifacts": [
+    "bom_delta.json",
+    "electrical.json"
+   ],
+   "elapsed_s": 0.0
+  },
+  {
+   "id": "render",
+   "title": "Renders",
+   "title_cs": "Vizualizace",
+   "status": "ok",
+   "summary": "5 views × 1200/600 px webp + jpg",
+   "data": {
+    "views": [
+     "01-part",
+     "02-holder",
+     "03-camera",
+     "04-led",
+     "05-arm"
+    ],
+    "log": [
+     "01-part                  1200.webp 8.8 KB  1200.jpg 19.4 KB  600.webp 3.8 KB  600.jpg 7.7 KB",
+     "02-holder                1200.webp 17.6 KB  1200.jpg 36.4 KB  600.webp 7.1 KB  600.jpg 13.4 KB",
+     "03-camera                1200.webp 18.0 KB  1200.jpg 36.7 KB  600.webp 7.4 KB  600.jpg 13.2 KB",
+     "04-led                   1200.webp 15.4 KB  1200.jpg 33.2 KB  600.webp 6.3 KB  600.jpg 12.4 KB",
+     "05-arm                   1200.webp 27.3 KB  1200.jpg 55.3 KB  600.webp 11.1 KB  600.jpg 20.5 KB"
+    ]
+   },
+   "artifacts": [
+    "renders/01-part-1200.jpg",
+    "renders/01-part-1200.webp",
+    "renders/01-part-600.jpg",
+    "renders/01-part-600.webp",
+    "renders/02-holder-1200.jpg",
+    "renders/02-holder-1200.webp",
+    "renders/02-holder-600.jpg",
+    "renders/02-holder-600.webp",
+    "renders/03-camera-1200.jpg",
+    "renders/03-camera-1200.webp",
+    "renders/03-camera-600.jpg",
+    "renders/03-camera-600.webp",
+    "renders/04-led-1200.jpg",
+    "renders/04-led-1200.webp",
+    "renders/04-led-600.jpg",
+    "renders/04-led-600.webp",
+    "renders/05-arm-1200.jpg",
+    "renders/05-arm-1200.webp",
+    "renders/05-arm-600.jpg",
+    "renders/05-arm-600.webp"
+   ],
+   "elapsed_s": 30.8
+  },
+  {
+   "id": "guide",
+   "title": "Guide draft",
+   "title_cs": "Koncept návodu",
+   "status": "ok",
+   "summary": "Rozšíření: baterka na SO-101 (CZ + EN), draft, komunitní návrh – ověřeno pouze v simulaci",
+   "artifacts": [
+    "guide.cs.html",
+    "guide.en.html"
+   ],
+   "elapsed_s": 0.0
+  }
+ ],
+ "summary": {
+  "ok": true,
+  "part_mass_print_g": 2.38,
+  "added_mass_g": 5.38,
+  "min_wall_mm": 1.22,
+  "collision_free": false,
+  "collision_exact_min_mm": 0.02,
+  "collisions_only_where_robot_clearance_below_mm": 2.48,
+  "led": "TRU COMPONENTS 1577414, white LED 10 mm, 3250 mcd, 50°, 20 mA",
+  "power": "USB 5 V from the PC or a USB charger, series resistor",
+  "resistor_ohm": 120.0,
+  "current_ma_typ": 14.2,
+  "verify_on_print": [
+   "hole pitch 8.0 ± 0.6 mm and Ø3.2 mm (measured on decimated sim meshes)",
+   "LED fit: bore 10.25 mm, collar seat 11.4 mm",
+   "screw length with the camera mount sandwiched (+3 mm)",
+   "thinnest wall 1.22 mm at the LED collar seat",
+   "cable service loop over the full wrist roll",
+   "clearance to the base in fully folded poses"
+  ]
+ },
+ "images": "img/forge/so101-flashlight/"
+}

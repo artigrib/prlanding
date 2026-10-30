@@ -41,7 +41,10 @@ const M = {
   accServo: new THREE.MeshStandardMaterial({ color: ACC_D, roughness: 0.5 }),
   ghost: new THREE.MeshBasicMaterial({ color: ACC, transparent: true, opacity: 0.16, depthWrite: false }),
   edge: new THREE.LineBasicMaterial({ color: 0x2a2a28, transparent: true, opacity: 0.55 }),
-  edgeGhost: new THREE.LineBasicMaterial({ color: ACC_D, transparent: true, opacity: 0.45 })
+  edgeGhost: new THREE.LineBasicMaterial({ color: ACC_D, transparent: true, opacity: 0.45 }),
+  // forge add-ons (tools/render-kit/forge-render.mjs): LED body and light cone
+  led: new THREE.MeshStandardMaterial({ color: '#FFF6DA', emissive: '#FFE08A', emissiveIntensity: 0.6, roughness: 0.3 }),
+  beam: new THREE.MeshBasicMaterial({ color: '#FFD54A', transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide })
 };
 
 // ---------- model ----------
@@ -70,7 +73,8 @@ function split(g, ref) {
 }
 function finish(g) { g = g.index ? g.toNonIndexed() : g; g.computeVertexNormals(); g.computeBoundingBox(); return g; }
 
-window.setup = async () => {
+// opts (forge renders only): { cameraMount: true } shows the wrist camera mount, { shift: { body: [x,y,z] m } } moves a body
+window.setup = async (opts = {}) => {
   const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
   await MeshoptDecoder.ready;
   const gltf = await loader.loadAsync('../../sim/so101/model/visual/so101_visual.glb');
@@ -93,12 +97,13 @@ window.setup = async () => {
   const walk = (el, parent) => {
     const name = el.getAttribute('name');
     const b = new THREE.Group(); b.position.fromArray(v3(el.getAttribute('pos'))); b.quaternion.copy(quat(el.getAttribute('quat')));
+    if (opts.shift && opts.shift[name]) b.position.add(new THREE.Vector3(...opts.shift[name]));
     parent.add(b);
     const j = new THREE.Group(); b.add(j); bodies[name] = j;   // joint rotation (hinge about local z) lives in j
     if (el.querySelector(':scope > joint')) joints[name] = j;
     for (const g of el.querySelectorAll(':scope > geom[mesh]')) {
       const mesh = g.getAttribute('mesh');
-      if (mesh === 'wrist_roll_follower_so101_camera_mount' || /gripper_part/.test(mesh)) continue;
+      if ((mesh === 'wrist_roll_follower_so101_camera_mount' && !opts.cameraMount) || /gripper_part/.test(mesh)) continue;
       const holder = new THREE.Group(); holder.position.fromArray(v3(g.getAttribute('pos'))); holder.quaternion.copy(quat(g.getAttribute('quat')));
       j.add(holder);
       const key = name + ':' + mesh, servo = /^sts3215/.test(mesh);
@@ -116,6 +121,15 @@ window.setup = async () => {
   };
   walk(xml.querySelector('worldbody > body'), root);
   return Object.keys(parts);
+};
+// forge add-on part: triangles (flat array, mm) in the frame of MuJoCo body `body`; kind 'print' | 'led'
+window.addPart = ({ key, body, tris, kind = 'print' }) => {
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(tris.map((v) => v / 1000)), 3));
+  const geom = finish(g), holder = new THREE.Group(); bodies[body].add(holder);
+  const m = new THREE.Mesh(geom, kind === 'led' ? M.led : M.grey); m.castShadow = m.receiveShadow = true; m.userData.kind = kind;
+  const l = new THREE.LineSegments(new THREE.EdgesGeometry(geom, 32), M.edge);
+  holder.add(m, l); parts[key] = { key, body, mesh: key, servo: false, holder, objs: kind === 'led' ? [m] : [m, l] };
+  return key;
 };
 
 // ---------- helpers ----------
@@ -156,6 +170,7 @@ window.renderStep = async (s) => {
     for (const o of p.objs) {
       if (o.isLineSegments) continue;
       const k = o.userData.kind;
+      if (k === 'led') { o.material = M.led; o.visible = true; continue; }
       o.material = k === 'horn' ? (s.hornHot ? M.acc : hot ? M.accServo : M.servo) : k === 'servo' ? (hot ? M.accServo : M.servo) : (hot ? M.acc : M.grey);
       if (k === 'horn' && s.noHorn) o.visible = false; else o.visible = true;
     }
@@ -175,6 +190,17 @@ window.renderStep = async (s) => {
     scene.add(g); ghosts.push(g);
     const c = worldBox([p]).getCenter(new THREE.Vector3());
     arrows.push([c.clone().add(off), c.clone().add(off.clone().multiplyScalar(0.18))]);
+  }
+  // light cones (forge renders): apex/dir in the frame of a MuJoCo body (mm), half angle in degrees
+  for (const cn of s.cones || []) {
+    const b = bodies[cn.body]; b.updateMatrixWorld(true);
+    const apex = b.localToWorld(new THREE.Vector3(...cn.apex.map((v) => v / 1000)));
+    const tip = b.localToWorld(new THREE.Vector3(...cn.apex.map((v, i) => (v + cn.dir[i] * cn.len) / 1000)));
+    const len = apex.distanceTo(tip), rad = Math.tan(THREE.MathUtils.degToRad(cn.half)) * len;
+    const geo = new THREE.ConeGeometry(rad, len, 48, 1, true); geo.translate(0, -len / 2, 0);
+    const mesh = new THREE.Mesh(geo, M.beam); mesh.position.copy(apex);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), tip.clone().sub(apex).normalize());
+    scene.add(mesh); ghosts.push(mesh);
   }
   // camera: fixed azimuth / elevation family, framed on s.frame (part keys) or on everything visible
   const frameParts = (s.frame || [...done, ...add.keys(), ...(s.solo || [])]).map((k) => parts[k]);
