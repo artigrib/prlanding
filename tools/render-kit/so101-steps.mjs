@@ -95,13 +95,13 @@ export const STEPS = [
     tags: [{ id: 5, at: { mm: [280, 0, 245] }, off: [60, -70] }],
     screws: [{ label: M2(2), at: [{ mm: [296, 10, 228] }] }, { label: M3(4), at: [{ mm: [232, -26, 234] }] }] },
   // ---- gripper ----
-  { id: '13-gripper', stage: 'e3', ...CAM.grip, done: before('jaw'), add: [{ part: P.jaw, dir: [1, 0, 0], dist: 0.05 }, { part: P.s6, dir: [0, 0, 1], dist: 0.06 }],
+  { id: '13-gripper', stage: 'e3', ...CAM.grip, frame: before('mjaw'), zoom: 0.62, done: before('jaw'), add: [{ part: P.jaw, dir: [1, 0, 0], dist: 0.05 }, { part: P.s6, dir: [0, 0, 1], dist: 0.06 }],
     tags: [{ id: 6, at: { mm: [316, -10, 250] }, off: [60, -70] }],
     screws: [{ label: M3(4), at: [{ mm: [297, 0, 234] }] }, { label: M2(4), at: [{ mm: [316, -22, 230] }] }] },
   { id: '14-moving-jaw', stage: 'e3', ...CAM.grip, done: before('mjaw'), add: [{ part: P.mjaw, dir: [0, 0, 1], dist: 0.05 }],
     screws: [{ label: M3(4), at: [{ mm: [317, -22, 255] }] }] },
   // ---- stage 4: electronics ----
-  { id: '15-plate', stage: 'e4', ...CAM.j1, done: before('plate'), add: [{ part: P.plate, dir: [-1, 0, 0], dist: 0.06 }] },
+  { id: '15-plate', stage: 'e4', ...CAM.j1, frame: ALL, zoom: 0.62, done: before('plate'), add: [{ part: P.plate, dir: [-1, 0, 0], dist: 0.06 }] },
   { id: '16-daisy-chain', stage: 'e4', ...CAM.arm, done: ALL,
     board: { at: { mm: [-27, 0, 47] }, off: [-40, 0] },
     cable: ['board', ...[1, 2, 3, 4, 5, 6].map((n) => ({ mm: SC[n] }))],
