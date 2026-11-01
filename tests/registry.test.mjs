@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import { CATEGORIES, RIGHTS, CATALOGUE, LABELS, checkRegistry, hiddenFields, loadRegistry, renderRegistry } from '../tools/registry.mjs';
+import { CATEGORIES, RIGHTS, CATALOGUE, LABELS, DISCIPLINES, SUBCATS, GAPS, checkRegistry, hiddenFields, loadRegistry, renderRegistry, renderGaps, disciplineOf } from '../tools/registry.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
 const { records, cs } = loadRegistry(ROOT);
@@ -113,7 +113,7 @@ test('rendered list: unknown rights show "Licence neověřena" / "Licence not co
 
 test('optional subcategory (e.g. RC cars under "wheeled") is accepted, shown and filterable', () => {
   const d = clone(records);
-  d.push({ ...clone(records.find((r) => r.category === 'wheeled')), id: 'test-rc-car', name: 'Test RC car', subcategory: 'rc-car' });
+  d.push({ ...clone(records.find((r) => r.category === 'wheeled')), id: 'test-rc-car', name: 'Test RC car', subcategory: 'rc-car', merged_from: undefined });
   const c = { ...cs, 'test-rc-car': 'Testovací RC auto.' };
   assert.deepEqual(checkRegistry(d, c), []);
   const html = renderRegistry('cs', d, c, '../../');
@@ -131,4 +131,94 @@ test('Czech summaries: one per record and no extra ones', () => {
 
 test('catalogue links point at existing catalogue entries', () => {
   for (const cid of Object.values(CATALOGUE)) assert.ok(catalogueIds.includes(cid), cid);
+});
+
+test('discipline: optional, one of bio|chem|phys|agro|desk|robotics when present; missing counts as robotics', () => {
+  assert.deepEqual(DISCIPLINES, ['bio', 'chem', 'phys', 'agro', 'desk', 'robotics']);
+  for (const r of records) if ('discipline' in r) assert.ok(DISCIPLINES.includes(r.discipline), r.id);
+  for (const d of ['biology', 'Bio', '', null]) { const x = clone(records); x[0].discipline = d; fails(x, /discipline/); }
+  const y = clone(records); delete y[0].discipline; assert.deepEqual(checkRegistry(y, cs), []);
+  assert.equal(disciplineOf({}), 'robotics');
+  // lab devices of the earlier batches got a field of use; robots did not
+  for (const [id, d] of [['pioreactor', 'bio'], ['sidekick', 'bio'], ['digital-pipette', 'chem'], ['uc2', 'phys'], ['so-arm100-101', 'robotics'], ['jubilee', 'robotics']]) assert.equal(disciplineOf(records.find((r) => r.id === id)), d, id);
+  // every field has records (the six census batches)
+  for (const d of DISCIPLINES) assert.ok(records.some((r) => disciplineOf(r) === d), d);
+});
+
+test('discipline filter: every record carries data-disc, the select lists fields and their equipment types (CZ + EN)', () => {
+  for (const L of ['cs', 'en']) {
+    const html = renderRegistry(L, records, cs, '../../'), li = items(html);
+    for (const r of records) assert.ok(li.find((x) => x.includes(`id="p-${r.id}"`)).includes(` data-disc="${disciplineOf(r)}"`), r.id);
+    const sel = /<select name="disc">([\s\S]*?)<\/select>/.exec(html)[1];
+    for (const d of DISCIPLINES) assert.match(sel, new RegExp(`<option value="${d}">${LABELS[L].disc[d]} \\(${records.filter((r) => disciplineOf(r) === d).length}\\)</option>`), d);
+    assert.match(sel, /<option value="bio\/centrifuge">  · (Centrifugy|Centrifuges) \(2\)<\/option>/);
+    // robots' subcategories stay under the category select, field types only under the field select
+    const cat = /<select name="cat">([\s\S]*?)<\/select>/.exec(html)[1];
+    assert.ok(cat.includes('value="wheeled/rc-car"') && !cat.includes('centrifuge') && !sel.includes('rc-car'));
+  }
+  assert.deepEqual(Object.keys(LABELS.cs.disc), DISCIPLINES);
+  assert.deepEqual(Object.values(LABELS.cs.disc), ['Biologie', 'Chemie', 'Fyzika', 'Zemědělství', 'Stůl', 'Robotika']);
+  assert.deepEqual(Object.values(LABELS.en.disc), ['Biology', 'Chemistry', 'Physics', 'Agriculture', 'Desktop', 'Robotics']);
+});
+
+test('subcategory labels: a Czech and an English label (filter + entry) for every slug used, none unused', () => {
+  const used = new Set(records.filter((r) => r.subcategory).map((r) => r.subcategory));
+  for (const s of used) {
+    assert.ok(SUBCATS[s], `no label row for subcategory "${s}"`);
+    assert.equal(SUBCATS[s].length, 4, s);
+    for (const t of SUBCATS[s]) assert.ok(typeof t === 'string' && t.trim() && !/^[a-z0-9-]+$/.test(t) || /^[A-Z]/.test(t), `${s}: label "${t}" looks like a slug`);
+  }
+  for (const s of Object.keys(SUBCATS)) assert.ok(used.has(s), `label row for unused subcategory "${s}"`);
+  for (const s of Object.keys(SUBCATS)) assert.match(s, /^[a-z0-9][a-z0-9-]*$/);
+  // the entry shows "Biologie · Centrifuga" for a field-of-use record
+  const li = items(renderRegistry('cs', records, cs, '../../')).find((x) => x.includes('id="p-polyfuge"'));
+  assert.match(li, /<span class="mono">Biologie · Centrifuga<\/span>/);
+  const en = items(renderRegistry('en', records, cs, '../../')).find((x) => x.includes('id="p-polyfuge"'));
+  assert.match(en, /<span class="mono">Biology · Centrifuge<\/span>/);
+});
+
+test('dedupe: no project twice across the census batches; merged copies kept under merged_from', () => {
+  const ids = new Set(records.map((r) => r.id));
+  // duplicates found across the batches: the kept record holds the other copy whole
+  for (const [keep, gone] of [['openpfge', 'openpfge'], ['mtu-rotator-mixer-shaker', 'most-rotator-mixer-shaker'], ['openhw3-shaker', 'openhw3-orbital-shaker'], ['smartphone-spectrophotometer-winters', 'bethel-smartphone-spectrophotometer']]) {
+    const r = records.find((x) => x.id === keep);
+    assert.ok(r && r.merged_from.some((m) => m.id === gone && m.summary_en && m.licenses), keep);
+    if (gone !== keep) assert.ok(!ids.has(gone), gone);
+  }
+  // among the field-of-use records (the census batches), the same repository is not listed under two ids
+  // (robot records may share one: an actuator and the robot built from it)
+  const key = (u) => String(u || '').toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/\/+$/, '');
+  for (const k of ['repo']) {
+    const seen = new Map();
+    for (const r of records.filter((x) => disciplineOf(x) !== 'robotics')) {
+      if (!r[k] || /^github\.com\/[^/]+$/.test(key(r[k]))) continue;
+      assert.ok(!seen.has(key(r[k])) || seen.get(key(r[k])) === r.id, `${k} ${r[k]}: ${seen.get(key(r[k]))} and ${r.id}`);
+      seen.set(key(r[k]), r.id);
+    }
+  }
+  const d = clone(records); d.push({ ...clone(records.find((r) => r.id === 'openhw3-shaker').merged_from[0]), id: 'openhw3-orbital-shaker' });
+  fails(d, /merged into another record/, { ...cs, 'openhw3-orbital-shaker': 'x' });
+  // a fork links its original; the NC licence of the original is inherited
+  const f = records.find((r) => r.id === 'mlab-peristaltic01'), o = records.find((r) => r.id === 'phisik-parametric-peristaltic-pump');
+  assert.equal(f.fork_of, o.id);
+  assert.equal(o.rights_class, 'nc'); assert.equal(f.rights_class, 'nc');
+  assert.match(items(renderRegistry('cs', records, cs, '../../')).find((x) => x.includes('id="p-mlab-peristaltic01"')), /<a class="reg-fork" href="#p-phisik-parametric-peristaltic-pump">Odvozeno z projektu /);
+  const g = clone(records); g.find((r) => r.id === 'mlab-peristaltic01').fork_of = 'no-such'; fails(g, /fork_of/);
+  // Stack-chan links its catalogue card and agrees with its licence
+  assert.equal(CATALOGUE['stack-chan'], 'stackchan');
+  assert.equal(normLic(records.find((r) => r.id === 'stack-chan').licenses.hardware), normLic(catalogue.stackchan));
+});
+const normLic = (s) => String(s).replace(/\s*\(.*$/, '').toUpperCase();
+
+test('gaps section: one line per field of use, Czech and English, same number of types', () => {
+  assert.deepEqual(Object.keys(GAPS), ['bio', 'chem', 'phys', 'agro', 'desk']);
+  for (const [d, g] of Object.entries(GAPS)) { assert.ok(g.cs.length > 0, d); assert.equal(g.cs.length, g.en.length, d); }
+  for (const L of ['cs', 'en']) {
+    const h = renderGaps(L);
+    assert.equal((h.match(/<div><dt>/g) || []).length, 5);
+    for (const d of Object.keys(GAPS)) assert.ok(h.includes(`<dt>${LABELS[L].disc[d]}</dt>`), d);
+    const page = fs.readFileSync(`${ROOT}/tools/content/rejstrik.${L}.html`, 'utf8');
+    assert.ok(page.includes('<!--registry-gaps-->') && page.includes(L === 'en' ? '>Gaps</h2>' : '>Bílá místa</h2>'), L);
+  }
+  assert.ok(GAPS.phys.en.includes('air track') && GAPS.chem.en.includes('pH meter'));
 });

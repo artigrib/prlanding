@@ -605,6 +605,9 @@ await check('registry static list (no JS needed)', '/katalog/rejstrik/', async p
   if (ext.length) throw new Error('external link without rel=noopener: ' + ext[0][1]);
   if (/<li class="reg-i"[\s\S]*?<img/.test(html.split('<ol class="reg-l"')[1] || '')) throw new Error('image in the registry list');
   if (!/<form class="reg-f" id="reg-f" hidden/.test(html)) throw new Error('filter form should start hidden');
+  // every entry carries its field of use; the gaps section is static
+  if ((html.match(/<li class="reg-i[^"]*"[^>]* data-disc="(bio|chem|phys|agro|desk|robotics)"/g) || []).length !== data.length) throw new Error('data-disc missing');
+  if (!/<h2 id="mista-h">Bílá místa<\/h2>/.test(html) || (html.match(/<dl class="doc-lic reg-gaps">/g) || []).length !== 1) throw new Error('gaps section missing');
 });
 for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
   await check(`registry filters + axe ${vp.width}px`, '/katalog/rejstrik/', async p => {
@@ -620,6 +623,16 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
     const subs = await p.locator('.reg-i:visible').evaluateAll(els => els.map(e => e.dataset.cat + '/' + e.dataset.sub));
     if (!subs.length || subs.some(c => c !== 'wheeled/rc-car')) throw new Error('subcategory filter');
     await p.selectOption('#reg-f select[name=cat]', '');
+    // field of use: "bio" = all life-science devices, "bio/centrifuge" = one equipment type, "robotics" = records without a field
+    for (const [v, want] of [['bio', d => d.disc === 'bio'], ['bio/centrifuge', d => d.disc === 'bio' && d.sub === 'centrifuge'], ['robotics', d => d.disc === 'robotics'], ['desk', d => d.disc === 'desk']]) {
+      await p.selectOption('#reg-f select[name=disc]', v);
+      const ds = await p.locator('.reg-i:visible').evaluateAll(els => els.map(e => ({ disc: e.dataset.disc, sub: e.dataset.sub })));
+      if (!ds.length || !ds.every(want)) throw new Error('discipline filter ' + v);
+    }
+    if (!/[?&]disc=desk\b/.test(p.url())) throw new Error('discipline filter not kept in the URL');
+    if (!(await p.locator('.reg-i:visible .reg-h .mono').first().innerText()).startsWith('Stůl · ')) throw new Error('discipline label in the entry');
+    await p.selectOption('#reg-f select[name=disc]', '');
+    if (!(await p.locator('#mista-h').isVisible()) || (await p.locator('.reg-gaps > div').count()) !== 5) throw new Error('gaps section');
     await p.fill('#reg-f input[name=q]', 'lekiwi');
     await p.waitForFunction(() => document.querySelectorAll('.reg-i:not([hidden])').length < 10);
     if (!(await p.locator('#p-lekiwi').isVisible())) throw new Error('search');

@@ -2,7 +2,8 @@
 // data/registry/summary.cs.json). Checked and rendered by tools/build.mjs into /katalog/rejstrik/ and
 // /en/catalogue/registry/; tests/registry.test.mjs runs the same check. Standalone:  node tools/registry.mjs
 //
-// Record (one per project): id, name, category, subcategory? (optional, kebab-case, e.g. for RC cars under "wheeled"),
+// Record (one per project): id, name, category, discipline? (optional: bio|chem|phys|agro|desk|robotics; missing = robotics),
+// subcategory? (optional, kebab-case equipment/robot type, e.g. "rc-car", "centrifuge"; labels in SUBCAT_LABELS/SUBCAT_ONE),
 // summary_en, homepage, repo, cad, licenses {hardware, software, docs} (exact text from the project),
 // rights_class (what the HARDWARE licence lets you do with prints), printed_share, actuation, control, bom_cost,
 // maturity {last_activity YYYY-MM, stars, known_builds, paper, docs_quality}, sim_model, safety_notes,
@@ -10,13 +11,16 @@
 // A displayed field named in `unverified` (see UNVERIFIED_RULES) renders as "neuvedeno"/"not stated", never as a fact;
 // research notes removed from displayed fields live in notes [{field, text}]. Records that the source census had twice
 // carry the other copy, whole, under merged_from; a changed rights_class keeps the census value in rights_class_census
-// with the reason in rights_note.
+// with the reason in rights_note. fork_of? names the id of the record a project is derived from (shown as a link).
 import fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 export const CATEGORIES = ['arm', 'gripper', 'hand', 'humanoid', 'legged', 'wheeled', 'tracked', 'drone', 'actuator', 'motor', 'gearbox', 'sensor', 'lidar', 'lab-automation', 'bioreactor', 'toolchanger', 'educational', 'other'];
 export const RIGHTS = ['permissive', 'copyleft', 'nc', 'nd', 'proprietary', 'unknown'];
 export const PRINTED = ['high', 'medium', 'low', 'unknown'];
+// field of use; a record without one counts as "robotics" (arms, legged and wheeled robots, actuators, sensors…)
+export const DISCIPLINES = ['bio', 'chem', 'phys', 'agro', 'desk', 'robotics'];
+export const disciplineOf = (r) => r.discipline || 'robotics';
 // a hardware licence text that names no licence: such a record must not carry a licensed rights class
 // ("all rights reserved" may be classed proprietary, nothing else)
 export const NO_HW_LICENCE = /^(unknown|none|no |not |unclear|unspecified|tbd|n\/a|see |\?)|all rights reserved|unspecified/i;
@@ -49,7 +53,8 @@ export const CATALOGUE = {
   'so-arm100-101': 'so101', lekiwi: 'lekiwi', xlerobot: 'xle', 'open-duck-mini': 'duck', 'amazing-hand': 'hand', 'otto-diy': 'otto',
   spotmicro: 'spot', 'sawppy-rover': 'sawppy', thor: 'thor', exomy: 'exomy', 'so-arm102': 'so102', 'nextis-aira': 'aira',
   parol6: 'parol6', 'berkeley-humanoid-lite': 'bhl', 'roboto-origin': 'origin',
-  'open-128-rc-car': 'rc128', zcar2: 'zcar2', 'lizard-rc-race-car': 'lizard'
+  'open-128-rc-car': 'rc128', zcar2: 'zcar2', 'lizard-rc-race-car': 'lizard',
+  'stack-chan': 'stackchan'
 };
 const SHOWCASE_PATH = { origin: { cs: 'sim/origin/', en: 'en/sim/origin/' } };
 
@@ -61,7 +66,8 @@ export const LABELS = {
     sim: { none: 'žádný', 'none known': 'žádný známý', unknown: 'neuvedeno', 'n/a': '—' },
     hw: 'Hardware', sw: 'Software', docs: 'Dokumentace', act: 'Pohon', simL: 'Simulační model', printedL: 'Podíl tisku', last: 'Poslední aktivita', stars: 'hvězd na GitHubu',
     fit: 'Vhodnost', maker: 'maker', school: 'škola', web: 'Web', repo: 'Repozitář', cad: 'CAD', paper: 'Článek', zenodo: 'Zenodo', inCat: 'Karta v katalogu', inShow: 'Ukázka v simulaci', of5: 'z 5',
-    na: 'neuvedeno', naLic: 'neuvedena', thin: 'Údaje neověřeny', src: 'Zdroj'
+    na: 'neuvedeno', naLic: 'neuvedena', thin: 'Údaje neověřeny', src: 'Zdroj', forkOf: 'Odvozeno z projektu',
+    disc: { bio: 'Biologie', chem: 'Chemie', phys: 'Fyzika', agro: 'Zemědělství', desk: 'Stůl', robotics: 'Robotika' }
   },
   en: {
     cat: { arm: 'Robot arm', gripper: 'Gripper', hand: 'Robot hand', humanoid: 'Humanoid', legged: 'Legged robot', wheeled: 'Wheeled robot', tracked: 'Tracked robot', drone: 'Drone', actuator: 'Actuator', motor: 'Motor', gearbox: 'Gearbox', sensor: 'Sensor', lidar: 'Lidar', 'lab-automation': 'Lab automation', bioreactor: 'Bioreactor', toolchanger: 'Tool changer', educational: 'Educational robot', other: 'Other' },
@@ -70,19 +76,150 @@ export const LABELS = {
     sim: { none: 'none', 'none known': 'none known', unknown: 'not stated', 'n/a': '—' },
     hw: 'Hardware', sw: 'Software', docs: 'Docs', act: 'Actuation', simL: 'Sim model', printedL: 'Printed share', last: 'Last activity', stars: 'GitHub stars',
     fit: 'Fit', maker: 'maker', school: 'school', web: 'Website', repo: 'Repository', cad: 'CAD', paper: 'Paper', zenodo: 'Zenodo', inCat: 'Catalogue card', inShow: 'Showcase in the simulator', of5: 'of 5',
-    na: 'not stated', naLic: 'not stated', thin: 'Details unconfirmed', src: 'Source'
+    na: 'not stated', naLic: 'not stated', thin: 'Details unconfirmed', src: 'Source', forkOf: 'Derived from',
+    disc: { bio: 'Biology', chem: 'Chemistry', phys: 'Physics', agro: 'Agriculture', desk: 'Desktop', robotics: 'Robotics' }
   }
 };
-// subcategory labels (optional field): plural for the filter, singular for the entry; an unlisted value is shown as
-// written, hyphens as spaces
-export const SUBCAT_LABELS = {
-  cs: { 'rc-car': 'RC auta', 'rc-truck-crawler': 'Crawlery', 'rc-tank': 'Tanky', 'autonomous-car-platform': 'Autonomní platformy' },
-  en: { 'rc-car': 'RC cars', 'rc-truck-crawler': 'Crawlers', 'rc-tank': 'Tanks', 'autonomous-car-platform': 'Autonomous platforms' }
+// subcategory labels (optional field), one row per slug: [cs plural (filter), cs singular (entry), en plural, en singular].
+// Every slug used in projects.json must have a row (checked by tests/registry.test.mjs); an unlisted value would be
+// shown as written, hyphens as spaces.
+export const SUBCATS = {
+  // robotics (RC cars under "wheeled")
+  'rc-car': ['RC auta', 'RC auto', 'RC cars', 'RC car'],
+  'rc-truck-crawler': ['Crawlery', 'RC crawler / truck', 'Crawlers', 'RC crawler / truck'],
+  'rc-tank': ['Tanky', 'RC tank', 'Tanks', 'RC tank'],
+  'autonomous-car-platform': ['Autonomní platformy', 'Autonomní platforma', 'Autonomous platforms', 'Autonomous platform'],
+  // biology
+  bioprinter: ['Biotiskárny', 'Biotiskárna', 'Bioprinters', 'Bioprinter'],
+  centrifuge: ['Centrifugy', 'Centrifuga', 'Centrifuges', 'Centrifuge'],
+  electroporator: ['Elektroporátory', 'Elektroporátor', 'Electroporators', 'Electroporator'],
+  'gel-electrophoresis': ['Gelová elektroforéza', 'Gelová elektroforéza', 'Gel electrophoresis', 'Gel electrophoresis'],
+  isothermal: ['Izotermální amplifikace (LAMP)', 'Izotermální amplifikace (LAMP)', 'Isothermal amplification (LAMP)', 'Isothermal amplification (LAMP)'],
+  micropipette: ['Mikropipety', 'Mikropipeta', 'Micropipettes', 'Micropipette'],
+  microscope: ['Mikroskopy', 'Mikroskop', 'Microscopes', 'Microscope'],
+  pcr: ['PCR cyklery', 'PCR cykler', 'PCR thermocyclers', 'PCR thermocycler'],
+  'peristaltic-pump': ['Peristaltická čerpadla', 'Peristaltické čerpadlo', 'Peristaltic pumps', 'Peristaltic pump'],
+  'pipette-controller': ['Elektronické pipetory', 'Elektronický pipetor', 'Pipette controllers', 'Pipette controller'],
+  qpcr: ['qPCR cyklery', 'qPCR cykler', 'qPCR instruments', 'qPCR instrument'],
+  'rocker-incubator': ['Kolébkové inkubátory', 'Kolébkový inkubátor', 'Rocking incubators', 'Rocking incubator'],
+  'rotator-shaker': ['Rotátory a třepačky', 'Rotátor / třepačka', 'Rotators and shakers', 'Rotator / shaker'],
+  spectrophotometer: ['Spektrofotometry', 'Spektrofotometr', 'Spectrophotometers', 'Spectrophotometer'],
+  'syringe-pump': ['Stříkačková čerpadla', 'Stříkačkové čerpadlo', 'Syringe pumps', 'Syringe pump'],
+  'vortex-mixer': ['Vortexy', 'Vortex', 'Vortex mixers', 'Vortex mixer'],
+  // chemistry
+  autosampler: ['Autosamplery', 'Autosampler', 'Autosamplers', 'Autosampler'],
+  balance: ['Váhy', 'Laboratorní váha', 'Balances', 'Balance'],
+  colorimeter: ['Kolorimetry', 'Kolorimetr', 'Colorimeters', 'Colorimeter'],
+  'contact-angle-goniometer': ['Měření kontaktního úhlu', 'Goniometr kontaktního úhlu', 'Contact-angle goniometers', 'Contact-angle goniometer'],
+  'electrochemistry-cell': ['Elektrochemické cely', 'Elektrochemická cela', 'Electrochemical cells', 'Electrochemical cell'],
+  'flow-chemistry-reactor': ['Průtokové reaktory', 'Průtokový reaktor', 'Flow-chemistry reactors', 'Flow-chemistry reactor'],
+  fluorimeter: ['Fluorimetry', 'Fluorimetr', 'Fluorimeters', 'Fluorimeter'],
+  'fraction-collector': ['Sběrače frakcí', 'Sběrač frakcí', 'Fraction collectors', 'Fraction collector'],
+  'fume-extraction': ['Odsávání výparů', 'Odsávačka výparů', 'Fume extraction', 'Fume extractor'],
+  'glove-box': ['Rukavicové boxy', 'Rukavicový box', 'Glove boxes', 'Glove box'],
+  'magnetic-stirrer': ['Magnetická míchadla', 'Magnetické míchadlo', 'Magnetic stirrers', 'Magnetic stirrer'],
+  'orbital-shaker': ['Orbitální třepačky', 'Orbitální třepačka', 'Orbital shakers', 'Orbital shaker'],
+  'robotic-chemist': ['Samořízené laboratoře', 'Samořízená laboratoř', 'Self-driving labs', 'Self-driving lab'],
+  'sample-rack': ['Stojany na zkumavky', 'Stojan na zkumavky', 'Sample racks', 'Sample rack'],
+  'spin-coater': ['Rotační nanášečky', 'Rotační nanášečka (spin coater)', 'Spin coaters', 'Spin coater'],
+  titrator: ['Titrátory', 'Titrátor', 'Titrators', 'Titrator'],
+  'tlc-tools': ['Pomůcky pro TLC', 'Pomůcka pro TLC', 'TLC tools', 'TLC tool'],
+  turbidimeter: ['Turbidimetry', 'Turbidimetr', 'Turbidimeters', 'Turbidimeter'],
+  'uv-vis-spectrophotometer': ['Spektrofotometry UV-Vis', 'Spektrofotometr UV-Vis', 'UV-Vis spectrophotometers', 'UV-Vis spectrophotometer'],
+  'viscometer-rheometer': ['Viskozimetry a reometry', 'Viskozimetr / reometr', 'Viscometers and rheometers', 'Viscometer / rheometer'],
+  // physics
+  'antenna-rotator': ['Rotátory antén', 'Rotátor antény', 'Antenna rotators', 'Antenna rotator'],
+  'cubesat-structure': ['Konstrukce CubeSatů', 'Konstrukce CubeSatu', 'CubeSat structures', 'CubeSat structure'],
+  'geiger-counter': ['Geigerovy počítače', 'Geigerův počítač', 'Geiger counters', 'Geiger counter'],
+  interferometer: ['Interferometry', 'Interferometr', 'Interferometers', 'Interferometer'],
+  'inverted-pendulum': ['Inverzní kyvadla', 'Inverzní kyvadlo', 'Inverted pendulums', 'Inverted pendulum'],
+  'magnetism-helmholtz-coil': ['Helmholtzovy cívky', 'Helmholtzova cívka', 'Helmholtz coils', 'Helmholtz coil'],
+  'microscope-positioning-stage': ['Polohovací stolky', 'Polohovací stolek mikroskopu', 'Positioning stages', 'Microscope positioning stage'],
+  'modular-optics': ['Modulární optika', 'Modulární optická stavebnice', 'Modular optics', 'Modular optics kit'],
+  'optical-tweezers': ['Optické pinzety', 'Optická pinzeta', 'Optical tweezers', 'Optical tweezers'],
+  optomechanics: ['Optomechanika', 'Optomechanika', 'Optomechanics', 'Optomechanics'],
+  'photogate-timer': ['Optické závory', 'Optická závora a časomíra', 'Photogates', 'Photogate timer'],
+  'quantum-sensing-odmr': ['Kvantové senzory (ODMR)', 'Kvantový senzor (ODMR)', 'Quantum sensing (ODMR)', 'Quantum sensing (ODMR)'],
+  'raman-spectrometer': ['Ramanovy spektrometry', 'Ramanův spektrometr', 'Raman spectrometers', 'Raman spectrometer'],
+  seismometer: ['Seismometry', 'Seismometr', 'Seismometers', 'Seismometer'],
+  spectrometer: ['Spektrometry', 'Spektrometr', 'Spectrometers', 'Spectrometer'],
+  'stirling-engine': ['Stirlingovy motory', 'Stirlingův motor', 'Stirling engines', 'Stirling engine'],
+  telescope: ['Dalekohledy', 'Dalekohled', 'Telescopes', 'Telescope'],
+  'telescope-accessory': ['Příslušenství dalekohledů', 'Příslušenství dalekohledu', 'Telescope accessories', 'Telescope accessory'],
+  'telescope-mount': ['Montáže dalekohledů', 'Montáž dalekohledu', 'Telescope mounts', 'Telescope mount'],
+  'weather-station': ['Meteostanice', 'Meteostanice', 'Weather stations', 'Weather station'],
+  'wind-tunnel': ['Aerodynamické tunely', 'Aerodynamický tunel', 'Wind tunnels', 'Wind tunnel'],
+  // agriculture
+  'cnc-garden-robot': ['Zahradní CNC roboti', 'Zahradní CNC robot', 'CNC garden robots', 'CNC garden robot'],
+  'fertigation-controller': ['Zálivka a hnojení', 'Automat na zálivku a hnojení', 'Fertigation controllers', 'Fertigation controller'],
+  'hydroponics-tower': ['Hydroponické věže', 'Hydroponická věž', 'Hydroponic towers', 'Hydroponic tower'],
+  'nutrient-dosing-pump': ['Dávkování živin', 'Dávkovací čerpadlo živin', 'Nutrient dosing pumps', 'Nutrient dosing pump'],
+  'plant-growth-chamber': ['Pěstební komory', 'Pěstební komora', 'Plant growth chambers', 'Plant growth chamber'],
+  'plant-phenotyping-gantry': ['Fenotypizační dráhy', 'Fenotypizační robot na dráze', 'Phenotyping gantries', 'Plant-phenotyping gantry'],
+  'plant-phenotyping-imager': ['Snímání rostlin', 'Snímač pro fenotypizaci rostlin', 'Plant imagers', 'Plant-phenotyping imager'],
+  'poultry-coop-door': ['Dvířka kurníku', 'Automatická dvířka kurníku', 'Coop doors', 'Poultry coop door'],
+  'robot-mower': ['Robotické sekačky', 'Robotická sekačka', 'Robot mowers', 'Robot mower'],
+  'root-phenotyping-imager': ['Snímání kořenů', 'Snímač kořenů', 'Root imagers', 'Root-phenotyping imager'],
+  'weeding-spot-sprayer': ['Bodový postřik plevele', 'Bodový postřikovač plevele', 'Weed spot sprayers', 'Weed spot sprayer'],
+  // desktop
+  'ball-balancing-platform': ['Balancování míčku', 'Plošina balancující míček', 'Ball balancers', 'Ball-balancing platform'],
+  'camera-slider': ['Kamerové jezdce', 'Kamerový jezdec', 'Camera sliders', 'Camera slider'],
+  'chess-robot': ['Šachoví roboti', 'Šachový robot', 'Chess robots', 'Chess robot'],
+  'cocktail-machine': ['Míchače nápojů', 'Míchač nápojů', 'Drink machines', 'Drink-mixing machine'],
+  'delta-robot': ['Delta roboti', 'Delta robot', 'Delta robots', 'Delta robot'],
+  'desk-cleaning-robot': ['Úklidoví roboti na stůl', 'Úklidový robot na stůl', 'Desk-cleaning robots', 'Desk-cleaning robot'],
+  'desk-quadruped': ['Malí čtyřnožci', 'Malý čtyřnohý robot', 'Small quadrupeds', 'Small quadruped'],
+  'desktop-cnc': ['Stolní CNC', 'Stolní CNC', 'Desktop CNC', 'Desktop CNC'],
+  'desktop-companion': ['Roboti-společníci', 'Stolní robot-společník', 'Companion robots', 'Desktop companion robot'],
+  'desktop-conveyor': ['Stolní dopravníky', 'Stolní dopravník', 'Desktop conveyors', 'Desktop conveyor'],
+  'desktop-humanoid': ['Stolní humanoidi', 'Stolní humanoid', 'Desktop humanoids', 'Desktop humanoid'],
+  'desktop-robot-arm': ['Stolní robotické ruce', 'Stolní robotická ruka', 'Desktop robot arms', 'Desktop robot arm'],
+  'desktop-sorter': ['Třídičky', 'Stolní třídička', 'Desktop sorters', 'Desktop sorter'],
+  'drawing-arm': ['Kreslicí ramena', 'Kreslicí rameno', 'Drawing arms', 'Drawing arm'],
+  'educational-desktop-robot': ['Výukoví roboti', 'Výukový robot', 'Educational robots', 'Educational desktop robot'],
+  'kinetic-sand-table': ['Kinetické pískové stoly', 'Kinetický pískový stůl', 'Kinetic sand tables', 'Kinetic sand table'],
+  'laser-engraver': ['Laserové gravírky', 'Laserová gravírka', 'Laser engravers', 'Laser engraver'],
+  'pen-plotter': ['Kreslicí plottery', 'Kreslicí plotter', 'Pen plotters', 'Pen plotter'],
+  'pick-and-place': ['Osazovací automaty', 'Osazovací automat', 'Pick-and-place machines', 'Pick-and-place machine'],
+  'robotic-chess-board': ['Samohybné šachovnice', 'Samohybná šachovnice', 'Self-moving chess boards', 'Self-moving chess board'],
+  'robotic-lamp': ['Robotické lampy', 'Robotická lampa', 'Robotic lamps', 'Robotic lamp'],
+  'rubiks-cube-solver': ['Řešiče Rubikovy kostky', 'Řešič Rubikovy kostky', "Rubik's cube solvers", "Rubik's cube solver"],
+  'scara-arm': ['Ramena SCARA', 'Rameno SCARA', 'SCARA arms', 'SCARA arm'],
+  'sphere-plotter': ['Plottery na vejce a koule', 'Plotter na vejce a koule', 'Egg and sphere plotters', 'Egg / sphere plotter'],
+  'telepresence-robot': ['Teleprezenční roboti', 'Teleprezenční robot', 'Telepresence robots', 'Telepresence robot']
 };
-export const SUBCAT_ONE = {
-  cs: { 'rc-car': 'RC auto', 'rc-truck-crawler': 'RC crawler / truck', 'rc-tank': 'RC tank', 'autonomous-car-platform': 'Autonomní platforma' },
-  en: { 'rc-car': 'RC car', 'rc-truck-crawler': 'RC crawler / truck', 'rc-tank': 'RC tank', 'autonomous-car-platform': 'Autonomous platform' }
+const subcatCol = (i) => Object.fromEntries(Object.entries(SUBCATS).map(([k, v]) => [k, v[i]]));
+export const SUBCAT_LABELS = { cs: subcatCol(0), en: subcatCol(2) };
+export const SUBCAT_ONE = { cs: subcatCol(1), en: subcatCol(3) };
+
+// "Bílá místa" / "Gaps": per discipline, standard equipment types for which the six census batches (2026-11-01) found
+// no open, substantially printed design. Types as the research notes name them (data/registry has the batches' summaries).
+export const GAPS = {
+  bio: {
+    cs: ['magnetické míchadlo', 'topný blok / suchá lázeň', 'vodní lázeň', 'inkubátor (jako samostatný přístroj)', 'CO2 inkubátor', 'laminární box', 'sterilizátory a tlakové nádoby (autokláv)', 'mikromanipulátor', 'počítač kolonií (hardware)', 'čtečka mikrodestiček', 'transiluminátor / zobrazování gelů', 'manipulace s mikrodestičkami'],
+    en: ['magnetic stirrer', 'heat block / dry bath', 'water bath', 'incubator (as a standalone device)', 'CO2 incubator', 'laminar flow / clean bench', 'autoclave-adjacent (sterilisers, pressure)', 'micromanipulator', 'colony counter (hardware)', 'plate reader', 'transilluminator / gel imager', 'plate handler / microplate tools']
+  },
+  chem: {
+    cs: ['míchací topná plotýnka', 'nástavcové (horní) míchadlo', 'pH metr', 'konduktometr', 'přístroj na stanovení bodu tání', 'termostatovaná lázeň', 'laboratorní stojany, svorky a držáky', 'elektrospinning'],
+    en: ['stirring hotplate', 'overhead stirrer', 'pH meter', 'conductivity meter', 'melting point apparatus', 'thermostatted bath', 'lab stands / clamps / holders', 'electrospinning']
+  },
+  phys: {
+    cs: ['polarimetr', 'lineární / posuvné stolky', 'vzduchová dráha', 'vozíky pro dynamiku / nakloněná rovina', 'vlnová vana', 'zvuk / Kundtova trubice / rezonance', 'mlžná komora', 'elektrostatika (Van de Graaffův generátor, Wimshurstova elektrika)', 'ochranné kryty pro lasery', 'díly vakuové komory'],
+    en: ['polarimeter', 'linear / translation stages', 'air track', 'dynamics carts / inclined plane', 'ripple tank / waves', 'sound / Kundt tube / resonance', 'cloud chamber', 'electrostatics (Van de Graaff, Wimshurst)', 'laser safety enclosures', 'vacuum chamber parts']
+  },
+  agro: {
+    cs: ['polní robotická platforma / rover pro řádkové plodiny', 'mechanický odplevelovací robot', 'laserové odplevelování', 'sklízecí robot / chapadlo na ovoce', 'odběr vzorků půdy / sondy', 'krmení hospodářských zvířat / přihrnování krmiva', 'sledování hospodářských zvířat (obojky apod.)', 'opylovací roboti', 'zemědělské drony (tištěné rámy)', 'sledování úlů / počítadla včel', 'sledování hmyzu a škůdců', 'komory pro plodnice hub', 'chov hmyzu (potemník, bráněnka)', 'počítání a třídění semen', 'otevřené traktory', 'gravitropismus rostlin / klinostaty'],
+    en: ['field robot platform / row-crop rover', 'weeding robot, mechanical', 'weeding, laser', 'harvesting robot / fruit gripper', 'soil sampling / probes', 'livestock: feeding / feed pushers', 'livestock monitoring (collars, etc.)', 'pollination robots', 'agricultural drones (printed frames)', 'beehive monitoring / bee counters', 'insect / pest monitoring', 'mushroom fruiting chambers', 'insect farming (mealworm/BSF)', 'seed counting / sorting', 'open tractors', 'plant gravitropism / clinostats']
+  },
+  desk: {
+    cs: ['polargraf / svislý plotter', 'roboti na air hockey a jiné hry', 'stolní robotická ruka s dopravníkem (pracoviště typu Dobot)'],
+    en: ['polargraph / vertical plotter', 'air-hockey / game robots', 'desktop robot arm with conveyor (Dobot-like workcell)']
+  }
 };
+export function renderGaps(L) {
+  const T = LABELS[L];
+  return '<dl class="doc-lic reg-gaps">' + Object.entries(GAPS).map(([d, g]) => `<div><dt>${esc(T.disc[d])}</dt><dd>${esc(g[L].join(', '))}</dd></div>`).join('') + '</dl>';
+}
 
 const isUrl = (u) => typeof u === 'string' && /^https?:\/\/[^\s]+$/.test(u);
 export function loadRegistry(root = '.') {
@@ -103,6 +240,8 @@ export function checkRegistry(records, cs = {}, catalogue = null) {
     if (!r.name || typeof r.name !== 'string') errors.push(`${at}: missing name`);
     if (!CATEGORIES.includes(r.category)) errors.push(`${at}: category "${r.category}" not in ${CATEGORIES.join('|')}`);
     if ('subcategory' in r && !(typeof r.subcategory === 'string' && /^[a-z0-9][a-z0-9-]*$/.test(r.subcategory))) errors.push(`${at}: subcategory must be a kebab-case string when present`);
+    if ('discipline' in r && !DISCIPLINES.includes(r.discipline)) errors.push(`${at}: discipline "${r.discipline}" not in ${DISCIPLINES.join('|')}`);
+    if (r.merged_from != null && !(Array.isArray(r.merged_from) && r.merged_from.every((m) => m && typeof m === 'object' && typeof m.id === 'string'))) errors.push(`${at}: merged_from must be a list of the merged census records`);
     if (!RIGHTS.includes(r.rights_class)) errors.push(`${at}: rights_class "${r.rights_class}" not in ${RIGHTS.join('|')}`);
     if (!PRINTED.includes(r.printed_share)) errors.push(`${at}: printed_share "${r.printed_share}" not in ${PRINTED.join('|')}`);
     if (!r.summary_en || typeof r.summary_en !== 'string') errors.push(`${at}: missing summary_en`);
@@ -123,6 +262,13 @@ export function checkRegistry(records, cs = {}, catalogue = null) {
     for (const k of ['maker', 'school']) { const v = r.fit && r.fit[k]; if (!(Number.isInteger(v) && v >= 1 && v <= 5)) errors.push(`${at}: fit.${k} must be 1–5`); }
   }
   for (const id of Object.keys(cs)) if (!seen.has(id)) errors.push(`summary.cs.json: "${id}" has no record`);
+  // derived designs link their original; a merged-away census id must not come back as a record of its own
+  const merged = new Set(records.flatMap((r) => (r && Array.isArray(r.merged_from) ? r.merged_from : []).map((m) => m.id).filter((id) => id !== r.id)));
+  for (const r of records) {
+    if (!r || r.fork_of == null) continue;
+    if (typeof r.fork_of !== 'string' || !seen.has(r.fork_of) || r.fork_of === r.id) errors.push(`${r.id}: fork_of "${r.fork_of}" is not another record's id`);
+  }
+  for (const id of merged) if (seen.has(id)) errors.push(`${id}: merged into another record (merged_from) but still listed on its own`);
   for (const [rid, cid] of Object.entries(CATALOGUE)) {
     if (!seen.has(rid)) errors.push(`CATALOGUE: registry id "${rid}" has no record`);
     if (!catalogue) continue;
@@ -148,7 +294,8 @@ export function sortRecords(records) {
     || lastKey(b).localeCompare(lastKey(a)) || a.name.localeCompare(b.name, 'en'));
 }
 export const subcatLabel = (L, s, one) => (one ? SUBCAT_ONE : SUBCAT_LABELS)[L][s] || s.replace(/-/g, ' ');
-const PAPER = /biorxiv\.org|ncbi\.nlm\.nih\.gov\/pmc|research\.wur\.nl\/en\/publications|doi\.org\/10\.1101\//i;
+// links to articles rather than project pages are labelled "Článek" / "Paper" (a Zenodo DOI is labelled "Zenodo")
+const PAPER = /biorxiv\.org|ncbi\.nlm\.nih\.gov\/pmc|research\.wur\.nl\/en\/publications|doi\.org\/10\.(?!5281\/)|journals\.plos\.org\/[a-z]+\/article\?id=|mdpi\.com\/\d|doaj\.org\/article|hardware-x\.com\/article|digitalcommons\.mtu\.edu|research\.chalmers\.se\/en\/publication|\/journal_contribution\//i;
 
 // static list + filter form; root = path to the site root from the page
 export function renderRegistry(L, records, cs, root) {
@@ -156,13 +303,19 @@ export function renderRegistry(L, records, cs, root) {
   const count = (k, v) => records.filter((r) => r[k] === v).length;
   const opt = (v, t, n) => `<option value="${v}">${esc(t)}${n == null ? '' : ` (${n})`}</option>`;
   const cats = CATEGORIES.filter((c) => count('category', c));
+  const discs = DISCIPLINES.filter((d) => records.some((r) => disciplineOf(r) === d));
+  const subOpts = (sel, val) => [...new Set(records.filter(sel).filter((r) => r.subcategory).map((r) => r.subcategory))]
+    .sort((a, b) => subcatLabel(L, a).localeCompare(subcatLabel(L, b), L))
+    .map((sc) => `<option value="${val}/${esc(sc)}">\u00a0\u00a0· ${esc(subcatLabel(L, sc))} (${records.filter(sel).filter((r) => r.subcategory === sc).length})</option>`).join('');
   const F = en
-    ? { legend: 'Filter the registry', cat: 'Category', all: 'All', rights: 'Rights', printed: 'Printed share', fitL: 'Good fit for', any: 'Anyone', fm: 'Makers (4–5 of 5)', fs: 'Schools (4–5 of 5)', q: 'Search', qph: 'name, motor, licence…', sort: 'Sort', sFit: 'Fit (maker, school)', sSchool: 'Fit for schools', sLast: 'Last activity', sName: 'Name', reset: 'Clear filters', msg: 'Showing {n} of {total} projects', none: 'No project matches these filters.' }
-    : { legend: 'Filtr rejstříku', cat: 'Kategorie', all: 'Vše', rights: 'Práva', printed: 'Podíl tisku', fitL: 'Vhodné pro', any: 'Kohokoli', fm: 'Makery (4–5 z 5)', fs: 'Školy (4–5 z 5)', q: 'Hledat', qph: 'název, motor, licence…', sort: 'Řazení', sFit: 'Vhodnost (maker, škola)', sSchool: 'Vhodnost pro školy', sLast: 'Poslední aktivita', sName: 'Název', reset: 'Zrušit filtry', msg: 'Zobrazeno {n} z {total} projektů', none: 'Filtrům neodpovídá žádný projekt.' };
+    ? { legend: 'Filter the registry', disc: 'Field', cat: 'Category', all: 'All', rights: 'Rights', printed: 'Printed share', fitL: 'Good fit for', any: 'Anyone', fm: 'Makers (4–5 of 5)', fs: 'Schools (4–5 of 5)', q: 'Search', qph: 'name, motor, licence…', sort: 'Sort', sFit: 'Fit (maker, school)', sSchool: 'Fit for schools', sLast: 'Last activity', sName: 'Name', reset: 'Clear filters', msg: 'Showing {n} of {total} projects', none: 'No project matches these filters.' }
+    : { legend: 'Filtr rejstříku', disc: 'Obor', cat: 'Kategorie', all: 'Vše', rights: 'Práva', printed: 'Podíl tisku', fitL: 'Vhodné pro', any: 'Kohokoli', fm: 'Makery (4–5 z 5)', fs: 'Školy (4–5 z 5)', q: 'Hledat', qph: 'název, motor, licence…', sort: 'Řazení', sFit: 'Vhodnost (maker, škola)', sSchool: 'Vhodnost pro školy', sLast: 'Poslední aktivita', sName: 'Název', reset: 'Zrušit filtry', msg: 'Zobrazeno {n} z {total} projektů', none: 'Filtrům neodpovídá žádný projekt.' };
   const form = `<form class="reg-f" id="reg-f" hidden data-msg="${esc(F.msg)}" aria-label="${esc(F.legend)}">
 <label class="reg-q"><span>${F.q}</span><input type="search" name="q" placeholder="${esc(F.qph)}" autocomplete="off"></label>
+<label><span>${F.disc}</span><select name="disc">${opt('', F.all, records.length)}${discs.map((d) => opt(d, T.disc[d], records.filter((r) => disciplineOf(r) === d).length)
+  + subOpts((r) => disciplineOf(r) === d && d !== 'robotics', d)).join('')}</select></label>
 <label><span>${F.cat}</span><select name="cat">${opt('', F.all, records.length)}${cats.map((c) => opt(c, T.cat[c], count('category', c))
-  + [...new Set(records.filter((r) => r.category === c && r.subcategory).map((r) => r.subcategory))].map((sc) => `<option value="${c}/${esc(sc)}">\u00a0\u00a0· ${esc(subcatLabel(L, sc))} (${records.filter((r) => r.category === c && r.subcategory === sc).length})</option>`).join('')).join('')}</select></label>
+  + subOpts((r) => r.category === c && disciplineOf(r) === 'robotics', c)).join('')}</select></label>
 <label><span>${F.rights}</span><select name="rights">${opt('', F.all)}${RIGHTS.map((c) => opt(c, T.rights[c], count('rights_class', c))).join('')}</select></label>
 <label><span>${F.printed}</span><select name="printed">${opt('', F.all)}${PRINTED.map((c) => opt(c, T.printed[c], count('printed_share', c))).join('')}</select></label>
 <label><span>${F.fitL}</span><select name="fit">${opt('', F.any)}${opt('maker', F.fm)}${opt('school', F.fs)}</select></label>
@@ -195,10 +348,14 @@ export function renderRegistry(L, records, cs, root) {
     const cid = CATALOGUE[r.id];
     if (cid) links.unshift(`<a class="reg-kit" href="${root}${kit(cid)}">${SHOWCASE_PATH[cid] ? T.inShow : T.inCat} <span aria-hidden="true">→</span></a>`);
     const [simV, simRaw] = simText(r.sim_model);
-    const text = fold([r.name, r.id, sum, T.cat[r.category], r.subcategory ? subcatLabel(L, r.subcategory, true) : '', thin || H.has('act') ? '' : r.actuation || '', H.has('hw') ? '' : lic.hardware || '', H.has('sw') ? '' : lic.software || ''].join(' '));
-    const sub = r.subcategory ? ` · ${esc(subcatLabel(L, r.subcategory, true))}` : '';
-    const head = `<li class="reg-i${thin ? ' reg-thin' : ''}" id="p-${r.id}" data-cat="${r.category}"${r.subcategory ? ` data-sub="${esc(r.subcategory)}"` : ''} data-rights="${r.rights_class}" data-printed="${r.printed_share}" data-maker="${r.fit.maker}" data-school="${r.fit.school}" data-last="${lastKey(r)}" data-name="${esc(fold(r.name))}" data-text="${esc(text)}">
-<div class="reg-h"><h3>${esc(r.name)}</h3><span class="mono">${esc(T.cat[r.category])}${sub}</span></div>
+    const disc = disciplineOf(r);
+    if (r.fork_of) { const o = records.find((x) => x.id === r.fork_of); if (o) links.push(`<a class="reg-fork" href="#p-${esc(o.id)}">${T.forkOf} ${esc(o.name)}</a>`); }
+    const text = fold([r.name, r.id, sum, T.cat[r.category], T.disc[disc], r.subcategory ? subcatLabel(L, r.subcategory, true) + ' ' + subcatLabel(L, r.subcategory) : '', thin || H.has('act') ? '' : r.actuation || '', H.has('hw') ? '' : lic.hardware || '', H.has('sw') ? '' : lic.software || ''].join(' '));
+    // a field-of-use record shows "Biologie · Centrifuga"; a robot keeps "Robot na kolech · RC auto"
+    const kind = disc === 'robotics' ? esc(T.cat[r.category]) + (r.subcategory ? ` · ${esc(subcatLabel(L, r.subcategory, true))}` : '')
+      : `${esc(T.disc[disc])} · ${esc(r.subcategory ? subcatLabel(L, r.subcategory, true) : T.cat[r.category])}`;
+    const head = `<li class="reg-i${thin ? ' reg-thin' : ''}" id="p-${r.id}" data-cat="${r.category}"${r.subcategory ? ` data-sub="${esc(r.subcategory)}"` : ''} data-disc="${disc}" data-rights="${r.rights_class}" data-printed="${r.printed_share}" data-maker="${r.fit.maker}" data-school="${r.fit.school}" data-last="${lastKey(r)}" data-name="${esc(fold(r.name))}" data-text="${esc(text)}">
+<div class="reg-h"><h3>${esc(r.name)}</h3><span class="mono">${kind}</span></div>
 <p class="reg-s">${esc(sum)}</p>`;
     // record whose details are all unverified: name, summary, one link
     if (thin && !links.length) {

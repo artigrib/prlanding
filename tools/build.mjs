@@ -11,7 +11,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import { checkComponents } from './check-components.mjs';
 import { buildTime, screwTable, kitsFromEur } from '../assets/plan/plan-core.mjs';
-import { loadRegistry, checkRegistry, renderRegistry, checkedDate } from './registry.mjs';
+import { loadRegistry, checkRegistry, renderRegistry, renderGaps, checkedDate } from './registry.mjs';
 
 // component data (purchase plans): fail the build on a source without URL/date/status
 {
@@ -540,7 +540,7 @@ function contentPage(c, L) {
   const page = c[L], url = SITE + page, root = '../'.repeat(page.split('/').length - 1);
   const en = L === 'en', home = en ? 'en/' : '';
   let body = expandBt(src.slice(mm[0].length), L, page).replace('<!--kits:licence-->', () => kitsByLicence(L))
-    .replace('<!--registry-->', () => renderRegistry(L, REG.records, REG.cs, root)).replace(/\{reg:count\}/g, REG.records.length)
+    .replace('<!--registry-->', () => renderRegistry(L, REG.records, REG.cs, root)).replace('<!--registry-gaps-->', () => renderGaps(L)).replace(/\{reg:count\}/g, REG.records.length)
     .replace(/\{reg:checked\}/g, () => { const d = checkedDate(REG.records); return L === 'en' ? d : d.split('-').map(Number).reverse().join('. '); })
     .replace(/\{root\}/g, root);
   // FAQPage from the visible questions

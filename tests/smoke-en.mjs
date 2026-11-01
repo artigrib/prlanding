@@ -189,6 +189,17 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
     // the runtime binds short words with a no-break space: compare normalised text
     if (!n || badges.some(t => t.replace(/\s+/g, ' ').trim() !== 'Licence not confirmed')) e.push('rights filter: ' + n + ' ' + [...new Set(badges)].join('|'));
     await p.selectOption('#reg-f select[name=rights]', '');
+    for (const [v, want] of [['chem', d => d.disc === 'chem'], ['phys/telescope-mount', d => d.disc === 'phys' && d.sub === 'telescope-mount'], ['agro', d => d.disc === 'agro']]) {
+      await p.selectOption('#reg-f select[name=disc]', v);
+      const ds = await p.locator('.reg-i:visible').evaluateAll(els => els.map(el => ({ disc: el.dataset.disc, sub: el.dataset.sub })));
+      if (!ds.length || !ds.every(want)) e.push('discipline filter ' + v);
+    }
+    const lab = (await p.locator('.reg-i:visible .reg-h .mono').first().innerText()).replace(/\s+/g, ' ');
+    if (!lab.startsWith('Agriculture · ')) e.push('discipline label: ' + lab);
+    const opts = (await p.locator('#reg-f select[name=disc] > option').allTextContents()).map(t => t.replace(/\s*\(\d+\)$/, '').replace(/\s+/g, ' ').trim());
+    for (const t of ['Biology', 'Chemistry', 'Physics', 'Agriculture', 'Desktop', 'Robotics']) if (!opts.includes(t)) e.push('discipline option ' + t);
+    await p.selectOption('#reg-f select[name=disc]', '');
+    if ((await p.locator('#mista-h').innerText()).trim() !== 'Gaps' || (await p.locator('.reg-gaps > div').count()) !== 5) e.push('gaps section');
     await noCzech(p, e);
     const kit = await p.locator('#p-so-arm100-101 a.reg-kit').getAttribute('href');
     if (new URL(kit, p.url()).pathname !== '/en/kit/so101/') e.push('catalogue link ' + kit);
