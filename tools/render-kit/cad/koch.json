@@ -1,0 +1,10 @@
+{ "root": "koch", "up": "y", "front": "+z",
+  "steps": [{"file": "koch-v1-1/hardware/follower/STEP/Follower_Arm.STEP", "parts_dir": "koch-v1-1/hardware/follower/STEP"}],
+  "rules": [
+    ["/Follower_[^/]*$", "", "print", 0.5],
+    ["DYNAMIXEL_XL430_W250", "XL430_W250#", "servo", 0.08],
+    ["DYNAMIXEL_XL330_M288", "XL330_M288#", "servo", 0.08],
+    ["XL430_Spacer", "spacer#", "accent", 0.3],
+    ["FPX330_H101", "frame_FPX330_H101#", "accent", 0.3],
+    ["HN11_I101", "horn_HN11_I101", "accent", 0.3]
+  ] }

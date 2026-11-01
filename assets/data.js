@@ -213,9 +213,33 @@ window.PR_ROBOTS = [
     license: { hw: 'CC-BY-4.0', sw: 'MIT', trademark: true, status: 'verified', checked: '2026-11-01',
       sources: ['https://github.com/orcahand/orcahand_hardware/blob/main/LICENSE', 'https://github.com/orcahand/orca_core/blob/main/LICENSE'] },
     related: ['hand', 'so101', 'aira'] },
+  { id: 'sesame', glb: true, render: true, mats: [['pla', 'PLA / PLA+', 'Dle projektu']], credit: 'Vizualizace z modelu Sesame Robot Project (Apache-2.0)', name: 'Sesame', type: 'Čtyřnohý robot', cat: 'legged', level: 'Začátečník', hw: 'Apache-2.0', sw: 'Apache-2.0',
+    author: 'Dorian Todd (Sesame Robot Project)', alt: 'Malý čtyřnohý robot Sesame s osmi mikroservy',
+    short: 'Malý čtyřnohý robot s osmi mikroservy, ESP32 a displejem OLED, který slouží jako obličej.',
+    lead: 'Malý tisknutelný čtyřnohý robot zaměřený na pohyb a výraz. Každou nohu pohánějí dvě mikroserva MG90S (180°), řídí ho ESP32 (Lolin S2 Mini nebo deska Sesame Distro Board) a displej OLED 128×64 kreslí obličej, který se mění podle pohybu. Ovládá se přes Wi-Fi z webového rozhraní nebo přes JSON API, případně sériovou konzolí po USB; animace se skládají v aplikaci Sesame Studio. Podle autora stačí základní pájení a znalost Arduino IDE.',
+    bomCost: '50–60 USD (elektronika a spojovací materiál, dle autora)', printTime: '—', software: 'Arduino (C++), webové rozhraní, Sesame Studio',
+    repo: 'https://github.com/dorianborian/sesame-robot', docs: 'https://github.com/dorianborian/sesame-robot/blob/main/docs/build-guide/README.md',
+    card: [['Osy', '8 (2 na nohu)'], ['Řízení', 'ESP32']],
+    bom: [['Mikroservo MG90S, 180°', '8×'], ['Displej OLED 0,96″ SSD1306 (I2C)', '1×'], ['Lolin S2 Mini (ESP32-S2) nebo deska Sesame Distro Board V3', '1×'], ['Kolébkový vypínač KCD1', '1×'], ['Akumulátor Bambu Lab 14500 (2S, 7,4 V, 800 mAh), volitelně', '1×'], ['Nabíječka Bambu Lab pro akumulátor 7,4 V (k akumulátoru)', '1×'], ['Měnič step-down 5 V / 3 A (S2 Mini s akumulátorem)', '1×'], ['Šroub M2 × 5 mm samořezný', '≈ 40×'], ['Šroub M2,5 × 5 mm (páky serv)', '10×'], ['Kabel USB-C (5 V / 3 A)', '1×'], ['Kabely, bužírky, stahovací pásky (viz BOM projektu)', '1 sada']],
+    specs: [['Stupně volnosti', '8 (2 na každou nohu)'], ['Pohon', '8× MG90S 180°'], ['Řízení', 'ESP32 (Lolin S2 Mini nebo Sesame Distro Board)'], ['Displej', 'OLED 128×64'], ['Napájení', '5 V / 3 A (USB-C PD, nebo akumulátor s měničem)'], ['Ovládání', 'Wi-Fi, webové rozhraní, JSON API, sériová konzole'], ['Tisk', 'PLA, 11 dílů, výplň 8–10 %']],
+    license: { hw: 'Apache-2.0', sw: 'Apache-2.0', status: 'verified', checked: '2026-11-01',
+      sources: ['https://github.com/dorianborian/sesame-robot/blob/main/LICENSE'] },
+    related: ['otto', 'spot', 'stackchan'] },
+  { id: 'koch', glb: true, render: true, setups: true, credit: 'Vizualizace z modelu Koch v1.1 (Apache-2.0)', name: 'Koch v1.1', type: 'Robotická ruka', cat: 'arm', level: 'Začátečník', hw: 'Apache-2.0', sw: 'Apache-2.0',
+    author: 'Jess Moss a Hugging Face (podle ruky Alexandera Kocha)', alt: 'Robotická ruka Koch v1.1 se servy Dynamixel a chapadlem',
+    short: 'Ruka s pěti osami a chapadlem se servy Dynamixel pro teleoperaci a učení v LeRobot. Pár ovládací + výkonná ruka.',
+    lead: 'Upravená verze levné ruky Alexandera Kocha; na rozdíl od originálu ji lze sestavit bez pájení. Výkonnou ruku (follower) pohánějí dvě serva Dynamixel XL430-W250-T a čtyři XL330-M288-T na 12 V, ovládací ruku (leader) šest XL330-M077-T na 5 V. Obě ruce se k počítači připojují přes desku Waveshare a USB-C a ovládají se knihovnou LeRobot. Projekt obsahuje modely ve formátech SolidWorks a STEP, schéma zapojení a video sestavení.',
+    bomCost: '≈ 278 USD follower, ≈ 199 USD leader (ceny v USA dle README projektu, bez dopravy a DPH)', printTime: '—', software: 'LeRobot (Python)',
+    repo: 'https://github.com/jess-moss/koch-v1-1', docs: 'https://github.com/jess-moss/koch-v1-1#assembly-instructions',
+    card: [['Osy', '5 + chapadlo'], ['Pohon', 'Dynamixel']],
+    bom: [['Servo Dynamixel XL430-W250-T (follower)', '2×'], ['Servo Dynamixel XL330-M288-T (follower)', '4×'], ['Servo Dynamixel XL330-M077-T (leader)', '6×'], ['Sada rámečků a volnoběžek FPX330-H101, 4 ks (follower)', '1×'], ['Sada rámečků a volnoběžek FPX330-H101, 4 ks (leader)', '1×'], ['Sada volnoběžek HN11-I101 (follower)', '1×'], ['Deska Waveshare Serial Bus Servo Driver (follower)', '1×'], ['Deska Waveshare Serial Bus Servo Driver (leader)', '1×'], ['Měnič napětí DC-DC (follower)', '1×'], ['Zdroj 12 V (follower)', '1×'], ['Zdroj 5 V (leader)', '1×'], ['Svěrka ke stolu (follower)', '1×'], ['Svěrka ke stolu (leader)', '1×'], ['Kabel USB-C (follower)', '1×'], ['Kabel USB-C (leader)', '1×'], ['Propojovací kabely (viz BOM projektu)', '1 sada']],
+    specs: [['Stupně volnosti', '5 os + chapadlo'], ['Pohon followeru', '2× XL430-W250-T, 4× XL330-M288-T'], ['Pohon leaderu', '6× XL330-M077-T'], ['Napájení', 'follower 12 V, leader 5 V'], ['Sestavení', 'bez pájení, podle videa v projektu'], ['Tisk', 'PLA+, ABS nebo PETG; vrstva 0,2 mm, výplň ≈ 30 %']],
+    license: { hw: 'Apache-2.0', sw: 'Apache-2.0', status: 'verified', checked: '2026-11-01',
+      sources: ['https://github.com/jess-moss/koch-v1-1/blob/main/LICENSE', 'https://github.com/huggingface/lerobot/blob/main/LICENSE'] },
+    related: ['so101', 'so102', 'aira'] },
   // Lab devices (cat 'lab'): no simulation. Model = the author's UC2 v2 STL files (TheBOX/SimpleBOX/BUILD_ME/STL) placed on the
   // 50 mm grid per APPLICATIONS/APP_SIMPLE-Smartphone_Microscope/mechanical/Readme.md; optics, magnets and screws not modelled.
-  { id: 'uc2', glb: true, render: true, noElectronics: true, noSoftware: true, credit: 'Vizualizace z dílů openUC2 (CERN-OHL-1.2): jednoduchý mikroskop pro telefon, mechanická verze. Sestavu jsme poskládali podle návodu a fotografií autorů; sestavený CAD model autoři nezveřejňují.', name: 'UC2', type: 'Modulární optická stavebnice', cat: 'lab', level: 'Začátečník', hw: 'CERN-OHL-1.2', sw: 'MIT',
+  { id: 'uc2', glb: true, render: true, noElectronics: true, noSoftware: true, fastenersListed: true, credit: 'Vizualizace z dílů openUC2 (CERN-OHL-1.2): jednoduchý mikroskop pro telefon, mechanická verze. Sestavu jsme poskládali podle návodu a fotografií autorů; sestavený CAD model autoři nezveřejňují.', name: 'UC2', type: 'Modulární optická stavebnice', cat: 'lab', level: 'Začátečník', hw: 'CERN-OHL-1.2', sw: 'MIT',
     author: 'openUC2 (B. Diederich a kol.)', alt: 'Mikroskop pro chytrý telefon složený z tištěných kostek UC2 na základní desce',
     short: 'Optické pokusy z tištěných kostek o hraně 50 mm. Model ukazuje jednoduchý mikroskop pro chytrý telefon.',
     lead: 'Otevřený modulární systém pro optiku a mikroskopii: tištěné kostky o hraně 50 mm drží pohromadě kuličkové magnety v základní desce a do kostek se zasouvají vložky se zrcadly, čočkami nebo držákem vzorku. Model ukazuje mechanickou verzi jednoduchého mikroskopu pro chytrý telefon podle návodu autorů: objektiv v zaostřovací kostce (Z-stage), dvě zrcadla pod 45°, okulár s držákem telefonu a držák vzorku nad objektivem. Tato sestava nemá elektroniku ani software.',
@@ -267,7 +291,7 @@ window.PR_BOX = function (r, tier, pair) {
       if (pair) { items.push(['Servo Feetech STS3215 7,4 V, převod 1/191', '2×', 'Hardware']); items.push(['Servo Feetech STS3215 7,4 V, převod 1/147', '3×', 'Hardware']); }
       items.push(['Řídicí deska serv', pair ? '2×' : '1×', 'Hardware'], ['Zdroj 5 V', pair ? '2×' : '1×', 'Hardware'], ['Kabel USB-C', '2×', 'Hardware'], ['Svěrky ke stolu', pair ? '4×' : '2×', 'Hardware']);
     } else { (r.bom || []).forEach(function (b) { if (r.setups && !pair && /leader/i.test(b[0]) && !/follower/i.test(b[0])) return; items.push([b[0], b[1], 'Hardware']); }); }
-    if (!((r._cs || r).bom || []).some(function (b) { return /^Šroub M\d/.test(b[0]); })) items.push(['Spojovací materiál podle návodu projektu', '—', 'Hardware']);
+    if (!r.fastenersListed) items.push(['Spojovací materiál podle návodu projektu', '—', 'Hardware']);
   }
   return items;
 };
