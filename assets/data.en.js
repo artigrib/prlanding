@@ -4,7 +4,7 @@
 // prices stay as in data.js (prices are copied, never invented). Metric units, decimal points.
 window.PR_EN = {
   colors: { white: 'White', grey: 'Grey', black: 'Black', orange: 'Orange', blue: 'Blue' },
-  cats: { arm: 'Arms and hands', mobile: 'Mobile', legged: 'Walking', desk: 'Desktop', combat: 'Combat robots' },
+  cats: { arm: 'Arms and hands', mobile: 'Mobile', legged: 'Walking', desk: 'Desktop', combat: 'Combat robots', lab: 'Lab' },
   levels: { 'Začátečník': 'Beginner', 'Střední': 'Intermediate', 'Pokročilý': 'Advanced' },
   robots: {
     so101: { type: 'Robot arm', author: 'The Robot Studio and Hugging Face', alt: 'SO-101 robot arm',
@@ -136,6 +136,14 @@ window.PR_EN = {
       card: [['Axes', '17 DOF'], ['Drive', 'tendons, 17 servos']],
       bom: [['Finger servo: Dynamixel XC330 or Feetech HLS3915', '16×'], ['Wrist servo: Dynamixel XC430 or Feetech HLS3930', '1×'], ['USB adapter: U2D2 (Dynamixel), or CH340 / CP210x (Feetech)', '1×'], ['Power Hub Board and 12 V adapter (Dynamixel build)', '1+1×'], ['Motor connector board (Gerber in the repository)', '12×'], ['Tower cooling fan', '2×'], ['Tendon line', '—'], ['PTFE tube for the tendons', '—'], ['GT2 wrist timing belt (GT2-142 in the CAD)', '1×'], ['Machined spool holder (drawing in 06_CNC)', '4×'], ['Threaded rod (FrankaConnector mounting part)', '2×'], ['4×8×3 and 8×13×4 mm bearings', '—'], ['2 mm and 3×50 mm pins, screws and nuts', '1 set'], ['Silicone for the skin (or TPU filament)', '—']],
       specs: [['Degrees of freedom', '17 (wrist + 16 in the fingers)'], ['Finger joints', 'thumb 4, other fingers 3 (abduction, MCP, PIP)'], ['Actuators', '17 Dynamixel or Feetech servos, tendons in PTFE tubes'], ['Skin', 'silicone cast in printed molds, or printed in TPU'], ['Variants', 'base; Touch with tactile sensors in the fingertips'], ['Simulation', 'URDF and MJCF (orcahand_description)'], ['Guide', 'the authors’ video and ASSEMBLY_ADDENDUM.md in the repository'], ['Print', 'Bambu Studio projects with ready-made plates'], ['Print time', '—']] },
+    uc2: { credit: 'Render from openUC2 parts (CERN-OHL-1.2): simple smartphone microscope, mechanical version. We arranged the assembly following the authors’ guide and photos; the authors do not publish an assembled CAD model.', type: 'Modular optics kit',
+      author: 'openUC2 (B. Diederich et al.)', alt: 'Smartphone microscope built from printed UC2 cubes on a baseplate',
+      short: 'Optics experiments from printed 50 mm cubes. The model shows the simple smartphone microscope.',
+      lead: 'An open toolbox for optics and microscopy: printed 50 mm cubes are held together by ball magnets in a baseplate, and inserts with mirrors, lenses or a sample holder slide into the cubes. The model shows the mechanical version of the simple smartphone microscope from the authors’ guide: an objective in a focusing cube (Z-stage), two 45° mirrors, an eyepiece with a phone holder and a sample holder above the objective. This setup has no electronics and no software.',
+      bomCost: '≈ 65 EUR (the authors’ estimate for this setup)', software: 'None for this setup (mechanical version)',
+      card: [['Cube', '50 mm'], ['Setup', 'smartphone microscope']],
+      bom: [['Microscope objective (e.g. 10×, NA 0.25)', '1×'], ['Eyepiece (e.g. 20×)', '1×'], ['Mirror (e.g. 30 × 30 mm)', '2×'], ['Ball magnet 5 mm', '32–36×'], ['M3 × 12 screw (DIN 912)', '32–56×'], ['M3 × 8 screw (DIN 912, galvanised steel)', '7×'], ['M3 × 30 screw and M3 nut, non-magnetic', '1×'], ['Smartphone', '1×']],
+      specs: [['Cube', '50 mm, printed or injection-moulded'], ['Connection', '5 mm ball magnets in the baseplate'], ['Modules in this setup', 'Z-stage, 2× 45° mirror, eyepiece with phone holder, sample holder, 2 empty cubes'], ['Focusing', 'coarse ≈ 30 mm by sliding the objective, fine ≈ ±6 mm with a gear'], ['Optics', 'objective (160 mm from the mirror) + eyepiece'], ['Electronics', 'none (mechanical version)']] },
     sesame: { credit: 'Render from the Sesame Robot Project model (Apache-2.0)', type: 'Quadruped robot', alt: 'Small Sesame quadruped robot with eight micro servos',
       short: 'Small four-legged robot with eight micro servos, an ESP32 and an OLED display that serves as its face.',
       lead: 'A small printable quadruped focused on movement and expression. Two MG90S (180°) micro servos drive each leg, an ESP32 (Lolin S2 Mini or the Sesame Distro Board) controls it, and a 128×64 OLED display draws a face that changes with the motion. It is controlled over Wi-Fi from a web interface or a JSON API, or alternatively from a serial console over USB; animations are composed in the Sesame Studio app. According to the author, basic soldering and familiarity with the Arduino IDE are enough.',
@@ -181,6 +189,7 @@ window.PR_EN = {
     ['GPL-3.0', 'c', 'Yes, with a condition', 'Source files of modified parts and firmware available'],
     ['CERN-OHL-P-2.0', 'y', 'Yes', 'Credit to the authors and the licence'],
     ['CERN-OHL-W / -S 2.0', 'c', 'Yes, with a condition', 'We publish the sources of the modified design'],
+    ['CERN-OHL-1.2', 'c', 'Yes, with a condition', 'Licence copy, dated change notice, modified sources under the same licence'],
     ['CC BY-NC / custom NC', 'n', 'No', 'Only with the author’s written permission']
   ]
 };
@@ -216,12 +225,13 @@ window.PR_EN_APPLY = function () {
     if (/\b(24|22,2|14,8) ?V\b|\d+ ?Nm/.test(all)) w.push('Strong motors: a moving arm can cause injury. Keep your hands out of reach during bring-up and keep the power switch within reach.');
     if (/pneumat/i.test(all)) w.push('The pneumatic gripper runs on compressed air – use only an approved air supply and hoses.');
     if (/230 ?V|síťov/i.test(all)) w.push('A mains-powered (230 V) supply may only be wired by a qualified person.');
+    if (/(^|[^a-zá-ž])magnet(?!ick)/i.test(all)) w.push('Contains small strong magnets: swallowing more than one can seriously injure the intestines. Keep away from small children. If swallowed, seek medical help immediately.');
     if (r.cat === 'combat') {
       w.push('Only power up a combat robot in an enclosed arena or with the weapon disconnected. Switch on the transmitter first, then the robot; switch off in reverse order, and check the failsafe before the first fight (the robot must stop when the transmitter is turned off).');
       if (/spinner|rotuj/i.test(all)) w.push('A spinning weapon can cause serious injury and throw debris: always lock it outside the arena and never spin it up in your hand or on a table.');
       if (/flipper/i.test(all)) w.push('The flipper moves violently: keep your fingers out of its path when handling the robot.');
     }
-    w.push('Power the hardware only from the supply specified in the project instructions.');
+    if (!o.noElectronics) w.push('Power the hardware only from the supply specified in the project instructions.');
     return w;
   };
   W.PR_SPECS = function (r) {

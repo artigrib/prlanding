@@ -153,8 +153,8 @@
 
   /* ---------- home ---------- */
   if (page === 'home') {
-    var FILTERS = [['all', 'Vše'], ['arm', 'Ruce a dlaně'], ['mobile', 'Mobilní'], ['legged', 'Kráčející'], ['desk', 'Stolní'], ['combat', 'Bojoví roboti']];
-    ['#robot-count', '#robot-count2'].forEach(function (sel) { var el = $(sel); if (el) el.textContent = R.length; });
+    var FILTERS = [['all', 'Vše'], ['arm', 'Ruce a dlaně'], ['mobile', 'Mobilní'], ['legged', 'Kráčející'], ['desk', 'Stolní'], ['combat', 'Bojoví roboti'], ['lab', 'Laboratoř']];
+    ['#robot-count', '#robot-count2'].forEach(function (sel) { var el = $(sel); if (el) el.textContent = R.filter(function (r) { return r.cat !== 'lab'; }).length; });   // robots only: lab devices are not robots
     var filter = qs('typ'); if (!FILTERS.some(function (f) { return f[0] === filter; })) filter = 'all';
     function renderFilters() {
       $('#filters').innerHTML = FILTERS.map(function (f) {
@@ -289,6 +289,7 @@
     set('#p-author', 'Open-source design: ' + r.author); set('#p-lead', r.lead);
     set('#p-credit', r.credit || (r.render ? 'Vizualizace z CAD projektu' : ''));
     set('#p-cap', 'Obr. 1 — ' + r.name);
+    if (r.cat === 'lab') { var lnp = $('#l-name') && $('#l-name').parentNode; if (lnp) lnp.innerHTML = lnp.innerHTML.replace('Robot vychází z otevřeného projektu', 'Přístroj vychází z otevřeného projektu').replace('The robot is based on the open project', 'The device is based on the open project'); }
     set('#l-name', r.name); set('#l-name2', r.name); set('#l-author', r.author); set('#l-hw', r.hw); set('#l-sw', r.sw); set('#l-hw2', r.hw); set('#l-sw2', r.sw);
     if (window.PR_NO_SW(r)) {
       var lsp = $('#l-sw') && $('#l-sw').parentNode;
