@@ -17,4 +17,14 @@ klepeto.glb  – "Klepeto" 150 g four-wheel lifter with a grabber claw:
                (https://creativecommons.org/licenses/by/4.0/).
                Parametric CAD sources: tools/robots-cad/ (build123d).
 
+orca.glb     – "ORCA Hand by ORCA Dexterity, Inc. — CC BY 4.0"
+               (https://creativecommons.org/licenses/by/4.0/).
+               https://github.com/orcahand/orcahand_hardware
+               Converted from the author's STEP assembly of the v2 base hand,
+               right (orca_v2/base/Orcahand_BaseV2_Right.zip, commit 0ce2646):
+               tessellated and simplified, small fasteners, tendons and
+               electronic components left out, duplicate servo instances
+               removed, servo cases shown as simplified blocks, recoloured.
+               This derivative is shared under the same licence, CC BY 4.0.
+
 Models of the other robots: see the credit line on each robot's page.

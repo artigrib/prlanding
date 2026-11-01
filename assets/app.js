@@ -356,7 +356,7 @@
       var sum = r.type + ' · ' + r.level;
       set('#summary', sum); set('#sb-sum', sum);
       var items = window.PR_BOX(r, 'kit', pair);
-      set('#box-title', 'Podle kusovníku projektu · ' + items.length + ' položek');
+      set('#box-title', window.PR_BOX_TITLE(r, items.length));
       $('#box').innerHTML = items.map(function (it, i) { return '<li><span class="n">' + (i < 9 ? '0' : '') + (i + 1) + '</span><span>' + esc(it[0]) + '</span><span class="q">' + esc(it[1]) + '</span><span class="t">' + it[2] + '</span></li>'; }).join('');
       set('#box-note', window.PR_BOX_NOTE(r));
     }

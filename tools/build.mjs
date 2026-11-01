@@ -237,14 +237,14 @@ function kitPage(r0, L) {
     title = t1.length <= 64 ? t1 : `Build ${r.name} | printedrobotics.cz`;
     desc = clip(r.preparing
       ? `${r.name}: we’re checking the licence and the bill of materials with the authors. ${r.short} Leave your email and you’ll be the first to know.`
-      : `Build ${r.name} from the open-source project: what you need from the bill of materials, the guide and the licence. ${r.short}`, 155);
+      : `Build ${r.name} from the open-source project: what you need ${D.PR_BOM_CAD(r) ? '(compiled from the CAD and docs)' : 'from the bill of materials'}, the guide and the licence. ${r.short}`, 155);
     ogTitle = `Build ${r.name}`;
   } else {
     const t1 = `${r.name} – postavte si: ${r.type.toLowerCase()} | printedrobotics.cz`;
     title = t1.length <= 64 ? t1 : `${r.name} – postavte si | printedrobotics.cz`;
     desc = clip(r.preparing
       ? `${r.name}: licenci a kusovník ověřujeme s autory. ${r.short} Nechte e-mail, dáme vědět jako prvním.`
-      : `Postavte si ${r.name} z otevřeného projektu: co budete potřebovat podle kusovníku, návod a licence. ${r.short}`, 155);
+      : `Postavte si ${r.name} z otevřeného projektu: co budete potřebovat ${D.PR_BOM_CAD(r) ? 'podle CAD a dokumentace' : 'podle kusovníku'}, návod a licence. ${r.short}`, 155);
     ogTitle = 'Postavte si ' + r.name;
   }
   const H = root;
@@ -315,6 +315,7 @@ function kitPage(r0, L) {
     .replace('<div class="a4 rel" id="related"></div>', `<div class="a4 rel" id="related">${prerender.related}</div>`)
     .replace('<span id="l-name"></span>', `<span id="l-name">${esc(r.name)}</span>`)
     .replace('<span id="l-author"></span>', `<span id="l-author">${esc(r.author)}</span>`)
+    .replace('podle kusovníku projektu <span id="l-name2">', D.PR_BOM_CAD(r) ? 'podle CAD a dokumentace projektu <span id="l-name2">' : 'podle kusovníku projektu <span id="l-name2">')
     .replace('<span id="l-name2"></span>', `<span id="l-name2">${esc(r.name)}</span>`)
     .replace('<span id="l-hw"></span>', `<span id="l-hw">${esc(r.hw)}</span>`)
     .replace(', software pod licencí <span id="l-sw"></span>.', noSw ? '. Vlastní software nepotřebuje, ovládá se RC vysílačem.' : `, software pod licencí <span id="l-sw">${esc(r.sw)}</span>.`)

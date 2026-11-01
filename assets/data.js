@@ -197,7 +197,22 @@ window.PR_ROBOTS = [
     // two candidate licences until the authors confirm: the derivation takes the stricter one (NC)
     license: { hw: ['CC-BY-SA-4.0', 'CC-BY-NC-SA-4.0'], status: 'unverified', checked: '2026-10-30',
       sources: ['https://www.printables.com/model/1146226-vertical-spinner-battlebot-antweight-150-g', 'https://www.thingiverse.com/thing:4835459'] },
-    related: ['svrn', 'otto', 'sawppy'] }
+    related: ['svrn', 'otto', 'sawppy'] },
+  // ORCA v2 base hand, right; facts from orcahand_hardware (README, ASSEMBLY_ADDENDUM, CAD) and orca_core (config.yaml, docs)
+  { id: 'orca', glb: true, bomSource: 'cad', bomDocs: 'orca_core', render: true, credit: 'Vizualizace z modelu ORCA Dexterity (CC BY 4.0)', name: 'ORCA Hand', type: 'Robotická dlaň', cat: 'arm', level: 'Pokročilý', hw: 'CC BY 4.0', sw: 'MIT',
+    author: 'ORCA Dexterity', alt: 'Robotická dlaň ORCA Hand s pěti prsty na věži se servy',
+    short: 'Pětiprstá dlaň se 17 stupni volnosti, poháněná šlachami ze serv ve věži pod zápěstím.',
+    lead: 'Pětiprstá dlaň se 17 stupni volnosti: 16 kloubů v prstech a jeden v zápěstí. Prsty táhnou šlachy vedené v PTFE trubičkách od cívek na servech, která jsou ve věži pod zápěstím. Projekt podporuje serva Dynamixel i Feetech. Kůži prstů a dlaně odlijete ze silikonu do tištěných forem, nebo ji rychleji vytisknete z TPU. Varianta Touch má ve špičkách prstů hmatové senzory. Ovládá se z Pythonu knihovnou orca_core.',
+    bomCost: '—', printTime: '—', software: 'orca_core (Python)',
+    repo: 'https://github.com/orcahand/orcahand_hardware', docs: 'https://www.youtube.com/watch?v=TgIz7HiyaoU',
+    card: [['Osy', '17 DOF'], ['Pohon', 'šlachy, 17 serv']],
+    // compiled from the CAD assembly and orca_core docs (the project publishes no hand BOM): servo models orca_core/constants.py
+    // MOTOR_MODELS; adapters docs/…/windows.md; PHB + 12 V setting-up-dynamixels.md; belt, rods, spool holders, fans, connector boards: CAD
+    bom: [['Servo prstů: Dynamixel XC330 nebo Feetech HLS3915', '16×'], ['Servo zápěstí: Dynamixel XC430 nebo Feetech HLS3930', '1×'], ['Převodník USB: U2D2 (Dynamixel), nebo CH340 / CP210x (Feetech)', '1×'], ['Power Hub Board a adaptér 12 V (sestava s Dynamixel)', '1+1×'], ['Deska konektorů motorů (Gerber v repozitáři)', '12×'], ['Ventilátor chlazení věže', '2×'], ['Lanko na šlachy', '—'], ['PTFE trubička pro vedení šlach', '—'], ['Ozubený řemen zápěstí GT2 (v CAD GT2-142)', '1×'], ['Frézovaný držák cívek (výkres v 06_CNC)', '4×'], ['Závitová tyč (připojovací díl FrankaConnector)', '2×'], ['Ložiska 4×8×3 a 8×13×4 mm', '—'], ['Kolíky 2 mm a 3×50 mm, šrouby a matice', '1 sada'], ['Silikon na kůži (nebo filament TPU)', '—']],
+    specs: [['Stupně volnosti', '17 (zápěstí + 16 v prstech)'], ['Klouby prstů', 'palec 4, ostatní prsty 3 (abdukce, MCP, PIP)'], ['Pohon', '17 serv Dynamixel nebo Feetech, šlachy v PTFE trubičkách'], ['Kůže', 'silikon odlitý do tištěných forem, nebo tisk z TPU'], ['Varianty', 'základní; Touch s hmatovými senzory ve špičkách prstů'], ['Simulace', 'URDF a MJCF (orcahand_description)'], ['Návod', 'video autorů a doplněk ASSEMBLY_ADDENDUM.md v repozitáři'], ['Tisk', 'projekty Bambu Studio s připravenými podložkami'], ['Doba tisku', '—']],
+    license: { hw: 'CC-BY-4.0', sw: 'MIT', trademark: true, status: 'verified', checked: '2026-11-01',
+      sources: ['https://github.com/orcahand/orcahand_hardware/blob/main/LICENSE', 'https://github.com/orcahand/orca_core/blob/main/LICENSE'] },
+    related: ['hand', 'so101', 'aira'] }
 ];
 // Browser demos linked from product pages (r.sim). colorParam: the sim reads ?color= (so101 does not yet).
 // Sizes = uncompressed bytes of a first visit (all responses until the sim is idle, Chromium, empty cache);
@@ -241,16 +256,21 @@ window.PR_BOX = function (r, tier, pair) {
   }
   return items;
 };
-window.PR_BOX_NOTE = function (r) { return r.id === 'so101' ? 'Počty dle kusovníku projektu SO-ARM100 (follower 7,4 V, zdroj 5 V). Follower s 12V servy: 6× C018 a zdroj 12 V / 5 A.' : 'Položky dle kusovníku projektu; přesné počty a varianty ověřte v jeho dokumentaci.'; };
+// r.bomSource: where the parts list comes from. Default: the project's published BOM; 'cad': the project publishes
+// no BOM and we compiled the list from its CAD assembly and docs (box title, note, FAQ and meta description say so).
+window.PR_BOM_CAD = function (r) { return r.bomSource === 'cad'; };
+window.PR_BOX_TITLE = function (r, n) { return (window.PR_BOM_CAD(r) ? 'Sestaveno z CAD a dokumentace projektu · ' : 'Podle kusovníku projektu · ') + n + ' položek'; };
+window.PR_BOX_NOTE = function (r) { if (window.PR_BOM_CAD(r)) return 'Projekt kusovník nezveřejňuje; seznam jsme sestavili z CAD sestavy a dokumentace projektu' + (r.bomDocs ? ' (' + r.bomDocs + ')' : '') + '. Počty ověřte v CAD.'; return r.id === 'so101' ? 'Počty dle kusovníku projektu SO-ARM100 (follower 7,4 V, zdroj 5 V). Follower s 12V servy: 6× C018 a zdroj 12 V / 5 A.' : 'Položky dle kusovníku projektu; přesné počty a varianty ověřte v jeho dokumentaci.'; };
 // FAQ of a kit page (app.js renders it, tools/build.mjs pre-renders it and adds it as FAQPage structured data).
 window.PR_FAQ = function (r) {
+  var cad = window.PR_BOM_CAD(r);
   return [
     ['Zvládnu sestavení bez zkušeností?', 'Náročnost tohoto projektu: ' + r.level + '. Návod projektu vede krok za krokem; odkaz najdete v sekci Licence a bezpečnost.'],
-    ['Můžu si robota koupit u vás?', 'Ne, nic neprodáváme. Díly koupíte přímo u dodavatelů podle kusovníku projektu (sekce Co budete potřebovat). Hotovou sadu možná nabídneme později; chcete-li o ní vědět, nechte e-mail ve formuláři nahoře.'],
+    ['Můžu si robota koupit u vás?', (cad ? 'Ne, nic neprodáváme. Díly koupíte přímo u dodavatelů; projekt kusovník nezveřejňuje, seznam v sekci Co budete potřebovat jsme sestavili z jeho CAD a dokumentace. Hotovou sadu možná nabídneme později; chcete-li o ní vědět, nechte e-mail ve formuláři nahoře.' : 'Ne, nic neprodáváme. Díly koupíte přímo u dodavatelů podle kusovníku projektu (sekce Co budete potřebovat). Hotovou sadu možná nabídneme později; chcete-li o ní vědět, nechte e-mail ve formuláři nahoře.')],
     ['Jste spojeni s autory projektu?', 'Ne. Vycházíme z otevřené dokumentace projektu ' + r.name + ' (' + r.author + ', licence ' + r.hw + '). Autoři s námi nejsou spojeni a tuto stránku neschválili.'],
     ['Jaký software budu potřebovat?', r.cat === 'combat' ? 'Žádný. Robot se ovládá RC vysílačem FlySky; přijímač Malenki Nano s ním jen spárujete, programovat nic nemusíte. Návod projektu najdete v sekci Licence a bezpečnost.' : r.software + '. Software je open-source a zdarma; odkaz na návod projektu najdete v sekci Licence a bezpečnost.'],
     ['Je stavba vhodná pro děti?', 'Není to hračka. Robot obsahuje malé díly a elektroniku; stavba je určena osobám od 14 let, mladším pouze pod dohledem dospělého, například ve škole nebo kroužku.'],
-    ['Jsme škola nebo kroužek. Co nám nabízíte?', 'Nic neprodáváme ani nefakturujeme. Zdarma je hodina se simulací SO-101 a pracovní list na stránce Pro školy; díly koupíte u dodavatelů podle kusovníku projektu.']
+    ['Jsme škola nebo kroužek. Co nám nabízíte?', (cad ? 'Nic neprodáváme ani nefakturujeme. Zdarma je hodina se simulací SO-101 a pracovní list na stránce Pro školy; díly koupíte u dodavatelů podle seznamu sestaveného z CAD a dokumentace projektu.' : 'Nic neprodáváme ani nefakturujeme. Zdarma je hodina se simulací SO-101 a pracovní list na stránce Pro školy; díly koupíte u dodavatelů podle kusovníku projektu.')]
   ];
 };
 window.PR_SPECS = function (r) {
