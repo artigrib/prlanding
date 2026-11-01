@@ -313,6 +313,7 @@ function kitPage(r0, L) {
     .replace('<ol class="box" id="box"></ol>', `<ol class="box" id="box">${prerender.box}</ol>`)
     .replace('<p class="mono" id="box-note" style="margin:16px 0 0"></p>', `<p class="mono" id="box-note" style="margin:16px 0 0">${esc(D.PR_BOX_NOTE(r))}</p>`)
     .replace('<div class="a4 rel" id="related"></div>', `<div class="a4 rel" id="related">${prerender.related}</div>`)
+    .replace('<span>Robota jsme vybrali podle vašich odpovědí v kvízu.</span>', r.cat === 'lab' ? '<span>Projekt jsme vybrali podle vašich odpovědí v kvízu.</span>' : '<span>Robota jsme vybrali podle vašich odpovědí v kvízu.</span>')
     .replace('Robot vychází z otevřeného projektu <span id="l-name"></span>', r.cat === 'lab' ? 'Přístroj vychází z otevřeného projektu <span id="l-name"></span>' : 'Robot vychází z otevřeného projektu <span id="l-name"></span>')
     .replace('<span id="l-name"></span>', `<span id="l-name">${esc(r.name)}</span>`)
     .replace('<span id="l-author"></span>', `<span id="l-author">${esc(r.author)}</span>`)
