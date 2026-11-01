@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: CERN-OHL-S-2.0
 """OpenFlexure Microscope v7 (motorised, RMS optics) -> raw GLB with one named node per part.
 
 Source: https://gitlab.com/openflexure/openflexure-microscope, tag v7.0.0-beta5 (CERN-OHL-S-2.0).

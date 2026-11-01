@@ -13,7 +13,7 @@ const cad = D.PR_ROBOTS.filter((r) => r.bomSource === 'cad');
 const BOM = /podle kusovníku|from the bill of materials|per the project’s bill of materials|following the bill of materials/i;
 
 test('bomSource values are known', () => {
-  for (const r of D.PR_ROBOTS) assert.ok(r.bomSource == null || r.bomSource === 'cad', r.id);
+  for (const r of D.PR_ROBOTS) assert.ok(r.bomSource == null || r.bomSource === 'cad' || r.bomSource === 'src', r.id);
   assert.ok(cad.some((r) => r.id === 'orca'), 'ORCA publishes no hand BOM');
 });
 

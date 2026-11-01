@@ -49,7 +49,8 @@ export const CATALOGUE = {
   'so-arm100-101': 'so101', lekiwi: 'lekiwi', xlerobot: 'xle', 'open-duck-mini': 'duck', 'amazing-hand': 'hand', 'otto-diy': 'otto',
   spotmicro: 'spot', 'sawppy-rover': 'sawppy', thor: 'thor', exomy: 'exomy', 'so-arm102': 'so102', 'nextis-aira': 'aira',
   parol6: 'parol6', 'berkeley-humanoid-lite': 'bhl', 'roboto-origin': 'origin',
-  'open-128-rc-car': 'rc128', zcar2: 'zcar2', 'lizard-rc-race-car': 'lizard'
+  'open-128-rc-car': 'rc128', zcar2: 'zcar2', 'lizard-rc-race-car': 'lizard',
+  'openflexure-microscope': 'openflexure'
 };
 const SHOWCASE_PATH = { origin: { cs: 'sim/origin/', en: 'en/sim/origin/' } };
 
