@@ -237,6 +237,14 @@ await check('en for-schools pilot form messages are English', '/en/for-schools/'
   if (!/school or club/.test(m)) e.push('validation message: ' + m);
 });
 await check('en kit vert150 (coming soon)', '/en/kit/vert150/', async (p, e) => { await p.waitForSelector('#prep-alt a'); await p.waitForTimeout(300); await noCzech(p, e); });
+for (const id of ['rc128', 'zcar2', 'lizard']) await check('en kit ' + id, `/en/kit/${id}/`, async (p, e) => {
+  await p.waitForSelector('h1'); await p.waitForTimeout(300); await noCzech(p, e);
+  if (/compressed air/.test(await p.locator('body').textContent())) e.push('false pneumatic-gripper warning');
+});
+await check('en kit parol6 keeps the gripper warning', '/en/kit/parol6/', async (p, e) => {
+  await p.waitForSelector('h1'); await p.waitForTimeout(300);
+  if (!/compressed air/.test(await p.locator('body').textContent())) e.push('gripper warning missing');
+});
 await check('en quiz', '/en/quiz/', async (p, e) => {
   await czLink(p, e, '/kviz.html');
   for (let i = 0; i < 3; i++) { await p.waitForSelector('.q-opt'); await noCzech(p, e, '#quiz'); await p.locator('.q-opt').nth(1).click(); }

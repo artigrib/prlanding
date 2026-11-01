@@ -273,6 +273,26 @@ await check('kit uc2: lab crumb, no sim, axe', '/sada/uc2/', async p => {
   const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
   if (bad.length) throw new Error('axe: ' + bad.map(v => `${v.id} (${v.nodes.length}) ${v.nodes[0].target}`).join('; '));
 });
+await check('parol6 keeps the pneumatic-gripper warning', '/sada/parol6/', async p => {
+  await p.waitForSelector('h1');
+  if (!/stlačeným vzduchem/.test(await p.locator('body').textContent())) throw new Error('gripper warning missing');
+});
+// RC cars: product page, licence + battery safety visible, axe clean at phone width
+for (const id of ['rc128', 'zcar2', 'lizard']) {
+  await check(`product ${id}: safety note, axe 390px`, `/sada/${id}/`, async p => {
+    await p.setViewportSize({ width: 390, height: 844 });
+    await p.waitForSelector('h1');
+    if (!/LiPo/.test(await p.locator('body').textContent())) throw new Error('battery safety note missing');
+    if (id === 'lizard' && !/954\s?EUR/.test(await p.locator('body').textContent())) throw new Error('Lizard BOM cost missing');
+    // tyres ("pneumatiky") must not trigger the compressed-air gripper warning
+    if (/stlačeným vzduchem/.test(await p.locator('body').textContent())) throw new Error('false pneumatic-gripper warning');
+    await p.addScriptTag({ content: AXE });
+    const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
+    const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    if (bad.length) throw new Error('axe: ' + bad.map(v => `${v.id} (${v.nodes.length}) ${v.nodes[0].target}`).join('; '));
+    if ((await p.evaluate(() => document.documentElement.scrollWidth)) > 390) throw new Error('horizontal scroll');
+  });
+}
 
 // content pages: schools + guides. Structured data matches the page, no prices, nav link from every header
 const ldOf = html => [...html.matchAll(/<script type="application\/ld\+json">([^<]*)<\/script>/g)].map(m => JSON.parse(m[1]));

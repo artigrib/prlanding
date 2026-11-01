@@ -277,7 +277,48 @@ window.PR_ROBOTS = [
     specs: [['Pohon', 'NEMA 17, závitová tyč M5 × 0,8'], ['Vedení', '2× ocelová tyč 6 mm, lineární ložiska'], ['Řízení', 'Arduino + CNC shield (DRV8825), mikrokrokování 1/32'], ['Pump na desku', 'až 3'], ['Napájení', 'zdroj 12 V'], ['Tlak', 'podle autorů až 4 MPa s 1ml stříkačkou'], ['Tisk', 'PLA'], ['Doba tisku', '—']],
     license: { hw: 'BSD-2-Clause', sw: 'BSD-2-Clause', status: 'verified', checked: '2026-11-01',
       sources: ['https://github.com/pachterlab/poseidon/blob/master/LICENSE'] },
-    related: ['sidekick', 'parol6', 'so101'] }
+    related: ['sidekick', 'parol6', 'so101'] },
+
+  // RC cars (checked 2026-11-01 from the repos; models: tools/robots-cad/rc128.py, zcar2.py, step2glb.py)
+  { id: 'rc128', glb: true, render: true, rcControl: true, credit: 'Vizualizace z FreeCAD souborů open-128-rc-car – Kurtis Kopf (CC BY 4.0), kola umístěna námi', name: 'Open 1:28 RC Car', type: 'RC auto 1:28', cat: 'mobile', level: 'Střední', hw: 'CC BY 4.0', sw: 'MIT',
+    author: 'Kurtis Kopf (zortness)', alt: 'Malé tištěné RC auto v měřítku 1:28 s motorem 130 vzadu a servem řízení vpředu',
+    short: 'Levné tištěné RC autíčko 1:28 pro školní týmy: plochý podvozek, motor 130 a mikroservo, ovládání běžným RC vysílačem.',
+    lead: 'Malé auto v měřítku 1:28, které navrhl trenér středoškolského týmu, aby si škola mohla postavit víc aut za málo peněz. Podvozek je jedna tištěná deska, řízení obstarává mikroservo, zadní nápravu pohání kartáčový motor 130 přes ozubená kola 10/42 zuby. Napájí ho 2S akumulátor (6–8 V) – LiPo, Li-ion nebo bezpečnější LiFePO4 velikosti AA. Ovládá se běžným RC vysílačem, nic se neprogramuje. Návod popisuje i rychlejší varianty, které se podle autora vyrovnají sériovým autům 1:28. LiPo akumulátor vyžaduje opatrnost – viz Bezpečnost.',
+    bomCost: '≈ 70 USD na auto (odhad autora při stavbě více aut; rychlejší auto do 100 USD)', printTime: '—', software: 'bez programování (RC vysílač)',
+    repo: 'https://github.com/zortness/open_128_rc_car', docs: 'https://github.com/zortness/open_128_rc_car/blob/main/doc/gettingstarted.md',
+    card: [['Měřítko', '1:28'], ['Pohon', 'motor 130']],
+    bom: [['Kartáčový motor velikosti 130', '1×'], ['Regulátor pro kartáčový motor (ESC)', '1×'], ['Mikroservo', '1×'], ['RC vysílač a přijímač (2 kanály)', '1 sada'], ['Akumulátor 2S (LiPo/Li-ion) nebo 2× LiFePO4 14500 s držákem', '1×'], ['Nabíječka k akumulátoru', '1×'], ['Ložisko MR63ZZ', '6×'], ['Závitová tyč M3, 70–75 mm (zadní náprava)', '1×'], ['Šrouby a matice M2 a M3', 'dle návodu'], ['Pneumatiky: 2 úzké přední, 2 široké zadní', '4×']],
+    specs: [['Měřítko', '1:28'], ['Pohon', 'kartáčový motor 130, převod 10/42 zubů; varianty s bezkartáčovým 1410'], ['Řízení', 'mikroservo'], ['Napájení', '2S, 6–8 V (LiPo, Li-ion nebo LiFePO4)'], ['Tisk', 'PLA (PETG odolnější), tryska 0,4 mm'], ['CAD', 'FreeCAD 1.1'], ['Bezpečnost', 'LiPo nabíjet jen balančním nabíječem, v ohnivzdorném vaku a pod dohledem; nafouklý či poškozený akumulátor vyřadit; dlouhodobě skladovat napůl nabitý; zkrat vodičů může způsobit požár. Děti jen s dospělým.']],
+    license: { hw: 'CC-BY-4.0', sw: 'MIT', status: 'verified', checked: '2026-11-01',
+      notes: 'FreeCAD soubory, obrázky a dokumentace: CC BY 4.0; zdrojový kód (Python nástroje): MIT.',
+      sources: ['https://github.com/zortness/open_128_rc_car/blob/main/LICENSE.md', 'https://github.com/zortness/open_128_rc_car/blob/main/doc/history.md'] },
+    related: ['zcar2', 'lizard', 'exomy'] },
+  { id: 'zcar2', glb: true, render: true, rcControl: true, noGuide: true, credit: 'Vizualizace ze sestavy zcar2 – Alex Yu (GPL-3.0)', name: 'zcar2', type: 'RC drift auto 1:28', cat: 'mobile', level: 'Střední', hw: 'GPL-3.0', sw: '—',
+    author: 'Alex Yu (alexyu132)', alt: 'Tištěný podvozek driftového RC auta 1:28 s pohonem všech kol',
+    short: 'Skoro celé tištěné driftové auto 1:28 s pohonem 4×4, tištěnými kardany a pneumatikami z TPU. Vejde se pod většinu karoserií MINI-Z (rozvor M).',
+    lead: 'Driftové auto v měřítku 1:28 s rozvorem 90 mm, pod které se vejde karoserie MINI-Z (autor ověřil AE86). Má nezávislé posuvné odpružení, pohon všech čtyř kol tištěnými kardany bez diferenciálů, motor 130 a baterii uprostřed a tištěné pneumatiky z TPU. Pozor: některé díly jsou podle autora náročné na tisk a návod na sestavení zatím chybí – repozitář má jen seznam dílů a videa. Poslední změna je z roku 2020. Napájí ho malý LiPo 2S – viz Bezpečnost.',
+    bomCost: '—', printTime: '—', software: 'bez programování (RC vysílač)',
+    repo: 'https://github.com/alexyu132/zcar2', docs: 'https://github.com/alexyu132/zcar2#readme',
+    card: [['Měřítko', '1:28'], ['Pohon', '4×4']],
+    bom: [['Kartáčový motor 130 (pro 2S)', '1×'], ['Servo GH-S37D 3,7 g', '1×'], ['Regulátor pro kartáčový motor (2S)', '1×'], ['Přijímač, alespoň 2 kanály (např. FlySky GR3E bez krabičky)', '1×'], ['Akumulátor LiPo 2S 300 mAh (Venom Fly)', '1×'], ['Ložisko MR105', '8×'], ['Tlačná pružinka ≈ 4 mm', '4×'], ['Šrouby M3 s půlkulatou hlavou (8–18 mm)', '17×'], ['Pojistná matice M3', '17×'], ['Karoserie MINI-Z, rozvor M', '1×']],
+    specs: [['Měřítko', '1:28, rozvor 90 mm (MINI-Z M)'], ['Pohon', '4×4, tištěné kardany, bez diferenciálů'], ['Odpružení', 'nezávislé, posuvné'], ['Řízení', 'servo 3,7 g, paralelní geometrie pro drift'], ['Napájení', 'LiPo 2S 300 mAh'], ['Pneumatiky', 'tištěné z TPU'], ['Návod', 'zatím není (README: „Todo“)'], ['Bezpečnost', 'LiPo nabíjet jen balančním nabíječem, v ohnivzdorném vaku a pod dohledem; nafouklý či poškozený akumulátor vyřadit; dlouhodobě skladovat napůl nabitý; zkrat vodičů může způsobit požár. Děti jen s dospělým.']],
+    license: { hw: 'GPL-3.0', status: 'verified', checked: '2026-11-01',
+      notes: 'Celý repozitář (STL, SketchUp model) je pod GPL-3.0; náš 3D model z něj je proto také GPL-3.0.',
+      sources: ['https://github.com/alexyu132/zcar2/blob/master/LICENSE'] },
+    related: ['rc128', 'lizard', 'exomy'] },
+  { id: 'lizard', glb: true, render: true, swNotFree: true, credit: 'Vizualizace ze sestavy Lizard – TRD-B (CC BY 4.0), bez šroubů a ložisek', name: 'Lizard', type: 'RC závodní auto', cat: 'mobile', level: 'Pokročilý', hw: 'CC BY 4.0', sw: 'CC BY 4.0',
+    author: 'TRD-B', alt: 'Velké tištěné závodní RC auto Lizard s přítlačným křídlem a terénními koly',
+    short: 'Velké tištěné silniční závodní auto s vlastní elektronikou: ESP32 v autě i ve vysílači, telemetrie a záznam dat. Není to levná hračka.',
+    lead: 'Silniční závodní auto, ke kterému autor zveřejnil všechno: tisková data STL i STEP, celou sestavu, desky plošných spojů pro auto i vlastní vysílač, kód pro ESP32 a záznamník dat s vyhodnocením v MATLABu. Pohání ho kartáčový motor 775 (150 W) přes převodovku a diferenciál, kola jsou kupovaná Carson 1:8. Autorův kusovník dává dohromady ≈ 954 EUR – počítá s celými baleními dílů (šrouby po 100 kusech) a s akumulátorem LiPo 3S 5000 mAh. Je to projekt pro pokročilé, s pájením a výrobou desek, ne levná hračka. Velký akumulátor a silný motor vyžadují opatrnost – viz Bezpečnost.',
+    bomCost: '≈ 954 EUR (součet kusovníku autora „BOM Lizard.xlsx“, německé ceny, celá balení dílů)', printTime: '—', software: 'Arduino (ESP32) v autě i vysílači; MATLAB pro záznam dat',
+    repo: 'https://github.com/TRD-B/Lizard', docs: 'https://www.instructables.com/Lizard-3D-Printed-RC-Race-Car/',
+    card: [['Motor', '775, 150 W'], ['Elektronika', 'ESP32']],
+    bom: [['Motor 775, 12 V, 150 W', '1×'], ['Chladič motoru 40–45 mm', '1×'], ['Řadič motoru Cytron MD20A', '1×'], ['Servo Graupner DES 708 BB MG + servo saver Tamiya', '1×'], ['Kola Carson 1:8 buggy', '2 sady'], ['Akumulátor LiPo 3S 5000 mAh (auto)', '1×'], ['Akumulátory NiMH AA (vysílač)', '6×'], ['ESP32 s externí anténou', '2×'], ['Desky plošných spojů auta a vysílače (Gerber v repozitáři)', '2×'], ['Ventilátor 50 mm, 12 V', '2×'], ['Ložiska (683ZZ, 6802ZZ, 6804ZZ, 608ZZ, 605ZZ, MR85ZZ, kluzná)', 'dle kusovníku'], ['Šrouby M3, matice, závitové vložky', 'dle kusovníku'], ['Filament PETG + TPU', '≈ 3 kg + 0,75 kg']],
+    specs: [['Rozměry (sestava autora)', '≈ 466 × 312 × 152 mm (s křídlem)'], ['Pohon', 'kartáčový motor 775, převodovka, diferenciál, kardany'], ['Řízení', 'servo, vlastní deska s ESP32'], ['Vysílač', 'vlastní, ESP32, 6× AA'], ['Napájení', 'LiPo 3S 5000 mAh (11,1 V)'], ['Data', 'telemetrie, záznamník dat, MATLAB'], ['Tisk', 'PETG, díly z TPU'], ['Bezpečnost', 'Velký LiPo 3S: nabíjet jen balančním nabíječem, v ohnivzdorném vaku a pod dohledem; nafouklý či poškozený akumulátor vyřadit; dlouhodobě skladovat napůl nabitý; zkrat může způsobit požár. Pojistka 30 A je v kusovníku. Těžké auto se silným motorem – jezdit jen na uzavřené ploše bez lidí. Děti jen s dospělým.']],
+    license: { hw: 'CC-BY-4.0', sw: 'CC-BY-4.0', status: 'verified', checked: '2026-11-01',
+      notes: 'Repozitář (STL, STEP, desky, kód) je pod CC BY 4.0 (License.md). Sestava obsahuje i modely kupovaných dílů (kola, motor, servo).',
+      sources: ['https://github.com/TRD-B/Lizard/blob/main/License.md', 'https://github.com/TRD-B/Lizard/blob/main/BOM%20Lizard.xlsx'] },
+    related: ['rc128', 'zcar2', 'exomy'] }
 ];
 // Browser demos linked from product pages (r.sim). colorParam: the sim reads ?color= (so101 does not yet).
 // Sizes = uncompressed bytes of a first visit (all responses until the sim is idle, Chromium, empty cache);
@@ -289,13 +330,15 @@ window.PR_SIMS = {
 };
 // Robot without its own software (RC-controlled); same test in app.js and tools/build.mjs.
 window.PR_NO_SW = function (r) { return !r.sw || String(r.sw).trim() === '—'; };
+// Per-robot FAQ flags: r.rcControl = driven with an RC transmitter, nothing to program (even if the repo has code);
+// r.swNotFree = part of the software is not free (e.g. MATLAB); r.noGuide = the project has no assembly guide.
 // Safety notes built from what a robot actually contains (used by app.js and tools/build.mjs).
 window.PR_SAFETY = function (r) {
   var all = JSON.stringify([r.bom || [], r.specs || [], r.lead || '']);
   var w = ['Určeno osobám od 14 let; mladší pouze pod dohledem dospělého. Pohyblivé části mohou přiskřípnout prsty.'];
   if (/LiPo|Li-Pol|Li-ion|akumulátor|baterie/i.test(all)) w.push('Lithiové akumulátory nabíjejte jen vhodnou nabíječkou, pod dohledem a mimo hořlavé předměty; poškozený článek nepoužívejte.');
   if (/\b(24|22,2|14,8) ?V\b|\d+ ?Nm/.test(all)) w.push('Silné motory: pohybující se rameno může způsobit zranění. Při oživování držte ruce mimo dosah a mějte po ruce vypínač napájení.');
-  if (/pneumat/i.test(all)) w.push('Pneumatické chapadlo pracuje se stlačeným vzduchem – používejte jen schválený zdroj a hadice.');
+  if (/pneumatick|stlačen/i.test(all)) w.push('Pneumatické chapadlo pracuje se stlačeným vzduchem – používejte jen schválený zdroj a hadice.');
   if (/230 ?V|síťov/i.test(all)) w.push('Zdroj připojený k síti 230 V smí zapojovat jen osoba s odpovídající kvalifikací.');
   if (/(^|[^a-zá-ž])magnet(?!ick)/i.test(all)) w.push('Obsahuje malé silné magnety: spolknutí více kusů může vážně poškodit střeva. Uchovávejte mimo dosah malých dětí. Při spolknutí ihned vyhledejte lékaře.');
   if (r.cat === 'combat') {
@@ -334,10 +377,14 @@ window.PR_BOX_NOTE = function (r) { if (window.PR_BOM_CAD(r)) return 'Projekt ku
 window.PR_FAQ = function (r) {
   var cad = window.PR_BOM_CAD(r);
   return [
-    ['Zvládnu sestavení bez zkušeností?', 'Náročnost tohoto projektu: ' + r.level + '. Návod projektu vede krok za krokem; odkaz najdete v sekci Licence a bezpečnost.'],
+    ['Zvládnu sestavení bez zkušeností?', 'Náročnost tohoto projektu: ' + r.level + (r.noGuide ? '. Projekt návod na sestavení nemá; repozitář obsahuje seznam dílů a videa.' : '. Návod projektu vede krok za krokem; odkaz najdete v sekci Licence a bezpečnost.')],
     [r.cat === 'lab' ? 'Můžu si sadu koupit u vás?' : 'Můžu si robota koupit u vás?', (cad ? 'Ne, nic neprodáváme. Díly koupíte přímo u dodavatelů; projekt kusovník nezveřejňuje, seznam v sekci Co budete potřebovat jsme sestavili z jeho CAD a dokumentace. Hotovou sadu možná nabídneme později; chcete-li o ní vědět, nechte e-mail ve formuláři nahoře.' : 'Ne, nic neprodáváme. Díly koupíte přímo u dodavatelů podle kusovníku projektu (sekce Co budete potřebovat). Hotovou sadu možná nabídneme později; chcete-li o ní vědět, nechte e-mail ve formuláři nahoře.')],
     ['Jste spojeni s autory projektu?', 'Ne. Vycházíme z otevřené dokumentace projektu ' + r.name + ' (' + r.author + ', licence ' + r.hw + '). Autoři s námi nejsou spojeni a tuto stránku neschválili.'],
-    ['Jaký software budu potřebovat?', r.cat === 'combat' ? 'Žádný. Robot se ovládá RC vysílačem FlySky; přijímač Malenki Nano s ním jen spárujete, programovat nic nemusíte. Návod projektu najdete v sekci Licence a bezpečnost.' : r.noSoftware ? r.software + '. Návod projektu najdete v sekci Licence a bezpečnost.' : r.software + '. Software je open-source a zdarma; odkaz na návod projektu najdete v sekci Licence a bezpečnost.'],
+    ['Jaký software budu potřebovat?', r.cat === 'combat' ? 'Žádný. Robot se ovládá RC vysílačem FlySky; přijímač Malenki Nano s ním jen spárujete, programovat nic nemusíte. Návod projektu najdete v sekci Licence a bezpečnost.'
+      : r.noSoftware ? r.software + '. Návod projektu najdete v sekci Licence a bezpečnost.'
+      : (window.PR_NO_SW(r) || r.rcControl) ? 'Žádný. Ovládá se běžným RC vysílačem, programovat nic nemusíte.' + (r.noGuide ? ' Projekt návod na sestavení nemá; repozitář obsahuje seznam dílů a videa.' : ' Návod projektu najdete v sekci Licence a bezpečnost.')
+      : r.swNotFree ? r.software + '. Část potřebného softwaru není zdarma; odkaz na návod projektu najdete v sekci Licence a bezpečnost.'
+      : r.software + '. Software je open-source a zdarma; odkaz na návod projektu najdete v sekci Licence a bezpečnost.'],
     ['Je stavba vhodná pro děti?', 'Není to hračka. ' + (r.cat === 'lab' ? 'Sestava' : 'Robot') + ' obsahuje malé díly' + (r.noElectronics ? '' : ' a elektroniku') + '; stavba je určena osobám od 14 let, mladším pouze pod dohledem dospělého, například ve škole nebo kroužku.'],
     ['Jsme škola nebo kroužek. Co nám nabízíte?', (cad ? 'Nic neprodáváme ani nefakturujeme. Zdarma je hodina se simulací SO-101 a pracovní list na stránce Pro školy; díly koupíte u dodavatelů podle seznamu sestaveného z CAD a dokumentace projektu.' : 'Nic neprodáváme ani nefakturujeme. Zdarma je hodina se simulací SO-101 a pracovní list na stránce Pro školy; díly koupíte u dodavatelů podle kusovníku projektu.')]
   ];
