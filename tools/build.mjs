@@ -313,6 +313,8 @@ function kitPage(r0, L) {
     .replace('<ol class="box" id="box"></ol>', `<ol class="box" id="box">${prerender.box}</ol>`)
     .replace('<p class="mono" id="box-note" style="margin:16px 0 0"></p>', `<p class="mono" id="box-note" style="margin:16px 0 0">${esc(D.PR_BOX_NOTE(r))}</p>`)
     .replace('<div class="a4 rel" id="related"></div>', `<div class="a4 rel" id="related">${prerender.related}</div>`)
+    .replace('<span>Robota jsme vybrali podle vašich odpovědí v kvízu.</span>', r.cat === 'lab' ? '<span>Projekt jsme vybrali podle vašich odpovědí v kvízu.</span>' : '<span>Robota jsme vybrali podle vašich odpovědí v kvízu.</span>')
+    .replace('Robot vychází z otevřeného projektu <span id="l-name"></span>', r.cat === 'lab' ? 'Přístroj vychází z otevřeného projektu <span id="l-name"></span>' : 'Robot vychází z otevřeného projektu <span id="l-name"></span>')
     .replace('<span id="l-name"></span>', `<span id="l-name">${esc(r.name)}</span>`)
     .replace('<span id="l-author"></span>', `<span id="l-author">${esc(r.author)}</span>`)
     .replace('podle kusovníku projektu <span id="l-name2">', D.PR_BOM_CAD(r) ? 'podle CAD a dokumentace projektu <span id="l-name2">' : 'podle kusovníku projektu <span id="l-name2">')
@@ -428,6 +430,7 @@ ${fig}
 </div>`;
 }
 // home: catalogue cards in the static HTML (scripts re-render the same cards with filters)
+const NROBOTS = R.filter(r => r.cat !== 'lab').length;   // the "N robotů" heading counts robots, not lab devices (same rule in app.js)
 const cards = R.map((r, i) => `<a class="card" href="sada/${r.id}/"><div class="tile"><span class="tag${r.preparing ? ' tag-p' : ''}">${r.preparing ? 'Připravujeme' : 'Postavte si'}</span><img src="img/${r.id}_white.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
   `<span class="card-meta"><span class="mono" style="color:var(--ink)">${no(i)}</span><span class="mono">${esc(r.preparing ? 'Připravujeme' : r.level)}</span></span>` +
   `<span><h3>${esc(r.name)}</h3><span class="type">${esc(r.type)}</span></span><span class="spec1">${r.card.map(c => esc(c[1])).join(' · ')}</span>` +
@@ -440,7 +443,7 @@ const showCard = (r, L) => `<a class="card card-show" href="sim/${r.sim}/" data-
 let home = read('index.html');
 home = home.replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->|<div class="cards" id="cards"><\/div>/, `<div class="cards" id="cards">\n${cards}\n${W.cs.PR_SHOWCASE.map(r => showCard(r, 'cs')).join('\n')}\n</div><!--/cards-->`)
   .replace(/<noscript><p>Pro katalog zapněte JavaScript[\s\S]*?<\/noscript>\n?/, '')
-  .replace(/id="robot-count">\d+</, `id="robot-count">${R.length}<`).replace(/id="robot-count2">\d+</, `id="robot-count2">${R.length}<`);
+  .replace(/id="robot-count">\d+</, `id="robot-count">${NROBOTS}<`).replace(/id="robot-count2">\d+</, `id="robot-count2">${NROBOTS}<`);
 if (!home.includes('<!--/cards-->')) throw new Error('index.html: cards placeholder not found');
 // catalogue -> registry link (the registry page links back to #katalog)
 const regLink = L => `<!--registry-link--><p class="reg-link"><a href="katalog/rejstrik/" data-cta="registry">${L === 'en' ? `All ${REG.records.length} printable projects in the registry` : `Všech ${REG.records.length} tisknutelných projektů v rejstříku`} <span aria-hidden="true">→</span></a></p><!--/registry-link-->`;

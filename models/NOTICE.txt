@@ -49,6 +49,24 @@ lizard.glb   – "Lizard" 3D printed RC race car by TRD-B,
                inserts and bearings left out, simplified and recoloured
                (tools/robots-cad/step2glb.py). Modified 2026-11-01.
 
+uc2.glb      – openUC2 / UC2-GIT (https://github.com/openUC2/UC2-GIT).
+               (C) Benedict Diederich, René Lachmann, Barbora Marsikova,
+               Xavier Uwurukundo, Rainer Heintzmann, Haoran Wang.
+               Hardware licensed under the CERN Open Hardware Licence v1.2
+               (CERN-OHL-1.2); licence text:
+               https://github.com/openUC2/UC2-GIT/blob/afc9de36f27d5a387e6b9ef1d85ae0cf33b4d3d6/License.md
+               Configuration: the simple smartphone microscope, mechanical
+               version (APPLICATIONS/APP_SIMPLE-Smartphone_Microscope/mechanical).
+               Built from the authors' UC2 v2 STL files
+               (TheBOX/SimpleBOX/BUILD_ME/STL, commit afc9de3); optics, magnets,
+               screws and the phone are not modelled. We arranged the assembly
+               following the authors' guide and photos; the authors do not
+               publish an assembled CAD model. Build script:
+               tools/lab-cad/uc2_glb.py.
+               Modified 2026-11-01: arranged into an assembly, recoloured,
+               compressed. This derivative is shared under the same licence,
+               CERN-OHL-1.2.
+
 sesame.glb   – Sesame Robot Project by Dorian Todd (dorianborian), Apache-2.0
                (full text: LICENSE-Apache-2.0.txt in this folder).
                https://github.com/dorianborian/sesame-robot (hardware/cad/Sesame-ESP32-v122.step)
@@ -64,3 +82,59 @@ koch.glb     – Koch v1.1 by Jess Moss / The Hugging Face team, after the low-c
                re-oriented. This derivative is published under Apache-2.0.
 
 Models of the other robots: see the credit line on each robot's page.
+
+sidekick.glb – Sidekick liquid dispensing robot by Rodolfo Keesey et al.
+               (https://github.com/rodolfokeesey/Liquid-Handler).
+               Copyright Rodolfo Keesey 2022.
+               Licensed under the CERN Open Hardware Licence v2 – Strongly
+               Reciprocal (CERN-OHL-S-2.0), https://ohwr.org/cern_ohl_s_v2.txt
+               (see license.txt in that repository). This source is distributed
+               WITHOUT ANY EXPRESS OR IMPLIED WARRANTY, INCLUDING OF
+               MERCHANTABILITY, SATISFACTORY QUALITY AND FITNESS FOR A PARTICULAR
+               PURPOSE. Please see the CERN-OHL-S v2 for applicable conditions.
+               Upstream source location: https://github.com/rodolfokeesey/Liquid-Handler
+               Source location of this modified file:
+               https://github.com/artigrib/prlanding/blob/main/models/sidekick.glb
+               Built from the authors' per-part STEP files (3D_Assets, commit
+               f799c0f), which carry the positions of the full assembly; tessellated,
+               recoloured, compressed. Left out: the feet (only one of eight is
+               placed in the files), the "Motor Cap New (Unvalidated)" variant and
+               the 50 ml tube holder. Motors, pumps, tubing, circuit board and
+               screws are not modelled. Modified 2026-11-01 by printedrobotics.cz
+               (conversion only, no design changes). This derivative is shared
+               under the same licence, CERN-OHL-S-2.0.
+
+poseidon.glb – poseidon syringe pump by the Pachter Lab, Caltech
+               (https://github.com/pachterlab/poseidon), BSD 2-Clause License.
+               Licence text (as required for redistribution):
+               | BSD 2-Clause License
+               |
+               | Copyright (c) 2018, Pachter Lab
+               | All rights reserved.
+               |
+               | Redistribution and use in source and binary forms, with or without
+               | modification, are permitted provided that the following conditions are met:
+               |
+               | * Redistributions of source code must retain the above copyright notice, this
+               |   list of conditions and the following disclaimer.
+               |
+               | * Redistributions in binary form must reproduce the above copyright notice,
+               |   this list of conditions and the following disclaimer in the documentation
+               |   and/or other materials provided with the distribution.
+               |
+               | THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+               | AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+               | IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+               | DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+               | FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+               | DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+               | SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+               | CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+               | OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+               | OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+               Built from the authors' STEP files Pump Base and Pump Carriage
+               (HARDWARE/pump/step, commit 5a139fe), which share the assembly's
+               coordinates; tessellated, recoloured, compressed. The cover slide
+               and syringe brace are left out because their exported positions do
+               not match the assembly. Motor, rods, bearings, threaded rod, knob and
+               syringe are not modelled.

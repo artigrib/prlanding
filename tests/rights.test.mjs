@@ -20,7 +20,7 @@ const byId = (id) => W.PR_ROBOTS.find((r) => r.id === id);
 
 test('licence ids map to classes', () => {
   for (const id of ['MIT', 'Apache-2.0', 'BSD-3-Clause', 'CC-BY-4.0', 'CC BY 4.0', 'CERN-OHL-P-2.0', 'CC0-1.0']) assert.equal(cls(id), 'permissive', id);
-  for (const id of ['GPL-3.0', 'GPL-3.0-only', 'LGPL-2.1', 'AGPL-3.0', 'CC-BY-SA-4.0', 'CC BY-SA 4.0', 'CERN-OHL-W-2.0', 'CERN-OHL-S-2.0', 'MPL-2.0']) assert.equal(cls(id), 'copyleft', id);
+  for (const id of ['GPL-3.0', 'GPL-3.0-only', 'LGPL-2.1', 'AGPL-3.0', 'CC-BY-SA-4.0', 'CC BY-SA 4.0', 'CERN-OHL-W-2.0', 'CERN-OHL-S-2.0', 'CERN-OHL-1.2', 'MPL-2.0']) assert.equal(cls(id), 'copyleft', id);
   for (const id of ['CC-BY-NC-4.0', 'CC BY-NC-SA 4.0', 'CC-BY-NC-ND-4.0']) assert.equal(cls(id), 'nc', id);
   assert.equal(cls('CC-BY-ND-4.0'), 'nd');
   assert.equal(cls('LicenseRef-proprietary'), 'proprietary');

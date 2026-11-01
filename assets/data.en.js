@@ -4,7 +4,7 @@
 // prices stay as in data.js (prices are copied, never invented). Metric units, decimal points.
 window.PR_EN = {
   colors: { white: 'White', grey: 'Grey', black: 'Black', orange: 'Orange', blue: 'Blue' },
-  cats: { arm: 'Arms and hands', mobile: 'Mobile', legged: 'Walking', desk: 'Desktop', combat: 'Combat robots' },
+  cats: { arm: 'Arms and hands', mobile: 'Mobile', legged: 'Walking', desk: 'Desktop', combat: 'Combat robots', lab: 'Lab' },
   levels: { 'Začátečník': 'Beginner', 'Střední': 'Intermediate', 'Pokročilý': 'Advanced' },
   robots: {
     so101: { type: 'Robot arm', author: 'The Robot Studio and Hugging Face', alt: 'SO-101 robot arm',
@@ -136,6 +136,14 @@ window.PR_EN = {
       card: [['Axes', '17 DOF'], ['Drive', 'tendons, 17 servos']],
       bom: [['Finger servo: Dynamixel XC330 or Feetech HLS3915', '16×'], ['Wrist servo: Dynamixel XC430 or Feetech HLS3930', '1×'], ['USB adapter: U2D2 (Dynamixel), or CH340 / CP210x (Feetech)', '1×'], ['Power Hub Board and 12 V adapter (Dynamixel build)', '1+1×'], ['Motor connector board (Gerber in the repository)', '12×'], ['Tower cooling fan', '2×'], ['Tendon line', '—'], ['PTFE tube for the tendons', '—'], ['GT2 wrist timing belt (GT2-142 in the CAD)', '1×'], ['Machined spool holder (drawing in 06_CNC)', '4×'], ['Threaded rod (FrankaConnector mounting part)', '2×'], ['4×8×3 and 8×13×4 mm bearings', '—'], ['2 mm and 3×50 mm pins, screws and nuts', '1 set'], ['Silicone for the skin (or TPU filament)', '—']],
       specs: [['Degrees of freedom', '17 (wrist + 16 in the fingers)'], ['Finger joints', 'thumb 4, other fingers 3 (abduction, MCP, PIP)'], ['Actuators', '17 Dynamixel or Feetech servos, tendons in PTFE tubes'], ['Skin', 'silicone cast in printed molds, or printed in TPU'], ['Variants', 'base; Touch with tactile sensors in the fingertips'], ['Simulation', 'URDF and MJCF (orcahand_description)'], ['Guide', 'the authors’ video and ASSEMBLY_ADDENDUM.md in the repository'], ['Print', 'Bambu Studio projects with ready-made plates'], ['Print time', '—']] },
+    uc2: { credit: 'Render from openUC2 parts (CERN-OHL-1.2): simple smartphone microscope, mechanical version. We arranged the assembly following the authors’ guide and photos; the authors do not publish an assembled CAD model.', type: 'Modular optics kit',
+      author: 'openUC2 (B. Diederich et al.)', alt: 'Smartphone microscope built from printed UC2 cubes on a baseplate',
+      short: 'Optics experiments from printed 50 mm cubes. The model shows the simple smartphone microscope.',
+      lead: 'An open toolbox for optics and microscopy: printed 50 mm cubes are held together by ball magnets in a baseplate, and inserts with mirrors, lenses or a sample holder slide into the cubes. The model shows the mechanical version of the simple smartphone microscope from the authors’ guide: an objective in a focusing cube (Z-stage), two 45° mirrors, an eyepiece with a phone holder and a sample holder above the objective. This setup has no electronics and no software.',
+      bomCost: '≈ 65 EUR (the authors’ estimate for this setup)', software: 'None for this setup (mechanical version)',
+      card: [['Cube', '50 mm'], ['Setup', 'smartphone microscope']],
+      bom: [['Microscope objective (e.g. 10×, NA 0.25)', '1×'], ['Eyepiece (e.g. 20×)', '1×'], ['Mirror (e.g. 30 × 30 mm)', '2×'], ['Ball magnet 5 mm', '32–36×'], ['M3 × 12 screw (DIN 912)', '32–56×'], ['M3 × 8 screw (DIN 912, galvanised steel)', '7×'], ['M3 × 30 screw and M3 nut, non-magnetic', '1×'], ['Smartphone', '1×']],
+      specs: [['Cube', '50 mm, printed or injection-moulded'], ['Connection', '5 mm ball magnets in the baseplate'], ['Modules in this setup', 'Z-stage, 2× 45° mirror, eyepiece with phone holder, sample holder, 2 empty cubes'], ['Focusing', 'coarse ≈ 30 mm by sliding the objective, fine ≈ ±6 mm with a gear'], ['Optics', 'objective (160 mm from the mirror) + eyepiece'], ['Electronics', 'none (mechanical version)']] },
     sesame: { credit: 'Render from the Sesame Robot Project model (Apache-2.0)', type: 'Quadruped robot', alt: 'Small Sesame quadruped robot with eight micro servos',
       short: 'Small four-legged robot with eight micro servos, an ESP32 and an OLED display that serves as its face.',
       lead: 'A small printable quadruped focused on movement and expression. Two MG90S (180°) micro servos drive each leg, an ESP32 (Lolin S2 Mini or the Sesame Distro Board) controls it, and a 128×64 OLED display draws a face that changes with the motion. It is controlled over Wi-Fi from a web interface or a JSON API, or alternatively from a serial console over USB; animations are composed in the Sesame Studio app. According to the author, basic soldering and familiarity with the Arduino IDE are enough.',
@@ -150,6 +158,22 @@ window.PR_EN = {
       card: [['Axes', '5 + gripper'], ['Actuators', 'Dynamixel']],
       bom: [['Dynamixel XL430-W250-T servo (follower)', '2×'], ['Dynamixel XL330-M288-T servo (follower)', '4×'], ['Dynamixel XL330-M077-T servo (leader)', '6×'], ['FPX330-H101 frame and idler set, 4 pcs (follower)', '1×'], ['FPX330-H101 frame and idler set, 4 pcs (leader)', '1×'], ['HN11-I101 idler set (follower)', '1×'], ['Waveshare Serial Bus Servo Driver board (follower)', '1×'], ['Waveshare Serial Bus Servo Driver board (leader)', '1×'], ['DC-DC voltage converter (follower)', '1×'], ['12 V power supply (follower)', '1×'], ['5 V power supply (leader)', '1×'], ['Table clamp (follower)', '1×'], ['Table clamp (leader)', '1×'], ['USB-C cable (follower)', '1×'], ['USB-C cable (leader)', '1×'], ['Jumper wires (see the project BOM)', '1 set']],
       specs: [['Degrees of freedom', '5 axes + gripper'], ['Follower actuators', '2× XL430-W250-T, 4× XL330-M288-T'], ['Leader actuators', '6× XL330-M077-T'], ['Power', 'follower 12 V, leader 5 V'], ['Assembly', 'no soldering, following the project’s assembly video'], ['Print', 'PLA+, ABS or PETG; 0.2 mm layers, ≈ 30 % infill']] },
+    sidekick: { author: 'Rodolfo Keesey et al.', mats: [['petg', 'PETG (or PLA)', 'Per project']], credit: 'Render from the Sidekick parts (CERN-OHL-S-2.0); feet and tube holder omitted, motors, pumps and electronics not modelled', type: 'Liquid dispensing robot',
+      alt: 'Sidekick desktop liquid dispensing robot with its arm over a microplate holder',
+      short: 'Desktop robot that dispenses liquids into a 96-well plate. A jointed arm over the plate, four 10 µL pumps.',
+      lead: 'A desktop robot for dispensing liquids into standard microplates (SBS, 96 wells). Two flat NEMA 17 stepper motors swing a jointed arm over the plate, and the tubes from four solenoid pumps by The Lee Company end at its tip. The pumps dispense in 10 µL steps. A Raspberry Pi Pico runs a MicroPython program, and you control it with simple commands over USB. The frame is fully printed; the authors recommend PETG. The pumps are the most expensive part (4 × USD 135 in the 2022 bill of materials). The authors also put the Pico code under the hardware licence (CERN-OHL-S-2.0).',
+      bomCost: '≈ USD 710 (4 pumps, authors’ prorated price 2/2022; ≈ USD 830 when buying whole packs)', software: 'MicroPython (Raspberry Pi Pico), commands over USB',
+      card: [['Pumps', '4 × 10 µL'], ['Plate', '96 wells (SBS)']],
+      bom: [['The Lee Company LPMA1250110L pump (10 µL)', '4×'], ['Flat NEMA 17 stepper motor, 0.9°', '2×'], ['TMC2209 stepper driver', '2×'], ['Raspberry Pi Pico', '1×'], ['ULN2803A Darlington array', '1×'], ['Sidekick circuit board (made from the project files)', '1×'], ['623-2Z bearing (3 × 10 × 4 mm)', '3×'], ['Limit switch', '2×'], ['Push button', '1×'], ['12 V power supply', '1×'], ['PTFE tubing 1/16″ and 1/8″', '1 set'], ['M2–M4 screws', '1 set'], ['PETG filament', '1 kg']],
+      specs: [['Dispensing', '4 pumps, 10 µL steps'], ['Motion', 'jointed arm, 2× NEMA 17 (0.9°)'], ['Control', 'Raspberry Pi Pico, MicroPython, TMC2209 drivers'], ['Power', '12 V supply'], ['Plate', 'SBS, 96 wells'], ['Print', 'PETG (or PLA), 20 % infill, with supports'], ['Print time', '—']] },
+    poseidon: { mats: [['pla', 'PLA', 'Per project']], credit: 'Render from the poseidon parts (BSD-2-Clause): one pump; cover slide and syringe brace omitted, motor, rods and syringe not modelled', type: 'Syringe pump',
+      author: 'Pachter Lab, Caltech – A. Sina Booeshaghi et al.', alt: 'Printed body of the Poseidon syringe pump with its sliding carriage',
+      short: 'Syringe pump for microfluidics: a stepper motor moves a carriage that pushes the syringe. One controller runs up to three pumps.',
+      lead: 'An open syringe pump from the Pachter Lab at Caltech, made mainly for microfluidics. A NEMA 17 stepper motor turns an M5 threaded rod that moves a carriage on two steel guide rods with linear bearings; the carriage pushes the syringe plunger. An Arduino with a CNC shield drives up to three pumps, controlled from a Python GUI on a computer or a Raspberry Pi. The system also includes a microscope (not in the model). The printed parts are PLA.',
+      bomCost: '≈ USD 175 for 3 pumps (authors’ bill of materials, prices from 1/2019); the whole system with the microscope under USD 400', software: 'Python (PyQt5) + Arduino firmware',
+      card: [['Drive', 'NEMA 17 + M5 thread'], ['Control', 'Arduino + CNC shield']],
+      bom: [['NEMA 17 stepper motor (40 mm, 45 Ncm)', '1× per pump'], ['5 mm / 5 mm shaft coupling', '1× per pump'], ['6 mm steel rod, 200 mm long', '2× per pump'], ['6 mm linear bearing', '2× per pump'], ['M5 × 0.8 threaded rod, 170 mm long, and M5 nut', '1× per pump'], ['M3 × 20 and M3 × 10 screws, M3 nuts', '4 + 2 + 2× per pump'], ['M5 knob (holds the syringe)', '1× per pump'], ['Arduino + CNC shield (for up to 3 pumps)', '1×'], ['12 V power supply', '1×'], ['Syringe', '1× per pump']],
+      specs: [['Drive', 'NEMA 17, M5 × 0.8 threaded rod'], ['Guides', '2× 6 mm steel rod, linear bearings'], ['Control', 'Arduino + CNC shield (DRV8825), 1/32 microstepping'], ['Pumps per board', 'up to 3'], ['Power', '12 V supply'], ['Pressure', 'up to 4 MPa with a 1 mL syringe, according to the authors'], ['Print', 'PLA'], ['Print time', '—']] },
     rc128: { credit: 'Render from the open-128-rc-car FreeCAD files by Kurtis Kopf (CC BY 4.0), wheels placed by us', type: '1:28 RC car', alt: 'Small printed 1:28 RC car with a 130 motor at the rear and a steering servo at the front',
       short: 'Low-cost printed 1:28 RC car for school teams: flat chassis, 130 motor and micro servo, driven with a standard RC transmitter.',
       lead: 'A small 1:28 car designed by a high-school team coach so that a school can build several cars for little money. The chassis is one printed plate, a micro servo steers, and a brushed 130 motor drives the rear axle through 10/42-tooth gears. It runs on a 2S battery (6–8 V): LiPo, Li-ion, or the safer AA-size LiFePO4. It is driven with a standard RC transmitter, with no programming. The guide also covers faster variants which, according to the author, keep up with box-stock 1:28 cars. A LiPo battery needs care – see Safety.',
@@ -202,6 +226,7 @@ window.PR_EN = {
     ['GPL-3.0', 'c', 'Yes, with a condition', 'Source files of modified parts and firmware available'],
     ['CERN-OHL-P-2.0', 'y', 'Yes', 'Credit to the authors and the licence'],
     ['CERN-OHL-W / -S 2.0', 'c', 'Yes, with a condition', 'We publish the sources of the modified design'],
+    ['CERN-OHL-1.2', 'c', 'Yes, with a condition', 'Licence copy, dated change notice, modified sources under the same licence'],
     ['CC BY-NC / custom NC', 'n', 'No', 'Only with the author’s written permission']
   ]
 };
@@ -237,12 +262,15 @@ window.PR_EN_APPLY = function () {
     if (/\b(24|22,2|14,8) ?V\b|\d+ ?Nm/.test(all)) w.push('Strong motors: a moving arm can cause injury. Keep your hands out of reach during bring-up and keep the power switch within reach.');
     if (/pneumatick|stlačen/i.test(all)) w.push('The pneumatic gripper runs on compressed air – use only an approved air supply and hoses.');
     if (/230 ?V|síťov/i.test(all)) w.push('A mains-powered (230 V) supply may only be wired by a qualified person.');
+    if (/(^|[^a-zá-ž])magnet(?!ick)/i.test(all)) w.push('Contains small strong magnets: swallowing more than one can seriously injure the intestines. Keep away from small children. If swallowed, seek medical help immediately.');
     if (r.cat === 'combat') {
       w.push('Only power up a combat robot in an enclosed arena or with the weapon disconnected. Switch on the transmitter first, then the robot; switch off in reverse order, and check the failsafe before the first fight (the robot must stop when the transmitter is turned off).');
       if (/spinner|rotuj/i.test(all)) w.push('A spinning weapon can cause serious injury and throw debris: always lock it outside the arena and never spin it up in your hand or on a table.');
       if (/flipper/i.test(all)) w.push('The flipper moves violently: keep your fingers out of its path when handling the robot.');
     }
-    w.push('Power the hardware only from the supply specified in the project instructions.');
+    if (o.liquids) w.push('Lab device: keep liquids away from the electronics and the power supply, and use chemicals and biological material only under your lab’s rules and with supervision. PLA or PETG printed parts may not withstand organic solvents. Test the device dry, without liquids, first.');
+    if (o.syringe) w.push('A syringe pump builds up high pressure: if a tube clogs, the syringe or a fitting can burst and spray liquid. Set the motor driver current as the authors describe and wear safety glasses.');
+    if (!o.noElectronics) w.push('Power the hardware only from the supply specified in the project instructions.');
     return w;
   };
   W.PR_SPECS = function (r) {

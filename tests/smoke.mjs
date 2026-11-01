@@ -251,12 +251,28 @@ await check('legacy sada.html redirects', '/sada.html?r=svrn', async p => {
   await p.goto(BASE + '/sada.html'); await p.waitForURL(/\/#katalog$/);
 });
 
-for (const id of ['so101', 'svrn', 'vert150']) {
+for (const id of ['so101', 'svrn', 'vert150', 'uc2', 'sidekick', 'poseidon']) {
   await check('product ' + id, `/sada/${id}/`, async p => {
     await p.waitForSelector('h1');
     if (!(await p.locator('h1').first().innerText()).trim()) throw new Error('empty h1');
   });
 }
+// lab category (Laboratoř): its own filter, UC2 card, a kit page in the lab crumb without a simulation, no serious axe issues
+await check('catalog lab filter', '/?typ=lab', async p => {
+  await p.waitForSelector('#filters .filter[data-f="lab"][aria-pressed="true"]');
+  const hrefs = await p.locator('#cards a.card').evaluateAll(as => as.map(a => a.getAttribute('href')));
+  const LAB = /sada\/(uc2|sidekick|poseidon)\/$/;
+  if (!hrefs.length || !hrefs.every(h => LAB.test(h) || !/sada\//.test(h)) || !['uc2', 'sidekick', 'poseidon'].every(id => hrefs.some(h => h.endsWith('sada/' + id + '/')))) throw new Error('lab cards: ' + hrefs.join(', '));
+});
+await check('kit uc2: lab crumb, no sim, axe', '/sada/uc2/', async p => {
+  await p.waitForSelector('h1');
+  if ((await p.locator('#crumb-cat').innerText()).trim() !== 'Laboratoř') throw new Error('crumb');
+  if (await p.locator('#sim-cta').count()) throw new Error('lab device must not link a simulation');
+  await p.addScriptTag({ content: AXE });
+  const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
+  const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+  if (bad.length) throw new Error('axe: ' + bad.map(v => `${v.id} (${v.nodes.length}) ${v.nodes[0].target}`).join('; '));
+});
 await check('parol6 keeps the pneumatic-gripper warning', '/sada/parol6/', async p => {
   await p.waitForSelector('h1');
   if (!/stlačeným vzduchem/.test(await p.locator('body').textContent())) throw new Error('gripper warning missing');
