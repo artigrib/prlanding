@@ -4,7 +4,7 @@
 // prices stay as in data.js (prices are copied, never invented). Metric units, decimal points.
 window.PR_EN = {
   colors: { white: 'White', grey: 'Grey', black: 'Black', orange: 'Orange', blue: 'Blue' },
-  cats: { arm: 'Arms and hands', mobile: 'Mobile', legged: 'Walking', desk: 'Desktop', combat: 'Combat robots' },
+  cats: { arm: 'Arms and hands', mobile: 'Mobile', legged: 'Walking', desk: 'Desktop', combat: 'Combat robots', lab: 'Lab' },
   levels: { 'Začátečník': 'Beginner', 'Střední': 'Intermediate', 'Pokročilý': 'Advanced' },
   robots: {
     so101: { type: 'Robot arm', author: 'The Robot Studio and Hugging Face', alt: 'SO-101 robot arm',
@@ -135,7 +135,15 @@ window.PR_EN = {
       lead: 'Five-finger hand with 17 degrees of freedom: 16 finger joints and one in the wrist. The fingers are pulled by tendons running through PTFE tubes from spools on the servos, which sit in a tower below the wrist. The project supports both Dynamixel and Feetech servos. You cast the finger and palm skin in silicone using printed molds, or print it faster in TPU. The Touch variant has tactile sensors in the fingertips. It is controlled from Python with the orca_core library.',
       card: [['Axes', '17 DOF'], ['Drive', 'tendons, 17 servos']],
       bom: [['Finger servo: Dynamixel XC330 or Feetech HLS3915', '16×'], ['Wrist servo: Dynamixel XC430 or Feetech HLS3930', '1×'], ['USB adapter: U2D2 (Dynamixel), or CH340 / CP210x (Feetech)', '1×'], ['Power Hub Board and 12 V adapter (Dynamixel build)', '1+1×'], ['Motor connector board (Gerber in the repository)', '12×'], ['Tower cooling fan', '2×'], ['Tendon line', '—'], ['PTFE tube for the tendons', '—'], ['GT2 wrist timing belt (GT2-142 in the CAD)', '1×'], ['Machined spool holder (drawing in 06_CNC)', '4×'], ['Threaded rod (FrankaConnector mounting part)', '2×'], ['4×8×3 and 8×13×4 mm bearings', '—'], ['2 mm and 3×50 mm pins, screws and nuts', '1 set'], ['Silicone for the skin (or TPU filament)', '—']],
-      specs: [['Degrees of freedom', '17 (wrist + 16 in the fingers)'], ['Finger joints', 'thumb 4, other fingers 3 (abduction, MCP, PIP)'], ['Actuators', '17 Dynamixel or Feetech servos, tendons in PTFE tubes'], ['Skin', 'silicone cast in printed molds, or printed in TPU'], ['Variants', 'base; Touch with tactile sensors in the fingertips'], ['Simulation', 'URDF and MJCF (orcahand_description)'], ['Guide', 'the authors’ video and ASSEMBLY_ADDENDUM.md in the repository'], ['Print', 'Bambu Studio projects with ready-made plates'], ['Print time', '—']] }
+      specs: [['Degrees of freedom', '17 (wrist + 16 in the fingers)'], ['Finger joints', 'thumb 4, other fingers 3 (abduction, MCP, PIP)'], ['Actuators', '17 Dynamixel or Feetech servos, tendons in PTFE tubes'], ['Skin', 'silicone cast in printed molds, or printed in TPU'], ['Variants', 'base; Touch with tactile sensors in the fingertips'], ['Simulation', 'URDF and MJCF (orcahand_description)'], ['Guide', 'the authors’ video and ASSEMBLY_ADDENDUM.md in the repository'], ['Print', 'Bambu Studio projects with ready-made plates'], ['Print time', '—']] },
+    uc2: { credit: 'Render from openUC2 parts (CERN-OHL-1.2): simple smartphone microscope, mechanical version', type: 'Modular optics kit',
+      author: 'openUC2 (B. Diederich et al.)', alt: 'Smartphone microscope built from printed UC2 cubes on a baseplate',
+      short: 'Optics experiments from printed 50 mm cubes. The model shows the simple smartphone microscope.',
+      lead: 'An open toolbox for optics and microscopy: printed 50 mm cubes are held together by ball magnets in a baseplate, and inserts with mirrors, lenses or a sample holder slide into the cubes. The model shows the mechanical version of the simple smartphone microscope from the authors’ guide: an objective in a cube with manual focusing (Z-stage), two 45° mirrors, an eyepiece with a phone holder and a sample holder above the objective. This setup has no electronics and no software.',
+      bomCost: '≈ 65 EUR (the authors’ estimate for this setup)', software: 'None for this setup (mechanical version)',
+      card: [['Cube', '50 mm'], ['Setup', 'smartphone microscope']],
+      bom: [['Microscope objective (e.g. 10×, NA 0.25)', '1×'], ['Eyepiece (e.g. 20×)', '1×'], ['Mirror 30 × 30 mm', '2×'], ['Ball magnet 5 mm', '32–36×'], ['M3 × 12 screw (DIN 912)', '32–56×'], ['M3 × 8 screw (DIN 912, galvanised steel)', '7×'], ['M3 × 30 screw and M3 nut, non-magnetic', '1×'], ['Smartphone', '1×']],
+      specs: [['Cube', '50 mm, printed or injection-moulded'], ['Connection', '5 mm ball magnets in the baseplate'], ['Modules in this setup', 'Z-stage, 2× 45° mirror, eyepiece with phone holder, sample holder, 2 empty cubes'], ['Focusing', 'coarse ≈ 30 mm by sliding the objective, fine ≈ ±6 mm with a gear'], ['Optics', 'objective with 160 mm tube length + eyepiece'], ['Electronics', 'none (mechanical version)']] }
   },
   // shared values that several robots use verbatim
   values: { 'Robotická ruka': 'Robot arm', 'Rover': 'Rover', 'LeRobot (Python)': 'LeRobot (Python)', 'Python / Arduino': 'Python / Arduino', 'ROS / Python': 'ROS / Python', 'GRBL, ROS 2': 'GRBL, ROS 2', 'LeRobot, ManiSkill': 'LeRobot, ManiSkill', 'Isaac Lab, MuJoCo (Python)': 'Isaac Lab, MuJoCo (Python)', 'ROS 2 (Python), Raspberry Pi': 'ROS 2 (Python), Raspberry Pi', 'PAROL6 Commander, Python API, ROS 2 / MoveIt': 'PAROL6 Commander, Python API, ROS 2 / MoveIt' },
@@ -202,6 +210,7 @@ window.PR_EN_APPLY = function () {
     if (/\b(24|22,2|14,8) ?V\b|\d+ ?Nm/.test(all)) w.push('Strong motors: a moving arm can cause injury. Keep your hands out of reach during bring-up and keep the power switch within reach.');
     if (/pneumat/i.test(all)) w.push('The pneumatic gripper runs on compressed air – use only an approved air supply and hoses.');
     if (/230 ?V|síťov/i.test(all)) w.push('A mains-powered (230 V) supply may only be wired by a qualified person.');
+    if (/magnet/i.test(all)) w.push('Contains small strong magnets: swallowing more than one can seriously injure the intestines. Keep away from small children.');
     if (r.cat === 'combat') {
       w.push('Only power up a combat robot in an enclosed arena or with the weapon disconnected. Switch on the transmitter first, then the robot; switch off in reverse order, and check the failsafe before the first fight (the robot must stop when the transmitter is turned off).');
       if (/spinner|rotuj/i.test(all)) w.push('A spinning weapon can cause serious injury and throw debris: always lock it outside the arena and never spin it up in your hand or on a table.');

@@ -251,12 +251,27 @@ await check('legacy sada.html redirects', '/sada.html?r=svrn', async p => {
   await p.goto(BASE + '/sada.html'); await p.waitForURL(/\/#katalog$/);
 });
 
-for (const id of ['so101', 'svrn', 'vert150']) {
+for (const id of ['so101', 'svrn', 'vert150', 'uc2']) {
   await check('product ' + id, `/sada/${id}/`, async p => {
     await p.waitForSelector('h1');
     if (!(await p.locator('h1').first().innerText()).trim()) throw new Error('empty h1');
   });
 }
+// lab category (Laboratoř): its own filter, UC2 card, a kit page in the lab crumb without a simulation, no serious axe issues
+await check('catalog lab filter', '/?typ=lab', async p => {
+  await p.waitForSelector('#filters .filter[data-f="lab"][aria-pressed="true"]');
+  const hrefs = await p.locator('#cards a.card').evaluateAll(as => as.map(a => a.getAttribute('href')));
+  if (!hrefs.length || !hrefs.every(h => /sada\/uc2\/$/.test(h) || !/sada\//.test(h)) || !hrefs.some(h => /sada\/uc2\/$/.test(h))) throw new Error('lab cards: ' + hrefs.join(', '));
+});
+await check('kit uc2: lab crumb, no sim, axe', '/sada/uc2/', async p => {
+  await p.waitForSelector('h1');
+  if ((await p.locator('#crumb-cat').innerText()).trim() !== 'Laboratoř') throw new Error('crumb');
+  if (await p.locator('#sim-cta').count()) throw new Error('lab device must not link a simulation');
+  await p.addScriptTag({ content: AXE });
+  const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
+  const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+  if (bad.length) throw new Error('axe: ' + bad.map(v => `${v.id} (${v.nodes.length}) ${v.nodes[0].target}`).join('; '));
+});
 
 // content pages: schools + guides. Structured data matches the page, no prices, nav link from every header
 const ldOf = html => [...html.matchAll(/<script type="application\/ld\+json">([^<]*)<\/script>/g)].map(m => JSON.parse(m[1]));

@@ -6,7 +6,7 @@ window.PR_COLORS = [
   { id: 'orange', name: 'Oranžová', hex: '#E8461E' },
   { id: 'blue', name: 'Modrá', hex: '#1F3BFF' }
 ];
-window.PR_CATS = { arm: 'Ruce a dlaně', mobile: 'Mobilní', legged: 'Kráčející', desk: 'Stolní', combat: 'Bojoví roboti' };
+window.PR_CATS = { arm: 'Ruce a dlaně', mobile: 'Mobilní', legged: 'Kráčející', desk: 'Stolní', combat: 'Bojoví roboti', lab: 'Laboratoř' };
 window.PR_ROBOTS = [
   { id: 'so101', glb: true, sim: 'so101', name: 'SO-101', type: 'Robotická ruka', cat: 'arm', level: 'Začátečník', hw: 'Apache-2.0', sw: 'Apache-2.0',
     author: 'The Robot Studio a Hugging Face', render: true, alt: 'Robotická ruka SO-101',
@@ -212,7 +212,21 @@ window.PR_ROBOTS = [
     specs: [['Stupně volnosti', '17 (zápěstí + 16 v prstech)'], ['Klouby prstů', 'palec 4, ostatní prsty 3 (abdukce, MCP, PIP)'], ['Pohon', '17 serv Dynamixel nebo Feetech, šlachy v PTFE trubičkách'], ['Kůže', 'silikon odlitý do tištěných forem, nebo tisk z TPU'], ['Varianty', 'základní; Touch s hmatovými senzory ve špičkách prstů'], ['Simulace', 'URDF a MJCF (orcahand_description)'], ['Návod', 'video autorů a doplněk ASSEMBLY_ADDENDUM.md v repozitáři'], ['Tisk', 'projekty Bambu Studio s připravenými podložkami'], ['Doba tisku', '—']],
     license: { hw: 'CC-BY-4.0', sw: 'MIT', trademark: true, status: 'verified', checked: '2026-11-01',
       sources: ['https://github.com/orcahand/orcahand_hardware/blob/main/LICENSE', 'https://github.com/orcahand/orca_core/blob/main/LICENSE'] },
-    related: ['hand', 'so101', 'aira'] }
+    related: ['hand', 'so101', 'aira'] },
+  // Lab devices (cat 'lab'): no simulation. Model = the author's UC2 v2 STL files (TheBOX/SimpleBOX/BUILD_ME/STL) placed on the
+  // 50 mm grid per APPLICATIONS/APP_SIMPLE-Smartphone_Microscope/mechanical/Readme.md; optics, magnets and screws not modelled.
+  { id: 'uc2', glb: true, render: true, credit: 'Vizualizace z dílů openUC2 (CERN-OHL-1.2): jednoduchý mikroskop pro telefon, mechanická verze', name: 'UC2', type: 'Modulární optická stavebnice', cat: 'lab', level: 'Začátečník', hw: 'CERN-OHL-1.2', sw: 'MIT',
+    author: 'openUC2 (B. Diederich a kol.)', alt: 'Mikroskop pro chytrý telefon složený z tištěných kostek UC2 na základní desce',
+    short: 'Optické pokusy z tištěných kostek o hraně 50 mm. Model ukazuje jednoduchý mikroskop pro chytrý telefon.',
+    lead: 'Otevřený modulární systém pro optiku a mikroskopii: tištěné kostky o hraně 50 mm drží pohromadě kuličkové magnety v základní desce a do kostek se zasouvají vložky se zrcadly, čočkami nebo držákem vzorku. Model ukazuje mechanickou verzi jednoduchého mikroskopu pro chytrý telefon podle návodu autorů: objektiv v kostce s ručním zaostřováním (Z-stage), dvě zrcadla pod 45°, okulár s držákem telefonu a držák vzorku nad objektivem. Tato sestava nemá elektroniku ani software.',
+    bomCost: '≈ 65 EUR (odhad autorů pro tuto sestavu)', printTime: '—', software: 'Pro tuto sestavu žádný (mechanická verze)',
+    repo: 'https://github.com/openUC2/UC2-GIT', docs: 'https://github.com/openUC2/UC2-GIT/tree/master/APPLICATIONS/APP_SIMPLE-Smartphone_Microscope/mechanical',
+    card: [['Kostka', '50 mm'], ['Sestava', 'mikroskop pro telefon']],
+    bom: [['Objektiv mikroskopu (např. 10×, NA 0,25)', '1×'], ['Okulár (např. 20×)', '1×'], ['Zrcátko 30 × 30 mm', '2×'], ['Kuličkový magnet 5 mm', '32–36×'], ['Šroub M3 × 12 (DIN 912)', '32–56×'], ['Šroub M3 × 8 (DIN 912, pozinkovaný)', '7×'], ['Šroub M3 × 30 a matice M3, nemagnetické', '1×'], ['Chytrý telefon', '1×']],
+    specs: [['Kostka', '50 mm, tištěná nebo vstřikovaná'], ['Spojení', 'kuličkové magnety 5 mm v základní desce'], ['Moduly sestavy', 'Z-stage, 2× zrcadlo 45°, okulár s držákem telefonu, držák vzorku, 2 prázdné kostky'], ['Zaostření', 'hrubé ≈ 30 mm posunem objektivu, jemné ≈ ±6 mm ozubeným kolem'], ['Optika', 'objektiv s tubusovou délkou 160 mm + okulár'], ['Elektronika', 'žádná (mechanická verze)']],
+    license: { hw: 'CERN-OHL-1.2', sw: 'MIT', status: 'verified', checked: '2026-11-01',
+      sources: ['https://github.com/openUC2/UC2-GIT/blob/master/License.md'] },
+    related: ['stackchan', 'otto', 'so101'] }
 ];
 // Browser demos linked from product pages (r.sim). colorParam: the sim reads ?color= (so101 does not yet).
 // Sizes = uncompressed bytes of a first visit (all responses until the sim is idle, Chromium, empty cache);
@@ -232,6 +246,7 @@ window.PR_SAFETY = function (r) {
   if (/\b(24|22,2|14,8) ?V\b|\d+ ?Nm/.test(all)) w.push('Silné motory: pohybující se rameno může způsobit zranění. Při oživování držte ruce mimo dosah a mějte po ruce vypínač napájení.');
   if (/pneumat/i.test(all)) w.push('Pneumatické chapadlo pracuje se stlačeným vzduchem – používejte jen schválený zdroj a hadice.');
   if (/230 ?V|síťov/i.test(all)) w.push('Zdroj připojený k síti 230 V smí zapojovat jen osoba s odpovídající kvalifikací.');
+  if (/magnet/i.test(all)) w.push('Obsahuje malé silné magnety: spolknutí více kusů může vážně poškodit střeva. Uchovávejte mimo dosah malých dětí.');
   if (r.cat === 'combat') {
     w.push('Bojového robota zapínejte jen v uzavřené aréně nebo s odpojenou zbraní. Nejdřív zapněte vysílač, potom robota; vypínejte v opačném pořadí a před prvním zápasem ověřte failsafe (po vypnutí vysílače se robot musí zastavit).');
     if (/spinner|rotuj/i.test(all)) w.push('Rotující zbraň může vážně zranit a vymrštit úlomky: mimo arénu ji vždy zajistěte a nikdy ji neroztáčejte v ruce ani na stole.');
@@ -306,7 +321,7 @@ window.PR_LICENSE_CLASS = function (id) {
   if (/PROPRIETARY|ALL-RIGHTS|LICENSEREF/.test(s)) return 'proprietary';
   if (/(^|-)NC(-|$)/.test(s) || /NONCOMMERCIAL/.test(s)) return 'nc';
   if (/(^|-)ND(-|$)/.test(s)) return 'nd';
-  if (/^(A?GPL|LGPL|CERN-OHL-[WS])|^CC-BY-SA|^MPL|^EUPL|^TAPR-OHL/.test(s)) return 'copyleft';
+  if (/^(A?GPL|LGPL|CERN-OHL-[WS]|CERN-OHL-1\.[12]$)|^CC-BY-SA|^MPL|^EUPL|^TAPR-OHL/.test(s)) return 'copyleft';
   if (/^(MIT|APACHE|BSD|ISC|ZLIB|0BSD|UNLICENSE|CC0|CC-BY(-[0-9.]+)?$|CERN-OHL-P|SOLDERPAD)/.test(s)) return 'permissive';
   return 'unknown';
 };
