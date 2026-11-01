@@ -766,3 +766,5 @@ code.call,.path code,.step-k code,.tl-k,.tl-meta code{font-family:var(--mono);fo
   .doc .g>.reg{grid-column:1 / -1}
 }
 @media (max-width:420px){.reg-f{grid-template-columns:minmax(0,1fr)}}
+.reg-na{color:var(--mute)}
+.reg-b-thin{border-style:dashed;color:var(--ink-2)}

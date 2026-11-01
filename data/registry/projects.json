@@ -1140,7 +1140,7 @@
   "cad": "https://github.com/LibreScanner/ciclop",
   "licenses": {
    "hardware": "CC-BY-SA-4.0",
-   "software": "GPL-2.0 (Horus, unverified)",
+   "software": "unknown",
    "docs": "CC-BY-SA-4.0"
   },
   "rights_class": "copyleft",
@@ -1172,6 +1172,12 @@
   "unverified": [
    "Horus license",
    "original bqlabs/ciclop repo status"
+  ],
+  "notes": [
+   {
+    "field": "licenses.software",
+    "text": "was: GPL-2.0 (Horus, unverified)"
+   }
   ]
  },
  {
@@ -1398,11 +1404,11 @@
   "repo": "https://github.com/raunaqbhirangi/anyskin",
   "cad": null,
   "licenses": {
-   "hardware": "MIT (software repo)",
+   "hardware": "unknown",
    "software": "MIT",
    "docs": "unknown"
   },
-  "rights_class": "permissive",
+  "rights_class": "unknown",
   "printed_share": "low",
   "actuation": "none (sensor)",
   "control": "Arduino (QT Py) + Python anyskin library",
@@ -1435,6 +1441,14 @@
   "unverified": [
    "hardware/mold license",
    "printed share"
+  ],
+  "rights_class_census": "permissive",
+  "rights_note": "hardware licence not established; the census class \"permissive\" came from the MIT licence of the software repo",
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "was: MIT (software repo)"
+   }
   ]
  },
  {
@@ -1643,7 +1657,7 @@
   "cad": null,
   "licenses": {
    "hardware": "CC-BY-4.0",
-   "software": "RepRapFirmware (Duet) - not verified",
+   "software": "unknown",
    "docs": "CC-BY-4.0 (same license.txt)"
   },
   "rights_class": "permissive",
@@ -1688,6 +1702,12 @@
    "stars",
    "firmware license",
    "printed share %"
+  ],
+  "notes": [
+   {
+    "field": "licenses.software",
+    "text": "was: RepRapFirmware (Duet) - not verified"
+   }
   ]
  },
  {
@@ -1699,11 +1719,11 @@
   "repo": "https://github.com/machineagency/science-jubilee",
   "cad": null,
   "licenses": {
-   "hardware": "CC-BY-4.0 (Jubilee base); tool CAD license not verified",
+   "hardware": "CC-BY-4.0 (Jubilee base)",
    "software": "MIT",
    "docs": "unknown"
   },
-  "rights_class": "permissive",
+  "rights_class": "unknown",
   "printed_share": "medium",
   "actuation": "Jubilee steppers + tool-specific actuators (pipette tool)",
   "control": "Python API (science_jubilee) over Duet/RPi",
@@ -1744,6 +1764,14 @@
   "unverified": [
    "tool CAD license",
    "docs license"
+  ],
+  "rights_class_census": "permissive",
+  "rights_note": "CC-BY-4.0 covers the Jubilee base only; the licence of the tool CAD files is not established",
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "was: CC-BY-4.0 (Jubilee base); tool CAD license not verified"
+   }
   ]
  },
  {
@@ -1903,7 +1931,7 @@
   "repo": "https://github.com/mtu-most/linear-actuator",
   "cad": null,
   "licenses": {
-   "hardware": "unknown (not stated on wiki)",
+   "hardware": "unknown",
    "software": "unknown",
    "docs": "unknown"
   },
@@ -1936,6 +1964,12 @@
   "unverified": [
    "license",
    "last commit"
+  ],
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "note: not stated on wiki"
+   }
   ]
  },
  {
@@ -1996,7 +2030,7 @@
   "repo": "https://github.com/ngkengwooi/ottomate",
   "cad": "https://www.printables.com/model/1346514-otto-franz-diffusion-cell-autosampler-printable-pa",
   "licenses": {
-   "hardware": "unknown (Mendeley/Printables terms not verified)",
+   "hardware": "unknown",
    "software": "CC-BY-4.0 (OttoMate app LICENSE)",
    "docs": "unknown"
   },
@@ -2033,6 +2067,12 @@
   "unverified": [
    "hardware license",
    "cost"
+  ],
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "note: Mendeley/Printables terms not verified"
+   }
   ]
  },
  {
@@ -2196,7 +2236,7 @@
   },
   "rights_class": "unknown",
   "printed_share": "unknown",
-  "actuation": "unknown (robot arm based - not verified)",
+  "actuation": "unknown",
   "control": "unknown",
   "bom_cost": null,
   "maturity": {
@@ -2228,6 +2268,12 @@
    "license",
    "arm",
    "cost"
+  ],
+  "notes": [
+   {
+    "field": "actuation",
+    "text": "note: robot arm based - not verified"
+   }
   ]
  },
  {
@@ -2368,11 +2414,11 @@
   "repo": "https://doi.org/10.5281/zenodo.7496012",
   "cad": null,
   "licenses": {
-   "hardware": "CC-BY-4.0 (Replistruder 4 Zenodo); bioprinter files license not verified",
+   "hardware": "CC-BY-4.0 (Replistruder 4 Zenodo record)",
    "software": "unknown",
    "docs": "unknown"
   },
-  "rights_class": "permissive",
+  "rights_class": "unknown",
   "printed_share": "medium",
   "actuation": "Stepper syringe extruder; FlashForge Finder motion",
   "control": "Duet 2 WiFi (RepRapFirmware)",
@@ -2404,6 +2450,14 @@
   ],
   "unverified": [
    "bioprinter files license"
+  ],
+  "rights_class_census": "permissive",
+  "rights_note": "CC-BY-4.0 covers the Replistruder 4 Zenodo record only; the licence of the bioprinter conversion files is not established",
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "was: CC-BY-4.0 (Replistruder 4 Zenodo); bioprinter files license not verified"
+   }
   ]
  },
  {
@@ -2606,7 +2660,7 @@
   "repo": "https://github.com/FYNCH-BIO/evolver",
   "cad": "https://github.com/FYNCH-BIO/hardware",
   "licenses": {
-   "hardware": "unknown (FYNCH-BIO/hardware has no LICENSE file)",
+   "hardware": "unknown",
    "software": "MIT (evolver, dpu)",
    "docs": "unknown"
   },
@@ -2651,6 +2705,12 @@
   "unverified": [
    "printed share",
    "hardware license"
+  ],
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "note: FYNCH-BIO/hardware has no LICENSE file"
+   }
   ]
  },
  {
@@ -2720,7 +2780,7 @@
   },
   "rights_class": "unknown",
   "printed_share": "medium",
-  "actuation": "LED lighting, pumps/aeration (not verified); OD/fluorescence sensing",
+  "actuation": "LED lighting, pumps/aeration; OD/fluorescence sensing",
   "control": "Firmware + Software dirs in repo",
   "bom_cost": null,
   "maturity": {
@@ -2752,6 +2812,12 @@
    "actuators",
    "license clarity",
    "cost"
+  ],
+  "notes": [
+   {
+    "field": "actuation",
+    "text": "was: LED lighting, pumps/aeration (not verified); OD/fluorescence sensing"
+   }
   ]
  },
  {
@@ -2822,7 +2888,7 @@
    "paper": null,
    "docs_quality": "good"
   },
-  "sim_model": "URDF+MJCF in repo (Simulation folder) - partially verified",
+  "sim_model": "URDF+MJCF in repo (Simulation folder)",
   "safety_notes": "Low-voltage (5-12 V) hobby bus servos; pinch points at gripper/joints; low force.",
   "fit": {
    "maker": 5,
@@ -2843,6 +2909,12 @@
   "unverified": [
    "sim_model files path",
    "exact SO-101 BOM total for single follower"
+  ],
+  "notes": [
+   {
+    "field": "sim_model",
+    "text": "was: URDF+MJCF in repo (Simulation folder) - partially verified"
+   }
   ]
  },
  {
@@ -3090,7 +3162,7 @@
    "paper": null,
    "docs_quality": "good"
   },
-  "sim_model": "URDF in Thor-ROS (unverified)",
+  "sim_model": "URDF in Thor-ROS",
   "safety_notes": "Stepper-driven arm with significant torque; no collision detection by default - use e-stop and keep clear of workspace.",
   "fit": {
    "maker": 5,
@@ -3106,6 +3178,12 @@
   ],
   "unverified": [
    "sim_model"
+  ],
+  "notes": [
+   {
+    "field": "sim_model",
+    "text": "was: URDF in Thor-ROS (unverified)"
+   }
   ]
  },
  {
@@ -3213,7 +3291,7 @@
    "software": "MIT (ROS repo)",
    "docs": "unknown"
   },
-  "rights_class": "nc",
+  "rights_class": "proprietary",
   "printed_share": "high",
   "actuation": "Stepper motors (open-loop or MKS closed-loop CAN kits)",
   "control": "Arduino Mega/GRBL; ROS1 MoveIt (Arctos-Robotics/ROS), community ROS2 (cr0Kz/ros2_arctos)",
@@ -3246,7 +3324,9 @@
   "unverified": [
    "current CAD license terms",
    "homepage content (blocked)"
-  ]
+  ],
+  "rights_class_census": "nc",
+  "rights_note": "paid personal CAD licence: closed, not just non-commercial"
  },
  {
   "id": "xlerobot",
@@ -3630,7 +3710,7 @@
   },
   "rights_class": "unknown",
   "printed_share": "high",
-  "actuation": "unknown (BHL actuators with printed gearboxes presumed)",
+  "actuation": "unknown",
   "control": "LeRobot third-party plugins (lerobot_robot_bhl_arm)",
   "bom_cost": null,
   "maturity": {
@@ -3657,6 +3737,12 @@
   "unverified": [
    "actuation",
    "hardware license"
+  ],
+  "notes": [
+   {
+    "field": "actuation",
+    "text": "note: BHL actuators with printed gearboxes presumed"
+   }
   ]
  },
  {
@@ -3684,7 +3770,7 @@
    "paper": null,
    "docs_quality": "ok"
   },
-  "sim_model": "URDF (unverified)",
+  "sim_model": "URDF",
   "safety_notes": "Low-voltage (5-12 V) hobby bus servos; pinch points at gripper/joints; low force.",
   "fit": {
    "maker": 4,
@@ -3701,6 +3787,12 @@
   "unverified": [
    "bom_cost",
    "sim"
+  ],
+  "notes": [
+   {
+    "field": "sim_model",
+    "text": "was: URDF (unverified)"
+   }
   ]
  },
  {
@@ -3708,17 +3800,17 @@
   "name": "EEZYbotARM Mk1/Mk2",
   "category": "arm",
   "summary_en": "Classic small hobby-servo 3D-printed palletizer-style arm by daGHIZmo; Python/Arduino kinematics library by meisben.",
-  "homepage": "https://www.thingiverse.com/daGHIZmo/designs",
+  "homepage": null,
   "repo": "https://github.com/meisben/easyEEZYbotARM",
   "cad": null,
   "licenses": {
-   "hardware": "unknown (Thingiverse)",
+   "hardware": "unknown",
    "software": "MIT (easyEEZYbotARM)",
    "docs": "unknown"
   },
   "rights_class": "unknown",
   "printed_share": "high",
-  "actuation": "Hobby PWM servos (MG996R-class, unverified)",
+  "actuation": "Hobby PWM servos",
   "control": "Arduino + Python lib (easyEEZYbotARM)",
   "bom_cost": null,
   "maturity": {
@@ -3746,6 +3838,20 @@
    "hardware license",
    "servo models",
    "homepage"
+  ],
+  "notes": [
+   {
+    "field": "actuation",
+    "text": "was: Hobby PWM servos (MG996R-class, unverified)"
+   },
+   {
+    "field": "homepage",
+    "text": "was: https://www.thingiverse.com/daGHIZmo/designs (designer page, not the project page)"
+   },
+   {
+    "field": "licenses.hardware",
+    "text": "note: Thingiverse"
+   }
   ]
  },
  {
@@ -4016,7 +4122,7 @@
   "repo": "https://github.com/real-stanford/universal_manipulation_interface",
   "cad": "https://docs.google.com/document/d/1TPYwV9sNVPAi0ZlAupDMkXZ4CA1hsZx7YDMSmcEy6EU",
   "licenses": {
-   "hardware": "unknown (hardware guide)",
+   "hardware": "unknown",
    "software": "MIT",
    "docs": "unknown"
   },
@@ -4049,6 +4155,12 @@
   "unverified": [
    "hardware license",
    "paper URL"
+  ],
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "note: hardware guide"
+   }
   ]
  },
  {
@@ -4076,7 +4188,7 @@
    "paper": "https://www.eng.yale.edu/grablab/pubs/Ma_RAM2017.pdf",
    "docs_quality": "ok"
   },
-  "sim_model": "URDF (openhand_simulation, unverified)",
+  "sim_model": "URDF (openhand_simulation)",
   "safety_notes": "Low force.",
   "fit": {
    "maker": 3,
@@ -4096,7 +4208,14 @@
   ],
   "unverified": [
    "CAD repo location",
-   "last activity of hardware"
+   "last activity of hardware",
+   "sim_model"
+  ],
+  "notes": [
+   {
+    "field": "sim_model",
+    "text": "was: URDF (openhand_simulation, unverified)"
+   }
   ]
  },
  {
@@ -4124,7 +4243,7 @@
    "paper": null,
    "docs_quality": "good"
   },
-  "sim_model": "MJCF (demos; unverified)",
+  "sim_model": "MJCF (demos)",
   "safety_notes": "Micro servos; low force.",
   "fit": {
    "maker": 5,
@@ -4139,7 +4258,14 @@
    }
   ],
   "unverified": [
-   "LeRobot integration"
+   "LeRobot integration",
+   "sim_model"
+  ],
+  "notes": [
+   {
+    "field": "sim_model",
+    "text": "was: MJCF (demos; unverified)"
+   }
   ]
  },
  {
@@ -4157,7 +4283,7 @@
   },
   "rights_class": "unknown",
   "printed_share": "high",
-  "actuation": "Dynamixel servos (tendon-driven; model/count unverified)",
+  "actuation": "Dynamixel servos (tendon-driven)",
   "control": "Python ruka_hand package, learned controllers",
   "bom_cost": null,
   "maturity": {
@@ -4189,6 +4315,12 @@
    "motor model/count",
    "cost",
    "hardware license"
+  ],
+  "notes": [
+   {
+    "field": "actuation",
+    "text": "was: Dynamixel servos (tendon-driven; model/count unverified)"
+   }
   ]
  },
  {
@@ -4216,7 +4348,7 @@
    "paper": "https://arxiv.org/abs/2504.04259",
    "docs_quality": "good"
   },
-  "sim_model": "orca_sim repo (format unverified)",
+  "sim_model": "orca_sim repo",
   "safety_notes": "Low force.",
   "fit": {
    "maker": 4,
@@ -4237,7 +4369,14 @@
   "unverified": [
    "servo count",
    "cost",
-   "homepage"
+   "homepage",
+   "sim_model"
+  ],
+  "notes": [
+   {
+    "field": "sim_model",
+    "text": "was: orca_sim repo (format unverified)"
+   }
   ]
  },
  {
@@ -4297,7 +4436,7 @@
   "cad": "https://github.com/TheRobotStudio/V1.0-Dexhand",
   "licenses": {
    "hardware": "CC-BY-NC-SA-4.0",
-   "software": "unknown (ROS2 repos)",
+   "software": "unknown",
    "docs": "CC-BY-NC-SA-4.0"
   },
   "rights_class": "nc",
@@ -4332,6 +4471,12 @@
   ],
   "unverified": [
    "V2 (CERN-OHL-S, early access) separately"
+  ],
+  "notes": [
+   {
+    "field": "licenses.software",
+    "text": "note: ROS2 repos"
+   }
   ]
  },
  {
@@ -4349,7 +4494,7 @@
   },
   "rights_class": "nc",
   "printed_share": "high",
-  "actuation": "7 servos (model unverified), tendon-driven",
+  "actuation": "7 servos, tendon-driven",
   "control": "Python SDK, ESP32 firmware, ROS2, mujoco_playground",
   "bom_cost": "$314 USD complete kit (README)",
   "maturity": {
@@ -4375,6 +4520,12 @@
   ],
   "unverified": [
    "servo model"
+  ],
+  "notes": [
+   {
+    "field": "actuation",
+    "text": "was: 7 servos (model unverified), tendon-driven"
+   }
   ]
  },
  {
@@ -4484,7 +4635,7 @@
   },
   "rights_class": "copyleft",
   "printed_share": "high",
-  "actuation": "25x Dynamixel (MX/AX series)",
+  "actuation": "25x Dynamixel",
   "control": "pypot, Raspberry Pi",
   "bom_cost": "$8,000-9,000 USD (README)",
   "maturity": {
@@ -4494,7 +4645,7 @@
    "paper": null,
    "docs_quality": "ok"
   },
-  "sim_model": "URDF (unverified)",
+  "sim_model": "URDF",
   "safety_notes": "Heavy-ish biped; falls.",
   "fit": {
    "maker": 2,
@@ -4510,6 +4661,16 @@
   ],
   "unverified": [
    "motor models"
+  ],
+  "notes": [
+   {
+    "field": "sim_model",
+    "text": "was: URDF (unverified)"
+   },
+   {
+    "field": "actuation",
+    "text": "was: 25x Dynamixel (MX/AX series)"
+   }
   ]
  },
  {
@@ -4609,13 +4770,13 @@
   "repo": "https://github.com/Roboparty/roboto_origin",
   "cad": "https://github.com/Roboparty/rpo_hardware",
   "licenses": {
-   "hardware": "CC-BY-SA-4.0 (rpo_hardware)",
-   "software": "GPL-3.0 (aggregation)",
-   "docs": "unknown"
+   "hardware": "CERN-OHL-W-2.0",
+   "software": "GPL-3.0-only",
+   "docs": "CC-BY-SA-4.0"
   },
   "rights_class": "copyleft",
   "printed_share": "unknown",
-  "actuation": "unknown (CAN motors presumed)",
+  "actuation": "14× Damiao DM-4340P (48 V), 9× DM-10010L",
   "control": "ROS2 Humble, Isaac Lab, MuJoCo sim2sim",
   "bom_cost": null,
   "maturity": {
@@ -4649,8 +4810,21 @@
   ],
   "unverified": [
    "printed share",
-   "actuation",
    "cost"
+  ],
+  "notes": [
+   {
+    "field": "licenses",
+    "text": "was: {\"hardware\":\"CC-BY-SA-4.0 (rpo_hardware)\",\"software\":\"GPL-3.0 (aggregation)\",\"docs\":\"unknown\"}; corrected from rpo_hardware/LICENSE (CERN-OHL-W-2.0; CC-BY-SA-4.0 is only the SPDX header of LICENSES.md), matching the catalogue entry"
+   },
+   {
+    "field": "actuation",
+    "text": "was: unknown (CAN motors presumed); from assets/BOM_EN.md (v1.0.1), as in the catalogue specs"
+   },
+   {
+    "field": "printed_share",
+    "text": "structure is CNC aluminium 6061/7075; per the catalogue only calibration jigs are printed"
+   }
   ]
  },
  {
@@ -4711,7 +4885,7 @@
   },
   "rights_class": "unknown",
   "printed_share": "high",
-  "actuation": "Arm/hand servos (models unverified); humanoid legs updated for Robstride 02",
+  "actuation": "Arm/hand servos; humanoid legs updated for Robstride 02",
   "control": "LeRobot (record/train/infer); exoskeleton with Hall encoders",
   "bom_cost": "~3,000 USD (Hugging Face estimate via TechCrunch)",
   "maturity": {
@@ -4742,6 +4916,12 @@
   "unverified": [
    "license",
    "actuation"
+  ],
+  "notes": [
+   {
+    "field": "actuation",
+    "text": "was: Arm/hand servos (models unverified); humanoid legs updated for Robstride 02"
+   }
   ]
  },
  {
@@ -4845,7 +5025,7 @@
   },
   "rights_class": "unknown",
   "printed_share": "high",
-  "actuation": "Servo drives (models unverified)",
+  "actuation": "Servo drives",
   "control": "unknown",
   "bom_cost": null,
   "maturity": {
@@ -4874,6 +5054,12 @@
    "repo",
    "actuation",
    "last activity"
+  ],
+  "notes": [
+   {
+    "field": "actuation",
+    "text": "was: Servo drives (models unverified)"
+   }
   ]
  },
  {
@@ -5117,7 +5303,7 @@
   },
   "rights_class": "permissive",
   "printed_share": "medium",
-  "actuation": "10x LewanSoul LX-16A serial bus servos (6 drive, 4 steer)",
+  "actuation": "10x LewanSoul LX-16A serial bus servos",
   "control": "Custom Python; ROS Kinetic/Melodic (curio)/ROS 2 Humble community ports",
   "bom_cost": "~$500 USD (README price breakdown)",
   "maturity": {
@@ -5145,6 +5331,12 @@
    "stars (GitHub API blocked in session)",
    "known_builds count",
    "servo split 6 drive/4 steer"
+  ],
+  "notes": [
+   {
+    "field": "actuation",
+    "text": "was: 10x LewanSoul LX-16A serial bus servos (6 drive, 4 steer)"
+   }
   ]
  },
  {
@@ -5444,13 +5636,13 @@
   "repo": "https://github.com/jjrobots/B-ROBOT_EVO2",
   "cad": null,
   "licenses": {
-   "hardware": "unknown (no LICENSE file)",
+   "hardware": "unknown",
    "software": "unknown",
    "docs": "unknown"
   },
   "rights_class": "unknown",
   "printed_share": "high",
-  "actuation": "2x stepper motors (per jjrobots page, unverified)",
+  "actuation": "2x stepper motors",
   "control": "Arduino firmware + smartphone app",
   "bom_cost": "unknown",
   "maturity": {
@@ -5478,6 +5670,16 @@
    "stars (GitHub API blocked in session)",
    "actuation",
    "licenses"
+  ],
+  "notes": [
+   {
+    "field": "actuation",
+    "text": "was: 2x stepper motors (per jjrobots page, unverified)"
+   },
+   {
+    "field": "licenses.hardware",
+    "text": "note: no LICENSE file"
+   }
   ]
  },
  {
@@ -5534,7 +5736,7 @@
   "repo": "https://github.com/kevinmcaleer/smars_library",
   "cad": "https://www.thingiverse.com/thing:2662828",
   "licenses": {
-   "hardware": "unknown (Thingiverse, not checked)",
+   "hardware": "unknown",
    "software": "MIT (smars_library)",
    "docs": "unknown"
   },
@@ -5573,6 +5775,12 @@
    "hardware license",
    "actuation details",
    "designer attribution"
+  ],
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "note: Thingiverse, not checked"
+   }
   ]
  },
  {
@@ -5732,7 +5940,7 @@
   "repo": "https://github.com/mike4192/spotMicro",
   "cad": "https://www.thingiverse.com/thing:3445283",
   "licenses": {
-   "hardware": "unknown (Thingiverse, not checked)",
+   "hardware": "unknown",
    "software": "MIT",
    "docs": "MIT"
   },
@@ -5766,6 +5974,12 @@
    "stars (GitHub API blocked in session)",
    "frame license",
    "known_builds count"
+  ],
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "note: Thingiverse, not checked"
+   }
   ]
  },
  {
@@ -6049,7 +6263,7 @@
   "repo": "https://github.com/Yerbert/DingoQuadruped",
   "cad": null,
   "licenses": {
-   "hardware": "unknown (CAD hosted separately)",
+   "hardware": "unknown",
    "software": "MIT",
    "docs": "MIT"
   },
@@ -6086,7 +6300,13 @@
    "bom_cost"
   ],
   "rights_class_census": "permissive",
-  "rights_note": "hardware licence not established; the census class \"permissive\" followed the software licence"
+  "rights_note": "hardware licence not established; the census class \"permissive\" followed the software licence",
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "note: CAD hosted separately"
+   }
+  ]
  },
  {
   "id": "sesame-robot",
@@ -6325,10 +6545,10 @@
   "summary_en": "Arduino 12-servo 3D-printed hexapod with gamepad, aimed at STEM/combat-hexapod events.",
   "homepage": "https://vorpalrobotics.com",
   "repo": "https://github.com/vorpalrobotics/VorpalHexapod",
-  "cad": "Thingiverse (search 'Vorpal Hexapod')",
+  "cad": null,
   "licenses": {
-   "hardware": "unknown (Thingiverse, not checked)",
-   "software": "unknown (no LICENSE file)",
+   "hardware": "unknown",
+   "software": "unknown",
    "docs": "unknown"
   },
   "rights_class": "unknown",
@@ -6361,6 +6581,20 @@
    "stars (GitHub API blocked in session)",
    "licenses",
    "servo count/model"
+  ],
+  "notes": [
+   {
+    "field": "cad",
+    "text": "was: Thingiverse (search 'Vorpal Hexapod')"
+   },
+   {
+    "field": "licenses.hardware",
+    "text": "note: Thingiverse, not checked"
+   },
+   {
+    "field": "licenses.software",
+    "text": "note: no LICENSE file"
+   }
   ]
  },
  {
@@ -6378,7 +6612,7 @@
   },
   "rights_class": "unknown",
   "printed_share": "high",
-  "actuation": "unknown (smart servos)",
+  "actuation": "unknown",
   "control": "ROS Kinetic, move_base, rplidar",
   "bom_cost": "unknown",
   "maturity": {
@@ -6408,7 +6642,13 @@
    "CAD license"
   ],
   "rights_class_census": "permissive",
-  "rights_note": "hardware licence not established; the census class \"permissive\" followed the software licence"
+  "rights_note": "hardware licence not established; the census class \"permissive\" followed the software licence",
+  "notes": [
+   {
+    "field": "actuation",
+    "text": "note: smart servos"
+   }
+  ]
  },
  {
   "id": "goliath-hexapod",
@@ -6419,8 +6659,8 @@
   "repo": "https://github.com/sergsave/goliath_robot",
   "cad": null,
   "licenses": {
-   "hardware": "unknown (no LICENSE)",
-   "software": "unknown (no LICENSE)",
+   "hardware": "unknown",
+   "software": "unknown",
    "docs": "unknown"
   },
   "rights_class": "unknown",
@@ -6453,6 +6693,16 @@
    "stars (GitHub API blocked in session)",
    "licenses",
    "actuation"
+  ],
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "note: no LICENSE"
+   },
+   {
+    "field": "licenses.software",
+    "text": "note: no LICENSE"
+   }
   ]
  },
  {
@@ -6464,7 +6714,7 @@
   "repo": "https://github.com/okalachev/flix",
   "cad": "https://github.com/okalachev/flix/tree/master/docs/assets",
   "licenses": {
-   "hardware": "unknown (no LICENSE file found)",
+   "hardware": "unknown",
    "software": "unknown",
    "docs": "unknown"
   },
@@ -6499,6 +6749,12 @@
    "license",
    "sim details",
    "MAVLink/QGroundControl support"
+  ],
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "note: no LICENSE file found"
+   }
   ]
  },
  {
@@ -6557,7 +6813,7 @@
   "repo": "https://github.com/David35k/drone",
   "cad": null,
   "licenses": {
-   "hardware": "unknown (no LICENSE)",
+   "hardware": "unknown",
    "software": "unknown",
    "docs": "unknown"
   },
@@ -6591,6 +6847,1527 @@
    "stars (GitHub API blocked in session)",
    "licenses",
    "CAD files not in repo"
+  ],
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "note: no LICENSE"
+   }
+  ]
+ },
+ {
+  "id": "openrc-f1",
+  "name": "OpenRC F1 (Daniel Norée)",
+  "category": "wheeled",
+  "subcategory": "rc-car",
+  "summary_en": "1:10 Formula 1 RC car, third-generation OpenR/C design by Daniel Norée; almost all parts printed in PLA with flexible-filament tyres, plus M3 hardware and sealed bearings. Spawned many remixes (2017-2023 F1 bodies, 1:18 mini by Nigel West).",
+  "homepage": "https://www.printables.com/model/2714-openrc-f1-car-110-rc-car",
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "n/a",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "Hobby-grade brushless/brushed motor + car ESC + steering servo; 2S LiPo",
+  "control": "Standard 2-channel RC transmitter/receiver",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2019-05",
+   "stars": null,
+   "known_builds": "many remixes on Printables/MakerWorld (e.g. OpenRC F1 2022/2023 full part sets, 1:18 scale OpenRC F1 with 8 makes)",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Fast 1:10 car; spinning spur/pinion gears; LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 1,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://www.printables.com/model/2714-openrc-f1-car-110-rc-car",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://colorfabb.com/openrc-f1-project-release",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://www.fabbaloo.com/2015/12/design-of-the-week-openrc-formula-1-car",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://www.printables.com/model/195183-118-scale-openrc-f1-radio-controlled-car",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://www.printables.com/model/453291-openrc-f1-2023-car-full-part-set",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "licence (Printables licence field not rendered; Thingiverse/Pinshape not reachable)",
+   "electronics list",
+   "bom_cost",
+   "stars/download counts (unlabelled on page)"
+  ],
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "was: not stated on Printables listing (page only says 'Please respect the license under which this project is released'); original Thingiverse thing:1834126 (250% variant) licence not checked"
+   },
+   {
+    "field": "actuation",
+    "text": "was: Hobby-grade brushless/brushed motor + car ESC + steering servo; 2S LiPo (specific parts listed on external 'openrc-electronics' page, not verified)"
+   }
+  ]
+ },
+ {
+  "id": "openrc-truggy",
+  "name": "OpenRC 1:10 4WD Truggy (Daniel Norée)",
+  "category": "wheeled",
+  "subcategory": "rc-car",
+  "summary_en": "Early (2012-2014) open 1:10 4WD truggy whose chassis, axles and internal mechanisms are almost entirely 3D printed (ABS, nylon, PC, Tritan; NinjaFlex tyres); screws, bearings, pins and electronics bought. Origin of the OpenRC community.",
+  "homepage": "https://grabcad.com/daniel.noree/models?page=1",
+  "repo": null,
+  "cad": "https://grabcad.com/daniel.noree/models?page=1",
+  "licenses": {
+   "hardware": "unknown",
+   "software": "n/a",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "Brushless/brushed car motor + ESC + steering servo",
+  "control": "Standard RC radio",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2014",
+   "stars": null,
+   "known_builds": "community >2,000 members in 2014 (3DPI); forum build logs on makerforums",
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "Printed drivetrain can shatter at speed; LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 1,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://3dprintingindustry.com/news/look-far-3d-printed-open-rc-project-come-32790/",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://grabcad.com/daniel.noree/models?page=1",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://vimeo.com/105538084",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "licence",
+   "electronics",
+   "current file availability",
+   "last_activity"
+  ],
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "was: not stated in sources checked (files on GrabCAD, YouMagine, Thingiverse)"
+   },
+   {
+    "field": "actuation",
+    "text": "was: Brushless/brushed car motor + ESC + steering servo (not specified in sources)"
+   }
+  ]
+ },
+ {
+  "id": "openrc-tractor",
+  "name": "OpenRC Tractor (Ebro 160D)",
+  "category": "wheeled",
+  "subcategory": "rc-truck-crawler",
+  "summary_en": "1:10 RC tractor modelled on an Ebro 160D by Cristobal Selma, reusing OpenRC F1 underpinnings; all structural parts printed, no supports; BOM and instructions released.",
+  "homepage": "https://all3dp.com/openrc-tractor/",
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "n/a",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "RC motor + ESC + servo",
+  "control": "Standard RC radio",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2016-10",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "unknown"
+  },
+  "sim_model": "none",
+  "safety_notes": "LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 1,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://all3dp.com/openrc-tractor/",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "licence",
+   "file availability (Pinshape)",
+   "electronics",
+   "docs_quality"
+  ],
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "was: not stated (released on Pinshape, called 'open source')"
+   },
+   {
+    "field": "actuation",
+    "text": "was: RC motor + ESC + servo (not specified)"
+   }
+  ]
+ },
+ {
+  "id": "tarmo4",
+  "name": "Tarmo4 (Engineering Nonsense)",
+  "category": "wheeled",
+  "subcategory": "rc-car",
+  "summary_en": "Fully 3D-printed RC car by Engineering Nonsense (u/EngineeringNS), predecessor of Tarmo5; Onshape source files shared for remixing; BOM provided as a file on Hackster.",
+  "homepage": "https://hackster.io/krisshellman1/fully-3d-printed-rc-car-tarmo4-585c14",
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "CC BY-ND (Hackster project licence field)",
+   "software": "n/a",
+   "docs": "CC BY-ND (Hackster)"
+  },
+  "rights_class": "nd",
+  "printed_share": "high",
+  "actuation": "Hobby RC motor/ESC/servo per BOM file",
+  "control": "Standard RC radio",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": null,
+   "stars": null,
+   "known_builds": "12,815 Hackster views; author says Tarmo4 instructions were never released",
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 1,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://hackster.io/krisshellman1/fully-3d-printed-rc-car-tarmo4-585c14",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://reddit.birdcat.cafe/r/EngineeringNS/comments/zvellk/tarmo5",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "electronics",
+   "last_activity",
+   "conflict: ND licence on Hackster vs author's invitation to remix Onshape files"
+  ],
+  "notes": [
+   {
+    "field": "actuation",
+    "text": "was: Hobby RC motor/ESC/servo per BOM file (not itemised on page)"
+   }
+  ]
+ },
+ {
+  "id": "tarmo5",
+  "name": "Tarmo5 (Engineering Nonsense)",
+  "category": "wheeled",
+  "subcategory": "rc-car",
+  "summary_en": "5th-generation printed 2WD street/drift RC car by Engineering Nonsense; source published as a public Onshape document (Dec 2022) with a request for credit and remixes; large community of builds and reinforcement mods.",
+  "homepage": "https://www.reddit.com/r/EngineeringNS/comments/zufdn0/tarmo5_source_files",
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "no licence stated; author asks for credit/link back and invites remixes",
+   "software": "n/a",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "Brushless car motor + ESC (gyro ESC recommended at ~60 km/h per builder review) + steering servo",
+  "control": "Standard RC radio",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2024",
+   "stars": null,
+   "known_builds": "many: r/EngineeringNS builds, Printables 'Tarmo5 MODS' reinforcement remix, Tarmo5+DonkeyCar self-driving remix, V1 Engineering forum review",
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "Reported ~60 km/h on 2S/3S; impact hazard, printed parts break (see reinforcement mods); LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 4,
+   "school": 2,
+   "lab": 2,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://reddit.birdcat.cafe/r/EngineeringNS/comments/zufdn0/tarmo5_source_files",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://forum.v1e.com/t/3d-printed-rc-cars-a-double-review-of-3dsets-and-tarmo5/44104",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://www.printables.com/model/424220-tarmo5-mods-reinforce-all-the-frequently-breaking-/comments",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "licence (none found)",
+   "exact BOM/electronics",
+   "last_activity",
+   "Onshape URL"
+  ],
+  "notes": [
+   {
+    "field": "cad",
+    "text": "was: Onshape public document (linked from r/EngineeringNS post; URL not captured)"
+   },
+   {
+    "field": "homepage",
+    "text": "was: https://reddit.birdcat.cafe/r/EngineeringNS/comments/zufdn0/tarmo5_source_files (Reddit mirror); same post on reddit.com"
+   }
+  ]
+ },
+ {
+  "id": "3dsets-rc-models",
+  "name": "3D Sets RC models (Buggy, Rancher 4x4, Buggster etc.)",
+  "category": "wheeled",
+  "subcategory": "rc-car",
+  "summary_en": "Commercial family of 1:8 printable RC vehicles from 3DSets.com (e.g. Model 7 Buggy, Model 1 Rancher 4x4): chassis, cardans and gearbox printed (~2.6-2.75 kg filament, ~14-15 days print), with a step-by-step guide and non-printed parts list.",
+  "homepage": "https://www.3dsets.com/product/model-7-buggy/",
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "paid digital files (3dsets.com terms of use)",
+   "software": "n/a",
+   "docs": "paid guide"
+  },
+  "rights_class": "proprietary",
+  "printed_share": "high",
+  "actuation": "User-supplied brushed or brushless motor (BeltDrive option brushless-only), ESC, servo, battery, radio",
+  "control": "Standard RC radio",
+  "bom_cost": "Files USD 40 (Model 7 Buggy) / USD 35 (Rancher 4x4) on 3dsets.com; electronics, tyres, shocks, bearings extra",
+  "maturity": {
+   "last_activity": null,
+   "stars": null,
+   "known_builds": "Prusa blog feature; V1 Engineering forum build review; Printables preview listing",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "1:8 scale, heavy and fast with brushless; LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 4,
+   "school": 2,
+   "lab": 1,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://www.3dsets.com/product/model-7-buggy/",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://3dsets.com/product/rancher-4x4/",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://blog.prusa3d.com/3d-printed-off-road-rc-cars-by-3d-sets_68548/",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://www.printables.com/model/61049-model-7-buggy",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "exact file-use terms",
+   "docs_quality (from vendor page)",
+   "last_activity"
+  ],
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "was: paid digital files; terms on 3dsets.com 'Terms and conditions of use' (not read)"
+   }
+  ]
+ },
+ {
+  "id": "lizard-rc-race-car",
+  "name": "Lizard 3D Printed RC Race Car",
+  "category": "wheeled",
+  "subcategory": "rc-car",
+  "summary_en": "On-road printed RC race car (PETG + TPU) with custom ESP32 car and remote PCBs, telemetry data logger and MATLAB evaluation; STL+STEP, Gerbers, code and Excel BOM in repo; Instructables write-up.",
+  "homepage": "https://www.instructables.com/Lizard-3D-Printed-RC-Race-Car/",
+  "repo": "https://github.com/TRD-B/Lizard",
+  "cad": "https://github.com/TRD-B/Lizard",
+  "licenses": {
+   "hardware": "CC-BY-4.0 (License.md)",
+   "software": "CC-BY-4.0 (single repo licence)",
+   "docs": "CC-BY-4.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "775 brushed motor (12 V, 150 W) with cooler + Cytron MD20A driver; Graupner DES 708 BB MG servo; 3S 5000 mAh LiPo",
+  "control": "Custom ESP32 car PCB + custom ESP32 handheld remote; ADS1115, current/temp/speed sensing; data logger",
+  "bom_cost": "~EUR 954 total incl. full packs of fasteners/filament/PCB fab (repo 'BOM Lizard.xlsx' sum)",
+  "maturity": {
+   "last_activity": "2025-08",
+   "stars": 129,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "3S LiPo with 30 A fuse on PCB; brushed 150 W motor runs hot (cooler fitted); LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 3,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/TRD-B/Lizard",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://raw.githubusercontent.com/TRD-B/Lizard/main/License.md",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://raw.githubusercontent.com/TRD-B/Lizard/main/BOM%20Lizard.xlsx",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "known_builds",
+   "Instructables page content (only metadata fetched)"
+  ],
+  "notes": [
+   {
+    "field": "cad",
+    "text": "note: STP files"
+   }
+  ]
+ },
+ {
+  "id": "robak",
+  "name": "Robak (robaki.dev)",
+  "category": "wheeled",
+  "subcategory": "rc-car",
+  "summary_en": "DIY 1/10 4x4 all-terrain RC car designed from scratch for makers by Milosz Nowak; printed parts via GitHub releases, BOM and printed-parts spreadsheets, build video and Discord.",
+  "homepage": "https://robaki.dev",
+  "repo": "https://github.com/robaki-dev/robak",
+  "cad": null,
+  "licenses": {
+   "hardware": "CC BY-NC-SA (LICENSE.txt, version not stated)",
+   "software": "n/a",
+   "docs": "CC BY-NC-SA"
+  },
+  "rights_class": "nc",
+  "printed_share": "high",
+  "actuation": "Hobby brushless/brushed car motor + ESC + servo per BOM spreadsheet",
+  "control": "Standard RC radio",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2023-11",
+   "stars": 173,
+   "known_builds": "26 forks; RUDE remix; Printables listing 'Robak 2 RC car'",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 4,
+   "school": 2,
+   "lab": 1,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/robaki-dev/robak",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://raw.githubusercontent.com/robaki-dev/robak/main/LICENSE.txt",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "electronics (BOM Google Sheet not reachable)",
+   "bom_cost",
+   "robaki.dev content (fetch not permitted)"
+  ],
+  "notes": [
+   {
+    "field": "actuation",
+    "text": "was: Hobby brushless/brushed car motor + ESC + servo per BOM spreadsheet (not read)"
+   }
+  ]
+ },
+ {
+  "id": "rude-truggy",
+  "name": "RUDE - Robak Unstoppable Dream Edition",
+  "category": "wheeled",
+  "subcategory": "rc-car",
+  "summary_en": "Open 1/10-class printed RC truggy with metal drivetrain, a heavily modified remix of Robak v2.2; v2.0 (May 2026) adds direct steering, optional centre diff and a two-piece chassis; BOM, assembly slides and Onshape model published.",
+  "homepage": "https://github.com/iniqy/RUDE",
+  "repo": "https://github.com/iniqy/RUDE",
+  "cad": "https://cad.onshape.com/documents/217738c328698a5c23f3d09a",
+  "licenses": {
+   "hardware": "CC BY-NC-SA 4.0 (LICENSE + README badge)",
+   "software": "n/a",
+   "docs": "CC BY-NC-SA 4.0"
+  },
+  "rights_class": "nc",
+  "printed_share": "medium",
+  "actuation": "Brushless car motor + ESC + steering servo, metal diffs/gears (premium parts listed in BOM sheet)",
+  "control": "Standard RC radio",
+  "bom_cost": "EUR 200 (low budget) - EUR 400 (premium) hardware kit without plastic parts (README FAQ)",
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": 48,
+   "known_builds": "user reviews quoted in README; Discord community",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Author: 'not child friendly ... an absolute weapon'; high-power brushless; LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 5,
+   "school": 2,
+   "lab": 1,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/iniqy/RUDE",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://raw.githubusercontent.com/iniqy/RUDE/main/LICENSE",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "exact electronics (BOM Google Sheet not reachable)"
+  ]
+ },
+ {
+  "id": "zcar2",
+  "name": "zcar2 1:28 4WD drift car",
+  "category": "wheeled",
+  "subcategory": "rc-car",
+  "summary_en": "Nearly fully 3D-printed 1:28 4WD drift car fitting Mini-Z M-wheelbase shells: sliding independent suspension, printed U-joints, TPU tyres, common M3 hardware.",
+  "homepage": "https://github.com/alexyu132/zcar2",
+  "repo": "https://github.com/alexyu132/zcar2",
+  "cad": null,
+  "licenses": {
+   "hardware": "GPL-3.0 (LICENSE)",
+   "software": "GPL-3.0",
+   "docs": "GPL-3.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "130-size brushed motor (2S), GH-S37D 3.7 g servo, small 2S brushed ESC, Venom Fly 300 mAh 2S LiPo",
+  "control": "Small 2-ch+ receiver (e.g. decased Flysky GR3E)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2020-10",
+   "stars": 76,
+   "known_builds": "9 forks; identical BOM appears on Printables 'Fully Printed 1:28 RC Car Chassis (MINI-Z compatible)' imported from Thingiverse",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Tiny 2S LiPo; low energy but still fire risk when charging. LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 1,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/alexyu132/zcar2",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://raw.githubusercontent.com/alexyu132/zcar2/master/LICENSE",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://www.printables.com/model/165280-fully-printed-128-rc-car-chassis-mini-z-compatible",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "whether Printables 165280 is the same author",
+   "bom_cost",
+   "assembly docs ('Todo' in README)"
+  ]
+ },
+ {
+  "id": "lhs-rc-micro-d-24r",
+  "name": "LHS RC MICRO-D 24R Chassis",
+  "category": "wheeled",
+  "subcategory": "rc-car",
+  "summary_en": "Adjustable 1:24 printed RWD drift chassis (locked diff, adjustable toe/camber/caster/Ackermann, 10:1 or 6:1 gearbox, 130/180 DC motor) shipped as an optimised OrcaSlicer 3MF plus online CAD viewer and BOM.",
+  "homepage": "https://github.com/lhndo/LHS-RC-MICRO-D-24R-Chassis",
+  "repo": "https://github.com/lhndo/LHS-RC-MICRO-D-24R-Chassis",
+  "cad": "http://tiny.cc/lhs-rc",
+  "licenses": {
+   "hardware": "CC BY-NC-SA 4.0 (README licence section + LICENSE.md)",
+   "software": "n/a",
+   "docs": "CC BY-NC-SA 4.0"
+  },
+  "rights_class": "nc",
+  "printed_share": "high",
+  "actuation": "130 or 180 brushed DC motor, micro servo, micro ESC/receiver ('one size up electronics')",
+  "control": "Micro RC radio",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2025-01",
+   "stars": 31,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "Needs a precise printer (0.14 mm layers, <0.1 mm tolerance). Small LiPo: LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 4,
+   "school": 2,
+   "lab": 1,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/lhndo/LHS-RC-MICRO-D-24R-Chassis",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "BOM contents/cost (Google Sheet)",
+   "known_builds",
+   "GitHub licence detection shows none; licence taken from README/LICENSE.md"
+  ]
+ },
+ {
+  "id": "open-128-rc-car",
+  "name": "Open 1:28 Scale 3D Printable RC Car (zortness)",
+  "category": "wheeled",
+  "subcategory": "rc-car",
+  "summary_en": "FreeCAD-designed 1:28 printable RC car built by a high-school H2GP coach as the cheapest viable car for school STEM competitions; budget and mid-tier builds (brushed or 1410 brushless) claimed competitive with box-stock 1:28 cars; extensive docs on electronics, batteries, receivers, DIY tyres.",
+  "homepage": "https://github.com/zortness/open_128_rc_car",
+  "repo": "https://github.com/zortness/open_128_rc_car",
+  "cad": "https://github.com/zortness/open_128_rc_car",
+  "licenses": {
+   "hardware": "CC-BY-4.0 (assets: FreeCAD/OpenSCAD files, images, docs)",
+   "software": "MIT (Python tools)",
+   "docs": "CC-BY-4.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "Budget brushed or 1410 brushless motor, micro ESC, micro servo, 2S (6-8 V) LiPo/Li-ion; single bearing type MR63ZZ",
+  "control": "Hobby 2-ch radio (docs/receivers.md)",
+  "bom_cost": "~USD 70 per car amortised (goal USD 50); competitive mid-tier car under USD 100 (doc/history.md)",
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": 2,
+   "known_builds": "fleet built and raced by author's H2GP high-school team",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Docs include LiPo/Li-ion charging and storage guidance (fireproof bag, storage voltage). Hot soldering iron for students.",
+  "fit": {
+   "maker": 4,
+   "school": 5,
+   "lab": 1,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/zortness/open_128_rc_car",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://raw.githubusercontent.com/zortness/open_128_rc_car/main/LICENSE.md",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://raw.githubusercontent.com/zortness/open_128_rc_car/main/doc/history.md",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://raw.githubusercontent.com/zortness/open_128_rc_car/main/doc/electronics.md",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://raw.githubusercontent.com/zortness/open_128_rc_car/main/doc/batteries.md",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "external build count beyond author's team"
+  ],
+  "notes": [
+   {
+    "field": "cad",
+    "text": "note: FreeCAD sources"
+   }
+  ]
+ },
+ {
+  "id": "hydrance-3d-printed-rc-car",
+  "name": "Hydrance 3D Printed RC Car (4WD, ~60 km/h; 100 km/h successor)",
+  "category": "wheeled",
+  "subcategory": "rc-car",
+  "summary_en": "4WD ~90%-printed RC car (PETG structure, TPU tyres/dampers, PA6-CF suggested for gears) by Hydrance with CAD and an AliExpress/Amazon BOM; successor repo adds metal diffs/axles targeting 100 km/h.",
+  "homepage": "https://github.com/HydranceAK/3D-Printed-RC-Car",
+  "repo": "https://github.com/HydranceAK/3D-Printed-RC-Car",
+  "cad": "https://github.com/HydranceAK/3D-Printed-RC-Car",
+  "licenses": {
+   "hardware": "custom: 'personal use only ... may not sell, redistribute, upload, or copy this design without direct permission' (README); no LICENSE file",
+   "software": "n/a",
+   "docs": "same"
+  },
+  "rights_class": "proprietary",
+  "printed_share": "high",
+  "actuation": "Brushless motor + ESC + servo from AliExpress/Amazon (BOM is links only)",
+  "control": "Standard RC radio",
+  "bom_cost": "USD 334 total, USD 276 without filament/screws (repo BOM file); README says ~USD 330",
+  "maturity": {
+   "last_activity": "2026-07",
+   "stars": 89,
+   "known_builds": "19 forks; successor repo (53 stars)",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Claims 60 km/h (successor 100 km/h, untested): serious impact hazard; LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 3,
+   "school": 1,
+   "lab": 1,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/HydranceAK/3D-Printed-RC-Car",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://raw.githubusercontent.com/HydranceAK/3D-Printed-RC-Car/main/BOM%203d%20Printed%20RC%20Car%204WD.txt",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://github.com/HydranceAK/Upgraded-100km-h-3d-Printed-RC-Car",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "exact electronics (BOM gives only shop links)",
+   "speed claims",
+   "successor README contradicts itself ('share for others' vs personal-use-only)"
+  ],
+  "notes": [
+   {
+    "field": "cad",
+    "text": "note: CAD Files folder"
+   }
+  ]
+ },
+ {
+  "id": "kestrel-rc-buggy",
+  "name": "Kestrel 1:14 printable RC buggy",
+  "category": "wheeled",
+  "subcategory": "rc-car",
+  "summary_en": "Roughly 1:14 printable RWD buggy (belt drive, no differential, oil shocks, rubber 1:10 touring tyres, optional TPU driveshafts) using ~400 g PLA+.",
+  "homepage": "https://github.com/JoshPattman/kestrel",
+  "repo": "https://github.com/JoshPattman/kestrel",
+  "cad": null,
+  "licenses": {
+   "hardware": "none stated (no LICENSE file)",
+   "software": "n/a",
+   "docs": "none stated"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "EMAX 2213 brushless motor, MG90S servo, ESC, 2S/3S LiPo, optional gyro",
+  "control": "Standard RC receiver",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2024-05",
+   "stars": 0,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 1,
+   "plan_guide_treatment": 1
+  },
+  "sources": [
+   {
+    "url": "https://github.com/JoshPattman/kestrel",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "known_builds"
+  ]
+ },
+ {
+  "id": "forrc",
+  "name": "FORRC - Free and Open RC Robot Car",
+  "category": "wheeled",
+  "subcategory": "rc-car",
+  "summary_en": "Very low-cost, slow, geared-down printable RC car for teaching drive mechanics (FreeCAD + STL, ~30 g PLA, 10-20 h print); kits sold near cost by the Fairfield County Makers' Guild and used in makerspace classes.",
+  "homepage": "https://github.com/codingwithsomeguy/forrc",
+  "repo": "https://github.com/codingwithsomeguy/forrc",
+  "cad": "https://github.com/codingwithsomeguy/forrc",
+  "licenses": {
+   "hardware": "CERN-OHL-S-2.0 (LICENSE.txt)",
+   "software": "CERN-OHL-S-2.0 (repo-wide)",
+   "docs": "CERN-OHL-S-2.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "Small geared DC motor + steering",
+  "control": "'Low end microcontroller included' (model not named)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2023-10",
+   "stars": 0,
+   "known_builds": "kits via FCMG makerspace",
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low speed and low power by design; check battery type in kit.",
+  "fit": {
+   "maker": 3,
+   "school": 4,
+   "lab": 1,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/codingwithsomeguy/forrc",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://raw.githubusercontent.com/codingwithsomeguy/forrc/main/LICENSE.txt",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "electronics/BOM contents",
+   "kit price",
+   "build count"
+  ],
+  "notes": [
+   {
+    "field": "actuation",
+    "text": "was: Small geared DC motor + steering (exact parts in bom/ folder, not read)"
+   },
+   {
+    "field": "cad",
+    "text": "note: rccarchassis.FCStd"
+   }
+  ]
+ },
+ {
+  "id": "seeholzer-onroad-rc-race-car",
+  "name": "3D-Printed On-Road RC Race Car (Anselm Seeholzer)",
+  "category": "wheeled",
+  "subcategory": "rc-car",
+  "summary_en": "~1:10 printed on-road race car designed over 18 months by a physics student with vehicle-dynamics-tuned suspension and print-in-place ball joints; won the 3D Printing Judges' Prize in the 2025 Instructables 'Make it Move' student contest; full Instructable mirrored in repo with 3MF files.",
+  "homepage": "https://www.instructables.com/3D-Printed-On-Road-RC-Race-Car/",
+  "repo": "https://github.com/AnselmSeeholzer/3D-Printed_On-Road_RC_Race_Car",
+  "cad": null,
+  "licenses": {
+   "hardware": "none stated in repo (no LICENSE file); Instructables licence not checked",
+   "software": "n/a",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "medium",
+  "actuation": "540 brushed motor (Tamiya Torque Tuned), Hobbywing 1060 ESC, steering servo; bought rear differential, dogbones and hubs",
+  "control": "Carson Reflex X1 transmitter/receiver",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-02",
+   "stars": 0,
+   "known_builds": "author build; contest prize",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Wear eye protection when freeing print-in-place joints (author warning). LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 1,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/AnselmSeeholzer/3D-Printed_On-Road_RC_Race_Car",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "licence",
+   "battery type",
+   "bom_cost"
+  ],
+  "notes": [
+   {
+    "field": "cad",
+    "text": "was: Fusion .f3z on Instructables"
+   }
+  ]
+ },
+ {
+  "id": "drnebin-rc-car",
+  "name": "RC_Car (Devin Namaky) resin-printable mini RC car",
+  "category": "wheeled",
+  "subcategory": "rc-car",
+  "summary_en": "Small Arduino-driven RC car fully printable (incl. tyres) on a small resin printer; two variants (rack-and-pinion with Seeeduino XIAO, servo-steering with Arduino Nano), with schematics, Gerbers, INO sketches, STL and CAD.",
+  "homepage": "https://github.com/DrNebin/RC_Car",
+  "repo": "https://github.com/DrNebin/RC_Car",
+  "cad": "https://github.com/DrNebin/RC_Car",
+  "licenses": {
+   "hardware": "GPL-3.0 (LICENSE)",
+   "software": "GPL-3.0",
+   "docs": "GPL-3.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "130-style DC drive motor + micro servo (SS) or two DC motors (RP)",
+  "control": "Arduino Nano / Seeeduino XIAO custom firmware + custom PCB",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2023-11",
+   "stars": 24,
+   "known_builds": "Arduino Project Hub / Hackster write-ups",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low power; resin printing requires gloves/ventilation (uncured resin is a skin sensitiser).",
+  "fit": {
+   "maker": 3,
+   "school": 3,
+   "lab": 1,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/DrNebin/RC_Car",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://projecthub.arduino.cc/devinnamaky/749dca72-3e05-4c05-9a75-0c18d3a29271",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "battery type",
+   "radio link type"
+  ]
+ },
+ {
+  "id": "thumper-cj7-crawler",
+  "name": "Thumper 1:8 CJ7 Rock Crawler (BlackCrow)",
+  "category": "wheeled",
+  "subcategory": "rc-truck-crawler",
+  "summary_en": "1:8 rock crawler with printed chassis, body, axle housings, links, hubs and wheels; printed-gear or metal-gear transmission options; bought AR44 ring/pinion, axle shafts and driveshafts.",
+  "homepage": "https://www.printables.com/model/323433-thumper-18-scale-rc-car-cj7-rock-crawler-by-blackc",
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "n/a",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "medium",
+  "actuation": "540-class brushed or brushless (e.g. Fusion SE 1200 kV) motor, 30-60 A ESC, steering servo, 2S shorty LiPo (one or two)",
+  "control": "Standard RC radio",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2025-11",
+   "stars": null,
+   "known_builds": "Printables Toy Cars contest entry (2023); counts unlabelled",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "XT60/12 AWG high-current wiring; LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 4,
+   "school": 2,
+   "lab": 1,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://www.printables.com/model/323433-thumper-18-scale-rc-car-cj7-rock-crawler-by-blackc",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "licence",
+   "known_builds",
+   "bom_cost"
+  ],
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "was: Printables licence field not readable in fetch"
+   }
+  ]
+ },
+ {
+  "id": "mrc24-micro-crawler",
+  "name": "MRC24 micro RC rock crawler",
+  "category": "wheeled",
+  "subcategory": "rc-truck-crawler",
+  "summary_en": "Micro (1:24-class) rock crawler with printed chassis, axles, wheels and knuckles driven by four N20 gear motors (motor on each wheel), with optional 3-channel front/rear power split.",
+  "homepage": "https://makerworld.com/models/2175320",
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "n/a",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "4x N20 (~200 rpm @6 V) motors, 8 mm servo (e.g. PTK 7308), single or dual brushed ESC, 2S LiPo, XT30",
+  "control": "Hobby radio (e.g. Radiomaster MT12)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": null,
+   "stars": null,
+   "known_builds": "9 comments/ratings on MakerWorld; Hackster news feature",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low power; LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 1,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://makerworld.com/models/2175320",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://www.hackster.io/news/mrc24-3d-printed-micro-rock-crawler-e340b55e966f",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "licence",
+   "designer handle on MakerWorld",
+   "last_activity"
+  ],
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "was: not shown on MakerWorld page fetch"
+   }
+  ]
+ },
+ {
+  "id": "rcmakerlab-printed-pickup",
+  "name": "Fully 3D Printed RC Pick-Up (RCMakerLab)",
+  "category": "wheeled",
+  "subcategory": "rc-truck-crawler",
+  "summary_en": "Fully printed RC pickup truck (392 mm long, 940 g) with printed gearbox, tyres and rims (~565 g PLA + 115 g TPU), designed for cheap motors/ESCs and a handmade transmitter.",
+  "homepage": "https://www.printables.com/model/879237-fully-3d-printed-rc-pick-up",
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "n/a",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "Cheap brushed motor + ESC + servo",
+  "control": "Handmade RC transmitter or any RC system",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2024-10",
+   "stars": null,
+   "known_builds": "5 makes & comments on Printables",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 3,
+   "school": 3,
+   "lab": 1,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://www.printables.com/model/879237-fully-3d-printed-rc-pick-up",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "licence",
+   "electronics"
+  ],
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "was: Printables licence field not readable in fetch"
+   },
+   {
+    "field": "actuation",
+    "text": "was: Cheap brushed motor + ESC + servo (list in video description, not read)"
+   }
+  ]
+ },
+ {
+  "id": "profboots-minidump",
+  "name": "ProfBoots MiniDump RC dump truck",
+  "category": "wheeled",
+  "subcategory": "rc-truck-crawler",
+  "summary_en": "Desk-scale printed RC dump truck by Professor Boots: ESP32 serving a Wi-Fi web controller (or game-pad), N20 drive and two SG90 servos, custom PCB; part of a family of printed RC construction vehicles (skid steer, excavator, semi, log truck).",
+  "homepage": "https://hackster.io/news/professor-boots-3d-printed-web-controlled-dump-truck-is-here-to-save-your-desk-from-clutter-742240273dd6",
+  "repo": "https://github.com/ProfBoots/3D-Printed-RC-DumpTruck-2.0",
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "no licence file in GitHub repo",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "1x N20 gear motor via H-bridge, 2x SG90 servos, 16340 Li-ion + boost converter",
+  "control": "ESP32 (Arduino IDE) web UI over Wi-Fi; PS3/PS4/PS5/Xbox controller support",
+  "bom_cost": "USD 64 parts kit from the author's shop, battery extra (Hackster)",
+  "maturity": {
+   "last_activity": "2023-11",
+   "stars": 20,
+   "known_builds": "6 forks; Hackaday/Hackster coverage; sibling repos Mini_Excavator (48 stars), SkidSteer V2 (45 stars)",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Single 16340 Li-ion cell: use protected cells and a proper charger.",
+  "fit": {
+   "maker": 4,
+   "school": 5,
+   "lab": 1,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://hackster.io/news/professor-boots-3d-printed-web-controlled-dump-truck-is-here-to-save-your-desk-from-clutter-742240273dd6",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://github.com/ProfBoots/3D-Printed-RC-DumpTruck-2.0",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://makerworld.com/models/496709",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "licence (secondary source; Printables page not checked)",
+   "software licence"
+  ],
+  "rights_class_census": "nc",
+  "rights_note": "CC BY-NC 4.0 is from a secondary source (Hackster article); the Printables licence was not checked",
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "was: CC BY-NC 4.0 on Printables (per Hackster article)"
+   }
+  ]
+ },
+ {
+  "id": "htm-rc-tank-dual-speed",
+  "name": "HowToMechatronics 3D Printed RC Tank with Dual-Speed Gearbox",
+  "category": "tracked",
+  "subcategory": "rc-tank",
+  "summary_en": "Large printed RC tank with 214 printed track links, suspension and a servo-shifted dual-speed gearbox driven by two 200 W 895 DC motors; custom Arduino Mega shield and WS2812B lighting; detailed article.",
+  "homepage": "https://howtomechatronics.com/projects/making-a-beast-of-a-3d-printed-rc-tank-with-dual-speed-gearbox/",
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "paid files on Cults3D; site '© HowToMechatronics, all rights reserved'",
+   "software": "Arduino code download (gated), licence not stated",
+   "docs": "all rights reserved"
+  },
+  "rights_class": "proprietary",
+  "printed_share": "high",
+  "actuation": "2x 12 V 200 W 895 DC motors (3000 rpm), 2x BTS7960 drivers, 25 kg servo for gear shift, 3S LiPo >=3000 mAh",
+  "control": "ATmega2560 (Arduino Mega) + custom PCB; Flysky FS-i6X / FS-iA6B (iBUS)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2025-01",
+   "stars": null,
+   "known_builds": "reader comments report purchases/builds",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "400 W of drive on 3S: pinch/crush hazard at tracks and sprockets, high current wiring; LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 4,
+   "school": 2,
+   "lab": 1,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://howtomechatronics.com/projects/making-a-beast-of-a-3d-printed-rc-tank-with-dual-speed-gearbox/",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "Cults3D price and licence (page not reachable)"
+  ],
+  "notes": [
+   {
+    "field": "cad",
+    "text": "was: Onshape viewer (linked from article); STL/STEP sold on Cults3D"
+   }
+  ]
+ },
+ {
+  "id": "htm-fully-printed-tank-platform",
+  "name": "HowToMechatronics Fully 3D Printed Tank - Tracked Robot Platform",
+  "category": "tracked",
+  "subcategory": "rc-tank",
+  "summary_en": "Fully printed tracked robot platform (~200 h print) with two 12 V geared DC motors, DRV8871 drivers, Arduino Mega shield and Flysky iBUS control; intended as a base for add-ons (later NERF turret).",
+  "homepage": "https://howtomechatronics.com/projects/fully-3d-printed-tank-tracked-robot-platform/",
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "not stated",
+   "docs": "© HowToMechatronics"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "2x 12 V DC gear motors (author recommends <=500 rpm), 2x DRV8871 drivers, 3S LiPo with XT60",
+  "control": "ATmega2560 + custom PCB, Flysky FS-i6X/FS-iA6B iBUS, battery voltage monitor",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2023-12",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Track pinch points; LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 2,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://howtomechatronics.com/projects/fully-3d-printed-tank-tracked-robot-platform/",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "licence and price on Cults3D (page not reachable)"
+  ],
+  "notes": [
+   {
+    "field": "cad",
+    "text": "was: Cults3D listing 'fully-3d-printed-tank-tracked-robot-platform'"
+   },
+   {
+    "field": "licenses.hardware",
+    "text": "was: files on Cults3D (free/paid status and licence not stated in article)"
+   }
+  ]
+ },
+ {
+  "id": "pstimpel-rc-bulldozer",
+  "name": "3D Printed RC Bulldozer (Peter Stimpel, 'caterpillarbulldozer')",
+  "category": "tracked",
+  "subcategory": "rc-tank",
+  "summary_en": "Two-foot printed tracked RC bulldozer (free-style, not a replica) with printed gearboxes and tracks, servo-lifted blade, Arduino light/buzzer board; detailed README BOM. (Repo name uses a trademark; design is not affiliated.)",
+  "homepage": "https://github.com/pstimpel/caterpillarbulldozer",
+  "repo": "https://github.com/pstimpel/caterpillarbulldozer",
+  "cad": null,
+  "licenses": {
+   "hardware": "CC BY-NC-SA 4.0 (README)",
+   "software": "CC BY-NC-SA 4.0 (README)",
+   "docs": "CC BY-NC-SA 4.0"
+  },
+  "rights_class": "nc",
+  "printed_share": "high",
+  "actuation": "2x 540 55T brushed motors, 2x HobbyKing X-Car 45 A brushed ESCs, 2x metal-gear standard servos, 2x 2S LiPo",
+  "control": "8-ch RC receiver (4-ch without lights); Arduino Nano for lights/buzzer",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2020-02",
+   "stars": 13,
+   "known_builds": "4 forks; also on Thingiverse thing:4057714, Printables 15078, Pinshape",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Two LiPos and two ESCs; track pinch points; LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 1,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/pstimpel/caterpillarbulldozer",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "known_builds"
+  ]
+ },
+ {
+  "id": "vk1602-leopard-rc-tank",
+  "name": "1/16 RC VK-16.02 Leopard tank (edumardo)",
+  "category": "tracked",
+  "subcategory": "rc-tank",
+  "summary_en": "1/16 printed RC tank hull, suspension and turret that reuses Heng Long Panther/Jagdpanther gearboxes, tracks, wheels and ring; PDF assembly guides; companion GPL Arduino tank controller (arduino-panzer).",
+  "homepage": "https://github.com/edumardo/VK-16.02-Leopard",
+  "repo": "https://github.com/edumardo/VK-16.02-Leopard",
+  "cad": null,
+  "licenses": {
+   "hardware": "none stated in repo (no LICENSE file)",
+   "software": "GPL-3.0 (separate repo edumardo/arduino-panzer)",
+   "docs": "none stated"
+  },
+  "rights_class": "unknown",
+  "printed_share": "medium",
+  "actuation": "Heng Long long-shaft gearboxes (x2), continuous-rotation servo or Heng Long unit for turret, 2x MG90S (recoil/elevation)",
+  "control": "Arduino-based (edumardo/arduino-panzer, GPL-3.0) or Heng Long electronics",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-04",
+   "stars": 3,
+   "known_builds": "build log on RCTankWarfare forum; Printables/MakerWorld mirrors",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low power; battery per chosen Heng Long electronics.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 1,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/edumardo/VK-16.02-Leopard",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://www.printables.com/model/245702-116-rc-panzer-tank-vk-1602-leopard-v093",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "battery/electronics in actual build",
+   "licence of STL files"
+  ]
+ },
+ {
+  "id": "via-bot",
+  "name": "VIA Bot (MakerHanoi VIA - Vietnam Autonomous)",
+  "category": "wheeled",
+  "subcategory": "autonomous-car-platform",
+  "summary_en": "Open-source 3D-printed self-driving car for students by MakerHanoi: printed chassis, control boards and lane/traffic-sign detection, with a companion simulator, datasets, ROS 2 stack and courses (Vietnamese).",
+  "homepage": "https://via.makerviet.org/",
+  "repo": "https://github.com/makerviet/via-bot",
+  "cad": "https://github.com/makerviet/via-bot",
+  "licenses": {
+   "hardware": "MIT (via-bot repo licence)",
+   "software": "MIT (via-bot); via-ros-2 no licence detected",
+   "docs": "CC0-1.0 (via-docs)"
+  },
+  "rights_class": "permissive",
+  "printed_share": "unknown",
+  "actuation": "unknown",
+  "control": "ROS 2 (makerviet/via-ros-2), ESP32 course variant (via-course-makerbot); lane following + traffic signs",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2023-07",
+   "stars": 0,
+   "known_builds": "via-bot repo 0 stars (via-ros-2: 13); used in Vietnamese student competitions (FPT Digital Race datasets)",
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "custom simulator (makerviet/via-simulation-jeep, MIT)",
+  "safety_notes": "unknown battery; treat as small Li-ion/LiPo robot.",
+  "fit": {
+   "maker": 2,
+   "school": 3,
+   "lab": 2,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/makerviet/via-bot",
+    "checked": "2026-11-01"
+   },
+   {
+    "url": "https://github.com/makerviet/via-docs",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "actuation",
+   "printed_share",
+   "BOM",
+   "website content (empty in fetch)",
+   "known_builds (competition use inferred from dataset repo description)"
+  ],
+  "notes": [
+   {
+    "field": "actuation",
+    "text": "note: not documented in fetched sources"
+   },
+   {
+    "field": "cad",
+    "text": "note: hardware/"
+   }
+  ]
+ },
+ {
+  "id": "tarmo5-donkeycar",
+  "name": "3D Printed SelfDrive Car: Tarmo 5 + DonkeyCar",
+  "category": "wheeled",
+  "subcategory": "autonomous-car-platform",
+  "summary_en": "Remix that turns a Tarmo5-based printed RC car into a DonkeyCar self-driving car with object detection; assembly PDF and STL set referenced on GitHub (CrazyDonkeyTarmo).",
+  "homepage": "https://www.printables.com/model/997322-3d-printed-selfdrive-car-tarmo-5-donkeycar-object",
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "unknown",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "Tarmo5 drivetrain (brushless motor/ESC + servo)",
+  "control": "DonkeyCar (Raspberry Pi/Jetson class computer; exact board not stated)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2024-09",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "DonkeyCar gym simulator (upstream)",
+  "safety_notes": "Autonomous mode at RC speeds: use a kill switch/throttle limit; LiPo pack: balance-charge in a fireproof bag, never charge unattended, store at ~3.8 V/cell, discard puffed packs; use a low-voltage cutoff in the ESC.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 2,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://www.printables.com/model/997322-3d-printed-selfdrive-car-tarmo-5-donkeycar-object",
+    "checked": "2026-11-01"
+   }
+  ],
+  "unverified": [
+   "licence",
+   "compute board",
+   "GitHub repo URL",
+   "DonkeyCar licence",
+   "sim_model applicability"
+  ],
+  "notes": [
+   {
+    "field": "licenses.hardware",
+    "text": "was: not shown on Printables listing; base Tarmo5 has no stated licence"
+   },
+   {
+    "field": "licenses.software",
+    "text": "was: DonkeyCar (MIT, upstream; not verified here)"
+   }
   ]
  }
 ]

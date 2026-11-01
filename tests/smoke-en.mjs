@@ -59,7 +59,7 @@ const alts = html => Object.fromEntries([...html.matchAll(/<link rel="alternate"
 // Czech-only letters, plus common Czech UI words that have no diacritics
 const CZ = /[ěřůčšžťďňĚŘŮČŠŽŤĎŇ]|[áéíóúý]\p{L}|\b(Rameno|Loket|Chapadlo|Klouby|Kloub|Mise|Znovu|Hotovo|Kostka|Miska|Simulace|Zkusit|Postavte|Kalibrace|Serva|Teplota|Zapnout|Spustit|Poloha|Diagnostika|Turnaj|Kamera|Pauza|Barva|Soupe\p{L}*|Zpomal\p{L}*|Vidlice|Agrese|Kontrola|Sada|Detail sady|Katalog|Licence a)\b/u;
 // names and quoted titles that legitimately contain such letters
-const OK = /Čeština|Zásilkovna|Česká pošta|González|Ángel|Muffin578|„150g vert“|Jazyk \/ Language/;
+const OK = /Čeština|Zásilkovna|Česká pošta|González|Ángel|Muffin578|„150g vert“|Jazyk \/ Language|Norée/;
 const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
 
 async function check(name, url, fn, opts = {}) {
@@ -185,9 +185,9 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
     await p.waitForSelector('#reg-f:not([hidden])');
     await p.selectOption('#reg-f select[name=rights]', 'unknown');
     const n = await p.locator('.reg-i:visible').count();
-    const badges = await p.locator('.reg-i:visible .reg-b').allTextContents();
+    const badges = await p.locator('.reg-i:visible:not(.reg-thin) .reg-b').allTextContents();
     // the runtime binds short words with a no-break space: compare normalised text
-    if (!n || badges.some(t => t.replace(/\s+/g, ' ').trim() !== 'No licence stated')) e.push('rights filter: ' + n + ' ' + [...new Set(badges)].join('|'));
+    if (!n || badges.some(t => t.replace(/\s+/g, ' ').trim() !== 'Licence not confirmed')) e.push('rights filter: ' + n + ' ' + [...new Set(badges)].join('|'));
     await p.selectOption('#reg-f select[name=rights]', '');
     await noCzech(p, e);
     const kit = await p.locator('#p-so-arm100-101 a.reg-kit').getAttribute('href');

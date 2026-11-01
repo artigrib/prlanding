@@ -560,10 +560,11 @@ await check('origin desktop keeps the panel joystick', '/sim/origin/?test=1', as
 await check('registry static list (no JS needed)', '/katalog/rejstrik/', async p => {
   const html = await (await p.request.get(BASE + '/katalog/rejstrik/')).text();
   const data = JSON.parse(fs.readFileSync(new URL('../data/registry/projects.json', import.meta.url), 'utf8'));
-  const n = (html.match(/<li class="reg-i"/g) || []).length;
+  const n = (html.match(/<li class="reg-i/g) || []).length;
   if (n !== data.length) throw new Error(`static list has ${n} of ${data.length} projects`);
-  const unknown = [...html.matchAll(/<li class="reg-i"[^>]*data-rights="unknown"[\s\S]*?<\/li>/g)];
-  if (unknown.length !== data.filter(r => r.rights_class === 'unknown').length || unknown.some(m => !m[0].includes('>Licence neuvedena</span>'))) throw new Error('unknown licence not labelled "Licence neuvedena"');
+  // unknown rights: "Licence neověřena" badge, or (all details unverified) only "Údaje neověřeny"; never a licensed badge
+  const unknown = [...html.matchAll(/<li class="reg-i[^"]*"[^>]*data-rights="unknown"[\s\S]*?<\/li>/g)].map(m => m[0]);
+  if (unknown.length !== data.filter(r => r.rights_class === 'unknown').length || unknown.some(x => !x.includes('>Licence neověřena</span>') && !x.includes('>Údaje neověřeny</span>'))) throw new Error('unknown licence not labelled "Licence neověřena"');
   const ext = [...html.matchAll(/<a href="(https?:[^"]+)"([^>]*)>/g)].filter(m => !/rel="noopener"/.test(m[2]));
   if (ext.length) throw new Error('external link without rel=noopener: ' + ext[0][1]);
   if (/<li class="reg-i"[\s\S]*?<img/.test(html.split('<ol class="reg-l"')[1] || '')) throw new Error('image in the registry list');
@@ -579,6 +580,9 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
     await p.selectOption('#reg-f select[name=cat]', 'arm');
     const cats = await p.locator('.reg-i:visible').evaluateAll(els => els.map(e => e.dataset.cat));
     if (!cats.length || cats.some(c => c !== 'arm')) throw new Error('category filter');
+    await p.selectOption('#reg-f select[name=cat]', 'wheeled/rc-car');
+    const subs = await p.locator('.reg-i:visible').evaluateAll(els => els.map(e => e.dataset.cat + '/' + e.dataset.sub));
+    if (!subs.length || subs.some(c => c !== 'wheeled/rc-car')) throw new Error('subcategory filter');
     await p.selectOption('#reg-f select[name=cat]', '');
     await p.fill('#reg-f input[name=q]', 'lekiwi');
     await p.waitForFunction(() => document.querySelectorAll('.reg-i:not([hidden])').length < 10);

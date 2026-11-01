@@ -32,8 +32,10 @@
   function apply() {
     var f = form.elements, q = fold(f.q.value), cat = f.cat.value, rights = f.rights.value, printed = f.printed.value, fit = f.fit.value, sort = f.sort.value || 'fit';
     var words = q ? q.split(' ') : [], shown = 0;
+    // "wheeled/rc-car" = a subcategory inside its category
+    var catMain = cat.split('/')[0], catSub = cat.split('/')[1] || '';
     items.forEach(function (el) {
-      var ok = (!cat || el.getAttribute('data-cat') === cat) && (!rights || el.getAttribute('data-rights') === rights)
+      var ok = (!cat || el.getAttribute('data-cat') === catMain && (!catSub || el.getAttribute('data-sub') === catSub)) && (!rights || el.getAttribute('data-rights') === rights)
         && (!printed || el.getAttribute('data-printed') === printed) && (!fit || num(el, fit) >= 4);
       if (ok && words.length) { var t = el.getAttribute('data-text') || ''; ok = words.every(function (w) { return t.indexOf(w) !== -1; }); }
       el.hidden = !ok;

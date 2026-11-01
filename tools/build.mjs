@@ -81,7 +81,7 @@ const R = W.cs.PR_ROBOTS, SIMS = W.cs.PR_SIMS || {};
 // registry of open projects (data/registry): fail the build on a bad record, as for data/components
 const REG = loadRegistry();
 {
-  const errs = checkRegistry(REG.records, REG.cs, [...R, ...(W.cs.PR_SHOWCASE || [])].map(r => r.id));
+  const errs = checkRegistry(REG.records, REG.cs, Object.fromEntries([...R, ...(W.cs.PR_SHOWCASE || [])].map(r => [r.id, r.license ? r.license.hw : r.hw])));
   if (errs.length) throw new Error('data/registry check failed:\n  ' + errs.join('\n  '));
 }
 // the catalogue's SO-101 print time must match the build-time data the plan and the guide use
@@ -205,10 +205,12 @@ const NAV = {
 function siteNav(path, root) {
   const L = path.startsWith('en/') ? 'en' : 'cs';
   const home = path === 'index.html' || path === 'en/index.html';
-  const cur = /^(navody|en\/guides)\//.test(path) ? 'navody' : /^(pro-skoly|en\/for-schools)\//.test(path) ? 'skoly' : /^(katalog|en\/catalogue)\//.test(path) ? 'katalog' : '';
+  const cur = /^(navody|en\/guides)\//.test(path) ? 'navody' : /^(pro-skoly|en\/for-schools)\//.test(path) ? 'skoly' : '';
+  // the registry sits inside the catalogue section, but the Katalog link points at the home page: "true", not "page"
+  const inCat = /^(katalog|en\/catalogue)\//.test(path);
   const links = NAV[L].map(([k, h, t]) => {
     const href = home && k === 'katalog' ? '#katalog' : k === 'katalog' && L === 'cs' ? (root || './') + h : root + h;
-    return `<a href="${href}"${home && k === 'katalog' ? ' data-sec="katalog"' : ''}${k === cur ? ' aria-current="page"' : ''}>${t}</a>`;
+    return `<a href="${href}"${home && k === 'katalog' ? ' data-sec="katalog"' : ''}${k === cur ? ' aria-current="page"' : k === 'katalog' && inCat ? ' aria-current="true"' : ''}>${t}</a>`;
   }).join('');
   return `<nav class="nav" aria-label="${L === 'en' ? 'Main menu' : 'Hlavní menu'}">${links}</nav>`;
 }
