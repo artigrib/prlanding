@@ -27,4 +27,17 @@ orca.glb     – "ORCA Hand by ORCA Dexterity, Inc. — CC BY 4.0"
                removed, servo cases shown as simplified blocks, recoloured.
                This derivative is shared under the same licence, CC BY 4.0.
 
+sesame.glb   – Sesame Robot Project by dorianborian, Apache-2.0
+               (https://www.apache.org/licenses/LICENSE-2.0).
+               https://github.com/dorianborian/sesame-robot (hardware/cad/Sesame-ESP32-v122.step)
+               Changes: tessellated from the author's STEP assembly in its assembled pose, meshes
+               simplified, parts grouped into named nodes, recoloured (printed parts take the print
+               colour), rescaled and re-oriented. This derivative is published under Apache-2.0.
+koch.glb     – Koch v1.1 by Jess Moss / The Hugging Face team, after the low-cost arm by
+               Alexander Koch. Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0).
+               https://github.com/jess-moss/koch-v1-1 (hardware/follower/STEP, Follower_Arm.STEP)
+               Changes: follower arm assembled from the author's STEP assembly placements and part
+               files, tessellated, meshes simplified, parts as named nodes, recoloured, rescaled and
+               re-oriented. This derivative is published under Apache-2.0.
+
 Models of the other robots: see the credit line on each robot's page.
