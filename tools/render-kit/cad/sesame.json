@@ -1,0 +1,17 @@
+{ "root": "sesame", "up": "y", "front": "-x", "tol": 0.05, "ang": 0.35,
+  "split": ["^/[^/]+@\\d+/COMPOUND@\\d+$"],
+  "steps": [{"file": "sesame-robot/hardware/cad/Sesame-ESP32-v122.step"}],
+  "rules": [
+    ["/femur-?joint-([LR]\\d)@", "femur_joint_{1}", "print", 0.5],
+    ["/foot-joint-([LR]\\d)@", "foot_joint_{1}", "print", 0.5],
+    ["/Bottom-Cover@", "bottom_cover", "print", 0.5],
+    ["/Internal-Frame@", "internal_frame", "print", 0.5],
+    ["^/[^/]+@\\d+/COMPOUND@\\d+/s0$", "face_window", "servo", 0.5],
+    ["^/[^/]+@\\d+/COMPOUND@\\d+/s1$", "top_cover", "print", 0.5],
+    ["/(SG90[^/@]*)@(\\d+)", "servo#2", "servo", 0.15],
+    ["/Display_OLED[^/]*@|/OLED-128x64", "display", "servo", 0.3],
+    ["/S2_Mini_Board", "controller_board", "pcb", 0.1],
+    ["/KCD1-B2", "power_switch", "accent", 0.3],
+    ["Screws@", "screws", "metal", 0.2],
+    ["Battery", "battery", "accent", 0.3]
+  ] }
