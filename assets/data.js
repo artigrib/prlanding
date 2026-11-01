@@ -250,7 +250,34 @@ window.PR_ROBOTS = [
     specs: [['Kostka', '50 mm, tištěná nebo vstřikovaná'], ['Spojení', 'kuličkové magnety 5 mm v základní desce'], ['Moduly sestavy', 'Z-stage, 2× zrcadlo 45°, okulár s držákem telefonu, držák vzorku, 2 prázdné kostky'], ['Zaostření', 'hrubé ≈ 30 mm posunem objektivu, jemné ≈ ±6 mm ozubeným kolem'], ['Optika', 'objektiv (160 mm od zrcadla) + okulár'], ['Elektronika', 'žádná (mechanická verze)']],
     license: { hw: 'CERN-OHL-1.2', sw: 'MIT', status: 'verified', checked: '2026-11-01',
       sources: ['https://github.com/openUC2/UC2-GIT/blob/afc9de36f27d5a387e6b9ef1d85ae0cf33b4d3d6/License.md'] },
-    related: ['stackchan', 'otto', 'so101'] }
+    related: ['stackchan', 'otto', 'so101'] },
+  // Lab devices (cat 'lab'), no simulation. Models = the authors' per-part STEP files, which they exported in the
+  // assembly's coordinates (Sidekick: 3D_Assets, commit f799c0f; Poseidon: HARDWARE/pump/step, commit 5a139fe).
+  // Bought parts (motors, pumps, rods, syringe, electronics) are not modelled.
+  { id: 'sidekick', liquids: true, mats: [['petg', 'PETG (nebo PLA)', 'Dle projektu']], glb: true, render: true, credit: 'Vizualizace z dílů Sidekick (CERN-OHL-S-2.0); nožičky a držák zkumavek vynechány, motory, pumpy a elektronika nejsou modelované', name: 'Sidekick', type: 'Dávkovací robot na kapaliny', cat: 'lab', level: 'Střední', hw: 'CERN-OHL-S-2.0', sw: 'CERN-OHL-S-2.0',
+    author: 'Rodolfo Keesey a kol.', alt: 'Stolní dávkovací robot Sidekick s ramenem nad držákem mikrotitrační destičky',
+    short: 'Stolní robot, který dávkuje kapaliny do 96jamkové destičky. Kloubové rameno nad destičkou, čtyři pumpy po 10 µl.',
+    lead: 'Stolní robot pro dávkování kapalin do standardních mikrotitračních destiček (SBS, 96 jamek). Dva ploché krokové motory NEMA 17 natáčejí kloubové rameno nad destičkou, na jeho konci ústí hadičky ze čtyř elektromagnetických pump The Lee Company, které dávkují po 10 µl. Řídí ho Raspberry Pi Pico s programem v MicroPythonu a ovládá se jednoduchými příkazy přes USB. Kostra je celá tištěná, autoři doporučují PETG. Nejdražší částí jsou pumpy (4 × 135 USD podle kusovníku z roku 2022). Autoři dali pod licenci hardwaru (CERN-OHL-S-2.0) i program pro Pico.',
+    bomCost: '≈ 710 USD (4 pumpy, přepočtená cena autorů 2/2022; při nákupu celých balení ≈ 830 USD)', printTime: '—', software: 'MicroPython (Raspberry Pi Pico), příkazy přes USB',
+    repo: 'https://github.com/rodolfokeesey/Liquid-Handler', docs: 'https://github.com/rodolfokeesey/Liquid-Handler/blob/main/Supporting_Documentation/assembly_guide.pdf',
+    card: [['Pumpy', '4 × 10 µl'], ['Destička', '96 jamek (SBS)']],
+    bom: [['Pumpa The Lee Company LPMA1250110L (10 µl)', '4×'], ['Plochý krokový motor NEMA 17, 0,9°', '2×'], ['Driver krokového motoru TMC2209', '2×'], ['Raspberry Pi Pico', '1×'], ['Darlingtonovo pole ULN2803A', '1×'], ['Deska plošných spojů Sidekick (výroba podle souborů projektu)', '1×'], ['Ložisko 623-2Z (3 × 10 × 4 mm)', '3×'], ['Koncový spínač', '2×'], ['Tlačítko', '1×'], ['Zdroj 12 V', '1×'], ['PTFE hadičky 1/16″ a 1/8″', '1 sada'], ['Šrouby M2–M4', '1 sada'], ['Filament PETG', '1 kg']],
+    specs: [['Dávkování', '4 pumpy, po 10 µl'], ['Pohyb', 'kloubové rameno, 2× NEMA 17 (0,9°)'], ['Řízení', 'Raspberry Pi Pico, MicroPython, drivery TMC2209'], ['Napájení', 'zdroj 12 V'], ['Destička', 'SBS, 96 jamek'], ['Tisk', 'PETG (nebo PLA), výplň 20 %, s podporami'], ['Doba tisku', '—']],
+    license: { hw: 'CERN-OHL-S-2.0', sw: 'CERN-OHL-S-2.0', status: 'verified', checked: '2026-11-01',
+      sources: ['https://github.com/rodolfokeesey/Liquid-Handler/blob/main/license.txt'] },
+    related: ['poseidon', 'so101', 'parol6'] },
+  { id: 'poseidon', liquids: true, syringe: true, mats: [['pla', 'PLA', 'Dle projektu']], glb: true, render: true, credit: 'Vizualizace z dílů poseidon (BSD-2-Clause): jedna pumpa; kryt a držák stříkačky vynechány, motor, tyče a stříkačka nejsou modelované', name: 'Poseidon', type: 'Stříkačková (injekční) pumpa', cat: 'lab', level: 'Střední', hw: 'BSD-2-Clause', sw: 'BSD-2-Clause',
+    author: 'Pachter Lab, Caltech – A. Sina Booeshaghi a kol.', alt: 'Tištěné tělo stříkačkové pumpy Poseidon s posuvnými saněmi',
+    short: 'Stříkačková pumpa pro mikrofluidiku: krokový motor posouvá saně se stříkačkou. Jedna řídicí deska ovládá až tři pumpy.',
+    lead: 'Otevřená stříkačková (injekční) pumpa z laboratoře Pachter Lab na Caltechu, určené hlavně pro mikrofluidiku. Krokový motor NEMA 17 otáčí závitovou tyčí M5, která posouvá saně na dvou ocelových vodicích tyčích s lineárními ložisky; saně tlačí na píst stříkačky. Arduino s CNC shieldem řídí až tři pumpy, ovládají se z grafického programu v Pythonu na počítači nebo na Raspberry Pi. K systému patří i mikroskop (není v modelu). Tištěné díly jsou z PLA.',
+    bomCost: '≈ 175 USD za 3 pumpy (kusovník autorů, ceny z 1/2019); celý systém s mikroskopem pod 400 USD', printTime: '—', software: 'Python (PyQt5) + firmware pro Arduino',
+    repo: 'https://github.com/pachterlab/poseidon', docs: 'https://pachterlab.github.io/poseidon/hardware',
+    card: [['Pohon', 'NEMA 17 + závit M5'], ['Řízení', 'Arduino + CNC shield']],
+    bom: [['Krokový motor NEMA 17 (40 mm, 45 Ncm)', '1× na pumpu'], ['Spojka hřídele 5 mm / 5 mm', '1× na pumpu'], ['Ocelová tyč 6 mm, délka 200 mm', '2× na pumpu'], ['Lineární ložisko 6 mm', '2× na pumpu'], ['Závitová tyč M5 × 0,8, délka 170 mm, a matice M5', '1× na pumpu'], ['Šrouby M3 × 20 a M3 × 10, matice M3', '4 + 2 + 2× na pumpu'], ['Knoflík M5 (drží stříkačku)', '1× na pumpu'], ['Arduino + CNC shield (pro až 3 pumpy)', '1×'], ['Zdroj 12 V', '1×'], ['Injekční stříkačka', '1× na pumpu']],
+    specs: [['Pohon', 'NEMA 17, závitová tyč M5 × 0,8'], ['Vedení', '2× ocelová tyč 6 mm, lineární ložiska'], ['Řízení', 'Arduino + CNC shield (DRV8825), mikrokrokování 1/32'], ['Pump na desku', 'až 3'], ['Napájení', 'zdroj 12 V'], ['Tlak', 'podle autorů až 4 MPa s 1ml stříkačkou'], ['Tisk', 'PLA'], ['Doba tisku', '—']],
+    license: { hw: 'BSD-2-Clause', sw: 'BSD-2-Clause', status: 'verified', checked: '2026-11-01',
+      sources: ['https://github.com/pachterlab/poseidon/blob/master/LICENSE'] },
+    related: ['sidekick', 'parol6', 'so101'] }
 ];
 // Browser demos linked from product pages (r.sim). colorParam: the sim reads ?color= (so101 does not yet).
 // Sizes = uncompressed bytes of a first visit (all responses until the sim is idle, Chromium, empty cache);
@@ -276,6 +303,9 @@ window.PR_SAFETY = function (r) {
     if (/spinner|rotuj/i.test(all)) w.push('Rotující zbraň může vážně zranit a vymrštit úlomky: mimo arénu ji vždy zajistěte a nikdy ji neroztáčejte v ruce ani na stole.');
     if (/flipper/i.test(all)) w.push('Flipper se pohybuje prudce: při manipulaci s robotem mějte prsty mimo jeho dráhu.');
   }
+  // devices that handle liquids (r.liquids) / syringe pumps that build up pressure (r.syringe; poseidon README, Safety Considerations)
+  if (r.liquids) w.push('Laboratorní přístroj: kapaliny držte dál od elektroniky a zdroje, chemikálie a biologický materiál používejte jen podle pravidel laboratoře a pod dohledem. Tištěné díly z PLA nebo PETG nemusí odolat organickým rozpouštědlům. Přístroj nejdřív vyzkoušejte nasucho, bez kapalin.');
+  if (r.syringe) w.push('Stříkačková pumpa vyvine velký tlak: při ucpané hadičce může stříkačka nebo spoj prasknout a vystříknout kapalinu. Proud driveru motoru nastavte podle návodu autorů a pracujte s ochrannými brýlemi.');
   if (!r.noElectronics) w.push('Hardware napájejte jen zdrojem uvedeným v návodu projektu.');
   return w;
 };

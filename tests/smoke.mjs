@@ -251,7 +251,7 @@ await check('legacy sada.html redirects', '/sada.html?r=svrn', async p => {
   await p.goto(BASE + '/sada.html'); await p.waitForURL(/\/#katalog$/);
 });
 
-for (const id of ['so101', 'svrn', 'vert150', 'uc2']) {
+for (const id of ['so101', 'svrn', 'vert150', 'uc2', 'sidekick', 'poseidon']) {
   await check('product ' + id, `/sada/${id}/`, async p => {
     await p.waitForSelector('h1');
     if (!(await p.locator('h1').first().innerText()).trim()) throw new Error('empty h1');
@@ -261,7 +261,8 @@ for (const id of ['so101', 'svrn', 'vert150', 'uc2']) {
 await check('catalog lab filter', '/?typ=lab', async p => {
   await p.waitForSelector('#filters .filter[data-f="lab"][aria-pressed="true"]');
   const hrefs = await p.locator('#cards a.card').evaluateAll(as => as.map(a => a.getAttribute('href')));
-  if (!hrefs.length || !hrefs.every(h => /sada\/uc2\/$/.test(h) || !/sada\//.test(h)) || !hrefs.some(h => /sada\/uc2\/$/.test(h))) throw new Error('lab cards: ' + hrefs.join(', '));
+  const LAB = /sada\/(uc2|sidekick|poseidon)\/$/;
+  if (!hrefs.length || !hrefs.every(h => LAB.test(h) || !/sada\//.test(h)) || !['uc2', 'sidekick', 'poseidon'].every(id => hrefs.some(h => h.endsWith('sada/' + id + '/')))) throw new Error('lab cards: ' + hrefs.join(', '));
 });
 await check('kit uc2: lab crumb, no sim, axe', '/sada/uc2/', async p => {
   await p.waitForSelector('h1');
