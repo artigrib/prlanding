@@ -197,7 +197,20 @@ window.PR_ROBOTS = [
     // two candidate licences until the authors confirm: the derivation takes the stricter one (NC)
     license: { hw: ['CC-BY-SA-4.0', 'CC-BY-NC-SA-4.0'], status: 'unverified', checked: '2026-10-30',
       sources: ['https://www.printables.com/model/1146226-vertical-spinner-battlebot-antweight-150-g', 'https://www.thingiverse.com/thing:4835459'] },
-    related: ['svrn', 'otto', 'sawppy'] }
+    related: ['svrn', 'otto', 'sawppy'] },
+  // ORCA v2 base hand, right; facts from orcahand_hardware (README, ASSEMBLY_ADDENDUM, CAD) and orca_core (config.yaml, docs)
+  { id: 'orca', glb: true, render: true, credit: 'Vizualizace z modelu ORCA Dexterity (CC BY 4.0)', name: 'ORCA Hand', type: 'Robotická dlaň', cat: 'arm', level: 'Pokročilý', hw: 'CC BY 4.0', sw: 'MIT',
+    author: 'ORCA Dexterity', alt: 'Robotická dlaň ORCA Hand s pěti prsty na věži se servy',
+    short: 'Pětiprstá dlaň se 17 stupni volnosti, poháněná šlachami ze serv ve věži pod zápěstím.',
+    lead: 'Pětiprstá dlaň se 17 stupni volnosti: 16 kloubů v prstech a zápěstí. Prsty táhnou šlachy vedené v PTFE trubičkách od cívek na servech, která jsou ve věži pod zápěstím. Projekt podporuje serva Dynamixel i Feetech. Kůži prstů a dlaně odlijete ze silikonu do tištěných forem, nebo ji rychleji vytisknete z TPU. Varianta Touch má ve špičkách prstů hmatové senzory. Ovládá se z Pythonu knihovnou orca_core.',
+    bomCost: '—', printTime: '—', software: 'orca_core (Python), orca_ui',
+    repo: 'https://github.com/orcahand/orcahand_hardware', docs: 'https://github.com/orcahand/orcahand_hardware/blob/main/orca_v2/base/ASSEMBLY_ADDENDUM.md',
+    card: [['Osy', '17 DOF'], ['Pohon', 'šlachy, 17 serv']],
+    bom: [['Servo Dynamixel XC330 nebo Feetech (prsty)', '16×'], ['Servo zápěstí (v CAD Dynamixel XC430)', '1×'], ['Převodník USB pro sběrnici serv (např. U2D2)', '1×'], ['Deska konektorů motorů (Gerber v repozitáři, počet dle CAD)', '12×'], ['Ventilátor chlazení věže', '2×'], ['PTFE trubička pro vedení šlach', '1×'], ['Ložiska 4×8×3 a 8×13×4 mm, kolíky, šrouby a matice', '1 sada'], ['Silikon na kůži (nebo filament TPU)', '—']],
+    specs: [['Stupně volnosti', '17 (zápěstí + 16 v prstech)'], ['Klouby prstů', 'palec 4, ostatní prsty 3 (abdukce, MCP, PIP)'], ['Pohon', '17 serv Dynamixel nebo Feetech, šlachy v PTFE trubičkách'], ['Kůže', 'silikon odlitý do tištěných forem, nebo tisk z TPU'], ['Varianty', 'základní; Touch s hmatovými senzory ve špičkách prstů'], ['Simulace', 'URDF a MJCF (orcahand_description)'], ['Tisk', 'projekty Bambu Studio s připravenými podložkami'], ['Doba tisku', '—']],
+    license: { hw: 'CC-BY-4.0', sw: 'MIT', trademark: true, status: 'verified', checked: '2026-11-01',
+      sources: ['https://github.com/orcahand/orcahand_hardware/blob/main/LICENSE', 'https://github.com/orcahand/orca_core/blob/main/LICENSE'] },
+    related: ['hand', 'so101', 'aira'] }
 ];
 // Browser demos linked from product pages (r.sim). colorParam: the sim reads ?color= (so101 does not yet).
 // Sizes = uncompressed bytes of a first visit (all responses until the sim is idle, Chromium, empty cache);
