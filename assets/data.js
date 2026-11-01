@@ -318,7 +318,23 @@ window.PR_ROBOTS = [
     license: { hw: 'CC-BY-4.0', sw: 'CC-BY-4.0', status: 'verified', checked: '2026-11-01',
       notes: 'Repozitář (STL, STEP, desky, kód) je pod CC BY 4.0 (License.md). Sestava obsahuje i modely kupovaných dílů (kola, motor, servo).',
       sources: ['https://github.com/TRD-B/Lizard/blob/main/License.md', 'https://github.com/TRD-B/Lizard/blob/main/BOM%20Lizard.xlsx'] },
-    related: ['rc128', 'zcar2', 'exomy'] }
+    related: ['rc128', 'zcar2', 'exomy'] },
+  // Lab device, no simulation. Model = parts exported one by one from the authors' OpenSCAD sources (tag v7.0.0-beta5)
+  // and placed with their render placements: tools/lab-cad/openflexure/ofm_assembly.scad + ofm_glb.py. Facts from the
+  // sources only (scad comments and parameters); the software is a separate project not covered here (noSoftware).
+  { id: 'openflexure', glb: true, render: true, noSoftware: true, credit: 'Vizualizace z OpenSCAD zdrojů OpenFlexure Microscope v7 (CERN-OHL-S-2.0): motorizovaná verze s objektivem RMS, díly rozmístěné podle renderovacích skriptů autorů; šrouby, kabely, čočky a deska LED nejsou modelované', name: 'OpenFlexure Microscope', type: 'Motorizovaný mikroskop', cat: 'lab', level: 'Pokročilý', hw: 'CERN-OHL-S-2.0', sw: 'neověřeno',
+    author: 'OpenFlexure (Richard Bowman, Julian Stirling a kol.)', alt: 'Tištěný mikroskop OpenFlexure na stojanu se zásuvkou na elektroniku, s krokovými motory a osvětlením nad stolkem',
+    short: 'Tištěný mikroskop, jehož stolek se posouvá na ohebných plastových kloubech. Tři krokové motory, objektiv RMS a kamera Raspberry Pi.',
+    lead: 'Otevřený mikroskop s posuvem ve třech osách. Tělo se stolkem se tiskne vcelku a stolek se posouvá na ohebných plastových kloubech (flexurách); podle autorů tak dosahuje velmi jemného posuvu v rozsahu asi 10 mm. Každou osu posouvá šroub M3 s mosaznou maticí, který přes ozubená kola v převodu 2 : 1 otáčí krokový motor 28BYJ-48 (existuje i ruční verze s kolečky). Motory řídí deska Sangaboard, obraz snímá kamera Raspberry Pi Camera v2 a Raspberry Pi 4 je v zásuvce ve stojanu. Model ukazuje motorizovanou verzi s objektivem RMS a tubusovou čočkou; levnější verze používá místo objektivu čočku z kamery Pi. Shora vzorek osvětluje deska s LED přes difuzor a kondenzor. Model vychází z vývojové verze v7.0.0-beta5. Software pro mikroskop je samostatný projekt autorů.',
+    bomCost: '—', printTime: '—', software: 'Software autorů pro Raspberry Pi je samostatný projekt, jeho licenci jsme neověřili',
+    repo: 'https://gitlab.com/openflexure/openflexure-microscope', docs: 'https://build.openflexure.org/',
+    card: [['Osy', '3 (X, Y, Z)'], ['Optika', 'objektiv RMS']],
+    bom: [['Krokový motor 28BYJ-48', '3×'], ['Řídicí deska motorů Sangaboard', '1×'], ['Raspberry Pi 4 Model B (nebo Pi 3)', '1×'], ['Kamera Raspberry Pi Camera v2', '1×'], ['Objektiv RMS (tubusová délka 160 mm, parfokální vzdálenost 45 mm)', '1×'], ['Tubusová čočka f = 50 mm, průměr 12,7 mm', '1×'], ['Čočka kondenzoru, průměr 13 mm', '1×'], ['Deska osvětlení s LED', '1×'], ['Bílý akrylátový difuzor', '1×'], ['Šroub M3 × 25 se šestihrannou hlavou (posuvový šroub)', '3×'], ['Mosazná matice M3', '3×'], ['Podložka M3', '6×'], ['Pružný kroužek z vitonu (táhne osu zpět)', '3×']],
+    specs: [['Posuv vzorku', 'stolek na ohebných kloubech, jemný posuv v rozsahu ≈ 10 mm (podle autorů)'], ['Pohon', '3× 28BYJ-48, ozubená kola 2 : 1, posuvové šrouby M3'], ['Řízení', 'Sangaboard + Raspberry Pi 4 v zásuvce stojanu'], ['Kamera', 'Raspberry Pi Camera v2'], ['Optika (model)', 'objektiv RMS + tubusová čočka f = 50 mm; levná verze s čočkou kamery Pi'], ['Osvětlení', 'deska s LED, difuzor, kondenzor s čočkou 13 mm'], ['Verze', 'v7.0.0-beta5 (vývojová)'], ['Doba tisku', '—']],
+    license: { hw: 'CERN-OHL-S-2.0', status: 'verified', checked: '2026-11-01',
+      notes: 'Hardware (OpenSCAD zdroje) je pod CERN-OHL-S-2.0 (soubor License, tag v7.0.0-beta5); náš 3D model z nich je proto také CERN-OHL-S-2.0. Software je samostatný projekt, jeho licenci jsme neověřili.',
+      sources: ['https://gitlab.com/openflexure/openflexure-microscope/-/blob/v7.0.0-beta5/License'] },
+    related: ['uc2', 'sidekick', 'poseidon'] }
 ];
 // Browser demos linked from product pages (r.sim). colorParam: the sim reads ?color= (so101 does not yet).
 // Sizes = uncompressed bytes of a first visit (all responses until the sim is idle, Chromium, empty cache);
