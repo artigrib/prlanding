@@ -611,6 +611,9 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
 await check('home catalogue links the registry and back', '/', async p => {
   const h = await p.locator('#katalog a[data-cta="registry"]').getAttribute('href');
   if (new URL(h, p.url()).pathname !== '/katalog/rejstrik/') throw new Error('registry link ' + h);
+  const n = JSON.parse(fs.readFileSync(new URL('../data/registry/projects.json', import.meta.url), 'utf8')).length;
+  const t = (await p.locator('#katalog a[data-cta="registry"]').textContent()).replace(/\s+/g, ' ').trim();
+  if (t !== `Všech ${n} tisknutelných projektů v rejstříku →`) throw new Error('registry link text: ' + t);
   const html = await (await p.request.get(BASE + '/katalog/rejstrik/')).text();
   if (!/<a href="\.\.\/\.\.\/#katalog">/.test(html)) throw new Error('no link back to #katalog');
   const sm = await (await p.request.get(BASE + '/sitemap.xml')).text();

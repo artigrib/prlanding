@@ -442,7 +442,7 @@ home = home.replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->
   .replace(/id="robot-count">\d+</, `id="robot-count">${R.length}<`).replace(/id="robot-count2">\d+</, `id="robot-count2">${R.length}<`);
 if (!home.includes('<!--/cards-->')) throw new Error('index.html: cards placeholder not found');
 // catalogue -> registry link (the registry page links back to #katalog)
-const regLink = L => `<!--registry-link--><p class="reg-link"><a href="katalog/rejstrik/" data-cta="registry">${L === 'en' ? `All ${REG.records.length} open projects in the registry` : `Všech ${REG.records.length} otevřených projektů v rejstříku`} <span aria-hidden="true">→</span></a></p><!--/registry-link-->`;
+const regLink = L => `<!--registry-link--><p class="reg-link"><a href="katalog/rejstrik/" data-cta="registry">${L === 'en' ? `All ${REG.records.length} printable projects in the registry` : `Všech ${REG.records.length} tisknutelných projektů v rejstříku`} <span aria-hidden="true">→</span></a></p><!--/registry-link-->`;
 if (!/<!--registry-link-->[\s\S]*?<!--\/registry-link-->/.test(home)) throw new Error('index.html: registry-link placeholder not found');
 home = home.replace(/<!--registry-link-->[\s\S]*?<!--\/registry-link-->/, () => regLink('cs'));
 home = home.replace(/<!--hero-new-->[\s\S]*?<!--\/hero-new-->/, `<!--hero-new-->${heroNew(home)}<!--/hero-new-->`)

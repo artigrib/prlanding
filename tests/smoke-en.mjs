@@ -202,6 +202,9 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
 await check('en home links the registry', '/en/', async (p, e) => {
   const h = await p.locator('#katalog a[data-cta="registry"]').getAttribute('href');
   if (new URL(h, p.url()).pathname !== '/en/catalogue/registry/') e.push('registry link ' + h);
+  const n = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/registry/projects.json'), 'utf8')).length;
+  const t = (await p.locator('#katalog a[data-cta="registry"]').textContent()).replace(/\s+/g, ' ').trim();
+  if (t !== `All ${n} printable projects in the registry →`) e.push('registry link text: ' + t);
 });
 // PR-Bench leaderboard draft (English): noindex, rendered from the results JSON, mock data labelled, axe clean
 for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
