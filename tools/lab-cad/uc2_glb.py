@@ -3,7 +3,7 @@
 Source: https://github.com/openUC2/UC2-GIT @ afc9de36f27d5a387e6b9ef1d85ae0cf33b4d3d6 (hardware CERN-OHL-1.2, License.md).
 Usage:  python3 -I tools/lab-cad/uc2_glb.py <UC2-GIT>/TheBOX/SimpleBOX/BUILD_ME/STL uc2-raw.glb
         npx -y gltfpack@0.25.0 -i uc2-raw.glb -o models/uc2.glb -kn -km -cc -vp 14 -vn 8
-Renders: node tools/render-kit/render.mjs uc2 dist=5.8
+Renders: node tools/render-kit/render.mjs uc2 dist=5.0
 Licence of this derived model: CERN-OHL-1.2 (same as the source), see models/NOTICE.txt.
 Parts: the author's STL files from openUC2/UC2-GIT TheBOX/SimpleBOX/BUILD_ME/STL (UC2 v2 cubes), placed on the
 50 mm UC2 grid per APPLICATIONS/APP_SIMPLE-Smartphone_Microscope/mechanical/Readme.md ("Building the Smartphone
