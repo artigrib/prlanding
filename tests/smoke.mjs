@@ -257,6 +257,10 @@ for (const id of ['so101', 'svrn', 'vert150']) {
     if (!(await p.locator('h1').first().innerText()).trim()) throw new Error('empty h1');
   });
 }
+await check('parol6 keeps the pneumatic-gripper warning', '/sada/parol6/', async p => {
+  await p.waitForSelector('h1');
+  if (!/stlačeným vzduchem/.test(await p.locator('body').textContent())) throw new Error('gripper warning missing');
+});
 // RC cars: product page, licence + battery safety visible, axe clean at phone width
 for (const id of ['rc128', 'zcar2', 'lizard']) {
   await check(`product ${id}: safety note, axe 390px`, `/sada/${id}/`, async p => {
@@ -264,6 +268,8 @@ for (const id of ['rc128', 'zcar2', 'lizard']) {
     await p.waitForSelector('h1');
     if (!/LiPo/.test(await p.locator('body').textContent())) throw new Error('battery safety note missing');
     if (id === 'lizard' && !/954\s?EUR/.test(await p.locator('body').textContent())) throw new Error('Lizard BOM cost missing');
+    // tyres ("pneumatiky") must not trigger the compressed-air gripper warning
+    if (/stlačeným vzduchem/.test(await p.locator('body').textContent())) throw new Error('false pneumatic-gripper warning');
     await p.addScriptTag({ content: AXE });
     const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
     const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');

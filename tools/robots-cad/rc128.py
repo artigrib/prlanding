@@ -5,11 +5,15 @@ Then: npx -y gltfpack@0.25.0 -i out-raw.glb -o ../../models/rc128.glb -kn -km -c
 
 No FreeCAD needed: an .FCStd file is a zip whose Document.xml lists the objects and whose *.Shape.brp files are
 the saved OpenCASCADE result shapes, read here with OCP. Source: github.com/zortness/open_128_rc_car @ f9155c21.
-Part set = doc/gettingstarted.md "most basic car" (single-piece pan chassis, tilted 130 motor rear end,
-threaded rear axle). Parts the author already placed in car coordinates (chassis, knuckles, steering link,
-servo and servo mount, tilted motor mount with its motor, pinion and main gear clones, rear axle mount) keep
-the author's position. Wheels and tyres are modelled at the print origin; we place them at the author's wheel
-proxies (02_WheelProxies.FCStd: one cylinder per wheel); the M3 rod goes on the main-gear axis.
+Part set: close to doc/gettingstarted.md "most basic car" (single-piece pan chassis, tilted 130 motor rear end,
+threaded rear axle); the servo mount is the one the author placed in 03_Servo.FCStd (MicroServoMount), not the
+MicroServoMountLongThrow the guide recommends, which is only saved at the print origin. Parts the author placed
+in car coordinates (chassis, right knuckle, steering link, servo and servo mount, tilted motor mount with its
+motor, pinion and main gear clones, rear axle mount) keep the author's position. Placed by us:
+- left steering knuckle: the author's body is saved 64 mm off to the side (print layout); it is exactly the mirror
+  image of the right knuckle, so we move it +64 mm in y into the mirror position (meets the steering link at +y);
+- wheels and tyres (modelled at the print origin): on the author's wheel proxies (02_WheelProxies.FCStd);
+- the M3 rod: on the main-gear axis.
 Car frame: +x forward, +y left, +z up (mm) -> glTF: X = y, Y = z, Z = x, metres, floor at 0.
 """
 import os
@@ -85,7 +89,8 @@ def add(group, name, mat, fn, obj, place=None):
 B = '19_PanChassisSinglePiece.FCStd'
 add('chassis', 'pan_chassis', 'print', B, 'Body071')
 add('steering', 'steering_knuckle_right', 'print', '01_PanChassisTwoPiece.FCStd', 'Body019')
-add('steering', 'steering_knuckle_left', 'print', '01_PanChassisTwoPiece.FCStd', 'Body023')
+add('steering', 'steering_knuckle_left', 'print', '01_PanChassisTwoPiece.FCStd', 'Body023',
+    place=lambda P: P + np.array([0.0, 64.0, 0.0]))   # print-layout offset -> mirror of the right knuckle
 add('steering', 'steering_link', 'print', '01_PanChassisTwoPiece.FCStd', 'Body022')
 add('steering', 'micro_servo', 'servo', '03_Servo.FCStd', 'Body006')
 add('steering', 'servo_mount', 'print', '03_Servo.FCStd', 'Body030')
