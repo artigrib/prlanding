@@ -1,0 +1,6596 @@
+[
+ {
+  "id": "openqdd-v1",
+  "name": "OpenQDD V1",
+  "category": "actuator",
+  "summary_en": "3D-printed quasi-direct-drive robotic actuator with a 9:1 planetary gearbox around an Eaglepower 8308 90KV pancake BLDC, driven by an ODrive S1.",
+  "homepage": "https://www.aaedmusa.com/projects/openqdd",
+  "repo": "https://github.com/aaedmusa/OpenQDD-V1",
+  "cad": null,
+  "licenses": {
+   "hardware": "none stated (no LICENSE file in repo)",
+   "software": "none stated (no LICENSE file in repo)",
+   "docs": "none stated (no LICENSE file in repo)"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "Eaglepower 8308 90KV BLDC + 9:1 printed planetary",
+  "control": "ODrive S1 (CAN/USB, magnetic encoder)",
+  "bom_cost": "~USD 247 incl. ODrive S1 ~$149 and motor ~$61 (Hackster article)",
+  "maturity": {
+   "last_activity": "2023-06",
+   "stars": 138,
+   "known_builds": "multiple derivatives on GitHub (e.g. Hyperspawn/openqdd-hs, JaschaWallmeier/OpenQDD)",
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "High-current BLDC + LiPo/bench supply: pinch hazard at output, motor/driver heating, battery fire risk; printed gears can shear under impact.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 4,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/aaedmusa/OpenQDD-V1",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://hackster.io/news/3d-print-your-own-actuator-for-robots-ee594207abcf",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "torque 16.36 Nm (secondary source)",
+   "bom_cost (secondary source)",
+   "cad link",
+   "homepage content (fetch blocked)"
+  ]
+ },
+ {
+  "id": "aaedmusa-capstan-drive",
+  "name": "Capstan Drive test stand (Aaed Musa)",
+  "category": "actuator",
+  "summary_en": "PLA-printed rope-driven capstan reducer test stand (8.55:1, 120 deg travel) with an Eagle Power 90KV BLDC and ODrive S1; low backlash, high transparency.",
+  "homepage": "https://www.aaedmusa.com/projects/capstandrive",
+  "repo": "https://github.com/aaedmusa/Capstan-Drive",
+  "cad": null,
+  "licenses": {
+   "hardware": "none stated (no LICENSE file in repo)",
+   "software": "none stated (no LICENSE file in repo)",
+   "docs": "none stated (no LICENSE file in repo)"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "Eagle Power 90KV BLDC + 8.55:1 capstan (rope) reduction",
+  "control": "ODrive S1 FOC",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2024-06",
+   "stars": 654,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "High-current BLDC + LiPo/bench supply: pinch hazard at output, motor/driver heating, battery fire risk; printed gears can shear under impact. Tensioned rope can snap.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 4,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/aaedmusa/Capstan-Drive",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "bom_cost",
+   "known builds"
+  ]
+ },
+ {
+  "id": "aaedmusa-internal-cycloidal-actuator",
+  "name": "Internal Cycloidal Actuator (Aaed Musa)",
+  "category": "actuator",
+  "summary_en": "Compact actuator with a self-built (custom-wound) BLDC motor and an 8:1 cycloidal drive nested inside the motor, Mini-Cheetah style.",
+  "homepage": "https://github.com/aaedmusa/Internal-Cycloidal-Actuator",
+  "repo": "https://github.com/aaedmusa/Internal-Cycloidal-Actuator",
+  "cad": null,
+  "licenses": {
+   "hardware": "none stated (no LICENSE file in repo)",
+   "software": "none stated (no LICENSE file in repo)",
+   "docs": "none stated (no LICENSE file in repo)"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "custom-built BLDC motor + internal 8:1 cycloidal",
+  "control": "unknown",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2024-05",
+   "stars": 316,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "High-current BLDC + LiPo/bench supply: pinch hazard at output, motor/driver heating, battery fire risk; printed gears can shear under impact. Strong magnets during rotor assembly.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/aaedmusa/Internal-Cycloidal-Actuator",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "controller",
+   "printed share of motor parts",
+   "bom_cost"
+  ]
+ },
+ {
+  "id": "berkeley-humanoid-lite-actuator",
+  "name": "Berkeley Humanoid Lite actuator",
+  "category": "actuator",
+  "summary_en": "Modular actuator of the open Berkeley Humanoid Lite: drone BLDC (MAD M6C12 150KV for 6512 / 5010 size) with a PLA 3D-printed cycloidal gearbox and embedded magnetic encoder, driven by a B-G431B-ESC1.",
+  "homepage": "https://lite.berkeley-humanoid.org/",
+  "repo": "https://github.com/HybridRobotics/berkeley-humanoid-lite",
+  "cad": "https://berkeley-humanoid-lite.gitbook.io/docs/getting-started-with-hardware/building-the-actuator",
+  "licenses": {
+   "hardware": "CC-BY-SA-4.0",
+   "software": "MIT",
+   "docs": "CC-BY-SA-4.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "MAD M6C12 150KV (6512) or 5010 BLDC + printed cycloidal reducer",
+  "control": "B-G431B-ESC1 (Moteus/ODrive/VESC also possible), CAN; IsaacLab RL stack",
+  "bom_cost": "6512: USD 188 (US)/157 (CN); 5010: USD 136/94 per actuator; full robot USD 4,312 (paper Table III)",
+  "maturity": {
+   "last_activity": "2026-03",
+   "stars": 2004,
+   "known_builds": "many community builds reported (Discord, derivatives e.g. zhangdong-cheku cycloidal V2)",
+   "paper": "https://arxiv.org/abs/2504.17249",
+   "docs_quality": "good"
+  },
+  "sim_model": "URDF/MJCF/USD in berkeley_humanoid_lite_assets",
+  "safety_notes": "High-current BLDC + LiPo/bench supply: pinch hazard at output, motor/driver heating, battery fire risk; printed gears can shear under impact. PLA reducer stiffness ~319 Nm/rad (paper); test with torque limits.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 5,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/HybridRobotics/berkeley-humanoid-lite",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://arxiv.org/pdf/2504.17249",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://hackaday.com/2026/08/30/lower-cost-humanoid-robot-leverages-diy-actuators/",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "gear ratio",
+   "known builds count"
+  ]
+ },
+ {
+  "id": "opentorque-actuator",
+  "name": "OpenTorque Actuator",
+  "category": "actuator",
+  "summary_en": "Compliant, back-drivable actuator for legged robots by Gabrael Levine: large outrunner BLDC with a 3D-printed planetary gearbox; widely forked ancestor of SpryDrive and others.",
+  "homepage": "https://hackaday.io/project/159404-opentorque-actuator",
+  "repo": "https://github.com/G-Levine/OpenTorque-Actuator",
+  "cad": null,
+  "licenses": {
+   "hardware": "CC-BY-SA-4.0",
+   "software": "CC-BY-SA-4.0",
+   "docs": "CC-BY-SA-4.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "9235-size 100KV outrunner BLDC + printed planetary (6:1 reported)",
+  "control": "ODrive / VESC (community reports)",
+  "bom_cost": "~USD 150 (RobotShop community build, derivative)",
+  "maturity": {
+   "last_activity": "2019-04",
+   "stars": 444,
+   "known_builds": "community builds and mods (RobotShop forum, NOT-JON-NOT/Modified_OpenTorque_Project)",
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "High-current BLDC + LiPo/bench supply: pinch hazard at output, motor/driver heating, battery fire risk; printed gears can shear under impact.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 4,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/G-Levine/OpenTorque-Actuator",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://community.robotshop.com/forum/t/3d-printed-opentorque-actuator",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "motor/ratio/torque from derivative build",
+   "hackaday page (fetch blocked)"
+  ]
+ },
+ {
+  "id": "sprydrive",
+  "name": "SpryDrive",
+  "category": "actuator",
+  "summary_en": "Affordable QDD actuator: brushless outrunner, low-cost metal VersaPlanetary 7:1 gearbox and 3D-printed housing; ~0.13 deg backlash; inspired by OpenTorque.",
+  "homepage": "https://github.com/bbokser/sprydrive",
+  "repo": "https://github.com/bbokser/sprydrive",
+  "cad": "https://makerworld.com/en/models/409587",
+  "licenses": {
+   "hardware": "MIT",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "medium",
+  "actuation": "Herlea X8318S or Turnigy 9235 BLDC + 7:1 metal planetary",
+  "control": "unknown",
+  "bom_cost": "see SpryDrive BoM.xlsx in repo",
+  "maturity": {
+   "last_activity": "2021-04",
+   "stars": 40,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "High-current BLDC + LiPo/bench supply: pinch hazard at output, motor/driver heating, battery fire risk; printed gears can shear under impact. Requires milling and arbor-press steps.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/bbokser/sprydrive",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "controller",
+   "bom total",
+   "makerworld listing ownership"
+  ]
+ },
+ {
+  "id": "tiptapmotor",
+  "name": "TipTapMotor",
+  "category": "actuator",
+  "summary_en": "Modular 3D-printed torque-controllable BLDC actuator, 47x47x47 mm, 8:1 printed planetary on a GBM3506 gimbal motor with the DirectServo PCB.",
+  "homepage": "https://github.com/DarrenLevine/TipTapMotor",
+  "repo": "https://github.com/DarrenLevine/TipTapMotor",
+  "cad": "https://github.com/DarrenLevine/TipTapMotor",
+  "licenses": {
+   "hardware": "MIT",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "iPower GBM3506H-130T gimbal BLDC + 8:1 printed planetary",
+  "control": "DirectServo PCB (DarrenLevine/DirectServo)",
+  "bom_cost": "~USD 74 per actuator (repo description)",
+  "maturity": {
+   "last_activity": "2020-02",
+   "stars": 16,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low-voltage gimbal motor; small pinch risk.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 3,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/DarrenLevine/TipTapMotor",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "firmware details"
+  ]
+ },
+ {
+  "id": "odri-actuator-module",
+  "name": "ODRI Open Robot Actuator (Solo/Bolt/TriFinger module)",
+  "category": "actuator",
+  "summary_en": "Open Dynamic Robot Initiative brushless actuator module: T-Motor 4004 300KV with 9:1 dual-stage timing-belt reduction, 3D-printed shells/pulleys, optical encoder; ~2.5 Nm at 12 A, 150 g; basis of Solo8/12, Bolt and TriFinger.",
+  "homepage": "https://open-dynamic-robot-initiative.github.io",
+  "repo": "https://github.com/open-dynamic-robot-initiative/open_robot_actuator_hardware",
+  "cad": "https://github.com/open-dynamic-robot-initiative/open_robot_actuator_hardware",
+  "licenses": {
+   "hardware": "BSD-3-Clause",
+   "software": "BSD-3-Clause",
+   "docs": "BSD-3-Clause"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "T-Motor Antigravity 4004 300KV + 9:1 belt",
+  "control": "BLMC uDriver / master board (ODRI), C++/Python",
+  "bom_cost": "null (supplier list without prices)",
+  "maturity": {
+   "last_activity": "2022-09",
+   "stars": 1513,
+   "known_builds": "used by multiple labs (Solo, TriFinger platforms)",
+   "paper": "https://open-dynamic-robot-initiative.github.io",
+   "docs_quality": "good"
+  },
+  "sim_model": "unknown",
+  "safety_notes": "High-current BLDC + LiPo/bench supply: pinch hazard at output, motor/driver heating, battery fire risk; printed gears can shear under impact. SLA/Polyjet printing recommended for belt pulleys.",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 5,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/open-dynamic-robot-initiative/open_robot_actuator_hardware",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/open-dynamic-robot-initiative/open_robot_actuator_hardware/blob/master/mechanics/actuator_module_v1/README.md",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "sim model",
+   "known builds",
+   "paper URL specific"
+  ]
+ },
+ {
+  "id": "jeongseojin-qdd-actuator",
+  "name": "Open QDD actuator (JeongSeoJin)",
+  "category": "actuator",
+  "summary_en": "Open-source QDD actuator with an 8110-size pancake BLDC and internal 10:1 cycloidal reducer in a 3D-printed + aluminium structure; 8.8 Nm max, 22 rad/s at 24 V.",
+  "homepage": "https://github.com/JeongSeoJin/quasi-direct-drive-actuator",
+  "repo": "https://github.com/JeongSeoJin/quasi-direct-drive-actuator",
+  "cad": null,
+  "licenses": {
+   "hardware": "none stated (no LICENSE file in repo)",
+   "software": "none stated (no LICENSE file in repo)",
+   "docs": "none stated (no LICENSE file in repo)"
+  },
+  "rights_class": "unknown",
+  "printed_share": "medium",
+  "actuation": "8110 pancake BLDC + internal 10:1 cycloidal",
+  "control": "FOC (driver unknown)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-06",
+   "stars": 69,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "High-current BLDC + LiPo/bench supply: pinch hazard at output, motor/driver heating, battery fire risk; printed gears can shear under impact.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/JeongSeoJin/quasi-direct-drive-actuator",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "motor driver",
+   "bom_cost"
+  ]
+ },
+ {
+  "id": "timxuti-integrated-joint-actuator",
+  "name": "3D-Printed Integrated Joint Actuator (timxuti)",
+  "category": "actuator",
+  "summary_en": "Printed QDD actuator with custom ironless Halbach-array rotor on a 10020 stator, internal 11:1 cycloidal gearbox (iglide i190-PF disks, PA6-CF structure) and integrated ODrive S1 (V6).",
+  "homepage": "https://github.com/timxuti/Integrated-Joint-Actuator",
+  "repo": "https://github.com/timxuti/Integrated-Joint-Actuator",
+  "cad": "https://github.com/timxuti/Integrated-Joint-Actuator",
+  "licenses": {
+   "hardware": "MIT",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "10020 stator + N52 Halbach rotor (custom BLDC) + 11:1 cycloidal",
+  "control": "ODrive S1",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2025-12",
+   "stars": 12,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "High-current BLDC + LiPo/bench supply: pinch hazard at output, motor/driver heating, battery fire risk; printed gears can shear under impact. Requires engineering filaments (PA6-CF, iglide).",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/timxuti/Integrated-Joint-Actuator",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "torque",
+   "bom_cost"
+  ]
+ },
+ {
+  "id": "sirojudin-cycloidal-actuator",
+  "name": "3D-printed cycloidal actuator (sirojudinMunir)",
+  "category": "actuator",
+  "summary_en": "3D-printed cycloidal actuator repository with a step-by-step pictorial assembly guide.",
+  "homepage": "https://github.com/sirojudinMunir/3D-printed-cycloidal-actuator",
+  "repo": "https://github.com/sirojudinMunir/3D-printed-cycloidal-actuator",
+  "cad": null,
+  "licenses": {
+   "hardware": "MIT",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "unknown",
+  "control": "unknown",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-02",
+   "stars": 217,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "High-current BLDC + LiPo/bench supply: pinch hazard at output, motor/driver heating, battery fire risk; printed gears can shear under impact.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 2,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/sirojudinMunir/3D-printed-cycloidal-actuator",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "motor",
+   "ratio",
+   "controller",
+   "all specs"
+  ]
+ },
+ {
+  "id": "koshiro-internal-cycloidal-actuator",
+  "name": "Internal Cycloidal Robotic Actuator (KoshiroRobot)",
+  "category": "actuator",
+  "summary_en": "MIT-licensed internal cycloidal robotic actuator repo (no README at check time).",
+  "homepage": "https://github.com/KoshiroRobot/Internal-Cycloidal-Robotic-Actuator",
+  "repo": "https://github.com/KoshiroRobot/Internal-Cycloidal-Robotic-Actuator",
+  "cad": null,
+  "licenses": {
+   "hardware": "MIT",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "unknown",
+  "actuation": "unknown",
+  "control": "unknown",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2025-01",
+   "stars": 55,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "unknown",
+  "fit": {
+   "maker": 2,
+   "school": 1,
+   "lab": 2,
+   "plan_guide_treatment": 1
+  },
+  "sources": [
+   {
+    "url": "https://github.com/KoshiroRobot/Internal-Cycloidal-Robotic-Actuator",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "everything except license/stars"
+  ]
+ },
+ {
+  "id": "utwente-antibacklash-cycloidal",
+  "name": "Anti-Backlash Cycloidal Actuator (Volbeda & Roozing, U. Twente)",
+  "category": "actuator",
+  "summary_en": "Cost-effective, torque-dense 3D-printed cycloidal actuator with two anti-backlash mechanisms (conical disk, split non-pinwheel); full SOLIDWORKS CAD, STL/STEP, BOM, test scripts and profile generator.",
+  "homepage": "https://github.com/geez0x1/2025-cycloidal-drive-antibacklash",
+  "repo": "https://github.com/geez0x1/2025-cycloidal-drive-antibacklash",
+  "cad": "https://github.com/JelmerV/Anti-Backlash-Cycloidal-Actuator",
+  "licenses": {
+   "hardware": "CC-BY-SA-4.0",
+   "software": "CC-BY-SA-4.0",
+   "docs": "CC-BY-SA-4.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "BLDC + printed cycloidal (details in thesis)",
+  "control": "unknown (test scripts provided)",
+  "bom_cost": "see Documentation/BOM in repo",
+  "maturity": {
+   "last_activity": "2025-04",
+   "stars": 14,
+   "known_builds": null,
+   "paper": "https://essay.utwente.nl/fileshare/file/103595/103595_Volbeda_MA_EEMCS.pdf",
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "High-current BLDC + LiPo/bench supply: pinch hazard at output, motor/driver heating, battery fire risk; printed gears can shear under impact.",
+  "fit": {
+   "maker": 3,
+   "school": 3,
+   "lab": 5,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/geez0x1/2025-cycloidal-drive-antibacklash",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/JelmerV/Anti-Backlash-Cycloidal-Actuator",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "motor model",
+   "journal/conf venue of 2025 paper",
+   "stars = sum of two repos (6+8)"
+  ]
+ },
+ {
+  "id": "tom-ilan-cycloidal-gearbox",
+  "name": "Cycloidal Gearbox + Fusion generator (tom-ilan)",
+  "category": "gearbox",
+  "summary_en": "3D-printed 1:9 cycloidal gearbox for NEMA 17 plus a Fusion 360 Python script that generates cycloid profiles with print-clearance offset.",
+  "homepage": "https://github.com/tom-ilan/cycloidal_gearbox",
+  "repo": "https://github.com/tom-ilan/cycloidal_gearbox",
+  "cad": "https://github.com/tom-ilan/cycloidal_gearbox",
+  "licenses": {
+   "hardware": "none stated (no LICENSE file in repo)",
+   "software": "none stated (no LICENSE file in repo)",
+   "docs": "none stated (no LICENSE file in repo)"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "NEMA 17 stepper + 9:1 cycloidal",
+  "control": "n/a (gearbox)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-08",
+   "stars": 88,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low risk (stepper).",
+  "fit": {
+   "maker": 4,
+   "school": 5,
+   "lab": 2,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/tom-ilan/cycloidal_gearbox",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": []
+ },
+ {
+  "id": "crap-cycloidal-generator",
+  "name": "CRAP - Cycloidal Reducer Algorithm & Parametrizer",
+  "category": "gearbox",
+  "summary_en": "Parametric cycloidal reducer generator (build123d) with solver, collision check, browser animation and toleranced STEP/STL export for 3D printing or 2.5-axis milling.",
+  "homepage": "https://github.com/dashs20/CRAP",
+  "repo": "https://github.com/dashs20/CRAP",
+  "cad": null,
+  "licenses": {
+   "hardware": "none stated (no LICENSE file in repo)",
+   "software": "none stated (no LICENSE file in repo)",
+   "docs": "none stated (no LICENSE file in repo)"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "n/a (design tool, user-chosen motor)",
+  "control": "Python GUI (FastAPI)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": 75,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "n/a",
+  "fit": {
+   "maker": 3,
+   "school": 4,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/dashs20/CRAP",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": []
+ },
+ {
+  "id": "zhangdong-cycloidal-drive-v2",
+  "name": "3D-Printed Cycloidal Drive V2 (Berkeley joint optimisation)",
+  "category": "gearbox",
+  "summary_en": "Community redesign of the Berkeley Humanoid Lite joint using a double-cycloidal reducer for lower backlash and higher stiffness (Chinese/English docs).",
+  "homepage": "https://github.com/zhangdong-cheku/3D-Printed-Cycloidal-Drive-V2",
+  "repo": "https://github.com/zhangdong-cheku/3D-Printed-Cycloidal-Drive-V2",
+  "cad": null,
+  "licenses": {
+   "hardware": "Apache-2.0",
+   "software": "Apache-2.0",
+   "docs": "Apache-2.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "BLDC (BHL-derived) + double cycloidal",
+  "control": "unknown",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2025-12",
+   "stars": 23,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "High-current BLDC + LiPo/bench supply: pinch hazard at output, motor/driver heating, battery fire risk; printed gears can shear under impact.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 3,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/zhangdong-cheku/3D-Printed-Cycloidal-Drive-V2",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "motor",
+   "ratio",
+   "test data"
+  ]
+ },
+ {
+  "id": "hassler-strain-wave-gear",
+  "name": "3D-Printed Strain Wave Gear (Hassler Engineering)",
+  "category": "gearbox",
+  "summary_en": "Files and documents for a 3D-printed strain-wave (harmonic) gear documented on Hackaday.io project 120377.",
+  "homepage": "https://hackaday.io/project/120377",
+  "repo": "https://github.com/HasslerEngineering/3D-Printed-Strain-Wave-Gear",
+  "cad": null,
+  "licenses": {
+   "hardware": "none stated (no LICENSE file in repo)",
+   "software": "none stated (no LICENSE file in repo)",
+   "docs": "none stated (no LICENSE file in repo)"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "unknown motor + printed strain wave",
+  "control": "n/a",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2018-09",
+   "stars": 11,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "unknown",
+  "fit": {
+   "maker": 3,
+   "school": 3,
+   "lab": 2,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/HasslerEngineering/3D-Printed-Strain-Wave-Gear",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "ratio",
+   "motor",
+   "hackaday page content (not fetched)"
+  ]
+ },
+ {
+  "id": "chilipeppr-robot-actuator-v8",
+  "name": "Robot Actuator ESP32 v8 (ChiliPeppr / John Lauer)",
+  "category": "actuator",
+  "summary_en": "Self-contained ESP32-brained modular arm actuator with printed gears and anti-backlash flex spline, derived from LoboCNC's WE-R2.4 arm; Eagle PCB, Fusion files, STLs, Lua firmware.",
+  "homepage": "https://github.com/chilipeppr/robot-actuator-esp32-v8",
+  "repo": "https://github.com/chilipeppr/robot-actuator-esp32-v8",
+  "cad": "https://github.com/chilipeppr/robot-actuator-esp32-v8",
+  "licenses": {
+   "hardware": "none stated (no LICENSE file in repo)",
+   "software": "none stated (no LICENSE file in repo)",
+   "docs": "none stated (no LICENSE file in repo)"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "stepper/DC motor (unknown) + printed gearing",
+  "control": "ESP32 NodeMCU-Lua firmware; ChiliPeppr web workspace",
+  "bom_cost": "see BOM in repo",
+  "maturity": {
+   "last_activity": "2020-10",
+   "stars": 237,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low-voltage; heat test results in repo.",
+  "fit": {
+   "maker": 3,
+   "school": 3,
+   "lab": 2,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/chilipeppr/robot-actuator-esp32-v8",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://hackaday.com/tag/flex-spline",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "motor type",
+   "WE-R2.4 upstream license"
+  ]
+ },
+ {
+  "id": "adamb314-servoproject",
+  "name": "ServoProject (Adam Backstrom)",
+  "category": "actuator",
+  "summary_en": "Replacement controller (ItsyBitsy M0) and encoder upgrade turning hobby servos (DS3225, MG90S) into high-precision servos, with a printed demo robot arm and gripper.",
+  "homepage": "https://github.com/adamb314/ServoProject",
+  "repo": "https://github.com/adamb314/ServoProject",
+  "cad": null,
+  "licenses": {
+   "hardware": "CC-BY-3.0-US",
+   "software": "CC-BY-3.0-US",
+   "docs": "CC-BY-3.0-US"
+  },
+  "rights_class": "permissive",
+  "printed_share": "low",
+  "actuation": "modified DS3225 / MG90S hobby servos",
+  "control": "Arduino firmware + Python configuration wizard",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2024-04",
+   "stars": 545,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low voltage.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 3,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/adamb314/ServoProject",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "printed share of servo itself",
+   "bom_cost"
+  ]
+ },
+ {
+  "id": "heypcb-knuckle",
+  "name": "Knuckle (HeyPCB)",
+  "category": "actuator",
+  "summary_en": "35 mm round FOC driver for a GBM2804 gimbal motor that emulates an STS3215 on the Open Duck Mini servo bus, with printed parts (STEP/STL, CadQuery) - design only, not fabricated.",
+  "homepage": "https://github.com/HeyPCB/knuckle",
+  "repo": "https://github.com/HeyPCB/knuckle",
+  "cad": "https://github.com/HeyPCB/knuckle",
+  "licenses": {
+   "hardware": "CERN-OHL-S-2.0",
+   "software": "CERN-OHL-S-2.0",
+   "docs": "CERN-OHL-S-2.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "low",
+  "actuation": "iPower GBM2804H-100T gimbal BLDC",
+  "control": "Feetech STS protocol emulation (ID-compatible STS3215)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": 1,
+   "known_builds": "none - README states not fabricated, assembled or powered",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Untested hardware.",
+  "fit": {
+   "maker": 2,
+   "school": 1,
+   "lab": 2,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/HeyPCB/knuckle",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": []
+ },
+ {
+  "id": "opensimplelidar",
+  "name": "OpenSimpleLidar",
+  "category": "lidar",
+  "summary_en": "Open-hardware triangulation scanning laser rangefinder: 5 scans/s, 180 points/rev, 4 m range, ~3-5 cm accuracy at 3 m; works with Hector SLAM.",
+  "homepage": "https://hackaday.io/project/20628-opensimplelidar",
+  "repo": "https://github.com/iliasam/OpenSimpleLidar",
+  "cad": "https://github.com/iliasam/OpenSimpleLidar",
+  "licenses": {
+   "hardware": "MIT",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "medium",
+  "actuation": "small DC motor spinning head",
+  "control": "STM32 firmware + PC utility; ROS Hector SLAM demo",
+  "bom_cost": "<USD 30 components (README; TSL1401CL price rose since 2023)",
+  "maturity": {
+   "last_activity": "2025-07",
+   "stars": 2576,
+   "known_builds": "author requests feedback; some community builds",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Laser diode: eye safety (class depends on module).",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 4,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/iliasam/OpenSimpleLidar",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "printed share (mechanics in Misc/Pictures)"
+  ]
+ },
+ {
+  "id": "opentoflidar",
+  "name": "OpenTOFLidar",
+  "category": "lidar",
+  "summary_en": "Fully open time-of-flight scanning lidar (no rangefinder module): 15-19 scans/s, 0.5 deg resolution, ~25 m range, 230 deg FOV, 905 nm pulsed laser with APD.",
+  "homepage": "https://github.com/iliasam/OpenTOFLidar/wiki",
+  "repo": "https://github.com/iliasam/OpenTOFLidar",
+  "cad": "https://github.com/iliasam/OpenTOFLidar",
+  "licenses": {
+   "hardware": "MIT",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "medium",
+  "actuation": "motor-spun mirror/head",
+  "control": "custom firmware + PC utility; Hector SLAM demo",
+  "bom_cost": "~USD 94 components (2020, TotalBOM.xlsx)",
+  "maturity": {
+   "last_activity": "2026-06",
+   "stars": 876,
+   "known_builds": null,
+   "paper": "https://habr.com/ru/post/485574/",
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "905 nm pulsed laser - IR eye safety; high-voltage APD bias.",
+  "fit": {
+   "maker": 3,
+   "school": 3,
+   "lab": 4,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/iliasam/OpenTOFLidar",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "printed share of mechanics"
+  ]
+ },
+ {
+  "id": "openlidar-iliasam",
+  "name": "OpenLIDAR (iliasam, triangulation v1)",
+  "category": "lidar",
+  "summary_en": "Earlier triangulation scanning rangefinder by iliasam using STM32F303 and ELIS-1024 line sensor; demoed on a Roomba.",
+  "homepage": "https://github.com/iliasam/OpenLIDAR",
+  "repo": "https://github.com/iliasam/OpenLIDAR",
+  "cad": null,
+  "licenses": {
+   "hardware": "MIT",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "unknown",
+  "actuation": "motor-spun head",
+  "control": "STM32F303 firmware",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2021-02",
+   "stars": 216,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Laser eye safety.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 3,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/iliasam/OpenLIDAR",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "printed share"
+  ]
+ },
+ {
+  "id": "openslam-a2lab",
+  "name": "OpenSLAM (A2Lab handheld LiDAR scanner)",
+  "category": "lidar",
+  "summary_en": "DIY handheld architectural/surveying SLAM scanner: Livox Mid-360 + NanoPi Zero 2 in 3D-printed housing, phone app and converter to ShareStudio point clouds.",
+  "homepage": "https://werdna0107.github.io/OpenSLAM/",
+  "repo": "https://github.com/Werdna0107/OpenSLAM",
+  "cad": "https://github.com/Werdna0107/OpenSLAM",
+  "licenses": {
+   "hardware": "MIT",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "medium",
+  "actuation": "none (sensor)",
+  "control": "on-board SLAM software + phone app",
+  "bom_cost": "null (Livox Mid-360 dominates cost)",
+  "maturity": {
+   "last_activity": "2026-09",
+   "stars": 46,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Class 1 lidar (Livox); battery pack.",
+  "fit": {
+   "maker": 3,
+   "school": 3,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/Werdna0107/OpenSLAM",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "bom_cost"
+  ]
+ },
+ {
+  "id": "openscan",
+  "name": "OpenScan Mini / Classic",
+  "category": "sensor",
+  "summary_en": "Open-hardware photogrammetry 3D scanners (printed frame, two steppers, Pi camera) with OpenScan3 Raspberry Pi firmware.",
+  "homepage": "https://openscan.eu",
+  "repo": "https://github.com/OpenScan-org/OpenScan-Design",
+  "cad": "https://github.com/OpenScan-org/OpenScan-Design",
+  "licenses": {
+   "hardware": "none stated (no LICENSE file in repo) (design repo)",
+   "software": "GPL-3.0 (OpenScan3)",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "2 steppers",
+  "control": "OpenScan3 firmware (Raspberry Pi), web UI",
+  "bom_cost": "null (kits sold by openscan.eu)",
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": 379,
+   "known_builds": "large community; commercial kits",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low voltage.",
+  "fit": {
+   "maker": 5,
+   "school": 5,
+   "lab": 3,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/OpenScan-org/OpenScan-Design",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/OpenScan-org/OpenScan3",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/OpenScanEu/OpenScan",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "hardware license",
+   "bom_cost"
+  ]
+ },
+ {
+  "id": "bq-ciclop",
+  "name": "bq Ciclop laser scanner",
+  "category": "sensor",
+  "summary_en": "Open-source laser-triangulation turntable 3D scanner by bq with printed parts (STL), laser-cut parts and Horus software; archived since 2016.",
+  "homepage": "http://diwo.bq.com/en/tag/ciclop",
+  "repo": "https://github.com/LibreScanner/ciclop",
+  "cad": "https://github.com/LibreScanner/ciclop",
+  "licenses": {
+   "hardware": "CC-BY-SA-4.0",
+   "software": "GPL-2.0 (Horus, unverified)",
+   "docs": "CC-BY-SA-4.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "medium",
+  "actuation": "1 stepper turntable + 2 line lasers",
+  "control": "Horus desktop app + horus-fw",
+  "bom_cost": "see Ciclop-BOM.ods",
+  "maturity": {
+   "last_activity": "2016-04",
+   "stars": 426,
+   "known_builds": "widely built and sold as kits (historical)",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Line lasers - eye safety.",
+  "fit": {
+   "maker": 4,
+   "school": 5,
+   "lab": 2,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/LibreScanner/ciclop",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "Horus license",
+   "original bqlabs/ciclop repo status"
+  ]
+ },
+ {
+  "id": "digit-tactile",
+  "name": "DIGIT tactile sensor",
+  "category": "sensor",
+  "summary_en": "Meta's low-cost compact vision-based tactile sensor: enclosure, elastomer, electronics and firmware binary released for fabrication.",
+  "homepage": "https://digit.ml",
+  "repo": "https://github.com/facebookresearch/digit-design",
+  "cad": "https://github.com/facebookresearch/digit-design",
+  "licenses": {
+   "hardware": "CC-BY-NC-4.0",
+   "software": "firmware binary only",
+   "docs": "CC-BY-NC-4.0"
+  },
+  "rights_class": "nc",
+  "printed_share": "unknown",
+  "actuation": "none (sensor)",
+  "control": "USB camera stream; digit-interface Python",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2025-03",
+   "stars": 216,
+   "known_builds": "used across tactile-sensing labs; commercial version sold",
+   "paper": "https://arxiv.org/abs/2005.14679",
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low voltage.",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 5,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/facebookresearch/digit-design",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "whether enclosure is 3D-printed or molded"
+  ]
+ },
+ {
+  "id": "digitac",
+  "name": "DigiTac (TacTip skin for DIGIT)",
+  "category": "sensor",
+  "summary_en": "DIGIT body fitted with a 3D-printed biomimetic TacTip pin-array skin (Bristol Robotics Lab).",
+  "homepage": "https://github.com/nlepora/digitac-design",
+  "repo": "https://github.com/nlepora/digitac-design",
+  "cad": "https://github.com/nlepora/digitac-design",
+  "licenses": {
+   "hardware": "GPL-3.0",
+   "software": "GPL-3.0",
+   "docs": "GPL-3.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "none (sensor)",
+  "control": "camera (DIGIT electronics)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2022-07",
+   "stars": 11,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low voltage.",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/nlepora/digitac-design",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "printed share",
+   "paper URL"
+  ]
+ },
+ {
+  "id": "gelslim-3",
+  "name": "GelSlim 3.0",
+  "category": "sensor",
+  "summary_en": "Slim vision-based tactile finger (MIT MCube) with 3D-printed body, custom PCB, cast elastomer and Raspberry Pi software; lab closed, superseded by GelSlim 4.0.",
+  "homepage": "https://ianhtaylor.net/gelslim-30",
+  "repo": "https://github.com/mcubelab/gelslim",
+  "cad": "https://github.com/mcubelab/gelslim",
+  "licenses": {
+   "hardware": "CC-BY-NC-4.0",
+   "software": "CC-BY-NC-4.0",
+   "docs": "CC-BY-NC-4.0"
+  },
+  "rights_class": "nc",
+  "printed_share": "medium",
+  "actuation": "none (sensor)",
+  "control": "Raspberry Pi camera software, GUI, calibration",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2024-11",
+   "stars": 114,
+   "known_builds": null,
+   "paper": "https://arxiv.org/abs/2103.12269",
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low voltage; silicone casting chemicals.",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/mcubelab/gelslim",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": []
+ },
+ {
+  "id": "gelslim-4",
+  "name": "GelSlim 4.0",
+  "category": "sensor",
+  "summary_en": "Easier-to-reproduce GelSlim tactile finger (U. Michigan MMint Lab): printed body (STL/Onshape), gel molds, laser-cut parts and PCBs.",
+  "homepage": "https://www.mmintlab.com/research/gelslim-4-0/",
+  "repo": "https://github.com/MMintLab/gelslim_hardware",
+  "cad": "https://github.com/MMintLab/gelslim_hardware",
+  "licenses": {
+   "hardware": "none stated (no LICENSE file in repo)",
+   "software": "none stated (no LICENSE file in repo)",
+   "docs": "none stated (no LICENSE file in repo)"
+  },
+  "rights_class": "unknown",
+  "printed_share": "medium",
+  "actuation": "none (sensor)",
+  "control": "camera; MMintLab gelslim_depth/gelslim_shear libraries",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2025-09",
+   "stars": 21,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low voltage; silicone casting.",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 5,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/MMintLab/gelslim_hardware",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "license",
+   "paper URL"
+  ]
+ },
+ {
+  "id": "9dtact",
+  "name": "9DTact",
+  "category": "sensor",
+  "summary_en": "Compact vision-based tactile sensor for 3D shape reconstruction and learned 6D force estimation; code, hardware files, BOM and ROS nodes; commercial use allowed.",
+  "homepage": "https://linchangyi1.github.io/9DTact/",
+  "repo": "https://github.com/linchangyi1/9DTact",
+  "cad": "https://github.com/linchangyi1/9DTact",
+  "licenses": {
+   "hardware": "MIT",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "medium",
+  "actuation": "none (sensor)",
+  "control": "Python/PyTorch, ROS",
+  "bom_cost": "see BOM (CN) Google doc",
+  "maturity": {
+   "last_activity": "2026-08",
+   "stars": 195,
+   "known_builds": "commercial production link in README",
+   "paper": "https://arxiv.org/abs/2308.14277",
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low voltage.",
+  "fit": {
+   "maker": 3,
+   "school": 3,
+   "lab": 5,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/linchangyi1/9DTact",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "printed share"
+  ]
+ },
+ {
+  "id": "anyskin",
+  "name": "AnySkin",
+  "category": "sensor",
+  "summary_en": "Plug-and-play magnetic tactile skin (NYU): magnetized elastomer skin slipped over a 3D-printed fingertip with magnetometer board; pip-installable interface.",
+  "homepage": "https://any-skin.github.io",
+  "repo": "https://github.com/raunaqbhirangi/anyskin",
+  "cad": null,
+  "licenses": {
+   "hardware": "MIT (software repo)",
+   "software": "MIT",
+   "docs": "unknown"
+  },
+  "rights_class": "permissive",
+  "printed_share": "low",
+  "actuation": "none (sensor)",
+  "control": "Arduino (QT Py) + Python anyskin library",
+  "bom_cost": "null (startup kits sold commercially)",
+  "maturity": {
+   "last_activity": "2024-11",
+   "stars": 90,
+   "known_builds": "commercial kits (e.g. WowRobo)",
+   "paper": "https://arxiv.org/abs/2409.08276",
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Strong magnetic particles.",
+  "fit": {
+   "maker": 3,
+   "school": 3,
+   "lab": 5,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/raunaqbhirangi/anyskin",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://arxiv.org/abs/2409.08276",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "hardware/mold license",
+   "printed share"
+  ]
+ },
+ {
+  "id": "eflesh",
+  "name": "eFlesh",
+  "category": "sensor",
+  "summary_en": "Customizable magnetic tactile sensor made by 3D-printing TPU cut-cell microstructures with embedded N52 magnets over a magnetometer; design pipeline converts any STL into a sensor.",
+  "homepage": "https://e-flesh.com",
+  "repo": "https://github.com/notvenky/eFlesh",
+  "cad": "https://github.com/notvenky/eFlesh",
+  "licenses": {
+   "hardware": "MIT",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "none (sensor)",
+  "control": "Python notebooks; magnetometer readout",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2025-10",
+   "stars": 438,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Neodymium magnets - swallowing hazard.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 5,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/notvenky/eFlesh",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "paper URL",
+   "bom_cost"
+  ]
+ },
+ {
+  "id": "tams-printed-ft",
+  "name": "TAMS printed force/torque sensors",
+  "category": "sensor",
+  "summary_en": "Family of low-cost 3D-printed force and 6-axis F/T sensors (OpenSCAD flexures + optical sensors + Arduino) with ROS drivers; 6-axis build under USD 20.",
+  "homepage": "https://github.com/TAMS-Group/tams_printed_ft",
+  "repo": "https://github.com/TAMS-Group/tams_printed_ft",
+  "cad": "https://github.com/TAMS-Group/tams_printed_ft",
+  "licenses": {
+   "hardware": "none stated (no LICENSE file in repo)",
+   "software": "none stated (no LICENSE file in repo)",
+   "docs": "none stated (no LICENSE file in repo)"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "none (sensor)",
+  "control": "Arduino firmware + ROS drivers",
+  "bom_cost": "<USD 20 for 6-axis (README)",
+  "maturity": {
+   "last_activity": "2020-08",
+   "stars": 46,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Printed flexures creep; not for safety-critical load limits.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 5,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/TAMS-Group/tams_printed_ft",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "paper URL (README says under review)"
+  ]
+ },
+ {
+  "id": "fiducial-ft-sensor",
+  "name": "Low-Cost Fiducial-based 6-Axis F/T Sensor",
+  "category": "sensor",
+  "summary_en": "Webcam tracks ArUco tags on a spring-suspended PLA-printed platform to estimate 6-axis force/torque; parts under USD 50 (Harvard, Ouyang & Howe).",
+  "homepage": "https://sites.google.com/view/fiducialforcesensor",
+  "repo": "https://github.com/nro-bot/fiducialforcesensor",
+  "cad": null,
+  "licenses": {
+   "hardware": "MPL-2.0",
+   "software": "MPL-2.0",
+   "docs": "MPL-2.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "none (sensor)",
+  "control": "OpenCV Python",
+  "bom_cost": "<USD 50 (paper Table II)",
+  "maturity": {
+   "last_activity": "2021-12",
+   "stars": 1,
+   "known_builds": null,
+   "paper": "https://arxiv.org/abs/2005.14250",
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low voltage.",
+  "fit": {
+   "maker": 4,
+   "school": 5,
+   "lab": 4,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/nro-bot/fiducialforcesensor",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://ar5iv.arxiv.org/html/2005.14250",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "hardware license scope (MPL on repo)"
+  ]
+ },
+ {
+  "id": "openflexure-microscope",
+  "name": "OpenFlexure Microscope",
+  "category": "lab-automation",
+  "summary_en": "3D-printed flexure-stage microscope (Raspberry Pi camera) with optional motorised XYZ stage for automated scanning.",
+  "homepage": "https://openflexure.org/projects/microscope/",
+  "repo": "https://gitlab.com/openflexure/openflexure-microscope",
+  "cad": null,
+  "licenses": {
+   "hardware": "CERN-OHL-S-2.0",
+   "software": "GPL-3.0 (openflexure-microscope-server)",
+   "docs": "CC-BY-SA-4.0 (website)"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "3x low-cost geared steppers via Sangaboard-compatible motor controller",
+  "control": "Raspberry Pi; OpenFlexure server (web UI + HTTP API)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2024+ (v7.0.0 beta series)",
+   "stars": null,
+   "known_builds": "used in 50+ countries (openflexure.org/about); vendor kits exist",
+   "paper": "Biomedical Optics Express (v6.0.0 overview)",
+   "docs_quality": "good"
+  },
+  "sim_model": "none known; stage kinematics simple (3 prismatic) - URDF feasible",
+  "safety_notes": "Optics/LEDs low risk; mains via PSU only. Project has medical-use page: we make no diagnostic claims.",
+  "fit": {
+   "maker": 4,
+   "school": 5,
+   "lab": 4,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://openflexure.org/projects/microscope/",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://openflexure.org/about/",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://gitlab.com/openflexure/openflexure-microscope",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://gitlab.com/openflexure/openflexure-microscope-server",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://build.openflexure.org/openflexure-microscope/v7.0.0-beta2/",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "bom_cost",
+   "exact last release date",
+   "stars",
+   "motor model"
+  ]
+ },
+ {
+  "id": "jubilee",
+  "name": "Jubilee toolchanger motion platform",
+  "category": "toolchanger",
+  "summary_en": "Open CoreXY motion platform with kinematic tool-changing, used for multi-material printing, plotting, light liquid handling and imaging.",
+  "homepage": "https://jubilee3d.com/",
+  "repo": "https://github.com/machineagency/jubilee",
+  "cad": null,
+  "licenses": {
+   "hardware": "CC-BY-4.0",
+   "software": "RepRapFirmware (Duet) - not verified",
+   "docs": "CC-BY-4.0 (same license.txt)"
+  },
+  "rights_class": "permissive",
+  "printed_share": "medium",
+  "actuation": "Steppers (LDO), lead screws, Gates belts; up to 5 tools with Duet 3 expansion",
+  "control": "Duet 3 Mini 5+ + RPi; G-code",
+  "bom_cost": "USD 1,799.99 full kit (Filastruder, tools not included)",
+  "maturity": {
+   "last_activity": "2023-01 (GitHub repo; wiki/kit active)",
+   "stars": null,
+   "known_builds": "Filastruder kit + Luke's Laboratory printed parts kit sold",
+   "paper": "https://dx.doi.org/10.1145/3313831.3376425",
+   "docs_quality": "ok"
+  },
+  "sim_model": "none known; URDF feasible (cartesian)",
+  "safety_notes": "24 V/10 A PSU (mains), heated bed; pinch points.",
+  "fit": {
+   "maker": 3,
+   "school": 3,
+   "lab": 5,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/machineagency/jubilee",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://jubilee3d.com/index.php?title=Main_Page",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://www.filastruder.com/products/jubilee-motion-platform-kit",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://science-jubilee.readthedocs.io/en/latest/building/building_a_jubilee.html",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars",
+   "firmware license",
+   "printed share %"
+  ]
+ },
+ {
+  "id": "science-jubilee",
+  "name": "Science Jubilee",
+  "category": "lab-automation",
+  "summary_en": "Python library + tool designs (pipette, top-down camera, etc.) turning Jubilee into a lab automation workcell.",
+  "homepage": "https://science-jubilee.readthedocs.io/",
+  "repo": "https://github.com/machineagency/science-jubilee",
+  "cad": null,
+  "licenses": {
+   "hardware": "CC-BY-4.0 (Jubilee base); tool CAD license not verified",
+   "software": "MIT",
+   "docs": "unknown"
+  },
+  "rights_class": "permissive",
+  "printed_share": "medium",
+  "actuation": "Jubilee steppers + tool-specific actuators (pipette tool)",
+  "control": "Python API (science_jubilee) over Duet/RPi",
+  "bom_cost": "base kit USD 1,799.99 + RPi 5 + tools",
+  "maturity": {
+   "last_activity": "2026-02",
+   "stars": null,
+   "known_builds": "Pozzo lab demos (jubilee_pipette_BOdemo, MIT)",
+   "paper": "https://dx.doi.org/10.1039/D3DD00033H",
+   "docs_quality": "good"
+  },
+  "sim_model": "none known; URDF feasible",
+  "safety_notes": "Chemicals/solvents in use: PLA parts not solvent-resistant (docs recommend Al upgrades).",
+  "fit": {
+   "maker": 2,
+   "school": 3,
+   "lab": 5,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/machineagency/science-jubilee",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://science-jubilee.readthedocs.io/en/latest/building/building_a_jubilee.html",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://ac-microcourses.readthedocs.io/en/latest/_sources/courses/robotics/3.3-liquid-handlers.md",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/pozzo-research-group/jubilee_pipette_BOdemo",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "tool CAD license",
+   "docs license"
+  ]
+ },
+ {
+  "id": "sidekick",
+  "name": "Sidekick liquid dispensing robot",
+  "category": "lab-automation",
+  "summary_en": "Desktop SBS-microplate liquid dispensing robot with armature motion system and fully 3D-printed body.",
+  "homepage": "https://github.com/rodolfokeesey/Liquid-Handler",
+  "repo": "https://github.com/rodolfokeesey/Liquid-Handler",
+  "cad": null,
+  "licenses": {
+   "hardware": "CERN-OHL-S-2.0",
+   "software": "CERN-OHL-S-2.0 (repo-wide)",
+   "docs": "CERN-OHL-S-2.0 (repo-wide); paper CC-BY-4.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "2x NEMA17 pancake steppers (TMC2209) + Lee Co. positive-displacement micro pumps (ULN2803A)",
+  "control": "Raspberry Pi Pico, MicroPython, serial G-code subset",
+  "bom_cost": "USD 710 total (paper); motion system ~USD 151-152",
+  "maturity": {
+   "last_activity": "2023-02",
+   "stars": null,
+   "known_builds": "unknown",
+   "paper": "https://doi.org/10.1016/j.ohx.2022.e00319",
+   "docs_quality": "ok"
+  },
+  "sim_model": "none known; 2-link armature - URDF feasible",
+  "safety_notes": "12 V only; dispensed reagents are user's responsibility.",
+  "fit": {
+   "maker": 3,
+   "school": 4,
+   "lab": 4,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/rodolfokeesey/Liquid-Handler",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://par.nsf.gov/servlets/purl/10358231",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://www.wevolver.com/specs/sidekick-a-low-cost-open-source-3d-printed-liquid-dispensing-robot",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "known builds",
+   "stars"
+  ]
+ },
+ {
+  "id": "digital-pipette",
+  "name": "Digital Pipette (v1/v2)",
+  "category": "lab-automation",
+  "summary_en": "3D-printed syringe pipette driven by a linear actuator, designed to be held by a two-finger robot gripper; v2 adds tip exchange.",
+  "homepage": "https://github.com/ac-rad/digital-pipette",
+  "repo": "https://github.com/ac-rad/digital-pipette",
+  "cad": null,
+  "licenses": {
+   "hardware": "CC-BY-4.0",
+   "software": "MIT",
+   "docs": "CC-BY-4.0 (README)"
+  },
+  "rights_class": "permissive",
+  "printed_share": "medium",
+  "actuation": "Actuonix L16-100-63-6-R linear actuator (6 V, up to 100 N)",
+  "control": "Arduino-compatible board over USB serial",
+  "bom_cost": "< USD 200 (paper: ~70 actuator, 60 printing, 40 electronics)",
+  "maturity": {
+   "last_activity": "2024-03 (repo); v2 paper 2026",
+   "stars": null,
+   "known_builds": "demonstrated on Franka arm + Robotiq 2F-85",
+   "paper": "https://pubs.rsc.org/en/content/articlehtml/2023/dd/d3dd00115f",
+   "docs_quality": "ok"
+  },
+  "sim_model": "none; simple to add as end-effector/prop in an SO-101 MJCF scene (feasible, not done)",
+  "safety_notes": "Low voltage. Accuracy within ISO 8655-2 claimed for v2 by authors; we should not restate as certification.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 4,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/ac-rad/digital-pipette",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://pubs.rsc.org/en/content/articlehtml/2023/dd/d3dd00115f",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://pubs.rsc.org/en/Content/ArticleLanding/2026/DD/D5DD00336A",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "SO-101 payload compatibility",
+   "v2 files location"
+  ]
+ },
+ {
+  "id": "poseidon",
+  "name": "Poseidon syringe pump + microscope",
+  "category": "lab-automation",
+  "summary_en": "Low-cost open syringe pump system with 3D-printed parts and a companion microscope for microfluidics.",
+  "homepage": "https://github.com/pachterlab/poseidon",
+  "repo": "https://github.com/pachterlab/poseidon",
+  "cad": null,
+  "licenses": {
+   "hardware": "BSD-2-Clause (repo-wide)",
+   "software": "BSD-2-Clause",
+   "docs": "BSD-2-Clause"
+  },
+  "rights_class": "permissive",
+  "printed_share": "medium",
+  "actuation": "Stepper motors with current-limited drivers",
+  "control": "Arduino firmware + Python GUI (per repo SOFTWARE dir)",
+  "bom_cost": "< USD 400 (README)",
+  "maturity": {
+   "last_activity": "2023-07",
+   "stars": null,
+   "known_builds": "used in scRNA-seq microfluidics paper (README)",
+   "paper": "unknown",
+   "docs_quality": "ok"
+  },
+  "sim_model": "none; trivial linear axis",
+  "safety_notes": "PLA parts; pressure limits from stall torque (README safety section).",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 4,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/pachterlab/poseidon",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "paper DOI",
+   "controller board model"
+  ]
+ },
+ {
+  "id": "mtu-syringe-pump-library",
+  "name": "MOST Open-source Syringe Pump Library",
+  "category": "lab-automation",
+  "summary_en": "Parametric OpenSCAD library of 3D-printable syringe pumps driven by RepRap electronics.",
+  "homepage": "https://reprap.org/wiki/Open-source_syringe_pump",
+  "repo": "https://github.com/mtu-most/linear-actuator",
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown (not stated on wiki)",
+   "software": "unknown",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "Stepper (NEMA17) linear actuator",
+  "control": "RAMPS/Melzi with Franklin firmware (original RPi method unmaintained)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2014 (paper)",
+   "stars": null,
+   "known_builds": "unknown",
+   "paper": "https://doi.org/10.1371/journal.pone.0107216",
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low voltage; no medical infusion use.",
+  "fit": {
+   "maker": 3,
+   "school": 3,
+   "lab": 3,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://reprap.org/wiki/Open-source_syringe_pump",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "license",
+   "last commit"
+  ]
+ },
+ {
+  "id": "ender3-syringe-pumps",
+  "name": "Ender3 syringe pump set (Baas & Saggiomo)",
+  "category": "lab-automation",
+  "summary_en": "Ender-3 printer kit parts reused to build a set of programmable syringe pumps.",
+  "homepage": "https://research.wur.nl/en/publications/ender3-3d-printer-kit-transformed-into-open-programmable-syringe-",
+  "repo": "https://zenodo.org/record/5139558",
+  "cad": null,
+  "licenses": {
+   "hardware": "Zenodo: 'Other (Open)' - unspecified",
+   "software": "unknown",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "medium",
+  "actuation": "Ender-3 steppers",
+  "control": "Marlin/printer board (assumed, not verified)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2021-07",
+   "stars": null,
+   "known_builds": "unknown",
+   "paper": "HardwareX 2021 (per review d5dd00451a)",
+   "docs_quality": "unknown"
+  },
+  "sim_model": "none",
+  "safety_notes": "Mains PSU from Ender-3 kit.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 3,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://zenodo.org/record/5139558",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://pubs.rsc.org/en/content/articlehtml/2026/dd/d5dd00451a",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "license",
+   "controller",
+   "docs quality"
+  ]
+ },
+ {
+  "id": "otto-autosampler",
+  "name": "Otto Franz-cell autosampler",
+  "category": "lab-automation",
+  "summary_en": "Ender 3 Pro converted into a 100-sample autosampler for Franz diffusion cell (skin permeation) experiments.",
+  "homepage": "https://blogs.ncl.ac.uk/kengng/news/new-paper-shows-how-to-build-otto",
+  "repo": "https://github.com/ngkengwooi/ottomate",
+  "cad": "https://www.printables.com/model/1346514-otto-franz-diffusion-cell-autosampler-printable-pa",
+  "licenses": {
+   "hardware": "unknown (Mendeley/Printables terms not verified)",
+   "software": "CC-BY-4.0 (OttoMate app LICENSE)",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "medium",
+  "actuation": "Ender 3 Pro steppers",
+  "control": "OttoMate G-code generator GUI",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-06",
+   "stars": null,
+   "known_builds": "authors' lab",
+   "paper": "https://doi.org/10.1016/j.ohx.2025.e00735",
+   "docs_quality": "ok"
+  },
+  "sim_model": "none; cartesian",
+  "safety_notes": "Mains PSU; pharma samples.",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://blogs.ncl.ac.uk/kengng/news/new-paper-shows-how-to-build-otto",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/ngkengwooi/ottomate",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "hardware license",
+   "cost"
+  ]
+ },
+ {
+  "id": "uc2",
+  "name": "openUC2 modular optics toolbox",
+  "category": "lab-automation",
+  "summary_en": "Modular 3D-printed cube system for optics/microscopy, incl. motorised stages and automated microscopes.",
+  "homepage": "https://github.com/openUC2/UC2-GIT",
+  "repo": "https://github.com/openUC2/UC2-GIT",
+  "cad": null,
+  "licenses": {
+   "hardware": "CERN-OHL-1.2",
+   "software": "MIT (UC2-GIT); ImSwitch GPL-3.0",
+   "docs": "unknown"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "Steppers for motorised stages (details per module)",
+  "control": "ImSwitch (Python, GPL-3.0); ESP32 firmware (not verified)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-08",
+   "stars": null,
+   "known_builds": "workshops/kits sold by openUC2",
+   "paper": "unknown",
+   "docs_quality": "ok"
+  },
+  "sim_model": "none known",
+  "safety_notes": "Some modules use lasers - laser class must be checked per module.",
+  "fit": {
+   "maker": 4,
+   "school": 5,
+   "lab": 4,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/openUC2/UC2-GIT",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/openUC2/ImSwitch",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "cost",
+   "paper",
+   "controller",
+   "laser classes"
+  ]
+ },
+ {
+  "id": "squid-octopi",
+  "name": "Squid / Octopi microscope platform",
+  "category": "lab-automation",
+  "summary_en": "Modular automated microscopy platform (origin: Octopi malaria scanner), software BSD-3, commercialised by Cephla.",
+  "homepage": "https://hongquanli.notion.site/Squid-Simplifying-Quantitive-Imaging-Development-and-Deployment-7bad36b7a9b44cacb1fe1580b39e05d8",
+  "repo": "https://github.com/Cephla-Lab/Squid",
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "BSD-3-Clause",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "low",
+  "actuation": "Motorised XYZ stage",
+  "control": "Python control software",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": null,
+   "known_builds": "commercial Cephla units",
+   "paper": "https://www.biorxiv.org/content/10.1101/2020.12.28.424613v1.full.pdf",
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Octopi origin is diagnostic (malaria) - avoid any diagnostic framing.",
+  "fit": {
+   "maker": 1,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 1
+  },
+  "sources": [
+   {
+    "url": "https://github.com/Cephla-Lab/Squid",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/hongquanli/octopi-research",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "hardware license",
+   "printed share"
+  ]
+ },
+ {
+  "id": "enderscope",
+  "name": "EnderScope",
+  "category": "lab-automation",
+  "summary_en": "Ender-3 converted into a scanning microscope (e.g. microplastics) with Enderscope.py library.",
+  "homepage": "https://www.eurobioimaging.eu/news/innovative-applications-of-the-enderscope-a-low-cost-microscopy-system/",
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "unknown",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "medium",
+  "actuation": "Ender-3 steppers",
+  "control": "Enderscope.py (SoftwareX 2025)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2025",
+   "stars": null,
+   "known_builds": "multiple labs (Euro-BioImaging news)",
+   "paper": "https://hal.inrae.fr/hal-05217576v1",
+   "docs_quality": "unknown"
+  },
+  "sim_model": "none",
+  "safety_notes": "Mains PSU.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 3,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://research.wur.nl/en/publications/enderscope-a-low-cost-3d-printer-based-scanning-microscope-for-mi/",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://pubs.rsc.org/en/content/articlehtml/2026/dd/d5dd00451a",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "repo",
+   "license"
+  ]
+ },
+ {
+  "id": "openlh",
+  "name": "OpenLH",
+  "category": "lab-automation",
+  "summary_en": "Liquid-handling system for creative biology experimentation (TEI 2019), on Instructables.",
+  "homepage": "https://instructables.com/OpenLH",
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "unknown",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "unknown",
+  "actuation": "unknown (robot arm based - not verified)",
+  "control": "unknown",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2019",
+   "stars": null,
+   "known_builds": "unknown",
+   "paper": "https://runi.ac.il/media/pp5bftyk/openlh.pdf",
+   "docs_quality": "ok"
+  },
+  "sim_model": "unknown",
+  "safety_notes": "Bio use - BSL-1 only.",
+  "fit": {
+   "maker": 3,
+   "school": 3,
+   "lab": 2,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://instructables.com/OpenLH",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://blog.arduino.cc/2018/12/20/openlh-robot-automates-biological-exploration/",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "license",
+   "arm",
+   "cost"
+  ]
+ },
+ {
+  "id": "evobot",
+  "name": "EvoBot",
+  "category": "lab-automation",
+  "summary_en": "Open-source modular liquid handling robot from ITU Copenhagen (EVOBLISS project).",
+  "homepage": "https://blogit.itu.dk/evoblissproject/?p=162",
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "unknown",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "unknown",
+  "actuation": "unknown",
+  "control": "unknown",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2020 (last paper)",
+   "stars": null,
+   "known_builds": "unknown",
+   "paper": "https://doaj.org/article/467a7d89f22a4cea831696fb934866eb",
+   "docs_quality": "unknown"
+  },
+  "sim_model": "unknown",
+  "safety_notes": "",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 3,
+   "plan_guide_treatment": 1
+  },
+  "sources": [
+   {
+    "url": "https://pure.itu.dk/en/publications/evobot-an-open-source-modular-liquid-handling-robot-for-scientifi/",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "everything except existence and papers"
+  ]
+ },
+ {
+  "id": "findus",
+  "name": "FINDUS",
+  "category": "lab-automation",
+  "summary_en": "3D-printable liquid handling workstation (SLAS Technology 2019).",
+  "homepage": null,
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "unknown",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "unknown",
+  "control": "unknown",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2019",
+   "stars": null,
+   "known_builds": "unknown",
+   "paper": "https://doi.org/10.1177/2472630319877374",
+   "docs_quality": "unknown"
+  },
+  "sim_model": "unknown",
+  "safety_notes": "",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 3,
+   "plan_guide_treatment": 1
+  },
+  "sources": [
+   {
+    "url": "https://colab.ws/articles/10.1177/2472630319877374",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "all details (source pages blocked)"
+  ]
+ },
+ {
+  "id": "personal-pipetting-robots",
+  "name": "Open-source personal pipetting robots (incubation + microscopy)",
+  "category": "lab-automation",
+  "summary_en": "Pipetting robots with live-cell incubation and microscopy compatibility (bioRxiv 2021 / PMC 2022).",
+  "homepage": "https://www.biorxiv.org/content/10.1101/2021.07.04.448641.full.pdf",
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "unknown",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "unknown",
+  "actuation": "unknown",
+  "control": "unknown",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2022",
+   "stars": null,
+   "known_builds": "unknown",
+   "paper": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9151679/",
+   "docs_quality": "unknown"
+  },
+  "sim_model": "unknown",
+  "safety_notes": "Cell culture - BSL-1 only.",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 1
+  },
+  "sources": [
+   {
+    "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9151679/",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "all details (PMC blocked)"
+  ]
+ },
+ {
+  "id": "replistruder-fresh-bioprinter",
+  "name": "Replistruder 4 + FRESH bioprinter (Feinberg lab)",
+  "category": "lab-automation",
+  "summary_en": "Open syringe extruder for FRESH bioprinting and a FlashForge-Finder-based bioprinter conversion.",
+  "homepage": "https://zenodo.org/records/4119127",
+  "repo": "https://doi.org/10.5281/zenodo.7496012",
+  "cad": null,
+  "licenses": {
+   "hardware": "CC-BY-4.0 (Replistruder 4 Zenodo); bioprinter files license not verified",
+   "software": "unknown",
+   "docs": "unknown"
+  },
+  "rights_class": "permissive",
+  "printed_share": "medium",
+  "actuation": "Stepper syringe extruder; FlashForge Finder motion",
+  "control": "Duet 2 WiFi (RepRapFirmware)",
+  "bom_cost": "< USD 900 total incl. ~USD 300 Finder (Sci Rep 2022)",
+  "maturity": {
+   "last_activity": "2022",
+   "stars": null,
+   "known_builds": "Feinberg lab",
+   "paper": "https://doi.org/10.1038/s41598-022-26809-4",
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Bioinks/cells: BSL-1 only; no tissue/medical claims.",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://zenodo.org/records/4119127",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9805454",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "bioprinter files license"
+  ]
+ },
+ {
+  "id": "histoender",
+  "name": "HistoEnder",
+  "category": "lab-automation",
+  "summary_en": "Ender-3 converted into a histology slide autostainer (HardwareX 2022).",
+  "homepage": null,
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "unknown",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "medium",
+  "actuation": "Ender-3 steppers",
+  "control": "unknown",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2022",
+   "stars": null,
+   "known_builds": "unknown",
+   "paper": null,
+   "docs_quality": "unknown"
+  },
+  "sim_model": "none",
+  "safety_notes": "Staining chemicals (solvents/dyes).",
+  "fit": {
+   "maker": 1,
+   "school": 1,
+   "lab": 3,
+   "plan_guide_treatment": 1
+  },
+  "sources": [
+   {
+    "url": "https://pubs.rsc.org/en/content/articlehtml/2026/dd/d5dd00451a",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "all except existence"
+  ]
+ },
+ {
+  "id": "incubot",
+  "name": "Incubot",
+  "category": "lab-automation",
+  "summary_en": "Tronxy X1-based in-incubator microscope (HardwareX 2021).",
+  "homepage": null,
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "unknown",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "medium",
+  "actuation": "printer steppers",
+  "control": "unknown",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2021",
+   "stars": null,
+   "known_builds": "unknown",
+   "paper": null,
+   "docs_quality": "unknown"
+  },
+  "sim_model": "none",
+  "safety_notes": "Incubator humidity + mains.",
+  "fit": {
+   "maker": 1,
+   "school": 1,
+   "lab": 3,
+   "plan_guide_treatment": 1
+  },
+  "sources": [
+   {
+    "url": "https://pubs.rsc.org/en/content/articlehtml/2026/dd/d5dd00451a",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "all except existence"
+  ]
+ },
+ {
+  "id": "stealthchanger",
+  "name": "StealthChanger",
+  "category": "toolchanger",
+  "summary_en": "Toolchanger mod for Voron-style printers.",
+  "homepage": "https://github.com/DraftShift/StealthChanger",
+  "repo": "https://github.com/DraftShift/StealthChanger",
+  "cad": null,
+  "licenses": {
+   "hardware": "GPL-3.0 (repo-wide)",
+   "software": "GPL-3.0",
+   "docs": "GPL-3.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "Printer steppers; passive dock tool change",
+  "control": "Klipper (+ klipper-toolchanger, GPL-3.0)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-02",
+   "stars": null,
+   "known_builds": "community (Voron)",
+   "paper": null,
+   "docs_quality": "unknown"
+  },
+  "sim_model": "none",
+  "safety_notes": "3D printer hot ends/mains.",
+  "fit": {
+   "maker": 4,
+   "school": 2,
+   "lab": 2,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/DraftShift/StealthChanger",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/viesturz/klipper-toolchanger",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "known builds",
+   "docs quality"
+  ]
+ },
+ {
+  "id": "pioreactor",
+  "name": "Pioreactor",
+  "category": "bioreactor",
+  "summary_en": "Small (20/40 mL) open bioreactor with OD, temperature, stirring, LEDs and pumps; turbidostat/chemostat/photobioreactor modes.",
+  "homepage": "https://pioreactor.com/",
+  "repo": "https://github.com/Pioreactor/pioreactor",
+  "cad": "https://github.com/Pioreactor/hardware",
+  "licenses": {
+   "hardware": "CC-BY-SA-4.0 (Pioreactor/hardware LICENSE)",
+   "software": "MIT",
+   "docs": "unknown"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "unknown",
+  "actuation": "Stirring motor, heater, 4x LED outputs, 12 V peristaltic pumps; OD at 900 nm, temperature",
+  "control": "Raspberry Pi; web UI + Python API, plugins",
+  "bom_cost": "USD 329 (20 mL) / 349 (40 mL) from vendor; pumps USD 89",
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": null,
+   "known_builds": "'Dozens of international teams' (vendor)",
+   "paper": "unknown",
+   "docs_quality": "good"
+  },
+  "sim_model": "n/a (no kinematics); growth-model process sim possible",
+  "safety_notes": "BSL-1 non-pathogenic organisms only; GMOs need contained-use authorisation (CZ 78/2004 Sb.). No food/probiotic/medical claims.",
+  "fit": {
+   "maker": 4,
+   "school": 5,
+   "lab": 5,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/Pioreactor/pioreactor",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/Pioreactor/hardware",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://pioreactor.com/",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://pioreactor.com/collections/all",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "printed share",
+   "sterility method",
+   "docs license"
+  ]
+ },
+ {
+  "id": "evolver",
+  "name": "eVOLVER",
+  "category": "bioreactor",
+  "summary_en": "Scalable continuous-culture framework (Smart Sleeves, 40 mL vials) for automated growth and lab evolution.",
+  "homepage": "https://www.fynchbio.com/",
+  "repo": "https://github.com/FYNCH-BIO/evolver",
+  "cad": "https://github.com/FYNCH-BIO/hardware",
+  "licenses": {
+   "hardware": "unknown (FYNCH-BIO/hardware has no LICENSE file)",
+   "software": "MIT (evolver, dpu)",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "low",
+  "actuation": "Fluidics (pumps), temperature, stirring per sleeve",
+  "control": "Python server + DPU (MIT)",
+  "bom_cost": "< USD 2,000 for 16-chamber prototype (Lab Manager, 2018)",
+  "maturity": {
+   "last_activity": "2026-06",
+   "stars": null,
+   "known_builds": "Fynch Biosciences commercial units",
+   "paper": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6035058",
+   "docs_quality": "ok"
+  },
+  "sim_model": "n/a",
+  "safety_notes": "Lab-only; BSL-1; GMO rules.",
+  "fit": {
+   "maker": 1,
+   "school": 2,
+   "lab": 5,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/FYNCH-BIO/evolver",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/FYNCH-BIO/dpu",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/FYNCH-BIO/hardware",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://www.labmanager.com/diy-brings-high-throughput-to-continuous-cell-culturing-4076",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "printed share",
+   "hardware license"
+  ]
+ },
+ {
+  "id": "chi-bio",
+  "name": "Chi.Bio",
+  "category": "bioreactor",
+  "summary_en": "Open automated bioreactor: heating, stirring, liquid handling, spectrometry and optogenetics, web UI.",
+  "homepage": "https://chi.bio/",
+  "repo": "https://github.com/HarrisonSteel/ChiBio",
+  "cad": "https://chi.bio/hardware/",
+  "licenses": {
+   "hardware": "not stated (site/repo)",
+   "software": "not stated (no LICENSE in repo)",
+   "docs": "not stated"
+  },
+  "rights_class": "unknown",
+  "printed_share": "low",
+  "actuation": "Heater, stirrer, pumps, LEDs incl. UV, spectrometer",
+  "control": "BeagleBone-based Python web app",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-02",
+   "stars": null,
+   "known_builds": "Labmaker sells units",
+   "paper": "https://doaj.org/article/fc7ea001168649d4a5e94bc39b856024",
+   "docs_quality": "ok"
+  },
+  "sim_model": "n/a",
+  "safety_notes": "UV LED (eye safety); BSL-1; GMO rules.",
+  "fit": {
+   "maker": 2,
+   "school": 3,
+   "lab": 5,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://chi.bio/",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://chi.bio/hardware/",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/HarrisonSteel/ChiBio",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "price",
+   "license"
+  ]
+ },
+ {
+  "id": "phenobottle-sbt",
+  "name": "Phenobottle (SmartBioTech / FIT VUT Brno)",
+  "category": "bioreactor",
+  "summary_en": "Algae/cyanobacteria cultivator with non-invasive photosynthetic phenotyping, for distributed optimisation (Czech).",
+  "homepage": "https://www.fit.vut.cz/research/product/732",
+  "repo": "https://github.com/SmartBioTech/Phenobottle_SBT",
+  "cad": null,
+  "licenses": {
+   "hardware": "GPLv3 + MIT per FIT VUT page, but licence agreement required; no LICENSE in repo",
+   "software": "see hardware",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "medium",
+  "actuation": "LED lighting, pumps/aeration (not verified); OD/fluorescence sensing",
+  "control": "Firmware + Software dirs in repo",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2022-07",
+   "stars": null,
+   "known_builds": "unknown",
+   "paper": "https://researchportalplus.anu.edu.au/en/publications/the-phenobottle-an-open-source-photobioreactor-platform-for-envir/",
+   "docs_quality": "poor"
+  },
+  "sim_model": "n/a",
+  "safety_notes": "Algae BSL-1; no food/feed claims.",
+  "fit": {
+   "maker": 3,
+   "school": 4,
+   "lab": 4,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://www.fit.vut.cz/research/product/732",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/SmartBioTech/Phenobottle_SBT",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "actuators",
+   "license clarity",
+   "cost"
+  ]
+ },
+ {
+  "id": "ekf-turbidostat",
+  "name": "Low-cost turbidostat with EKF growth estimation",
+  "category": "bioreactor",
+  "summary_en": "User-friendly low-cost turbidostat (PMC5529016).",
+  "homepage": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5529016/",
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "unknown",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "unknown",
+  "actuation": "pumps, OD",
+  "control": "unknown",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2017",
+   "stars": null,
+   "known_builds": "unknown",
+   "paper": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5529016/",
+   "docs_quality": "unknown"
+  },
+  "sim_model": "n/a",
+  "safety_notes": "BSL-1.",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 3,
+   "plan_guide_treatment": 1
+  },
+  "sources": [
+   {
+    "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5529016/",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "all details"
+  ]
+ },
+ {
+  "id": "so-arm100-101",
+  "name": "SO-ARM100 / SO-101 (Standard Open Arm)",
+  "category": "arm",
+  "summary_en": "Low-cost 5-DoF+gripper 3D-printed arm built from Feetech STS3215 bus servos, sold as leader/follower pair for imitation learning; SO-101 is the current version, SO-100 deprecated.",
+  "homepage": "https://github.com/TheRobotStudio/SO-ARM100",
+  "repo": "https://github.com/TheRobotStudio/SO-ARM100",
+  "cad": "https://github.com/TheRobotStudio/SO-ARM100",
+  "licenses": {
+   "hardware": "Apache-2.0 (repo LICENSE)",
+   "software": "Apache-2.0",
+   "docs": "Apache-2.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "6x Feetech STS3215 per arm (leader uses mixed gear ratios 1/345,1/191,1/147)",
+  "control": "Native LeRobot support (so101_follower/so101_leader); Waveshare bus servo board over USB",
+  "bom_cost": "~$230 USD for leader+follower electronics excl. printing (README US table); ~$13.89/servo",
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": 7946,
+   "known_builds": "Very large community; many commercial kits (Seeed, WowRobo, PartaBot, RobotEd, Autodiscovery etc. listed in README)",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "URDF+MJCF in repo (Simulation folder) - partially verified",
+  "safety_notes": "Low-voltage (5-12 V) hobby bus servos; pinch points at gripper/joints; low force.",
+  "fit": {
+   "maker": 5,
+   "school": 5,
+   "lab": 4,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/TheRobotStudio/SO-ARM100",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://huggingface.co/docs/lerobot/so101",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "sim_model files path",
+   "exact SO-101 BOM total for single follower"
+  ]
+ },
+ {
+  "id": "so-arm102",
+  "name": "SO-ARM102 (Robonine)",
+  "category": "arm",
+  "summary_en": "Community successor to SO-100/101 by Robonine with stronger STS3235/STS3250 servos in the follower, LeRobot-compatible leader/follower kit.",
+  "homepage": "https://robonine.com",
+  "repo": "https://github.com/roboninecom/SO-ARM102",
+  "cad": "https://github.com/roboninecom/SO-ARM102",
+  "licenses": {
+   "hardware": "CERN-OHL-P-2.0",
+   "software": "Apache-2.0",
+   "docs": "CC-BY-4.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "Follower: 2x STS3235, 2x STS3250, 2x STS3215 (12 V); Leader: 6x STS3215 (5 V)",
+  "control": "LeRobot (docs/lerobot.md); Waveshare bus adapter",
+  "bom_cost": "~$342 components or ~$388 incl. filament for leader+follower (README)",
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": 176,
+   "known_builds": "Independent test build listed in README",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "URDF/Xacro in simulation/urdf",
+  "safety_notes": "Low-voltage (5-12 V) hobby bus servos; pinch points at gripper/joints; low force. 12 V follower is stronger than SO-101.",
+  "fit": {
+   "maker": 5,
+   "school": 4,
+   "lab": 4,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/roboninecom/SO-ARM102",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "GitHub reports CC-BY-4.0 as repo license; README splits licenses"
+  ]
+ },
+ {
+  "id": "koch-v1-0",
+  "name": "Low-Cost Robot Arm (Koch v1.0)",
+  "category": "arm",
+  "summary_en": "Alexander Koch's 3D-printed Dynamixel leader/follower arm that seeded the LeRobot hardware ecosystem; inspired by GELLO.",
+  "homepage": "https://github.com/AlexanderKoch-Koch/low_cost_robot",
+  "repo": "https://github.com/AlexanderKoch-Koch/low_cost_robot",
+  "cad": "https://github.com/AlexanderKoch-Koch/low_cost_robot",
+  "licenses": {
+   "hardware": "MIT",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "Follower: 2x Dynamixel XL430-W250 + 4x XL330-M288; leader: 6x XL330-M077",
+  "control": "Dynamixel SDK; LeRobot 'koch' robot type; MuJoCo simulation.py",
+  "bom_cost": "~$250 follower + ~$180 leader = ~$430 USD (README)",
+  "maturity": {
+   "last_activity": "2024-09",
+   "stars": 3419,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "MJCF (MuJoCo simulation in repo)",
+  "safety_notes": "Low-voltage (5-12 V) hobby bus servos; pinch points at gripper/joints; low force.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/AlexanderKoch-Koch/low_cost_robot",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "LeRobot current support status for v1.0 vs v1.1"
+  ]
+ },
+ {
+  "id": "koch-v1-1",
+  "name": "Koch v1.1",
+  "category": "arm",
+  "summary_en": "Improved, easier-to-assemble version of the Koch Dynamixel arm with detailed multi-country BOM and LeRobot instructions.",
+  "homepage": "https://github.com/jess-moss/koch-v1-1",
+  "repo": "https://github.com/jess-moss/koch-v1-1",
+  "cad": "https://github.com/jess-moss/koch-v1-1",
+  "licenses": {
+   "hardware": "Apache-2.0",
+   "software": "Apache-2.0",
+   "docs": "Apache-2.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "Dynamixel XL430-W250 + XL330-M288 (follower), XL330-M077 (leader)",
+  "control": "LeRobot (koch_follower/koch_leader)",
+  "bom_cost": "Leader ~$199, follower ~$278 USD (README tables)",
+  "maturity": {
+   "last_activity": "2024-09",
+   "stars": 736,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "unknown",
+  "safety_notes": "Low-voltage (5-12 V) hobby bus servos; pinch points at gripper/joints; low force.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/jess-moss/koch-v1-1",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "sim model"
+  ]
+ },
+ {
+  "id": "moss-v1",
+  "name": "Moss v1 arm",
+  "category": "arm",
+  "summary_en": "Feetech STS3215-based leader/follower arm from the Koch v1.1 author; README now recommends SO-100 and marks Moss as to-be-deprecated.",
+  "homepage": "https://github.com/jess-moss/moss-robot-arms",
+  "repo": "https://github.com/jess-moss/moss-robot-arms",
+  "cad": "https://github.com/jess-moss/moss-robot-arms",
+  "licenses": {
+   "hardware": "Apache-2.0",
+   "software": "Apache-2.0",
+   "docs": "Apache-2.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "Feetech STS3215 servos",
+  "control": "LeRobot (moss type, deprecated)",
+  "bom_cost": "Follower ~$288, leader ~$159 USD (README)",
+  "maturity": {
+   "last_activity": "2025-02",
+   "stars": 88,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "unknown",
+  "safety_notes": "Low-voltage (5-12 V) hobby bus servos; pinch points at gripper/joints; low force.",
+  "fit": {
+   "maker": 3,
+   "school": 3,
+   "lab": 3,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/jess-moss/moss-robot-arms",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "sim model"
+  ]
+ },
+ {
+  "id": "bcn3d-moveo",
+  "name": "BCN3D Moveo",
+  "category": "arm",
+  "summary_en": "Fully 3D-printed 5-axis educational arm by BCN3D (derived from BetaBots arm), stepper-driven via Arduino/RAMPS.",
+  "homepage": "https://github.com/BCN3D/BCN3D-Moveo",
+  "repo": "https://github.com/BCN3D/BCN3D-Moveo",
+  "cad": "https://github.com/BCN3D/BCN3D-Moveo",
+  "licenses": {
+   "hardware": "MIT (GitHub repo license)",
+   "software": "MIT",
+   "docs": "unknown"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "NEMA 17/23 steppers (per BOM) + hobby servo gripper",
+  "control": "Arduino/RAMPS firmware; community ROS packages (jesseweisberg/moveo_ros, 328 stars)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2022-03",
+   "stars": 2012,
+   "known_builds": "Widely built in schools; many community forks",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF via community moveo_ros",
+  "safety_notes": "Stepper-driven arm with significant torque; no collision detection by default - use e-stop and keep clear of workspace.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 2,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/BCN3D/BCN3D-Moveo",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/jesseweisberg/moveo_ros",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "exact motor list",
+   "bom_cost"
+  ]
+ },
+ {
+  "id": "thor",
+  "name": "Thor",
+  "category": "arm",
+  "summary_en": "Open-source 6-DoF 3D-printed arm with printed gears and GT2 belts, G-code controlled (GRBL/RRF) with ROS2/MoveIt2 configs.",
+  "homepage": "http://thor.angel-lm.com",
+  "repo": "https://github.com/AngelLM/Thor",
+  "cad": "https://github.com/AngelLM/Thor",
+  "licenses": {
+   "hardware": "CC-BY-SA-4.0",
+   "software": "CC-BY-SA-4.0",
+   "docs": "CC-BY-SA-4.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "Stepper motors with 3D-printed gears and GT2 belts",
+  "control": "GRBL/RepRapFirmware G-code; ROS2 + MoveIt2 (AngelLM/Thor-ROS)",
+  "bom_cost": "<350 EUR hardware (README)",
+  "maturity": {
+   "last_activity": "2025-05",
+   "stars": 1635,
+   "known_builds": "Large hobby community",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "URDF in Thor-ROS (unverified)",
+  "safety_notes": "Stepper-driven arm with significant torque; no collision detection by default - use e-stop and keep clear of workspace.",
+  "fit": {
+   "maker": 5,
+   "school": 4,
+   "lab": 3,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/AngelLM/Thor",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "sim_model"
+  ]
+ },
+ {
+  "id": "parol6",
+  "name": "PAROL6",
+  "category": "arm",
+  "summary_en": "Industrial-style 6-axis 3D-printed desktop arm by Source Robotics with commander GUI, Python API and ROS2/MoveIt; available as kit or DIY.",
+  "homepage": "https://source-robotics.com",
+  "repo": "https://github.com/Source-Robotics/PAROL6-Desktop-robot-arm",
+  "cad": "https://github.com/Source-Robotics/PAROL6-Desktop-robot-arm",
+  "licenses": {
+   "hardware": "GPL-3.0",
+   "software": "GPL-3.0",
+   "docs": "unknown"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "Stepper motors (closed-loop per docs)",
+  "control": "PAROL Commander GUI, Python API, ROS2 MoveIt (Source-Robotics/PAROL6-ROS2-MOVEIT)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": 3420,
+   "known_builds": "Commercial kits + community projects page",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "URDF (ROS2 MoveIt repo)",
+  "safety_notes": "Stepper-driven arm with significant torque; no collision detection by default - use e-stop and keep clear of workspace. README has explicit liability disclaimer.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 4,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/Source-Robotics/PAROL6-Desktop-robot-arm",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "actuation details",
+   "bom_cost",
+   "GPL applied to hardware files"
+  ]
+ },
+ {
+  "id": "faze4",
+  "name": "Faze4",
+  "category": "arm",
+  "summary_en": "Fully 3D-printable 6-axis arm with printed cycloidal gearboxes, styled after industrial robots; predecessor of PAROL6.",
+  "homepage": "https://github.com/Source-Robotics/Faze4-Robotic-arm",
+  "repo": "https://github.com/Source-Robotics/Faze4-Robotic-arm",
+  "cad": "https://github.com/Source-Robotics/Faze4-Robotic-arm",
+  "licenses": {
+   "hardware": "CERN-OHL-S-2.0 (LICENSE file; README still says MIT)",
+   "software": "unknown",
+   "docs": "unknown"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "Stepper motors + 3D-printed cycloidal reducers",
+  "control": "ROS / Matlab per docs",
+  "bom_cost": "<1000 USD (README)",
+  "maturity": {
+   "last_activity": "2025-12",
+   "stars": 914,
+   "known_builds": "Hackaday.io project 167247; Printables model 611889",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF (URDF_FAZE4)",
+  "safety_notes": "Stepper-driven arm with significant torque; no collision detection by default - use e-stop and keep clear of workspace.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 3,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/Source-Robotics/Faze4-Robotic-arm",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://www.printables.com/model/611889-faze4-robotic-arm",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "license conflict README MIT vs LICENSE CERN-OHL-S"
+  ]
+ },
+ {
+  "id": "arctos",
+  "name": "Arctos",
+  "category": "arm",
+  "summary_en": "6-axis mostly 3D-printed (PLA) arm with steppers and Arduino/GRBL or CAN closed-loop control; CAD sold under a personal non-commercial license, ROS packages open.",
+  "homepage": "https://arctosrobotics.com",
+  "repo": "https://github.com/Arctos-Robotics/ROS",
+  "cad": null,
+  "licenses": {
+   "hardware": "Paid personal non-commercial CAD license (Hackster)",
+   "software": "MIT (ROS repo)",
+   "docs": "unknown"
+  },
+  "rights_class": "nc",
+  "printed_share": "high",
+  "actuation": "Stepper motors (open-loop or MKS closed-loop CAN kits)",
+  "control": "Arduino Mega/GRBL; ROS1 MoveIt (Arctos-Robotics/ROS), community ROS2 (cr0Kz/ros2_arctos)",
+  "bom_cost": "~$400 in parts (Hackster)",
+  "maturity": {
+   "last_activity": "2025-03",
+   "stars": 103,
+   "known_builds": "Kits sold via RobotShop/West3D",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF (arctos_urdf)",
+  "safety_notes": "Stepper-driven arm with significant torque; no collision detection by default - use e-stop and keep clear of workspace.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 2,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/Arctos-Robotics/ROS",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://hackster.io/news/arctos-robotics-aims-to-design-a-3d-printable-robot-arm-as-easy-as-building-lego-03559e924d70",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "current CAD license terms",
+   "homepage content (blocked)"
+  ]
+ },
+ {
+  "id": "xlerobot",
+  "name": "XLeRobot",
+  "category": "wheeled",
+  "summary_en": "Dual-arm household mobile manipulator built on LeKiwi + SO-100/101 arms on an IKEA cart base, with VR/gamepad teleop and VLA tutorials.",
+  "homepage": "https://xlerobot.readthedocs.io",
+  "repo": "https://github.com/Vector-Wangel/XLeRobot",
+  "cad": "https://github.com/Vector-Wangel/XLeRobot",
+  "licenses": {
+   "hardware": "Apache-2.0 (repo LICENSE)",
+   "software": "Apache-2.0",
+   "docs": "Apache-2.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "medium",
+  "actuation": "Feetech STS3215 bus servos (arms, head, wheels); omni or 2-wheel differential base",
+  "control": "LeRobot-based; MuJoCo sim; keyboard/Xbox/Joy-Con/Quest3 teleop",
+  "bom_cost": "from ~$660 excl. printing (README); dev kit $579 world-wide (README)",
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": 5649,
+   "known_builds": "Active community",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "URDF + MuJoCo (docs simulation section)",
+  "safety_notes": "Heavier cart platform; tip-over risk with arms extended.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 5,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/Vector-Wangel/XLeRobot",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://xlerobot.readthedocs.io/en/latest/index.html",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "printed_share (cart is IKEA metal; printed brackets)"
+  ],
+  "merged_from": [
+   {
+    "id": "xlerobot",
+    "name": "XLeRobot",
+    "category": "arm",
+    "summary_en": "Dual-arm household mobile manipulator built from two SO-101 arms on a LeKiwi-style base with IKEA cart, head camera and LeRobot software.",
+    "homepage": "https://xlerobot.readthedocs.io",
+    "repo": "https://github.com/Vector-Wangel/XLeRobot",
+    "cad": "https://github.com/Vector-Wangel/XLeRobot",
+    "licenses": {
+     "hardware": "Apache-2.0",
+     "software": "Apache-2.0",
+     "docs": "Apache-2.0"
+    },
+    "rights_class": "permissive",
+    "printed_share": "medium",
+    "actuation": "Feetech STS3215 servos (2x SO-101 arms + base)",
+    "control": "LeRobot-based; keyboard/Xbox/Joy-Con/VR teleop; VLA tutorial",
+    "bom_cost": "From $660 USD excl. printing/shipping (README)",
+    "maturity": {
+     "last_activity": "2026-10",
+     "stars": 5649,
+     "known_builds": "Active community",
+     "paper": null,
+     "docs_quality": "good"
+    },
+    "sim_model": "URDF + MuJoCo (simulation docs, web MuJoCo demo)",
+    "safety_notes": "Low-voltage (5-12 V) hobby bus servos; pinch points at gripper/joints; low force. README disclaims all liability.",
+    "fit": {
+     "maker": 5,
+     "school": 4,
+     "lab": 4,
+     "plan_guide_treatment": 5
+    },
+    "sources": [
+     {
+      "url": "https://github.com/Vector-Wangel/XLeRobot",
+      "checked": "2026-10-31"
+     }
+    ],
+    "unverified": [
+     "servo count"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "lekiwi",
+  "name": "LeKiwi",
+  "category": "wheeled",
+  "summary_en": "Low-cost mobile manipulator: 3-wheel kiwi (holonomic) omni-wheel base carrying an SO-100/SO-101 arm, designed for Hugging Face LeRobot.",
+  "homepage": "https://github.com/SIGRobotics-UIUC/LeKiwi",
+  "repo": "https://github.com/SIGRobotics-UIUC/LeKiwi",
+  "cad": "https://a360.co/4k1P8yO",
+  "licenses": {
+   "hardware": "Apache-2.0 (repo LICENSE.txt covers CAD/STL)",
+   "software": "Apache-2.0 (LeRobot)",
+   "docs": "Apache-2.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "3x Feetech STS3215 (12V or 7.4V) wheel servos + 6x STS3215 arm; 4\" omni wheels; Raspberry Pi 5",
+  "control": "LeRobot (huggingface.co/docs/lerobot/lekiwi); Dynamixel XL430 variant",
+  "bom_cost": "~$482 (12V) / ~$499 (5V) full; ~$184-251 base only (repo BOM.md)",
+  "maturity": {
+   "last_activity": "2026-08",
+   "stars": 1501,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "URDF (repo /URDF)",
+  "safety_notes": "Low-power servo robot; LiPo/power-bank handling; arm pinch points.",
+  "fit": {
+   "maker": 5,
+   "school": 5,
+   "lab": 5,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/SIGRobotics-UIUC/LeKiwi",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/SIGRobotics-UIUC/LeKiwi/blob/main/BOM.md",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://huggingface.co/docs/lerobot/lekiwi",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "known_builds"
+  ],
+  "merged_from": [
+   {
+    "id": "lekiwi",
+    "name": "LeKiwi",
+    "category": "arm",
+    "summary_en": "Low-cost mobile manipulator: SO-101 arm on a 3-omniwheel printed base with Raspberry Pi 5, officially supported in LeRobot.",
+    "homepage": "https://github.com/SIGRobotics-UIUC/LeKiwi",
+    "repo": "https://github.com/SIGRobotics-UIUC/LeKiwi",
+    "cad": "https://github.com/SIGRobotics-UIUC/LeKiwi",
+    "licenses": {
+     "hardware": "Apache-2.0",
+     "software": "Apache-2.0",
+     "docs": "Apache-2.0"
+    },
+    "rights_class": "permissive",
+    "printed_share": "high",
+    "actuation": "STS3215 servos (arm + 3 wheel servos); Dynamixel variant via Koch v1.1",
+    "control": "LeRobot 'lekiwi' (official docs)",
+    "bom_cost": null,
+    "maturity": {
+     "last_activity": "2026-08",
+     "stars": 1501,
+     "known_builds": null,
+     "paper": null,
+     "docs_quality": "good"
+    },
+    "sim_model": "URDF (URDF folder)",
+    "safety_notes": "Low-voltage (5-12 V) hobby bus servos; pinch points at gripper/joints; low force. Li-ion battery handling.",
+    "fit": {
+     "maker": 5,
+     "school": 5,
+     "lab": 4,
+     "plan_guide_treatment": 4
+    },
+    "sources": [
+     {
+      "url": "https://github.com/SIGRobotics-UIUC/LeKiwi",
+      "checked": "2026-10-31"
+     },
+     {
+      "url": "https://huggingface.co/docs/lerobot/lekiwi",
+      "checked": "2026-10-31"
+     }
+    ],
+    "unverified": [
+     "bom_cost (in BOM.md, not read)"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "trlc-dk1",
+  "name": "TRLC DK1",
+  "category": "arm",
+  "summary_en": "Developer kit leader/follower arm from The Robot Learning Company, distributed as a LeRobot plugin with follower URDF.",
+  "homepage": "https://github.com/robot-learning-co/trlc-dk1",
+  "repo": "https://github.com/robot-learning-co/trlc-dk1",
+  "cad": null,
+  "licenses": {
+   "hardware": "unclear - 'All rights reserved' notice for CAD; repo Apache-2.0",
+   "software": "Apache-2.0",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "unknown",
+  "actuation": "unknown",
+  "control": "LeRobot plugin (dk1_follower/dk1_leader)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-07",
+   "stars": 812,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF (urdf/follower)",
+  "safety_notes": "unknown",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/robot-learning-co/trlc-dk1",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "printed share",
+   "actuation",
+   "hardware license"
+  ]
+ },
+ {
+  "id": "nextis-aira",
+  "name": "Nextis AIRA",
+  "category": "arm",
+  "summary_en": "3D-printable 7-DoF (6+gripper) arm with Damiao CAN motors and a Dynamixel XL330 leader, shipped as a native LeRobot plugin.",
+  "homepage": "https://www.nextis.tech/hardware",
+  "repo": "https://github.com/robertorobotics/Nextis-AIRA-3D",
+  "cad": "https://github.com/robertorobotics/Nextis-AIRA-3D",
+  "licenses": {
+   "hardware": "Apache-2.0",
+   "software": "Apache-2.0",
+   "docs": "Apache-2.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "medium",
+  "actuation": "Damiao CAN-bus motors (follower), Dynamixel XL330 (leader)",
+  "control": "LeRobot plugin (aira_follower) with new Damiao driver",
+  "bom_cost": "EUR 2,000-2,500 full teleop kit (README)",
+  "maturity": {
+   "last_activity": "2026-03",
+   "stars": 266,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "unknown",
+  "safety_notes": "Higher-torque BLDC follower; use current limits/e-stop.",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/robertorobotics/Nextis-AIRA-3D",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "sim model"
+  ]
+ },
+ {
+  "id": "am-arm200",
+  "name": "AM-ARM200",
+  "category": "arm",
+  "summary_en": "Fully 3D-printable 6+1 DoF arm (1 kg payload claimed) for LeRobot/AlohaMini, STS3215 or STS3250 servos.",
+  "homepage": "https://github.com/liyiteng/AM-ARM",
+  "repo": "https://github.com/liyiteng/AM-ARM",
+  "cad": "https://github.com/liyiteng/AM-ARM",
+  "licenses": {
+   "hardware": "Apache-2.0",
+   "software": "Apache-2.0",
+   "docs": "Apache-2.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "7x Feetech STS3215 (Pro: STS3250; STS3095 noted)",
+  "control": "LeRobot via lerobot_alohamini or small upstream patch",
+  "bom_cost": "~$240 follower / ~$140 leader / ~$380 kit (README)",
+  "maturity": {
+   "last_activity": "2026-06",
+   "stars": 91,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none (URDF 'coming soon')",
+  "safety_notes": "Low-voltage (5-12 V) hobby bus servos; pinch points at gripper/joints; low force.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 3,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/liyiteng/AM-ARM",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "payload claim"
+  ]
+ },
+ {
+  "id": "star-arm-102",
+  "name": "Star Arm 102 (Fashion Star)",
+  "category": "arm",
+  "summary_en": "Vendor-backed 6+1 DoF leader/follower arm series with LeRobot plugins and ROS2 Humble; repository-wide hardware license not yet established.",
+  "homepage": "https://fashionstar.com.hk/robot-arm/star-arm-102/",
+  "repo": "https://github.com/servodevelop/Star-Arm-102",
+  "cad": "https://github.com/servodevelop/Star-Arm-102",
+  "licenses": {
+   "hardware": "not established (LICENSE.md)",
+   "software": "Apache-2.0 (LeRobot plugins)",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "unknown",
+  "actuation": "Fashion Star bus servos (brushless in FL follower, coreless in HD)",
+  "control": "LeRobot plugins; ROS2 Humble; ACT pretrained model",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": 60,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF",
+  "safety_notes": "Low-voltage (5-12 V) hobby bus servos; pinch points at gripper/joints; low force.",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 3,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/servodevelop/Star-Arm-102",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "printed share",
+   "license"
+  ]
+ },
+ {
+  "id": "bhl-arm",
+  "name": "Berkeley Humanoid Lite Arm (Lite v1.5)",
+  "category": "arm",
+  "summary_en": "3D-printed bimanual arm platform from Berkeley Humanoid Lite with LeRobot robot/teleoperator plugins and MuJoCo+Mink IK teleop.",
+  "homepage": "https://github.com/berkeley-humanoids/berkeley-humanoid-lite-arm",
+  "repo": "https://github.com/berkeley-humanoids/berkeley-humanoid-lite-arm",
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "MIT",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "unknown (BHL actuators with printed gearboxes presumed)",
+  "control": "LeRobot third-party plugins (lerobot_robot_bhl_arm)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-03",
+   "stars": 11,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "MJCF (bhl_arm.xml)",
+  "safety_notes": "BLDC actuators; use damping mode/e-stop.",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/berkeley-humanoids/berkeley-humanoid-lite-arm",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "actuation",
+   "hardware license"
+  ]
+ },
+ {
+  "id": "poppy-ergo-jr",
+  "name": "Poppy Ergo Jr",
+  "category": "arm",
+  "summary_en": "Small 6-DoF educational arm of simple 3D-printed shapes driven by Dynamixel XL-320 and a Raspberry Pi; Poppy project (Inria).",
+  "homepage": "https://www.poppy-project.org",
+  "repo": "https://github.com/poppy-project/poppy-ergo-jr",
+  "cad": "https://github.com/poppy-project/poppy-ergo-jr",
+  "licenses": {
+   "hardware": "CC-BY-SA-4.0",
+   "software": "GPL-3.0",
+   "docs": "unknown"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "6x Dynamixel XL-320",
+  "control": "pypot / Poppy software, Snap!, Python",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2022-05",
+   "stars": 229,
+   "known_builds": "Used in French schools (Poppy Education)",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF (unverified)",
+  "safety_notes": "Low-voltage (5-12 V) hobby bus servos; pinch points at gripper/joints; low force.",
+  "fit": {
+   "maker": 4,
+   "school": 5,
+   "lab": 2,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/poppy-project/poppy-ergo-jr",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "bom_cost",
+   "sim"
+  ]
+ },
+ {
+  "id": "eezybotarm",
+  "name": "EEZYbotARM Mk1/Mk2",
+  "category": "arm",
+  "summary_en": "Classic small hobby-servo 3D-printed palletizer-style arm by daGHIZmo; Python/Arduino kinematics library by meisben.",
+  "homepage": "https://www.thingiverse.com/daGHIZmo/designs",
+  "repo": "https://github.com/meisben/easyEEZYbotARM",
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown (Thingiverse)",
+   "software": "MIT (easyEEZYbotARM)",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "Hobby PWM servos (MG996R-class, unverified)",
+  "control": "Arduino + Python lib (easyEEZYbotARM)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2023-10",
+   "stars": 120,
+   "known_builds": "Very widely printed",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Hobby servos, low force.",
+  "fit": {
+   "maker": 4,
+   "school": 5,
+   "lab": 1,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/meisben/easyEEZYbotARM",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "hardware license",
+   "servo models",
+   "homepage"
+  ]
+ },
+ {
+  "id": "fred-arm",
+  "name": "FRED arm",
+  "category": "arm",
+  "summary_en": "Personal 3D-printed Dynamixel arm with belt drives, IK and RL (SAC) experiments.",
+  "homepage": "https://github.com/thomashiemstra/fred",
+  "repo": "https://github.com/thomashiemstra/fred",
+  "cad": "https://a360.co/2PHQOEz",
+  "licenses": {
+   "hardware": "GPL-3.0",
+   "software": "GPL-3.0",
+   "docs": "GPL-3.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "Dynamixel servos (gripper XL330-M288) + GT2 belts",
+  "control": "Python, Xbox IK control",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": 114,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "unknown",
+  "safety_notes": "Low-voltage (5-12 V) hobby bus servos; pinch points at gripper/joints; low force.",
+  "fit": {
+   "maker": 2,
+   "school": 1,
+   "lab": 2,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/thomashiemstra/fred",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "servo list"
+  ]
+ },
+ {
+  "id": "aharobot",
+  "name": "AhaRobot (Astra)",
+  "category": "arm",
+  "summary_en": "Low-cost bimanual mobile manipulator with aluminium profiles and 3D-printed parts plus teleop handles; GPL-3.0 with added non-commercial restriction.",
+  "homepage": "https://github.com/hilookas/Astra_Hardwares",
+  "repo": "https://github.com/hilookas/Astra_Hardwares",
+  "cad": "https://github.com/hilookas/Astra_Hardwares",
+  "licenses": {
+   "hardware": "GPL-3.0 + non-commercial restriction",
+   "software": "see astra_ws",
+   "docs": "unknown"
+  },
+  "rights_class": "nc",
+  "printed_share": "medium",
+  "actuation": "unknown",
+  "control": "ROS2 (hilookas/astra_ws)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-02",
+   "stars": 20,
+   "known_builds": null,
+   "paper": "https://arxiv.org/abs/2503.10070",
+   "docs_quality": "poor"
+  },
+  "sim_model": "URDF (astra_description)",
+  "safety_notes": "unknown",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 3,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/hilookas/Astra_Hardwares",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "actuation",
+   "cost"
+  ]
+ },
+ {
+  "id": "ssg-48",
+  "name": "SSG-48 adaptive electric gripper",
+  "category": "gripper",
+  "summary_en": "Open-source BLDC gripper with force feedback built on Spectral micro BLDC drivers, with URDF/MJCF and ROS2 driver.",
+  "homepage": "https://source-robotics.com",
+  "repo": "https://github.com/Source-Robotics/SSG-48-adaptive-electric-gripper",
+  "cad": "https://github.com/Source-Robotics/SSG-48-adaptive-electric-gripper",
+  "licenses": {
+   "hardware": "Apache-2.0",
+   "software": "Apache-2.0",
+   "docs": "Apache-2.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "medium",
+  "actuation": "Gimbal BLDC + Spectral micro BLDC driver (CAN)",
+  "control": "Python API (Spectral-BLDC-Python), ROS2 package",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-09",
+   "stars": 184,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "URDF+MJCF",
+  "safety_notes": "Force-controlled; pinch hazard.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/Source-Robotics/SSG-48-adaptive-electric-gripper",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "printed share",
+   "cost"
+  ]
+ },
+ {
+  "id": "msg-gripper",
+  "name": "MSG compliant AI stepper gripper",
+  "category": "gripper",
+  "summary_en": "Linear-rail gripper up to 200 mm stroke using steppers with StepFOC force control, URDF/MJCF and ROS2.",
+  "homepage": "https://source-robotics.com",
+  "repo": "https://github.com/Source-Robotics/MSG-compliant-AI-stepper-gripper",
+  "cad": "https://github.com/Source-Robotics/MSG-compliant-AI-stepper-gripper",
+  "licenses": {
+   "hardware": "CERN-OHL-S-2.0",
+   "software": "unknown",
+   "docs": "unknown"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "medium",
+  "actuation": "NEMA stepper (21.5/40/60 mm lengths) + StepFOC driver",
+  "control": "Python over CAN, ROS2",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-08",
+   "stars": 71,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF+MJCF",
+  "safety_notes": "Stepper force can be high; set current limits.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/Source-Robotics/MSG-compliant-AI-stepper-gripper",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "printed share",
+   "cost"
+  ]
+ },
+ {
+  "id": "robonine-so-gripper",
+  "name": "Robonine SO-ARM parallel gripper",
+  "category": "gripper",
+  "summary_en": "3D-printed parallel gripper (rack-and-pinion) for SO-100/101/102 arms using one STS3215.",
+  "homepage": "https://robonine.com",
+  "repo": "https://github.com/roboninecom/SO-ARM100-101-102-Parallel-Gripper",
+  "cad": "https://github.com/roboninecom/SO-ARM100-101-102-Parallel-Gripper",
+  "licenses": {
+   "hardware": "CERN-OHL-P-2.0",
+   "software": "Apache-2.0",
+   "docs": "CC-BY-4.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "1x Feetech STS3215",
+  "control": "Same bus as SO-ARM; LeRobot-compatible arm; sims in Gazebo/MuJoCo/Webots",
+  "bom_cost": "~$50 (README)",
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": 199,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "URDF (5 physics engines via ROS2 description)",
+  "safety_notes": "Low-voltage (5-12 V) hobby bus servos; pinch points at gripper/joints; low force.",
+  "fit": {
+   "maker": 5,
+   "school": 4,
+   "lab": 4,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/roboninecom/SO-ARM100-101-102-Parallel-Gripper",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": []
+ },
+ {
+  "id": "touch-finray",
+  "name": "Touch-Sensing Fin-Ray Gripper",
+  "category": "gripper",
+  "summary_en": "Soft 3D-printed fin-ray fingers with a magnet and 3-axis Hall sensor in every lamella for tactile sensing.",
+  "homepage": "https://github.com/StefanRohringer/Touch-Sensing-Fin-Ray-Gripper",
+  "repo": "https://github.com/StefanRohringer/Touch-Sensing-Fin-Ray-Gripper",
+  "cad": "https://github.com/StefanRohringer/Touch-Sensing-Fin-Ray-Gripper",
+  "licenses": {
+   "hardware": "CERN-OHL-S-2.0",
+   "software": "GPL-3.0",
+   "docs": "CERN-OHL-S-2.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "unknown",
+  "control": "Raspberry Pi Pico firmware + PC software",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": 3,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low force soft fingers.",
+  "fit": {
+   "maker": 3,
+   "school": 4,
+   "lab": 3,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/StefanRohringer/Touch-Sensing-Fin-Ray-Gripper",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "actuation"
+  ]
+ },
+ {
+  "id": "umi",
+  "name": "UMI - Universal Manipulation Interface",
+  "category": "gripper",
+  "summary_en": "Hand-held 3D-printed soft-finger gripper with GoPro for in-the-wild demonstration collection; policies deployed on arms with WSG50 or printed grippers.",
+  "homepage": "https://umi-gripper.github.io/",
+  "repo": "https://github.com/real-stanford/universal_manipulation_interface",
+  "cad": "https://docs.google.com/document/d/1TPYwV9sNVPAi0ZlAupDMkXZ4CA1hsZx7YDMSmcEy6EU",
+  "licenses": {
+   "hardware": "unknown (hardware guide)",
+   "software": "MIT",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "Passive (hand-held); sensing via GoPro camera",
+  "control": "Python pipeline (SLAM + diffusion policy)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-05",
+   "stars": 1625,
+   "known_builds": "Widely replicated in research",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Passive device.",
+  "fit": {
+   "maker": 3,
+   "school": 3,
+   "lab": 5,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/real-stanford/universal_manipulation_interface",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "hardware license",
+   "paper URL"
+  ]
+ },
+ {
+  "id": "yale-openhand",
+  "name": "Yale OpenHand",
+  "category": "gripper",
+  "summary_en": "Family of underactuated hands (Model T, T42, O, M2, W, F3...) made by hybrid deposition manufacturing (3D printing + cast resin), Dynamixel or hobby-servo driven.",
+  "homepage": "https://www.eng.yale.edu/grablab/openhand/",
+  "repo": "https://github.com/grablab/openhand_node",
+  "cad": null,
+  "licenses": {
+   "hardware": "CC-BY-NC-3.0",
+   "software": "MIT (openhand_node)",
+   "docs": "CC-BY-NC-3.0"
+  },
+  "rights_class": "nc",
+  "printed_share": "high",
+  "actuation": "Dynamixel (e.g. XL-320 in Model W) or hobby servos",
+  "control": "ROS (grablab/openhand_node)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2022-02",
+   "stars": 14,
+   "known_builds": "Widely used in labs",
+   "paper": "https://www.eng.yale.edu/grablab/pubs/Ma_RAM2017.pdf",
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF (openhand_simulation, unverified)",
+  "safety_notes": "Low force.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://www.eng.yale.edu/grablab/openhand/",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/grablab/openhand_node",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "CAD repo location",
+   "last activity of hardware"
+  ]
+ },
+ {
+  "id": "amazing-hand",
+  "name": "AmazingHand (AH!)",
+  "category": "hand",
+  "summary_en": "Pollen Robotics' low-cost 8-DoF printable humanoid hand: 4 fingers each driven by 2 Feetech SCS0009 servos in parallel.",
+  "homepage": "https://github.com/pollen-robotics/AmazingHand",
+  "repo": "https://github.com/pollen-robotics/AmazingHand",
+  "cad": "https://github.com/pollen-robotics/AmazingHand",
+  "licenses": {
+   "hardware": "CC-BY-4.0",
+   "software": "Apache-2.0",
+   "docs": "CC-BY-4.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "8x Feetech SCS0009 (SG90 force-control variant by community)",
+  "control": "Python (Rustypot/pypot) via Feetech TTL linker or Arduino; MuJoCo/Mink demos",
+  "bom_cost": "<200 EUR (README)",
+  "maturity": {
+   "last_activity": "2026-04",
+   "stars": 2503,
+   "known_builds": "Community variants listed",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "MJCF (demos; unverified)",
+  "safety_notes": "Micro servos; low force.",
+  "fit": {
+   "maker": 5,
+   "school": 5,
+   "lab": 4,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/pollen-robotics/AmazingHand",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "LeRobot integration"
+  ]
+ },
+ {
+  "id": "ruka",
+  "name": "RUKA",
+  "category": "hand",
+  "summary_en": "NYU tendon-driven humanoid hand with 15 underactuated DoF, 3D-printed parts and learned controllers from mocap gloves.",
+  "homepage": "https://ruka-hand.github.io/",
+  "repo": "https://github.com/ruka-hand/RUKA",
+  "cad": "https://ruka.gitbook.io/instructions",
+  "licenses": {
+   "hardware": "unknown",
+   "software": "MIT",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "Dynamixel servos (tendon-driven; model/count unverified)",
+  "control": "Python ruka_hand package, learned controllers",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2025-08",
+   "stars": 202,
+   "known_builds": null,
+   "paper": "https://arxiv.org/abs/2504.13165",
+   "docs_quality": "good"
+  },
+  "sim_model": "MJCF (assets xml)",
+  "safety_notes": "Tendon tension; low force.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 5,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/ruka-hand/RUKA",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://arxiv.org/abs/2504.13165v1",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "motor model/count",
+   "cost",
+   "hardware license"
+  ]
+ },
+ {
+  "id": "orca-hand",
+  "name": "ORCA Hand",
+  "category": "hand",
+  "summary_en": "Tendon-driven, 3D-printed anthropomorphic hand with tactile sensing, Feetech or Dynamixel servos, Bambu 3MF print files.",
+  "homepage": "https://orcahand.com",
+  "repo": "https://github.com/orcahand/orcahand_hardware",
+  "cad": "https://github.com/orcahand/orcahand_hardware",
+  "licenses": {
+   "hardware": "CC-BY-4.0",
+   "software": "MIT (orca_core)",
+   "docs": "CC-BY-4.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "Feetech or Dynamixel servos (tendon-driven)",
+  "control": "orca_core Python; teleop/retargeter repos",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": 227,
+   "known_builds": null,
+   "paper": "https://arxiv.org/abs/2504.04259",
+   "docs_quality": "good"
+  },
+  "sim_model": "orca_sim repo (format unverified)",
+  "safety_notes": "Low force.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 5,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/orcahand/orcahand_hardware",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/orcahand/orca_core",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "servo count",
+   "cost",
+   "homepage"
+  ]
+ },
+ {
+  "id": "leap-hand",
+  "name": "LEAP Hand",
+  "category": "hand",
+  "summary_en": "CMU low-cost 16-DoF anthropomorphic hand: Dynamixel XC330 motors with off-the-shelf brackets and 3D-printed palm, fingertips and spacers.",
+  "homepage": "http://leaphand.com/",
+  "repo": "https://github.com/leap-hand/LEAP_Hand_API",
+  "cad": null,
+  "licenses": {
+   "hardware": "CC-BY-NC-4.0 (CAD)",
+   "software": "MIT (code)",
+   "docs": "unknown"
+  },
+  "rights_class": "nc",
+  "printed_share": "medium",
+  "actuation": "16x Dynamixel XC330-M288-T",
+  "control": "Python/C++ API, ROS/ROS2",
+  "bom_cost": "~2,000 USD (paper)",
+  "maturity": {
+   "last_activity": "2025-10",
+   "stars": 177,
+   "known_builds": "Sold as kits (Robotis)",
+   "paper": "https://arxiv.org/abs/2309.06440",
+   "docs_quality": "good"
+  },
+  "sim_model": "URDF + Isaac Gym/PyBullet sims",
+  "safety_notes": "Low force.",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 5,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/leap-hand/LEAP_Hand_API",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://ar5iv.arxiv.org/html/2309.06440",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "homepage unreachable"
+  ]
+ },
+ {
+  "id": "dexhand-v1",
+  "name": "DexHand v1",
+  "category": "hand",
+  "summary_en": "3D-printed dexterous humanoid hand and forearm by The Robot Studio driven by 16 slim micro-servos; ROS2 stack by IoT Design Shop.",
+  "homepage": "https://www.dexhand.org",
+  "repo": "https://github.com/TheRobotStudio/V1.0-Dexhand",
+  "cad": "https://github.com/TheRobotStudio/V1.0-Dexhand",
+  "licenses": {
+   "hardware": "CC-BY-NC-SA-4.0",
+   "software": "unknown (ROS2 repos)",
+   "docs": "CC-BY-NC-SA-4.0"
+  },
+  "rights_class": "nc",
+  "printed_share": "high",
+  "actuation": "16 Emax slim micro servos (ES33xx) + wrist servos (Feetech SCS15/SCS2332 suggested)",
+  "control": "ROS2 (iotdesignshop/dexhand_ros2_meta); BLE example",
+  "bom_cost": "<300 USD components (README)",
+  "maturity": {
+   "last_activity": "2024-07",
+   "stars": 581,
+   "known_builds": "IoT Design Shop build log",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF (dexhandv2_description)",
+  "safety_notes": "Low force.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 3,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/TheRobotStudio/V1.0-Dexhand",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/iotdesignshop/dexhand-mechanical-build",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "V2 (CERN-OHL-S, early access) separately"
+  ]
+ },
+ {
+  "id": "aero-hand-open",
+  "name": "Aero Hand Open",
+  "category": "hand",
+  "summary_en": "Tendon-driven 7-actuator, 16-joint fully 3D-printed hand by Chestnut Robotics (ex-TetherIA) with ESP32 firmware, ROS2 and MuJoCo RL tools.",
+  "homepage": "https://chestnut-robotics.github.io/aero-hand-open/",
+  "repo": "https://github.com/Chestnut-Robotics/aero-hand-open",
+  "cad": "https://github.com/Chestnut-Robotics/aero-hand-open",
+  "licenses": {
+   "hardware": "CC-BY-NC-SA-4.0",
+   "software": "Apache-2.0",
+   "docs": "CC-BY-NC-SA-4.0"
+  },
+  "rights_class": "nc",
+  "printed_share": "high",
+  "actuation": "7 servos (model unverified), tendon-driven",
+  "control": "Python SDK, ESP32 firmware, ROS2, mujoco_playground",
+  "bom_cost": "$314 USD complete kit (README)",
+  "maturity": {
+   "last_activity": "2026-09",
+   "stars": 1056,
+   "known_builds": "Community forks (AeroPiper, ROS2 projects)",
+   "paper": "https://arxiv.org/abs/2608.28578",
+   "docs_quality": "good"
+  },
+  "sim_model": "MJCF (MuJoCo)",
+  "safety_notes": "Tendon tension; servo overload warning in README.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 5,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/Chestnut-Robotics/aero-hand-open",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "servo model"
+  ]
+ },
+ {
+  "id": "robot-nano-hand",
+  "name": "Robot Nano Hand",
+  "category": "hand",
+  "summary_en": "The Robot Studio's small fully 3D-printed robot hand released as STL set.",
+  "homepage": "https://robotnanohand.com",
+  "repo": "https://github.com/TheRobotStudio/robot-nano-hand",
+  "cad": null,
+  "licenses": {
+   "hardware": "MIT",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "unknown",
+  "control": "unknown",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2024-11",
+   "stars": 31,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "unknown",
+  "fit": {
+   "maker": 3,
+   "school": 3,
+   "lab": 2,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/TheRobotStudio/robot-nano-hand",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "actuation",
+   "homepage"
+  ]
+ },
+ {
+  "id": "inmoov",
+  "name": "InMoov",
+  "category": "humanoid",
+  "summary_en": "Gael Langevin's life-size open-source 3D-printed humanoid (printable on 12x12x12 cm beds), servo-driven and controlled with MyRobotLab.",
+  "homepage": "https://inmoov.fr",
+  "repo": "https://github.com/MyRobotLab/InMoov2",
+  "cad": "https://inmoov.fr",
+  "licenses": {
+   "hardware": "CC-BY-NC-3.0",
+   "software": "Apache-2.0 (InMoov2 MRL service)",
+   "docs": "CC-BY-NC-3.0"
+  },
+  "rights_class": "nc",
+  "printed_share": "high",
+  "actuation": "Hobby servos (many; models vary)",
+  "control": "MyRobotLab (Java/Python), Arduino",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-06",
+   "stars": 37,
+   "known_builds": "Hundreds of builds worldwide (unquantified); InMoov Petit on Printables",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "unknown",
+  "safety_notes": "Many high-torque hobby servos, mains PSU; pinch points in hand/shoulder.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 2,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://inmoov.fr/project/",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/MyRobotLab/InMoov2",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "servo list",
+   "build count"
+  ]
+ },
+ {
+  "id": "poppy-humanoid",
+  "name": "Poppy Humanoid",
+  "category": "humanoid",
+  "summary_en": "Inria's open-source 3D-printed humanoid for research/education with 25 Dynamixel actuators.",
+  "homepage": "https://www.poppy-project.org",
+  "repo": "https://github.com/poppy-project/poppy-humanoid",
+  "cad": "https://github.com/poppy-project/poppy-humanoid",
+  "licenses": {
+   "hardware": "CC-BY-SA-4.0",
+   "software": "GPL-3.0",
+   "docs": "unknown"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "25x Dynamixel (MX/AX series)",
+  "control": "pypot, Raspberry Pi",
+  "bom_cost": "$8,000-9,000 USD (README)",
+  "maturity": {
+   "last_activity": "2021-12",
+   "stars": 1093,
+   "known_builds": "Used in labs/art projects",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF (unverified)",
+  "safety_notes": "Heavy-ish biped; falls.",
+  "fit": {
+   "maker": 2,
+   "school": 3,
+   "lab": 3,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/poppy-project/poppy-humanoid",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "motor models"
+  ]
+ },
+ {
+  "id": "toddlerbot",
+  "name": "ToddlerBot",
+  "category": "humanoid",
+  "summary_en": "Stanford 30-DoF entirely 3D-printed humanoid on Dynamixel motors for ML loco-manipulation, with MuJoCo/MJX RL and diffusion policy tools.",
+  "homepage": "https://toddlerbot.github.io/",
+  "repo": "https://github.com/hshi74/toddlerbot",
+  "cad": "https://cad.onshape.com/documents/565bc33af293a651f66e88d2",
+  "licenses": {
+   "hardware": "CC-BY-NC-SA-4.0",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "nc",
+  "printed_share": "high",
+  "actuation": "Dynamixel (XC330, 2XL430 and others), 30 active DoF",
+  "control": "Python, MuJoCo/MJX RL, diffusion policy",
+  "bom_cost": "<6,000 USD BOM (paper)",
+  "maturity": {
+   "last_activity": "2026-07",
+   "stars": 797,
+   "known_builds": "Five independent replications reported in paper; Robotis bundle kit",
+   "paper": "https://arxiv.org/abs/2502.00893",
+   "docs_quality": "good"
+  },
+  "sim_model": "URDF+MJCF",
+  "safety_notes": "Small biped; falls.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 5,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/hshi74/toddlerbot",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://arxiv.org/html/2502.00893v4",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": []
+ },
+ {
+  "id": "berkeley-humanoid-lite",
+  "name": "Berkeley Humanoid Lite",
+  "category": "humanoid",
+  "summary_en": "Open-source sub-$5,000 humanoid with modular 3D-printed cycloidal gearboxes on BLDC actuators, Isaac Lab training and sim2real.",
+  "homepage": "https://lite.berkeley-humanoid.org/",
+  "repo": "https://github.com/HybridRobotics/berkeley-humanoid-lite",
+  "cad": "https://berkeley-humanoid-lite.gitbook.io/docs/releases",
+  "licenses": {
+   "hardware": "CC-BY-SA-4.0",
+   "software": "MIT",
+   "docs": "unknown"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "BLDC motors with 3D-printed gearboxes",
+  "control": "Isaac Lab, sim2sim MuJoCo, lowlevel deploy",
+  "bom_cost": "<5,000 USD (README)",
+  "maturity": {
+   "last_activity": "2026-03",
+   "stars": 2004,
+   "known_builds": null,
+   "paper": "https://arxiv.org/abs/2504.17249",
+   "docs_quality": "good"
+  },
+  "sim_model": "URDF+MJCF+USD",
+  "safety_notes": "~1 m, ~16 kg robot with BLDC actuators; tether and e-stop.",
+  "fit": {
+   "maker": 2,
+   "school": 1,
+   "lab": 5,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/HybridRobotics/berkeley-humanoid-lite",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "hardware license scope (badge only)"
+  ]
+ },
+ {
+  "id": "roboto-origin",
+  "name": "ROBOTO_ORIGIN (RoboParty)",
+  "category": "humanoid",
+  "summary_en": "Fully open-source DIY running/jumping humanoid prototype (1.25 m) from Shanghai RoboParty with hardware, ROS2 deploy and Isaac Lab training.",
+  "homepage": "https://roboparty.com/roboto_origin/doc",
+  "repo": "https://github.com/Roboparty/roboto_origin",
+  "cad": "https://github.com/Roboparty/rpo_hardware",
+  "licenses": {
+   "hardware": "CC-BY-SA-4.0 (rpo_hardware)",
+   "software": "GPL-3.0 (aggregation)",
+   "docs": "unknown"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "unknown",
+  "actuation": "unknown (CAN motors presumed)",
+  "control": "ROS2 Humble, Isaac Lab, MuJoCo sim2sim",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": 2791,
+   "known_builds": "~100 pre-orders reported (press)",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF+MJCF (rpo_description)",
+  "safety_notes": "Full-size dynamic biped; high-power actuators.",
+  "fit": {
+   "maker": 1,
+   "school": 1,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/Roboparty/roboto_origin",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/Roboparty/rpo_hardware",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://www.letsdatascience.com/news/roboparty-open-sources-roboto-origin-humanoid-platform-75201d39",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "printed share",
+   "actuation",
+   "cost"
+  ]
+ },
+ {
+  "id": "zeroth-bot",
+  "name": "Zeroth Bot (Zeroth-01)",
+  "category": "humanoid",
+  "summary_en": "Small 3D-printed open humanoid on Feetech servos for sim-to-real RL, originally K-Scale Labs.",
+  "homepage": "https://docs.zeroth.bot",
+  "repo": "https://github.com/zeroth-robotics/zeroth-bot",
+  "cad": null,
+  "licenses": {
+   "hardware": "MIT",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "Feetech servos",
+  "control": "kos-zbot OS, ksim-gym-zbot RL",
+  "bom_cost": "BoM from $350 (README)",
+  "maturity": {
+   "last_activity": "2025-05",
+   "stars": 845,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "MJCF+URDF",
+  "safety_notes": "Small, low risk.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 4,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/zeroth-robotics/zeroth-bot",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "servo count"
+  ]
+ },
+ {
+  "id": "hopejr",
+  "name": "HopeJR",
+  "category": "humanoid",
+  "summary_en": "The Robot Studio / Hugging Face DIY humanoid with tendon-driven dexterous hands and matching exoskeleton teleop, integrated with LeRobot.",
+  "homepage": "https://github.com/TheRobotStudio/HOPEJr",
+  "repo": "https://github.com/TheRobotStudio/HOPEJr",
+  "cad": "https://github.com/TheRobotStudio/HOPEJr",
+  "licenses": {
+   "hardware": "none stated",
+   "software": "none stated",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "Arm/hand servos (models unverified); humanoid legs updated for Robstride 02",
+  "control": "LeRobot (record/train/infer); exoskeleton with Hall encoders",
+  "bom_cost": "~3,000 USD (Hugging Face estimate via TechCrunch)",
+  "maturity": {
+   "last_activity": "2026-05",
+   "stars": 840,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF",
+  "safety_notes": "unknown",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/TheRobotStudio/HOPEJr",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://techcrunch.com/2025/05/29/hugging-face-unveils-two-new-humanoid-robots/",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "license",
+   "actuation"
+  ]
+ },
+ {
+  "id": "asimov-1",
+  "name": "Asimov 1 (Menlo)",
+  "category": "humanoid",
+  "summary_en": "1.2 m, 25-DoF open-source humanoid with 7075 aluminium and MJF PA12 printed structure; DIY kit sold or self-sourced.",
+  "homepage": "https://docs.menlo.ai/asimov/1",
+  "repo": "https://github.com/menloresearch/asimov-1",
+  "cad": "https://github.com/menloresearch/asimov-1",
+  "licenses": {
+   "hardware": "CERN-OHL-S-2.0",
+   "software": "GPL-2.0",
+   "docs": "unknown"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "medium",
+  "actuation": "CAN-bus actuators (25)",
+  "control": "Radxa CM5 + RPi5; Isaac Lab (cyclotron); MuJoCo",
+  "bom_cost": "$20,000 DIY kit (README)",
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": 1377,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "MJCF",
+  "safety_notes": "35 kg biped; industrial-level hazards.",
+  "fit": {
+   "maker": 1,
+   "school": 1,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/menloresearch/asimov-1",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "actuator models"
+  ]
+ },
+ {
+  "id": "bambot",
+  "name": "Bambot",
+  "category": "humanoid",
+  "summary_en": "Low-cost wheeled humanoid combining SO-100 arm design and LeKiwi base with 15 STS3215 servos and a web control/sim site.",
+  "homepage": "https://bambot.org",
+  "repo": "https://github.com/timqian/bambot",
+  "cad": "https://github.com/timqian/bambot",
+  "licenses": {
+   "hardware": "Apache-2.0",
+   "software": "Apache-2.0",
+   "docs": "Apache-2.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "15x Feetech STS3215 (12 V)",
+  "control": "Web (feetech.js), LeRobot-style leader teleop",
+  "bom_cost": "~$300 per robot (hardware README)",
+  "maturity": {
+   "last_activity": "2025-07",
+   "stars": 978,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "URDF (website)",
+  "safety_notes": "Low-voltage (5-12 V) hobby bus servos; pinch points at gripper/joints; low force.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 2,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/timqian/bambot",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "hardware still 'drafting'"
+  ]
+ },
+ {
+  "id": "pib",
+  "name": "pib (printable intelligent bot)",
+  "category": "humanoid",
+  "summary_en": "German open-source 3D-printable humanoid from isento GmbH aimed at schools; v4 adds microphone array; used in 70+ schools.",
+  "homepage": "https://pib.rocks",
+  "repo": null,
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "AGPL-3.0 (forks of pib-backend)",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "Servo drives (models unverified)",
+  "control": "unknown",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "unknown",
+   "stars": null,
+   "known_builds": "70+ schools, 1,800+ community members (3printr)",
+   "paper": null,
+   "docs_quality": "unknown"
+  },
+  "sim_model": "unknown",
+  "safety_notes": "unknown",
+  "fit": {
+   "maker": 4,
+   "school": 5,
+   "lab": 2,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://www.3printr.com/open-source-robot-pib-version-4-3d-printed-modular-and-ready-for-the-classroom-1884933/",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "license",
+   "repo",
+   "actuation",
+   "last activity"
+  ]
+ },
+ {
+  "id": "gello",
+  "name": "GELLO",
+  "category": "other",
+  "summary_en": "Low-cost 3D-printed, Dynamixel-encoded kinematic replica leaders for teleoperating Franka, UR5, xArm7, YAM, Lite6, AR4 and FR3.",
+  "homepage": "https://wuphilipp.github.io/gello_site/",
+  "repo": "https://github.com/wuphilipp/gello_mechanical",
+  "cad": "https://github.com/wuphilipp/gello_mechanical",
+  "licenses": {
+   "hardware": "MIT",
+   "software": "MIT",
+   "docs": "unknown"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "Dynamixel XL330 servos used as encoders (+ gripper trigger)",
+  "control": "gello_software (Python, ROS2 for FR3, MuJoCo sim)",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-09",
+   "stars": 562,
+   "known_builds": "Widely replicated in labs",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "URDF (gello_mechanical)",
+  "safety_notes": "Passive leader; follower robot safety applies.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 5,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/wuphilipp/gello_mechanical",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/wuphilipp/gello_software",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "bom_cost",
+   "CAD source by request only"
+  ]
+ },
+ {
+  "id": "airexo-2",
+  "name": "AirExo / AirExo-2",
+  "category": "other",
+  "summary_en": "SJTU low-cost wearable arm exoskeletons with printed links and encoders for in-the-wild whole-arm demonstration collection.",
+  "homepage": "http://airexo.tech/airexo2/",
+  "repo": "https://github.com/AirExo/AirExo-2",
+  "cad": "https://github.com/AirExo/AirExo-2",
+  "licenses": {
+   "hardware": "CC-BY-NC-SA-4.0 (AirExo-2); MIT (AirExo v1)",
+   "software": "CC-BY-NC-SA-4.0",
+   "docs": "unknown"
+  },
+  "rights_class": "nc",
+  "printed_share": "high",
+  "actuation": "Encoders (passive exoskeleton)",
+  "control": "Python data pipeline",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-04",
+   "stars": 44,
+   "known_builds": null,
+   "paper": "https://arxiv.org/abs/2503.03081",
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Passive.",
+  "fit": {
+   "maker": 2,
+   "school": 2,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/AirExo/AirExo-2",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/AirExo/collector",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "encoder type",
+   "cost"
+  ]
+ },
+ {
+  "id": "homie-cockpit",
+  "name": "HOMIE exoskeleton cockpit",
+  "category": "other",
+  "summary_en": "Isomorphic exoskeleton arms, Hall-sensor gloves and pedal for humanoid loco-manipulation teleop (~$0.5k hardware); hardware files behind request form.",
+  "homepage": "https://github.com/InternRobotics/OpenHomie",
+  "repo": "https://github.com/InternRobotics/OpenHomie",
+  "cad": null,
+  "licenses": {
+   "hardware": "CC-BY-NC-4.0 (files via form)",
+   "software": "CC-BY-NC-4.0",
+   "docs": "unknown"
+  },
+  "rights_class": "nc",
+  "printed_share": "unknown",
+  "actuation": "Encoders/Hall sensors (passive)",
+  "control": "Deploy to Unitree G1 + Dex3",
+  "bom_cost": "~$500 hardware (README)",
+  "maturity": {
+   "last_activity": "2026-09",
+   "stars": 626,
+   "known_builds": null,
+   "paper": "https://arxiv.org/abs/2502.13013",
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Passive device.",
+  "fit": {
+   "maker": 1,
+   "school": 1,
+   "lab": 3,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/InternRobotics/OpenHomie",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "printed share"
+  ]
+ },
+ {
+  "id": "u-arm",
+  "name": "LeRobot Anything U-Arm",
+  "category": "other",
+  "summary_en": "Low-cost universal 3D-printed leader arm (servos as encoders) to teleoperate many commercial arms and SO-100/XLeRobot.",
+  "homepage": "https://github.com/MINT-SJTU/LeRobot-Anything-U-Arm",
+  "repo": "https://github.com/MINT-SJTU/LeRobot-Anything-U-Arm",
+  "cad": "https://github.com/MINT-SJTU/LeRobot-Anything-U-Arm",
+  "licenses": {
+   "hardware": "Apache-2.0",
+   "software": "Apache-2.0",
+   "docs": "Apache-2.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "Feetech STS3215 (global version) servos used as encoders",
+  "control": "ROS Noetic, LeRobot adaptation, SAPIEN sim",
+  "bom_cost": "From $60 excl. printing (README)",
+  "maturity": {
+   "last_activity": "2026-09",
+   "stars": 333,
+   "known_builds": null,
+   "paper": "https://arxiv.org/abs/2509.02437",
+   "docs_quality": "good"
+  },
+  "sim_model": "SAPIEN sim",
+  "safety_notes": "Passive leader.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 4,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/MINT-SJTU/LeRobot-Anything-U-Arm",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": []
+ },
+ {
+  "id": "doglove",
+  "name": "DOGlove",
+  "category": "other",
+  "summary_en": "Open-source low-cost haptic force-feedback glove for dexterous hand teleoperation using Dynamixel servos and printed parts.",
+  "homepage": "https://do-glove.github.io",
+  "repo": "https://github.com/TEA-Lab/DOGlove",
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "MIT",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "unknown",
+  "actuation": "Dynamixel servos (force feedback)",
+  "control": "Python, MuJoCo visualisation",
+  "bom_cost": null,
+  "maturity": {
+   "last_activity": "2026-04",
+   "stars": 145,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "MJCF (visualisation)",
+  "safety_notes": "Force feedback on fingers - limit torque.",
+  "fit": {
+   "maker": 2,
+   "school": 1,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/TEA-Lab/DOGlove",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "printed share",
+   "cost",
+   "hardware license",
+   "paper URL"
+  ]
+ },
+ {
+  "id": "sawppy-rover",
+  "name": "Sawppy the Rover",
+  "category": "wheeled",
+  "summary_en": "Six-wheel rocker-bogie Mars rover model (Curiosity/Perseverance) built from aluminium extrusion joined by 3D-printed parts, with community ROS stacks.",
+  "homepage": "https://github.com/Roger-random/Sawppy_Rover",
+  "repo": "https://github.com/Roger-random/Sawppy_Rover",
+  "cad": "https://cad.onshape.com/documents/43678ef564a43281c83e1aef/w/392bbf8745395bc24367a35c/e/9bd6bbb7aba50a97523d14f2",
+  "licenses": {
+   "hardware": "MIT (repo LICENSE)",
+   "software": "MIT; community ROS ports have own licenses",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "medium",
+  "actuation": "10x LewanSoul LX-16A serial bus servos (6 drive, 4 steer)",
+  "control": "Custom Python; ROS Kinetic/Melodic (curio)/ROS 2 Humble community ports",
+  "bom_cost": "~$500 USD (README price breakdown)",
+  "maturity": {
+   "last_activity": "2025-09",
+   "stars": null,
+   "known_builds": "README cites many community builds",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "URDF/Gazebo via community 'curio' (github.com/srmainwaring/curio)",
+  "safety_notes": "Low speed; LiPo.",
+  "fit": {
+   "maker": 5,
+   "school": 4,
+   "lab": 3,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/Roger-random/Sawppy_Rover",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "known_builds count",
+   "servo split 6 drive/4 steer"
+  ]
+ },
+ {
+  "id": "exomy",
+  "name": "ExoMy (ESA)",
+  "category": "wheeled",
+  "summary_en": "ESA Planetary Robotics Lab 6-wheel rocker-bogie rover replica of ExoMars, almost fully 3D-printed, Raspberry Pi + ROS.",
+  "homepage": "https://github.com/esa-prl/ExoMy",
+  "repo": "https://github.com/esa-prl/ExoMy",
+  "cad": "https://github.com/esa-prl/ExoMy/tree/master/Mechanical%20Design",
+  "licenses": {
+   "hardware": "GPL-3.0 (repo LICENSE)",
+   "software": "GPL-3.0",
+   "docs": "GPL-3.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "Hobby servos: continuous-rotation drive servos + positional steering servos (wiki)",
+  "control": "Raspberry Pi, ROS (Docker), web/gamepad",
+  "bom_cost": "~500 EUR (wiki FAQ)",
+  "maturity": {
+   "last_activity": "2021-02",
+   "stars": null,
+   "known_builds": null,
+   "paper": "https://www.researchgate.net/publication/344874558_ExoMy_A_Low_Cost_3D_Printed_Rover",
+   "docs_quality": "good"
+  },
+  "sim_model": "unknown",
+  "safety_notes": "Low risk; LiPo.",
+  "fit": {
+   "maker": 5,
+   "school": 5,
+   "lab": 3,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/esa-prl/ExoMy",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/esa-prl/ExoMy/wiki",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "exact servo models/counts",
+   "known_builds"
+  ]
+ },
+ {
+  "id": "jakkra-mars-rover",
+  "name": "Mars Rover (jakkra)",
+  "category": "wheeled",
+  "summary_en": "3D-printed Curiosity/Perseverance-inspired 6-wheel rover with steering corners, 6-DOF arm and pan/tilt head; Fusion 360 CAD in repo.",
+  "homepage": "https://github.com/jakkra/Mars-Rover",
+  "repo": "https://github.com/jakkra/Mars-Rover",
+  "cad": "https://github.com/jakkra/Mars-Rover/tree/master/CAD",
+  "licenses": {
+   "hardware": "MIT (repo LICENSE)",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "6x 12V 60RPM DC gearmotors + 2 ESCs; 4 steering servos (MG946R/MG996R); 6 arm servos; 2 head servos",
+  "control": "Custom firmware (ESP32/Arduino-style); no ROS",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2022-10",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "No manual; 3S LiPo; arm servos.",
+  "fit": {
+   "maker": 4,
+   "school": 2,
+   "lab": 2,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/jakkra/Mars-Rover",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "controller board details",
+   "control MCU"
+  ]
+ },
+ {
+  "id": "openbot",
+  "name": "OpenBot",
+  "category": "wheeled",
+  "summary_en": "Intel ISL smartphone-brained robot: ~$50 3D-printed (or DIY) 4-wheel body with Arduino Nano, Android app for person following and learned autonomous navigation.",
+  "homepage": "https://www.openbot.org",
+  "repo": "https://github.com/isl-org/OpenBot",
+  "cad": "https://www.thingiverse.com/thing:4670884",
+  "licenses": {
+   "hardware": "MIT (repo LICENSE covers body/)",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "4x TT DC gearmotors + L298N-class driver, Arduino Nano",
+  "control": "Android/iOS app, Arduino firmware, PyTorch/TF policy training",
+  "bom_cost": "~$50 body (README)",
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": null,
+   "known_builds": null,
+   "paper": "https://arxiv.org/abs/2008.10631",
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low risk.",
+  "fit": {
+   "maker": 5,
+   "school": 5,
+   "lab": 4,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/isl-org/OpenBot",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/isl-org/OpenBot/tree/master/body",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "motor driver model",
+   "Thingiverse license"
+  ]
+ },
+ {
+  "id": "jetbot",
+  "name": "NVIDIA JetBot",
+  "category": "wheeled",
+  "summary_en": "Educational AI robot on Jetson Nano with 3D-printed chassis and camera mount; Jupyter-based collision avoidance and road following.",
+  "homepage": "https://github.com/NVIDIA-AI-IOT/jetbot",
+  "repo": "https://github.com/NVIDIA-AI-IOT/jetbot",
+  "cad": "https://github.com/NVIDIA-AI-IOT/jetbot/tree/master/assets",
+  "licenses": {
+   "hardware": "MIT (repo LICENSE.md)",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "medium",
+  "actuation": "2x TT DC motors + Adafruit motor driver; caster",
+  "control": "Python/Jupyter on Jetson Nano/Orin",
+  "bom_cost": "<$150 add-on to Jetson Nano (README)",
+  "maturity": {
+   "last_activity": "2026-06",
+   "stars": null,
+   "known_builds": "many third-party kits exist",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low risk.",
+  "fit": {
+   "maker": 4,
+   "school": 5,
+   "lab": 3,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/NVIDIA-AI-IOT/jetbot",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/NVIDIA-AI-IOT/jetbot/blob/master/docs/bill_of_materials.md",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "known_builds"
+  ]
+ },
+ {
+  "id": "nanosaur",
+  "name": "nanosaur",
+  "category": "tracked",
+  "summary_en": "Smallest NVIDIA Jetson tracked 'dinosaur' robot, fully 3D-printable, ROS 2 Humble + Isaac ROS with sim in Isaac Sim.",
+  "homepage": "https://nanosaur.ai",
+  "repo": "https://github.com/rnanosaur/nanosaur",
+  "cad": null,
+  "licenses": {
+   "hardware": "CC BY-NC-SA 4.0 (STL meshes, README)",
+   "software": "MIT",
+   "docs": "unknown"
+  },
+  "rights_class": "nc",
+  "printed_share": "high",
+  "actuation": "Small DC motors driving 3D-printed tracks (per nanosaur.ai)",
+  "control": "ROS 2 Humble, Isaac ROS, Docker images",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2026-06",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF (nanosaur_description) + Isaac Sim",
+  "safety_notes": "Low risk.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/rnanosaur/nanosaur",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "motor model",
+   "bom_cost",
+   "drive type (tracks) from prior knowledge"
+  ]
+ },
+ {
+  "id": "upkie",
+  "name": "Upkie",
+  "category": "legged",
+  "summary_en": "Open-source wheeled biped (wheel-legged, Ascento-like) with 3D-printed PETG structure, mjbots actuators and Raspberry Pi; Python/C++ Gymnasium environments.",
+  "homepage": "https://github.com/upkie/upkie",
+  "repo": "https://github.com/upkie/upkie",
+  "cad": "https://github.com/upkie/upkie_parts",
+  "licenses": {
+   "hardware": "see upkie_parts repo",
+   "software": "Apache-2.0",
+   "docs": "Apache-2.0"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "4x mjbots qdd100 (hips/knees) + 2x moteus r4.11 dev-kit wheel motors; pi3hat; Raspberry Pi 4",
+  "control": "Python/C++ spines, Gymnasium envs, PyBullet/Bullet sim, RL (MjLab community)",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "URDF (upkie_description) ; MjLab playground",
+  "safety_notes": "BLDC torque, falls; LiPo; e-stop advised.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 5,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/upkie/upkie",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/upkie/upkie/blob/main/docs/assembly/bill-of-materials.md",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "parts license (upkie_parts not checked)",
+   "bom_cost"
+  ],
+  "rights_class_census": "permissive",
+  "rights_note": "hardware licence not established; the census class \"permissive\" followed the software licence"
+ },
+ {
+  "id": "b-robot-evo2",
+  "name": "B-ROBOT EVO 2 (jjrobots)",
+  "category": "wheeled",
+  "summary_en": "Arduino self-balancing two-wheel robot with 3D-printed parts, smartphone app control.",
+  "homepage": "http://www.jjrobots.com/b-robot-evo-2-much-more-than-a-self-balancing-robot/",
+  "repo": "https://github.com/jjrobots/B-ROBOT_EVO2",
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown (no LICENSE file)",
+   "software": "unknown",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "2x stepper motors (per jjrobots page, unverified)",
+  "control": "Arduino firmware + smartphone app",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2017-06",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low risk.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 2,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/jjrobots/B-ROBOT_EVO2",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "actuation",
+   "licenses"
+  ]
+ },
+ {
+  "id": "openmower",
+  "name": "OpenMower",
+  "category": "wheeled",
+  "summary_en": "Open-source conversion of a cheap robotic lawn mower (YardForce Classic 500) into RTK-GPS ROS mower with custom mainboard and xESC motor controllers.",
+  "homepage": "https://github.com/ClemensElflein/OpenMower",
+  "repo": "https://github.com/ClemensElflein/OpenMower",
+  "cad": null,
+  "licenses": {
+   "hardware": "CC BY-NC-SA 4.0 (repo docs/hardware)",
+   "software": "GPL or MIT per sub-repo",
+   "docs": "CC BY-NC-SA 4.0"
+  },
+  "rights_class": "nc",
+  "printed_share": "low",
+  "actuation": "Stock mower BLDC wheel/blade motors driven by xESC",
+  "control": "ROS (open_mower_ros), OpenMowerOS, app",
+  "bom_cost": "unknown ('cheaper than mid-range off-the-shelf', README)",
+  "maturity": {
+   "last_activity": "2026-09",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "unknown",
+  "safety_notes": "Spinning blade: high cut hazard; outdoor.",
+  "fit": {
+   "maker": 3,
+   "school": 1,
+   "lab": 3,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/ClemensElflein/OpenMower",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "printed_share (printed mounts only)",
+   "bom_cost"
+  ]
+ },
+ {
+  "id": "smars",
+  "name": "SMARS",
+  "category": "tracked",
+  "summary_en": "Screwless Modular Assemblable Robotic System: tiny 3D-printed tracked (or quad-leg) Arduino robot popular in education.",
+  "homepage": "https://www.thingiverse.com/thing:2662828",
+  "repo": "https://github.com/kevinmcaleer/smars_library",
+  "cad": "https://www.thingiverse.com/thing:2662828",
+  "licenses": {
+   "hardware": "unknown (Thingiverse, not checked)",
+   "software": "MIT (smars_library)",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "2x N20 micro gearmotors (tracked) or servos via PCA9685 (quad)",
+  "control": "Arduino; MicroPython/Python smars_library",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2025-03",
+   "stars": null,
+   "known_builds": "large community (smarsfan.com)",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Very low risk.",
+  "fit": {
+   "maker": 5,
+   "school": 5,
+   "lab": 1,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/kevinmcaleer/smars_library",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://pypi.org/project/smars-library/",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "hardware license",
+   "actuation details",
+   "designer attribution"
+  ]
+ },
+ {
+  "id": "pupper-v1",
+  "name": "Stanford Pupper (v1)",
+  "category": "legged",
+  "summary_en": "Raspberry Pi 12-servo quadruped from Stanford Student Robotics; code end-of-lifed in favour of Pupper v3.",
+  "homepage": "https://stanfordstudentrobotics.org/pupper",
+  "repo": "https://github.com/stanfordroboticsclub/StanfordQuadruped",
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "MIT",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "unknown",
+  "actuation": "12 hobby servos via pigpio PWM",
+  "control": "Python on Raspberry Pi; PS4 joystick",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2024-07",
+   "stars": null,
+   "known_builds": "widely built in classes",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "unknown",
+  "safety_notes": "Low risk.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 3,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/stanfordroboticsclub/StanfordQuadruped",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "hardware license",
+   "printed_share",
+   "servo model",
+   "control specifics beyond README"
+  ],
+  "rights_class_census": "permissive",
+  "rights_note": "hardware licence not established; the census class \"permissive\" followed the software licence"
+ },
+ {
+  "id": "pupper-v3",
+  "name": "Stanford Pupper v3",
+  "category": "legged",
+  "summary_en": "Stanford Student Robotics' brushless quadruped with RL locomotion out of the box, Raspberry Pi 5 and depth camera.",
+  "homepage": "https://pupper-v3-documentation.readthedocs.io",
+  "repo": "https://github.com/G-Levine/pupper_v3_description",
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "MIT (description pkg)",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "unknown",
+  "actuation": "12x GIM4305 400W BLDC (README specs)",
+  "control": "ROS 2, MuJoCo sim, RL policy",
+  "bom_cost": "roughly $1000 BOM (StanfordQuadruped README)",
+  "maturity": {
+   "last_activity": "2024-11",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF + MJCF (pupper_v3_description)",
+  "safety_notes": "BLDC legs; pinch/impact.",
+  "fit": {
+   "maker": 3,
+   "school": 3,
+   "lab": 5,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/stanfordroboticsclub/StanfordQuadruped",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/G-Levine/pupper_v3_description",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "hardware license",
+   "printed_share",
+   "docs site unreachable"
+  ],
+  "rights_class_census": "permissive",
+  "rights_note": "hardware licence not established; the census class \"permissive\" followed the software licence"
+ },
+ {
+  "id": "mini-pupper",
+  "name": "Mini Pupper (MangDang)",
+  "category": "legged",
+  "summary_en": "Commercial-but-open-software small quadruped (Mini Pupper 4) with ROS 2 Jazzy, micro-ROS and MuJoCo/Isaac RL stacks.",
+  "homepage": "https://github.com/mangdangroboticsclub/mini_pupper",
+  "repo": "https://github.com/mangdangroboticsclub/mini_pupper",
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "Apache-2.0",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "unknown",
+  "actuation": "Proprietary MangDang MD-300C-150 3-DoF coreless smart servo joints (README)",
+  "control": "ROS 2 Jazzy, micro-ROS, MuJoCo/Isaac RL",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "MuJoCo/Isaac (mini_pupper_4_sim)",
+  "safety_notes": "Low.",
+  "fit": {
+   "maker": 3,
+   "school": 4,
+   "lab": 3,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/mangdangroboticsclub/mini_pupper",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "printed_share",
+   "hardware license"
+  ],
+  "rights_class_census": "proprietary",
+  "rights_note": "hardware licence not established; the census class \"proprietary\" followed the software licence"
+ },
+ {
+  "id": "spotmicro",
+  "name": "SpotMicro (KDY0523 frame + mike4192 ROS)",
+  "category": "legged",
+  "summary_en": "Popular 3D-printed 12-servo quadruped frame (Thingiverse 3445283) with a ROS Kinetic motion stack by mike4192.",
+  "homepage": "https://www.thingiverse.com/thing:3445283",
+  "repo": "https://github.com/mike4192/spotMicro",
+  "cad": "https://www.thingiverse.com/thing:3445283",
+  "licenses": {
+   "hardware": "unknown (Thingiverse, not checked)",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "12x PDI-HV5523MG servos via PCA9685 (mike4192 build)",
+  "control": "ROS Kinetic C++/Python on Raspberry Pi; URDF",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2021-03",
+   "stars": null,
+   "known_builds": "large community (spotmicroai)",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF (repo)",
+  "safety_notes": "Servo stall currents; 2S LiPo direct to servos.",
+  "fit": {
+   "maker": 5,
+   "school": 4,
+   "lab": 3,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/mike4192/spotMicro",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "frame license",
+   "known_builds count"
+  ]
+ },
+ {
+  "id": "spotmicro-esp32",
+  "name": "SpotMicroESP32",
+  "category": "legged",
+  "summary_en": "Support-free-printable SpotMicro derivative with ESP32-DevKitC and ESP32-CAM integration.",
+  "homepage": "https://github.com/michaelkubina/SpotMicroESP32",
+  "repo": "https://github.com/michaelkubina/SpotMicroESP32",
+  "cad": "https://www.thingiverse.com/thing:4559827",
+  "licenses": {
+   "hardware": "GPL-3.0 (repo LICENSE)",
+   "software": "GPL-3.0",
+   "docs": "GPL-3.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "12x MG996R or DS3218MG servos",
+  "control": "ESP32 Arduino firmware (WIP)",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2024-11",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Servo current.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 2,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/michaelkubina/SpotMicroESP32",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "firmware completeness"
+  ]
+ },
+ {
+  "id": "opendog-v3",
+  "name": "openDog V3",
+  "category": "legged",
+  "summary_en": "James Bruton's large BLDC quadruped with 3D-printed cycloidal drives, all parts printed in PLA.",
+  "homepage": "https://github.com/XRobots/openDogV3",
+  "repo": "https://github.com/XRobots/openDogV3",
+  "cad": "https://github.com/XRobots/openDogV3",
+  "licenses": {
+   "hardware": "MIT (repo LICENSE)",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "BLDC motors + ODrive + AS5047 encoders, printed cycloidal reducers",
+  "control": "Arduino/Teensy-style firmware, custom remote",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2023-03",
+   "stars": null,
+   "known_builds": "video series",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Large, powerful; ODrive limits disabled in README - pinch/crush hazard.",
+  "fit": {
+   "maker": 3,
+   "school": 1,
+   "lab": 3,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/XRobots/openDogV3",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "motor model",
+   "bom_cost",
+   "control MCU"
+  ]
+ },
+ {
+  "id": "opendog-v1",
+  "name": "openDog (V1)",
+  "category": "legged",
+  "summary_en": "Earlier James Bruton open-source large quadruped series (CAD and code per episode).",
+  "homepage": "https://github.com/XRobots/openDog",
+  "repo": "https://github.com/XRobots/openDog",
+  "cad": "https://github.com/XRobots/openDog",
+  "licenses": {
+   "hardware": "GPL-3.0 (README: all CAD+code)",
+   "software": "GPL-3.0",
+   "docs": "GPL-3.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "unknown",
+  "actuation": "unknown",
+  "control": "Arduino",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2019-04",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "Large robot.",
+  "fit": {
+   "maker": 2,
+   "school": 1,
+   "lab": 2,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/XRobots/openDog",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "actuation",
+   "printed_share"
+  ]
+ },
+ {
+  "id": "odri-solo12",
+  "name": "ODRI Solo 12",
+  "category": "legged",
+  "summary_en": "Open Dynamic Robot Initiative 12-DOF torque-controlled quadruped (2.5 kg) built from mostly 3D-printed brushless actuator modules.",
+  "homepage": "https://open-dynamic-robot-initiative.github.io",
+  "repo": "https://github.com/open-dynamic-robot-initiative/open_robot_actuator_hardware",
+  "cad": "https://github.com/open-dynamic-robot-initiative/open_robot_actuator_hardware/tree/master/mechanics/quadruped_robot_12dof_v1",
+  "licenses": {
+   "hardware": "BSD-3-Clause (repo LICENSE)",
+   "software": "BSD-3-Clause",
+   "docs": "BSD-3-Clause"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "Brushless outrunners + optical encoders + 9:1 dual-stage timing belt, ODRI master board & micro drivers",
+  "control": "ROS/C++ (odri_control_interface), robot_properties_solo",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2022-09",
+   "stars": null,
+   "known_builds": "multiple labs (paper)",
+   "paper": "https://arxiv.org/abs/1910.00093",
+   "docs_quality": "good"
+  },
+  "sim_model": "URDF (robot_properties_solo)",
+  "safety_notes": "High-bandwidth torque control; impact risk.",
+  "fit": {
+   "maker": 2,
+   "school": 1,
+   "lab": 5,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/open-dynamic-robot-initiative/open_robot_actuator_hardware",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "known_builds",
+   "bom_cost"
+  ]
+ },
+ {
+  "id": "odri-bolt",
+  "name": "ODRI Bolt (Biped 6dof)",
+  "category": "legged",
+  "summary_en": "ODRI 6-DOF biped (1.34 kg) using the same 3D-printed actuator modules, passive ankles.",
+  "homepage": "https://open-dynamic-robot-initiative.github.io",
+  "repo": "https://github.com/open-dynamic-robot-initiative/open_robot_actuator_hardware",
+  "cad": "https://github.com/open-dynamic-robot-initiative/open_robot_actuator_hardware/tree/master/mechanics/biped_6dof_v1",
+  "licenses": {
+   "hardware": "BSD-3-Clause",
+   "software": "BSD-3-Clause (robot_properties_bolt)",
+   "docs": "BSD-3-Clause"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "ODRI brushless actuator modules (3 active DOF/leg)",
+  "control": "ROS/C++ ODRI stack",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2023-03",
+   "stars": null,
+   "known_builds": null,
+   "paper": "https://arxiv.org/abs/1910.00093",
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF (robot_properties_bolt)",
+  "safety_notes": "Needs support/harness when testing.",
+  "fit": {
+   "maker": 2,
+   "school": 1,
+   "lab": 4,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/open-dynamic-robot-initiative/open_robot_actuator_hardware",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/open-dynamic-robot-initiative/robot_properties_bolt",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "bom_cost"
+  ]
+ },
+ {
+  "id": "open-quadruped",
+  "name": "OpenQuadruped (Adham Elarabawy)",
+  "category": "legged",
+  "summary_en": "3D-printed 12-DOF servo quadruped with Bezier gaits, Teensy + ROS, custom servo PCB and URDF.",
+  "homepage": "https://github.com/adham-elarabawy/open-quadruped",
+  "repo": "https://github.com/adham-elarabawy/open-quadruped",
+  "cad": "https://github.com/adham-elarabawy/open-quadruped/tree/master/model",
+  "licenses": {
+   "hardware": "MIT (repo LICENSE)",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "12 hobby servos via custom PCB",
+  "control": "ROS + Teensy C++",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2024-08",
+   "stars": null,
+   "known_builds": null,
+   "paper": "https://www.adhamelarabawy.com/images/IK_Model.pdf",
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF (Gazebo)",
+  "safety_notes": "Servo current.",
+  "fit": {
+   "maker": 4,
+   "school": 3,
+   "lab": 3,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/adham-elarabawy/open-quadruped",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "servo model"
+  ]
+ },
+ {
+  "id": "dingo-quadruped",
+  "name": "Dingo Quadruped",
+  "category": "legged",
+  "summary_en": "Low-cost research quadruped (Monash students) based on Stanford Pupper/notspot code, ROS Noetic with Gazebo sim.",
+  "homepage": "https://github.com/Yerbert/DingoQuadruped",
+  "repo": "https://github.com/Yerbert/DingoQuadruped",
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown (CAD hosted separately)",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "unknown",
+  "printed_share": "unknown",
+  "actuation": "12 hobby servos (dingo_servo_interfacing)",
+  "control": "ROS Noetic, joystick, Gazebo",
+  "bom_cost": "unknown (press: ~$1300, unverified)",
+  "maturity": {
+   "last_activity": "2026-03",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF (dingo_description)",
+  "safety_notes": "Servo current.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 4,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/Yerbert/DingoQuadruped",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "CAD license",
+   "printed_share",
+   "bom_cost"
+  ],
+  "rights_class_census": "permissive",
+  "rights_note": "hardware licence not established; the census class \"permissive\" followed the software licence"
+ },
+ {
+  "id": "sesame-robot",
+  "name": "Sesame",
+  "category": "legged",
+  "summary_en": "Tiny fully 3D-printed 8-servo ESP32 quadruped with OLED face; community simulator and ML tools (MJCF/URDF).",
+  "homepage": "https://github.com/dorianborian/sesame-robot",
+  "repo": "https://github.com/dorianborian/sesame-robot",
+  "cad": "https://github.com/dorianborian/sesame-robot/tree/main/hardware",
+  "licenses": {
+   "hardware": "Apache-2.0 (repo)",
+   "software": "Apache-2.0",
+   "docs": "Apache-2.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "8x MG90 180-degree micro servos",
+  "control": "ESP32 Arduino firmware; web sim; animation tool",
+  "bom_cost": "$50-60 hardware (README)",
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "URDF + MJCF (community sesame ML tools)",
+  "safety_notes": "Very low.",
+  "fit": {
+   "maker": 5,
+   "school": 5,
+   "lab": 2,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/dorianborian/sesame-robot",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "known_builds"
+  ]
+ },
+ {
+  "id": "kame32",
+  "name": "Kame32 / MiniKame",
+  "category": "legged",
+  "summary_en": "Small 8-servo 3D-printed quadruped by JavierIH (bq labs heritage); Kame32 is the ESP32 successor of MiniKame.",
+  "homepage": "https://github.com/JavierIH/kame32",
+  "repo": "https://github.com/JavierIH/kame32",
+  "cad": "https://github.com/JavierIH/kame32/tree/master/3d",
+  "licenses": {
+   "hardware": "CC BY-SA 4.0 (README)",
+   "software": "GPL-3.0 (LICENSE file)",
+   "docs": "CC BY-SA 4.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "8 micro servos",
+  "control": "ESP32 firmware (MiniKame: NodeMCU)",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2025-11",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Very low.",
+  "fit": {
+   "maker": 5,
+   "school": 4,
+   "lab": 1,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/JavierIH/kame32",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/JavierIH/miniKame",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "servo model"
+  ]
+ },
+ {
+  "id": "open-duck-mini",
+  "name": "Open Duck Mini v2",
+  "category": "legged",
+  "summary_en": "~42 cm 3D-printed bipedal 'BDX-style' robot walking with RL policies trained in MuJoCo Playground; Raspberry Pi Zero 2W runtime.",
+  "homepage": "https://github.com/apirrone/Open_Duck_Mini",
+  "repo": "https://github.com/apirrone/Open_Duck_Mini",
+  "cad": "https://cad.onshape.com/documents/64074dfcfa379b37d8a47762/w/3650ab4221e215a4f65eb7fe/e/0505c262d882183a25049d05",
+  "licenses": {
+   "hardware": "Apache-2.0 (repo)",
+   "software": "Apache-2.0",
+   "docs": "Apache-2.0"
+  },
+  "rights_class": "permissive",
+  "printed_share": "high",
+  "actuation": "Feetech bus servos (runtime uses rustypot.feetech)",
+  "control": "Python runtime + ONNX RL policy; MuJoCo Playground",
+  "bom_cost": "under $400 BOM (README)",
+  "maturity": {
+   "last_activity": "2026-01",
+   "stars": null,
+   "known_builds": "community builds via Discord",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "MJCF (MuJoCo)",
+  "safety_notes": "Falls; low power.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 5,
+   "plan_guide_treatment": 5
+  },
+  "sources": [
+   {
+    "url": "https://github.com/apirrone/Open_Duck_Mini",
+    "checked": "2026-10-31"
+   },
+   {
+    "url": "https://github.com/apirrone/Open_Duck_Mini_Runtime",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "servo model (likely STS3215)",
+   "known_builds"
+  ]
+ },
+ {
+  "id": "otto-diy",
+  "name": "Otto DIY",
+  "category": "legged",
+  "summary_en": "Arduino 4-servo 3D-printed biped widely used in schools; CC-BY-SA designs and GPL library.",
+  "homepage": "https://www.ottodiy.com",
+  "repo": "https://github.com/OttoDIY/OttoDIYLib",
+  "cad": null,
+  "licenses": {
+   "hardware": "CC BY-SA 4.0 (README)",
+   "software": "GPL-3.0",
+   "docs": "CC BY-SA 4.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "4 hobby micro servos (legs) + buzzer",
+  "control": "Arduino library; block coding",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2024-05",
+   "stars": null,
+   "known_builds": "very large (education)",
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Very low.",
+  "fit": {
+   "maker": 5,
+   "school": 5,
+   "lab": 1,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/OttoDIY/OttoDIYLib",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "servo model",
+   "bom_cost"
+  ]
+ },
+ {
+  "id": "rookidroid-hexapod",
+  "name": "rookidroid Hexapod family",
+  "category": "legged",
+  "summary_en": "Family of 18-DOF 3D-printed ESP32 hexapods sharing one firmware and gait generator; phone WiFi control or live pose streaming.",
+  "homepage": "https://github.com/rookidroid/hexapod",
+  "repo": "https://github.com/rookidroid/hexapod",
+  "cad": "https://github.com/rookidroid/hexapod",
+  "licenses": {
+   "hardware": "GPL-3.0 (repo)",
+   "software": "GPL-3.0",
+   "docs": "GPL-3.0"
+  },
+  "rights_class": "copyleft",
+  "printed_share": "high",
+  "actuation": "18 servos per robot (21G digital / MG92B micro / 25kg digital variants)",
+  "control": "ESP32 Arduino firmware; PC pose streaming",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "unknown",
+  "safety_notes": "Servo current.",
+  "fit": {
+   "maker": 5,
+   "school": 4,
+   "lab": 2,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/rookidroid/hexapod",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "bom_cost"
+  ]
+ },
+ {
+  "id": "vorpal-hexapod",
+  "name": "Vorpal the Hexapod",
+  "category": "legged",
+  "summary_en": "Arduino 12-servo 3D-printed hexapod with gamepad, aimed at STEM/combat-hexapod events.",
+  "homepage": "https://vorpalrobotics.com",
+  "repo": "https://github.com/vorpalrobotics/VorpalHexapod",
+  "cad": "Thingiverse (search 'Vorpal Hexapod')",
+  "licenses": {
+   "hardware": "unknown (Thingiverse, not checked)",
+   "software": "unknown (no LICENSE file)",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "Hobby servos via Adafruit 16-ch PWM driver",
+  "control": "Arduino + gamepad",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2021-02",
+   "stars": null,
+   "known_builds": "kits sold (Tindie)",
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "none",
+  "safety_notes": "Low.",
+  "fit": {
+   "maker": 4,
+   "school": 5,
+   "lab": 1,
+   "plan_guide_treatment": 3
+  },
+  "sources": [
+   {
+    "url": "https://github.com/vorpalrobotics/VorpalHexapod",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "licenses",
+   "servo count/model"
+  ]
+ },
+ {
+  "id": "hopper-hexapod",
+  "name": "Hopper (hexapod, ROS)",
+  "category": "legged",
+  "summary_en": "PhantomX-inspired 3D-printed hexapod running ROS Kinetic on Raspberry Pi 3 with RPLidar.",
+  "homepage": "https://davidmakesrobots.com",
+  "repo": "https://github.com/MultipedRobotics/Hopper_ROS",
+  "cad": "https://davidmakesrobots.com/robotics/2019/06/22/HopperModels.html",
+  "licenses": {
+   "hardware": "unknown",
+   "software": "MIT",
+   "docs": "MIT"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "unknown (smart servos)",
+  "control": "ROS Kinetic, move_base, rplidar",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2019-08",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "ok"
+  },
+  "sim_model": "URDF (ros-kinetic-urdf use)",
+  "safety_notes": "Low.",
+  "fit": {
+   "maker": 3,
+   "school": 2,
+   "lab": 3,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/MultipedRobotics/Hopper_ROS",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "actuation",
+   "CAD license"
+  ],
+  "rights_class_census": "permissive",
+  "rights_note": "hardware licence not established; the census class \"permissive\" followed the software licence"
+ },
+ {
+  "id": "goliath-hexapod",
+  "name": "Goliath hexapod",
+  "category": "legged",
+  "summary_en": "ROS hexapod with STL parts, URDF description, simulation and teleop packages.",
+  "homepage": "https://github.com/sergsave/goliath_robot",
+  "repo": "https://github.com/sergsave/goliath_robot",
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown (no LICENSE)",
+   "software": "unknown (no LICENSE)",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "hobby servos (servo emulator in repo)",
+  "control": "ROS (catkin)",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2018-04",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "URDF (goliath_description)",
+  "safety_notes": "Low.",
+  "fit": {
+   "maker": 2,
+   "school": 1,
+   "lab": 2,
+   "plan_guide_treatment": 1
+  },
+  "sources": [
+   {
+    "url": "https://github.com/sergsave/goliath_robot",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "licenses",
+   "actuation"
+  ]
+ },
+ {
+  "id": "flix",
+  "name": "Flix",
+  "category": "drone",
+  "summary_en": "ESP32 quadcopter made from scratch with 3D-printed frame (v1.1) and <2k-line Arduino flight firmware; sim support.",
+  "homepage": "https://github.com/okalachev/flix",
+  "repo": "https://github.com/okalachev/flix",
+  "cad": "https://github.com/okalachev/flix/tree/master/docs/assets",
+  "licenses": {
+   "hardware": "unknown (no LICENSE file found)",
+   "software": "unknown",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "high",
+  "actuation": "4x 8520 3.7V brushed motors via MOSFETs; ESP32 Mini; SPI IMU",
+  "control": "Arduino firmware, MAVLink/QGroundControl, Gazebo sim (repo)",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2026-09",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "Gazebo (repo docs)",
+  "safety_notes": "Props; LiPo; 100% infill frame.",
+  "fit": {
+   "maker": 5,
+   "school": 4,
+   "lab": 3,
+   "plan_guide_treatment": 4
+  },
+  "sources": [
+   {
+    "url": "https://github.com/okalachev/flix",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "license",
+   "sim details",
+   "MAVLink/QGroundControl support"
+  ]
+ },
+ {
+  "id": "esp-drone",
+  "name": "ESP-Drone (Espressif)",
+  "category": "drone",
+  "summary_en": "Espressif's open ESP32/S2/S3 mini drone with Crazyflie-derived firmware; Wi-Fi app/gamepad control.",
+  "homepage": "https://github.com/espressif/esp-drone",
+  "repo": "https://github.com/espressif/esp-drone",
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown",
+   "software": "GPL-3.0",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "low",
+  "actuation": "4 brushed coreless motors",
+  "control": "ESP-IDF firmware (Crazyflie-derived), cfclient",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2026-10",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "good"
+  },
+  "sim_model": "none",
+  "safety_notes": "Props.",
+  "fit": {
+   "maker": 4,
+   "school": 4,
+   "lab": 3,
+   "plan_guide_treatment": 2
+  },
+  "sources": [
+   {
+    "url": "https://github.com/espressif/esp-drone",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "printed_share (PCB frame; printed frames community only)",
+   "motor type"
+  ],
+  "rights_class_census": "copyleft",
+  "rights_note": "hardware licence not established; the census class \"copyleft\" followed the software licence"
+ },
+ {
+  "id": "diy-esp32-drone-david35k",
+  "name": "DIY ESP32 5-inch drone (David35k)",
+  "category": "drone",
+  "summary_en": "Hobby 250 mm 5-inch quadcopter with self-designed Onshape 3D-printed frame and custom ESP32 flight controller code.",
+  "homepage": "https://github.com/David35k/drone",
+  "repo": "https://github.com/David35k/drone",
+  "cad": null,
+  "licenses": {
+   "hardware": "unknown (no LICENSE)",
+   "software": "unknown",
+   "docs": "unknown"
+  },
+  "rights_class": "unknown",
+  "printed_share": "medium",
+  "actuation": "4 BLDC + ESCs, 3S LiPo",
+  "control": "Custom ESP32 firmware",
+  "bom_cost": "unknown",
+  "maturity": {
+   "last_activity": "2024-09",
+   "stars": null,
+   "known_builds": null,
+   "paper": null,
+   "docs_quality": "poor"
+  },
+  "sim_model": "none",
+  "safety_notes": "5-inch props are dangerous; 3S LiPo.",
+  "fit": {
+   "maker": 2,
+   "school": 1,
+   "lab": 1,
+   "plan_guide_treatment": 1
+  },
+  "sources": [
+   {
+    "url": "https://github.com/David35k/drone",
+    "checked": "2026-10-31"
+   }
+  ],
+  "unverified": [
+   "stars (GitHub API blocked in session)",
+   "licenses",
+   "CAD files not in repo"
+  ]
+ }
+]

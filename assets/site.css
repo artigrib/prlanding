@@ -732,3 +732,37 @@ code.call,.path code,.step-k code,.tl-k,.tl-meta code{font-family:var(--mono);fo
 .band .sec-k{color:#fff}
 .proto .ph{position:static;margin-top:28px;max-width:44rem}
 @media (max-width:860px){.sec-k{display:inline;margin:0 0 0 10px}}
+/* registry (/katalog/rejstrik/): static list from tools/registry.mjs, filters from assets/registry.js */
+.reg-link{margin:40px 0 0;font-size:18px}
+.reg-link a{text-underline-offset:3px}
+.mk.u{border:1px dashed var(--line-2)}
+.reg-rights dt{display:flex;align-items:center}
+.reg-f{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px var(--gutter);align-items:end;padding-bottom:20px}
+.reg-f label{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:500}
+.reg-f select,.reg-f input{width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--line-2);border-radius:0;font:inherit;font-size:16px;font-weight:400;background:#fff;color:var(--ink)}
+.reg-f .reg-q{grid-column:1 / span 2}
+.reg-f .chip{justify-self:start}
+.reg-count{margin:0 0 12px}
+.reg-none{margin:24px 0;color:var(--ink-2)}
+.reg-l{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
+.reg-i{display:flex;flex-direction:column;gap:10px;padding:22px 0;border-bottom:1px solid var(--line)}
+.reg-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px}
+.reg-h h3{margin:0;font-weight:500;font-size:clamp(20px,2vw,26px);letter-spacing:-.02em}
+.reg-s{margin:0;max-width:52rem;color:var(--ink-2)}
+.reg-lic{margin:0;display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline;font-size:14px;color:var(--ink-2)}
+.reg-b{display:inline-flex;align-items:center;font-family:var(--mono);font-size:12px;padding:3px 8px;border:1px solid var(--line-2);color:var(--ink)}
+.reg-b-unknown{border-style:dashed}
+.reg-lt{overflow-wrap:anywhere}
+.reg-d{margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px var(--gutter);font-size:14px}
+.reg-d div{min-width:0}
+.reg-d dt{font-family:var(--mono);font-size:12px;color:var(--mute)}
+.reg-d dd{margin:0;overflow-wrap:anywhere}
+.reg-a{margin:0;display:flex;flex-wrap:wrap;gap:4px 20px;font-size:15px}
+.reg-a a{display:inline-flex;align-items:center;min-height:32px;text-underline-offset:3px}
+.reg-a .reg-kit{font-weight:500}
+@media (max-width:860px){
+  .reg-f{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .reg-f .reg-q{grid-column:1 / -1}
+  .doc .g>.reg{grid-column:1 / -1}
+}
+@media (max-width:420px){.reg-f{grid-template-columns:minmax(0,1fr)}}
