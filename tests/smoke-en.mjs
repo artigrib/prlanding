@@ -19,7 +19,8 @@ const CONTENT_PAGES = [['pro-skoly/', 'en/for-schools/'], ['pro-skoly/pracovni-l
   ['navody/so101-lerobot-prvni-kroky/', 'en/guides/so101-lerobot-first-steps/'], ['navody/bojovi-roboti-150-g/', 'en/guides/combat-robots-150-g/'],
   ['navody/licence-open-source-hardwaru/', 'en/guides/open-source-hardware-licences/'],
   ['navody/so101-sestaveni/', 'en/guides/so101-assembly/'], ['navody/so101-lerobot-simulace/', 'en/guides/so101-lerobot-simulation/'], ['navody/so101-sestaveni/kontrolni-seznam/', 'en/guides/so101-assembly/checklist/'],
-  ['stavba/so101/', 'en/build/so101/'], ['plan/so101/', 'en/plan/so101/'], ['plan/svrn/', 'en/plan/svrn/'], ['navody/so101-baterka/', 'en/guides/so101-flashlight/'], ['bench/', 'en/bench/']];
+  ['stavba/so101/', 'en/build/so101/'], ['plan/so101/', 'en/plan/so101/'], ['plan/svrn/', 'en/plan/svrn/'], ['navody/so101-baterka/', 'en/guides/so101-flashlight/'], ['bench/', 'en/bench/'],
+  ['katalog/rejstrik/', 'en/catalogue/registry/']];
 const fail =(name, msg) => { failed++; console.log(`FAIL ${name}\n  ${msg}`); };
 
 /* ---------- 1. static hreflang / sitemap checks ---------- */
@@ -58,7 +59,7 @@ const alts = html => Object.fromEntries([...html.matchAll(/<link rel="alternate"
 // Czech-only letters, plus common Czech UI words that have no diacritics
 const CZ = /[ěřůčšžťďňĚŘŮČŠŽŤĎŇ]|[áéíóúý]\p{L}|\b(Rameno|Loket|Chapadlo|Klouby|Kloub|Mise|Znovu|Hotovo|Kostka|Miska|Simulace|Zkusit|Postavte|Kalibrace|Serva|Teplota|Zapnout|Spustit|Poloha|Diagnostika|Turnaj|Kamera|Pauza|Barva|Soupe\p{L}*|Zpomal\p{L}*|Vidlice|Agrese|Kontrola|Sada|Detail sady|Katalog|Licence a)\b/u;
 // names and quoted titles that legitimately contain such letters
-const OK = /Čeština|Zásilkovna|Česká pošta|González|Ángel|Muffin578|„150g vert“|Jazyk \/ Language/;
+const OK = /Čeština|Zásilkovna|Česká pošta|González|Ángel|Muffin578|„150g vert“|Jazyk \/ Language|Norée/;
 const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
 
 async function check(name, url, fn, opts = {}) {
@@ -178,6 +179,33 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
     if (vp.width === 390 && (await p.evaluate(() => document.documentElement.scrollWidth)) > 390) e.push('horizontal scroll');
   }, { viewport: vp });
 }
+// registry (English): filters work, entries link English catalogue cards, no Czech, axe clean
+for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
+  await check(`en registry ${vp.width}px`, '/en/catalogue/registry/', async (p, e) => {
+    await p.waitForSelector('#reg-f:not([hidden])');
+    await p.selectOption('#reg-f select[name=rights]', 'unknown');
+    const n = await p.locator('.reg-i:visible').count();
+    const badges = await p.locator('.reg-i:visible:not(.reg-thin) .reg-b').allTextContents();
+    // the runtime binds short words with a no-break space: compare normalised text
+    if (!n || badges.some(t => t.replace(/\s+/g, ' ').trim() !== 'Licence not confirmed')) e.push('rights filter: ' + n + ' ' + [...new Set(badges)].join('|'));
+    await p.selectOption('#reg-f select[name=rights]', '');
+    await noCzech(p, e);
+    const kit = await p.locator('#p-so-arm100-101 a.reg-kit').getAttribute('href');
+    if (new URL(kit, p.url()).pathname !== '/en/kit/so101/') e.push('catalogue link ' + kit);
+    await p.addScriptTag({ content: AXE });
+    const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
+    const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    if (bad.length) e.push('axe: ' + bad.map(v => `${v.id} (${v.nodes.length}) ${v.nodes[0].target}`).join('; '));
+    if ((await p.evaluate(() => document.documentElement.scrollWidth)) > vp.width) e.push('horizontal scroll');
+  }, { viewport: vp });
+}
+await check('en home links the registry', '/en/', async (p, e) => {
+  const h = await p.locator('#katalog a[data-cta="registry"]').getAttribute('href');
+  if (new URL(h, p.url()).pathname !== '/en/catalogue/registry/') e.push('registry link ' + h);
+  const n = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/registry/projects.json'), 'utf8')).length;
+  const t = (await p.locator('#katalog a[data-cta="registry"]').textContent()).replace(/\s+/g, ' ').trim();
+  if (t !== `All ${n} printable projects in the registry →`) e.push('registry link text: ' + t);
+});
 // PR-Bench leaderboard draft (English): noindex, rendered from the results JSON, mock data labelled, axe clean
 for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
   await check(`en bench leaderboard ${vp.width}px`, '/en/bench/', async (p, e) => {

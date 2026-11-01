@@ -556,5 +556,69 @@ await check('origin desktop keeps the panel joystick', '/sim/origin/?test=1', as
   if (!(await p.locator('#pad').isVisible())) throw new Error('panel joystick missing');
 });
 
+// registry of open projects: static list (works without JS), rights badges honest, filters, catalogue links, axe
+await check('registry static list (no JS needed)', '/katalog/rejstrik/', async p => {
+  const html = await (await p.request.get(BASE + '/katalog/rejstrik/')).text();
+  const data = JSON.parse(fs.readFileSync(new URL('../data/registry/projects.json', import.meta.url), 'utf8'));
+  const n = (html.match(/<li class="reg-i/g) || []).length;
+  if (n !== data.length) throw new Error(`static list has ${n} of ${data.length} projects`);
+  // unknown rights: "Licence neověřena" badge, or (all details unverified) only "Údaje neověřeny"; never a licensed badge
+  const unknown = [...html.matchAll(/<li class="reg-i[^"]*"[^>]*data-rights="unknown"[\s\S]*?<\/li>/g)].map(m => m[0]);
+  if (unknown.length !== data.filter(r => r.rights_class === 'unknown').length || unknown.some(x => !x.includes('>Licence neověřena</span>') && !x.includes('>Údaje neověřeny</span>'))) throw new Error('unknown licence not labelled "Licence neověřena"');
+  const ext = [...html.matchAll(/<a href="(https?:[^"]+)"([^>]*)>/g)].filter(m => !/rel="noopener"/.test(m[2]));
+  if (ext.length) throw new Error('external link without rel=noopener: ' + ext[0][1]);
+  if (/<li class="reg-i"[\s\S]*?<img/.test(html.split('<ol class="reg-l"')[1] || '')) throw new Error('image in the registry list');
+  if (!/<form class="reg-f" id="reg-f" hidden/.test(html)) throw new Error('filter form should start hidden');
+});
+for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
+  await check(`registry filters + axe ${vp.width}px`, '/katalog/rejstrik/', async p => {
+    await p.setViewportSize(vp);
+    const offsite = [];
+    p.on('request', r => { const u = new URL(r.url()); if (u.origin !== new URL(BASE).origin && !IGNORE.test(r.url())) offsite.push(r.url()); });
+    await p.waitForSelector('#reg-f:not([hidden])');
+    const total = await p.locator('.reg-i').count();
+    await p.selectOption('#reg-f select[name=cat]', 'arm');
+    const cats = await p.locator('.reg-i:visible').evaluateAll(els => els.map(e => e.dataset.cat));
+    if (!cats.length || cats.some(c => c !== 'arm')) throw new Error('category filter');
+    await p.selectOption('#reg-f select[name=cat]', 'wheeled/rc-car');
+    const subs = await p.locator('.reg-i:visible').evaluateAll(els => els.map(e => e.dataset.cat + '/' + e.dataset.sub));
+    if (!subs.length || subs.some(c => c !== 'wheeled/rc-car')) throw new Error('subcategory filter');
+    await p.selectOption('#reg-f select[name=cat]', '');
+    await p.fill('#reg-f input[name=q]', 'lekiwi');
+    await p.waitForFunction(() => document.querySelectorAll('.reg-i:not([hidden])').length < 10);
+    if (!(await p.locator('#p-lekiwi').isVisible())) throw new Error('search');
+    await p.fill('#reg-f input[name=q]', 'zzzz-no-such');
+    await p.waitForSelector('#reg-none:not([hidden])');
+    await p.fill('#reg-f input[name=q]', '');
+    await p.selectOption('#reg-f select[name=fit]', 'school');
+    const sch = await p.locator('.reg-i:visible').evaluateAll(els => els.map(e => +e.dataset.school));
+    if (!sch.length || sch.some(v => v < 4)) throw new Error('school fit filter');
+    await p.selectOption('#reg-f select[name=fit]', '');
+    await p.selectOption('#reg-f select[name=sort]', 'last');
+    const last = await p.locator('.reg-i').evaluateAll(els => els.map(e => e.dataset.last));
+    if (last.some((v, i) => i && v > last[i - 1])) throw new Error('sort by last activity');
+    if ((await p.locator('.reg-i:visible').count()) !== total) throw new Error('filters not cleared');
+    const kit = await p.locator('#p-so-arm100-101 a.reg-kit').getAttribute('href');
+    if (new URL(kit, p.url()).pathname !== '/sada/so101/') throw new Error('catalogue link ' + kit);
+    await p.addScriptTag({ content: AXE });
+    const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
+    const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    if (bad.length) throw new Error('axe: ' + bad.map(v => `${v.id} (${v.nodes.length}) ${v.nodes[0].target}`).join('; '));
+    if ((await p.evaluate(() => document.documentElement.scrollWidth)) > vp.width) throw new Error('horizontal scroll');
+    if (offsite.length) throw new Error('off-site requests: ' + offsite.join(', '));
+  });
+}
+await check('home catalogue links the registry and back', '/', async p => {
+  const h = await p.locator('#katalog a[data-cta="registry"]').getAttribute('href');
+  if (new URL(h, p.url()).pathname !== '/katalog/rejstrik/') throw new Error('registry link ' + h);
+  const n = JSON.parse(fs.readFileSync(new URL('../data/registry/projects.json', import.meta.url), 'utf8')).length;
+  const t = (await p.locator('#katalog a[data-cta="registry"]').textContent()).replace(/\s+/g, ' ').trim();
+  if (t !== `Všech ${n} tisknutelných projektů v rejstříku →`) throw new Error('registry link text: ' + t);
+  const html = await (await p.request.get(BASE + '/katalog/rejstrik/')).text();
+  if (!/<a href="\.\.\/\.\.\/#katalog">/.test(html)) throw new Error('no link back to #katalog');
+  const sm = await (await p.request.get(BASE + '/sitemap.xml')).text();
+  if (!sm.includes('<loc>https://printedrobotics.cz/katalog/rejstrik/</loc>') || !sm.includes('<loc>https://printedrobotics.cz/en/catalogue/registry/</loc>')) throw new Error('registry not in the sitemap');
+});
+
 await browser.close();
 process.exit(failed ? 1 : 0);
