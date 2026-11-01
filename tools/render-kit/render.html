@@ -53,7 +53,7 @@ window.renderKit = async o => {
   root.position.y = -box.min.y; root.updateMatrixWorld(true);
   box.translate(new THREE.Vector3(0, -box.min.y, 0));
   const c = box.getCenter(new THREE.Vector3()), r = box.getSize(new THREE.Vector3()).length() / 2;
-  c.y = (box.max.y - box.min.y) * 0.35;
+  c.y = (box.max.y - box.min.y) * (o.ty ?? 0.35);   // look-at height (fraction of the model height)
   const az = THREE.MathUtils.degToRad(o.az ?? 35), el = THREE.MathUtils.degToRad(o.el ?? 26), d = r * (o.dist ?? 4.2);
   camera.position.set(c.x + d * Math.cos(el) * Math.sin(az), c.y + d * Math.sin(el), c.z + d * Math.cos(el) * Math.cos(az));
   camera.lookAt(c);

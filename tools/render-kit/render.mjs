@@ -1,6 +1,6 @@
 // Catalogue renders of a kit model in the five print colours: img/<id>_<colour>.jpg (1200×900).
 // Usage (repo root served on BASE; three.js from the site's vendor/three/):
-//   python3 -m http.server 8123 &  node tools/render-kit/render.mjs svrn [show=opt_modul_flipper] [az=35] [el=26]
+//   python3 -m http.server 8123 &  node tools/render-kit/render.mjs svrn [show=opt_modul_flipper] [az=35] [el=26] [dist=4.2] [ty=0.35]
 // Needs Playwright (require('playwright') / NODE_PATH). Headless SwiftShader is fine (it is slow, not wrong).
 import fs from 'node:fs';
 import path from 'node:path';
@@ -23,7 +23,7 @@ await page.waitForFunction(() => window.ready);
 for (const [name, hex] of Object.entries(COLORS)) {
   const url = await page.evaluate(o => window.renderKit(o), {
     model: `../../models/${id}.glb`, show, color: hex, w: 2400, h: 1800,
-    az: +arg('az', 35), el: +arg('el', 26), dist: +arg('dist', 4.2), jpeg: { w: 1200, h: 900, q: 0.86 }
+    az: +arg('az', 35), el: +arg('el', 26), dist: +arg('dist', 4.2), ty: +arg('ty', 0.35), jpeg: { w: 1200, h: 900, q: 0.86 }
   });
   const file = path.join(ROOT, 'img', `${id}_${name}.jpg`);
   fs.writeFileSync(file, Buffer.from(url.split(',')[1], 'base64'));
