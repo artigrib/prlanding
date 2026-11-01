@@ -26,6 +26,23 @@ orca.glb     – "ORCA Hand by ORCA Dexterity, Inc. — CC BY 4.0"
                electronic components left out, duplicate servo instances
                removed, servo cases shown as simplified blocks, recoloured.
                This derivative is shared under the same licence, CC BY 4.0.
+rc128.glb    – "open-128-rc-car" (1:28 RC car) by Kurtis Kopf (zortness),
+               https://github.com/zortness/open_128_rc_car @ f9155c21.
+               FreeCAD files CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
+               Changes: the getting-started part set read from the saved FCStd shapes,
+               wheels and tyres placed at the author's wheel proxies, tessellated,
+               simplified and recoloured (tools/robots-cad/rc128.py).
+zcar2.glb    – "zcar2" (1:28 RC drift car) by Alex Yu (alexyu132),
+               https://github.com/alexyu132/zcar2 @ 43c964cd. GPL-3.0
+               (https://www.gnu.org/licenses/gpl-3.0.html). This derivative (the
+               author's assembled zcar2.stl split into named parts, recoloured;
+               tools/robots-cad/zcar2.py) is shared under the same licence, GPL-3.0.
+lizard.glb   – "Lizard" 3D printed RC race car by TRD-B,
+               https://github.com/TRD-B/Lizard @ ce1855a4. CC BY 4.0
+               (https://creativecommons.org/licenses/by/4.0/).
+               Changes: converted from the author's STEP assembly, screws, nuts,
+               inserts and bearings left out, simplified and recoloured
+               (tools/robots-cad/step2glb.py).
 
 sesame.glb   – Sesame Robot Project by Dorian Todd (dorianborian), Apache-2.0
                (full text: LICENSE-Apache-2.0.txt in this folder).

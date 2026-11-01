@@ -1,0 +1,44 @@
+{
+ "groups": {
+  "Lizard_PCB|NodeMCU": "electronics",
+  "^[^/]*/1 - Main body": "main_body",
+  "^[^/]*/2 - Gearbox": "gearbox_differential",
+  "^[^/]*/3 - Rear wheels": "rear_axle",
+  "^[^/]*/4 - Front wheels": "front_axle_steering"
+ },
+ "materials": [
+  [
+   "screw|countersunk|M3 nut|M3 locknut|threaded insert|/Bearings/|ZZ|Kugellager|2RS|magnet|/0303|/0306|R_Axial|C_Disc|C_Rect",
+   "drop"
+  ],
+  [
+   "Lizard_PCB/(Board|PCB Component|_autosave)",
+   "pcb"
+  ],
+  [
+   "Lizard_PCB|NodeMCU|ESP32|MD20A|LME78|Antenna|On-Off|switch|Flintronic|LED",
+   "accent"
+  ],
+  [
+   "copper wire",
+   "copper"
+  ],
+  [
+   "TPU",
+   "rubber"
+  ],
+  [
+   "Carson",
+   "rubber"
+  ],
+  [
+   "775 motor|40x20 Servo|Sunon|Cooling block|Claw clutch|servo saver",
+   "servo"
+  ],
+  [
+   "/(Screws and nuts|Steel rods|Bearings)/|screw|nut|insert|Kugellager|ZZ|Spring|0X-DF|magnet",
+   "bolt"
+  ]
+ ],
+ "default": "print"
+}

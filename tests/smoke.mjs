@@ -257,6 +257,20 @@ for (const id of ['so101', 'svrn', 'vert150']) {
     if (!(await p.locator('h1').first().innerText()).trim()) throw new Error('empty h1');
   });
 }
+// RC cars: product page, licence + battery safety visible, axe clean at phone width
+for (const id of ['rc128', 'zcar2', 'lizard']) {
+  await check(`product ${id}: safety note, axe 390px`, `/sada/${id}/`, async p => {
+    await p.setViewportSize({ width: 390, height: 844 });
+    await p.waitForSelector('h1');
+    if (!/LiPo/.test(await p.locator('body').textContent())) throw new Error('battery safety note missing');
+    if (id === 'lizard' && !/954\s?EUR/.test(await p.locator('body').textContent())) throw new Error('Lizard BOM cost missing');
+    await p.addScriptTag({ content: AXE });
+    const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
+    const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    if (bad.length) throw new Error('axe: ' + bad.map(v => `${v.id} (${v.nodes.length}) ${v.nodes[0].target}`).join('; '));
+    if ((await p.evaluate(() => document.documentElement.scrollWidth)) > 390) throw new Error('horizontal scroll');
+  });
+}
 
 // content pages: schools + guides. Structured data matches the page, no prices, nav link from every header
 const ldOf = html => [...html.matchAll(/<script type="application\/ld\+json">([^<]*)<\/script>/g)].map(m => JSON.parse(m[1]));
