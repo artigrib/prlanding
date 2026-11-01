@@ -7,7 +7,8 @@ Usage (python 3.12+, pip install build123d trimesh fast_simplification; gltfpack
   node tools/render-kit/render.mjs sesame az=35 el=24 dist=4.8      # koch: az=50 el=16 dist=4.6
 config: { "steps": [{"file": STEP (relative to the clone dir), "parts_dir": multi-file assembly part folder}],
           "up": "y"|"z", "front": "+x"|"-x"|... (direction the robot faces, CAD frame),
-          "rules": [[regex on the label path, node name, material, kept triangle fraction]], "tol", "ang" }
+          "rules": [[regex on the label path, node name, material, kept triangle fraction]], "tol", "ang",
+          "split": [regex: leaves exploded into one leaf per solid, paths <path>/s0, /s1 ...] }
 Node names: '' keeps the leaf label, '{1}' inserts regex group 1, 'servo#' numbers leaves, 'servo#2' numbers
 distinct values of regex group 2 (one node per sub-assembly instance). Materials: 'print' takes the print colour
 in render.html / viewer3d.js; servo, accent, pcb, metal stay dark/neutral.
@@ -26,14 +27,28 @@ from OCP.TopExp import TopExp_Explorer
 from OCP.TopLoc import TopLoc_Location
 from OCP.TopoDS import TopoDS
 
-MATS = {
-    'print': ((0.89, 0.89, 0.86, 1), 0.0, 0.55),
-    'servo': ((0.012, 0.012, 0.012, 1), 0.0, 0.35),
-    'accent': ((0.17, 0.17, 0.16, 1), 0.0, 0.6),
-    'metal': ((0.62, 0.62, 0.60, 1), 1.0, 0.32),
+MATS = {   # same values as the other catalogue models (models/lekiwi.glb, so102.glb)
+    'print': ((0.891, 0.891, 0.859, 1), 0.0, 0.55),
+    'servo': ((0.0066, 0.0066, 0.0066, 1), 0.0, 0.35),      # + clearcoat 0.2, added after export
+    'accent': ((0.267, 0.267, 0.251, 1), 0.0, 0.4),
+    'metal': ((0.488, 0.488, 0.465, 1), 1.0, 0.3),
     'rubber': ((0.025, 0.025, 0.025, 1), 0.0, 0.82),
     'pcb': ((0.03, 0.12, 0.06, 1), 0.0, 0.5),
 }
+CLEARCOAT = {'servo': {'clearcoatFactor': 0.2, 'clearcoatRoughnessFactor': 0}}
+
+
+def add_clearcoat(path):
+    """trimesh writes no material extensions: add KHR_materials_clearcoat to the glossy materials."""
+    import pygltflib
+    g = pygltflib.GLTF2().load(path)
+    hit = False
+    for m in g.materials:
+        if m.name in CLEARCOAT:
+            m.extensions = dict(m.extensions or {}, KHR_materials_clearcoat=CLEARCOAT[m.name]); hit = True
+    if hit:
+        g.extensionsUsed = sorted(set((g.extensionsUsed or []) + ['KHR_materials_clearcoat']))
+        g.save(path)
 
 
 def tess(shape, tol, ang):
@@ -113,12 +128,14 @@ def main(cfg_path, out, src='.'):
     tol, ang = cfg.get('tol', 0.1), cfg.get('ang', 0.4)
     rules = [(re.compile(r[0]), r[1], r[2], r[3]) for r in cfg['rules']]
     drop = [re.compile(d) for d in cfg.get('drop', [])]
+    split = [re.compile(d) for d in cfg.get('split', [])]
     groups = OrderedDict()  # node -> {mat: [(P, I, keep)]}
     unmatched = []
     counts = {}
     for st in cfg['steps']:
         root = import_step(st['file'])
         M = np.array(st.get('matrix', np.eye(4)), float)
+        pending = []
         for path, lab, s in leaves(root, ''):
             if st.get('parts_dir'):
                 ps = part_shape(st['parts_dir'], lab)
@@ -127,6 +144,14 @@ def main(cfg_path, out, src='.'):
                 s = ps.Moved(s.Location())
             if any(d.search(path) for d in drop):
                 continue
+            if any(x.search(path) for x in split):   # one leaf per solid: <path>/s0, <path>/s1 ...
+                from OCP.TopAbs import TopAbs_SOLID
+                ex, k = TopExp_Explorer(s, TopAbs_SOLID), 0
+                while ex.More():
+                    pending.append((f'{path}/s{k}', f'{lab}_{k}', ex.Current())); ex.Next(); k += 1
+                continue
+            pending.append((path, lab, s))
+        for path, lab, s in pending:
             for rx, node, mat, keep in rules:
                 mo = rx.search(path)
                 if mo:
@@ -180,6 +205,7 @@ def main(cfg_path, out, src='.'):
         nn = name if len([1 for n2, _, _ in meshes if n2 == name]) == 1 else f'{name}__{mat}'
         scene.add_geometry(m, node_name=nn, geom_name=nn)
     scene.export(out)
+    add_clearcoat(out)
     print(f'{out}: nodes={len(meshes)} tris {total0} -> {total1}; size mm {(hi - lo).round(1).tolist()}')
     print('nodes:', ', '.join(dict.fromkeys(n for n, _, _ in meshes)))
 
