@@ -27,15 +27,22 @@ orca.glb     – "ORCA Hand by ORCA Dexterity, Inc. — CC BY 4.0"
                removed, servo cases shown as simplified blocks, recoloured.
                This derivative is shared under the same licence, CC BY 4.0.
 
-uc2.glb      – openUC2 / UC2-GIT (https://github.com/openUC2/UC2-GIT), hardware
-               licensed under the CERN Open Hardware Licence v1.2 (CERN-OHL-1.2),
-               see License.md in that repository. Configuration: the simple
-               smartphone microscope, mechanical version
-               (APPLICATIONS/APP_SIMPLE-Smartphone_Microscope/mechanical).
+uc2.glb      – openUC2 / UC2-GIT (https://github.com/openUC2/UC2-GIT).
+               (C) Benedict Diederich, René Lachmann, Barbora Marsikova,
+               Xavier Uwurukundo, Rainer Heintzmann, Haoran Wang.
+               Hardware licensed under the CERN Open Hardware Licence v1.2
+               (CERN-OHL-1.2); licence text:
+               https://github.com/openUC2/UC2-GIT/blob/afc9de36f27d5a387e6b9ef1d85ae0cf33b4d3d6/License.md
+               Configuration: the simple smartphone microscope, mechanical
+               version (APPLICATIONS/APP_SIMPLE-Smartphone_Microscope/mechanical).
                Built from the authors' UC2 v2 STL files
-               (TheBOX/SimpleBOX/BUILD_ME/STL, commit afc9de3), placed on the
-               50 mm UC2 grid following the authors' assembly steps; recoloured,
-               compressed. Optics, magnets, screws and the phone are not modelled.
-               This derivative is shared under the same licence, CERN-OHL-1.2.
+               (TheBOX/SimpleBOX/BUILD_ME/STL, commit afc9de3); optics, magnets,
+               screws and the phone are not modelled. We arranged the assembly
+               following the authors' guide and photos; the authors do not
+               publish an assembled CAD model. Build script:
+               tools/lab-cad/uc2_glb.py.
+               Modified 2026-11-01: arranged into an assembly, recoloured,
+               compressed. This derivative is shared under the same licence,
+               CERN-OHL-1.2.
 
 Models of the other robots: see the credit line on each robot's page.

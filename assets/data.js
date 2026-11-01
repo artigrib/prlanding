@@ -215,17 +215,17 @@ window.PR_ROBOTS = [
     related: ['hand', 'so101', 'aira'] },
   // Lab devices (cat 'lab'): no simulation. Model = the author's UC2 v2 STL files (TheBOX/SimpleBOX/BUILD_ME/STL) placed on the
   // 50 mm grid per APPLICATIONS/APP_SIMPLE-Smartphone_Microscope/mechanical/Readme.md; optics, magnets and screws not modelled.
-  { id: 'uc2', glb: true, render: true, credit: 'Vizualizace z dílů openUC2 (CERN-OHL-1.2): jednoduchý mikroskop pro telefon, mechanická verze', name: 'UC2', type: 'Modulární optická stavebnice', cat: 'lab', level: 'Začátečník', hw: 'CERN-OHL-1.2', sw: 'MIT',
+  { id: 'uc2', glb: true, render: true, noElectronics: true, noSoftware: true, credit: 'Vizualizace z dílů openUC2 (CERN-OHL-1.2): jednoduchý mikroskop pro telefon, mechanická verze. Sestavu jsme poskládali podle návodu a fotografií autorů; sestavený CAD model autoři nezveřejňují.', name: 'UC2', type: 'Modulární optická stavebnice', cat: 'lab', level: 'Začátečník', hw: 'CERN-OHL-1.2', sw: 'MIT',
     author: 'openUC2 (B. Diederich a kol.)', alt: 'Mikroskop pro chytrý telefon složený z tištěných kostek UC2 na základní desce',
     short: 'Optické pokusy z tištěných kostek o hraně 50 mm. Model ukazuje jednoduchý mikroskop pro chytrý telefon.',
-    lead: 'Otevřený modulární systém pro optiku a mikroskopii: tištěné kostky o hraně 50 mm drží pohromadě kuličkové magnety v základní desce a do kostek se zasouvají vložky se zrcadly, čočkami nebo držákem vzorku. Model ukazuje mechanickou verzi jednoduchého mikroskopu pro chytrý telefon podle návodu autorů: objektiv v kostce s ručním zaostřováním (Z-stage), dvě zrcadla pod 45°, okulár s držákem telefonu a držák vzorku nad objektivem. Tato sestava nemá elektroniku ani software.',
+    lead: 'Otevřený modulární systém pro optiku a mikroskopii: tištěné kostky o hraně 50 mm drží pohromadě kuličkové magnety v základní desce a do kostek se zasouvají vložky se zrcadly, čočkami nebo držákem vzorku. Model ukazuje mechanickou verzi jednoduchého mikroskopu pro chytrý telefon podle návodu autorů: objektiv v zaostřovací kostce (Z-stage), dvě zrcadla pod 45°, okulár s držákem telefonu a držák vzorku nad objektivem. Tato sestava nemá elektroniku ani software.',
     bomCost: '≈ 65 EUR (odhad autorů pro tuto sestavu)', printTime: '—', software: 'Pro tuto sestavu žádný (mechanická verze)',
     repo: 'https://github.com/openUC2/UC2-GIT', docs: 'https://github.com/openUC2/UC2-GIT/tree/master/APPLICATIONS/APP_SIMPLE-Smartphone_Microscope/mechanical',
     card: [['Kostka', '50 mm'], ['Sestava', 'mikroskop pro telefon']],
-    bom: [['Objektiv mikroskopu (např. 10×, NA 0,25)', '1×'], ['Okulár (např. 20×)', '1×'], ['Zrcátko 30 × 30 mm', '2×'], ['Kuličkový magnet 5 mm', '32–36×'], ['Šroub M3 × 12 (DIN 912)', '32–56×'], ['Šroub M3 × 8 (DIN 912, pozinkovaný)', '7×'], ['Šroub M3 × 30 a matice M3, nemagnetické', '1×'], ['Chytrý telefon', '1×']],
-    specs: [['Kostka', '50 mm, tištěná nebo vstřikovaná'], ['Spojení', 'kuličkové magnety 5 mm v základní desce'], ['Moduly sestavy', 'Z-stage, 2× zrcadlo 45°, okulár s držákem telefonu, držák vzorku, 2 prázdné kostky'], ['Zaostření', 'hrubé ≈ 30 mm posunem objektivu, jemné ≈ ±6 mm ozubeným kolem'], ['Optika', 'objektiv s tubusovou délkou 160 mm + okulár'], ['Elektronika', 'žádná (mechanická verze)']],
+    bom: [['Objektiv mikroskopu (např. 10×, NA 0,25)', '1×'], ['Okulár (např. 20×)', '1×'], ['Zrcátko (např. 30 × 30 mm)', '2×'], ['Kuličkový magnet 5 mm', '32–36×'], ['Šroub M3 × 12 (DIN 912)', '32–56×'], ['Šroub M3 × 8 (DIN 912, pozinkovaný)', '7×'], ['Šroub M3 × 30 a matice M3, nemagnetické', '1×'], ['Chytrý telefon', '1×']],
+    specs: [['Kostka', '50 mm, tištěná nebo vstřikovaná'], ['Spojení', 'kuličkové magnety 5 mm v základní desce'], ['Moduly sestavy', 'Z-stage, 2× zrcadlo 45°, okulár s držákem telefonu, držák vzorku, 2 prázdné kostky'], ['Zaostření', 'hrubé ≈ 30 mm posunem objektivu, jemné ≈ ±6 mm ozubeným kolem'], ['Optika', 'objektiv (160 mm od zrcadla) + okulár'], ['Elektronika', 'žádná (mechanická verze)']],
     license: { hw: 'CERN-OHL-1.2', sw: 'MIT', status: 'verified', checked: '2026-11-01',
-      sources: ['https://github.com/openUC2/UC2-GIT/blob/master/License.md'] },
+      sources: ['https://github.com/openUC2/UC2-GIT/blob/afc9de36f27d5a387e6b9ef1d85ae0cf33b4d3d6/License.md'] },
     related: ['stackchan', 'otto', 'so101'] }
 ];
 // Browser demos linked from product pages (r.sim). colorParam: the sim reads ?color= (so101 does not yet).
@@ -246,13 +246,13 @@ window.PR_SAFETY = function (r) {
   if (/\b(24|22,2|14,8) ?V\b|\d+ ?Nm/.test(all)) w.push('Silné motory: pohybující se rameno může způsobit zranění. Při oživování držte ruce mimo dosah a mějte po ruce vypínač napájení.');
   if (/pneumat/i.test(all)) w.push('Pneumatické chapadlo pracuje se stlačeným vzduchem – používejte jen schválený zdroj a hadice.');
   if (/230 ?V|síťov/i.test(all)) w.push('Zdroj připojený k síti 230 V smí zapojovat jen osoba s odpovídající kvalifikací.');
-  if (/magnet/i.test(all)) w.push('Obsahuje malé silné magnety: spolknutí více kusů může vážně poškodit střeva. Uchovávejte mimo dosah malých dětí.');
+  if (/(^|[^a-zá-ž])magnet(?!ick)/i.test(all)) w.push('Obsahuje malé silné magnety: spolknutí více kusů může vážně poškodit střeva. Uchovávejte mimo dosah malých dětí. Při spolknutí ihned vyhledejte lékaře.');
   if (r.cat === 'combat') {
     w.push('Bojového robota zapínejte jen v uzavřené aréně nebo s odpojenou zbraní. Nejdřív zapněte vysílač, potom robota; vypínejte v opačném pořadí a před prvním zápasem ověřte failsafe (po vypnutí vysílače se robot musí zastavit).');
     if (/spinner|rotuj/i.test(all)) w.push('Rotující zbraň může vážně zranit a vymrštit úlomky: mimo arénu ji vždy zajistěte a nikdy ji neroztáčejte v ruce ani na stole.');
     if (/flipper/i.test(all)) w.push('Flipper se pohybuje prudce: při manipulaci s robotem mějte prsty mimo jeho dráhu.');
   }
-  w.push('Hardware napájejte jen zdrojem uvedeným v návodu projektu.');
+  if (!r.noElectronics) w.push('Hardware napájejte jen zdrojem uvedeným v návodu projektu.');
   return w;
 };
 // Parameters shown on the product page and in JSON-LD; unknown values ('—' or empty) are left out.
@@ -267,7 +267,7 @@ window.PR_BOX = function (r, tier, pair) {
       if (pair) { items.push(['Servo Feetech STS3215 7,4 V, převod 1/191', '2×', 'Hardware']); items.push(['Servo Feetech STS3215 7,4 V, převod 1/147', '3×', 'Hardware']); }
       items.push(['Řídicí deska serv', pair ? '2×' : '1×', 'Hardware'], ['Zdroj 5 V', pair ? '2×' : '1×', 'Hardware'], ['Kabel USB-C', '2×', 'Hardware'], ['Svěrky ke stolu', pair ? '4×' : '2×', 'Hardware']);
     } else { (r.bom || []).forEach(function (b) { if (r.setups && !pair && /leader/i.test(b[0]) && !/follower/i.test(b[0])) return; items.push([b[0], b[1], 'Hardware']); }); }
-    items.push(['Spojovací materiál podle návodu projektu', '—', 'Hardware']);
+    if (!((r._cs || r).bom || []).some(function (b) { return /^Šroub M\d/.test(b[0]); })) items.push(['Spojovací materiál podle návodu projektu', '—', 'Hardware']);
   }
   return items;
 };
@@ -281,10 +281,10 @@ window.PR_FAQ = function (r) {
   var cad = window.PR_BOM_CAD(r);
   return [
     ['Zvládnu sestavení bez zkušeností?', 'Náročnost tohoto projektu: ' + r.level + '. Návod projektu vede krok za krokem; odkaz najdete v sekci Licence a bezpečnost.'],
-    ['Můžu si robota koupit u vás?', (cad ? 'Ne, nic neprodáváme. Díly koupíte přímo u dodavatelů; projekt kusovník nezveřejňuje, seznam v sekci Co budete potřebovat jsme sestavili z jeho CAD a dokumentace. Hotovou sadu možná nabídneme později; chcete-li o ní vědět, nechte e-mail ve formuláři nahoře.' : 'Ne, nic neprodáváme. Díly koupíte přímo u dodavatelů podle kusovníku projektu (sekce Co budete potřebovat). Hotovou sadu možná nabídneme později; chcete-li o ní vědět, nechte e-mail ve formuláři nahoře.')],
+    [r.cat === 'lab' ? 'Můžu si sadu koupit u vás?' : 'Můžu si robota koupit u vás?', (cad ? 'Ne, nic neprodáváme. Díly koupíte přímo u dodavatelů; projekt kusovník nezveřejňuje, seznam v sekci Co budete potřebovat jsme sestavili z jeho CAD a dokumentace. Hotovou sadu možná nabídneme později; chcete-li o ní vědět, nechte e-mail ve formuláři nahoře.' : 'Ne, nic neprodáváme. Díly koupíte přímo u dodavatelů podle kusovníku projektu (sekce Co budete potřebovat). Hotovou sadu možná nabídneme později; chcete-li o ní vědět, nechte e-mail ve formuláři nahoře.')],
     ['Jste spojeni s autory projektu?', 'Ne. Vycházíme z otevřené dokumentace projektu ' + r.name + ' (' + r.author + ', licence ' + r.hw + '). Autoři s námi nejsou spojeni a tuto stránku neschválili.'],
-    ['Jaký software budu potřebovat?', r.cat === 'combat' ? 'Žádný. Robot se ovládá RC vysílačem FlySky; přijímač Malenki Nano s ním jen spárujete, programovat nic nemusíte. Návod projektu najdete v sekci Licence a bezpečnost.' : r.software + '. Software je open-source a zdarma; odkaz na návod projektu najdete v sekci Licence a bezpečnost.'],
-    ['Je stavba vhodná pro děti?', 'Není to hračka. Robot obsahuje malé díly a elektroniku; stavba je určena osobám od 14 let, mladším pouze pod dohledem dospělého, například ve škole nebo kroužku.'],
+    ['Jaký software budu potřebovat?', r.cat === 'combat' ? 'Žádný. Robot se ovládá RC vysílačem FlySky; přijímač Malenki Nano s ním jen spárujete, programovat nic nemusíte. Návod projektu najdete v sekci Licence a bezpečnost.' : r.noSoftware ? r.software + '. Návod projektu najdete v sekci Licence a bezpečnost.' : r.software + '. Software je open-source a zdarma; odkaz na návod projektu najdete v sekci Licence a bezpečnost.'],
+    ['Je stavba vhodná pro děti?', 'Není to hračka. ' + (r.cat === 'lab' ? 'Sestava' : 'Robot') + ' obsahuje malé díly' + (r.noElectronics ? '' : ' a elektroniku') + '; stavba je určena osobám od 14 let, mladším pouze pod dohledem dospělého, například ve škole nebo kroužku.'],
     ['Jsme škola nebo kroužek. Co nám nabízíte?', (cad ? 'Nic neprodáváme ani nefakturujeme. Zdarma je hodina se simulací SO-101 a pracovní list na stránce Pro školy; díly koupíte u dodavatelů podle seznamu sestaveného z CAD a dokumentace projektu.' : 'Nic neprodáváme ani nefakturujeme. Zdarma je hodina se simulací SO-101 a pracovní list na stránce Pro školy; díly koupíte u dodavatelů podle kusovníku projektu.')]
   ];
 };
@@ -300,6 +300,7 @@ window.PR_LICENSES = [
   ['GPL-3.0', 'c', 'Ano, s podmínkou', 'Zdrojové soubory upravených dílů a firmwaru k dispozici'],
   ['CERN-OHL-P-2.0', 'y', 'Ano', 'Uvedení autorů a licence'],
   ['CERN-OHL-W / -S 2.0', 'c', 'Ano, s podmínkou', 'Zdroje upravené konstrukce zveřejňujeme'],
+  ['CERN-OHL-1.2', 'c', 'Ano, s podmínkou', 'Kopie licence, označení změn s datem, upravené zdroje pod stejnou licencí'],
   ['CC BY-NC / vlastní NC', 'n', 'Ne', 'Pouze s písemným svolením autora']
 ];
 

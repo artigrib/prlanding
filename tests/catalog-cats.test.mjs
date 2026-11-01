@@ -44,3 +44,23 @@ test('lab category: UC2 with model, renders and verified licence', () => {
   assert.ok(CS.PR_SAFETY(uc2).some((w) => /magnet/i.test(w)), 'magnet warning (CZ)');
   assert.ok(EN.PR_SAFETY(EN.PR_ROBOTS.find((r) => r.id === 'uc2')).some((w) => /magnet/i.test(w)), 'magnet warning (EN)');
 });
+
+test('lab wording is data-driven: no electronics/software claims, magnet rule only for magnets', () => {
+  const uc2 = CS.PR_ROBOTS.find((r) => r.id === 'uc2'), uc2en = EN.PR_ROBOTS.find((r) => r.id === 'uc2');
+  assert.equal(uc2.noElectronics, true); assert.equal(uc2.noSoftware, true);
+  const faq = CS.PR_FAQ(uc2).flat().join(' ');
+  assert.ok(faq.includes('Můžu si sadu koupit u vás?') && faq.includes('Sestava obsahuje malé díly;'), 'lab FAQ');
+  assert.ok(!/elektroniku|open-source a zdarma/.test(faq), 'no electronics / software claims');
+  assert.ok(!CS.PR_SAFETY(uc2).some((w) => /napájejte/.test(w)) && !EN.PR_SAFETY(uc2en).some((w) => /Power the hardware/.test(w)), 'no power line');
+  assert.ok(CS.PR_SAFETY(uc2).some((w) => /ihned vyhledejte lékaře/.test(w)) && EN.PR_SAFETY(uc2en).some((w) => /seek medical help/.test(w)));
+  // non-lab kit keeps the robot wording and the power line
+  const so = CS.PR_ROBOTS.find((r) => r.id === 'so101');
+  assert.ok(CS.PR_FAQ(so).flat().join(' ').includes('Robot obsahuje malé díly a elektroniku'));
+  assert.ok(CS.PR_SAFETY(so).some((w) => /napájejte/.test(w)));
+  // magnet rule: not triggered by "magnetický enkodér"
+  const fake = { id: 'x', cat: 'arm', bom: [['Magnetický enkodér AS5600', '1×']], specs: [], lead: 'Má magnetický enkodér.' };
+  assert.ok(!CS.PR_SAFETY(fake).some((w) => /magnety/.test(w)), 'magnetický enkodér is not a loose magnet');
+  assert.ok(CS.PR_SAFETY({ id: 'y', cat: 'lab', bom: [['Kuličkový magnet 5 mm', '32×']], specs: [], lead: '' }).some((w) => /magnety/.test(w)));
+  // the "N robotů" heading counts robots only
+  assert.ok(new RegExp(`id="robot-count2">${CS.PR_ROBOTS.filter((r) => r.cat !== 'lab').length}<`).test(read('index.html')));
+});
