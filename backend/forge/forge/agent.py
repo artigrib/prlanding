@@ -44,7 +44,7 @@ LABEL_CS = "návrh AI, ověřeno pouze v simulaci"
 LABEL_EN = "AI draft, verified in simulation only"
 TERMINAL = ("done", "failed", "budget", "cancelled", "timeout", "refused")
 
-DEVICES = [load_device(d) for d in list_devices()]  # platforms forge can design for (devices/<id>/device.json)
+DEVICES = [d for d in map(load_device, list_devices()) if d.spec.get("agent", True)]  # platforms the agent designs for (devices/<id>/device.json, agent != false)
 DEVICE_IDS = tuple(d.id for d in DEVICES)
 MOVES_WITH = tuple(dict.fromkeys(m for d in DEVICES for m in d.moves_with))
 _ROBOT_ENUM = " | ".join(f'"{i}"' for i in DEVICE_IDS + ("other",))

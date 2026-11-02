@@ -29,7 +29,7 @@ def _read(path):
         return json.load(f)
 
 
-_TYPES = {"object": dict, "array": list, "string": str, "boolean": bool, "integer": int, "number": (int, float)}
+_TYPES = {"object": dict, "array": list, "string": str, "boolean": bool, "integer": int, "number": (int, float), "null": type(None)}
 
 
 def _is(v, t):
