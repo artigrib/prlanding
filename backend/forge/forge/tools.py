@@ -1,7 +1,7 @@
 """The forge agent's tools: the ONLY things the LLM can make the worker do.
 
     run_cad(code)                 build123d source -> sandbox (forge-cad container, no network) -> STEP/STL + report
-    list_mounts()                 the SO-101 mount-point library (read-only)
+    list_mounts()                 the device's mount-point library (read-only; devices/<id>/device.json -> mounts)
     check_fit(part, mount, ...)   MuJoCo: static fit, collision sweep over the joint range, servo torque; printability
     pick_components(query)        search data/components + the forge parts catalogue (read-only)
     render_steps()                render spec for the latest part; renders when a renderer is available
@@ -20,22 +20,21 @@ import shutil
 import subprocess
 
 from . import checks, sim
+from .device import load_device
 from .budget import BudgetExceeded
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FORGE = os.path.dirname(HERE)
 ROOT = os.path.abspath(os.path.join(FORGE, "..", ".."))
-MOUNTS = os.path.join(HERE, "mounts", "so101.json")
+DEVICE = load_device()  # default platform; Toolbox(device=...) for others
+MOUNTS = DEVICE.path(DEVICE.spec["mounts"])
 CATALOG = os.path.join(HERE, "parts", "catalog.json")
 COMPONENTS_DIR = os.path.join(ROOT, "data", "components")
 MAX_CODE = 64 * 1024
-SWEEP = {
-    "quick": {"shoulder_lift": 3, "elbow_flex": 3, "wrist_flex": 5, "wrist_roll": 3, "gripper": 2},
-    "full": None,  # sim.collision_sweep default grid (9 900 poses)
-}
+SWEEP = {"quick": DEVICE.grid("quick"), "full": None}  # None = the device's full grid (SO-101: 9 900 poses)
 # bodies sandwiched under an add-on plate on a mount (they move out along the face normal)
-SANDWICH = {"gripper_cam_face": "camera_mount"}
-STALL_NM = {"C018 12 V (30 kg·cm)": 2.94, "C001 7.4 V (16.5 kg·cm at 6 V)": 1.62}
+SANDWICH = DEVICE.sandwich
+STALL_NM = DEVICE.stall_nm
 CTRL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f‪-‮⁦-⁩]")
 
 TOOL_STEP = {"run_cad": "cad", "list_mounts": "mount", "check_fit": "checks", "pick_components": "parts", "render_steps": "render"}
@@ -102,7 +101,8 @@ class ToolError(Exception):
 
 
 class Toolbox:
-    def __init__(self, job_id, job_dir, cad, budget, sweep="quick", render=False, jobs_dir=None):
+    def __init__(self, job_id, job_dir, cad, budget, sweep="quick", render=False, jobs_dir=None, device=None):
+        self.device = device or DEVICE
         self.job_id, self.job_dir, self.cad, self.budget = job_id, job_dir, cad, budget
         self.jobs_dir = jobs_dir or os.path.dirname(job_dir)
         self.out = os.path.join(job_dir, "out")
@@ -115,7 +115,9 @@ class Toolbox:
         self.last_fit = None
         self.components = {}     # id -> component (everything pick_components returned)
         self.renders = []
-        self.mounts = _load(MOUNTS)
+        self.mounts = self.device.mounts if device else _load(MOUNTS)
+        self.sandwich = self.device.sandwich if device else SANDWICH
+        self.stall_nm = self.device.stall_nm if device else STALL_NM
 
     # ------------------------------------------------------------------ dispatch
     def dispatch(self, name, raw_args):
@@ -189,7 +191,7 @@ class Toolbox:
                 "band_width_max_mm", "center")
         out = [{k: it[k] for k in keep if k in it} for it in lib["interfaces"]]
         return ({"robot": lib.get("robot"), "units": lib.get("units"), "frames": lib.get("frames"), "interfaces": out,
-                 "sandwich": {k: f"the {v} body sits on this face; pass sandwich_mm to check_fit if your plate goes under it" for k, v in SANDWICH.items()}},
+                 "sandwich": {k: f"the {v} body sits on this face; pass sandwich_mm to check_fit if your plate goes under it" for k, v in self.sandwich.items()}},
                 f"{len(out)} mount points: " + ", ".join(i["id"] for i in out), [])
 
     def _part(self, part):
@@ -219,20 +221,21 @@ class Toolbox:
         total_g = round(part_g + extra_g, 2)
         com = rep.get("center_of_mass_mm") or [0, 0, 0]
         shift = None
-        if sw > 0 and it["id"] in SANDWICH and normal:
-            shift = {SANDWICH[it["id"]]: [round(n * sw, 3) for n in normal]}
+        if sw > 0 and it["id"] in self.sandwich and normal:
+            shift = {self.sandwich[it["id"]]: [round(n * sw, 3) for n in normal]}
         body = it["body"]
-        model_xml = sim.model_with_part(stl, body, max(total_g, 1e-6) / 1000.0, com, os.path.join(fdir, "model_with_part.xml"), shift)
-        base_xml = sim.model_with_part(stl, body, 1e-9, com, os.path.join(fdir, "model_base.xml"), shift)
+        model_xml = sim.model_with_part(stl, body, max(total_g, 1e-6) / 1000.0, com, os.path.join(fdir, "model_with_part.xml"), shift, device=self.device)
+        base_xml = sim.model_with_part(stl, body, 1e-9, com, os.path.join(fdir, "model_base.xml"), shift, device=self.device)
         if normal:
             axis = max(range(3), key=lambda k: abs(normal[k]))
             v = it["plane"]["point"][axis]
             seats = (v, v + normal[axis] * sw) if sw else (v,)
         else:
             axis, seats = 1, (1e9,)
-        fit = sim.static_fit(model_xml, stl, seat_axis=axis, seat_values=seats)
-        coll = sim.collision_sweep(model_xml, part_stl=stl, grid=SWEEP[self.sweep])
-        torque = sim.torque_check(base_xml, model_xml, {"total": total_g, "part_print_g": part_g, "extra_g": extra_g}, STALL_NM,
+        fit = sim.static_fit(model_xml, stl, seat_axis=axis, seat_values=seats,
+                             seat_tol=self.device.check("fit", "seat_tol_mm", 0.3), depth_tol=self.device.check("fit", "depth_tol_mm", 0.2))
+        coll = sim.collision_sweep(model_xml, part_stl=stl, grid=self.device.grid("quick") if self.sweep == "quick" else None, device=self.device)
+        torque = sim.torque_check(base_xml, model_xml, {"total": total_g, "part_print_g": part_g, "extra_g": extra_g}, self.stall_nm,
                                   "Static gravity torque, max over a pose grid; dynamic loads not included.")
         rows = [{k: r[k] for k in ("joint", "max_static_nm_without", "max_static_nm_with", "delta_pct", "pct_of_stall_with")} for r in torque["rows"]]
         worst = sorted(coll["exact"]["details"], key=lambda r: r["min_mm"])[:3]
@@ -301,7 +304,7 @@ class Toolbox:
     def t_render_steps(self):
         pid = self._part("latest")
         P = self.parts[pid]
-        body = (self.last_fit or {}).get("body") or "gripper"
+        body = (self.last_fit or {}).get("body") or (self.device.mount(self.device.default_mount) or {}).get("body", "gripper")
         spec = {
             "setup": {"cameraMount": True},
             "parts": [{"key": "forge:part", "body": body, "stl": "part.stl"}],
