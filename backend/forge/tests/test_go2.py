@@ -112,6 +112,28 @@ class Go2Sim(unittest.TestCase):
         self.assertFalse(self.sim.static_fit(xml, stl, seat_axis=2, seat_values=(57.0,))["interference"])
         self.assertTrue(self.L.leg_sweep(xml, stl, self.dev, grid=self.grid, poses=["stand", "trot_a"])["collision_free"])
 
+    def test_toolbox_check_fit_dispatches_to_legged(self):
+        """check_fit on a floating-base device goes through sim_legged (leg sweep + payload), not the arm checks."""
+        from forge.sandbox import run_cad, netns_available
+        from forge.tools import Toolbox
+        src = _read(os.path.join(PKG, "addons", "smoke_plate.py"))
+        jd = os.path.join(self.tmp, "jobs", "j1")
+        os.makedirs(jd, exist_ok=True)
+        r = run_cad(src, os.path.join(jd, "cad1"), allow_no_netns=not netns_available())
+        self.assertTrue(r["ok"], r["errors"])
+        tb = Toolbox("j1", jd, None, None, device=self.dev)
+        tb.parts["cad-01"] = {"dir": os.path.join(jd, "cad1"), "report": r["report"]}
+        tb.latest = "cad-01"
+        summary, text, arts = tb.t_check_fit(mount="back_top_face")
+        self.assertEqual(summary["device"], "unitree_go2")
+        self.assertIn("payload", summary)
+        self.assertTrue(summary["payload"]["ok"], summary["payload"])
+        self.assertTrue(summary["collision"]["collision_free"], summary["collision"])
+        self.assertFalse(summary["static_fit"]["interference"])
+        self.assertTrue(summary["ok"], summary)
+        self.assertIn("legs", text)
+        self.assertTrue(os.path.exists(os.path.join(tb.out, "checks.json")))
+
 
 if __name__ == "__main__":
     unittest.main()

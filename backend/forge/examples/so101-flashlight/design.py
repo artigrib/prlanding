@@ -1,5 +1,5 @@
 # SO-101 flashlight holder (forge stage 0 design). Submitted through run_cad exactly as an LLM would.
-# Frame: MuJoCo body "gripper" of sim/so101/model/so101.xml, millimetres (see forge/mounts/so101.json,
+# Frame: MuJoCo body "gripper" of sim/so101/model/so101.xml, millimetres (see devices/so101/mounts.json,
 # interface "gripper_cam_face"). The plate sits on the fixed jaw's +y face and takes the two screws of
 # the wrist-camera mount; the sleeve holds a 10 mm LED beside the camera, aimed at the TCP (gripperframe).
 # Past the -x edge of the flat face the jaw falls away (beyond_edge_profile): a foot follows that surface

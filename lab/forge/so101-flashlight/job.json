@@ -276,7 +276,7 @@
     "source_lines": 90,
     "sandbox": {
      "stage": "done",
-     "elapsed_s": 3.177
+     "elapsed_s": 2.412
     }
    },
    "artifacts": [
@@ -285,7 +285,7 @@
     "part.stl",
     "report.json"
    ],
-   "elapsed_s": 3.7
+   "elapsed_s": 3.0
   },
   {
    "id": "checks",
@@ -346,7 +346,7 @@
     "checks.json",
     "model_with_part.xml"
    ],
-   "elapsed_s": 88.7
+   "elapsed_s": 101.9
   },
   {
    "id": "parts",
@@ -427,7 +427,7 @@
     "renders/05-arm-600.jpg",
     "renders/05-arm-600.webp"
    ],
-   "elapsed_s": 24.7
+   "elapsed_s": 25.3
   },
   {
    "id": "guide",

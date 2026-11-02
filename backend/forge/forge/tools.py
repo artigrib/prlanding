@@ -226,6 +226,8 @@ class Toolbox:
         if sw > 0 and it["id"] in self.sandwich and normal:
             shift = {self.sandwich[it["id"]]: [round(n * sw, 3) for n in normal]}
         body = it["body"]
+        if (self.device.spec.get("base") or {}).get("floating"):
+            return self._check_fit_legged(pid, it, stl, pr, part_g, extra_g, total_g, com, fdir)
         model_xml = sim.model_with_part(stl, body, max(total_g, 1e-6) / 1000.0, com, os.path.join(fdir, "model_with_part.xml"), shift, device=self.device)
         base_xml = sim.model_with_part(stl, body, 1e-9, com, os.path.join(fdir, "model_base.xml"), shift, device=self.device)
         if normal:
@@ -277,6 +279,32 @@ class Toolbox:
                          f"sweep {coll['poses_checked']} poses {'collision-free' if coll['collision_free'] else str(coll['exact']['poses_penetrating']) + ' in contact'}"
                          + (f", wrist_flex +{wf['delta_pct']} %" if wf and wf.get("delta_pct") is not None else ""),
                 ["checks.json"])
+
+    def _check_fit_legged(self, pid, it, stl, pr, part_g, extra_g, total_g, com, fdir):
+        """Floating-base devices (quadrupeds): fit + per-leg collision sweep + payload/stability (forge/sim_legged.py)."""
+        from . import sim_legged
+        fit, coll, pay = sim_legged.check_fit(self.device, stl, it, total_g, com, fdir, sweep=self.sweep)
+        # seat contact only where the mount data defines a support spec (Go2 mounts are not measured yet)
+        support = sim.support_check(os.path.join(fdir, "model_with_part.xml"), stl, it) if it.get("plane") and it.get("support") else None
+        ok = bool(pr["ok"] and not fit["interference"] and coll["collision_free"] and pay["ok"] and (support is None or support["ok"]))
+        summary = {
+            "ok": ok, "part": pid, "mount": it["id"], "body": it["body"], "sweep": self.sweep, "device": self.device.id,
+            "printability": {k: pr[k] for k in ("min_wall_mm", "min_wall_required_mm", "wall_ok", "overhang_area_mm2_over_45deg", "watertight", "ok") if k in pr},
+            "static_fit": {"min_mm": fit["min_mm"], "interference": fit["interference"]},
+            "collision": {k: coll[k] for k in ("poses_checked", "collision_free", "closest") if k in coll},
+            "payload": {k: pay[k] for k in ("added_mass_g", "payload_nominal_g", "within_nominal_payload", "limits", "rows", "ok") if k in pay},
+            "support": {k: support[k] for k in ("contact_ratio", "max_gap_mm", "max_overhang_mm", "ok") if k in support} if support else None,
+            "aim": None, "torque": None, "added_mass_g": total_g,
+        }
+        full = {"printability": pr, "static_fit": fit, "support": support, "collision": coll, "payload": pay, "added_mass_g": total_g,
+                "part": pid, "mount": it["id"], "device": self.device.id}
+        with open(os.path.join(self.out, "checks.json"), "w", encoding="utf-8") as f:
+            json.dump(full, f, indent=1, ensure_ascii=False)
+        self.fits[(pid, it["id"])] = summary
+        self.last_fit = summary
+        return (summary, f"{pid} on {self.device.id}/{it['id']}: wall {pr['min_wall_mm']} mm, fit {'interference' if fit['interference'] else 'ok'}, "
+                         f"legs {coll.get('poses_checked')} poses {'collision-free' if coll['collision_free'] else 'IN CONTACT'}, "
+                         f"payload {'ok' if pay['ok'] else 'FAILS'}", ["checks.json"])
 
     def t_pick_components(self, query=None):
         if not isinstance(query, str) or not (2 <= len(query.strip()) <= 200):

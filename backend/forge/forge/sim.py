@@ -269,7 +269,7 @@ def torque_check(base_xml, part_xml, added_mass_g, stall_nm, lever_note, device=
 
 # --------------------------------------------------------------------------- mount-library driven fit checks
 # Both checks are robot-agnostic: everything robot-specific (body, mating plane, tolerances, aim targets) comes
-# from the mount library entry (forge/mounts/<robot>.json), so a new platform only needs its own library.
+# from the mount library entry (devices/<id>/mounts.json), so a new platform only needs its own library.
 
 def _body_meshes_in_frame(m, d, body_id, exclude_geoms=()):
     """Visual meshes (group 2) of the bodies welded to body_id, in body_id's frame (mm)."""
