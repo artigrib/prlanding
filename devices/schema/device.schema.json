@@ -1,0 +1,37 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "device.schema.json",
+ "title": "Device package manifest (devices/<id>/device.json)",
+ "type": "object",
+ "required": ["id", "name", "units", "model", "mounts", "joints", "sweep", "prompt"],
+ "properties": {
+  "$schema": {"type": "string"},
+  "$comment": {"type": "string"},
+  "id": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+  "name": {"type": "string"},
+  "kind": {"type": "string", "enum": ["arm", "quadruped", "humanoid", "wheeled", "other"]},
+  "units": {"type": "string", "enum": ["mm"]},
+  "licence": {"type": "object", "properties": {"model": {"type": "string"}, "source": {"type": "string"}, "notice": {"type": "string"}}},
+  "model": {"type": "object", "required": ["dir", "xml"], "properties": {
+    "dir": {"type": "string", "description": "repo-relative directory of the MJCF (may live outside devices/, e.g. the site's sim/so101/model)"},
+    "xml": {"type": "string"}, "scene": {"type": "string"}, "meshdir": {"type": "string"}, "overlay": {"type": "string"}}},
+  "mounts": {"type": "string", "description": "repo-relative path of mounts.json"},
+  "ports": {"type": "string"},
+  "components": {"type": "string"},
+  "checks": {"type": "string", "description": "path of checks.json relative to the device dir"},
+  "tcp_site": {"type": "string"},
+  "attach_bodies": {"type": "array", "items": {"type": "string"}},
+  "moves_with": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+  "default_mount": {"type": "string"},
+  "sandwich": {"type": "object", "additionalProperties": {"type": "string"}},
+  "joints": {"type": "object", "required": ["torque"], "properties": {
+    "all": {"type": "array", "items": {"type": "string"}},
+    "torque": {"type": "array", "items": {"type": "string"}, "minItems": 1}}},
+  "sweep": {"type": "object", "required": ["quick", "full", "torque"], "properties": {
+    "quick": {"$ref": "#/$defs/grid"}, "full": {"$ref": "#/$defs/grid"}, "torque": {"$ref": "#/$defs/grid"}}},
+  "poses": {"type": "object", "additionalProperties": {"type": "object", "additionalProperties": {"type": "number"}}},
+  "actuators": {"type": "object", "properties": {"stall_nm": {"type": "object", "additionalProperties": {"type": "number", "exclusiveMinimum": 0}}}},
+  "prompt": {"type": "object", "required": ["name", "scope"], "properties": {"name": {"type": "string"}, "scope": {"type": "string"}}}
+ },
+ "$defs": {"grid": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 1}}}
+}

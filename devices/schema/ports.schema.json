@@ -1,0 +1,19 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "ports.schema.json",
+ "title": "Power and data ports of a device (ports.json)",
+ "type": "object",
+ "required": ["platform", "ports"],
+ "properties": {
+  "$comment": {"type": "string"}, "platform": {"type": "string"},
+  "ports": {"type": "array", "items": {"type": "object", "required": ["id", "connector", "kind"], "properties": {
+   "id": {"type": "string"}, "body": {"type": "string"}, "connector": {"type": "string"},
+   "kind": {"type": "string", "enum": ["power_out", "power_in", "data", "power_data", "bus"]},
+   "voltage_v": {"type": "number"}, "voltage_range_v": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+   "current_a": {"type": "number", "minimum": 0}, "protocol": {"type": "string"},
+   "location_mm": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3},
+   "cable_exit": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3},
+   "source": {"type": "string"}, "verified": {"type": "boolean"}}}},
+  "budgets": {"type": "object", "properties": {"added_mass_g": {"type": "number"}, "power_w": {"type": "object", "additionalProperties": {"type": "number"}}}}
+ }
+}

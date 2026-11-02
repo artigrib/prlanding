@@ -1,0 +1,30 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "mounts.schema.json",
+ "title": "Mount interfaces of a device (mounts.json)",
+ "type": "object",
+ "required": ["robot", "units", "interfaces"],
+ "properties": {
+  "$comment": {"type": "string"}, "robot": {"type": "string"}, "units": {"type": "string", "enum": ["mm"]},
+  "frames": {"type": "string"}, "source_note": {"type": "string"}, "measured": {"type": "object"},
+  "interfaces": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/interface"}}
+ },
+ "$defs": {
+  "vec3": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3},
+  "interface": {"type": "object", "required": ["id", "body", "kind"], "properties": {
+   "id": {"type": "string"}, "name": {"type": "string"}, "body": {"type": "string"},
+   "kind": {"type": "string", "enum": ["screw_face", "flat_face_no_holes", "clamp", "rail", "clamp_band", "clip", "connector_face", "other"]},
+   "plane": {"type": "object", "required": ["point", "normal"], "properties": {"point": {"$ref": "#/$defs/vec3"}, "normal": {"$ref": "#/$defs/vec3"}}},
+   "flat_area_mm2": {"type": "number", "minimum": 0},
+   "support_polygon": {"type": "array", "description": "outline of the real supporting face, in-plane 2D coordinates (mm); hook for the contact-ratio check", "items": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}, "minItems": 3},
+   "edge_limits": {"type": "object", "description": "hook for the contact-ratio/edge check", "properties": {"min_contact_ratio": {"type": "number", "minimum": 0, "maximum": 1}, "max_overhang_mm": {"type": "number", "minimum": 0}}},
+   "holes": {"type": "array", "items": {"type": "object", "required": ["center"], "properties": {"center": {"$ref": "#/$defs/vec3"}, "d_nominal": {"type": "number"}, "d_measured": {"type": "number"}, "axis": {"$ref": "#/$defs/vec3"}}}},
+   "fastener": {"description": "prose (legacy) or structured spec", "oneOf": [{"type": "string"}, {"$ref": "#/$defs/fastener"}]},
+   "fastener_spec": {"$ref": "#/$defs/fastener"},
+   "keep_out": {"type": "array", "items": {"type": "object", "required": ["kind"], "properties": {"kind": {"type": "string", "enum": ["box", "swept", "cylinder"]}, "body": {"type": "string"}, "joint": {"type": "string"}, "min": {"$ref": "#/$defs/vec3"}, "max": {"$ref": "#/$defs/vec3"}}}},
+   "load_limit": {"type": "object", "properties": {"mass_g": {"type": "number", "minimum": 0}, "moment_nmm": {"type": "number", "minimum": 0}}},
+   "moves_with": {"type": "string"}
+  }},
+  "fastener": {"type": "object", "required": ["thread"], "properties": {"std": {"type": "string"}, "thread": {"type": "string", "pattern": "^M[0-9.]+"}, "length": {"type": ["string", "number"]}, "torque_nm": {"type": "number"}, "nut": {"type": "string"}}}
+ }
+}
