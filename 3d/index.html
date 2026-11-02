@@ -57,6 +57,7 @@ footer{padding:48px var(--m)}footer pre{max-height:12em}
  #ag{padding:calc(var(--hd) + 32px) var(--m) 48px}#c2{height:75vw}
  .cats{grid-template-columns:repeat(2,1fr)}}
 @media (prefers-reduced-motion:reduce){#c,#rc,#vis{transition:none!important}#c.blur{filter:none;opacity:1}html{scroll-behavior:auto}}
+footer details{margin-top:16px}footer summary{cursor:pointer;color:#ff7a1a;font-weight:700}
 </style></head><body><div id="bar"></div><div id="hd">printed<b>robotics</b>.cz</div>
 <div id="vis"><canvas id="c"></canvas><div id="rc"><b id="rn"></b><span id="rk"></span><div id="rd"></div></div></div>
 <main id="m1"><section class="t" data-i="0"><div class="n">01</div><h2>Open-source roboti. Od repozitáře k&nbsp;robotovi na stole.</h2><p>Ověřený katalog, simulace v prohlížeči a návod na stavbu na jednom místě.</p><div class="nums"><div><b>168</b>projektů</div><div><b>30</b>3D modelů</div><div><b>16</b>kategorií</div></div></section>
@@ -74,7 +75,7 @@ footer{padding:48px var(--m)}footer pre{max-height:12em}
 <section class="t" data-i="10"><div class="n">12</div><h2>Dopad, který lze měřit.</h2><p>[doplnit] škol · [doplnit] studentů · [doplnit] postavených robotů.</p></section>
 <section class="t" data-i="11"><div class="n">13</div><h2>Otevřené a poctivé.</h2><p>Hotovou sadu možná nabídneme později – a jen tam, kde to licence dovoluje. Co ještě není hotové, označujeme „připravujeme“.</p></section>
 <section class="t" data-i="12"><div class="n">14</div><h2>Postavme to spolu.</h2><p>Hledáme partnery, granty a fondy pro [doplnit].</p><div class="cta"><a>Stáhnout one-pager</a><a class="o">Domluvit schůzku</a></div></section></main>
-<footer><b>Atribuce 3D modelů</b> — modely jsou odvozeny z open-source projektů a zveřejněny pod licencí původního projektu; autoři s námi nejsou spojeni.<pre>aira.glb – AIRA — Nextis (Roberto De la Cruz González); hardware licence: Apache-2.0; https://github.com/robertorobotics/Nextis-AIRA-3D
+<footer><b>Atribuce 3D modelů</b> — modely jsou odvozeny z open-source projektů a zveřejněny pod licencí původního projektu; autoři s námi nejsou spojeni.<details><summary>Zobrazit licence modelů</summary><pre>aira.glb – AIRA — Nextis (Roberto De la Cruz González); hardware licence: Apache-2.0; https://github.com/robertorobotics/Nextis-AIRA-3D
 bhl.glb – Berkeley Humanoid Lite — Hybrid Robotics, UC Berkeley; hardware licence: CC BY-SA 4.0; https://github.com/HybridRobotics/berkeley-humanoid-lite
 duck.glb – Open Duck Mini v2 — Antoine Pirrone a komunita; hardware licence: Apache-2.0; https://github.com/apirrone/Open_Duck_Mini
 exomy.glb – ExoMy — ESA Planetary Robotics Lab; hardware licence: GPL-3.0; https://github.com/esa-prl/ExoMy
@@ -241,7 +242,7 @@ poseidon.glb – poseidon syringe pump by the Pachter Lab, Caltech
                and syringe brace are left out because their exported positions do
                not match the assembly. Motor, rods, bearings, threaded rod, knob and
                syringe are not modelled.
-</pre></footer>
+</pre></details></footer>
 <script type="importmap">{"imports":{"three":"../vendor/three/three.module.min.js","three/addons/":"../vendor/three/addons/"}}</script>
 <script type="module">
 import * as THREE from 'three';import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
