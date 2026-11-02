@@ -239,10 +239,10 @@ let pos=0,tNext=0;const DWELL=4.6,MOVE=1.1;const clock=new THREE.Clock();
 function dots(){const n=G[gi].models.length;rd.innerHTML=n>1?G[gi].models.map((_,k)=>`<i class="${k===pos?'on':''}"></i>`).join(''):'';}
 function cap(){const g=G[gi];rn.textContent=g.models[pos].name;rk.textContent=g.count?`Kategorie: ${g.label} · ${g.count} projektů`:`${g.label} · ${g.models.length} modely`;dots();}
 async function show(i){if(i===want)return;want=i;c.classList.add('blur');rc.style.opacity=0;
- const g=G[i];const [first]=await Promise.all([loadModel(g.models[0].model),new Promise(r=>setTimeout(r,350))]);if(want!==i)return;
+ const g=G[i];const [first]=await Promise.all([loadModel(g.models[0].model),new Promise(r=>setTimeout(r,160))]);if(want!==i)return;
  for(const x of slots)x.o.root.visible=false;gi=i;pos=0;slots=[{o:first,t0:-9,dir:1}];first.root.visible=true;trans=1;
  tNext=clock.elapsedTime+DWELL;cap();c.classList.remove('blur');rc.style.opacity=1;
- g.models.forEach(m=>loadModel(m.model));if(G[i+1])loadModel(G[i+1].models[0].model);window.ready=true;}
+ g.models.forEach(m=>loadModel(m.model));[i+1,i+2,i-1].forEach(j=>G[j]&&loadModel(G[j].models[0].model));window.ready=true;}
 async function nextInCat(){const g=G[gi];if(g.models.length<2)return;const np=(pos+1)%g.models.length;const o=await loadModel(g.models[np].model);
  if(G[gi]!==g)return;const t=clock.elapsedTime;slots=slots.filter(x=>x.dir>0);for(const x of slots){x.dir=-1;x.t0=t;}
  o.root.visible=true;slots.push({o,t0:t,dir:1});pos=np;cap();}
