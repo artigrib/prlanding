@@ -1,0 +1,234 @@
+[
+ {
+  "key": "legged",
+  "label": "Kráčející robot",
+  "count": 20,
+  "anim": "walk",
+  "models": [
+   {
+    "model": "spot",
+    "name": "SpotMicro"
+   },
+   {
+    "model": "duck",
+    "name": "Open Duck Mini v2"
+   }
+  ]
+ },
+ {
+  "key": "arena",
+  "label": "Bojové roboty 150 g (aréna)",
+  "count": null,
+  "anim": "roll",
+  "models": [
+   {
+    "model": "svrn",
+    "name": "Project SVRN"
+   },
+   {
+    "model": "vert150",
+    "name": "Vertikální spinner 150 g"
+   },
+   {
+    "model": "kosa",
+    "name": "Kosa (150 g)"
+   },
+   {
+    "model": "klepeto",
+    "name": "Klepeto (150 g)"
+   }
+  ]
+ },
+ {
+  "key": "wheeled",
+  "label": "Robot na kolech",
+  "count": 32,
+  "anim": "roll",
+  "models": [
+   {
+    "model": "exomy",
+    "name": "ExoMy"
+   },
+   {
+    "model": "sawppy",
+    "name": "Sawppy"
+   },
+   {
+    "model": "osr",
+    "name": "Open Source Rover"
+   }
+  ]
+ },
+ {
+  "key": "hand",
+  "label": "Robotická dlaň",
+  "count": 7,
+  "anim": "swing",
+  "models": [
+   {
+    "model": "orca",
+    "name": "ORCA Hand"
+   },
+   {
+    "model": "hand",
+    "name": "AmazingHand"
+   }
+  ]
+ },
+ {
+  "key": "arm",
+  "label": "Robotická ruka",
+  "count": 19,
+  "anim": "swing",
+  "models": [
+   {
+    "model": "koch",
+    "name": "Koch v1.1"
+   },
+   {
+    "model": "so102",
+    "name": "SO-ARM 102"
+   },
+   {
+    "model": "aira",
+    "name": "AIRA"
+   }
+  ]
+ },
+ {
+  "key": "lab-automation",
+  "label": "Laboratorní automatizace",
+  "count": 18,
+  "anim": "slide",
+  "models": [
+   {
+    "model": "sidekick",
+    "name": "Sidekick"
+   },
+   {
+    "model": "uc2",
+    "name": "UC2"
+   }
+  ]
+ },
+ {
+  "key": "wheeled",
+  "label": "Robot na kolech",
+  "count": 32,
+  "anim": "roll",
+  "models": [
+   {
+    "model": "lekiwi",
+    "name": "LeKiwi"
+   },
+   {
+    "model": "xle",
+    "name": "XLeRobot"
+   }
+  ]
+ },
+ {
+  "key": "arm",
+  "label": "Robotická ruka",
+  "count": 19,
+  "anim": "swing",
+  "models": [
+   {
+    "model": "thor",
+    "name": "Thor"
+   },
+   {
+    "model": "parol6",
+    "name": "PAROL6"
+   }
+  ]
+ },
+ {
+  "key": "legged",
+  "label": "Kráčející robot",
+  "count": 20,
+  "anim": "walk",
+  "models": [
+   {
+    "model": "otto",
+    "name": "Otto DIY"
+   },
+   {
+    "model": "sesame",
+    "name": "Sesame"
+   }
+  ]
+ },
+ {
+  "key": "wheeled",
+  "label": "Robot na kolech",
+  "count": 32,
+  "anim": "roll",
+  "models": [
+   {
+    "model": "zcar2",
+    "name": "zcar2"
+   },
+   {
+    "model": "rc128",
+    "name": "Open 1:28 RC Car"
+   },
+   {
+    "model": "lizard",
+    "name": "Lizard"
+   }
+  ]
+ },
+ {
+  "key": "humanoid",
+  "label": "Humanoid",
+  "count": 10,
+  "anim": "walk",
+  "models": [
+   {
+    "model": "bhl",
+    "name": "Berkeley Humanoid Lite"
+   }
+  ]
+ },
+ {
+  "key": "other",
+  "label": "Ostatní",
+  "count": 5,
+  "anim": "slide",
+  "models": [
+   {
+    "model": "stackchan",
+    "name": "Stack-chan"
+   }
+  ]
+ },
+ {
+  "key": "mix",
+  "label": "Celý katalog",
+  "count": 168,
+  "anim": "mix",
+  "models": [
+   {
+    "model": "spot",
+    "name": "SpotMicro"
+   },
+   {
+    "model": "exomy",
+    "name": "ExoMy"
+   },
+   {
+    "model": "orca",
+    "name": "ORCA Hand"
+   },
+   {
+    "model": "bhl",
+    "name": "Berkeley Humanoid Lite"
+   },
+   {
+    "model": "sidekick",
+    "name": "Sidekick"
+   }
+  ]
+ }
+]
