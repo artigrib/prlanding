@@ -9,7 +9,7 @@ MIN_WALL_MM = 1.2
 E12 = [10, 12, 15, 18, 22, 27, 33, 39, 47, 56, 68, 82]
 
 
-def printability(stl_path, report, build_dir, bed=(180, 180, 180)):
+def printability(stl_path, report, build_dir, print_note=None, bed=(180, 180, 180)):
     mesh = trimesh.load_mesh(stl_path, process=True)
     wall = (report.get("wall") or {}).get("min_wall_mm")
     over = overhang_area(mesh, build_dir, 45.0)
@@ -22,12 +22,13 @@ def printability(stl_path, report, build_dir, bed=(180, 180, 180)):
         "wall_ok": ok_wall,
         "build_dir": up,
         "overhang_area_mm2_over_45deg": over,
-        "overhang_note": "The LED bore lies horizontally in the print orientation: Ø≈10 mm round holes print without supports in PLA (slight droop at the top, ream with a 10 mm drill by hand if the LED does not slide in). No other supports needed.",
-        "overhang_note_cs": "Otvor pro LED leží při tisku vodorovně: kruhový otvor Ø≈10 mm se v PLA vytiskne bez podpor (strop se mírně prověsí, případně protáhněte ručně vrtákem 10 mm). Jiné podpory nejsou potřeba.",
+        "orientation": print_note,
+        "overhang_note": "Printed standing on its flat top face: the LED bore points down at ≈35° from vertical and the conforming foot is a vertical prism, so no supports are needed. If the LED does not slide in, ream the bore with a 10 mm drill by hand.",
+        "overhang_note_cs": "Tiskne se na ploché horní ploše: otvor pro LED míří šikmo dolů (≈35° od svislice) a přizpůsobená patka je svislý hranol, podpory nejsou potřeba. Pokud LED nejde zasunout, protáhněte otvor ručně vrtákem 10 mm.",
         "watertight": report["watertight"],
         "fits_bed": all(s <= b for s, b in zip(sorted(size), sorted(bed))),
-        "settings": "PLA, 0.4 mm nozzle, 0.2 mm layers, 3 perimeters, 30 % infill, plate face on the bed",
-        "settings_cs": "PLA, tryska 0,4 mm, vrstva 0,2 mm, 3 perimetry, výplň 30 %, destičkou na podložku",
+        "settings": "PLA, 0.4 mm nozzle, 0.2 mm layers, 3 perimeters, 30 % infill, flat top face on the bed",
+        "settings_cs": "PLA, tryska 0,4 mm, vrstva 0,2 mm, 3 perimetry, výplň 30 %, plochou horní stranou na podložku",
         "ok": ok_wall and report["watertight"],
     }
 

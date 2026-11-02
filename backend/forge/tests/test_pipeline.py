@@ -75,6 +75,9 @@ class PipelineTest(unittest.TestCase):
         self.assertTrue(c["printability"]["wall_ok"])
         self.assertGreaterEqual(c["printability"]["min_wall_mm"], 1.2)
         self.assertFalse(c["static_fit"]["interference"])
+        self.assertTrue(c["support"]["ok"], c["support"])
+        self.assertGreaterEqual(c["support"]["contact_ratio"], c["support"]["min_contact_ratio"])
+        self.assertTrue(c["aim"]["ok"], c["aim"])
         self.assertLessEqual(c["added_mass_g"], 15)
         col = c["collision"]
         self.assertGreater(col["poses_checked"], 5000)
