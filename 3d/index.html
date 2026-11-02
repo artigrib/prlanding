@@ -259,6 +259,7 @@ function place(x,p,side,t,anim){const R=x.o.root,q=1-ease(p),X=side*q*2.8;R.posi
  else if(anim==='swing'){R.position.x=X*.7;R.rotation.y=side*q*1.8;R.scale.setScalar(.75+.25*ease(p));}
  else if(anim==='slide'){R.position.y=-q*2.4;R.position.x=side*q*.4;}
  else {R.position.x=X;R.position.y=-q*.5;R.scale.setScalar(.7+.3*ease(p));}
+ if(side<0){R.position.x*=.45;R.scale.multiplyScalar(Math.max(.05,1-.95*q));}
  R.rotation.y+=Math.sin(t*.35)*.55+.5;R.position.y+=Math.sin(t*1.4)*.02;
  return {partSway,partBob};}
 function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta(),.1),t=clock.elapsedTime;
