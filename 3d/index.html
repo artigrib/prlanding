@@ -246,7 +246,7 @@ poseidon.glb – poseidon syringe pump by the Pachter Lab, Caltech
 <script type="importmap">{"imports":{"three":"../vendor/three/three.module.min.js","three/addons/":"../vendor/three/addons/"}}</script>
 <script type="module">
 import * as THREE from 'three';import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import {MeshoptDecoder} from 'three/addons/libs/meshopt_decoder.module.js';import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+import {MeshoptDecoder} from 'three/addons/libs/meshopt_decoder.module.js';import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';import {toCreasedNormals} from 'three/addons/utils/BufferGeometryUtils.js';
 const G=await (await fetch('groups.json')).json();
 const r=new THREE.WebGLRenderer({canvas:c,antialias:true,alpha:true,preserveDrawingBuffer:true});r.setPixelRatio(Math.min(devicePixelRatio,1.75));r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=.8;
 const s=new THREE.Scene();s.environment=new THREE.PMREMGenerator(r).fromScene(new RoomEnvironment(),.04).texture;
@@ -254,7 +254,7 @@ s.environmentIntensity=.35;s.add(new THREE.HemisphereLight(0xdfe6ff,0x1a1e26,.25
 const cam=new THREE.PerspectiveCamera(32,1,.01,100);
 const loader=new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);const cache={};
 const loadModel=name=>cache[name]??=loader.loadAsync(`../models/${name}.glb`).then(prep);
-function prep(gl){const root=new THREE.Group(),m=gl.scene;root.add(m);let mi=0;m.traverse(o=>{if(!o.isMesh)return;const ar=[].concat(o.material).map(M=>{M=M.clone();if(M.color){const hsl={};M.color.getHSL(hsl);if(hsl.l>.7)M.color.setHSL(hsl.h,hsl.s*.5,.5+.12*((mi*37)%7)/6);}if('roughness' in M){M.roughness=Math.max(M.roughness,.5);M.metalness=Math.min(M.metalness,.2);}mi++;return M;});o.material=Array.isArray(o.material)?ar:ar[0];});
+function prep(gl){const root=new THREE.Group(),m=gl.scene;root.add(m);const EM=new THREE.LineBasicMaterial({color:0x0b0d10,transparent:true,opacity:.35});let mi=0;m.traverse(o=>{if(!o.isMesh)return;try{o.geometry=toCreasedNormals(o.geometry,THREE.MathUtils.degToRad(35));if(o.geometry.attributes.position.count<240000)o.add(new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry,35),EM));}catch(e){}const ar=[].concat(o.material).map(M=>{M=M.clone();if(M.color){const hsl={};M.color.getHSL(hsl);if(hsl.l>.7)M.color.setHSL(hsl.h,hsl.s*.5,.5+.12*((mi*37)%7)/6);}if('roughness' in M){M.roughness=Math.max(M.roughness,.5);M.metalness=Math.min(M.metalness,.2);}mi++;return M;});o.material=Array.isArray(o.material)?ar:ar[0];});
  const b=new THREE.Box3().setFromObject(m),sph=b.getBoundingSphere(new THREE.Sphere()),k=1/sph.radius;
  m.scale.multiplyScalar(k);m.position.sub(sph.center).multiplyScalar(k);m.updateMatrixWorld(true);
  let tops=[...m.children];while(tops.length<4){const n=tops.find(o=>o.children.length>1);if(!n)break;tops=tops.filter(o=>o!==n).concat(n.children);}
