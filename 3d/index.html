@@ -27,7 +27,37 @@ footer{position:relative;z-index:5;background:#08090b;padding:3rem 6vw;color:#6b
 @media (max-width:700px){.cats{grid-template-columns:repeat(3,1fr)}}#rd{margin-top:.4rem;display:flex;gap:6px;justify-content:center}#rd i{width:7px;height:7px;border-radius:50%;background:#2f3744;display:block;transition:.3s}#rd i.on{background:#ff7a1a;width:18px;border-radius:4px}
 #hd{background:#0b0d10d9;padding:.3rem .6rem;border-radius:8px;left:calc(6vw - .6rem)}
 #vis{padding-top:0}
-@media (max-width:700px){#hd{top:.6vh}#vis{top:0}}</style></head><body><div id="bar"></div><div id="hd">printed<b>robotics</b>.cz</div>
+@media (max-width:700px){#hd{top:.6vh}#vis{top:0}}
+/* Swiss grid: 8px spacing scale, 12 col desktop / 4 col mobile */
+:root{--hd:48px;--m:max(20px,4vw);--line:#1d222b}
+body{font-family:"Inter","Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;letter-spacing:-.005em}
+#bar{z-index:21}
+#hd{left:0;right:0;top:0;height:var(--hd);box-sizing:border-box;display:flex;align-items:center;padding:0 var(--m);border-radius:0;background:#0b0d10;border-bottom:1px solid var(--line);font-size:15px;letter-spacing:-.01em}
+#vis{top:var(--hd);height:calc(100vh - var(--hd));width:50vw}
+main{width:calc(41.66vw - var(--m));padding-left:var(--m)}
+.t{min-height:calc(100vh - var(--hd));max-width:none;padding:var(--hd) 0 0;box-sizing:border-box}
+.t .n,#ag .t-n{font-family:inherit!important;font-weight:800!important;font-size:clamp(56px,7vw,112px)!important;line-height:.9!important;color:#ff7a1a!important;letter-spacing:-.045em;margin-bottom:24px}
+.t h2,.agl h2{font-weight:700;letter-spacing:-.025em;line-height:1.05;margin:0 0 16px}
+.t p{max-width:36ch;font-size:18px;line-height:1.5}
+.nums{gap:32px;margin-top:32px}.nums>div{border-top:1px solid #ff7a1a;padding-top:8px;font-size:13px;color:#9aa3b2}.nums b{font-size:40px;letter-spacing:-.03em}
+#rc{text-align:left;left:32px;right:32px;bottom:32px;font-size:12px;letter-spacing:.04em;text-transform:uppercase;border-top:1px solid var(--line);padding-top:8px}#rc b{font-size:15px;text-transform:none;letter-spacing:-.01em;margin-bottom:2px}
+#rd{justify-content:flex-start;margin-top:8px}#rd i,#rd i.on{border-radius:0;height:3px;width:16px}#rd i.on{width:32px}
+.cta a,#prompt,.st,.cat{border-radius:0!important}
+.cats{gap:0;border-top:1px solid var(--line);border-left:1px solid var(--line)}.cat{border:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px}
+#ag{padding:calc(var(--hd) + 48px) var(--m) 48px}
+footer{padding:48px var(--m)}footer pre{max-height:12em}
+@media (max-width:700px){
+ #vis{top:var(--hd);width:100vw;height:75vw;box-shadow:none;border-bottom:1px solid var(--line)}
+ #rc{left:var(--m);right:var(--m);bottom:8px;border:0;padding:0}#rc b{font-size:14px}
+ main{width:auto;padding:calc(var(--hd) + 75vw) var(--m) 0}
+ .t{min-height:calc(100svh - var(--hd) - 75vw);justify-content:flex-start;padding:32px 0 48px;border-bottom:1px solid var(--line);scroll-margin-top:calc(var(--hd) + 75vw);scroll-snap-align:start}
+ html{scroll-snap-type:y proximity}
+ .t .n,#ag .t-n{font-size:64px!important;margin-bottom:16px}.t h2{font-size:30px}.t p{font-size:17px}
+ .nums{gap:16px}.nums b{font-size:32px}
+ #ag{padding:calc(var(--hd) + 32px) var(--m) 48px}#c2{height:75vw}
+ .cats{grid-template-columns:repeat(2,1fr)}}
+@media (prefers-reduced-motion:reduce){#c,#rc,#vis{transition:none!important}#c.blur{filter:none;opacity:1}html{scroll-behavior:auto}}
+</style></head><body><div id="bar"></div><div id="hd">printed<b>robotics</b>.cz</div>
 <div id="vis"><canvas id="c"></canvas><div id="rc"><b id="rn"></b><span id="rk"></span><div id="rd"></div></div></div>
 <main id="m1"><section class="t" data-i="0"><div class="n">01</div><h2>Open-source roboti. Od repozitáře k&nbsp;robotovi na stole.</h2><p>Ověřený katalog, simulace v prohlížeči a návod na stavbu na jednom místě.</p><div class="nums"><div><b>168</b>projektů</div><div><b>30</b>3D modelů</div><div><b>16</b>kategorií</div></div></section>
 <section class="t" data-i="1"><div class="n">02</div><h2>Otevřená robotika je roztříštěná.</h2><p>Tisíce repozitářů, nejasné licence, ceny i vyspělost. Školy a laboratoře nevědí, kde začít.</p></section>
@@ -235,7 +265,7 @@ window.loadModel=loadModel;
 // ---------- state ----------
 let gi=-1,want=-1,trans=0;          // trans: 1 = exploded (category change)
 let slots=[];                        // active robots: {o,t0,dir:+1 enter / -1 exit}
-let pos=0,tNext=0;const DWELL=4.6,MOVE=1.1;const clock=new THREE.Clock();
+let pos=0,tNext=0;const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;const DWELL=RM?1e9:4.6,MOVE=1.1;const clock=new THREE.Clock();
 function dots(){const n=G[gi].models.length;rd.innerHTML=n>1?G[gi].models.map((_,k)=>`<i class="${k===pos?'on':''}"></i>`).join(''):'';}
 function cap(){const g=G[gi];rn.textContent=g.models[pos].name;rk.textContent=g.count?`Kategorie: ${g.label} · ${g.count} projektů`:`${g.label} · ${g.models.length} modely`;dots();}
 async function show(i){if(i===want)return;want=i;c.classList.add('blur');rc.style.opacity=0;
@@ -260,7 +290,7 @@ function place(x,p,side,t,anim){const R=x.o.root,q=1-ease(p),X=side*q*2.8;R.posi
  else if(anim==='slide'){R.position.y=-q*2.4;R.position.x=side*q*.4;}
  else {R.position.x=X;R.position.y=-q*.5;R.scale.setScalar(.7+.3*ease(p));}
  if(side<0){R.position.x*=.45;R.scale.multiplyScalar(Math.max(.05,1-.95*q));}
- R.rotation.y+=Math.sin(t*.35)*.55+.5;R.position.y+=Math.sin(t*1.4)*.02;
+ if(RM)t=0;R.rotation.y+=Math.sin(t*.35)*.55+.5;R.position.y+=Math.sin(t*1.4)*.02;
  return {partSway,partBob};}
 function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta(),.1),t=clock.elapsedTime;
  bar.style.width=(scrollY/(document.documentElement.scrollHeight-innerHeight)*100)+'%';
