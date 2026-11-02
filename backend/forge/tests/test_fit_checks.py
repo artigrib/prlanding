@@ -56,13 +56,29 @@ class FitChecksTest(unittest.TestCase):
         self.assertFalse(aim["ok"], aim)
         self.assertGreater(aim["miss_mm"], 30.0)
 
+    def test_library_sets_max_overhang(self):
+        it = next(i for i in self.lib["interfaces"] if i["id"] == "gripper_cam_face")
+        self.assertEqual(it["support"]["max_overhang_mm"], 3.0)
+
+    def test_short_foot_design_fails_overhang(self):
+        # bd84f15: good contact (91.8 %) and aim, but a strip of the seat at the plate's -x edge and below the
+        # foot's z band hung 8.4 mm above the jaw bevel; max_overhang_mm (3 mm, mount data) must reject it
+        sup, _ = self.run_checks(os.path.join(FIX, "so101_flashlight_v1_part.stl"), "gripper_cam_face",
+                                 {"origin": [-24.9, 30.36, -29.73], "dir": [0.4425, -0.3665, -0.8184]},
+                                 {"camera_mount": [0, 3.0, 0]}, "v1")
+        self.assertGreaterEqual(sup["contact_ratio"], 0.8)
+        self.assertGreater(sup["max_gap_mm"], 8.0)
+        self.assertFalse(sup["overhang_ok"], sup)
+        self.assertFalse(sup["ok"], sup)
+
     def test_published_design_passes(self):
         meta = load(os.path.join(EX, "report.json"))["meta"]
         p = meta["params"]
         sup, aim = self.run_checks(os.path.join(EX, "part.stl"), meta["mount_interface"], meta["emitter_axis"],
                                    {"camera_mount": [0, p["plate_t"], 0]}, "current")
         self.assertTrue(sup["ok"], sup)
-        self.assertGreaterEqual(sup["contact_ratio"], 0.8)
+        self.assertGreaterEqual(sup["contact_ratio"], 0.9)
+        self.assertLessEqual(sup["max_gap_mm"], 3.0)
         self.assertTrue(aim["ok"], aim)
         self.assertLess(aim["miss_mm"], 1.0)
         self.assertEqual(aim["blocked_by"], [])

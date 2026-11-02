@@ -443,6 +443,7 @@
     "min_contact_ratio": 0.8,
     "contact_tol_mm": 0.5,
     "band_mm": 0.5,
+    "max_overhang_mm": 3.0,
     "note": "Of the add-on's surface that faces the host at or below the mount plane, this share must lie within contact_tol_mm of the host body."
    },
    "holes": [

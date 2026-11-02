@@ -156,7 +156,7 @@ def library(meas):
                 "beyond_edge_profile": {"along_axis": 0, "height_axis": 1, "cross_axis": 2, "cross_range": [-30.0, -17.0],
                                         "points": m1["edge_profile_x_y"],
                                         "note": "Host surface height (y) past the -x edge of the flat face: a seat that extends there needs a conforming foot down to these heights."},
-                "support": {"min_contact_ratio": 0.8, "contact_tol_mm": 0.5, "band_mm": 0.5,
+                "support": {"min_contact_ratio": 0.8, "contact_tol_mm": 0.5, "band_mm": 0.5, "max_overhang_mm": 3.0,
                             "note": "Of the add-on's surface that faces the host at or below the mount plane, this share must lie within contact_tol_mm of the host body."},
                 "holes": [
                     {"center": [hj[0][1][0], m1["face_y"], hj[0][1][2]], "d_measured": hj[0][0], "d_nominal": 3.2, "axis": [0, -1, 0]},

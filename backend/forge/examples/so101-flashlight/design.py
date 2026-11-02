@@ -44,9 +44,19 @@ body = body - Pos(P["sleeve_x"] + 10.0, y0 - 20.0, P["sleeve_z"]) * Box(120.0, 4
 # the foot stops where it would get thinner than foot_min (no knife edge at the face edge)
 prof = [(x, y + P["foot_gap"]) for x, y in P["foot_profile"] if plate_x0 - 1e-6 <= x and y + P["foot_gap"] <= y0 - P["foot_min"]]
 if prof:
-    xa, xb = max(plate_x0, prof[0][0]), prof[-1][0]
-    pts = [(xa, y0 + 1.0)] + [(xa, prof[0][1])] + [(x, y) for x, y in prof if xa < x <= xb] + [(xb, y0 + 1.0)]
-    foot = Pos(0, 0, plate_z0) * extrude(Polygon(*pts, align=None), amount=plate_z1 - plate_z0)
+    # start the foot exactly at the plate's -x edge: the surface height there is interpolated from the
+    # measured profile, so no strip of the seat between the plate edge and the first sample hangs in the air
+    fp = P["foot_profile"]
+    xa, xb = plate_x0, prof[-1][0]
+    ya = prof[0][1]
+    for (x0_, y0_), (x1_, y1_) in zip(fp, fp[1:]):
+        if x0_ <= xa <= x1_:
+            ya = y0_ + (y1_ - y0_) * (xa - x0_) / (x1_ - x0_) + P["foot_gap"]
+            break
+    pts = [(xa, y0 + 1.0), (xa, ya)] + [(x, y) for x, y in prof if xa + 0.05 < x <= xb] + [(xb, y0 + 1.0)]
+    # z band: the plate and the saddle under the sleeve (the saddle reaches below the plate)
+    fz0 = min(plate_z0, P["sleeve_z"] - 6.0)
+    foot = Pos(0, 0, fz0) * extrude(Polygon(*pts, align=None), amount=plate_z1 - fz0)
     # the foot runs under the whole saddle, so it is also the rib that carries the sleeve into the jaw
     body = body + foot
 # flat print face: nothing above top_z (the part prints standing on this face, bore pointing down)

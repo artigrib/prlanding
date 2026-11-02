@@ -289,6 +289,7 @@ def support_check(xml, part_stl, interface, part_geom="forge_part", n_samples=20
     A plate hanging over the edge of the flat face, or a sleeve held off the surface, lowers the ratio."""
     sup = interface.get("support") or {}
     tol, band, need = sup.get("contact_tol_mm", 0.5), sup.get("band_mm", 0.5), sup.get("min_contact_ratio", 0.8)
+    max_over = sup.get("max_overhang_mm")  # largest allowed gap between any seat point and the host (None = not enforced)
     m = mujoco.MjModel.from_xml_path(xml)
     d = mujoco.MjData(m)
     mujoco.mj_kinematics(m, d)
@@ -320,8 +321,10 @@ def support_check(xml, part_stl, interface, part_geom="forge_part", n_samples=20
             "contact_area_mm2": round(float((dist <= tol).sum() * area_per), 1), "contact_ratio": round(ratio, 3),
             "min_contact_ratio": need, "contact_tol_mm": tol, "max_gap_mm": round(float(dist.max()), 2),
             "max_gap_at": [round(float(v), 1) for v in worst], "seat_share_outside_flat_face": out_of_face,
-            "ok": ratio >= need,
-            "note": "seat = part surface facing the host at or below the mount plane; contact = within contact_tol_mm of the host meshes"}
+            "max_overhang_mm": max_over, "overhang_ok": max_over is None or float(dist.max()) <= max_over,
+            "ok": ratio >= need and (max_over is None or float(dist.max()) <= max_over),
+            "note": "seat = part surface facing the host at or below the mount plane; contact = within contact_tol_mm of the host meshes; "
+                    "max_gap_mm (worst seat point to host) must stay within max_overhang_mm"}
 
 
 def aim_check(xml, axis, target, attach_body, part_geom="forge_part", reach_mm=None):

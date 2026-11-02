@@ -3,7 +3,7 @@
  "bbox_mm": [
   [
    -37.31,
-   15.71,
+   15.17,
    -33.71
   ],
   [
@@ -14,32 +14,32 @@
  ],
  "size_mm": [
   44.36,
-  26.22,
+  26.76,
   19.71
  ],
- "volume_mm3": 4070.0,
- "volume_mesh_mm3": 4070.0,
- "area_mm2": 2836.9,
+ "volume_mm3": 4270.7,
+ "volume_mesh_mm3": 4270.6,
+ "area_mm2": 2887.7,
  "density_g_cm3": 1.24,
- "mass_solid_g": 5.05,
- "mass_print_g": 3.48,
+ "mass_solid_g": 5.3,
+ "mass_print_g": 3.59,
  "mass_print_assumptions": "0.8 mm solid shell + 30 % infill",
  "center_of_mass_mm": [
-  -22.33,
-  25.12,
-  -21.8
+  -22.72,
+  24.88,
+  -21.95
  ],
  "watertight": true,
  "winding_consistent": true,
  "euler_number": -2,
- "triangles": 2636,
+ "triangles": 2628,
  "n_solids": 1,
  "occ_valid": true,
  "wall": {
   "min_wall_mm": 1.22,
-  "raw_min_mm": 0.06,
+  "raw_min_mm": 0.02,
   "p10_mm": 1.8,
-  "median_mm": 4.4,
+  "median_mm": 5.06,
   "samples": 1500,
   "method": "inward rays from surface samples, 2nd percentile"
  },
