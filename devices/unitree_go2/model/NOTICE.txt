@@ -1,0 +1,10 @@
+Unitree Go2 MJCF model, vendored unchanged from MuJoCo Menagerie:
+  https://github.com/google-deepmind/mujoco_menagerie/tree/b0655057a9df2abe39ea7fc989914ba6f248301c/unitree_go2
+  (last commit touching unitree_go2: 6da8b971844845de6ab27315aacc3a3fea4ddb8e)
+Licence: BSD-3-Clause, Copyright (c) 2016-2022 HangZhou YuShu TECHNOLOGY CO.,LTD. ("Unitree Robotics"); see LICENSE.
+Derived by DeepMind from Unitree's public URDF (see README.md).
+
+The meshes (assets/*.obj, about 30 MB) are NOT committed. Fetch them with
+  devices/unitree_go2/tools/fetch_model.sh
+which downloads them from the pinned commit above and checks assets.sha256.
+The model does not include the EDU expansion dock or any payload.

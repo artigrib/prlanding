@@ -322,7 +322,7 @@ class Dispatch(unittest.TestCase):
 
 class EvalHarness(unittest.TestCase):
     def test_tasks_use_known_mounts(self):
-        ids = {i["id"] for i in json.load(open(os.path.join(FORGE, "forge", "mounts", "so101.json")))["interfaces"]}
+        ids = {i["id"] for i in json.load(open(os.path.join(os.path.dirname(os.path.dirname(FORGE)), "devices", "so101", "mounts.json")))["interfaces"]}
         tasks = eval_runner.load_tasks()
         self.assertGreaterEqual(len(tasks), 6)
         for t in tasks:

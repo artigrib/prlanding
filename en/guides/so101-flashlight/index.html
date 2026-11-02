@@ -59,13 +59,13 @@
 <div class="a4 prose">
 <h2>What you need</h2>
 <ul>
-<li>Printed holder (PLA, ≈2.38 g, 42 × 18 × 18 mm), printed plate-down, no supports.</li>
+<li>Printed holder (PLA, ≈3.59 g, 44 × 27 × 20 mm), printed standing on its flat top face, no supports.</li>
 <li>White 10 mm LED: <a href="https://www.conrad.com/en/p/tru-components-1577414-led-wired-white-circular-10-mm-3250-mcd-50-20-ma-1577414.html">TRU COMPONENTS 1577414, white LED 10 mm, 3250 mcd, 50°, 20 mA</a> (source checked 2026-10-30; the page showed no price).</li>
 <li>Resistor 120 Ω, ≥ 0.25 W (<a href="https://www.electrokit.com/en/motstand-metallfilm-0.6w-1120ohm-120r">example</a>).</li>
 <li>An old USB-A cable to cut (≈1 m), heat-shrink tubing.</li>
 <li>2× M3 screw, 3 mm longer than the screws in the jaw holes.</li>
 </ul>
-<figure class="doc-fig"><picture><source type="image/webp" srcset="../../../img/forge/so101-flashlight/01-part-600.webp 600w, ../../../img/forge/so101-flashlight/01-part-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="../../../img/forge/so101-flashlight/01-part-1200.jpg" srcset="../../../img/forge/so101-flashlight/01-part-600.jpg 600w, ../../../img/forge/so101-flashlight/01-part-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="The orange holder on its own: a plate with two slotted screw holes and an angled LED sleeve" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 1 – Holder: plate with holes for 2× M3 (slotted ±0.6 mm for the pitch uncertainty) and an LED sleeve tilted 24° towards the jaw tips (CAD render).</figcaption></figure>
+<figure class="doc-fig"><picture><source type="image/webp" srcset="../../../img/forge/so101-flashlight/01-part-600.webp 600w, ../../../img/forge/so101-flashlight/01-part-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="../../../img/forge/so101-flashlight/01-part-1200.jpg" srcset="../../../img/forge/so101-flashlight/01-part-600.jpg 600w, ../../../img/forge/so101-flashlight/01-part-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="The orange holder on its own: a plate with two slotted screw holes and an angled LED sleeve" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 1 – Holder: plate with holes for 2× M3 (slotted ±0.6 mm for the pitch uncertainty) an LED sleeve tilted 22° and turned 28° onto the grip centre between the jaw tips, and a foot that follows the jaw under the overhang (CAD render).</figcaption></figure>
 </div>
 </div>
 </section>
@@ -77,7 +77,7 @@
 <h2>Fitting it to the gripper</h2>
 <ol>
 <li>Undo the two M3 screws of the wrist camera mount on the fixed jaw and take the camera off. Without a camera, just remove the screws.</li>
-<li>Put the holder plate on the jaw face (holes at 8.0 mm pitch), sleeve on the side away from the moving jaw.</li>
+<li>Put the holder plate on the jaw face (holes at 8.0 mm pitch), sleeve on the side away from the moving jaw; the foot must sit on the sloped edge of the jaw.</li>
 <li>Put the camera mount back on top and tighten everything with the longer M3 screws (+3 mm). The camera moves 3 mm away from the jaw.</li>
 <li>Push the LED into the sleeve from the back (bore 10.25 mm, the LED collar sits in the 11.4 mm seat). The longer leg is the anode (+).</li>
 </ol>
@@ -112,10 +112,10 @@
 <div class="a4 prose">
 <h2>What we checked in simulation</h2>
 <ul>
-<li><b>Printing:</b> thinnest wall 1.22 mm (minimum 1.2 mm), the model is closed, the LED bore prints horizontally without supports.</li>
-<li><b>Mass:</b> part ≈2.38 g; with the LED, resistor and some cable ≈5.38 g extra on the gripper.</li>
-<li><b>Servos:</b> static wrist-flex torque rises by 0.0046 N·m (3.5 %) to 0.135 N·m, 8.3 % of a 7.4 V servo's torque. Shoulder: +2.0 %. Negligible.</li>
-<li><b>Collisions:</b> Across 8644 poses the holder touches the base or the driver-board plate in 8 fully folded poses, all of them poses where the arm's own jaw is already within 2.48 mm of the base. Keep the folded rest pose a few degrees open or check it on the real arm. Clearance to the camera mount and the jaw is ≥ 0.3 mm away from the seat faces.</li>
+<li><b>Printing:</b> thinnest wall 1.22 mm (minimum 1.2 mm), the model is closed, the LED bore points down at an angle when printing, no supports.</li>
+<li><b>Mass:</b> part ≈3.59 g; with the LED, resistor and some cable ≈6.59 g extra on the gripper.</li>
+<li><b>Servos:</b> static wrist-flex torque rises by 0.0056 N·m (4.3 %) to 0.136 N·m, 8.4 % of a 7.4 V servo's torque. Shoulder: +2.4 %. Negligible.</li>
+<li><b>Collisions:</b> Across 8644 poses the holder touches the base or the driver-board plate in 8 fully folded poses, all of them poses where the arm's own jaw is already within 2.48 mm of the base. Keep the folded rest pose a few degrees open or check it on the real arm. Clearance to the camera mount and the jaw is ≥ 0.03 mm away from the seat faces.</li>
 </ul>
 <figure class="doc-fig"><picture><source type="image/webp" srcset="../../../img/forge/so101-flashlight/05-arm-600.webp 600w, ../../../img/forge/so101-flashlight/05-arm-1200.webp 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)"><img src="../../../img/forge/so101-flashlight/05-arm-1200.jpg" srcset="../../../img/forge/so101-flashlight/05-arm-600.jpg 600w, ../../../img/forge/so101-flashlight/05-arm-1200.jpg 1200w" sizes="(min-width: 800px) 736px, calc(100vw - 32px)" alt="The whole SO-101 arm in a working pose, gripper pointing down, the orange holder and a light cone on the jaw tips" width="1200" height="900" loading="lazy" decoding="async"></picture><figcaption>Fig. 5 – Working pose: the light moves with the gripper and aims where it reaches (CAD render).</figcaption></figure>
 <h3>Verify on a print</h3>

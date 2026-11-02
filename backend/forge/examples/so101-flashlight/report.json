@@ -2,44 +2,44 @@
  "units": "mm",
  "bbox_mm": [
   [
-   -34.92,
-   24.0,
-   -33.21
+   -37.31,
+   15.17,
+   -33.71
   ],
   [
    7.05,
-   42.1,
-   -14.79
+   41.93,
+   -14.0
   ]
  ],
  "size_mm": [
-  41.97,
-  18.1,
-  18.42
+  44.36,
+  26.76,
+  19.71
  ],
- "volume_mm3": 2211.6,
- "volume_mesh_mm3": 2211.6,
- "area_mm2": 2238.0,
+ "volume_mm3": 4270.7,
+ "volume_mesh_mm3": 4270.6,
+ "area_mm2": 2887.7,
  "density_g_cm3": 1.24,
- "mass_solid_g": 2.74,
- "mass_print_g": 2.38,
+ "mass_solid_g": 5.3,
+ "mass_print_g": 3.59,
  "mass_print_assumptions": "0.8 mm solid shell + 30 % infill",
  "center_of_mass_mm": [
-  -19.51,
-  28.64,
-  -23.31
+  -22.72,
+  24.88,
+  -21.95
  ],
  "watertight": true,
  "winding_consistent": true,
- "euler_number": -4,
- "triangles": 2596,
+ "euler_number": -2,
+ "triangles": 2628,
  "n_solids": 1,
  "occ_valid": true,
  "wall": {
   "min_wall_mm": 1.22,
-  "raw_min_mm": 0.19,
+  "raw_min_mm": 0.02,
   "p10_mm": 1.8,
-  "median_mm": 3.0,
+  "median_mm": 5.06,
   "samples": 1500,
   "method": "inward rays from surface samples, 2nd percentile"
  },
@@ -47,15 +47,28 @@
   "frame": "gripper body, mm",
   "mount_interface": "gripper_cam_face",
   "led_axis_dir": [
-   0.0,
-   -0.4067,
-   -0.9135
+   0.4425,
+   -0.3665,
+   -0.8184
   ],
   "led_front_center": [
-   -28.0,
-   30.08,
-   -30.39
+   -24.9,
+   30.36,
+   -29.73
   ],
+  "emitter_axis": {
+   "origin": [
+    -24.9,
+    30.36,
+    -29.73
+   ],
+   "dir": [
+    0.4425,
+    -0.3665,
+    -0.8184
+   ],
+   "kind": "light"
+  },
   "sleeve_center": [
    -28.0,
    32.92,
@@ -76,10 +89,10 @@
   ],
   "print_build_dir": [
    0,
-   1,
-   0
+   0,
+   -1
   ],
-  "print_note": "plate face (y = face_y) on the bed; horizontal bore without supports",
+  "print_note": "flat top face (z = top_z) on the bed; the LED bore points down at an angle, no supports",
   "params": {
    "led_d": 10.0,
    "led_clear": 0.25,
@@ -87,8 +100,8 @@
    "flange_h": 1.5,
    "wall": 1.8,
    "sleeve_len": 14.0,
-   "tilt_deg": 24.0,
-   "toe_deg": 0.0,
+   "tilt_deg": 21.5,
+   "toe_deg": 28.4,
    "plate_t": 3.0,
    "hole_pitch": 8.0,
    "hole_mid_x": -0.95,
@@ -97,7 +110,109 @@
    "hole_d": 3.4,
    "slot_extra": 0.6,
    "sleeve_x": -28.0,
-   "sleeve_z": -24.0
+   "sleeve_z": -24.0,
+   "top_z": -14.0,
+   "foot_gap": 0.1,
+   "foot_min": 1.5,
+   "foot_profile": [
+    [
+     -35.0,
+     13.48
+    ],
+    [
+     -34.0,
+     15.03
+    ],
+    [
+     -33.0,
+     15.61
+    ],
+    [
+     -32.0,
+     15.74
+    ],
+    [
+     -31.0,
+     15.74
+    ],
+    [
+     -30.0,
+     15.74
+    ],
+    [
+     -29.0,
+     15.74
+    ],
+    [
+     -28.0,
+     15.74
+    ],
+    [
+     -27.0,
+     15.74
+    ],
+    [
+     -26.0,
+     15.74
+    ],
+    [
+     -25.0,
+     15.87
+    ],
+    [
+     -24.0,
+     16.56
+    ],
+    [
+     -23.0,
+     17.25
+    ],
+    [
+     -22.0,
+     17.94
+    ],
+    [
+     -21.0,
+     18.63
+    ],
+    [
+     -20.0,
+     19.32
+    ],
+    [
+     -19.0,
+     20.0
+    ],
+    [
+     -18.0,
+     20.69
+    ],
+    [
+     -17.0,
+     21.38
+    ],
+    [
+     -16.0,
+     22.07
+    ],
+    [
+     -15.0,
+     22.75
+    ],
+    [
+     -14.0,
+     23.29
+    ],
+    [
+     -13.0,
+     23.66
+    ],
+    [
+     -12.0,
+     23.89
+    ]
+   ],
+   "face_x_min": -12.8
   }
  }
 }

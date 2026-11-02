@@ -5,3 +5,4 @@ node_modules/
 
 # PR-Bench run output (episode logs, replays; hidden-set logs must never be committed)
 bench/runs/
+devices/unitree_go2/model/assets/

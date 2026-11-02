@@ -6,6 +6,7 @@
 !backend/forge/templates
 !backend/forge/eval
 !sim/so101/model
+!devices
 !data/components
 **/__pycache__
 **/*.pyc

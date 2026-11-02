@@ -75,6 +75,9 @@ class PipelineTest(unittest.TestCase):
         self.assertTrue(c["printability"]["wall_ok"])
         self.assertGreaterEqual(c["printability"]["min_wall_mm"], 1.2)
         self.assertFalse(c["static_fit"]["interference"])
+        self.assertTrue(c["support"]["ok"], c["support"])
+        self.assertGreaterEqual(c["support"]["contact_ratio"], c["support"]["min_contact_ratio"])
+        self.assertTrue(c["aim"]["ok"], c["aim"])
         self.assertLessEqual(c["added_mass_g"], 15)
         col = c["collision"]
         self.assertGreater(col["poses_checked"], 5000)
@@ -121,7 +124,7 @@ class PipelineTest(unittest.TestCase):
             self.assertTrue(src["recommend"], line)
 
     def test_mount_library_up_to_date(self):
-        r = subprocess.run([sys.executable, os.path.join(FORGE, "tools", "measure_so101.py"), "--check"], capture_output=True, text=True, cwd=ROOT)
+        r = subprocess.run([sys.executable, os.path.join(ROOT, "devices", "so101", "tools", "measure_so101.py"), "--check"], capture_output=True, text=True, cwd=ROOT)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
 

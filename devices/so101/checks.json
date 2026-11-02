@@ -1,0 +1,11 @@
+{
+ "$schema": "../schema/checks.schema.json",
+ "$comment": "Thresholds forge reads for SO-101. fit.min_contact_ratio/max_overhang_mm mirror the support spec in mounts.json (support_check reads the mount data); the aim check reads targets from mounts.json. enabled=false means forge does not gate on that section yet.",
+ "fit": {"enabled": true, "seat_tol_mm": 0.3, "depth_tol_mm": 0.2, "min_contact_ratio": 0.8, "max_overhang_mm": 3.0},
+ "collision": {"enabled": true, "margin_mm": 2.0, "contact_mm": 0.2},
+ "torque": {"enabled": true},
+ "function": {"enabled": false, "targets": [{"kind": "aim", "site": "gripperframe", "max_miss_mm": 5}]},
+ "print": {"enabled": true, "bed_mm": [180, 180, 180]},
+ "power": {"enabled": false, "derate": 0.8},
+ "assembly": {"enabled": false, "require_tool_access": true}
+}
