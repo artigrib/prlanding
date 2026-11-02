@@ -72,6 +72,23 @@ def flat_face(mesh, axis, sign, coord, tol=0.6):
     return float(mesh.area_faces[sel].sum()), tri.min(axis=0), tri.max(axis=0)
 
 
+def height_profile(mesh, along, up, sign, along_values, cross, cross_values):
+    """Surface height (coordinate on `up`, outermost along sign*up) of `mesh` sampled at along_values, taking the
+    highest hit over cross_values (so a part resting on the profile never dips into the mesh). Rays come from outside."""
+    pts = []
+    for a in along_values:
+        o = np.zeros((len(cross_values), 3))
+        o[:, along], o[:, cross], o[:, up] = a, cross_values, sign * 500.0
+        d = np.zeros(3)
+        d[up] = -sign
+        loc, ri, _ = mesh.ray.intersects_location(o, np.tile(d, (len(o), 1)))
+        if len(loc) == 0:
+            continue
+        hs = [float(sign * (sign * loc[ri == i][:, up]).max()) for i in range(len(o)) if (ri == i).any()]
+        pts.append([round(float(a), 1), round(sign * max(sign * h for h in hs), 2)])
+    return pts
+
+
 def measure():
     m = mujoco.MjModel.from_xml_path(MODEL)
     g = body_meshes(m, "gripper")
@@ -89,6 +106,8 @@ def measure():
         "holes_cam_y25": holes(cam, [0, 25.0, 0], [0, 1, 0], 6),
         "camera_mount_bbox": [[round(float(v), 1) for v in cam.bounds[0]], [round(float(v), 1) for v in cam.bounds[1]]],
         "jaw_bbox": [[round(float(v), 1) for v in jaw.bounds[0]], [round(float(v), 1) for v in jaw.bounds[1]]],
+        # jaw top surface (y) beyond the flat face towards -x, max over the screw band z -30…-17 (supports a foot)
+        "edge_profile_x_y": height_profile(jaw, 0, 1, +1, np.arange(-35.0, -11.5, 1.0), 2, np.arange(-30.0, -16.5, 1.0)),
     }
     # M2: outer (-x) face of the fixed jaw
     area, lo, hi = flat_face(jaw, 0, -1, -35.0)
@@ -121,6 +140,8 @@ def library(meas):
         "frames": "Each interface is given in the MuJoCo body frame named in `body` (sim/so101/model/so101.xml), in mm. The gripper frame: z runs from the wrist (z≈0) to the jaw tips (z≈-104), the fixed jaw is on -x, the moving jaw on +x, the wrist-camera side is +y.",
         "source_note": "Measured on decimated sim meshes, not on the original CAD: features can be off by ±0.5 mm; hole diameters on decimated meshes read small. Every value must be checked on a real print (ověřit na tisku).",
         "measured": meas,
+        "targets": [{"id": "tcp", "name": "Grip centre between the jaw tips", "body": "gripper", "site": "gripperframe",
+                     "aim_tol_mm": 5.0, "note": "Lights and sensors that rotate with the gripper aim here (miss distance = perpendicular distance from the axis)."}],
         "interfaces": [
             {
                 "id": "gripper_cam_face",
@@ -130,6 +151,13 @@ def library(meas):
                 "kind": "screw_face",
                 "plane": {"point": [-1.0, m1["face_y"], -23.4], "normal": [0, 1, 0]},
                 "flat_area_mm2": m1["face_area_mm2"],
+                "face_bounds": {"axes": [0, 2], "min": m1["face_bounds_xz"][0], "max": m1["face_bounds_xz"][1],
+                                "note": "Flat, seatable region of the face (x, z). Anything of the add-on's seat outside it overhangs the edge."},
+                "beyond_edge_profile": {"along_axis": 0, "height_axis": 1, "cross_axis": 2, "cross_range": [-30.0, -17.0],
+                                        "points": m1["edge_profile_x_y"],
+                                        "note": "Host surface height (y) past the -x edge of the flat face: a seat that extends there needs a conforming foot down to these heights."},
+                "support": {"min_contact_ratio": 0.8, "contact_tol_mm": 0.5, "band_mm": 0.5, "max_overhang_mm": 3.0,
+                            "note": "Of the add-on's surface that faces the host at or below the mount plane, this share must lie within contact_tol_mm of the host body."},
                 "holes": [
                     {"center": [hj[0][1][0], m1["face_y"], hj[0][1][2]], "d_measured": hj[0][0], "d_nominal": 3.2, "axis": [0, -1, 0]},
                     {"center": [hj[1][1][0], m1["face_y"], hj[1][1][2]], "d_measured": hj[1][0], "d_nominal": 3.2, "axis": [0, -1, 0]},

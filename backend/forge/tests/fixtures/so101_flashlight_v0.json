@@ -1,0 +1,23 @@
+{
+ "comment": "Holder as published before the fit fixes (sleeve over the jaw edge, toe 0): must FAIL the support and aim checks.",
+ "emitter_axis": {
+  "origin": [
+   -28.0,
+   30.08,
+   -30.39
+  ],
+  "dir": [
+   0.0,
+   -0.4067,
+   -0.9135
+  ]
+ },
+ "interface": "gripper_cam_face",
+ "shift": {
+  "camera_mount": [
+   0,
+   3.0,
+   0
+  ]
+ }
+}
