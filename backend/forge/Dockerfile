@@ -1,7 +1,7 @@
 # forge image (backend/forge): ONE image, two services in backend/deploy/compose.yml
 #   forge-worker  python -m forge.worker        agent loop (OpenRouter egress only), MuJoCo checks
 #   forge-cad     python -m forge.cad_service   run_cad sandbox server, network_mode: none, sees only /sock
-# Build context = repo root (the image needs sim/so101/model and data/components); see Dockerfile.dockerignore.
+# Build context = repo root (the image needs sim/so101/model, devices/ and data/components); see Dockerfile.dockerignore.
 #   docker build -f backend/forge/Dockerfile -t forge .
 FROM python:3.13-slim
 ARG APP_VERSION=dev
@@ -20,6 +20,7 @@ RUN groupadd --gid 1000 forge \
 WORKDIR /app
 COPY sim/so101/model /app/sim/so101/model
 COPY data/components /app/data/components
+COPY devices /app/devices
 COPY backend/forge/forge /app/backend/forge/forge
 COPY backend/forge/designs /app/backend/forge/designs
 COPY backend/forge/templates /app/backend/forge/templates

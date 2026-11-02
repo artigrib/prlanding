@@ -26,12 +26,14 @@ import numpy as np
 import trimesh
 
 from . import checks, sim
+from .device import load_device
 from .sandbox import run_cad
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FORGE = os.path.dirname(HERE)
 ROOT = os.path.abspath(os.path.join(FORGE, "..", ".."))
-MOUNTS = os.path.join(HERE, "mounts", "so101.json")
+DEVICE = load_device("so101")  # stage 0 is the SO-101 flashlight add-on
+MOUNTS = DEVICE.path(DEVICE.spec["mounts"])
 CATALOG = os.path.join(HERE, "parts", "catalog.json")
 DESIGN = os.path.join(FORGE, "designs", "so101_flashlight.py")
 TEMPLATES = os.path.join(FORGE, "templates")
@@ -211,9 +213,9 @@ def world_mm(model_xml, pose, body, local_mm):
 
 
 def render_spec(model_xml, meta, led_tip, params, coll):
-    J = ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]
+    J = DEVICE.joints
     zero = {j: 0.0 for j in J}
-    work = {"shoulder_pan": 0.0, "shoulder_lift": -0.35, "elbow_flex": 0.55, "wrist_flex": 1.15, "wrist_roll": 0.0, "gripper": 0.45}
+    work = DEVICE.pose("work")
     holes = meta["screw_holes"]
     (h1, h2), (ydir,) = world_mm(model_xml, zero, "gripper", [[holes[0][0], holes[0][1] + params["plate_t"], holes[0][2]],
                                                              [holes[1][0], holes[1][1] + params["plate_t"], holes[1][2]]])
@@ -304,7 +306,7 @@ def run_job(request, job_dir, render=True, brain=None, sweep_grid=None):
         lib = json.load(f)
     mount_id, ranked = brain.choose_mount(spec, lib)
     mount = next(i for i in lib["interfaces"] if i["id"] == mount_id)
-    tcp = site_mm(os.path.join(sim.MODEL_DIR, "so101.xml"), "gripperframe")
+    tcp = site_mm(DEVICE.model_xml, DEVICE.tcp_site)
     params = brain.params(spec, mount, tcp)
     log.done("mount", summary=f"{mount_id}: 2× M3 holes, pitch {mount['hole_pitch_mm']['design_value']} ± {mount['hole_pitch_mm']['uncertainty']} mm (ověřit na tisku)",
              data={"chosen": mount_id, "ranked": ranked, "holes": mount["holes"], "verify": mount["verify"], "tcp_gripper_mm": tcp, "params": params})
@@ -334,7 +336,7 @@ def run_job(request, job_dir, render=True, brain=None, sweep_grid=None):
     added_g = round(sum(extra.values()), 2)
     led_c = np.asarray(meta["sleeve_center"])
     com = (np.asarray(rep["center_of_mass_mm"]) * rep["mass_print_g"] + led_c * (added_g - rep["mass_print_g"])) / added_g
-    shift = {"camera_mount": [0, params["plate_t"], 0]}
+    shift = {DEVICE.sandwich[mount_id]: [0, params["plate_t"], 0]} if mount_id in DEVICE.sandwich else None
     model_xml = sim.model_with_part(os.path.join(job_dir, "part.stl"), "gripper", added_g / 1000.0, com.tolist(),
                                     os.path.join(job_dir, "model_with_part.xml"), shift)
     base_xml = sim.model_with_part(os.path.join(job_dir, "part.stl"), "gripper", 1e-9, com.tolist(),
@@ -346,7 +348,7 @@ def run_job(request, job_dir, render=True, brain=None, sweep_grid=None):
     if meta.get("emitter_axis"):
         target = next(t for t in lib.get("targets", []) if t["id"] == meta["emitter_axis"].get("target", "tcp"))
         aim = sim.aim_check(model_xml, meta["emitter_axis"], target, mount["body"])
-    torque = sim.torque_check(base_xml, model_xml, {"total": added_g, **extra}, {"C018 12 V (30 kg·cm)": 2.94, "C001 7.4 V (16.5 kg·cm at 6 V)": 1.62},
+    torque = sim.torque_check(base_xml, model_xml, {"total": added_g, **extra}, DEVICE.stall_nm,
                               "Static gravity torque, max over a pose grid, MuJoCo model masses (the model includes the wrist camera mount, 12 g). "
                               "Added mass sits ≈40 mm from the wrist-roll axis; dynamic loads (fast moves) not included.")
     chk = {"printability": pr, "static_fit": fit, "support": support, "aim": aim, "collision": coll, "torque": torque, "added_mass_g": added_g,

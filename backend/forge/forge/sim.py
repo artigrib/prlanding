@@ -1,6 +1,6 @@
 """MuJoCo checks for an add-on part: collision sweep over the joint range and static servo torque.
 
-The part (STL in the attach body's frame, mm) is added as a body to a COPY of sim/so101/model/so101.xml
+The part (STL in the attach body's frame, mm) is added as a body to a COPY of the device's MJCF (devices/<id>/device.json; SO-101: sim/so101/model/so101.xml)
 (the site's model is never modified). Collision distances use mj_geomDistance between the part and
 every geom of the other moving links (visual meshes and collision primitives). MuJoCo measures mesh
 distances on convex hulls, so the sweep is conservative (hull of a sleeve-on-a-plate part is bigger
@@ -16,8 +16,10 @@ import mujoco
 import numpy as np
 import trimesh
 
+from .device import load_device
+
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-MODEL_DIR = os.path.join(ROOT, "sim/so101/model")
+MODEL_DIR = load_device().model_dir  # default device (so101); pass device= for other platforms
 G = 9.81
 SOLID_TYPES = {int(t) for t in (mujoco.mjtGeom.mjGEOM_MESH, mujoco.mjtGeom.mjGEOM_BOX, mujoco.mjtGeom.mjGEOM_CYLINDER,
                                 mujoco.mjtGeom.mjGEOM_CAPSULE, mujoco.mjtGeom.mjGEOM_SPHERE)}
@@ -25,12 +27,13 @@ MESH = int(mujoco.mjtGeom.mjGEOM_MESH)
 CONTACT_MM = 0.2  # closer than this on the real meshes counts as a collision (surfaces cross or touch)
 
 
-def model_with_part(stl_path, attach_body, added_mass_kg, com_mm, out_xml, shift_bodies=None):
-    """Write a copy of so101.xml with the part as body `forge_part` under `attach_body`.
+def model_with_part(stl_path, attach_body, added_mass_kg, com_mm, out_xml, shift_bodies=None, device=None):
+    """Write a copy of the device model (default so101.xml) with the part as body `forge_part` under `attach_body`.
     shift_bodies: {"camera_mount": [0, 3, 0]} moves a body (mm) that the part is sandwiched under."""
-    with open(os.path.join(MODEL_DIR, "so101.xml"), encoding="utf-8") as f:
+    dev = device or load_device()
+    with open(dev.model_xml, encoding="utf-8") as f:
         xml = f.read()
-    xml = xml.replace('meshdir="assets"', f'meshdir="{os.path.join(MODEL_DIR, "assets")}"', 1)
+    xml = xml.replace(f'meshdir="{dev.meshdir}"', f'meshdir="{os.path.join(dev.model_dir, dev.meshdir)}"', 1)
     xml = xml.replace("</asset>", f'  <mesh name="forge_part" file="{os.path.abspath(stl_path)}" scale="0.001 0.001 0.001"/>\n  </asset>', 1)
     com = " ".join(f"{v / 1000.0:.6f}" for v in com_mm)
     body = (f'<body name="forge_part">\n'
@@ -84,7 +87,7 @@ def joint_grid(m, spec):
     return names, values
 
 
-def collision_sweep(xml, part_geom="forge_part", grid=None, margin_mm=2.0, refine=12, part_stl=None):
+def collision_sweep(xml, part_geom="forge_part", grid=None, margin_mm=2.0, refine=12, part_stl=None, device=None):
     """Sweep the joint grid. A pose counts only if the robot itself is clear there: the hulls of the
     part's own link group (gripper + camera mount) must not touch any non-adjacent link (poses where the
     folded arm runs into its own base are excluded, the real arm cannot reach them either). In the
@@ -101,7 +104,7 @@ def collision_sweep(xml, part_geom="forge_part", grid=None, margin_mm=2.0, refin
     others = [g for g in vis if m.geom_bodyid[g] not in same]
     own = [g for g in vis if m.geom_bodyid[g] in same]
     own_vs = [g for g in others if m.geom_bodyid[g] not in adjacent]
-    grid = grid or {"shoulder_lift": 5, "elbow_flex": 5, "wrist_flex": 11, "wrist_roll": 9, "gripper": 4}
+    grid = grid or (device or load_device()).grid("full")
     names, values = joint_grid(m, grid)
     qadr = [m.jnt_qposadr[m.joint(n).id] for n in names]
     fromto = np.zeros(6)
@@ -230,14 +233,15 @@ def static_fit(xml, part_stl, seat_axis=1, seat_values=(24.0,), seat_tol=0.3, pa
             "note": f"part samples on the seat planes (axis {seat_axis} = {list(seat_values)} ± {seat_tol} mm) are not counted; a vertex counts as inside when deeper than {depth_tol} mm"}
 
 
-def gravity_torques(xml, grid=None):
+def gravity_torques(xml, grid=None, device=None):
     """Max |gravity torque| per joint over a pose grid (N·m), static (qvel = qacc = 0)."""
     m = mujoco.MjModel.from_xml_path(xml)
     d = mujoco.MjData(m)
-    grid = grid or {"shoulder_lift": 9, "elbow_flex": 9, "wrist_flex": 9, "wrist_roll": 5}
+    dev = device or load_device()
+    grid = grid or dev.grid("torque")
     names, values = joint_grid(m, grid)
     qadr = [m.jnt_qposadr[m.joint(n).id] for n in names]
-    joints = ["shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]
+    joints = dev.torque_joints
     dadr = {j: m.jnt_dofadr[m.joint(j).id] for j in joints}
     best = {j: 0.0 for j in joints}
     for combo in itertools.product(*values):
@@ -251,9 +255,9 @@ def gravity_torques(xml, grid=None):
     return {j: round(v, 4) for j, v in best.items()}
 
 
-def torque_check(base_xml, part_xml, added_mass_g, stall_nm, lever_note):
-    base = gravity_torques(base_xml)
-    withp = gravity_torques(part_xml)
+def torque_check(base_xml, part_xml, added_mass_g, stall_nm, lever_note, device=None):
+    base = gravity_torques(base_xml, device=device)
+    withp = gravity_torques(part_xml, device=device)
     rows = []
     for j in base:
         delta = withp[j] - base[j]
