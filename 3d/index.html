@@ -1,0 +1,279 @@
+<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>printedrobotics.cz — návrh nové úvodní stránky (3D)</title><meta name="robots" content="noindex">
+<style>
+body{margin:0;background:#0b0d10;color:#eef;font:17px/1.55 system-ui,sans-serif}
+#bar{position:fixed;left:0;top:0;height:3px;background:#ff7a1a;z-index:20}
+#hd{position:fixed;left:6vw;top:3vh;font-weight:800;z-index:15}#hd b{color:#ff7a1a}
+#vis{position:fixed;right:0;top:0;width:52vw;height:100vh;z-index:1;transition:opacity .4s}
+#c{width:100%;height:100%;display:block;transition:filter .35s,opacity .35s}#c.blur{filter:blur(16px);opacity:.15}
+#rc{position:absolute;left:0;right:0;bottom:9vh;text-align:center;color:#9aa3b2;font-size:.9rem;transition:opacity .35s}#rc b{color:#eef;display:block;font-size:1rem}
+main{position:relative;z-index:2;width:44vw;padding-left:6vw}
+.t{min-height:92vh;display:flex;flex-direction:column;justify-content:center;max-width:34rem}
+.t .n{color:#ff7a1a;font:700 .8rem ui-monospace,monospace;letter-spacing:.1em}
+.t h2{font-size:clamp(1.9rem,3.6vw,3.2rem);line-height:1.05;margin:.25em 0}.t p{color:#aab3c2;font-size:1.15rem;margin:0}
+.nums{display:flex;gap:2.2rem;margin-top:1.6rem}.nums b{display:block;font-size:2.6rem;color:#ff7a1a;line-height:1}
+.cta{display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap}.cta a{background:#ff7a1a;color:#111;padding:.7rem 1.2rem;border-radius:10px;font-weight:700}.cta a.o{background:none;color:#ffb37a;border:1px solid #ff7a1a}
+#ag{position:relative;z-index:5;min-height:100vh;background:#0e1116;display:flex;align-items:center;gap:3vw;padding:8vh 6vw;box-sizing:border-box;border-top:1px solid #223;border-bottom:1px solid #223}
+.agl{flex:1;max-width:32rem}.agl .k{color:#ff7a1a;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.agl h2{font-size:clamp(1.5rem,2.6vw,2.3rem);line-height:1.1}
+#prompt{background:#161b23;border:1px solid #2a3240;border-radius:12px;padding:1rem 1.1rem;font:1rem ui-monospace,monospace;min-height:3em}#prompt i{color:#ff7a1a;font-style:normal;animation:bl 1s steps(1) infinite}@keyframes bl{50%{opacity:0}}
+#steps{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0;min-height:5.5rem;align-content:flex-start}.st{padding:.35rem .8rem;border-radius:99px;border:1px solid #334;color:#9aa3b2;transition:.3s;font-size:.95rem}.st.run{border-color:#ff7a1a;color:#ffb37a}.st.ok{border-color:#3ecf8e;color:#3ecf8e}
+.note{color:#6b7484;font-size:.8rem}#c2{flex:1.2;width:100%;height:70vh;min-width:0}
+footer{position:relative;z-index:5;background:#08090b;padding:3rem 6vw;color:#6b7484;font-size:.8rem}footer pre{white-space:pre-wrap;font-size:.72rem;max-height:40vh;overflow:auto}
+@media (max-width:700px){
+ #vis{z-index:3;width:100vw;height:46vh;background:#0b0d10;box-shadow:0 10px 30px #0b0d10}#rc{bottom:1vh}#hd{font-size:.85rem;top:1.2vh}
+ main{width:auto;padding:46vh 6vw 0}.t{min-height:60vh;justify-content:flex-start;padding-top:4vh}.t h2{font-size:1.8rem}
+ #ag{flex-direction:column;align-items:stretch}#c2{height:48vh;flex:none}#steps{min-height:4.5rem}}
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-top:1.2rem}.cat{display:block;padding:.5rem .6rem;border:1px solid #2a3240;border-radius:10px;color:#cfd6e2;text-decoration:none;font-size:.78rem;line-height:1.2}.cat b{display:block;color:#ff7a1a;font-size:1.25rem}.cat:hover{border-color:#ff7a1a}
+@media (max-width:700px){.cats{grid-template-columns:repeat(3,1fr)}}#rd{margin-top:.4rem;display:flex;gap:6px;justify-content:center}#rd i{width:7px;height:7px;border-radius:50%;background:#2f3744;display:block;transition:.3s}#rd i.on{background:#ff7a1a;width:18px;border-radius:4px}
+#hd{background:#0b0d10d9;padding:.3rem .6rem;border-radius:8px;left:calc(6vw - .6rem)}
+#vis{padding-top:0}
+@media (max-width:700px){#hd{top:.6vh}#vis{top:0}}</style></head><body><div id="bar"></div><div id="hd">printed<b>robotics</b>.cz</div>
+<div id="vis"><canvas id="c"></canvas><div id="rc"><b id="rn"></b><span id="rk"></span><div id="rd"></div></div></div>
+<main id="m1"><section class="t" data-i="0"><div class="n">01</div><h2>Open-source roboti. Od repozitáře k&nbsp;robotovi na stole.</h2><p>Ověřený katalog, simulace v prohlížeči a návod na stavbu na jednom místě.</p><div class="nums"><div><b>168</b>projektů</div><div><b>30</b>3D modelů</div><div><b>16</b>kategorií</div></div></section>
+<section class="t" data-i="1"><div class="n">02</div><h2>Otevřená robotika je roztříštěná.</h2><p>Tisíce repozitářů, nejasné licence, ceny i vyspělost. Školy a laboratoře nevědí, kde začít.</p></section>
+<section class="t" data-i="2"><div class="n">03</div><h2>Do robotiky bez zamčených dveří.</h2><p>Zdarma v prohlížeči, pak tisk, pak stavba. Platíte jen za díly, které opravdu potřebujete.</p></section>
+<section class="t" data-i="3"><div class="n">04</div><h2>Stavíte na návrzích, které už fungují.</h2><p>Komunitou postavené a ověřené projekty. Robot je váš: upravíte ho i opravíte.</p></section>
+<section class="t" data-i="4"><div class="n">05</div><h2>Nejdřív si to vyzkoušíte v prohlížeči.</h2><p>Ruka SO-101 ve fyzikální simulaci, deset misí, bez nákupu jediného dílu.</p></section>
+<section class="t" data-i="5"><div class="n">06</div><h2>Každý díl je vidět.</h2><p>Licence, cena kusovníku, zdroj a datum ověření u každého projektu.</p></section>
+<section class="t" data-i="6"><div class="n">07</div><h2>Pak robota postavíte.</h2><p>Sedm etap, 10 až 19 hodin. Víte, co koupit a kde.</p></section></main>
+<section id="ag"><div class="agl"><div class="k">Agentic Engineering Team</div><div class="t-n" style="color:#ff7a1a;font:700 .8rem monospace">08</div><h2>Řekněte, co změnit. Agenti to navrhnou.</h2>
+<div id="prompt"><span id="pt"></span><i>|</i></div><div id="steps"></div><div class="note">Vizualizace (skriptované demo), ne živý backend. Příklad vychází z rozšíření so101-flashlight – ověřeno pouze v simulaci.</div></div><canvas id="c2"></canvas></section>
+<main id="m2"><section class="t" data-i="7"><div class="n">09</div><h2>Ruku může řídit váš AI asistent.</h2><p>MCP nástroje pro Clauda a další, s benchmarkem řízení.</p></section>
+<section class="t" data-i="8"><div class="n">10</div><h2>Robotika pro každou třídu.</h2><p>Hodina robotiky zdarma a návody česky. Simulace běží na školním počítači.</p></section>
+<section class="t" data-i="9"><div class="n">11</div><h2>16 kategorií. Od kol po bioreaktor.</h2><p>Každá kategorie vede přímo do katalogu.</p><div class="cats"><a class="cat" href="https://printedrobotics.cz/katalog/rejstrik/?cat=wheeled"><b>32</b>Robot na kolech</a><a class="cat" href="https://printedrobotics.cz/katalog/rejstrik/?cat=legged"><b>20</b>Kráčející robot</a><a class="cat" href="https://printedrobotics.cz/katalog/rejstrik/?cat=arm"><b>19</b>Robotická ruka</a><a class="cat" href="https://printedrobotics.cz/katalog/rejstrik/?cat=lab-automation"><b>18</b>Laboratorní automatizace</a><a class="cat" href="https://printedrobotics.cz/katalog/rejstrik/?cat=actuator"><b>16</b>Pohon</a><a class="cat" href="https://printedrobotics.cz/katalog/rejstrik/?cat=sensor"><b>11</b>Senzor</a><a class="cat" href="https://printedrobotics.cz/katalog/rejstrik/?cat=humanoid"><b>10</b>Humanoid</a><a class="cat" href="https://printedrobotics.cz/katalog/rejstrik/?cat=hand"><b>7</b>Robotická dlaň</a><a class="cat" href="https://printedrobotics.cz/katalog/rejstrik/?cat=gripper"><b>6</b>Chapadlo</a><a class="cat" href="https://printedrobotics.cz/katalog/rejstrik/?cat=tracked"><b>6</b>Pásový robot</a><a class="cat" href="https://printedrobotics.cz/katalog/rejstrik/?cat=bioreactor"><b>5</b>Bioreaktor</a><a class="cat" href="https://printedrobotics.cz/katalog/rejstrik/?cat=other"><b>5</b>Ostatní</a><a class="cat" href="https://printedrobotics.cz/katalog/rejstrik/?cat=gearbox"><b>4</b>Převodovka</a><a class="cat" href="https://printedrobotics.cz/katalog/rejstrik/?cat=lidar"><b>4</b>Lidar</a><a class="cat" href="https://printedrobotics.cz/katalog/rejstrik/?cat=drone"><b>3</b>Dron</a><a class="cat" href="https://printedrobotics.cz/katalog/rejstrik/?cat=toolchanger"><b>2</b>Výměna nástrojů</a></div></section>
+<section class="t" data-i="10"><div class="n">12</div><h2>Dopad, který lze měřit.</h2><p>[doplnit] škol · [doplnit] studentů · [doplnit] postavených robotů.</p></section>
+<section class="t" data-i="11"><div class="n">13</div><h2>Otevřené a poctivé.</h2><p>Hotovou sadu možná nabídneme později – a jen tam, kde to licence dovoluje. Co ještě není hotové, označujeme „připravujeme“.</p></section>
+<section class="t" data-i="12"><div class="n">14</div><h2>Postavme to spolu.</h2><p>Hledáme partnery, granty a fondy pro [doplnit].</p><div class="cta"><a>Stáhnout one-pager</a><a class="o">Domluvit schůzku</a></div></section></main>
+<footer><b>Atribuce 3D modelů</b> — modely jsou odvozeny z open-source projektů a zveřejněny pod licencí původního projektu; autoři s námi nejsou spojeni.<pre>aira.glb – AIRA — Nextis (Roberto De la Cruz González); hardware licence: Apache-2.0; https://github.com/robertorobotics/Nextis-AIRA-3D
+bhl.glb – Berkeley Humanoid Lite — Hybrid Robotics, UC Berkeley; hardware licence: CC BY-SA 4.0; https://github.com/HybridRobotics/berkeley-humanoid-lite
+duck.glb – Open Duck Mini v2 — Antoine Pirrone a komunita; hardware licence: Apache-2.0; https://github.com/apirrone/Open_Duck_Mini
+exomy.glb – ExoMy — ESA Planetary Robotics Lab; hardware licence: GPL-3.0; https://github.com/esa-prl/ExoMy
+hand.glb – AmazingHand — Pollen Robotics; hardware licence: CC BY 4.0; https://github.com/pollen-robotics/AmazingHand
+klepeto.glb – viz úplné licenční texty níže (models/NOTICE.txt)
+koch.glb – Koch v1.1 — Jess Moss a Hugging Face (podle ruky Alexandera Kocha); hardware licence: Apache-2.0; https://github.com/jess-moss/koch-v1-1
+kosa.glb – viz úplné licenční texty níže (models/NOTICE.txt)
+lekiwi.glb – LeKiwi — SIGRobotics UIUC; hardware licence: Apache-2.0; https://github.com/SIGRobotics-UIUC/LeKiwi
+lizard.glb – Lizard — TRD-B; hardware licence: CC BY 4.0; https://github.com/TRD-B/Lizard
+orca.glb – ORCA Hand — ORCA Dexterity; hardware licence: CC BY 4.0; https://github.com/orcahand/orcahand_hardware
+osr.glb – Open Source Rover — JPL / Caltech; hardware licence: Apache-2.0; https://github.com/nasa-jpl/open-source-rover
+otto.glb – Otto DIY — Otto DIY; hardware licence: CC BY-SA 4.0; https://github.com/OttoDIY/OttoDIYLib
+parol6.glb – PAROL6 — Petar Crnjak (Source Robotics); hardware licence: GPL-3.0; https://github.com/PCrnjak/PAROL6-Desktop-robot-arm
+rc128.glb – Open 1:28 RC Car — Kurtis Kopf (zortness); hardware licence: CC BY 4.0; https://github.com/zortness/open_128_rc_car
+sawppy.glb – Sawppy — Roger Cheng; hardware licence: MIT; https://github.com/Roger-random/Sawppy_Rover
+sesame.glb – Sesame — Dorian Todd (Sesame Robot Project); hardware licence: Apache-2.0; https://github.com/dorianborian/sesame-robot
+sidekick.glb – Sidekick — Rodolfo Keesey a kol.; hardware licence: CERN-OHL-S-2.0; https://github.com/rodolfokeesey/Liquid-Handler
+so101.glb – SO-101 — The Robot Studio a Hugging Face; hardware licence: Apache-2.0; https://github.com/TheRobotStudio/SO-ARM100
+so102.glb – SO-ARM 102 — Robonine; hardware licence: CERN-OHL-P-2.0; https://github.com/roboninecom/SO-ARM-102
+spot.glb – SpotMicro — KDY0523 a komunita SpotMicroAI; hardware licence: CC BY (Thingiverse); https://github.com/mike4192/spotMicro
+stackchan.glb – Stack-chan — Shinya Ishikawa (meganetaaan) a komunita; hardware licence: Apache-2.0; https://github.com/stack-chan/stack-chan
+svrn.glb – Project SVRN — Shoverobotics (Jordan Gell); hardware licence: CC BY 4.0; https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai
+thor.glb – Thor — Ángel L. M. (AngelLM); hardware licence: CC BY-SA 4.0; https://github.com/AngelLM/Thor
+uc2.glb – UC2 — openUC2 (B. Diederich a kol.); hardware licence: CERN-OHL-1.2; https://github.com/openUC2/UC2-GIT
+vert150.glb – Vertikální spinner 150 g — TheBlackfish (remix „150g vert“ od Muffin578); hardware licence: CC BY-SA 4.0 nebo BY-NC-SA 4.0 (ověřujeme s autory); https://www.printables.com/model/1146226-vertical-spinner-battlebot-antweight-150-g
+xle.glb – XLeRobot — Gaotian Wang a kol.; hardware licence: Apache-2.0 (ověřujeme); https://github.com/Vector-Wangel/XLeRobot
+zcar2.glb – zcar2 — Alex Yu (alexyu132); hardware licence: GPL-3.0; https://github.com/alexyu132/zcar2</pre><b>Úplné licenční texty (models/NOTICE.txt)</b><pre>3D models (GLB) in this folder are derived from open-source projects and are
+published under the licence of their source project:
+
+svrn.glb     – Project SVRN by Shoverobotics (Printables 1272536), CC BY 4.0.
+               https://www.printables.com/model/1272536
+               Converted from the author&#x27;s STEP assembly, simplified and recoloured.
+vert150.glb  – &quot;Vertical Spinner Battlebot – Antweight (150 g)&quot; by TheBlackfish
+               (Printables 1146226), a remix of &quot;150g vert&quot; by Muffin578.
+               CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
+               This derivative (assembled pose, stand-in motor and wheels,
+               recolouring) is shared under the same licence, CC BY-SA 4.0.
+
+kosa.glb     – &quot;Kosa&quot; 150 g horizontal undercutter and
+klepeto.glb  – &quot;Klepeto&quot; 150 g four-wheel lifter with a grabber claw:
+               original designs by printedrobotics.cz (not derived from any
+               third-party model), CC BY 4.0
+               (https://creativecommons.org/licenses/by/4.0/).
+               Parametric CAD sources: tools/robots-cad/ (build123d).
+
+orca.glb     – &quot;ORCA Hand by ORCA Dexterity, Inc. — CC BY 4.0&quot;
+               (https://creativecommons.org/licenses/by/4.0/).
+               https://github.com/orcahand/orcahand_hardware
+               Converted from the author&#x27;s STEP assembly of the v2 base hand,
+               right (orca_v2/base/Orcahand_BaseV2_Right.zip, commit 0ce2646):
+               tessellated and simplified, small fasteners, tendons and
+               electronic components left out, duplicate servo instances
+               removed, servo cases shown as simplified blocks, recoloured.
+               This derivative is shared under the same licence, CC BY 4.0.
+rc128.glb    – &quot;open-128-rc-car&quot; (1:28 RC car) by Kurtis Kopf (zortness),
+               https://github.com/zortness/open_128_rc_car @ f9155c21.
+               FreeCAD files CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
+               Changes: a basic-car part set read from the saved FCStd shapes;
+               parts the author placed in car coordinates keep that position; the
+               left knuckle mirrored into place by us (the author&#x27;s body sits in a
+               print-layout position); wheels and tyres placed by us at the author&#x27;s
+               wheel proxies; tessellated, simplified and recoloured
+               (tools/robots-cad/rc128.py). Modified 2026-11-01.
+zcar2.glb    – &quot;zcar2&quot; (1:28 RC drift car) by Alex Yu (alexyu132),
+               https://github.com/alexyu132/zcar2 @ 43c964cd. GPL-3.0
+               (https://www.gnu.org/licenses/gpl-3.0.html). This derivative (the
+               author&#x27;s assembled zcar2.stl split into named parts, recoloured;
+               tools/robots-cad/zcar2.py) is shared under the same licence, GPL-3.0.
+               5 pieces we could not identify are named part_N.
+               Modified by printedrobotics.cz on 2026-11-01.
+lizard.glb   – &quot;Lizard&quot; 3D printed RC race car by TRD-B,
+               https://github.com/TRD-B/Lizard @ ce1855a4. CC BY 4.0
+               (https://creativecommons.org/licenses/by/4.0/).
+               Changes: converted from the author&#x27;s STEP assembly, screws, nuts,
+               inserts and bearings left out, simplified and recoloured
+               (tools/robots-cad/step2glb.py). Modified 2026-11-01.
+
+uc2.glb      – openUC2 / UC2-GIT (https://github.com/openUC2/UC2-GIT).
+               (C) Benedict Diederich, René Lachmann, Barbora Marsikova,
+               Xavier Uwurukundo, Rainer Heintzmann, Haoran Wang.
+               Hardware licensed under the CERN Open Hardware Licence v1.2
+               (CERN-OHL-1.2); licence text:
+               https://github.com/openUC2/UC2-GIT/blob/afc9de36f27d5a387e6b9ef1d85ae0cf33b4d3d6/License.md
+               Configuration: the simple smartphone microscope, mechanical
+               version (APPLICATIONS/APP_SIMPLE-Smartphone_Microscope/mechanical).
+               Built from the authors&#x27; UC2 v2 STL files
+               (TheBOX/SimpleBOX/BUILD_ME/STL, commit afc9de3); optics, magnets,
+               screws and the phone are not modelled. We arranged the assembly
+               following the authors&#x27; guide and photos; the authors do not
+               publish an assembled CAD model. Build script:
+               tools/lab-cad/uc2_glb.py.
+               Modified 2026-11-01: arranged into an assembly, recoloured,
+               compressed. This derivative is shared under the same licence,
+               CERN-OHL-1.2.
+
+sesame.glb   – Sesame Robot Project by Dorian Todd (dorianborian), Apache-2.0
+               (full text: LICENSE-Apache-2.0.txt in this folder).
+               https://github.com/dorianborian/sesame-robot (hardware/cad/Sesame-ESP32-v122.step)
+               Changes: tessellated from the author&#x27;s STEP assembly in its assembled pose, meshes
+               simplified, parts grouped into named nodes, recoloured (printed parts take the print
+               colour, the face window insert dark), rescaled and re-oriented. This derivative
+               is published under Apache-2.0.
+koch.glb     – Koch v1.1 by Jess Moss / The Hugging Face team, after the low-cost arm by
+               Alexander Koch. Apache-2.0 (full text: LICENSE-Apache-2.0.txt in this folder).
+               https://github.com/jess-moss/koch-v1-1 (hardware/follower/STEP, Follower_Arm.STEP)
+               Changes: follower arm assembled from the author&#x27;s STEP assembly placements and part
+               files, tessellated, meshes simplified, parts as named nodes, recoloured, rescaled and
+               re-oriented. This derivative is published under Apache-2.0.
+
+Models of the other robots: see the credit line on each robot&#x27;s page.
+
+sidekick.glb – Sidekick liquid dispensing robot by Rodolfo Keesey et al.
+               (https://github.com/rodolfokeesey/Liquid-Handler).
+               Copyright Rodolfo Keesey 2022.
+               Licensed under the CERN Open Hardware Licence v2 – Strongly
+               Reciprocal (CERN-OHL-S-2.0), https://ohwr.org/cern_ohl_s_v2.txt
+               (see license.txt in that repository). This source is distributed
+               WITHOUT ANY EXPRESS OR IMPLIED WARRANTY, INCLUDING OF
+               MERCHANTABILITY, SATISFACTORY QUALITY AND FITNESS FOR A PARTICULAR
+               PURPOSE. Please see the CERN-OHL-S v2 for applicable conditions.
+               Upstream source location: https://github.com/rodolfokeesey/Liquid-Handler
+               Source location of this modified file:
+               https://github.com/artigrib/prlanding/blob/main/models/sidekick.glb
+               Built from the authors&#x27; per-part STEP files (3D_Assets, commit
+               f799c0f), which carry the positions of the full assembly; tessellated,
+               recoloured, compressed. Left out: the feet (only one of eight is
+               placed in the files), the &quot;Motor Cap New (Unvalidated)&quot; variant and
+               the 50 ml tube holder. Motors, pumps, tubing, circuit board and
+               screws are not modelled. Modified 2026-11-01 by printedrobotics.cz
+               (conversion only, no design changes). This derivative is shared
+               under the same licence, CERN-OHL-S-2.0.
+
+poseidon.glb – poseidon syringe pump by the Pachter Lab, Caltech
+               (https://github.com/pachterlab/poseidon), BSD 2-Clause License.
+               Licence text (as required for redistribution):
+               | BSD 2-Clause License
+               |
+               | Copyright (c) 2018, Pachter Lab
+               | All rights reserved.
+               |
+               | Redistribution and use in source and binary forms, with or without
+               | modification, are permitted provided that the following conditions are met:
+               |
+               | * Redistributions of source code must retain the above copyright notice, this
+               |   list of conditions and the following disclaimer.
+               |
+               | * Redistributions in binary form must reproduce the above copyright notice,
+               |   this list of conditions and the following disclaimer in the documentation
+               |   and/or other materials provided with the distribution.
+               |
+               | THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+               | AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+               | IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+               | DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+               | FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+               | DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+               | SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+               | CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+               | OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+               | OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+               Built from the authors&#x27; STEP files Pump Base and Pump Carriage
+               (HARDWARE/pump/step, commit 5a139fe), which share the assembly&#x27;s
+               coordinates; tessellated, recoloured, compressed. The cover slide
+               and syringe brace are left out because their exported positions do
+               not match the assembly. Motor, rods, bearings, threaded rod, knob and
+               syringe are not modelled.
+</pre></footer>
+<script type="importmap">{"imports":{"three":"../vendor/three/three.module.min.js","three/addons/":"../vendor/three/addons/"}}</script>
+<script type="module">
+import * as THREE from 'three';import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {MeshoptDecoder} from 'three/addons/libs/meshopt_decoder.module.js';import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+const G=await (await fetch('groups.json')).json();
+const r=new THREE.WebGLRenderer({canvas:c,antialias:true,alpha:true,preserveDrawingBuffer:true});r.setPixelRatio(Math.min(devicePixelRatio,1.75));r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=.85;
+const s=new THREE.Scene();s.environment=new THREE.PMREMGenerator(r).fromScene(new RoomEnvironment(),.04).texture;
+s.environmentIntensity=.6;s.add(new THREE.HemisphereLight(0xffffff,0x223344,.5));const dl=new THREE.DirectionalLight(0xfff2e6,1.6);dl.position.set(3,5,4);s.add(dl);
+const cam=new THREE.PerspectiveCamera(32,1,.01,100);
+const loader=new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);const cache={};
+const loadModel=name=>cache[name]??=loader.loadAsync(`../models/${name}.glb`).then(prep);
+function prep(gl){const root=new THREE.Group(),m=gl.scene;root.add(m);
+ const b=new THREE.Box3().setFromObject(m),sph=b.getBoundingSphere(new THREE.Sphere()),k=1/sph.radius;
+ m.scale.multiplyScalar(k);m.position.sub(sph.center).multiplyScalar(k);m.updateMatrixWorld(true);
+ let tops=[...m.children];while(tops.length<4){const n=tops.find(o=>o.children.length>1);if(!n)break;tops=tops.filter(o=>o!==n).concat(n.children);}
+ const parts=tops.map(o=>{const wb=new THREE.Box3().setFromObject(o),wc=wb.getCenter(new THREE.Vector3());let d=wc.clone();if(d.length()<1e-3)d.set(0,1,0);
+  d.normalize().add(new THREE.Vector3(0,.3,0)).normalize();const wsc=o.parent.getWorldScale(new THREE.Vector3()).x;
+  return {o,base:o.position.clone(),off:d.multiplyScalar(0.55/wsc),ph:Math.random()*6.28,y:wc.y};});
+ root.visible=false;s.add(root);return {root,parts};}
+window.loadModel=loadModel;
+// ---------- state ----------
+let gi=-1,want=-1,trans=0;          // trans: 1 = exploded (category change)
+let slots=[];                        // active robots: {o,t0,dir:+1 enter / -1 exit}
+let pos=0,tNext=0;const DWELL=4.6,MOVE=1.1;const clock=new THREE.Clock();
+function dots(){const n=G[gi].models.length;rd.innerHTML=n>1?G[gi].models.map((_,k)=>`<i class="${k===pos?'on':''}"></i>`).join(''):'';}
+function cap(){const g=G[gi];rn.textContent=g.models[pos].name;rk.textContent=g.count?`Kategorie: ${g.label} · ${g.count} projektů`:`${g.label} · ${g.models.length} modely`;dots();}
+async function show(i){if(i===want)return;want=i;c.classList.add('blur');rc.style.opacity=0;
+ const g=G[i];const [first]=await Promise.all([loadModel(g.models[0].model),new Promise(r=>setTimeout(r,350))]);if(want!==i)return;
+ for(const x of slots)x.o.root.visible=false;gi=i;pos=0;slots=[{o:first,t0:-9,dir:1}];first.root.visible=true;trans=1;
+ tNext=clock.elapsedTime+DWELL;cap();c.classList.remove('blur');rc.style.opacity=1;
+ g.models.forEach(m=>loadModel(m.model));if(G[i+1])loadModel(G[i+1].models[0].model);window.ready=true;}
+async function nextInCat(){const g=G[gi];if(g.models.length<2)return;const np=(pos+1)%g.models.length;const o=await loadModel(g.models[np].model);
+ if(G[gi]!==g)return;const t=clock.elapsedTime;slots=slots.filter(x=>x.dir>0);for(const x of slots){x.dir=-1;x.t0=t;}
+ o.root.visible=true;slots.push({o,t0:t,dir:1});pos=np;cap();}
+const io=new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting)show(+e.target.dataset.i);},{rootMargin:'-45% 0px -45% 0px'});
+document.querySelectorAll('.t').forEach(e=>io.observe(e));show(0);
+const hide=new Set();const vo=new IntersectionObserver(es=>{for(const e of es)e.isIntersecting?hide.add(e.target):hide.delete(e.target);vis.style.opacity=hide.size?0:1},{threshold:.55});vo.observe(ag);
+new IntersectionObserver(es=>{for(const e of es)e.isIntersecting?hide.add(e.target):hide.delete(e.target);vis.style.opacity=hide.size?0:1},{threshold:.05}).observe(document.querySelector('footer'));
+const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2,cl=x=>Math.max(0,Math.min(1,x));
+// motion per type: p = 0 (offstage) .. 1 (on stage); side: +1 enter from right, -1 exit to left
+function place(x,p,side,t,anim){const R=x.o.root,q=1-ease(p),X=side*q*2.8;R.position.set(0,0,0);R.rotation.set(0,0,0);R.scale.setScalar(1);
+ const moving=p<1;let partSway=0,partBob=0;
+ if(anim==='roll'){R.position.x=X;R.position.y=moving?Math.abs(Math.sin(X*5))*.03:0;R.rotation.z=moving?-side*.06*Math.sin(q*Math.PI):0;}
+ else if(anim==='walk'){R.position.x=X;R.position.y=moving?Math.abs(Math.sin(X*7))*.07:0;partSway=moving?.22:0;partBob=X*7;}
+ else if(anim==='swing'){R.position.x=X*.7;R.rotation.y=side*q*1.8;R.scale.setScalar(.75+.25*ease(p));}
+ else if(anim==='slide'){R.position.y=-q*2.4;R.position.x=side*q*.4;}
+ else {R.position.x=X;R.position.y=-q*.5;R.scale.setScalar(.7+.3*ease(p));}
+ R.rotation.y+=Math.sin(t*.35)*.55+.5;R.position.y+=Math.sin(t*1.4)*.02;
+ return {partSway,partBob};}
+function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta(),.1),t=clock.elapsedTime;
+ bar.style.width=(scrollY/(document.documentElement.scrollHeight-innerHeight)*100)+'%';
+ const w=vis.clientWidth,h=vis.clientHeight;cam.aspect=w/h;const mob=innerWidth<700;
+ const fov=THREE.MathUtils.degToRad(cam.fov),fit=1.4/Math.sin(Math.min(fov/2,Math.atan(Math.tan(fov/2)*cam.aspect)));
+ cam.position.set(0,.3,fit);cam.lookAt(0,mob?.05:.12,0);cam.updateProjectionMatrix();r.setSize(w,h,false);
+ if(gi>=0){if(t>tNext){tNext=t+DWELL;nextInCat();}
+  trans=Math.max(0,trans-dt*1.4);const anim=G[gi].anim;
+  slots=slots.filter(x=>{const k=cl((t-x.t0)/MOVE);if(x.dir<0&&k>=1){x.o.root.visible=false;return false;}return true;});
+  for(const x of slots){const k=cl((t-x.t0)/MOVE),p=x.dir>0?k:1-k,side=x.dir>0?1:-1;
+   const m=place(x,p,side,t,anim);const e=ease(trans)*.9+.06+.04*Math.sin(t*1.1);
+   for(const P of x.o.parts){P.o.position.copy(P.base).addScaledVector(P.off,e+(m.partSway?Math.sin(m.partBob+P.ph)*.04:0));
+    P.o.rotation.z=(m.partSway&&P.y<0?Math.sin(m.partBob+P.ph)*m.partSway:Math.sin(t*1.6+P.ph)*.03);}}}
+ if(vis.style.opacity!=='0')r.render(s,cam);}
+frame();
+import('./agent.js').then(m=>m.start(THREE,loadModel('so101')));
+</script></body></html>
