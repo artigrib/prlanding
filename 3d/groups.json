@@ -40,22 +40,18 @@
   ]
  },
  {
-  "key": "wheeled",
-  "label": "Robot na kolech",
-  "count": 32,
-  "anim": "roll",
+  "key": "lab-automation",
+  "label": "Laboratorní automatizace",
+  "count": 18,
+  "anim": "slide",
   "models": [
    {
-    "model": "exomy",
-    "name": "ExoMy"
+    "model": "sidekick",
+    "name": "Sidekick"
    },
    {
-    "model": "sawppy",
-    "name": "Sawppy"
-   },
-   {
-    "model": "osr",
-    "name": "Open Source Rover"
+    "model": "uc2",
+    "name": "UC2"
    }
   ]
  },
@@ -96,18 +92,22 @@
   ]
  },
  {
-  "key": "lab-automation",
-  "label": "Laboratorní automatizace",
-  "count": 18,
-  "anim": "slide",
+  "key": "wheeled",
+  "label": "Robot na kolech",
+  "count": 32,
+  "anim": "roll",
   "models": [
    {
-    "model": "sidekick",
-    "name": "Sidekick"
+    "model": "exomy",
+    "name": "ExoMy"
    },
    {
-    "model": "uc2",
-    "name": "UC2"
+    "model": "sawppy",
+    "name": "Sawppy"
+   },
+   {
+    "model": "osr",
+    "name": "Open Source Rover"
    }
   ]
  },
