@@ -1,6 +1,6 @@
 // /3d/ main path: pre-rendered flythrough frames scrubbed by scroll on a 2D canvas (no WebGL).
 // Frames come from the live flythrough (fly.js) via tools/seq/record.mjs; ?live forces the WebGL version.
-import {loadOrder, scrollU, frameFor, nearest} from './seq-core.mjs';
+import {scrollU, frameFor, nearest} from './seq-core.mjs';
 
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const [G, M] = await Promise.all(['groups.json', 'seq/manifest.json'].map(u => fetch(u).then(r => { if (!r.ok) throw new Error(u); return r.json(); })));
@@ -22,41 +22,44 @@ const stats = window.__seq = {set: set.dir, frames: F, loaded: 0, draws: 0, show
 
 function size() {
   const d = Math.min(devicePixelRatio || 1, 1.5);
-  canvas.width = Math.round(innerWidth * d); canvas.height = Math.round(innerHeight * d); shown = -1;
+  canvas.width = Math.round(innerWidth * d); canvas.height = Math.round(innerHeight * d); shown = -1; shownU = -1;
 }
+// Hybrid: one pre-rendered poster per thesis, crossfaded by scroll (no frame stepping between theses).
+let U = 0, shownU = -1;
+const fit = im => { const cw = canvas.width, ch = canvas.height, s = Math.max(cw / im.naturalWidth, ch / im.naturalHeight);
+  const w = im.naturalWidth * s, h = im.naturalHeight * s; ctx.drawImage(im, (cw - w) / 2, (ch - h) / 2, w, h); };
+const poster = k => { const i = nearest(frameFor(k, N, F), have); return i < 0 ? null : img[i]; };
 function draw() {
   if (covered) return;
-  const i = nearest(want, have);
-  if (i < 0 || i === shown) return;
-  const im = img[i], cw = canvas.width, ch = canvas.height, s = Math.max(cw / im.naturalWidth, ch / im.naturalHeight);
-  const w = im.naturalWidth * s, h = im.naturalHeight * s;
-  ctx.fillStyle = '#f4f4f1'; ctx.fillRect(0, 0, cw, ch);
-  ctx.drawImage(im, (cw - w) / 2, (ch - h) / 2, w, h);
-  shown = stats.shown = i; stats.draws++;
+  const k = Math.floor(U), a = U - k, A = poster(k), B = a > 0 ? poster(k + 1) : null;
+  if (!A || U === shownU && shown >= 0) return;
+  ctx.globalAlpha = 1; ctx.fillStyle = '#f4f4f1'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  fit(A); if (B && B !== A) { ctx.globalAlpha = a; fit(B); ctx.globalAlpha = 1; }
+  shownU = U; shown = stats.shown = frameFor(k, N, F); stats.draws++;
 }
 let centers = [];
 const measure = () => { centers = secs.map(e => { const b = e.getBoundingClientRect(); return b.top + scrollY + b.height / 2; }); };
 const bar = document.getElementById('bar');
 function update() {
   if (bar) bar.style.width = (scrollY / (document.documentElement.scrollHeight - innerHeight) * 100) + '%';
-  want = frameFor(scrollU(scrollY + innerHeight / 2, centers, RM), N, F); draw();
+  U = scrollU(scrollY + innerHeight / 2, centers, RM); want = frameFor(Math.round(U), N, F); draw();
 }
 let raf = 0;
 const tick = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; update(); }); };
 addEventListener('scroll', tick, {passive: true});
 addEventListener('resize', () => { size(); measure(); tick(); });
 new ResizeObserver(() => { measure(); tick(); }).observe(document.body);
-new IntersectionObserver(([e]) => { covered = e.isIntersecting && e.boundingClientRect.top <= 0 && e.boundingClientRect.bottom >= innerHeight; if (!covered) { shown = -1; tick(); } },
+new IntersectionObserver(([e]) => { covered = e.isIntersecting && e.boundingClientRect.top <= 0 && e.boundingClientRect.bottom >= innerHeight; if (!covered) { shown = -1; shownU = -1; tick(); } },
   {threshold: [0, .5, .98, 1]}).observe(document.getElementById('ag'));
 size(); measure(); update();
 
 // progressive preload: first / last / middle, then fill gaps; reduced motion only needs the thesis frames
-const order = RM ? [...new Set(secs.map((_, k) => frameFor(k, N, F)))] : loadOrder(F);
+const order = [...new Set(secs.map((_, k) => frameFor(k, N, F)))];
 let q = 0;
 const one = () => new Promise(res => {
   if (q >= order.length) return res(false);
   const i = order[q++], im = new Image(); im.decoding = 'async'; im.src = url(i);
-  const ok = () => { img[i] = im; have[i] = true; stats.loaded++; if (shown < 0 || Math.abs(i - want) < Math.abs(shown - want)) { shown = -1; draw(); } res(true); };
+  const ok = () => { img[i] = im; have[i] = true; stats.loaded++; shown = -1; draw(); res(true); };
   // decode() can reject under load in Chromium even for valid images; a completed load is still drawable
   im.onload = () => im.decode().then(ok, ok); im.onerror = () => { stats.failed = (stats.failed || 0) + 1; res(true); };
 });
