@@ -1,51 +1,57 @@
 <!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>printedrobotics.cz — návrh nové úvodní stránky (3D)</title><meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E8461E'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/i18n.css">
 <style>
-body{margin:0;background:#0b0d10;color:#eef;font:17px/1.55 system-ui,sans-serif}
-#bar{position:fixed;left:0;top:0;height:3px;background:#ff7a1a;z-index:20}
-#hd{position:fixed;left:6vw;top:3vh;font-weight:800;z-index:15}#hd b{color:#ff7a1a}
+
+#bar{position:fixed;left:0;top:0;height:3px;background:var(--accent);z-index:20}
+#hd{position:fixed;left:6vw;top:3vh;font-weight:800;z-index:15}#hd b{color:var(--accent)}
 #vis{position:fixed;right:0;top:0;width:52vw;height:100vh;z-index:1;transition:opacity .4s}
 #c{width:100%;height:100%;display:block;transition:filter .35s,opacity .35s}#c.blur{filter:blur(16px);opacity:.15}
-#rc{position:absolute;left:0;right:0;bottom:9vh;text-align:center;color:#9aa3b2;font-size:.9rem;transition:opacity .35s}#rc b{color:#eef;display:block;font-size:1rem}
+#rc{position:absolute;left:0;right:0;bottom:9vh;text-align:center;color:var(--mute);font-size:.9rem;transition:opacity .35s}#rc b{color:var(--ink);display:block;font-size:1rem}
 main{position:relative;z-index:2;width:44vw;padding-left:6vw}
 .t{min-height:92vh;display:flex;flex-direction:column;justify-content:center;max-width:34rem}
-.t .n{color:#ff7a1a;font:700 .8rem ui-monospace,monospace;letter-spacing:.1em}
-.t h2{font-size:clamp(1.9rem,3.6vw,3.2rem);line-height:1.05;margin:.25em 0}.t p{color:#aab3c2;font-size:1.15rem;margin:0}
-.nums{display:flex;gap:2.2rem;margin-top:1.6rem}.nums b{display:block;font-size:2.6rem;color:#ff7a1a;line-height:1}
-.cta{display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap}.cta a{background:#ff7a1a;color:#111;padding:.7rem 1.2rem;border-radius:10px;font-weight:700}.cta a.o{background:none;color:#ffb37a;border:1px solid #ff7a1a}
-#ag{position:relative;z-index:5;min-height:100vh;background:#0e1116;display:flex;align-items:center;gap:3vw;padding:8vh 6vw;box-sizing:border-box;border-top:1px solid #223;border-bottom:1px solid #223}
-.agl{flex:1;max-width:32rem}.agl .k{color:#ff7a1a;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.agl h2{font-size:clamp(1.5rem,2.6vw,2.3rem);line-height:1.1}
-#prompt{background:#161b23;border:1px solid #2a3240;border-radius:12px;padding:1rem 1.1rem;font:1rem ui-monospace,monospace;min-height:3em}#prompt i{color:#ff7a1a;font-style:normal;animation:bl 1s steps(1) infinite}@keyframes bl{50%{opacity:0}}
-#steps{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0;min-height:5.5rem;align-content:flex-start}.st{padding:.35rem .8rem;border-radius:99px;border:1px solid #334;color:#9aa3b2;transition:.3s;font-size:.95rem}.st.run{border-color:#ff7a1a;color:#ffb37a}.st.ok{border-color:#3ecf8e;color:#3ecf8e}
-.note{color:#6b7484;font-size:.8rem}#c2{flex:1.2;width:100%;height:70vh;min-width:0}
-footer{position:relative;z-index:5;background:#08090b;padding:3rem 6vw;color:#6b7484;font-size:.8rem}footer pre{white-space:pre-wrap;font-size:.72rem;max-height:40vh;overflow:auto}
+.t .n{color:var(--accent);font:700 .8rem ui-monospace,monospace;letter-spacing:.1em}
+.t h2{font-size:clamp(1.9rem,3.6vw,3.2rem);line-height:1.05;margin:.25em 0}.t p{color:var(--ink-2);font-size:1.15rem;margin:0}
+.nums{display:flex;gap:2.2rem;margin-top:1.6rem}.nums b{display:block;font-size:2.6rem;color:var(--accent);line-height:1}
+.cta{display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap}.cta a{background:var(--accent);color:#fff;padding:.7rem 1.2rem;border-radius:10px;font-weight:700}.cta a.o{background:none;color:var(--accent-text);border:1px solid var(--accent)}
+#ag{position:relative;z-index:5;min-height:100vh;background:var(--sand);display:flex;align-items:center;gap:3vw;padding:8vh 6vw;box-sizing:border-box;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.agl{flex:1;max-width:32rem}.agl .k{color:var(--accent);font-weight:800;letter-spacing:.12em;text-transform:uppercase}.agl h2{font-size:clamp(1.5rem,2.6vw,2.3rem);line-height:1.1}
+#prompt{background:#fff;border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem;font:1rem ui-monospace,monospace;min-height:3em}#prompt i{color:var(--accent);font-style:normal;animation:bl 1s steps(1) infinite}@keyframes bl{50%{opacity:0}}
+#steps{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0;min-height:5.5rem;align-content:flex-start}.st{padding:.35rem .8rem;border-radius:99px;border:1px solid var(--line);color:var(--mute);transition:.3s;font-size:.95rem}.st.run{border-color:var(--accent);color:var(--accent-text)}.st.ok{border-color:#1f8a4c;color:#1f8a4c}
+.note{color:var(--mute);font-size:.8rem}#c2{flex:1.2;width:100%;height:70vh;min-width:0}
+.three-f{position:relative;z-index:5;background:var(--sand);padding:3rem 6vw;color:var(--mute);font-size:.8rem}.three-f pre{white-space:pre-wrap;font-size:.72rem;max-height:40vh;overflow:auto}
 @media (max-width:700px){
- #vis{z-index:3;width:100vw;height:46vh;background:#0b0d10;box-shadow:0 10px 30px #0b0d10}#rc{bottom:1vh}#hd{font-size:.85rem;top:1.2vh}
+ #vis{z-index:3;width:100vw;height:46vh;background:var(--paper);box-shadow:0 10px 30px var(--paper)}#rc{bottom:1vh}#hd{font-size:.85rem;top:1.2vh}
  main{width:auto;padding:46vh 6vw 0}.t{min-height:60vh;justify-content:flex-start;padding-top:4vh}.t h2{font-size:1.8rem}
  #ag{flex-direction:column;align-items:stretch}#c2{height:48vh;flex:none}#steps{min-height:4.5rem}}
-.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-top:1.2rem}.cat{display:block;padding:.5rem .6rem;border:1px solid #2a3240;border-radius:10px;color:#cfd6e2;text-decoration:none;font-size:.78rem;line-height:1.2}.cat b{display:block;color:#ff7a1a;font-size:1.25rem}.cat:hover{border-color:#ff7a1a}
-@media (max-width:700px){.cats{grid-template-columns:repeat(3,1fr)}}#rd{margin-top:.4rem;display:flex;gap:6px;justify-content:center}#rd i{width:7px;height:7px;border-radius:50%;background:#2f3744;display:block;transition:.3s}#rd i.on{background:#ff7a1a;width:18px;border-radius:4px}
-#hd{background:#0b0d10d9;padding:.3rem .6rem;border-radius:8px;left:calc(6vw - .6rem)}
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-top:1.2rem}.cat{display:block;padding:.5rem .6rem;border:1px solid var(--line);border-radius:10px;color:var(--ink);text-decoration:none;font-size:.78rem;line-height:1.2}.cat b{display:block;color:var(--accent);font-size:1.25rem}.cat:hover{border-color:var(--accent)}
+@media (max-width:700px){.cats{grid-template-columns:repeat(3,1fr)}}#rd{margin-top:.4rem;display:flex;gap:6px;justify-content:center}#rd i{width:7px;height:7px;border-radius:50%;background:var(--line);display:block;transition:.3s}#rd i.on{background:var(--accent);width:18px;border-radius:4px}
+#hd{background:#fff;padding:.3rem .6rem;border-radius:8px;left:calc(6vw - .6rem)}
 #vis{padding-top:0}
 @media (max-width:700px){#hd{top:.6vh}#vis{top:0}}
 /* Swiss grid: 8px spacing scale, 12 col desktop / 4 col mobile */
-:root{--hd:48px;--m:max(20px,4vw);--line:#1d222b}
-body{font-family:"Inter","Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;letter-spacing:-.005em}
+:root{--hd:48px;--m:max(20px,4vw);--line:var(--line)}
+
 #bar{z-index:21}
-#hd{left:0;right:0;top:0;height:var(--hd);box-sizing:border-box;display:flex;align-items:center;padding:0 var(--m);border-radius:0;background:#0b0d10;border-bottom:1px solid var(--line);font-size:15px;letter-spacing:-.01em}
+#hd{left:0;right:0;top:0;height:var(--hd);box-sizing:border-box;display:flex;align-items:center;padding:0 var(--m);border-radius:0;background:var(--paper);border-bottom:1px solid var(--line);font-size:15px;letter-spacing:-.01em}
 #vis{top:var(--hd);height:calc(100vh - var(--hd));width:50vw}
 main{width:calc(41.66vw - var(--m));padding-left:var(--m)}
 .t{min-height:calc(100vh - var(--hd));max-width:none;padding:var(--hd) 0 0;box-sizing:border-box}
-.t .n,#ag .t-n{font-family:inherit!important;font-weight:800!important;font-size:clamp(56px,7vw,112px)!important;line-height:.9!important;color:#ff7a1a!important;letter-spacing:-.045em;margin-bottom:24px}
+.t .n,#ag .t-n{font-family:inherit!important;font-weight:800!important;font-size:clamp(56px,7vw,112px)!important;line-height:.9!important;color:var(--accent)!important;letter-spacing:-.045em;margin-bottom:24px}
 .t h2,.agl h2{font-weight:700;letter-spacing:-.025em;line-height:1.05;margin:0 0 16px}
 .t p{max-width:36ch;font-size:18px;line-height:1.5}
-.nums{gap:32px;margin-top:32px}.nums>div{border-top:1px solid #ff7a1a;padding-top:8px;font-size:13px;color:#9aa3b2}.nums b{font-size:40px;letter-spacing:-.03em}
+.nums{gap:32px;margin-top:32px}.nums>div{border-top:1px solid var(--accent);padding-top:8px;font-size:13px;color:var(--mute)}.nums b{font-size:40px;letter-spacing:-.03em}
 #rc{text-align:left;left:32px;right:32px;bottom:32px;font-size:12px;letter-spacing:.04em;text-transform:uppercase;border-top:1px solid var(--line);padding-top:8px}#rc b{font-size:15px;text-transform:none;letter-spacing:-.01em;margin-bottom:2px}
 #rd{justify-content:flex-start;margin-top:8px}#rd i,#rd i.on{border-radius:0;height:3px;width:16px}#rd i.on{width:32px}
 .cta a,#prompt,.st,.cat{border-radius:0!important}
 .cats{gap:0;border-top:1px solid var(--line);border-left:1px solid var(--line)}.cat{border:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px}
 #ag{padding:calc(var(--hd) + 48px) var(--m) 48px;scroll-margin-top:var(--hd)}#ag .agl{scroll-margin-top:calc(var(--hd) + 16px)}
-footer{padding:48px var(--m)}footer pre{max-height:12em}
+.three-f{padding:48px var(--m)}.three-f pre{max-height:12em}
 @media (max-width:700px){
  #vis{top:var(--hd);width:100vw;height:75vw;box-shadow:none;border-bottom:1px solid var(--line)}
  #rc{left:var(--m);right:var(--m);bottom:8px;border:0;padding:0}#rc b{font-size:14px}
@@ -57,8 +63,24 @@ footer{padding:48px var(--m)}footer pre{max-height:12em}
  #ag{padding:calc(var(--hd) + 32px) var(--m) 48px}#c2{height:75vw}
  .cats{grid-template-columns:repeat(2,1fr)}}
 @media (prefers-reduced-motion:reduce){#c,#rc,#vis{transition:none!important}#c.blur{filter:none;opacity:1}html{scroll-behavior:auto}}
-footer details{margin-top:16px}footer summary{cursor:pointer;color:#ff7a1a;font-weight:700}
-</style></head><body><div id="bar"></div><div id="hd">printed<b>robotics</b>.cz</div>
+.three-f details{margin-top:16px}.three-f summary{cursor:pointer;color:var(--accent);font-weight:700}
+
+/* site style integration */
+.site-h{position:fixed!important;left:0;right:0;top:0}
+.t .n,#ag .t-n{font-weight:600!important}
+.t h2,.agl h2{font-weight:600}
+.nums>div{border-top-color:var(--ink)}
+.cta a{background:var(--ink);color:#fff;font-weight:500;text-decoration:none;min-height:56px;display:inline-flex;align-items:center;padding:0 20px}.cta a.o{background:#fff;color:var(--ink);border:1px solid var(--ink)}
+#rc,#rk{font-family:var(--mono)}#rc b{font-family:var(--sans);color:var(--ink)}
+#prompt{border-color:var(--ink)}#ag{border-color:var(--ink)}
+.three-f{margin-top:0;padding-top:24px;border-top:1px solid var(--ink)}
+</style></head><body data-page="content" data-root="../"><div id="bar"></div><header class="site-h" id="site-h">
+<div class="wrap"><div class="hbar">
+<div class="brand"><i aria-hidden="true"></i><a href="../">printedrobotics</a><!--lang-sw--><span class="lang-sw"><span aria-current="true" lang="cs" title="Čeština">CZ</span><span class="sep" aria-hidden="true">/</span><a href="../en/" hreflang="en" lang="en" data-lang="en" title="English">EN</a></span><!--/lang-sw--></div>
+<nav class="nav" aria-label="Hlavní menu"><a href="../sim/so101/">Simulace</a><a href="../sim/arena/">Aréna</a><a href="../#katalog">Katalog</a><a href="../navody/">Návody</a><a href="../pro-skoly/">Pro školy</a></nav>
+<a class="pill" href="../kviz.html">Najít robota <span aria-hidden="true">→</span></a>
+</div></div>
+</header>
 <div id="vis"><canvas id="c"></canvas><div id="rc"><b id="rn"></b><span id="rk"></span><div id="rd"></div></div></div>
 <main id="m1"><section class="t" data-i="0"><div class="n">01</div><h2>Open-source roboti. Od repozitáře k&nbsp;robotovi na stole.</h2><p>Ověřený katalog, simulace v prohlížeči a návod na stavbu na jednom místě.</p><div class="nums"><div><b>168</b>projektů</div><div><b>30</b>3D modelů</div><div><b>16</b>kategorií</div></div></section>
 <section class="t" data-i="1"><div class="n">02</div><h2>Otevřená robotika je roztříštěná.</h2><p>Tisíce repozitářů, nejasné licence, ceny i vyspělost. Školy a laboratoře nevědí, kde začít.</p></section>
@@ -75,7 +97,7 @@ footer details{margin-top:16px}footer summary{cursor:pointer;color:#ff7a1a;font-
 <section class="t" data-i="10"><div class="n">12</div><h2>Dopad, který lze měřit.</h2><p>[doplnit] škol · [doplnit] studentů · [doplnit] postavených robotů.</p></section>
 <section class="t" data-i="11"><div class="n">13</div><h2>Otevřené a poctivé.</h2><p>Hotovou sadu možná nabídneme později – a jen tam, kde to licence dovoluje. Co ještě není hotové, označujeme „připravujeme“.</p></section>
 <section class="t" data-i="12"><div class="n">14</div><h2>Postavme to spolu.</h2><p>Hledáme partnery, granty a fondy pro [doplnit].</p><div class="cta"><a>Stáhnout one-pager</a><a class="o">Domluvit schůzku</a></div></section></main>
-<footer><b>Atribuce 3D modelů</b> — modely jsou odvozeny z open-source projektů a zveřejněny pod licencí původního projektu; autoři s námi nejsou spojeni.<details><summary>Zobrazit licence modelů</summary><pre>aira.glb – AIRA — Nextis (Roberto De la Cruz González); hardware licence: Apache-2.0; https://github.com/robertorobotics/Nextis-AIRA-3D
+<footer class="wrap three-f"><b>Atribuce 3D modelů</b> — modely jsou odvozeny z open-source projektů a zveřejněny pod licencí původního projektu; autoři s námi nejsou spojeni.<details><summary>Zobrazit licence modelů</summary><pre>aira.glb – AIRA — Nextis (Roberto De la Cruz González); hardware licence: Apache-2.0; https://github.com/robertorobotics/Nextis-AIRA-3D
 bhl.glb – Berkeley Humanoid Lite — Hybrid Robotics, UC Berkeley; hardware licence: CC BY-SA 4.0; https://github.com/HybridRobotics/berkeley-humanoid-lite
 duck.glb – Open Duck Mini v2 — Antoine Pirrone a komunita; hardware licence: Apache-2.0; https://github.com/apirrone/Open_Duck_Mini
 exomy.glb – ExoMy — ESA Planetary Robotics Lab; hardware licence: GPL-3.0; https://github.com/esa-prl/ExoMy
@@ -243,7 +265,15 @@ poseidon.glb – poseidon syringe pump by the Pachter Lab, Caltech
                not match the assembly. Motor, rods, bearings, threaded rod, knob and
                syringe are not modelled.
 </pre></details></footer>
+<footer class="wrap site-f">
+<div class="g">
+<div class="a1" style="color:var(--ink)">printedrobotics.cz</div>
+<div class="a4s">Praha · <a href="../pro-skoly/">Pro školy</a> · <a href="../navody/">Návody</a> <span id="footer-contact"></span></div>
+<div class="a10">Všechny projekty patří svým autorům. Záznamy ze simulace jsou tak označené.</div>
+</div>
+</footer>
 <script type="importmap">{"imports":{"three":"../vendor/three/three.module.min.js","three/addons/":"../vendor/three/addons/"}}</script>
+<script>(function(){const f=()=>document.documentElement.style.setProperty('--hd',document.getElementById('site-h').offsetHeight+'px');f();addEventListener('resize',f);})()</script>
 <script type="module">
 import * as THREE from 'three';import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {MeshoptDecoder} from 'three/addons/libs/meshopt_decoder.module.js';import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';import {toCreasedNormals} from 'three/addons/utils/BufferGeometryUtils.js';
