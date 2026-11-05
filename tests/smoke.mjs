@@ -33,6 +33,14 @@ await check('home', '/', async p => {
   if ((await p.locator('#cards .card').count()) < 3) throw new Error('too few cards');
 });
 
+await check('3d image sequence', '/3d/', async p => {
+  await p.waitForFunction(() => window.__seq && window.__seq.draws > 0, null, {timeout: 20000});
+  const h = await p.evaluate(() => document.documentElement.scrollHeight);
+  await p.evaluate(y => scrollTo(0, y), h);
+  await p.waitForFunction(() => window.__seq.shown > window.__seq.frames / 2, null, {timeout: 20000});
+  if (await p.evaluate(() => !!document.querySelector('#c').getContext('2d') === false)) throw new Error('canvas not 2d');
+});
+
 await check('catalog filter', '/', async p => {
   await p.waitForSelector('#filters .filter');
   const before = await p.locator('#cards .card:visible').count();
