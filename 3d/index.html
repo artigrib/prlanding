@@ -283,4 +283,4 @@ poseidon.glb – poseidon syringe pump by the Pachter Lab, Caltech
 </footer>
 <script type="importmap">{"imports":{"three":"../vendor/three/three.module.min.js","three/addons/":"../vendor/three/addons/"}}</script>
 <script>(function(){const f=()=>document.documentElement.style.setProperty('--hd',document.getElementById('site-h').offsetHeight+'px');f();addEventListener('resize',f);})()</script>
-<script type="module" src="fly.js"></script></body></html>
+<script type="module">const q=new URLSearchParams(location.search);(q.has('live')||q.has('capture')?import('./fly.js'):import('./seq.js').catch(e=>{console.warn('seq unavailable, live fallback',e);return import('./fly.js');}));</script></body></html>
