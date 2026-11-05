@@ -1,0 +1,161 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "checks.schema.json",
+ "title": "Check profile of a device (checks.json). Sections with enabled=false are hooks for checks not implemented yet.",
+ "type": "object",
+ "properties": {
+  "$comment": {
+   "type": "string"
+  },
+  "fit": {
+   "type": "object",
+   "properties": {
+    "enabled": {
+     "type": "boolean"
+    },
+    "seat_tol_mm": {
+     "type": "number"
+    },
+    "depth_tol_mm": {
+     "type": "number"
+    },
+    "min_contact_ratio": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1
+    },
+    "max_overhang_mm": {
+     "type": "number"
+    },
+    "hole_pos_tol_mm": {
+     "type": "number"
+    }
+   }
+  },
+  "collision": {
+   "type": "object",
+   "properties": {
+    "enabled": {
+     "type": "boolean"
+    },
+    "margin_mm": {
+     "type": "number"
+    },
+    "contact_mm": {
+     "type": "number"
+    },
+    "poses": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "torque": {
+   "type": "object",
+   "properties": {
+    "enabled": {
+     "type": "boolean"
+    },
+    "max_delta_pct": {
+     "type": "number"
+    }
+   }
+  },
+  "function": {
+   "type": "object",
+   "properties": {
+    "enabled": {
+     "type": "boolean"
+    },
+    "targets": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "kind"
+      ],
+      "properties": {
+       "kind": {
+        "type": "string",
+        "enum": [
+         "aim",
+         "reach",
+         "fov"
+        ]
+       },
+       "site": {
+        "type": "string"
+       },
+       "max_miss_mm": {
+        "type": "number"
+       }
+      }
+     }
+    }
+   }
+  },
+  "print": {
+   "type": "object",
+   "properties": {
+    "enabled": {
+     "type": "boolean"
+    },
+    "bed_mm": {
+     "type": "array",
+     "items": {
+      "type": "number"
+     },
+     "minItems": 3,
+     "maxItems": 3
+    }
+   }
+  },
+  "power": {
+   "type": "object",
+   "properties": {
+    "enabled": {
+     "type": "boolean"
+    },
+    "derate": {
+     "type": "number"
+    }
+   }
+  },
+  "assembly": {
+   "type": "object",
+   "properties": {
+    "enabled": {
+     "type": "boolean"
+    },
+    "require_tool_access": {
+     "type": "boolean"
+    }
+   }
+  },
+  "payload": {
+   "type": "object",
+   "properties": {
+    "enabled": {
+     "type": "boolean"
+    },
+    "max_com_shift_mm": {
+     "type": "number"
+    },
+    "min_stability_margin_mm": {
+     "type": "number"
+    },
+    "max_torque_pct_of_limit": {
+     "type": "number"
+    },
+    "poses": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  }
+ }
+}

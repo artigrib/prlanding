@@ -1,0 +1,54 @@
+{
+ "$schema": "../schema/device.schema.json",
+ "$comment": "Unitree Go2 (EDU) device package. Model: MuJoCo Menagerie unitree_go2 (BSD-3-Clause), vendored in model/ (meshes fetched by tools/fetch_model.sh). Not offered to the LLM agent yet (agent=false).",
+ "id": "unitree_go2",
+ "name": "Unitree Go2 EDU quadruped",
+ "kind": "quadruped",
+ "agent": false,
+ "units": "mm",
+ "licence": {"model": "BSD-3-Clause", "source": "https://github.com/google-deepmind/mujoco_menagerie/tree/b0655057a9df2abe39ea7fc989914ba6f248301c/unitree_go2", "notice": "devices/unitree_go2/model/NOTICE.txt"},
+ "model": {"dir": "devices/unitree_go2/model", "xml": "go2.xml", "scene": "scene.xml", "meshdir": "assets"},
+ "mounts": "devices/unitree_go2/mounts.json",
+ "ports": "devices/unitree_go2/ports.json",
+ "checks": "checks.json",
+ "base": {"body": "base", "floating": true},
+ "attach_bodies": ["base"],
+ "moves_with": ["base"],
+ "default_mount": "back_top_face",
+ "sandwich": {},
+ "legs": {
+  "FL": ["FL_hip_joint", "FL_thigh_joint", "FL_calf_joint"], "FR": ["FR_hip_joint", "FR_thigh_joint", "FR_calf_joint"],
+  "RL": ["RL_hip_joint", "RL_thigh_joint", "RL_calf_joint"], "RR": ["RR_hip_joint", "RR_thigh_joint", "RR_calf_joint"]
+ },
+ "feet": {"FL": "FL", "FR": "FR", "RL": "RL", "RR": "RR"},
+ "joints": {
+  "all": ["FL_hip_joint", "FL_thigh_joint", "FL_calf_joint", "FR_hip_joint", "FR_thigh_joint", "FR_calf_joint",
+          "RL_hip_joint", "RL_thigh_joint", "RL_calf_joint", "RR_hip_joint", "RR_thigh_joint", "RR_calf_joint"],
+  "torque": ["FL_hip_joint", "FL_thigh_joint", "FL_calf_joint", "FR_hip_joint", "FR_thigh_joint", "FR_calf_joint",
+             "RL_hip_joint", "RL_thigh_joint", "RL_calf_joint", "RR_hip_joint", "RR_thigh_joint", "RR_calf_joint"]
+ },
+ "sweep": {
+  "$comment": "Per-leg grids: each leg is swept over its own joints with the other legs held in the pose being checked.",
+  "quick": {"FL_hip_joint": 3, "FL_thigh_joint": 4, "FL_calf_joint": 3, "FR_hip_joint": 3, "FR_thigh_joint": 4, "FR_calf_joint": 3,
+            "RL_hip_joint": 3, "RL_thigh_joint": 4, "RL_calf_joint": 3, "RR_hip_joint": 3, "RR_thigh_joint": 4, "RR_calf_joint": 3},
+  "full": {"FL_hip_joint": 5, "FL_thigh_joint": 9, "FL_calf_joint": 6, "FR_hip_joint": 5, "FR_thigh_joint": 9, "FR_calf_joint": 6,
+           "RL_hip_joint": 5, "RL_thigh_joint": 9, "RL_calf_joint": 6, "RR_hip_joint": 5, "RR_thigh_joint": 9, "RR_calf_joint": 6},
+  "torque": {}
+ },
+ "poses_note": "stand = Menagerie 'home' keyframe. lie, sit, trot_a, trot_b are forge test poses within the model's joint ranges, not Unitree gait data.",
+ "poses": {
+  "stand":  {"FL_hip_joint": 0, "FL_thigh_joint": 0.9, "FL_calf_joint": -1.8, "FR_hip_joint": 0, "FR_thigh_joint": 0.9, "FR_calf_joint": -1.8,
+             "RL_hip_joint": 0, "RL_thigh_joint": 0.9, "RL_calf_joint": -1.8, "RR_hip_joint": 0, "RR_thigh_joint": 0.9, "RR_calf_joint": -1.8},
+  "lie":    {"FL_hip_joint": 0, "FL_thigh_joint": 1.2, "FL_calf_joint": -2.7, "FR_hip_joint": 0, "FR_thigh_joint": 1.2, "FR_calf_joint": -2.7,
+             "RL_hip_joint": 0, "RL_thigh_joint": 1.2, "RL_calf_joint": -2.7, "RR_hip_joint": 0, "RR_thigh_joint": 1.2, "RR_calf_joint": -2.7},
+  "sit":    {"FL_hip_joint": 0, "FL_thigh_joint": 0.6, "FL_calf_joint": -1.3, "FR_hip_joint": 0, "FR_thigh_joint": 0.6, "FR_calf_joint": -1.3,
+             "RL_hip_joint": 0, "RL_thigh_joint": 2.0, "RL_calf_joint": -2.6, "RR_hip_joint": 0, "RR_thigh_joint": 2.0, "RR_calf_joint": -2.6},
+  "trot_a": {"FL_hip_joint": 0.1, "FL_thigh_joint": 0.5, "FL_calf_joint": -1.2, "FR_hip_joint": -0.1, "FR_thigh_joint": 1.1, "FR_calf_joint": -2.2,
+             "RL_hip_joint": 0.1, "RL_thigh_joint": 1.1, "RL_calf_joint": -2.2, "RR_hip_joint": -0.1, "RR_thigh_joint": 0.5, "RR_calf_joint": -1.2},
+  "trot_b": {"FL_hip_joint": 0.1, "FL_thigh_joint": 1.1, "FL_calf_joint": -2.2, "FR_hip_joint": -0.1, "FR_thigh_joint": 0.5, "FR_calf_joint": -1.2,
+             "RL_hip_joint": 0.1, "RL_thigh_joint": 0.5, "RL_calf_joint": -1.2, "RR_hip_joint": -0.1, "RR_thigh_joint": 1.1, "RR_calf_joint": -2.2}
+ },
+ "actuators": {"limit_from_model": true, "stall_nm": {}},
+ "payload": {"nominal_g": 8000, "max_g": 12000, "source": "https://www.unitree.com/go2 (EDU column: ≈8kg, MAX ~12kg)", "verified": true},
+ "prompt": {"name": "Unitree Go2", "scope": "a small printable add-on for the Unitree Go2 EDU back (brackets, sensor and light holders, cable guides, low-voltage electronics from the dock's 5 V / 12 V outputs)"}
+}

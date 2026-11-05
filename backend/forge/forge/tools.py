@@ -1,7 +1,7 @@
 """The forge agent's tools: the ONLY things the LLM can make the worker do.
 
     run_cad(code)                 build123d source -> sandbox (forge-cad container, no network) -> STEP/STL + report
-    list_mounts()                 the SO-101 mount-point library (read-only)
+    list_mounts()                 the device's mount-point library (read-only; devices/<id>/device.json -> mounts)
     check_fit(part, mount, ...)   MuJoCo: static fit, collision sweep over the joint range, servo torque; printability
     pick_components(query)        search data/components + the forge parts catalogue (read-only)
     render_steps()                render spec for the latest part; renders when a renderer is available
@@ -20,22 +20,21 @@ import shutil
 import subprocess
 
 from . import checks, sim
+from .device import load_device
 from .budget import BudgetExceeded
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FORGE = os.path.dirname(HERE)
 ROOT = os.path.abspath(os.path.join(FORGE, "..", ".."))
-MOUNTS = os.path.join(HERE, "mounts", "so101.json")
+DEVICE = load_device()  # default platform; Toolbox(device=...) for others
+MOUNTS = DEVICE.path(DEVICE.spec["mounts"])
 CATALOG = os.path.join(HERE, "parts", "catalog.json")
 COMPONENTS_DIR = os.path.join(ROOT, "data", "components")
 MAX_CODE = 64 * 1024
-SWEEP = {
-    "quick": {"shoulder_lift": 3, "elbow_flex": 3, "wrist_flex": 5, "wrist_roll": 3, "gripper": 2},
-    "full": None,  # sim.collision_sweep default grid (9 900 poses)
-}
+SWEEP = {"quick": DEVICE.grid("quick"), "full": None}  # None = the device's full grid (SO-101: 9 900 poses)
 # bodies sandwiched under an add-on plate on a mount (they move out along the face normal)
-SANDWICH = {"gripper_cam_face": "camera_mount"}
-STALL_NM = {"C018 12 V (30 kg·cm)": 2.94, "C001 7.4 V (16.5 kg·cm at 6 V)": 1.62}
+SANDWICH = DEVICE.sandwich
+STALL_NM = DEVICE.stall_nm
 CTRL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f‪-‮⁦-⁩]")
 
 TOOL_STEP = {"run_cad": "cad", "list_mounts": "mount", "check_fit": "checks", "pick_components": "parts", "render_steps": "render"}
@@ -102,7 +101,8 @@ class ToolError(Exception):
 
 
 class Toolbox:
-    def __init__(self, job_id, job_dir, cad, budget, sweep="quick", render=False, jobs_dir=None):
+    def __init__(self, job_id, job_dir, cad, budget, sweep="quick", render=False, jobs_dir=None, device=None):
+        self.device = device or DEVICE
         self.job_id, self.job_dir, self.cad, self.budget = job_id, job_dir, cad, budget
         self.jobs_dir = jobs_dir or os.path.dirname(job_dir)
         self.out = os.path.join(job_dir, "out")
@@ -115,7 +115,9 @@ class Toolbox:
         self.last_fit = None
         self.components = {}     # id -> component (everything pick_components returned)
         self.renders = []
-        self.mounts = _load(MOUNTS)
+        self.mounts = self.device.mounts if device else _load(MOUNTS)
+        self.sandwich = self.device.sandwich if device else SANDWICH
+        self.stall_nm = self.device.stall_nm if device else STALL_NM
 
     # ------------------------------------------------------------------ dispatch
     def dispatch(self, name, raw_args):
@@ -186,10 +188,12 @@ class Toolbox:
         lib = self.mounts
         keep = ("id", "name", "body", "kind", "plane", "flat_area_mm2", "holes", "hole_pitch_mm", "fastener", "other_features",
                 "occupied_by", "clearance_envelope", "use", "uncertainty_mm", "verify", "face_bounds_yz", "features_note", "section",
-                "band_width_max_mm", "center")
+                "band_width_max_mm", "center", "face_bounds", "beyond_edge_profile", "support")
         out = [{k: it[k] for k in keep if k in it} for it in lib["interfaces"]]
         return ({"robot": lib.get("robot"), "units": lib.get("units"), "frames": lib.get("frames"), "interfaces": out,
-                 "sandwich": {k: f"the {v} body sits on this face; pass sandwich_mm to check_fit if your plate goes under it" for k, v in SANDWICH.items()}},
+                 "targets": lib.get("targets", []),
+                 "emitter_axis": "lights/sensors: put meta['emitter_axis'] = {'origin': [mm], 'dir': [unit], 'target': id} in the CAD meta; check_fit then reports the miss distance to that target",
+                 "sandwich": {k: f"the {v} body sits on this face; pass sandwich_mm to check_fit if your plate goes under it" for k, v in self.sandwich.items()}},
                 f"{len(out)} mount points: " + ", ".join(i["id"] for i in out), [])
 
     def _part(self, part):
@@ -219,24 +223,36 @@ class Toolbox:
         total_g = round(part_g + extra_g, 2)
         com = rep.get("center_of_mass_mm") or [0, 0, 0]
         shift = None
-        if sw > 0 and it["id"] in SANDWICH and normal:
-            shift = {SANDWICH[it["id"]]: [round(n * sw, 3) for n in normal]}
+        if sw > 0 and it["id"] in self.sandwich and normal:
+            shift = {self.sandwich[it["id"]]: [round(n * sw, 3) for n in normal]}
         body = it["body"]
-        model_xml = sim.model_with_part(stl, body, max(total_g, 1e-6) / 1000.0, com, os.path.join(fdir, "model_with_part.xml"), shift)
-        base_xml = sim.model_with_part(stl, body, 1e-9, com, os.path.join(fdir, "model_base.xml"), shift)
+        if (self.device.spec.get("base") or {}).get("floating"):
+            return self._check_fit_legged(pid, it, stl, pr, part_g, extra_g, total_g, com, fdir)
+        model_xml = sim.model_with_part(stl, body, max(total_g, 1e-6) / 1000.0, com, os.path.join(fdir, "model_with_part.xml"), shift, device=self.device)
+        base_xml = sim.model_with_part(stl, body, 1e-9, com, os.path.join(fdir, "model_base.xml"), shift, device=self.device)
         if normal:
             axis = max(range(3), key=lambda k: abs(normal[k]))
             v = it["plane"]["point"][axis]
             seats = (v, v + normal[axis] * sw) if sw else (v,)
         else:
             axis, seats = 1, (1e9,)
-        fit = sim.static_fit(model_xml, stl, seat_axis=axis, seat_values=seats)
-        coll = sim.collision_sweep(model_xml, part_stl=stl, grid=SWEEP[self.sweep])
-        torque = sim.torque_check(base_xml, model_xml, {"total": total_g, "part_print_g": part_g, "extra_g": extra_g}, STALL_NM,
+        fit = sim.static_fit(model_xml, stl, seat_axis=axis, seat_values=seats,
+                             seat_tol=self.device.check("fit", "seat_tol_mm", 0.3), depth_tol=self.device.check("fit", "depth_tol_mm", 0.2))
+        coll = sim.collision_sweep(model_xml, part_stl=stl, grid=self.device.grid("quick") if self.sweep == "quick" else None, device=self.device)
+        # mount-library driven: seat contact on the interface, and the emitter/sensor axis vs a library target
+        support = sim.support_check(model_xml, stl, it) if it.get("plane") else None
+        aim = None
+        ax = meta.get("emitter_axis")
+        if isinstance(ax, dict) and isinstance(ax.get("origin"), list) and isinstance(ax.get("dir"), list):
+            target = next((t for t in self.mounts.get("targets", []) if t["id"] == ax.get("target", "tcp")), None)
+            if target is not None:
+                aim = sim.aim_check(model_xml, ax, target, body)
+        torque = sim.torque_check(base_xml, model_xml, {"total": total_g, "part_print_g": part_g, "extra_g": extra_g}, self.stall_nm,
                                   "Static gravity torque, max over a pose grid; dynamic loads not included.")
         rows = [{k: r[k] for k in ("joint", "max_static_nm_without", "max_static_nm_with", "delta_pct", "pct_of_stall_with")} for r in torque["rows"]]
         worst = sorted(coll["exact"]["details"], key=lambda r: r["min_mm"])[:3]
-        ok = bool(pr["ok"] and not fit["interference"] and coll["collision_free"])
+        ok = bool(pr["ok"] and not fit["interference"] and coll["collision_free"] and (support is None or support["ok"])
+                  and (aim is None or aim["ok"]))
         summary = {
             "ok": ok, "part": pid, "mount": it["id"], "body": body, "sweep": self.sweep,
             "printability": {k: pr[k] for k in ("min_wall_mm", "min_wall_required_mm", "wall_ok", "overhang_area_mm2_over_45deg", "watertight", "ok") if k in pr},
@@ -247,18 +263,48 @@ class Toolbox:
                           "poses_penetrating": coll["exact"]["poses_penetrating"],
                           "collisions_only_where_robot_clearance_below_mm": coll["collisions_only_where_robot_clearance_below_mm"],
                           "closest": [{"pose": w["pose"], "min_mm": w["min_mm"], "body": w["closest_body"], "penetrating": w["penetrating"]} for w in worst]},
+            "support": {k: support[k] for k in ("contact_ratio", "min_contact_ratio", "max_gap_mm", "max_gap_at", "max_overhang_mm", "seat_share_outside_flat_face", "ok") if k in support} if support else None,
+            "aim": {k: aim[k] for k in ("target", "target_mm", "miss_mm", "aim_tol_mm", "blocked_by", "ok")} if aim else None,
             "torque": rows, "added_mass_g": total_g,
         }
-        full = {"printability": pr, "static_fit": fit, "collision": coll, "torque": torque, "added_mass_g": total_g, "part": pid, "mount": it["id"]}
+        full = {"printability": pr, "static_fit": fit, "support": support, "aim": aim, "collision": coll, "torque": torque, "added_mass_g": total_g, "part": pid, "mount": it["id"]}
         with open(os.path.join(self.out, "checks.json"), "w", encoding="utf-8") as f:
             json.dump(full, f, indent=1, ensure_ascii=False)
         self.fits[(pid, it["id"])] = summary
         self.last_fit = summary
         wf = next((r for r in torque["rows"] if r["joint"] == "wrist_flex"), None)
         return (summary, f"{pid} on {it['id']}: wall {pr['min_wall_mm']} mm, fit {'interference' if fit['interference'] else 'ok'} (min {fit['min_mm']} mm), "
+                         + (f"seat contact {support['contact_ratio'] * 100:.0f} % ({'ok' if support['ok'] else 'TOO LOW: seat overhangs or floats'}), " if support else "")
+                         + (f"aim miss {aim['miss_mm']} mm ({'ok' if aim['ok'] else 'off target'}), " if aim else "") +
                          f"sweep {coll['poses_checked']} poses {'collision-free' if coll['collision_free'] else str(coll['exact']['poses_penetrating']) + ' in contact'}"
                          + (f", wrist_flex +{wf['delta_pct']} %" if wf and wf.get("delta_pct") is not None else ""),
                 ["checks.json"])
+
+    def _check_fit_legged(self, pid, it, stl, pr, part_g, extra_g, total_g, com, fdir):
+        """Floating-base devices (quadrupeds): fit + per-leg collision sweep + payload/stability (forge/sim_legged.py)."""
+        from . import sim_legged
+        fit, coll, pay = sim_legged.check_fit(self.device, stl, it, total_g, com, fdir, sweep=self.sweep)
+        # seat contact only where the mount data defines a support spec (Go2 mounts are not measured yet)
+        support = sim.support_check(os.path.join(fdir, "model_with_part.xml"), stl, it) if it.get("plane") and it.get("support") else None
+        ok = bool(pr["ok"] and not fit["interference"] and coll["collision_free"] and pay["ok"] and (support is None or support["ok"]))
+        summary = {
+            "ok": ok, "part": pid, "mount": it["id"], "body": it["body"], "sweep": self.sweep, "device": self.device.id,
+            "printability": {k: pr[k] for k in ("min_wall_mm", "min_wall_required_mm", "wall_ok", "overhang_area_mm2_over_45deg", "watertight", "ok") if k in pr},
+            "static_fit": {"min_mm": fit["min_mm"], "interference": fit["interference"]},
+            "collision": {k: coll[k] for k in ("poses_checked", "collision_free", "closest") if k in coll},
+            "payload": {k: pay[k] for k in ("added_mass_g", "payload_nominal_g", "within_nominal_payload", "limits", "rows", "ok") if k in pay},
+            "support": {k: support[k] for k in ("contact_ratio", "max_gap_mm", "max_overhang_mm", "ok") if k in support} if support else None,
+            "aim": None, "torque": None, "added_mass_g": total_g,
+        }
+        full = {"printability": pr, "static_fit": fit, "support": support, "collision": coll, "payload": pay, "added_mass_g": total_g,
+                "part": pid, "mount": it["id"], "device": self.device.id}
+        with open(os.path.join(self.out, "checks.json"), "w", encoding="utf-8") as f:
+            json.dump(full, f, indent=1, ensure_ascii=False)
+        self.fits[(pid, it["id"])] = summary
+        self.last_fit = summary
+        return (summary, f"{pid} on {self.device.id}/{it['id']}: wall {pr['min_wall_mm']} mm, fit {'interference' if fit['interference'] else 'ok'}, "
+                         f"legs {coll.get('poses_checked')} poses {'collision-free' if coll['collision_free'] else 'IN CONTACT'}, "
+                         f"payload {'ok' if pay['ok'] else 'FAILS'}", ["checks.json"])
 
     def t_pick_components(self, query=None):
         if not isinstance(query, str) or not (2 <= len(query.strip()) <= 200):
@@ -301,7 +347,7 @@ class Toolbox:
     def t_render_steps(self):
         pid = self._part("latest")
         P = self.parts[pid]
-        body = (self.last_fit or {}).get("body") or "gripper"
+        body = (self.last_fit or {}).get("body") or (self.device.mount(self.device.default_mount) or {}).get("body", "gripper")
         spec = {
             "setup": {"cameraMount": True},
             "parts": [{"key": "forge:part", "body": body, "stl": "part.stl"}],

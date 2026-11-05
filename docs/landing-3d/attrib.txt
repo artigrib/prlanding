@@ -1,0 +1,28 @@
+aira.glb – AIRA — Nextis (Roberto De la Cruz González); hardware licence: Apache-2.0; https://github.com/robertorobotics/Nextis-AIRA-3D
+bhl.glb – Berkeley Humanoid Lite — Hybrid Robotics, UC Berkeley; hardware licence: CC BY-SA 4.0; https://github.com/HybridRobotics/berkeley-humanoid-lite
+duck.glb – Open Duck Mini v2 — Antoine Pirrone a komunita; hardware licence: Apache-2.0; https://github.com/apirrone/Open_Duck_Mini
+exomy.glb – ExoMy — ESA Planetary Robotics Lab; hardware licence: GPL-3.0; https://github.com/esa-prl/ExoMy
+hand.glb – AmazingHand — Pollen Robotics; hardware licence: CC BY 4.0; https://github.com/pollen-robotics/AmazingHand
+klepeto.glb – viz úplné licenční texty níže (models/NOTICE.txt)
+koch.glb – Koch v1.1 — Jess Moss a Hugging Face (podle ruky Alexandera Kocha); hardware licence: Apache-2.0; https://github.com/jess-moss/koch-v1-1
+kosa.glb – viz úplné licenční texty níže (models/NOTICE.txt)
+lekiwi.glb – LeKiwi — SIGRobotics UIUC; hardware licence: Apache-2.0; https://github.com/SIGRobotics-UIUC/LeKiwi
+lizard.glb – Lizard — TRD-B; hardware licence: CC BY 4.0; https://github.com/TRD-B/Lizard
+orca.glb – ORCA Hand — ORCA Dexterity; hardware licence: CC BY 4.0; https://github.com/orcahand/orcahand_hardware
+osr.glb – Open Source Rover — JPL / Caltech; hardware licence: Apache-2.0; https://github.com/nasa-jpl/open-source-rover
+otto.glb – Otto DIY — Otto DIY; hardware licence: CC BY-SA 4.0; https://github.com/OttoDIY/OttoDIYLib
+parol6.glb – PAROL6 — Petar Crnjak (Source Robotics); hardware licence: GPL-3.0; https://github.com/PCrnjak/PAROL6-Desktop-robot-arm
+rc128.glb – Open 1:28 RC Car — Kurtis Kopf (zortness); hardware licence: CC BY 4.0; https://github.com/zortness/open_128_rc_car
+sawppy.glb – Sawppy — Roger Cheng; hardware licence: MIT; https://github.com/Roger-random/Sawppy_Rover
+sesame.glb – Sesame — Dorian Todd (Sesame Robot Project); hardware licence: Apache-2.0; https://github.com/dorianborian/sesame-robot
+sidekick.glb – Sidekick — Rodolfo Keesey a kol.; hardware licence: CERN-OHL-S-2.0; https://github.com/rodolfokeesey/Liquid-Handler
+so101.glb – SO-101 — The Robot Studio a Hugging Face; hardware licence: Apache-2.0; https://github.com/TheRobotStudio/SO-ARM100
+so102.glb – SO-ARM 102 — Robonine; hardware licence: CERN-OHL-P-2.0; https://github.com/roboninecom/SO-ARM-102
+spot.glb – SpotMicro — KDY0523 a komunita SpotMicroAI; hardware licence: CC BY (Thingiverse); https://github.com/mike4192/spotMicro
+stackchan.glb – Stack-chan — Shinya Ishikawa (meganetaaan) a komunita; hardware licence: Apache-2.0; https://github.com/stack-chan/stack-chan
+svrn.glb – Project SVRN — Shoverobotics (Jordan Gell); hardware licence: CC BY 4.0; https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai
+thor.glb – Thor — Ángel L. M. (AngelLM); hardware licence: CC BY-SA 4.0; https://github.com/AngelLM/Thor
+uc2.glb – UC2 — openUC2 (B. Diederich a kol.); hardware licence: CERN-OHL-1.2; https://github.com/openUC2/UC2-GIT
+vert150.glb – Vertikální spinner 150 g — TheBlackfish (remix „150g vert“ od Muffin578); hardware licence: CC BY-SA 4.0 nebo BY-NC-SA 4.0 (ověřujeme s autory); https://www.printables.com/model/1146226-vertical-spinner-battlebot-antweight-150-g
+xle.glb – XLeRobot — Gaotian Wang a kol.; hardware licence: Apache-2.0 (ověřujeme); https://github.com/Vector-Wangel/XLeRobot
+zcar2.glb – zcar2 — Alex Yu (alexyu132); hardware licence: GPL-3.0; https://github.com/alexyu132/zcar2

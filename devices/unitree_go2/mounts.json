@@ -1,0 +1,40 @@
+{
+ "$comment": "Go2 EDU mount interfaces. Frame: MuJoCo body 'base' of model/go2.xml, mm; +x forward, +z up. Nothing here has been checked on a real robot (verified=false). Unknown values are null with a todo; do not fill them from guesses.",
+ "robot": "unitree_go2",
+ "units": "mm",
+ "frames": "base body frame of devices/unitree_go2/model/go2.xml (mm): +x forward, +y left, +z up. The Menagerie model has no expansion dock.",
+ "source": {"docs": ["https://support.unitree.com/home/en/developer/Payload", "https://support.unitree.com/home/en/developer/about_Go2"], "mesh": "Menagerie unitree_go2 base_*.obj @ b0655057"},
+ "interfaces": [
+  {
+   "id": "back_top_face", "name": "Back top face (where the expansion dock sits)", "body": "base", "kind": "flat_face_no_holes",
+   "plane": {"point": [-23.6, 0.0, 57.0], "normal": [0, 0, 1]},
+   "flat_area_mm2": 18392,
+   "support_polygon": [[-126.8, -48.4], [79.6, -48.4], [79.6, 48.4], [-126.8, 48.4]],
+   "edge_limits": {"min_contact_ratio": 0.8, "max_overhang_mm": 3.0},
+   "holes": null,
+   "fastener": "Unitree fixes the expansion dock to the back with M3x50 screws (Payload page, 'Install expansion dock' step 3). Hole positions: see back_load_holes (unknown).",
+   "verified": false,
+   "source": "Measured on the Menagerie visual mesh: upward faces at z=57 mm (bounding box of the face set, not its exact outline; ±1 mm). Dock screw size from https://support.unitree.com/home/en/developer/Payload",
+   "todo": "Replace support_polygon with the real outline (calipers or Unitree drawing); add the dock screw holes once back_load_holes is known.",
+   "moves_with": "base"
+  },
+  {
+   "id": "back_load_holes", "name": "Back load installation holes", "body": "base", "kind": "screw_face",
+   "plane": null, "support_polygon": null, "holes": null,
+   "fastener_spec": {"thread": "M3", "length": null, "std": null, "head": null, "source": "dock uses M3x50 per https://support.unitree.com/home/en/developer/Payload; thread of the load holes themselves not stated in text"},
+   "verified": false,
+   "source": "'Back load installation hole map' drawing (image, mm) on https://support.unitree.com/home/en/developer/about_Go2",
+   "todo": "Transcribe hole centres and diameters from the drawing (image only, not machine-readable) and check with calipers on Marta's Go2.",
+   "moves_with": "base"
+  },
+  {
+   "id": "dock_rails", "name": "Expansion dock guide rails", "body": "base", "kind": "rail",
+   "plane": null, "support_polygon": null, "holes": null, "count": null,
+   "fastener_spec": {"thread": "M4", "length": 10, "std": null, "head": "internal hexagon (socket)", "nut": "square nut in the rail", "source": "https://support.unitree.com/home/en/developer/Payload (servo arm mounting on the rails)"},
+   "verified": false,
+   "source": "'Rail size' drawing (image, mm) on https://support.unitree.com/home/en/developer/Payload",
+   "todo": "Rail profile (slot width, depth, square-nut size), length, number of rails and position relative to base: transcribe from the drawing and measure; the dock itself is not in the sim model (needs a dock body in model/overlay.xml).",
+   "moves_with": "base"
+  }
+ ]
+}

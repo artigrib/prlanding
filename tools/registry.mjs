@@ -54,7 +54,7 @@ export const CATALOGUE = {
   spotmicro: 'spot', 'sawppy-rover': 'sawppy', thor: 'thor', exomy: 'exomy', 'so-arm102': 'so102', 'nextis-aira': 'aira',
   parol6: 'parol6', 'berkeley-humanoid-lite': 'bhl', 'roboto-origin': 'origin',
   'open-128-rc-car': 'rc128', zcar2: 'zcar2', 'lizard-rc-race-car': 'lizard',
-  'stack-chan': 'stackchan'
+  'stack-chan': 'stackchan', 'openflexure-microscope': 'openflexure'
 };
 const SHOWCASE_PATH = { origin: { cs: 'sim/origin/', en: 'en/sim/origin/' } };
 

@@ -26,16 +26,20 @@ import numpy as np
 import trimesh
 
 from . import checks, sim
+from .device import load_device
 from .sandbox import run_cad
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FORGE = os.path.dirname(HERE)
 ROOT = os.path.abspath(os.path.join(FORGE, "..", ".."))
-MOUNTS = os.path.join(HERE, "mounts", "so101.json")
+DEVICE = load_device("so101")  # stage 0 is the SO-101 flashlight add-on
+MOUNTS = DEVICE.path(DEVICE.spec["mounts"])
 CATALOG = os.path.join(HERE, "parts", "catalog.json")
 DESIGN = os.path.join(FORGE, "designs", "so101_flashlight.py")
 TEMPLATES = os.path.join(FORGE, "templates")
 SLUG = "so101-flashlight"
+# sleeve placement in the gripper frame (mm): beside the wrist camera mount, clear of its base block and arm
+SLEEVE_X, SLEEVE_Z, TOP_Z = -28.0, -24.0, -14.0
 STEPS = [
     ("parse", "Parse request", "Rozbor zadání"),
     ("mount", "Pick mount point", "Výběr místa uchycení"),
@@ -95,12 +99,17 @@ class ScriptedBrain:
              "tilt_deg": 25.0, "toe_deg": 0.0, "plate_t": 3.0, "hole_pitch": mount["hole_pitch_mm"]["design_value"],
              "hole_mid_x": round((holes[0]["center"][0] + holes[1]["center"][0]) / 2, 2), "hole_z": holes[0]["center"][2],
              "face_y": mount["plane"]["point"][1], "hole_d": 3.4, "slot_extra": mount["hole_pitch_mm"]["uncertainty"],
-             "sleeve_x": -28.0, "sleeve_z": -24.0}
-        # aim: tilt the sleeve (towards -y) so its axis passes the TCP site in the y-z plane; the toe (towards +x)
-        # stays 0 so the sleeve's back end stays inside the jaw outline (x > -35 mm)
+             "sleeve_x": SLEEVE_X, "sleeve_z": SLEEVE_Z, "top_z": TOP_Z, "foot_gap": 0.1, "foot_min": 1.5,
+             "foot_profile": mount["beyond_edge_profile"]["points"], "face_x_min": mount["face_bounds"]["min"][0]}
+        # aim: the sleeve axis passes through the TCP site (tilt towards -y, toe towards +x). The flat face itself
+        # has no room for the sleeve with the wrist camera fitted (its base block and arm sit in the beam), so the
+        # sleeve stays beside the camera, on the conforming foot past the face's -x edge.
         od = p["led_d"] + p["led_clear"] + 2 * p["wall"]
         cy = p["face_y"] + p["plate_t"] + od / 2 - 1.0
-        p["tilt_deg"] = round(math.degrees(math.atan2(cy - tcp_mm[1], p["sleeve_z"] - tcp_mm[2])), 0)
+        v = np.asarray(tcp_mm, float) - np.array([p["sleeve_x"], cy, p["sleeve_z"]])
+        v = v / np.linalg.norm(v)
+        p["tilt_deg"] = round(math.degrees(math.asin(-v[1])), 1)
+        p["toe_deg"] = round(math.degrees(math.atan2(v[0], -v[2])), 1)
         return p
 
     def write_cad(self, params):
@@ -204,9 +213,9 @@ def world_mm(model_xml, pose, body, local_mm):
 
 
 def render_spec(model_xml, meta, led_tip, params, coll):
-    J = ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]
+    J = DEVICE.joints
     zero = {j: 0.0 for j in J}
-    work = {"shoulder_pan": 0.0, "shoulder_lift": -0.35, "elbow_flex": 0.55, "wrist_flex": 1.15, "wrist_roll": 0.0, "gripper": 0.45}
+    work = DEVICE.pose("work")
     holes = meta["screw_holes"]
     (h1, h2), (ydir,) = world_mm(model_xml, zero, "gripper", [[holes[0][0], holes[0][1] + params["plate_t"], holes[0][2]],
                                                              [holes[1][0], holes[1][1] + params["plate_t"], holes[1][2]]])
@@ -297,7 +306,7 @@ def run_job(request, job_dir, render=True, brain=None, sweep_grid=None):
         lib = json.load(f)
     mount_id, ranked = brain.choose_mount(spec, lib)
     mount = next(i for i in lib["interfaces"] if i["id"] == mount_id)
-    tcp = site_mm(os.path.join(sim.MODEL_DIR, "so101.xml"), "gripperframe")
+    tcp = site_mm(DEVICE.model_xml, DEVICE.tcp_site)
     params = brain.params(spec, mount, tcp)
     log.done("mount", summary=f"{mount_id}: 2× M3 holes, pitch {mount['hole_pitch_mm']['design_value']} ± {mount['hole_pitch_mm']['uncertainty']} mm (ověřit na tisku)",
              data={"chosen": mount_id, "ranked": ranked, "holes": mount["holes"], "verify": mount["verify"], "tcp_gripper_mm": tcp, "params": params})
@@ -322,32 +331,41 @@ def run_job(request, job_dir, render=True, brain=None, sweep_grid=None):
         catalog = json.load(f)
     led = brain.pick_led(spec, catalog, params["led_d"])
     led_tip = led_mesh(params, meta, os.path.join(job_dir, "led.stl"))
-    pr = checks.printability(os.path.join(job_dir, "part.stl"), rep, meta["print_build_dir"])
+    pr = checks.printability(os.path.join(job_dir, "part.stl"), rep, meta["print_build_dir"], meta.get("print_note"))
     extra = {"part_print_g": rep["mass_print_g"], "led_g": led["pick"]["mass_g_est"], "resistor_heatshrink_g": 0.4, "cable_on_gripper_g": 2.0}
     added_g = round(sum(extra.values()), 2)
     led_c = np.asarray(meta["sleeve_center"])
     com = (np.asarray(rep["center_of_mass_mm"]) * rep["mass_print_g"] + led_c * (added_g - rep["mass_print_g"])) / added_g
-    shift = {"camera_mount": [0, params["plate_t"], 0]}
+    shift = {DEVICE.sandwich[mount_id]: [0, params["plate_t"], 0]} if mount_id in DEVICE.sandwich else None
     model_xml = sim.model_with_part(os.path.join(job_dir, "part.stl"), "gripper", added_g / 1000.0, com.tolist(),
                                     os.path.join(job_dir, "model_with_part.xml"), shift)
     base_xml = sim.model_with_part(os.path.join(job_dir, "part.stl"), "gripper", 1e-9, com.tolist(),
                                    os.path.join(job_dir, "model_base.xml"), shift)
     fit = sim.static_fit(model_xml, os.path.join(job_dir, "part.stl"), seat_values=(params["face_y"], params["face_y"] + params["plate_t"]))
     coll = sim.collision_sweep(model_xml, part_stl=os.path.join(job_dir, "part.stl"), grid=sweep_grid)
-    torque = sim.torque_check(base_xml, model_xml, {"total": added_g, **extra}, {"C018 12 V (30 kg·cm)": 2.94, "C001 7.4 V (16.5 kg·cm at 6 V)": 1.62},
+    support = sim.support_check(model_xml, os.path.join(job_dir, "part.stl"), mount)
+    aim = None
+    if meta.get("emitter_axis"):
+        target = next(t for t in lib.get("targets", []) if t["id"] == meta["emitter_axis"].get("target", "tcp"))
+        aim = sim.aim_check(model_xml, meta["emitter_axis"], target, mount["body"])
+    torque = sim.torque_check(base_xml, model_xml, {"total": added_g, **extra}, DEVICE.stall_nm,
                               "Static gravity torque, max over a pose grid, MuJoCo model masses (the model includes the wrist camera mount, 12 g). "
                               "Added mass sits ≈40 mm from the wrist-roll axis; dynamic loads (fast moves) not included.")
-    chk = {"printability": pr, "static_fit": fit, "collision": coll, "torque": torque, "added_mass_g": added_g,
+    chk = {"printability": pr, "static_fit": fit, "support": support, "aim": aim, "collision": coll, "torque": torque, "added_mass_g": added_g,
            "added_mass_com_gripper_mm": [round(float(v), 2) for v in com]}
     with open(os.path.join(job_dir, "checks.json"), "w", encoding="utf-8") as f:
         json.dump(chk, f, indent=1, ensure_ascii=False)
     wf = next(r for r in torque["rows"] if r["joint"] == "wrist_flex")
-    ok = pr["ok"] and not fit["interference"] and added_g <= spec["requirements"]["mass_max_g"]
+    ok = (pr["ok"] and not fit["interference"] and added_g <= spec["requirements"]["mass_max_g"] and support["ok"]
+          and (aim is None or aim["ok"]))
     log.done("checks", status="ok" if ok else "warn",
-             summary=(f"wall {pr['min_wall_mm']} mm ≥ {pr['min_wall_required_mm']}; +{added_g} g; wrist_flex static +{wf['delta_pct']} %; "
+             summary=(f"wall {pr['min_wall_mm']} mm ≥ {pr['min_wall_required_mm']}; seat contact {support['contact_ratio'] * 100:.0f} %; "
+                      + (f"aim miss {aim['miss_mm']} mm; " if aim else "") + f"+{added_g} g; wrist_flex static +{wf['delta_pct']} %; "
                       f"sweep {coll['poses_checked']} poses: {'no collision' if coll['collision_free'] else 'contact only where the robot itself is within ' + str(coll['collisions_only_where_robot_clearance_below_mm']) + ' mm'}"),
              data={"printability": {k: pr[k] for k in ("min_wall_mm", "wall_ok", "overhang_area_mm2_over_45deg", "watertight", "ok")},
                    "static_fit": {"min_mm": fit["min_mm"], "interference": fit["interference"]},
+                   "support": {k: support[k] for k in ("contact_ratio", "min_contact_ratio", "contact_area_mm2", "seat_area_mm2", "ok")},
+                   "aim": {k: aim[k] for k in ("target", "miss_mm", "aim_tol_mm", "blocked_by", "ok")} if aim else None,
                    "collision": {k: coll[k] for k in ("poses", "poses_checked", "poses_excluded_robot_self_contact", "collision_free",
                                                       "collisions_only_where_robot_clearance_below_mm")} | {"exact_min_mm": coll["exact"]["min_mm"], "hull_min_mm": coll["hull"]["min_mm"],
                                                                                                           "exact_poses_penetrating": coll["exact"]["poses_penetrating"]},
@@ -439,7 +457,7 @@ def guide_values(spec, mount, params, rep, pr, fit, coll, torque, elec, led, add
     common = {
         "mass": rep["mass_print_g"], "added": added_g, "wall": pr["min_wall_mm"], "poses": coll["poses_checked"], "poses_all": coll["poses"],
         "excluded": coll["poses_excluded_robot_self_contact"], "r": f"{c['r_ohm']:.0f}", "i_typ": c["i_ma"]["typ"], "i_max": c["i_ma"]["max"],
-        "i_min": c["i_ma"]["min"], "p_r": c["p_resistor_mw_max"], "tilt": f"{params['tilt_deg']:.0f}", "pitch": params["hole_pitch"],
+        "i_min": c["i_ma"]["min"], "p_r": c["p_resistor_mw_max"], "tilt": f"{params['tilt_deg']:.0f}", "toe": f"{params['toe_deg']:.0f}", "pitch": params["hole_pitch"],
         "slot": params["slot_extra"], "bore": f"{params['led_d'] + params['led_clear']:.2f}", "flange": params["flange_d"],
         "wf_delta": wf["delta_nm"], "wf_pct": wf["delta_pct"], "wf_with": wf["max_static_nm_with"], "wf_stall": wf["pct_of_stall_with"]["C001 7.4 V (16.5 kg·cm at 6 V)"],
         "sl_pct": wr["delta_pct"], "led_name": led["name"], "led_url": led["sources"][0]["url"], "led_checked": led["sources"][0]["checked"],
@@ -449,7 +467,7 @@ def guide_values(spec, mount, params, rep, pr, fit, coll, torque, elec, led, add
     }
     en = dict(common)
     cs = {k: (fmt(v, 2 if isinstance(v, float) and abs(v) < 10 else 1, "cs") if isinstance(v, float) else v) for k, v in common.items()}
-    cs["r"], cs["tilt"], cs["bore"] = common["r"], common["tilt"], fmt(params["led_d"] + params["led_clear"], 2, "cs")
+    cs["r"], cs["tilt"], cs["toe"], cs["bore"] = common["r"], common["tilt"], common["toe"], fmt(params["led_d"] + params["led_clear"], 2, "cs")
     cs["pitch"], cs["slot"] = fmt(params["hole_pitch"], 1, "cs"), fmt(params["slot_extra"], 1, "cs")
     en["pitch"], en["slot"] = fmt(params["hole_pitch"], 1), fmt(params["slot_extra"], 1)
     en["wf_delta"], cs["wf_delta"] = fmt(wf["delta_nm"], 4), fmt(wf["delta_nm"], 4, "cs")

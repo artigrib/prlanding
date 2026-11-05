@@ -1,5 +1,5 @@
 {
- "$comment": "In-house forge eval: typical SO-101 add-ons with automatic graders (backend/forge/eval/graders.py). Mount ids come from forge/mounts/so101.json, which has three interfaces today (gripper_cam_face, gripper_outer_face, forearm_clamp). Tasks that would ideally sit elsewhere (upper arm, base, moving jaw) use the closest existing interface; the request text says so, so a model is not graded on a mount we cannot simulate.",
+ "$comment": "In-house forge eval: typical SO-101 add-ons with automatic graders (backend/forge/eval/graders.py). Mount ids come from devices/so101/mounts.json, which has three interfaces today (gripper_cam_face, gripper_outer_face, forearm_clamp). Tasks that would ideally sit elsewhere (upper arm, base, moving jaw) use the closest existing interface; the request text says so, so a model is not graded on a mount we cannot simulate.",
  "version": 1,
  "tasks": [
   {"id": "flashlight", "request": "SO-101 with a small flashlight on the gripper: a holder for a 10 mm white LED aimed at the jaw tips, powered from USB 5 V.",

@@ -1,0 +1,10 @@
+{
+ "$schema": "../schema/ports.schema.json",
+ "$comment": "SO-101 has no accessory power port; add-ons bring their own supply (USB 5 V) as in the flashlight extension. The servo bus is listed so agents do not tap it.",
+ "platform": "so101",
+ "ports": [
+  {"id": "servo_bus", "body": "base", "connector": "STS3215 3-pin daisy chain", "kind": "bus", "protocol": "Feetech half-duplex TTL", "verified": false},
+  {"id": "external_usb_5v", "connector": "USB-A (external power bank / PC)", "kind": "power_out", "voltage_v": 5.0, "current_a": 0.5, "verified": false}
+ ],
+ "budgets": {"power_w": {"external_usb_5v": 2.5}}
+}

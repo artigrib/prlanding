@@ -1,6 +1,6 @@
 """MuJoCo checks for an add-on part: collision sweep over the joint range and static servo torque.
 
-The part (STL in the attach body's frame, mm) is added as a body to a COPY of sim/so101/model/so101.xml
+The part (STL in the attach body's frame, mm) is added as a body to a COPY of the device's MJCF (devices/<id>/device.json; SO-101: sim/so101/model/so101.xml)
 (the site's model is never modified). Collision distances use mj_geomDistance between the part and
 every geom of the other moving links (visual meshes and collision primitives). MuJoCo measures mesh
 distances on convex hulls, so the sweep is conservative (hull of a sleeve-on-a-plate part is bigger
@@ -16,8 +16,10 @@ import mujoco
 import numpy as np
 import trimesh
 
+from .device import load_device
+
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-MODEL_DIR = os.path.join(ROOT, "sim/so101/model")
+MODEL_DIR = load_device().model_dir  # default device (so101); pass device= for other platforms
 G = 9.81
 SOLID_TYPES = {int(t) for t in (mujoco.mjtGeom.mjGEOM_MESH, mujoco.mjtGeom.mjGEOM_BOX, mujoco.mjtGeom.mjGEOM_CYLINDER,
                                 mujoco.mjtGeom.mjGEOM_CAPSULE, mujoco.mjtGeom.mjGEOM_SPHERE)}
@@ -25,12 +27,13 @@ MESH = int(mujoco.mjtGeom.mjGEOM_MESH)
 CONTACT_MM = 0.2  # closer than this on the real meshes counts as a collision (surfaces cross or touch)
 
 
-def model_with_part(stl_path, attach_body, added_mass_kg, com_mm, out_xml, shift_bodies=None):
-    """Write a copy of so101.xml with the part as body `forge_part` under `attach_body`.
+def model_with_part(stl_path, attach_body, added_mass_kg, com_mm, out_xml, shift_bodies=None, device=None):
+    """Write a copy of the device model (default so101.xml) with the part as body `forge_part` under `attach_body`.
     shift_bodies: {"camera_mount": [0, 3, 0]} moves a body (mm) that the part is sandwiched under."""
-    with open(os.path.join(MODEL_DIR, "so101.xml"), encoding="utf-8") as f:
+    dev = device or load_device()
+    with open(dev.model_xml, encoding="utf-8") as f:
         xml = f.read()
-    xml = xml.replace('meshdir="assets"', f'meshdir="{os.path.join(MODEL_DIR, "assets")}"', 1)
+    xml = xml.replace(f'meshdir="{dev.meshdir}"', f'meshdir="{os.path.join(dev.model_dir, dev.meshdir)}"', 1)
     xml = xml.replace("</asset>", f'  <mesh name="forge_part" file="{os.path.abspath(stl_path)}" scale="0.001 0.001 0.001"/>\n  </asset>', 1)
     com = " ".join(f"{v / 1000.0:.6f}" for v in com_mm)
     body = (f'<body name="forge_part">\n'
@@ -84,7 +87,7 @@ def joint_grid(m, spec):
     return names, values
 
 
-def collision_sweep(xml, part_geom="forge_part", grid=None, margin_mm=2.0, refine=12, part_stl=None):
+def collision_sweep(xml, part_geom="forge_part", grid=None, margin_mm=2.0, refine=12, part_stl=None, device=None):
     """Sweep the joint grid. A pose counts only if the robot itself is clear there: the hulls of the
     part's own link group (gripper + camera mount) must not touch any non-adjacent link (poses where the
     folded arm runs into its own base are excluded, the real arm cannot reach them either). In the
@@ -101,7 +104,7 @@ def collision_sweep(xml, part_geom="forge_part", grid=None, margin_mm=2.0, refin
     others = [g for g in vis if m.geom_bodyid[g] not in same]
     own = [g for g in vis if m.geom_bodyid[g] in same]
     own_vs = [g for g in others if m.geom_bodyid[g] not in adjacent]
-    grid = grid or {"shoulder_lift": 5, "elbow_flex": 5, "wrist_flex": 11, "wrist_roll": 9, "gripper": 4}
+    grid = grid or (device or load_device()).grid("full")
     names, values = joint_grid(m, grid)
     qadr = [m.jnt_qposadr[m.joint(n).id] for n in names]
     fromto = np.zeros(6)
@@ -230,14 +233,15 @@ def static_fit(xml, part_stl, seat_axis=1, seat_values=(24.0,), seat_tol=0.3, pa
             "note": f"part samples on the seat planes (axis {seat_axis} = {list(seat_values)} ± {seat_tol} mm) are not counted; a vertex counts as inside when deeper than {depth_tol} mm"}
 
 
-def gravity_torques(xml, grid=None):
+def gravity_torques(xml, grid=None, device=None):
     """Max |gravity torque| per joint over a pose grid (N·m), static (qvel = qacc = 0)."""
     m = mujoco.MjModel.from_xml_path(xml)
     d = mujoco.MjData(m)
-    grid = grid or {"shoulder_lift": 9, "elbow_flex": 9, "wrist_flex": 9, "wrist_roll": 5}
+    dev = device or load_device()
+    grid = grid or dev.grid("torque")
     names, values = joint_grid(m, grid)
     qadr = [m.jnt_qposadr[m.joint(n).id] for n in names]
-    joints = ["shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]
+    joints = dev.torque_joints
     dadr = {j: m.jnt_dofadr[m.joint(j).id] for j in joints}
     best = {j: 0.0 for j in joints}
     for combo in itertools.product(*values):
@@ -251,9 +255,9 @@ def gravity_torques(xml, grid=None):
     return {j: round(v, 4) for j, v in best.items()}
 
 
-def torque_check(base_xml, part_xml, added_mass_g, stall_nm, lever_note):
-    base = gravity_torques(base_xml)
-    withp = gravity_torques(part_xml)
+def torque_check(base_xml, part_xml, added_mass_g, stall_nm, lever_note, device=None):
+    base = gravity_torques(base_xml, device=device)
+    withp = gravity_torques(part_xml, device=device)
     rows = []
     for j in base:
         delta = withp[j] - base[j]
@@ -261,3 +265,98 @@ def torque_check(base_xml, part_xml, added_mass_g, stall_nm, lever_note):
                      "delta_nm": round(delta, 4), "delta_pct": round(100.0 * delta / base[j], 2) if base[j] > 1e-6 else None,
                      "pct_of_stall_with": {k: round(100.0 * withp[j] / v, 1) for k, v in stall_nm.items()}})
     return {"added_mass_g": added_mass_g, "stall_nm": stall_nm, "rows": rows, "note": lever_note}
+
+
+# --------------------------------------------------------------------------- mount-library driven fit checks
+# Both checks are robot-agnostic: everything robot-specific (body, mating plane, tolerances, aim targets) comes
+# from the mount library entry (devices/<id>/mounts.json), so a new platform only needs its own library.
+
+def _body_meshes_in_frame(m, d, body_id, exclude_geoms=()):
+    """Visual meshes (group 2) of the bodies welded to body_id, in body_id's frame (mm)."""
+    same = _welded_group(m, body_id)
+    Rb, tb = d.xmat[body_id].reshape(3, 3), d.xpos[body_id]
+    out = []
+    for g in range(m.ngeom):
+        if m.geom_bodyid[g] not in same or g in exclude_geoms or int(m.geom_type[g]) != MESH or int(m.geom_group[g]) != 2:
+            continue
+        mid = m.geom_dataid[g]
+        va, vn, fa, fn = m.mesh_vertadr[mid], m.mesh_vertnum[mid], m.mesh_faceadr[mid], m.mesh_facenum[mid]
+        V = m.mesh_vert[va:va + vn] @ d.geom_xmat[g].reshape(3, 3).T + d.geom_xpos[g]
+        out.append((m.mesh(mid).name, trimesh.Trimesh((V - tb) @ Rb * 1000.0, m.mesh_face[fa:fa + fn], process=False)))
+    return out
+
+
+def support_check(xml, part_stl, interface, part_geom="forge_part", n_samples=20000, seed=7):
+    """How well the add-on sits on its mount. Part surface samples whose normal faces the host
+    (n·plane_normal < -0.5) and that lie at or below the mount plane (+ band_mm) form the seat; the
+    contact ratio is the share of that seat area within contact_tol_mm of the host body's meshes.
+    A plate hanging over the edge of the flat face, or a sleeve held off the surface, lowers the ratio."""
+    sup = interface.get("support") or {}
+    tol, band, need = sup.get("contact_tol_mm", 0.5), sup.get("band_mm", 0.5), sup.get("min_contact_ratio", 0.8)
+    max_over = sup.get("max_overhang_mm")  # largest allowed gap between any seat point and the host (None = not enforced)
+    m = mujoco.MjModel.from_xml_path(xml)
+    d = mujoco.MjData(m)
+    mujoco.mj_kinematics(m, d)
+    host_body = m.body(interface["body"]).id
+    pg = m.geom(part_geom).id
+    host = [t for name, t in _body_meshes_in_frame(m, d, host_body, exclude_geoms=(pg,))]
+    host = trimesh.util.concatenate(host)
+    part = trimesh.load_mesh(part_stl, process=True)
+    pts, fi = trimesh.sample.sample_surface_even(part, n_samples, seed=seed)
+    n = np.asarray(interface["plane"]["normal"], float)
+    p0 = np.asarray(interface["plane"]["point"], float)
+    facing = part.face_normals[fi] @ n < -0.5
+    height = (pts - p0) @ n
+    seat = facing & (height <= band)
+    if not seat.any():
+        return {"seat_area_mm2": 0.0, "contact_ratio": 0.0, "ok": False, "note": "no part surface faces the mount"}
+    _, dist, _ = trimesh.proximity.closest_point(host, pts[seat])
+    area_per = part.area / len(pts)
+    ratio = float((dist <= tol).mean())
+    sp = pts[seat]
+    fb = interface.get("face_bounds")
+    out_of_face = None
+    if fb:
+        ax = fb["axes"]
+        inside = np.all([(sp[:, a] >= lo - tol) & (sp[:, a] <= hi + tol) for a, lo, hi in zip(ax, fb["min"], fb["max"])], axis=0)
+        out_of_face = round(float(1.0 - inside.mean()), 3)
+    worst = sp[np.argmax(dist)]
+    return {"interface": interface["id"], "seat_area_mm2": round(float(seat.sum() * area_per), 1),
+            "contact_area_mm2": round(float((dist <= tol).sum() * area_per), 1), "contact_ratio": round(ratio, 3),
+            "min_contact_ratio": need, "contact_tol_mm": tol, "max_gap_mm": round(float(dist.max()), 2),
+            "max_gap_at": [round(float(v), 1) for v in worst], "seat_share_outside_flat_face": out_of_face,
+            "max_overhang_mm": max_over, "overhang_ok": max_over is None or float(dist.max()) <= max_over,
+            "ok": ratio >= need and (max_over is None or float(dist.max()) <= max_over),
+            "note": "seat = part surface facing the host at or below the mount plane; contact = within contact_tol_mm of the host meshes; "
+                    "max_gap_mm (worst seat point to host) must stay within max_overhang_mm"}
+
+
+def aim_check(xml, axis, target, attach_body, part_geom="forge_part", reach_mm=None):
+    """Emitter/sensor axis vs a library target site. axis = {"origin": [mm], "dir": [unit]} in the attach
+    body's frame. Miss = perpendicular distance of the target from the axis (target behind the emitter
+    counts as a miss of the full distance). Occlusion: the segment origin->closest point must not pass
+    through the robot's own meshes (welded to the attach body) or the part."""
+    m = mujoco.MjModel.from_xml_path(xml)
+    d = mujoco.MjData(m)
+    mujoco.mj_kinematics(m, d)
+    b = m.body(attach_body).id
+    tb_body = m.body(target["body"]).id
+    s = m.site(target["site"]).id
+    Rb, tb = d.xmat[b].reshape(3, 3), d.xpos[b]
+    tgt = (d.site_xpos[s] - tb) @ Rb * 1000.0
+    o = np.asarray(axis["origin"], float)
+    u = np.asarray(axis["dir"], float)
+    u = u / np.linalg.norm(u)
+    t = float((tgt - o) @ u)
+    miss = float(np.linalg.norm(tgt - (o + max(t, 0.0) * u)))
+    blocked_by = []
+    if t > 0:
+        for name, mm in _body_meshes_in_frame(m, d, b):
+            loc, _, _ = mm.ray.intersects_location([o + u * 0.5], [u])
+            if len(loc) and np.min(np.linalg.norm(loc - o, axis=1)) < t:
+                blocked_by.append(name)
+    tol = target.get("aim_tol_mm", 5.0)
+    return {"target": target["id"], "target_mm": [round(float(v), 2) for v in tgt], "origin_mm": [round(float(v), 2) for v in o],
+            "dir": [round(float(v), 4) for v in u], "distance_along_axis_mm": round(t, 1), "miss_mm": round(miss, 2),
+            "aim_tol_mm": tol, "blocked_by": sorted(set(blocked_by)), "same_body": tb_body == b,
+            "ok": t > 0 and miss <= tol and not blocked_by}
