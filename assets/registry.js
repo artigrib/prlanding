@@ -18,7 +18,7 @@
   // the static order is the "fit" order: keep it as the tie-breaker base
   items.forEach(function (el, i) { el._i = i; });
   // filters survive a reload / shared link through the query string
-  var KEYS = ['q', 'cat', 'rights', 'printed', 'fit', 'sort'];
+  var KEYS = ['q', 'disc', 'cat', 'rights', 'printed', 'fit', 'sort'];
   try {
     var sp = new URLSearchParams(location.search);
     KEYS.forEach(function (k) {
@@ -30,12 +30,14 @@
   } catch (e) {}
 
   function apply() {
-    var f = form.elements, q = fold(f.q.value), cat = f.cat.value, rights = f.rights.value, printed = f.printed.value, fit = f.fit.value, sort = f.sort.value || 'fit';
+    var f = form.elements, q = fold(f.q.value), disc = f.disc ? f.disc.value : '', cat = f.cat.value, rights = f.rights.value, printed = f.printed.value, fit = f.fit.value, sort = f.sort.value || 'fit';
     var words = q ? q.split(' ') : [], shown = 0;
     // "wheeled/rc-car" = a subcategory inside its category
     var catMain = cat.split('/')[0], catSub = cat.split('/')[1] || '';
+    // "bio" = a field of use (records without one are "robotics"), "bio/centrifuge" = an equipment type inside it
+    var discMain = disc.split('/')[0], discSub = disc.split('/')[1] || '';
     items.forEach(function (el) {
-      var ok = (!cat || el.getAttribute('data-cat') === catMain && (!catSub || el.getAttribute('data-sub') === catSub)) && (!rights || el.getAttribute('data-rights') === rights)
+      var ok = (!disc || el.getAttribute('data-disc') === discMain && (!discSub || el.getAttribute('data-sub') === discSub)) && (!cat || el.getAttribute('data-cat') === catMain && (!catSub || el.getAttribute('data-sub') === catSub)) && (!rights || el.getAttribute('data-rights') === rights)
         && (!printed || el.getAttribute('data-printed') === printed) && (!fit || num(el, fit) >= 4);
       if (ok && words.length) { var t = el.getAttribute('data-text') || ''; ok = words.every(function (w) { return t.indexOf(w) !== -1; }); }
       el.hidden = !ok;
@@ -47,7 +49,7 @@
     noneEl.hidden = shown > 0;
     try {
       var p = new URLSearchParams();
-      KEYS.forEach(function (k) { var v = f[k].value; if (v && !(k === 'sort' && v === 'fit')) p.set(k, v); });
+      KEYS.forEach(function (k) { if (!f[k]) return; var v = f[k].value; if (v && !(k === 'sort' && v === 'fit')) p.set(k, v); });
       var qs = p.toString();
       history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
     } catch (e) {}
