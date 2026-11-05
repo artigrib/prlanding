@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {MeshoptDecoder} from 'three/addons/libs/meshopt_decoder.module.js';
+import {toCreasedNormals, mergeVertices} from 'three/addons/utils/BufferGeometryUtils.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 
 const Q = new URLSearchParams(location.search);
@@ -26,13 +27,20 @@ r.toneMapping = THREE.NeutralToneMapping; r.toneMappingExposure = 1.0;
 const s = new THREE.Scene();
 s.fog = new THREE.Fog(0xffffff, 9, 30);
 s.environment = new THREE.PMREMGenerator(r).fromScene(new RoomEnvironment(), .04).texture;
-s.environmentIntensity = .55;
-s.add(new THREE.HemisphereLight(0xffffff, 0xd9d9d3, .9));
-const key = new THREE.DirectionalLight(0xffffff, 1.5); key.position.set(4, 9, 6); s.add(key);
-const fill = new THREE.DirectionalLight(0xe8eeff, .5); fill.position.set(-6, 3, -4); s.add(fill);
+s.environmentIntensity = .38;
+s.add(new THREE.HemisphereLight(0xffffff, 0xd9d9d3, .35));
+const key = new THREE.DirectionalLight(0xffffff, 2.6); key.position.set(4, 9, 6); s.add(key, key.target);
+const SHADOWS = !mobile();
+if (SHADOWS) {
+  r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048); key.shadow.bias = -.0004; key.shadow.normalBias = .02;
+  Object.assign(key.shadow.camera, {left: -7, right: 7, top: 7, bottom: -7, near: .5, far: 30});
+}
+const fill = new THREE.DirectionalLight(0xe8eeff, .35); fill.position.set(-6, 3, -4); s.add(fill);
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(400, 400),
   new THREE.MeshBasicMaterial({color: 0xf4f4f1, toneMapped: false}));
 floor.rotation.x = -Math.PI / 2; s.add(floor);
+if (SHADOWS) { const sf = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.ShadowMaterial({opacity: .16})); sf.rotation.x = -Math.PI / 2; sf.position.y = .001; sf.receiveShadow = true; s.add(sf); }
 // soft contact shadow texture
 const shTex = (() => {
   const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
@@ -46,17 +54,34 @@ const cam = new THREE.PerspectiveCamera(30, 1, .05, 80);
 // ---------- models ----------
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 const cache = {};
-function prep(gl) {
+const CREASE = 30 * Math.PI / 180, geoCache = new Map(), edgeMat = new THREE.LineBasicMaterial({color: 0x1a1a1a, transparent: true, opacity: .22});
+// hard-surface normals: computed once per source geometry, shared between meshes, original disposed
+function crisp(g) {
+  if (geoCache.has(g)) return geoCache.get(g);
+  let n = g;
+  try {
+    const tmp = new THREE.BufferGeometry(); tmp.setAttribute('position', g.attributes.position); if (g.index) tmp.setIndex(g.index);
+    n = mergeVertices(toCreasedNormals(tmp, CREASE), 1e-5);
+    if (n !== g) { n.groups = g.groups; g.dispose(); }
+  } catch (e) { n = g; }
+  geoCache.set(g, n); return n;
+}
+const idle = () => new Promise(res => (window.requestIdleCallback || setTimeout)(res));
+async function prep(gl) {
   const root = new THREE.Group(), m = gl.scene; root.add(m);
   const b = new THREE.Box3().setFromObject(m), sph = b.getBoundingSphere(new THREE.Sphere()), k = 1 / sph.radius;
   m.scale.multiplyScalar(k); m.position.sub(sph.center).multiplyScalar(k); m.updateMatrixWorld(true);
-  let mi = 0;
+  let mi = 0; const meshes = [];
+  m.traverse(o => { if (o.isMesh) meshes.push(o); });
+  for (let i = 0; i < meshes.length; i++) { const o = meshes[i]; o.geometry = crisp(o.geometry); o.castShadow = SHADOWS; if (i % 8 === 7) await idle(); }
   m.traverse(o => {
     if (!o.isMesh) return;
     const ar = [].concat(o.material).map(M => {
       M = M.clone();
-      if (M.color) { const h = {}; M.color.getHSL(h); if (h.l > .7) M.color.setHSL(h.h, h.s * .4, .78 + .1 * ((mi * 37) % 7) / 6); }
-      if ('roughness' in M) { M.roughness = Math.max(M.roughness, .55); M.metalness = Math.min(M.metalness, .15); }
+      let L = .5;
+      if (M.color) { const h = {}; M.color.getHSL(h); L = h.l; if (h.l > .7) M.color.setHSL(h.h, h.s * .4, .7 + .06 * ((mi * 37) % 7) / 6); }
+      if ('roughness' in M) { M.roughness = L < .25 ? .42 : .5; M.metalness = L < .25 ? .45 : .05; }
+      M.flatShading = false; M.needsUpdate = true;
       mi++; return M;
     });
     o.material = Array.isArray(o.material) ? ar : ar[0];
@@ -70,13 +95,24 @@ function prep(gl) {
     const wsc = o.parent.getWorldScale(new THREE.Vector3()).x;
     return {o, base: o.position.clone(), off: d.multiplyScalar(.6 / wsc)};
   });
+  root.userData.edges = () => {
+    if (mobile() || root.userData.e) return;
+    root.updateMatrixWorld(true); const inv = root.matrixWorld.clone().invert(), out = [], v = new THREE.Vector3(), M = new THREE.Matrix4();
+    for (const o of meshes) {
+      const eg = new THREE.EdgesGeometry(o.geometry, 35), p = eg.attributes.position; M.multiplyMatrices(inv, o.matrixWorld);
+      for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(M); out.push(v.x, v.y, v.z); }
+      eg.dispose();
+    }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(out, 3));
+    root.add(root.userData.e = new THREE.LineSegments(g, edgeMat));
+  };
   return {root, parts};
 }
 export const loadModel = name => cache[name] ??= loader.loadAsync(`../models/${name}.glb`).then(prep);
 window.loadModel = loadModel;
 
 // ---------- showroom layout ----------
-const SCALE = .62, GAP = 1.55, STEP = 7;
+const SCALE = .62, GAP = 1.45, STEP = 6, EXPL = 5;
 const clusters = G.slice(0, 12).map((g, k) => ({
   g, k, c: new THREE.Vector3(k * STEP, 0, k % 2 ? -1.6 : 1.6),
   w: (g.models.length - 1) * GAP + 1.3
@@ -95,6 +131,7 @@ function place(sl, o) {
   const sh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), shMat);
   sh.rotation.x = -Math.PI / 2; sh.position.set(sl.x, .003, sl.z); sh.scale.set(sz.x * 1.35 + .2, sz.z * 1.35 + .2, 1);
   s.add(sh); sl.o = o; dirty = true;
+  if (!(sl.cl.k === EXPL && sl.j === 0)) o.root.userData.edges?.();
 }
 
 // ---------- camera keyframes ----------
@@ -104,14 +141,15 @@ function buildPath() {
   const mob = mobile(), P = [], T = [];
   clusters.forEach(cl => {
     const yaw = (cl.k % 2 ? -1 : 1) * .38;
-    const D = (Math.max(3.4, cl.w * 1.25 + 1.9)) * (mob ? 1.55 : 1);
-    const t = cl.c.clone().add(new THREE.Vector3(mob ? 0 : -(cl.w * .28 + .75), mob ? -.15 : .5, 0));
+    let D = (Math.max(3.2, cl.w * .95 + 1.5)) * (mob ? 1.5 : 1);
+    let t = cl.c.clone().add(new THREE.Vector3(mob ? 0 : -(cl.w * .24 + .7), mob ? -.15 : .45, 0));
+    if (mob && cl.k === EXPL) { const s0 = slots.find(x => x.cl === cl && x.j === 0); t = new THREE.Vector3(s0.x + .6, .3, s0.z); D = 10.5; }
     T.push(t); P.push(t.clone().add(new THREE.Vector3(Math.sin(yaw) * D, mob ? 1.9 : 1.35, Math.cos(yaw) * D)));
   });
   // final thesis: pull back over the whole showroom
   const mid = new THREE.Vector3((clusters.length - 1) * STEP / 2, 0, 0);
-  T.push(mid.clone().add(new THREE.Vector3(mob ? 0 : -4, 0, 0)));
-  P.push(mid.clone().add(new THREE.Vector3(0, mob ? 26 : 15, mob ? 34 : 24)));
+  T.push(mid.clone().add(new THREE.Vector3(mob ? 0 : -3.5, 0, 0)));
+  P.push(mid.clone().add(new THREE.Vector3(mob ? 0 : 2, mob ? 13 : 7.5, mob ? 24 : 15)));
   camCurve = new THREE.CatmullRomCurve3(P, false, 'centripetal');
   tgtCurve = new THREE.CatmullRomCurve3(T, false, 'centripetal');
 }
@@ -144,7 +182,6 @@ function scrollU() {
 // ---------- frame ----------
 let u = scrollU(), covered = false;
 const N = secs.length - 1;
-const EXPL = 5;                 // „Každý díl je vidět“
 const bar = document.getElementById('bar');
 function resize() {
   const w = innerWidth, h = innerHeight;
@@ -173,7 +210,7 @@ function step(dt) {
   if (sl?.o && Math.abs(e - lastE) > 1e-4) { for (const P of sl.o.parts) P.o.position.copy(P.base).addScaledVector(P.off, e * 1.1); lastE = e; dirty = true; }
   if (!(dirty || moving) || covered) return false;
   const t = Math.min(1, Math.max(0, u / N));
-  cam.position.copy(camCurve.getPoint(t)); const tg = tgtCurve.getPoint(t); cam.lookAt(tg); const dd = cam.position.distanceTo(tg); s.fog.near = dd + 3; s.fog.far = dd * 2.2 + 14;
+  cam.position.copy(camCurve.getPoint(t)); const tg = tgtCurve.getPoint(t); cam.lookAt(tg); const dd = cam.position.distanceTo(tg); if (SHADOWS) { key.target.position.copy(tg); key.position.copy(tg).add(new THREE.Vector3(4, 9, 6)); const ext = Math.min(18, dd * .6 + 3); Object.assign(key.shadow.camera, {left: -ext, right: ext, top: ext, bottom: -ext}); key.shadow.camera.updateProjectionMatrix(); } s.fog.near = dd + 3; s.fog.far = dd * 2.2 + 14;
   const t0 = performance.now(); r.render(s, cam); stats.ms += performance.now() - t0; stats.frames++;
   stats.tris = r.info.render.triangles; stats.calls = r.info.render.calls;
   dirty = false; return true;
