@@ -33,12 +33,12 @@ await check('home', '/', async p => {
   if ((await p.locator('#cards .card').count()) < 3) throw new Error('too few cards');
 });
 
-await check('3d image sequence', '/3d/', async p => {
-  await p.waitForFunction(() => window.__seq && window.__seq.draws > 0, null, {timeout: 20000});
-  const h = await p.evaluate(() => document.documentElement.scrollHeight);
-  await p.evaluate(y => scrollTo(0, y), h);
-  await p.waitForFunction(() => window.__seq.shown > window.__seq.frames / 2, null, {timeout: 20000});
-  if (await p.evaluate(() => !!document.querySelector('#c').getContext('2d') === false)) throw new Error('canvas not 2d');
+await check('3d flow cards', '/3d/', async p => {
+  await p.waitForFunction(() => window.ready === true, null, {timeout: 20000});
+  if (await p.locator('#c').count()) throw new Error('sticky canvas still present');
+  if ((await p.locator('.t .pv img').count()) < 8) throw new Error('too few posters');
+  const pos = await p.evaluate(() => getComputedStyle(document.querySelector('.t')).position);
+  if (pos === 'fixed' || pos === 'sticky') throw new Error('thesis not in flow');
 });
 
 await check('catalog filter', '/', async p => {
