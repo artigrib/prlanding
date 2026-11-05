@@ -39,6 +39,9 @@ await check('3d flow cards', '/3d/', async p => {
   if ((await p.locator('.t .pv img').count()) < 8) throw new Error('too few posters');
   const pos = await p.evaluate(() => getComputedStyle(document.querySelector('.t')).position);
   if (pos === 'fixed' || pos === 'sticky') throw new Error('thesis not in flow');
+  const ev = await p.locator('#ev .ev').count();
+  if (ev < 6 || ev > 8) throw new Error(`evidence cards ${ev}`);
+  if ((await p.content()).includes('[doplnit]')) throw new Error('[doplnit] visible');
 });
 
 await check('catalog filter', '/', async p => {
