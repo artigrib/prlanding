@@ -251,7 +251,7 @@ await check('legacy sada.html redirects', '/sada.html?r=svrn', async p => {
   await p.goto(BASE + '/sada.html'); await p.waitForURL(/\/#katalog$/);
 });
 
-for (const id of ['so101', 'svrn', 'vert150', 'uc2', 'sidekick', 'poseidon']) {
+for (const id of ['so101', 'svrn', 'vert150', 'uc2', 'sidekick', 'poseidon', 'openflexure']) {
   await check('product ' + id, `/sada/${id}/`, async p => {
     await p.waitForSelector('h1');
     if (!(await p.locator('h1').first().innerText()).trim()) throw new Error('empty h1');
@@ -261,10 +261,19 @@ for (const id of ['so101', 'svrn', 'vert150', 'uc2', 'sidekick', 'poseidon']) {
 await check('catalog lab filter', '/?typ=lab', async p => {
   await p.waitForSelector('#filters .filter[data-f="lab"][aria-pressed="true"]');
   const hrefs = await p.locator('#cards a.card').evaluateAll(as => as.map(a => a.getAttribute('href')));
-  const LAB = /sada\/(uc2|sidekick|poseidon)\/$/;
-  if (!hrefs.length || !hrefs.every(h => LAB.test(h) || !/sada\//.test(h)) || !['uc2', 'sidekick', 'poseidon'].every(id => hrefs.some(h => h.endsWith('sada/' + id + '/')))) throw new Error('lab cards: ' + hrefs.join(', '));
+  const LAB = /sada\/(uc2|sidekick|poseidon|openflexure)\/$/;
+  if (!hrefs.length || !hrefs.every(h => LAB.test(h) || !/sada\//.test(h)) || !['uc2', 'sidekick', 'poseidon', 'openflexure'].every(id => hrefs.some(h => h.endsWith('sada/' + id + '/')))) throw new Error('lab cards: ' + hrefs.join(', '));
 });
 await check('kit uc2: lab crumb, no sim, axe', '/sada/uc2/', async p => {
+  await p.waitForSelector('h1');
+  if ((await p.locator('#crumb-cat').innerText()).trim() !== 'Laboratoř') throw new Error('crumb');
+  if (await p.locator('#sim-cta').count()) throw new Error('lab device must not link a simulation');
+  await p.addScriptTag({ content: AXE });
+  const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
+  const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+  if (bad.length) throw new Error('axe: ' + bad.map(v => `${v.id} (${v.nodes.length}) ${v.nodes[0].target}`).join('; '));
+});
+await check('kit openflexure: lab crumb, no sim, axe', '/sada/openflexure/', async p => {
   await p.waitForSelector('h1');
   if ((await p.locator('#crumb-cat').innerText()).trim() !== 'Laboratoř') throw new Error('crumb');
   if (await p.locator('#sim-cta').count()) throw new Error('lab device must not link a simulation');

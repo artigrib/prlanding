@@ -138,3 +138,55 @@ poseidon.glb – poseidon syringe pump by the Pachter Lab, Caltech
                and syringe brace are left out because their exported positions do
                not match the assembly. Motor, rods, bearings, threaded rod, knob and
                syringe are not modelled.
+
+openflexure.glb – OpenFlexure Microscope v7 by the OpenFlexure project
+               (Richard Bowman, Julian Stirling et al.),
+               https://gitlab.com/openflexure/openflexure-microscope, tag v7.0.0-beta5.
+               Copyright notices in the sources: "(c) Richard Bowman, January 2016"
+               (openscad/main_body.scad and other part files), "Copyright Richard
+               Bowman, 2022" (openscad/libs/rms_thread.scad); "For copyright and
+               authorship information, see the Git history at:
+               https://gitlab.com/openflexure/openflexure-microscope".
+               Licensed under the CERN Open Hardware Licence v2 – Strongly
+               Reciprocal (CERN-OHL-S-2.0), https://ohwr.org/cern_ohl_s_v2.txt
+               (see License in that repository). This source is distributed
+               WITHOUT ANY EXPRESS OR IMPLIED WARRANTY, INCLUDING OF
+               MERCHANTABILITY, SATISFACTORY QUALITY AND FITNESS FOR A PARTICULAR
+               PURPOSE. Please see the CERN-OHL-S v2 for applicable conditions.
+               Upstream source location:
+               https://gitlab.com/openflexure/openflexure-microscope/-/tree/v7.0.0-beta5
+               Source location of this modified file:
+               https://github.com/artigrib/prlanding/blob/main/models/openflexure.glb
+               (built with tools/lab-cad/openflexure/ofm_assembly.scad and
+               ofm_glb.py in the same repository, also CERN-OHL-S-2.0).
+               Motorised configuration with RMS objective optics: each part was
+               exported from the authors' OpenSCAD modules with OpenSCAD and placed
+               with the authors' render placements (rendering/librender/
+               assembly_parameters.scad) and motor-lug frames; tessellated,
+               simplified, recoloured, compressed. The authors' simplified models of
+               the Raspberry Pi 4, Pi Camera v2, 28BYJ-48 motors, objective and a
+               Sangaboard (v0.4 outline) are included. Not modelled: screws, nuts,
+               washers, elastic bands, cables, tube and condenser lenses, the LED
+               board and diffuser, cable tidies. The authors' assembly files
+               rendering/mount_*.scad were not available to us; the positions of
+               the motors, Raspberry Pi and Sangaboard were derived by us from the
+               motor-lug and drawer frames in the design and may differ from the
+               authors' renders. The Sangaboard shown is the authors' v0.4
+               primitive although the drawer is the stack_11mm variant.
+               Third-party notices in source files used by this model:
+               | openscad/libs/MCAD/involute_gears.scad: modified from
+               |   involute_gears.scad in MCAD, "Licensed under the Creative
+               |   Commons - GNU LGPL 2.1 license. © 2010 by GregFrost,
+               |   thingiverse.com/Amp"; updated by Julian Stirling in 2020.
+               | openscad/libs/threads.scad: "(c) Richard Bowman 2020, Released
+               |   under the CERN Open Hardware License"; put together by Graham
+               |   Gibson as a derivative of ZhuangLab/3D-printing
+               |   (nikon_filter_cube) by Hazen Babcock, CERN OHL 1.2,
+               |   "(c) Hazen Babcock 2015".
+               | openscad/libs/locking_dovetail.scad: "(c) Richard Bowman 2021,
+               |   released under CERN-OHL-W v2".
+               | openscad/libs/illumination.scad: "(c) Richard Bowman, April
+               |   2018, Released under the CERN Open Hardware License".
+               Modified 2026-11-01 by printedrobotics.cz (assembly and conversion
+               only, no design changes). This derivative is shared under the same
+               licence, CERN-OHL-S-2.0.

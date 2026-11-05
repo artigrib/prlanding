@@ -318,7 +318,24 @@ window.PR_ROBOTS = [
     license: { hw: 'CC-BY-4.0', sw: 'CC-BY-4.0', status: 'verified', checked: '2026-11-01',
       notes: 'Repozitář (STL, STEP, desky, kód) je pod CC BY 4.0 (License.md). Sestava obsahuje i modely kupovaných dílů (kola, motor, servo).',
       sources: ['https://github.com/TRD-B/Lizard/blob/main/License.md', 'https://github.com/TRD-B/Lizard/blob/main/BOM%20Lizard.xlsx'] },
-    related: ['rc128', 'zcar2', 'exomy'] }
+    related: ['rc128', 'zcar2', 'exomy'] },
+  // Lab device, no simulation. Model = parts exported one by one from the authors' OpenSCAD sources (tag v7.0.0-beta5)
+  // and placed with their render placements: tools/lab-cad/openflexure/ofm_assembly.scad + ofm_glb.py. Facts from the
+  // sources only (scad comments and parameters); parts list compiled from the sources (bomSource 'src'). Software: the
+  // authors' OpenFlexure server (separate repository, GPL-3.0).
+  { id: 'openflexure', glb: true, render: true, bomSource: 'src', bomDocs: 'v7.0.0-beta5', credit: 'Vizualizace z OpenSCAD zdrojů OpenFlexure Microscope v7 (CERN-OHL-S-2.0): motorizovaná verze s objektivem RMS. Díly jsme rozmístili podle umístění z renderovacích skriptů autorů; motory, Raspberry Pi a Sangaboard jsme umístili sami podle úchytů a zásuvky v konstrukci. Šrouby, matice, kroužky, kabely, čočky, deska LED a difuzor nejsou modelované.', name: 'OpenFlexure Microscope', type: 'Motorizovaný mikroskop', cat: 'lab', level: 'Pokročilý', hw: 'CERN-OHL-S-2.0', sw: 'GPL-3.0',
+    author: 'OpenFlexure (Richard Bowman, Julian Stirling a kol.)', alt: 'Tištěný mikroskop OpenFlexure na stojanu se zásuvkou na elektroniku, s krokovými motory a osvětlením nad stolkem',
+    short: 'Tištěný mikroskop, jehož stolek se posouvá na ohebných plastových kloubech. Tři krokové motory, objektiv RMS a kamera Raspberry Pi.',
+    lead: 'Otevřený mikroskop s posuvem ve třech osách. Tělo se stolkem se tiskne vcelku a stolek se posouvá na ohebných plastových kloubech (flexurách); podle autorů tak dosahuje velmi jemného posuvu v rozsahu asi 10 mm. Každou osu posouvá šroub M3 v mosazné matici; šroubem otáčí krokový motor 28BYJ-48 přes ozubená kola s převodem 2 : 1 (existuje i ruční verze s kolečky). Motory řídí deska Sangaboard, obraz snímá kamera Raspberry Pi Camera v2 a Raspberry Pi 4 je v zásuvce ve stojanu. Model ukazuje motorizovanou verzi s objektivem RMS a tubusovou čočkou; levnější verze používá místo objektivu čočku z kamery Pi. Shora vzorek osvětluje deska s LED přes difuzor a kondenzor. Model vychází z vývojové verze v7.0.0-beta5. Mikroskop se ovládá softwarem autorů OpenFlexure server s webovým rozhraním, který běží na Raspberry Pi.',
+    bomCost: '—', printTime: '—', software: 'Mikroskop ovládá software autorů OpenFlexure server s webovým rozhraním na Raspberry Pi (GPL-3.0)',
+    repo: 'https://gitlab.com/openflexure/openflexure-microscope', docs: 'https://build.openflexure.org/',
+    card: [['Osy', '3 (X, Y, Z)'], ['Optika', 'objektiv RMS']],
+    bom: [['Krokový motor 28BYJ-48', '3×'], ['Řídicí deska motorů Sangaboard', '1×'], ['Raspberry Pi 4 Model B (nebo Pi 3)', '1×'], ['Kamera Raspberry Pi Camera v2', '1×'], ['Objektiv RMS (tubusová délka 160 mm, parfokální vzdálenost 45 mm)', '1×'], ['Tubusová čočka f = 50 mm, průměr 12,7 mm', '1×'], ['Čočka kondenzoru, průměr 13 mm', '1×'], ['Deska osvětlení s LED', '1×'], ['Bílý akrylátový difuzor', '1×'], ['Šroub M3 × 25 se šestihrannou hlavou (posuvový šroub)', '3×'], ['Mosazná matice M3', '3×'], ['Podložka M3', '6×'], ['Pryžový kroužek z vitonu (táhne osu zpět)', '3×']],
+    specs: [['Posuv vzorku', 'stolek na ohebných kloubech, jemný posuv v rozsahu ≈ 10 mm (podle autorů)'], ['Pohon', '3× 28BYJ-48, ozubená kola 2 : 1, posuvové šrouby M3'], ['Řízení', 'Sangaboard + Raspberry Pi 4 v zásuvce stojanu'], ['Kamera', 'Raspberry Pi Camera v2'], ['Optika (model)', 'objektiv RMS + tubusová čočka f = 50 mm; levná verze s čočkou kamery Pi'], ['Osvětlení', 'deska s LED, difuzor, kondenzor s čočkou 13 mm'], ['Verze', 'v7.0.0-beta5 (vývojová)'], ['Doba tisku', '—']],
+    license: { hw: 'CERN-OHL-S-2.0', sw: 'GPL-3.0', status: 'verified', checked: '2026-11-01',
+      notes: 'Hardware (OpenSCAD zdroje) je pod CERN-OHL-S-2.0 (soubor License, tag v7.0.0-beta5); náš 3D model z nich je proto také CERN-OHL-S-2.0. Software (openflexure-microscope-server, větev v3) je pod GPL-3.0.',
+      sources: ['https://gitlab.com/openflexure/openflexure-microscope/-/blob/v7.0.0-beta5/License', 'https://gitlab.com/openflexure/openflexure-microscope-server/-/blob/v3/LICENSE'] },
+    related: ['uc2', 'sidekick', 'poseidon'] }
 ];
 // Browser demos linked from product pages (r.sim). colorParam: the sim reads ?color= (so101 does not yet).
 // Sizes = uncompressed bytes of a first visit (all responses until the sim is idle, Chromium, empty cache);
@@ -371,14 +388,16 @@ window.PR_BOX = function (r, tier, pair) {
 // r.bomSource: where the parts list comes from. Default: the project's published BOM; 'cad': the project publishes
 // no BOM and we compiled the list from its CAD assembly and docs (box title, note, FAQ and meta description say so).
 window.PR_BOM_CAD = function (r) { return r.bomSource === 'cad'; };
-window.PR_BOX_TITLE = function (r, n) { return (window.PR_BOM_CAD(r) ? 'Sestaveno z CAD a dokumentace projektu · ' : 'Podle kusovníku projektu · ') + n + ' položek'; };
-window.PR_BOX_NOTE = function (r) { if (window.PR_BOM_CAD(r)) return 'Projekt kusovník nezveřejňuje; seznam jsme sestavili z CAD sestavy a dokumentace projektu' + (r.bomDocs ? ' (' + r.bomDocs + ')' : '') + '. Počty ověřte v CAD.'; return r.id === 'so101' ? 'Počty dle kusovníku projektu SO-ARM100 (follower 7,4 V, zdroj 5 V). Follower s 12V servy: 6× C018 a zdroj 12 V / 5 A.' : 'Položky dle kusovníku projektu; přesné počty a varianty ověřte v jeho dokumentaci.'; };
+// 'src': the project's BOM is in docs we could not check; the list was compiled from its source files (OpenSCAD, render scripts).
+window.PR_BOM_SRC = function (r) { return r.bomSource === 'src'; };
+window.PR_BOX_TITLE = function (r, n) { return (window.PR_BOM_CAD(r) ? 'Sestaveno z CAD a dokumentace projektu · ' : window.PR_BOM_SRC(r) ? 'Sestaveno ze zdrojových souborů projektu · ' : 'Podle kusovníku projektu · ') + n + ' položek'; };
+window.PR_BOX_NOTE = function (r) { if (window.PR_BOM_CAD(r)) return 'Projekt kusovník nezveřejňuje; seznam jsme sestavili z CAD sestavy a dokumentace projektu' + (r.bomDocs ? ' (' + r.bomDocs + ')' : '') + '. Počty ověřte v CAD.'; if (window.PR_BOM_SRC(r)) return 'Seznam jsme sestavili z OpenSCAD zdrojů a renderovacích skriptů projektu' + (r.bomDocs ? ' (' + r.bomDocs + ')' : '') + ', ne z jeho kusovníku. Úplný seznam a počty ověřte v návodu projektu.'; return r.id === 'so101' ? 'Počty dle kusovníku projektu SO-ARM100 (follower 7,4 V, zdroj 5 V). Follower s 12V servy: 6× C018 a zdroj 12 V / 5 A.' : 'Položky dle kusovníku projektu; přesné počty a varianty ověřte v jeho dokumentaci.'; };
 // FAQ of a kit page (app.js renders it, tools/build.mjs pre-renders it and adds it as FAQPage structured data).
 window.PR_FAQ = function (r) {
-  var cad = window.PR_BOM_CAD(r);
+  var cad = window.PR_BOM_CAD(r), src = window.PR_BOM_SRC(r);
   return [
     ['Zvládnu sestavení bez zkušeností?', 'Náročnost tohoto projektu: ' + r.level + (r.noGuide ? '. Projekt návod na sestavení nemá; repozitář obsahuje seznam dílů a videa.' : '. Návod projektu vede krok za krokem; odkaz najdete v sekci Licence a bezpečnost.')],
-    [r.cat === 'lab' ? 'Můžu si sadu koupit u vás?' : 'Můžu si robota koupit u vás?', (cad ? 'Ne, nic neprodáváme. Díly koupíte přímo u dodavatelů; projekt kusovník nezveřejňuje, seznam v sekci Co budete potřebovat jsme sestavili z jeho CAD a dokumentace. Hotovou sadu možná nabídneme později; chcete-li o ní vědět, nechte e-mail ve formuláři nahoře.' : 'Ne, nic neprodáváme. Díly koupíte přímo u dodavatelů podle kusovníku projektu (sekce Co budete potřebovat). Hotovou sadu možná nabídneme později; chcete-li o ní vědět, nechte e-mail ve formuláři nahoře.')],
+    [r.cat === 'lab' ? 'Můžu si sadu koupit u vás?' : 'Můžu si robota koupit u vás?', (src ? 'Ne, nic neprodáváme. Díly koupíte přímo u dodavatelů; seznam v sekci Co budete potřebovat jsme sestavili podle zdrojových souborů projektu. Hotovou sadu možná nabídneme později; chcete-li o ní vědět, nechte e-mail ve formuláři nahoře.' : cad ? 'Ne, nic neprodáváme. Díly koupíte přímo u dodavatelů; projekt kusovník nezveřejňuje, seznam v sekci Co budete potřebovat jsme sestavili z jeho CAD a dokumentace. Hotovou sadu možná nabídneme později; chcete-li o ní vědět, nechte e-mail ve formuláři nahoře.' : 'Ne, nic neprodáváme. Díly koupíte přímo u dodavatelů podle kusovníku projektu (sekce Co budete potřebovat). Hotovou sadu možná nabídneme později; chcete-li o ní vědět, nechte e-mail ve formuláři nahoře.')],
     ['Jste spojeni s autory projektu?', 'Ne. Vycházíme z otevřené dokumentace projektu ' + r.name + ' (' + r.author + ', licence ' + r.hw + '). Autoři s námi nejsou spojeni a tuto stránku neschválili.'],
     ['Jaký software budu potřebovat?', r.cat === 'combat' ? 'Žádný. Robot se ovládá RC vysílačem FlySky; přijímač Malenki Nano s ním jen spárujete, programovat nic nemusíte. Návod projektu najdete v sekci Licence a bezpečnost.'
       : r.noSoftware ? r.software + '. Návod projektu najdete v sekci Licence a bezpečnost.'
@@ -386,7 +405,7 @@ window.PR_FAQ = function (r) {
       : r.swNotFree ? r.software + '. Část potřebného softwaru není zdarma; odkaz na návod projektu najdete v sekci Licence a bezpečnost.'
       : r.software + '. Software je open-source a zdarma; odkaz na návod projektu najdete v sekci Licence a bezpečnost.'],
     ['Je stavba vhodná pro děti?', 'Není to hračka. ' + (r.cat === 'lab' ? 'Sestava' : 'Robot') + ' obsahuje malé díly' + (r.noElectronics ? '' : ' a elektroniku') + '; stavba je určena osobám od 14 let, mladším pouze pod dohledem dospělého, například ve škole nebo kroužku.'],
-    ['Jsme škola nebo kroužek. Co nám nabízíte?', (cad ? 'Nic neprodáváme ani nefakturujeme. Zdarma je hodina se simulací SO-101 a pracovní list na stránce Pro školy; díly koupíte u dodavatelů podle seznamu sestaveného z CAD a dokumentace projektu.' : 'Nic neprodáváme ani nefakturujeme. Zdarma je hodina se simulací SO-101 a pracovní list na stránce Pro školy; díly koupíte u dodavatelů podle kusovníku projektu.')]
+    ['Jsme škola nebo kroužek. Co nám nabízíte?', (src ? 'Nic neprodáváme ani nefakturujeme. Zdarma je hodina se simulací SO-101 a pracovní list na stránce Pro školy; díly koupíte u dodavatelů podle seznamu sestaveného ze zdrojových souborů projektu.' : cad ? 'Nic neprodáváme ani nefakturujeme. Zdarma je hodina se simulací SO-101 a pracovní list na stránce Pro školy; díly koupíte u dodavatelů podle seznamu sestaveného z CAD a dokumentace projektu.' : 'Nic neprodáváme ani nefakturujeme. Zdarma je hodina se simulací SO-101 a pracovní list na stránce Pro školy; díly koupíte u dodavatelů podle kusovníku projektu.')]
   ];
 };
 window.PR_SPECS = function (r) {
