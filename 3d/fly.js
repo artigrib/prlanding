@@ -2,7 +2,6 @@
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {MeshoptDecoder} from 'three/addons/libs/meshopt_decoder.module.js';
-import {toCreasedNormals, mergeVertices} from 'three/addons/utils/BufferGeometryUtils.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 
 const Q = new URLSearchParams(location.search);
@@ -55,25 +54,31 @@ const cam = new THREE.PerspectiveCamera(30, 1, .05, 80);
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 const cache = {};
 const CREASE = 30 * Math.PI / 180, geoCache = new Map(), edgeMat = new THREE.LineBasicMaterial({color: 0x1a1a1a, transparent: true, opacity: .22});
-// hard-surface normals: computed once per source geometry, shared between meshes, original disposed
+// hard-surface pass (crease normals + feature edges) runs in a small worker pool, off the main thread;
+// computed once per source geometry, shared between meshes, original disposed
+const pool = Array.from({length: Math.min(4, Math.max(2, (navigator.hardwareConcurrency || 4) - 1))}, () => new Worker(new URL('./crease-worker.js', import.meta.url)));
+const pend = new Map(); let jid = 0, rr = 0;
+pool.forEach(w => w.onmessage = ({data}) => { pend.get(data.id)(data); pend.delete(data.id); });
 function crisp(g) {
   if (geoCache.has(g)) return geoCache.get(g);
-  let n = g;
-  try {
-    const tmp = new THREE.BufferGeometry(); tmp.setAttribute('position', g.attributes.position); if (g.index) tmp.setIndex(g.index);
-    n = mergeVertices(toCreasedNormals(tmp, CREASE), 1e-5);
-    if (n !== g) { n.groups = g.groups; g.dispose(); }
-  } catch (e) { n = g; }
-  geoCache.set(g, n); return n;
+  const pa = g.attributes.position, pos = new Float32Array(pa.count * 3);
+  for (let i = 0; i < pa.count; i++) { pos[i*3] = pa.getX(i); pos[i*3+1] = pa.getY(i); pos[i*3+2] = pa.getZ(i); }
+  const idx = g.index ? Uint32Array.from(g.index.array) : null, id = jid++;
+  const pr = new Promise(res => { pend.set(id, res); pool[rr++ % pool.length].postMessage({id, pos, idx, crease: Math.cos(CREASE), edge: mobile() ? null : Math.cos(35 * Math.PI / 180)}, [pos.buffer].concat(idx ? [idx.buffer] : [])); })
+    .then(({p, n, ix, E}) => {
+      const out = new THREE.BufferGeometry();
+      out.setAttribute('position', new THREE.BufferAttribute(p, 3)); out.setAttribute('normal', new THREE.BufferAttribute(n, 3)); out.setIndex(new THREE.BufferAttribute(ix, 1));
+      out.groups = g.groups; out.userData.edges = E; g.dispose(); return out;
+    }).catch(() => g);
+  geoCache.set(g, pr); return pr;
 }
-const idle = () => new Promise(res => (window.requestIdleCallback || setTimeout)(res));
 async function prep(gl) {
   const root = new THREE.Group(), m = gl.scene; root.add(m);
   const b = new THREE.Box3().setFromObject(m), sph = b.getBoundingSphere(new THREE.Sphere()), k = 1 / sph.radius;
   m.scale.multiplyScalar(k); m.position.sub(sph.center).multiplyScalar(k); m.updateMatrixWorld(true);
   let mi = 0; const meshes = [];
   m.traverse(o => { if (o.isMesh) meshes.push(o); });
-  for (let i = 0; i < meshes.length; i++) { const o = meshes[i]; o.geometry = crisp(o.geometry); o.castShadow = SHADOWS; if (i % 8 === 7) await idle(); }
+  await Promise.all(meshes.map(async o => { o.geometry = await crisp(o.geometry); o.castShadow = SHADOWS; }));
   m.traverse(o => {
     if (!o.isMesh) return;
     const ar = [].concat(o.material).map(M => {
@@ -97,18 +102,21 @@ async function prep(gl) {
   });
   root.userData.edges = () => {
     if (mobile() || root.userData.e) return;
-    root.updateMatrixWorld(true); const inv = root.matrixWorld.clone().invert(), out = [], v = new THREE.Vector3(), M = new THREE.Matrix4();
+    root.updateMatrixWorld(true); const inv = root.matrixWorld.clone().invert(), v = new THREE.Vector3(), M = new THREE.Matrix4();
+    let len = 0; for (const o of meshes) len += o.geometry.userData.edges?.length || 0;
+    const out = new Float32Array(len); let k = 0;
     for (const o of meshes) {
-      const eg = new THREE.EdgesGeometry(o.geometry, 35), p = eg.attributes.position; M.multiplyMatrices(inv, o.matrixWorld);
-      for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(M); out.push(v.x, v.y, v.z); }
-      eg.dispose();
+      const E = o.geometry.userData.edges; if (!E) continue; M.multiplyMatrices(inv, o.matrixWorld);
+      for (let i = 0; i < E.length; i += 3) { v.set(E[i], E[i+1], E[i+2]).applyMatrix4(M); out[k++] = v.x; out[k++] = v.y; out[k++] = v.z; }
     }
-    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(out, 3));
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(out, 3));
     root.add(root.userData.e = new THREE.LineSegments(g, edgeMat));
   };
   return {root, parts};
 }
-export const loadModel = name => cache[name] ??= loader.loadAsync(`../models/${name}.glb`).then(prep);
+// desktop gets full-detail CAD conversions (models/hd, tools/robots-cad/hd.sh)
+const HD = new Set(['lizard', 'orca', 'so102']);
+export const loadModel = name => cache[name] ??= (hd => loader.loadAsync(`../models/${hd ? 'hd/' : ''}${name}.glb`).then(prep))(!mobile() && HD.has(name));
 window.loadModel = loadModel;
 
 // ---------- showroom layout ----------

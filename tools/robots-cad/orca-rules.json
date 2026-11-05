@@ -1,0 +1,30 @@
+{
+ "groups": {},
+ "materials": [
+  [
+   "screw|bolt|nut|washer|bearing|insert|pin_|dowel|M2|M3|M4",
+   "drop"
+  ],
+  [
+   "Wrist|Hull|ForeArm|Cover",
+   "print"
+  ],
+  [
+   "TPU",
+   "rubber"
+  ],
+  [
+   "dynamixel|feetech|servo|motor|XC330|XL330|STS",
+   "servo"
+  ],
+  [
+   "pcb|sensor|board",
+   "pcb"
+  ],
+  [
+   "ptfe|tube|string|line",
+   "drop"
+  ]
+ ],
+ "default": "print"
+}
