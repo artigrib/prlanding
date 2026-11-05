@@ -16,10 +16,10 @@
   ]
  },
  {
-  "key": "arena",
-  "label": "Bojové roboty 150 g (aréna)",
+  "key": "chaos",
+  "label": "Bojové roboty, hobby i věda – každý z jiného repozitáře",
   "count": null,
-  "anim": "roll",
+  "anim": "mix",
   "models": [
    {
     "model": "svrn",
@@ -78,16 +78,12 @@
   "anim": "swing",
   "models": [
    {
+    "model": "so101",
+    "name": "SO-101"
+   },
+   {
     "model": "koch",
     "name": "Koch v1.1"
-   },
-   {
-    "model": "so102",
-    "name": "SO-ARM 102"
-   },
-   {
-    "model": "aira",
-    "name": "AIRA"
    }
   ]
  },
@@ -112,18 +108,14 @@
   ]
  },
  {
-  "key": "wheeled",
-  "label": "Robot na kolech",
-  "count": 32,
-  "anim": "roll",
+  "key": "humanoid",
+  "label": "Humanoid",
+  "count": 10,
+  "anim": "walk",
   "models": [
    {
-    "model": "lekiwi",
-    "name": "LeKiwi"
-   },
-   {
-    "model": "xle",
-    "name": "XLeRobot"
+    "model": "bhl",
+    "name": "Berkeley Humanoid Lite"
    }
   ]
  },
@@ -152,10 +144,26 @@
    {
     "model": "otto",
     "name": "Otto DIY"
+   }
+  ]
+ },
+ {
+  "key": "mix",
+  "label": "Celý katalog",
+  "count": 168,
+  "anim": "mix",
+  "models": [
+   {
+    "model": "lizard",
+    "name": "Lizard"
    },
    {
-    "model": "sesame",
-    "name": "Sesame"
+    "model": "poseidon",
+    "name": "Poseidon"
+   },
+   {
+    "model": "so102",
+    "name": "SO-ARM 102"
    }
   ]
  },
@@ -172,22 +180,6 @@
    {
     "model": "rc128",
     "name": "Open 1:28 RC Car"
-   },
-   {
-    "model": "lizard",
-    "name": "Lizard"
-   }
-  ]
- },
- {
-  "key": "humanoid",
-  "label": "Humanoid",
-  "count": 10,
-  "anim": "walk",
-  "models": [
-   {
-    "model": "bhl",
-    "name": "Berkeley Humanoid Lite"
    }
   ]
  },
@@ -210,24 +202,24 @@
   "anim": "mix",
   "models": [
    {
-    "model": "spot",
-    "name": "SpotMicro"
+    "model": "sesame",
+    "name": "Sesame"
    },
    {
-    "model": "exomy",
-    "name": "ExoMy"
+    "model": "aira",
+    "name": "AIRA"
    },
    {
-    "model": "orca",
-    "name": "ORCA Hand"
+    "model": "lekiwi",
+    "name": "LeKiwi"
    },
    {
-    "model": "bhl",
-    "name": "Berkeley Humanoid Lite"
+    "model": "xle",
+    "name": "XLeRobot"
    },
    {
-    "model": "sidekick",
-    "name": "Sidekick"
+    "model": "openflexure",
+    "name": "OpenFlexure Microscope"
    }
   ]
  }

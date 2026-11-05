@@ -16,15 +16,15 @@ document.querySelectorAll('.t').forEach(sec => {
   const g = G[+sec.dataset.i], m = sec.querySelector('.meta');
   if (!g || !m) return;
   m.innerHTML = `<b>${g.models.map(x => x.name).join(' · ')}</b>` +
-    (g.count ? `Kategorie: ${g.label} · ${g.count} projektů` : `${g.label} · ${g.models.length} modely`);
+    (g.count ? `${g.key === 'mix' ? '' : 'Kategorie: '}${g.label} · ${g.count} projektů` : `${g.label} · ${g.models.length} modely`);
 });
 
 // ---------- renderer / scene ----------
 const r = new THREE.WebGLRenderer({canvas, antialias: true, powerPreference: 'high-performance'});
-r.setClearColor(0xffffff, 1);
+r.setClearColor(0xf4f4f1, 1);
 r.toneMapping = THREE.NeutralToneMapping; r.toneMappingExposure = 1.0;
 const s = new THREE.Scene();
-s.fog = new THREE.Fog(0xffffff, 9, 30);
+s.fog = new THREE.Fog(0xf4f4f1, 9, 30);
 s.environment = new THREE.PMREMGenerator(r).fromScene(new RoomEnvironment(), .04).texture;
 s.environmentIntensity = .38;
 s.add(new THREE.HemisphereLight(0xffffff, 0xd9d9d3, .35));
@@ -116,18 +116,19 @@ async function prep(gl) {
 }
 // desktop gets full-detail CAD conversions (models/hd, tools/robots-cad/hd.sh)
 const HD = new Set(['lizard', 'orca', 'so102']);
-export const loadModel = name => cache[name] ??= (hd => loader.loadAsync(`../models/${hd ? 'hd/' : ''}${name}.glb`).then(prep))(!mobile() && HD.has(name));
+export const loadModel = (name, own) => own ? loader.loadAsync(`../models/${name}.glb`).then(prep) : cache[name] ??= (hd => loader.loadAsync(`../models/${hd ? 'hd/' : ''}${name}.glb`).then(prep))(!mobile() && HD.has(name));
 window.loadModel = loadModel;
 
 // ---------- showroom layout ----------
 const SCALE = .62, GAP = 1.45, STEP = 6, EXPL = 5;
-const clusters = G.slice(0, 12).map((g, k) => ({
+const FAM = G.length - 1, FG = 1.05;
+const clusters = G.map((g, k) => ({
   g, k, c: new THREE.Vector3(k * STEP, 0, k % 2 ? -1.6 : 1.6),
-  w: (g.models.length - 1) * GAP + 1.3
+  w: (g.models.length - 1) * (k === FAM ? FG : GAP) + 1.3
 }));
 const slots = [];
 clusters.forEach(cl => cl.g.models.forEach((m, j) => slots.push({
-  cl, j, name: m.model, x: cl.c.x + (j - (cl.g.models.length - 1) / 2) * GAP, z: cl.c.z
+  cl, j, name: m.model, x: cl.c.x + (j - (cl.g.models.length - 1) / 2) * (cl.k === FAM ? FG : GAP), z: cl.c.z + (cl.k === FAM ? (j % 2 ? -.55 : .35) : 0)
 })));
 let dirty = true;
 function place(sl, o) {
@@ -149,15 +150,12 @@ function buildPath() {
   const mob = mobile(), P = [], T = [];
   clusters.forEach(cl => {
     const yaw = (cl.k % 2 ? -1 : 1) * .38;
-    let D = (Math.max(3.2, cl.w * .95 + 1.5)) * (mob ? 1.5 : 1);
-    let t = cl.c.clone().add(new THREE.Vector3(mob ? 0 : -(cl.w * .24 + .7), mob ? -.15 : .45, 0));
-    if (mob && cl.k === EXPL) { const s0 = slots.find(x => x.cl === cl && x.j === 0); t = new THREE.Vector3(s0.x + .6, .3, s0.z); D = 10.5; }
+    let D = (Math.max(4.4, cl.w * 1.1 + 2)) * (mob ? 1.5 : 1);
+    let t = cl.c.clone().add(new THREE.Vector3(mob ? 0 : -(cl.w * .1 + .8), mob ? -.15 : .45, 0));
+    if (mob && cl.k === FAM) D *= 1.25;
+    if (mob && cl.k === EXPL) { const s0 = slots.find(x => x.cl === cl && x.j === 0); t = new THREE.Vector3(s0.x + .6, .3, s0.z); D = 7; }
     T.push(t); P.push(t.clone().add(new THREE.Vector3(Math.sin(yaw) * D, mob ? 1.9 : 1.35, Math.cos(yaw) * D)));
   });
-  // final thesis: pull back over the whole showroom
-  const mid = new THREE.Vector3((clusters.length - 1) * STEP / 2, 0, 0);
-  T.push(mid.clone().add(new THREE.Vector3(mob ? 0 : -3.5, 0, 0)));
-  P.push(mid.clone().add(new THREE.Vector3(mob ? 0 : 2, mob ? 13 : 7.5, mob ? 24 : 15)));
   camCurve = new THREE.CatmullRomCurve3(P, false, 'centripetal');
   tgtCurve = new THREE.CatmullRomCurve3(T, false, 'centripetal');
 }
@@ -182,7 +180,7 @@ function scrollU() {
   const u0 = scrollU();
   const order = [...slots].sort((a, b) => Math.abs(a.cl.k - u0) - Math.abs(b.cl.k - u0));
   let i = 0;
-  const worker = async () => { while (i < order.length) { const sl = order[i++]; try { place(sl, await loadModel(sl.name)); } catch (e) { console.warn(sl.name, e); } } };
+  const worker = async () => { while (i < order.length) { const sl = order[i++]; try { place(sl, await loadModel(sl.name, sl.name === 'so101')); } catch (e) { console.warn(sl.name, e); } } };
   await Promise.all([worker(), worker(), worker()]);
   window.ready = true;
 })();
@@ -198,10 +196,11 @@ function resize() {
   buildPath(); measure(); dirty = true;
 }
 addEventListener('resize', resize); resize();
+new ResizeObserver(() => { measure(); dirty = true; }).observe(document.body);
 addEventListener('scroll', () => { dirty = true; }, {passive: true});
 // skip rendering while an opaque block covers the viewport
 const cover = new Set();
-new IntersectionObserver(es => { for (const e of es) (e.intersectionRatio > .98 || (e.isIntersecting && e.boundingClientRect.top <= 0 && e.boundingClientRect.bottom >= innerHeight)) ? cover.add(e.target) : cover.delete(e.target); covered = cover.size > 0; dirty = true; },
+new IntersectionObserver(es => { for (const e of es) (e.intersectionRatio > .98 || (e.isIntersecting && e.boundingClientRect.top <= 0 && e.boundingClientRect.bottom >= innerHeight)) ? cover.add(e.target) : cover.delete(e.target); const was = covered; covered = cover.size > 0; if (was && !covered) { measure(); u = scrollU(); } dirty = true; },
   {threshold: [0, .5, .98, 1]}).observe(document.getElementById('ag'));
 
 let lastE = -1;
