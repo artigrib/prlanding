@@ -190,3 +190,13 @@ openflexure.glb – OpenFlexure Microscope v7 by the OpenFlexure project
                Modified 2026-11-01 by printedrobotics.cz (assembly and conversion
                only, no design changes). This derivative is shared under the same
                licence, CERN-OHL-S-2.0.
+
+hd/ – full-detail desktop variants used by the /3d/ flyover, converted by
+       tools/robots-cad/hd.sh from the same authors' STEP assemblies, under the
+       same licences as the entries above:
+  hd/lizard.glb – Lizard by TRD-B, CC BY 4.0, github.com/TRD-B/Lizard (commit ce1855a)
+  hd/orca.glb   – ORCA Hand by ORCA Dexterity, Inc., CC BY 4.0,
+                  github.com/orcahand/orcahand_hardware (orca_v2/base, commit 0ce2646)
+  hd/so102.glb  – SO-ARM 102 by Robonine, CERN-OHL-P-2.0,
+                  github.com/roboninecom/SO-ARM-102 (SO-ARM102_Follower.STEP, commit 6006f85)
+  Changes: tessellated, re-grouped and recoloured; geometry is the authors' own.

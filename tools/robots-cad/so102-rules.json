@@ -1,0 +1,9 @@
+{
+ "groups": {},
+ "materials": [
+  ["screw|bolt|nut|washer|bearing|insert|DIN|ISO", "drop"],
+  ["STS3215|servo|motor|feetech", "servo"],
+  ["pcb|board", "pcb"]
+ ],
+ "default": "print"
+}
