@@ -120,6 +120,11 @@ await check('plan so101: totals, variant guard, checker, local state', '/plan/so
   if (await total() !== '373–398 €') throw new Error('default pair total ' + await total());
   if (!(await p.locator('[data-testid=plan-screws]').count()) || !/49× M2×6[\s\S]*96× M3×6/.test(await p.locator('#plan-screws').innerText())) throw new Error('screw table');
   if ((await p.locator('[data-testid=plan-alt]').count()) < 1) throw new Error('kit alternatives');
+  // each line says what it is for; servo lines per arm (C001 is both the 7.4 V follower and leader joint 2)
+  const roles = (await p.locator('[data-testid=plan-role]').allInnerTexts()).join(' | ').replace(/\s/g, ' ');
+  if (!/Follower 7,4 V, klouby 1–6/.test(roles) || !/Leader 7,4 V, kloub 2 \(rameno\)/.test(roles) || !/Leader 7,4 V, klouby 1 a 3 \(základna, loket\)/.test(roles)) throw new Error('line roles: ' + roles);
+  if (/zatím žádné recenze/.test(await p.locator('#plan-groups').innerText())) throw new Error('empty review line shown');
+  if (await p.locator('.plan-line > .pl-name > .plan-flag-no').count()) throw new Error('recommended source styled as not recommended');
   // ready-made kit vs. parts: self-printed parts are cheaper; with a print service the kit wins
   const rec = p.locator('[data-testid=plan-kit-rec]');
   if ((await rec.getAttribute('data-choice')) !== 'parts' || !/levněji/.test(await rec.innerText())) throw new Error('kit rec (self print): ' + await rec.innerText());
@@ -203,7 +208,8 @@ await check('plan svrn: totals, module, part check, safety, notes, local state',
   if (!(await p.locator('#plan-notes [data-note=esc_hv] a[href*="bristolbotbuilders"]').count())) throw new Error('HV note with source');
   if (!(await p.locator('#plan-notes [data-note=servo_bec]').count())) throw new Error('servo/BEC verify note');
   if (!/Malenki Nano HV/.test(await p.locator('#plan-groups').innerText())) throw new Error('HV controller line');
-  if (!(await p.locator('[data-testid=plan-reviews]').count())) throw new Error('review lines');
+  // every SVRN listing had 0 reviews when checked: no empty "no reviews yet" lines
+  if (/zatím žádné recenze/.test(await p.locator('#plan-groups').innerText())) throw new Error('empty review lines shown');
   await p.check('input[name=module][value=wedge]');
   if (await total() !== '92–95 €') throw new Error('wedge total ' + await total());
   if (await p.locator('#plan-notes [data-note=servo_bec]').count()) throw new Error('servo note shown for the wedge');

@@ -222,7 +222,7 @@ export function buildPlan(data, opts = {}) {
       flag_reason: x.flag_reason || null, flag_reason_cs: x.flag_reason_cs || null, reviews: pickReviews(x.reviews)
     }));
     const line = {
-      component: c.id, name: c.name, name_cs: c.name_cs, qty: l.qty, packs, per: s.per || 1, arm: l.arm || null,
+      component: c.id, name: c.name, name_cs: c.name_cs, role: c.role || null, role_cs: c.role_cs || null, qty: l.qty, packs, per: s.per || 1, arm: l.arm || null,
       source: s.id, label: s.label, url: s.url, price: s.price, currency: s.currency, unit_eur: round2(unit), subtotal_eur: subtotal,
       checked: s.checked, status: s.status, stock: s.stock, eta_days: eta,
       flag: s.flag || null, flag_reason: s.flag_reason || null, flag_reason_cs: s.flag_reason_cs || null,
