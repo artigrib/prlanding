@@ -2,7 +2,7 @@
  "$schema": "./svrn.schema.json",
  "meta": {
   "robot": "svrn",
-  "generated": "2026-10-30",
+  "generated": "2026-11-07",
   "fx_czk_per_eur": 24.2,
   "fx_note": "Assumption: CNB daily rate not fetched; update before use.",
   "source": "Component map 2026-10-29, FLS Battlebots / AirsoftShop / Koptery / Rotorama listings re-opened 2026-10-30. We are not a seller: users buy directly from suppliers.",
@@ -1320,7 +1320,7 @@
       2,
       5
      ],
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": true,
      "note": "The title says 35C, the parameters 25C; either is plenty for 4× N10.",
@@ -1328,7 +1328,7 @@
      "reviews": {
       "rating": null,
       "count": 0,
-      "checked": "2026-10-30",
+      "checked": "2026-11-07",
       "signals": [],
       "url": "https://airsoftshop.cz/en/gens-ace-battery-li-pol-7-4v-300mah-35c-jst"
      }
@@ -1466,7 +1466,7 @@
      "per": 1,
      "stock": "In stock",
      "eta_days": null,
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": false,
      "flag": "check_label",
