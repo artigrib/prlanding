@@ -10,7 +10,7 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 import { checkComponents } from './check-components.mjs';
-import { buildTime, screwTable, kitsFromEur } from '../assets/plan/plan-core.mjs';
+import { buildTime, screwTable, kitsFromEur, buildPlan } from '../assets/plan/plan-core.mjs';
 import { loadRegistry, checkRegistry, renderRegistry, renderGaps, checkedDate } from './registry.mjs';
 
 // component data (purchase plans): fail the build on a source without URL/date/status
@@ -379,6 +379,35 @@ function heroNew(html) {
   }
   return '';
 }
+// home hero: SO-101 facts under the buttons, all from data/components/so101.json through plan-core (the plan page's
+// own numbers): the default plan (a pair, parts printed yourself) landed total + oldest price check, one arm (the
+// default follower), delivery, print + work hours. Prices in € only: the CZK rate in the data is an assumption, not a source.
+function heroFacts(L) {
+  const en = L === 'en';
+  const nf = new Intl.NumberFormat(en ? 'en-GB' : 'cs-CZ', { maximumFractionDigits: 1 });
+  const rng = (r, u) => (r[0] === r[1] ? nf.format(r[0]) : `${nf.format(r[0])}–${nf.format(r[1])}`) + ' ' + u;
+  const day = iso => { const [y, m, d] = iso.split('-'); return `${+d}. ${+m}. ${y}`; };
+  const cfgs = Object.keys(SO101.configs), pair = buildPlan(SO101), one = buildPlan(SO101, { config: cfgs.find(c => !SO101.configs[c].arms.includes('leader')) });
+  if (pair.print !== 'self' || !pair.config.arms.includes('leader')) throw new Error('so101.json: the default plan is no longer a self-printed pair; update heroFacts()');
+  const ck = pair.checked, checked = ck.oldest === ck.newest ? day(ck.oldest)
+    : ck.oldest.slice(0, 4) === ck.newest.slice(0, 4) ? `${day(ck.oldest).replace(/ \d{4}$/, '')}\u00a0– ${day(ck.newest)}` : `${day(ck.oldest)}\u00a0– ${day(ck.newest)}`;
+  const about = r => (r[0] === r[1] ? '≈\u00a0' : '');   // one number = an estimate, not a promise
+  const bt = pair.build_time, pr = bt.print_hours;
+  const rows = en ? [
+    ['Parts', `${rng(pair.totals.landed_eur, '€')} for a pair with shipping, parts printed yourself; one arm ${rng(one.totals.landed_eur, '€')}`],
+    ['Prices checked', checked],
+    ['Delivery', about(pair.eta_days) + rng(pair.eta_days, 'days')],
+    ['Time', `printer ≈ ${nf.format(pr[0])} h, your work ${rng(bt.work_hours, 'h')}`],
+    ['You need', 'a 3D printer (or a print service) and a computer with Python']
+  ] : [
+    ['Díly', `${rng(pair.totals.landed_eur, '€')} za pár rukou s dopravou, díly tisknete sami; jedna ruka ${rng(one.totals.landed_eur, '€')}`],
+    ['Ceny ověřené', checked],
+    ['Dodání', about(pair.eta_days) + rng(pair.eta_days, 'dní')],
+    ['Čas', `tiskárna ≈ ${nf.format(pr[0])} h, vaše práce ${rng(bt.work_hours, 'h')}`],
+    ['Potřebujete', '3D tiskárnu (nebo tiskový servis) a počítač s Pythonem']
+  ];
+  return `<dl class="hero-facts" aria-label="${en ? 'SO-101 at a glance' : 'SO-101 v kostce'}">${rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`;
+}
 // real photos: drop assets/photos/<id>.jpg (+ optional <id>.json {w,h,alt_cs,alt_en,cap_cs,cap_en}) and the next build
 // shows it instead of the render. No photo = the render stays, labelled as a render (never a stock or fake photo).
 function photoSlot(id, L, fb) {
@@ -455,9 +484,10 @@ const regLink = L => `<!--registry-link--><p class="reg-link"><a href="katalog/r
 if (!/<!--registry-link-->[\s\S]*?<!--\/registry-link-->/.test(home)) throw new Error('index.html: registry-link placeholder not found');
 home = home.replace(/<!--registry-link-->[\s\S]*?<!--\/registry-link-->/, () => regLink('cs'));
 home = home.replace(/<!--hero-new-->[\s\S]*?<!--\/hero-new-->/, `<!--hero-new-->${heroNew(home)}<!--/hero-new-->`)
-  .replace(/<!--build-tl-->[\s\S]*?<!--\/build-tl-->/, `<!--build-tl-->\n${buildTimeline('cs')}\n<!--/build-tl-->`);
+  .replace(/<!--build-tl-->[\s\S]*?<!--\/build-tl-->/, `<!--build-tl-->\n${buildTimeline('cs')}\n<!--/build-tl-->`)
+  .replace(/<!--hero-facts-->[\s\S]*?<!--\/hero-facts-->/, () => `<!--hero-facts-->${heroFacts('cs')}<!--/hero-facts-->`);
 home = fillPhotos(home, 'cs');
-if (!home.includes('<!--/hero-new-->') || !home.includes('<!--/build-tl-->')) throw new Error('index.html: hero-new or build-tl placeholder not found');
+if (!home.includes('<!--/hero-new-->') || !home.includes('<!--/build-tl-->') || !home.includes('<dl class="hero-facts"')) throw new Error('index.html: hero-new or build-tl placeholder not found');
 // Czech home gets its hreflang pair + switcher; the English home is rendered from it
 if (home.includes('<!--/cards-->')) {
   home = wireI18n(setAlternates(home, '', 'en/'), 'cs', 'index.html', '', 'en/', '');
@@ -482,7 +512,8 @@ if (home.includes('<!--/cards-->')) {
     .replace(/<body data-page="home"/, `<body data-page="home" data-root="${root}"`);
   en = fillPhotos(en, 'en');
   en = en.replace(/<!--registry-link-->[\s\S]*?<!--\/registry-link-->/, () => regLink('en'));
-  en = en.replace(/<!--build-tl-->[\s\S]*?<!--\/build-tl-->/, `<!--build-tl-->\n${buildTimeline('en')}\n<!--/build-tl-->`);
+  en = en.replace(/<!--build-tl-->[\s\S]*?<!--\/build-tl-->/, `<!--build-tl-->\n${buildTimeline('en')}\n<!--/build-tl-->`)
+    .replace(/<!--hero-facts-->[\s\S]*?<!--\/hero-facts-->/, () => `<!--hero-facts-->${heroFacts('en')}<!--/hero-facts-->`);
   en = wireI18n(en, 'en', page, '', page, '').replace(/<script src="assets\/data\.js"><\/script>/, m => m + '\n<script src="assets/data.en.js"></script>');
   en = enLinks(translateHtml(en), page, '');
   assertEnglish(en, page);

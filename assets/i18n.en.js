@@ -206,6 +206,9 @@
       /* home v2 (index.html) */
       'Tisk a kompletace v Praze': 'Printed and assembled in Prague',
       'Open-source roboty.': 'Open-source robots.', 'Nejdřív v prohlížeči,': 'First in your browser,', 'pak na vašem stole.': 'then on your desk.',
+      /* de-slop L3 hero */
+      'Postavte si robotickou ruku SO-101.': 'Build your own SO-101 robot arm.', 'Nejdřív ji vyzkoušejte v prohlížeči.': 'Try it in your browser first.',
+      'Simulaci spustíte zdarma a bez registrace. Až budete chtít skutečnou ruku, řekneme vám, které díly koupit a ve kterém obchodě, a provedeme vás stavbou. Díly kupujete sami, my nic neprodáváme.': 'Run the simulation free, no sign-up. When you want the real arm, we tell you which parts to buy from which shop and guide you through the build. You buy the parts yourself; we sell nothing.',
       /* de-slop L2 labels */
       'Zjistit, co koupit a za kolik': 'See what to buy and what it costs', 'Poslat mi upozornění': 'Email me when it’s ready', 'Odebírat novinky': 'Subscribe to updates',
       'Najít robota ve 3 otázkách': 'Find a robot in 3 questions', 'Jak s adresou nakládáme': 'How we handle your address',
