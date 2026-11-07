@@ -29,7 +29,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_REVISION = ""        # commit of samarth-shukla6/act-svla-so101-pickplace we tested
+DEFAULT_REVISION = "c903979a9d73104d38f6daac5266962128a99219"  # commit of samarth-shukla6/act-svla-so101-pickplace we tested (7 Nov 2026)
 
 
 def status(ctl):
