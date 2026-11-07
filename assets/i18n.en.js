@@ -206,6 +206,10 @@
       /* home v2 (index.html) */
       'Tisk a kompletace v Praze': 'Printed and assembled in Prague',
       'Open-source roboty.': 'Open-source robots.', 'Nejdřív v prohlížeči,': 'First in your browser,', 'pak na vašem stole.': 'then on your desk.',
+      /* de-slop L2 labels */
+      'Zjistit, co koupit a za kolik': 'See what to buy and what it costs', 'Poslat mi upozornění': 'Email me when it’s ready', 'Odebírat novinky': 'Subscribe to updates',
+      'Najít robota ve 3 otázkách': 'Find a robot in 3 questions', 'Jak s adresou nakládáme': 'How we handle your address',
+      'Digitální dvojče v prohlížeči bude řídit vaši skutečnou SO-101. Chceme, aby limity kloubů a rychlosti hlídal software.': 'A digital twin in the browser will drive your real SO-101. We plan for software to enforce joint and speed limits.',
       'Novinka': 'New', 'Cesta k vlastní SO-101': 'The path to your own SO-101', 'Simulace v prohlížeči': 'Simulation in your browser', 'Stavba podle návodu': 'Build with the guide', 'Připojte svou AI': 'Connect your AI',
       'Robotickou ruku SO-101 si vyzkoušíte ve fyzikální simulaci, bojové roboty v aréně. Skutečného robota si pak postavíte: řekneme vám, co koupit a kde, a provedeme vás stavbou.': 'Try the SO-101 robot arm in a physics simulation and combat robots in the arena. Then you build the real robot: we tell you what to buy and where, and walk you through the build.',
       'Nakupte díly': 'Buy the parts', 'Díly koupíte přímo u dodavatelů podle našeho plánu, s ověřenými cenami a kontrolou variant serv. Hotovou sadu možná nabídneme později – na stránce SO-101 se můžete zapsat.': 'You buy the parts directly from suppliers following our plan, with checked prices and a servo variant check. We may offer a ready-made kit later – you can sign up on the SO-101 page.',

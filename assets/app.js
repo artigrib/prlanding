@@ -79,7 +79,7 @@
     var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: function (n) {
       var p = n.parentNode && n.parentNode.nodeName;
       return /^(SCRIPT|STYLE|TEXTAREA|CODE|PRE|TITLE)$/.test(p) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT; } });
-    var n;
+    var n, nw = [];
     while ((n = w.nextNode())) {
       var t = n.nodeValue, u = t
         .replace(SHORT_RE, '$1$2\u00A0').replace(SHORT_RE, '$1$2\u00A0')
@@ -87,7 +87,17 @@
         .replace(/(\d) (?=(Kč|EUR|USD|€|V|A|h|mm|cm|m|kg|g|Nm|ks|%|dní|let|os)\b)/g, '$1 ')
         .replace(/ [—–] /g, ' – ');
       if (u !== t) n.nodeValue = u;
+      if (/SO-1\d\d/.test(u) && n.parentNode.closest && !n.parentNode.classList.contains('nw') && n.parentNode.closest('h1,h2,h3,.btn,button,.pill,.step-a,.hero-new')) nw.push(n);
     }
+    // headings and buttons: "SO-101" never breaks at its hyphen (wrapped in a no-wrap span; the text itself is unchanged)
+    nw.forEach(function (n) {
+      var f = document.createDocumentFragment();
+      n.nodeValue.split(/(SO-1\d\d)/).forEach(function (p, i) {
+        if (!p) return;
+        if (i % 2) { var s = document.createElement('span'); s.className = 'nw'; s.textContent = p; f.appendChild(s); } else f.appendChild(document.createTextNode(p));
+      });
+      n.parentNode.replaceChild(f, n);
+    });
   }
   var typoQueued = false;
   function typoSoon() { if (typoQueued) return; typoQueued = true; requestAnimationFrame(function () { typoQueued = false; typo(document.body); }); }
@@ -98,13 +108,13 @@
   function softForm(kind, robot) {
     var t = kind === 'price'
       ? ['Zatím nevíte?', 'Pošleme vám jeden e-mail, až budeme znát cenu a termín.', 'Dejte mi vědět']
-      : ['Novinky e-mailem', 'Nové návody a simulace. Nejvýš jednou za měsíc, odhlásíte se jedním klikem.', 'Odebírat'];
+      : ['Novinky e-mailem', 'Nové návody a simulace. Nejvýš jednou za měsíc, odhlásíte se jedním klikem.', 'Odebírat novinky'];
     return '<form class="soft" novalidate data-soft="' + kind + '"' + (robot ? ' data-robot="' + esc(robot) + '"' : '') + '>' +
       '<b>' + t[0] + '</b><span class="muted">' + t[1] + '</span>' +
       '<span class="soft-row"><label class="sr-only" for="soft-' + kind + '">E-mail</label>' +
       '<input id="soft-' + kind + '" type="email" name="email" autocomplete="email" autocapitalize="off" spellcheck="false" inputmode="email" placeholder="vas@email.cz">' +
       '<button type="submit" class="btn btn-o">' + t[2] + '</button></span>' +
-      '<span class="mono soft-note">Odesláním souhlasíte se zasláním těchto e-mailů. Adresu nikomu nepředáme.</span>' +
+      '<span class="mono soft-note">Odesláním souhlasíte se zasláním těchto e-mailů. Adresu nikomu nepředáme. <a href="' + ROOT + (document.documentElement.lang === 'en' ? 'en/privacy/' : 'soukromi/') + '">Jak s adresou nakládáme <span aria-hidden="true">→</span></a></span>' +
       '<span class="soft-msg" role="status" aria-live="polite"></span></form>';
   }
   document.addEventListener('submit', function (e) {

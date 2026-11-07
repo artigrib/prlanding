@@ -64,7 +64,7 @@ for (const vp of [{ width: 360, height: 780 }, { width: 1440, height: 900 }]) {
     const sim = p.locator('a[data-cta="hero-sim"]'), plan = p.locator('a[data-cta="hero-plan"]');
     const txt = async l => (await l.innerText()).replace(/\s+/g, ' ');  // app.js glues short words with nbsp
     if (!/Vyzkoušejte SO-101 v prohlížeči/.test(await txt(sim))) throw new Error('primary CTA text');
-    if (!/Plán nákupu dílů/.test(await txt(plan))) throw new Error('secondary CTA text');
+    if (!/Zjistit, co koupit a za kolik/.test(await txt(plan))) throw new Error('secondary CTA text');
     const u1 = await sim.evaluate(a => new URL(a.href).pathname), u2 = await plan.evaluate(a => new URL(a.href).pathname);
     if (u1 !== '/sim/so101/' || u2 !== '/plan/so101/') throw new Error(`CTA targets ${u1} ${u2}`);
     const box = await sim.boundingBox();
