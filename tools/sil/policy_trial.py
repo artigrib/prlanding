@@ -29,6 +29,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_REVISION = ""        # commit of samarth-shukla6/act-svla-so101-pickplace we tested
 
 
 def status(ctl):
@@ -85,6 +86,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--out", required=True, help="output folder (logs, trace.json, snapshots, summary.md)")
     ap.add_argument("--policy", default="samarth-shukla6/act-svla-so101-pickplace", help="Hub repo id or local folder")
+    ap.add_argument("--revision", default=DEFAULT_REVISION, help="Hub commit to pin (empty = latest); ignored for a local folder")
     ap.add_argument("--cameras", default="up,side", help="NAME[=VIEW] list; names must match the policy's image features")
     ap.add_argument("--size", default="640x480")
     ap.add_argument("--duration", type=float, default=20)
@@ -124,7 +126,17 @@ def main():
 
         # 2. rollout, with a trace of what the arm and the cube did
         cam_cfg = ", ".join(f"{c.split('=')[0]}: {{type: zmq, server_address: 127.0.0.1, port: {args.camera_port}, camera_name: {c.split('=')[0]}, width: {w}, height: {h}, fps: 30}}" for c in cams)
-        cmd = ["lerobot-rollout", "--strategy.type=base", f"--policy.path={args.policy}", "--policy.device=cpu",
+        local = Path(args.policy).exists()
+        resolved = "local folder"
+        if not local:
+            try:
+                from huggingface_hub import HfApi
+                resolved = HfApi().model_info(args.policy, revision=args.revision or None).sha
+            except Exception as e:                        # offline etc.: lerobot-rollout will say more
+                resolved = f"unknown ({type(e).__name__})"
+        print(f"policy {args.policy} at revision {resolved}")
+        rev = [f"--policy.pretrained_revision={args.revision}"] if args.revision and not local else []
+        cmd = ["lerobot-rollout", "--strategy.type=base", f"--policy.path={args.policy}", *rev, "--policy.device=cpu",
                "--robot.type=so101_follower", f"--robot.port={args.port}", "--robot.id=sil_follower", f"--robot.use_degrees={args.use_degrees}",
                f"--robot.cameras={{ {cam_cfg} }}", f"--task={args.task}", f"--duration={args.duration:g}", "--play_sounds=false"]
         (out / "command.txt").write_text(" ".join(f"'{a}'" if " " in a else a for a in cmd) + "\n")
@@ -164,7 +176,7 @@ def main():
         # 3. summary
         log = (out / "rollout.log").read_text()
         active = [x for x in trace if x["torque"]]
-        lines = [f"# Policy trial: {args.policy}", "", f"- lerobot-rollout exit code: {rc}, wall time {wall:.0f} s (duration {args.duration:g} s)",
+        lines = [f"# Policy trial: {args.policy}", "", f"- revision: {resolved}", f"- lerobot-rollout exit code: {rc}, wall time {wall:.0f} s (duration {args.duration:g} s)",
                  f"- cameras: {', '.join(cams)} {args.size}; ZMQ subscribers seen: {max((x['subscribers'] or 0) for x in trace) if trace else 0}"]
         slow = [float(x) for x in re.findall(r"running slower \(([\d.]+) Hz\)", log)]
         if slow:

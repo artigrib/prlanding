@@ -11,7 +11,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { encodePNG, decodePNG, crc32 } from '../lib/png.mjs';
-import { greeting, commandFrame, messageFrame, parseFrames, startZmqPub } from '../lib/zmq-pub.mjs';
+import { greeting, commandFrame, messageFrame, parseFrames, startZmqPub, readProps, MAX_PEER_FRAME } from '../lib/zmq-pub.mjs';
 import { extractScene, geomPoses, renderView, lookAt } from '../lib/raster.mjs';
 import { CAMERA_PRESETS, parseCameraSpec, parseSize, cameraPoses } from '../lib/camera.mjs';
 import { loadScene, MjPlant } from '../lib/plant.mjs';
@@ -108,6 +108,31 @@ test('ZMQ PUB: a subscriber gets messages, a non-subscriber does not block it', 
   const got = zmqFirstMessage(pub.port);
   const timer = setInterval(() => pub.send('{"hello":1}'), 20);
   try { assert.equal(await got, '{"hello":1}'); } finally { clearInterval(timer); stall.destroy(); pub.close(); }
+});
+
+test('ZMQ PUB: malformed peers are dropped, the publisher keeps serving good subscribers', async () => {
+  // truncated READY property: name "Socket-Type", then only 2 of the 4 value-length bytes
+  const truncated = Buffer.concat([Buffer.from([0x04, 19, 5]), Buffer.from('READY'), Buffer.from([11]), Buffer.from('Socket-Type'), Buffer.from([0xFF, 0xFF])]);
+  assert.throws(() => readProps(truncated.subarray(9)), /truncated/);
+  assert.throws(() => parseFrames(Buffer.concat([Buffer.from([0x02]), Buffer.from([0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF])]), MAX_PEER_FRAME), /too large/);
+  const logs = [];
+  const pub = await startZmqPub({ port: 0, log: (m) => logs.push(m) });
+  const evil = (bytes) => new Promise((res) => {
+    const s = net.connect(pub.port, '127.0.0.1', () => s.write(Buffer.concat([greeting(), bytes])));
+    s.on('close', res); s.on('error', res); s.resume();
+    setTimeout(() => { s.destroy(); res(); }, 3000);
+  });
+  const longHead = Buffer.alloc(9); longHead[0] = 0x06; longHead.writeBigUInt64BE(1n << 40n, 1);
+  await Promise.all([
+    evil(truncated),                                                     // truncated READY
+    evil(longHead),                                                      // 1 TB command frame announced
+    evil(Buffer.alloc(MAX_PEER_FRAME + 100, 0x02)),                      // flood of unparsable input
+    evil(Buffer.concat([Buffer.from([0x04, 1, 9])]))                      // command name longer than the frame
+  ]);
+  assert.ok(logs.filter((l) => /bad peer/.test(l)).length >= 3, logs.join('\n'));
+  const got = zmqFirstMessage(pub.port);
+  const timer = setInterval(() => pub.send('{"still":"alive"}'), 20);
+  try { assert.equal(await got, '{"still":"alive"}'); } finally { clearInterval(timer); pub.close(); }
 });
 
 test('runner with --camera: frames over ZMQ (LeRobot JSON format) and a PNG preview', { timeout: 60000, skip: process.platform === 'win32' && 'needs a pty' }, async () => {

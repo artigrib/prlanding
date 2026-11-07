@@ -35,14 +35,23 @@ export function messageFrame(payload) {
   const h = Buffer.alloc(9); h[0] = 0x02; h.writeBigUInt64BE(BigInt(b.length), 1);
   return Buffer.concat([h, b]);
 }
-/** Split a byte stream into ZMTP frames; returns { frames: [{flags, body}], rest }. */
-export function parseFrames(buf) {
+/** Largest frame we accept from a subscriber (they only send READY and subscriptions). */
+export const MAX_PEER_FRAME = 65536;
+
+/** Split a byte stream into ZMTP frames; returns { frames: [{flags, body}], rest }. Throws on an oversized frame. */
+export function parseFrames(buf, maxFrame = Infinity) {
   const frames = [];
   let p = 0;
   while (p + 2 <= buf.length) {
     const flags = buf[p];
     let size, head;
-    if (flags & 0x02) { if (p + 9 > buf.length) break; size = Number(buf.readBigUInt64BE(p + 1)); head = 9; } else { size = buf[p + 1]; head = 2; }
+    if (flags & 0x02) {
+      if (p + 9 > buf.length) break;
+      const big = buf.readBigUInt64BE(p + 1);
+      if (Number.isFinite(maxFrame) && big > BigInt(maxFrame)) throw new Error(`ZMTP frame of ${big} bytes is too large`);
+      size = Number(big); head = 9;
+    } else { size = buf[p + 1]; head = 2; }
+    if (size > maxFrame) throw new Error(`ZMTP frame of ${size} bytes is too large`);
     if (p + head + size > buf.length) break;
     frames.push({ flags, body: buf.subarray(p + head, p + head + size) });
     p += head + size;
@@ -57,7 +66,12 @@ export function startZmqPub({ port = 5555, host = '127.0.0.1', hwmBytes = 8 << 2
     const peer = { sock, state: 'greeting', subs: [], buf: Buffer.alloc(0), dropped: 0 };
     sock.write(greeting());
     sock.on('data', (chunk) => {
+      // a malformed or hostile peer must never take the runner down: drop that connection only
+      try { onData(chunk); } catch (e) { log(`zmq: bad peer (${e.message}), closing`); sock.destroy(); peers.delete(peer); }
+    });
+    const onData = (chunk) => {
       peer.buf = peer.buf.length ? Buffer.concat([peer.buf, chunk]) : chunk;
+      if (peer.buf.length > MAX_PEER_FRAME + 9) throw new Error('too much unparsed input');
       if (peer.state === 'greeting') {
         if (peer.buf.length < 64) return;
         const g = peer.buf.subarray(0, 64);
@@ -66,24 +80,28 @@ export function startZmqPub({ port = 5555, host = '127.0.0.1', hwmBytes = 8 << 2
         sock.write(commandFrame('READY', { 'Socket-Type': 'PUB' }));
         peer.state = 'handshake';
       }
-      const { frames, rest } = parseFrames(peer.buf);
+      const { frames, rest } = parseFrames(peer.buf, MAX_PEER_FRAME);
       peer.buf = rest;
       for (const fr of frames) {
         if (fr.flags & 0x04) {
           const name = fr.body.toString('ascii', 1, 1 + fr.body[0]), data = fr.body.subarray(1 + fr.body[0]);
+          if (fr.body.length < 1 || 1 + fr.body[0] > fr.body.length) throw new Error('truncated command');
           if (name === 'READY') {
             const type = readProps(data)['Socket-Type'];
             if (type !== 'SUB' && type !== 'XSUB') { log(`zmq: peer is ${type}, not SUB; closing`); sock.destroy(); return; }
             peer.state = 'ready'; peers.add(peer);
-          } else if (name === 'SUBSCRIBE') peer.subs.push(Buffer.from(data));            // ZMTP 3.1 style
+          } else if (peer.state !== 'ready') throw new Error(`${name} before READY`);
+          else if (name === 'SUBSCRIBE') addSub(Buffer.from(data));                       // ZMTP 3.1 style
           else if (name === 'CANCEL') peer.subs = peer.subs.filter((s) => !s.equals(data));
           else if (name === 'ERROR') { sock.destroy(); return; }
-        } else if (fr.body.length >= 1) {                                                // ZMTP 3.0 style
-          if (fr.body[0] === 1) peer.subs.push(Buffer.from(fr.body.subarray(1)));
+        } else if (peer.state !== 'ready') throw new Error('message before READY');
+        else if (fr.body.length >= 1) {                                                   // ZMTP 3.0 style
+          if (fr.body[0] === 1) addSub(Buffer.from(fr.body.subarray(1)));
           else if (fr.body[0] === 0) { const t = fr.body.subarray(1); peer.subs = peer.subs.filter((s) => !s.equals(t)); }
         }
       }
-    });
+    };
+    const addSub = (t) => { if (peer.subs.length >= 64) throw new Error('too many subscriptions'); peer.subs.push(t); };
     const gone = () => peers.delete(peer);
     sock.on('close', gone); sock.on('error', gone);
   });
@@ -110,12 +128,17 @@ export function startZmqPub({ port = 5555, host = '127.0.0.1', hwmBytes = 8 << 2
   });
 }
 
-function readProps(buf) {
+/** ZMTP metadata properties; throws on a truncated or malformed list. */
+export function readProps(buf) {
   const out = {};
   let p = 0;
   while (p < buf.length) {
-    const nl = buf[p], name = buf.toString('ascii', p + 1, p + 1 + nl); p += 1 + nl;
-    const vl = buf.readUInt32BE(p); out[name] = buf.toString('utf8', p + 4, p + 4 + vl); p += 4 + vl;
+    const nl = buf[p];
+    if (p + 1 + nl + 4 > buf.length) throw new Error('truncated property name');
+    const name = buf.toString('ascii', p + 1, p + 1 + nl); p += 1 + nl;
+    const vl = buf.readUInt32BE(p);
+    if (p + 4 + vl > buf.length) throw new Error('truncated property value');
+    out[name] = buf.toString('utf8', p + 4, p + 4 + vl); p += 4 + vl;
   }
   return out;
 }
