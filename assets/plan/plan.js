@@ -17,9 +17,9 @@ const S = {
   cs: {
     total: 'Celkem s DPH a dopravou', goods: 'zboží', eta: 'Doručení', days: 'dní', slowest: 'podle nejpomalejší položky',
     build: 'Čas stavby (odhad)', print: 'tisk', work: 'práce', h: 'h', est: 'odhad', perPiece: '/ ks',
-    qty: 'ks', ordered: 'Objednáno', open: 'Otevřít u dodavatele', alt: 'Další zdroje', notRec: 'nedoporučujeme',
+    qty: 'ks', ordered: 'Mám objednáno', open: 'Otevřít u dodavatele', alt: 'Další zdroje', notRec: 'nedoporučujeme',
     ship: 'Doprava', vat: { eu_oss: 'cena s DPH (DE 19 %), při OSS až +1,7 %', cz: 'cena s 21 % DPH', cz_nonvat: 'konečná cena (neplátce DPH)', cn_ioss: 'DPH přes IOSS, clo 3 € za položku', non_eu: 'dovoz mimo EU: DPH a clo 3 € za položku', per_vendor: 'DPH podle zvoleného dodavatele', none: '' },
-    landed: 'Celkem s dopravou', subtotal: 'Zboží', status: { verified: 'ověřeno', carried: 'převzato', unverified: 'neověřeno', estimate: 'odhad' },
+    landed: 'Celkem s dopravou', subtotal: 'Zboží', status: { verified: 'ověřeno', carried: 'převzato ze zdroje', unverified: 'neověřeno', estimate: 'odhad' },
     joint: 'Kloub', code: 'Kód', volt: 'Napětí', ratio: 'Převod', follower_12v: 'Follower 12 V', follower_74v: 'Follower 7,4 V', leader: 'Leader 7,4 V',
     jn: { shoulder_pan: 'základna', shoulder_lift: 'rameno', elbow_flex: 'loket', wrist_flex: 'zápěstí', wrist_roll: 'rotace zápěstí', gripper: 'chapadlo' },
     flagsH: 'Zdroje, které nedoporučujeme nebo kde je třeba dát pozor', allJoints: 'všechny klouby', jointN: (a, j, n) => `${a}, kloub ${j} (${n})`, joints1: 'kloub', joints: 'klouby', and: 'a',
@@ -61,9 +61,9 @@ const S = {
   en: {
     total: 'Total incl. VAT and shipping', goods: 'goods', eta: 'Delivery', days: 'days', slowest: 'set by the slowest line',
     build: 'Build time (estimate)', print: 'print', work: 'work', h: 'h', est: 'estimate', perPiece: '/ pc',
-    qty: 'pcs', ordered: 'Ordered', open: 'Open at supplier', alt: 'Other sources', notRec: 'not recommended',
+    qty: 'pcs', ordered: 'I’ve ordered this', open: 'Open at supplier', alt: 'Other sources', notRec: 'not recommended',
     ship: 'Shipping', vat: { eu_oss: 'price incl. VAT (DE 19 %), up to +1.7 % with OSS', cz: 'price incl. 21 % VAT', cz_nonvat: 'final price (not a VAT payer)', cn_ioss: 'VAT via IOSS, 3 € duty per line', non_eu: 'non-EU import: VAT and 3 € duty per line', per_vendor: 'VAT depends on the vendor', none: '' },
-    landed: 'Landed', subtotal: 'Goods', status: { verified: 'verified', carried: 'carried', unverified: 'unverified', estimate: 'estimate' },
+    landed: 'Landed', subtotal: 'Goods', status: { verified: 'verified', carried: 'copied from source', unverified: 'unverified', estimate: 'estimate' },
     joint: 'Joint', code: 'Code', volt: 'Voltage', ratio: 'Gear ratio', follower_12v: 'Follower 12 V', follower_74v: 'Follower 7.4 V', leader: 'Leader 7.4 V',
     jn: { shoulder_pan: 'base', shoulder_lift: 'shoulder', elbow_flex: 'elbow', wrist_flex: 'wrist', wrist_roll: 'wrist roll', gripper: 'gripper' },
     flagsH: 'Sources we do not recommend or that need care', allJoints: 'all joints', jointN: (a, j, n) => `${a}, joint ${j} (${n})`, joints1: 'joint', joints: 'joints', and: 'and',
