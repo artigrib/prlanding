@@ -389,7 +389,7 @@
     {
      "component": "so101.servo.c044",
      "qty": 2,
-     "source": "openelab",
+     "source": "eckstein",
      "arm": "leader"
     },
     {
@@ -459,7 +459,7 @@
     {
      "component": "so101.servo.c044",
      "qty": 2,
-     "source": "openelab",
+     "source": "eckstein",
      "arm": "leader"
     },
     {

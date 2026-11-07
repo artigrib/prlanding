@@ -74,7 +74,7 @@ test('plan totals: follower 12 V, self-printed', () => {
 
 test('plan totals: pair, self-printed and print service', () => {
   const p = buildPlan(data, { robot: 'pair', print: 'self' });
-  assert.deepEqual(p.totals.landed_eur, [389, 414]);
+  assert.deepEqual(p.totals.landed_eur, [384, 405]);
   assert.deepEqual(p.variants.map((v) => v.arm), ['follower_12v', 'leader']);
   const servos = p.groups.flatMap((g) => g.lines).filter((l) => /servo\.c0/.test(l.component));
   assert.equal(sum(servos.map((l) => l.qty)), 12);
