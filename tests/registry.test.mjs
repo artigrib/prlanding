@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import { CATEGORIES, RIGHTS, CATALOGUE, LABELS, DISCIPLINES, SUBCATS, GAPS, checkRegistry, hiddenFields, loadRegistry, renderRegistry, renderGaps, disciplineOf } from '../tools/registry.mjs';
+import { CATEGORIES, RIGHTS, CATALOGUE, LABELS, DISCIPLINES, SUBCATS, GAPS, checkRegistry, hiddenFields, loadRegistry, renderRegistry, renderGaps, disciplineOf, hazardsOf } from '../tools/registry.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
 const { records, cs } = loadRegistry(ROOT);
@@ -221,4 +221,34 @@ test('gaps section: one line per field of use, Czech and English, same number of
     assert.ok(page.includes('<!--registry-gaps-->') && page.includes(L === 'en' ? '>Gaps</h2>' : '>Bílá místa</h2>'), L);
   }
   assert.ok(GAPS.phys.en.includes('air track') && GAPS.chem.en.includes('pH meter'));
+  // stirrers exist in the chemistry list, so they are not a gap in biology
+  assert.ok(!GAPS.bio.en.includes('magnetic stirrer') && !GAPS.bio.cs.includes('magnetické míchadlo'));
+  assert.ok(GAPS.bio.en.includes('sterilisers / autoclaves') && GAPS.agro.en.includes('insect farming (mealworms, black soldier fly)'));
+});
+
+test('hazard line: derived from equipment type and safety notes, shown in CZ and EN, only for tagged records', () => {
+  const want = { electropen: ['hv'], 'ag3d-gel-toolkit': ['hv'], openpfge: ['hv'], 'laser-xy-scanner': ['laser'], 'openflexure-optical-tweezers': ['laser'],
+    'psf-centrifuge-lecodevert': ['rotor'], 'maasi-spin-coater': ['rotor'], 'western-inert-gas-glovebox': ['gas'], 'geiger-counter-esp32-eink': ['hv', 'radiation'],
+    'openhw3-shaker': ['mains'], 'gaudilabs-3d-fiber-spectrometer': [], 'grimgork-printed-optics-mounts': [], 'so-arm100-101': [], 'ender3-syringe-pumps': [] };
+  for (const [id, tags] of Object.entries(want)) assert.deepEqual(hazardsOf(records.find((r) => r.id === id)), tags, id);
+  const cz = items(renderRegistry('cs', records, cs, '../../')), en = items(renderRegistry('en', records, cs, '../../'));
+  assert.match(cz.find((x) => x.includes('id="p-electropen"')), /<p class="reg-hz">Pozor: vysoké napětí — jen pod dohledem dospělého\.<\/p>/);
+  assert.match(en.find((x) => x.includes('id="p-electropen"')), /<p class="reg-hz">Caution: high voltage — adult supervision only\.<\/p>/);
+  assert.match(cz.find((x) => x.includes('id="p-geiger-counter-esp32-eink"')), /Pozor: vysoké napětí, zdroj záření — /);
+  for (const r of records) assert.equal(cz.find((x) => x.includes(`id="p-${r.id}"`)).includes('class="reg-hz"'), hazardsOf(r).length > 0, r.id);
+  // the page note gains the supervision sentence; the existing note text stays
+  for (const [L, a, b] of [['cs', 'Mladší stavitelé patří pod dohled dospělého.', 'Hodnocení „škola“ předpokládá práci pod dohledem učitele.'], ['en', 'Younger builders should work with an adult.', 'The “school” rating assumes work under a teacher’s supervision.']]) {
+    assert.ok(fs.readFileSync(`${ROOT}/tools/content/rejstrik.${L}.html`, 'utf8').includes(`${a} ${b}</span>`), L);
+  }
+});
+
+test('licences the review downgraded: unknown with a rights_note; CERN OHL without a version only copyleft when certified before v2', () => {
+  for (const id of ['isaac879-pan-tilt-slider', 'ugr-arduino-autotitrator', 'smartphone-spectrophotometer-winters']) {
+    const r = records.find((x) => x.id === id); assert.equal(r.rights_class, 'unknown', id); assert.ok(r.rights_note, id);
+  }
+  for (const id of ['satnogs-rotator', 'openpfge']) {
+    const r = records.find((x) => x.id === id);
+    assert.equal(r.licenses.hardware, 'CERN OHL (version not stated)', id); assert.equal(r.rights_class, 'copyleft', id); assert.match(r.rights_note, /before CERN-OHL v2/, id);
+  }
+  for (const id of ['mulberry-3d-printed-qpcr', 'tuebingen-printed-flow-equipment', 'laser-xy-scanner', 'most-open-source-colorimeter']) assert.ok(records.find((x) => x.id === id).rights_note, id);
 });

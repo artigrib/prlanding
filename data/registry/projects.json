@@ -9693,11 +9693,11 @@
   "repo": "https://github.com/isaac879/Pan-Tilt-Mount",
   "cad": "https://github.com/isaac879/Pan-Tilt-Mount",
   "licenses": {
-   "hardware": "MIT (repo LICENSE)",
+   "hardware": "not stated (CAD only on Thingiverse 4547074; repo MIT covers code)",
    "software": "MIT",
    "docs": "MIT"
   },
-  "rights_class": "permissive",
+  "rights_class": "unknown",
   "printed_share": "high",
   "actuation": "3x NEMA17 steppers (TMC2208)",
   "control": "Arduino Nano firmware; serial over USB or JDY-31 Bluetooth module",
@@ -9730,8 +9730,14 @@
    {
     "field": "licenses.hardware",
     "text": "was: MIT (repo LICENSE; Thingiverse thing:4547074 licence not checked)"
+   },
+   {
+    "field": "licenses.hardware",
+    "text": "was: MIT (repo LICENSE)"
    }
-  ]
+  ],
+  "rights_class_census": "permissive",
+  "rights_note": "the repo MIT licence covers the code; the CAD/STL files are only on Thingiverse (thing:4547074), whose licence field was not read"
  },
  {
   "id": "af-slider",
@@ -9873,7 +9879,8 @@
   ],
   "unverified": [
    "Thingiverse CAD licence"
-  ]
+  ],
+  "rights_note": "CC-BY-SA-4.0 is the repo LICENSE; the CAD/STL files are hosted on Thingiverse (thing:2710048), whose licence field was not read"
  },
  {
   "id": "telebot",
@@ -10232,7 +10239,7 @@
   "category": "other",
   "discipline": "desk",
   "subcategory": "cocktail-machine",
-  "summary_en": "Mainly 3D-printed (220x220 bed) drink-mixing machine with diaphragm pumps, relays, load cell and TFT/joystick UI on Raspberry Pi 5 + Arduino Mega; Fusion f3z CAD; documentation largely TODO.",
+  "summary_en": "Mainly 3D-printed (220x220 bed) drink-mixing machine with diaphragm pumps, relays, load cell and TFT/joystick UI on Raspberry Pi 5 + Arduino Mega; Fusion f3z CAD; documentation incomplete.",
   "homepage": "https://github.com/ErikMagnusson256/automatic_drink_mixing_machine",
   "repo": "https://github.com/ErikMagnusson256/automatic_drink_mixing_machine",
   "cad": "https://github.com/ErikMagnusson256/automatic_drink_mixing_machine",
@@ -10269,6 +10276,12 @@
   ],
   "unverified": [
    "completion status"
+  ],
+  "notes": [
+   {
+    "field": "summary_en",
+    "text": "was: Mainly 3D-printed (220x220 bed) drink-mixing machine with diaphragm pumps, relays, load cell and TFT/joystick UI on Raspberry Pi 5 + Arduino Mega; Fusion f3z CAD; documentation largely TODO."
+   }
   ]
  },
  {
@@ -11161,11 +11174,11 @@
   "repo": "https://gitlab.com/diegusleik/openpfge",
   "cad": "https://doi.org/10.5281/zenodo.3900147",
   "licenses": {
-   "hardware": "unknown (OSHWA: CERN OHL, version not stated)",
+   "hardware": "CERN OHL (version not stated)",
    "software": "GPL (version not stated)",
    "docs": "CC-BY-4.0 (Zenodo record)"
   },
-  "rights_class": "unknown",
+  "rights_class": "copyleft",
   "printed_share": "medium",
   "actuation": "180° digital servo (DS3218MG class) rotating the gel tray; 12 V pump, Peltier elements, fans",
   "control": "Arduino Nano firmware, HC-05 Bluetooth, Android app, 16x2 LCD",
@@ -11188,7 +11201,7 @@
   "sources": [
    {
     "url": "https://certification.oshwa.org/cl000001.html",
-    "checked": "2026-11-01"
+    "checked": "2026-11-07"
    },
    {
     "url": "https://zenodo.org/record/3900147",
@@ -11201,7 +11214,6 @@
   ],
   "unverified": [
    "GitLab repo (gitlab.com blocked)",
-   "CERN OHL version",
    "paper DOI suffix (inferred from HardwareX Oct 2020 listing, not opened)",
    "printed share of whole system"
   ],
@@ -11268,8 +11280,8 @@
     "census_batch": "pcr"
    }
   ],
-  "rights_class_census": "copyleft",
-  "rights_note": "OSHWA certificate CL000001 names \"CERN OHL\" without a version; CERN-OHL-P-2.0 would be permissive, so the class is not established (the pcr census copy classed it copyleft)",
+  "rights_class_census": "unknown",
+  "rights_note": "OSHWA CL000001 names \"CERN\" without a version; it was certified on 2019-12-11, before CERN-OHL v2 (2020), and every v1.x CERN OHL is reciprocal, so the class is copyleft (the lab-bio2 census copy had it unknown)",
   "notes": [
    {
     "field": "licenses.hardware",
@@ -11282,6 +11294,10 @@
    {
     "field": "actuation",
     "text": "was: 180 deg digital servo (DS3218MG-class) rotating gel tray; 12 V pump, Peltier elements, fans"
+   },
+   {
+    "field": "licenses.hardware",
+    "text": "was: unknown (OSHWA: CERN OHL, version not stated)"
    }
   ]
  },
@@ -11291,7 +11307,7 @@
   "category": "lab-automation",
   "discipline": "bio",
   "subcategory": "electroporator",
-  "summary_en": "Electricity-free handheld electroporator: a 3D-printed casing and hand toggle hold the piezoelectric crystal from a BBQ lighter, producing ~2 kV, ~5 ms decaying pulses into a millifluidic cuvette; PLOS Biology 2020.",
+  "summary_en": "Electricity-free handheld electroporator: a hand-toggled device in a 3D-printed casing produces ~2 kV, ~5 ms decaying pulses into a millifluidic cuvette; PLOS Biology 2020.",
   "homepage": "https://github.com/bhamla-lab/ElectroPen-PlosBiology-2019",
   "repo": "https://github.com/bhamla-lab/ElectroPen-PlosBiology-2019",
   "cad": "https://github.com/bhamla-lab/ElectroPen-PlosBiology-2019",
@@ -11338,6 +11354,10 @@
    {
     "field": "licenses.hardware",
     "text": "was: none stated in repo (paper CC-BY-4.0 covers article)"
+   },
+   {
+    "field": "summary_en",
+    "text": "was: Electricity-free handheld electroporator: a 3D-printed casing and hand toggle hold the piezoelectric crystal from a BBQ lighter, producing ~2 kV, ~5 ms decaying pulses into a millifluidic cuvette; PLOS Biology 2020."
    }
   ]
  },
@@ -11526,7 +11546,8 @@
     "field": "cad",
     "text": "note: S4 File: source CAD incl. Autodesk Inventor assemblies); STLs in S1 File (.s004"
    }
-  ]
+  ],
+  "rights_note": "CC-BY-4.0 is the PLOS ONE article licence (publisher terms); the design files are its Supporting Information and carry no separate hardware licence"
  },
  {
   "id": "opener-pcr",
@@ -11769,7 +11790,7 @@
   "category": "lab-automation",
   "discipline": "bio",
   "subcategory": "gel-electrophoresis",
-  "summary_en": "Low-cost educational agarose gel electrophoresis kit whose buffer tanks, 7-well comb and electrode standoffs are printed in PLA (100% infill); electrodes from copper banana plugs or platinum wire. STLs on OSF (bioRxiv 2023).",
+  "summary_en": "Low-cost educational agarose gel electrophoresis kit whose buffer tanks, 7-well comb and electrode standoffs are printed in PLA. STLs on OSF (bioRxiv 2023).",
   "homepage": "https://www.biorxiv.org/content/10.1101/2023.03.22.533785v1",
   "repo": "https://osf.io/fy7ca/",
   "cad": null,
@@ -11817,6 +11838,10 @@
    {
     "field": "licenses.hardware",
     "text": "was: unknown (not stated in preprint; OSF page not readable)"
+   },
+   {
+    "field": "summary_en",
+    "text": "was: Low-cost educational agarose gel electrophoresis kit whose buffer tanks, 7-well comb and electrode standoffs are printed in PLA (100% infill); electrodes from copper banana plugs or platinum wire. STLs on OSF (bioRxiv 2023)."
    }
   ]
  },
@@ -12611,11 +12636,11 @@
   "repo": "https://github.com/GeoEduLab/3D-printed-Spectrometer",
   "cad": "https://osf.io/7ewb3",
   "licenses": {
-   "hardware": "CC BY-SA 4.0 (GeoEduLab README)",
+   "hardware": "unknown (CC BY-SA 4.0 per the third-party GeoEduLab README)",
    "software": "n/a",
    "docs": "CC BY-SA 4.0 (GeoEduLab manual)"
   },
-  "rights_class": "copyleft",
+  "rights_class": "unknown",
   "printed_share": "high",
   "actuation": "none",
   "control": "Smartphone camera + spectroscopy app",
@@ -12717,8 +12742,14 @@
    {
     "field": "maturity.stars",
     "text": "was: 0"
+   },
+   {
+    "field": "licenses.hardware",
+    "text": "was: CC BY-SA 4.0 (GeoEduLab README)"
    }
-  ]
+  ],
+  "rights_class_census": "copyleft",
+  "rights_note": "CC BY-SA 4.0 is stated by GeoEduLab, a third party that publishes a manual; the licence of the authors' OSF deposit (osf.io/7ewb3) and the HardwareX specifications table could not be read (blocked)"
  },
  {
   "id": "votava-printed-spectroscope",
@@ -14651,7 +14682,7 @@
   "repo": "https://gitlab.com/librespacefoundation/satnogs/satnogs-rotator/",
   "cad": null,
   "licenses": {
-   "hardware": "CERN OHL v1 (OSHWA GR000001: 'CERN', certified 2018-09)",
+   "hardware": "CERN OHL (version not stated)",
    "software": "GPL (OSHWA listing)",
    "docs": "CC BY-SA (OSHWA); wiki CC BY-SA 3.0"
   },
@@ -14702,8 +14733,13 @@
    {
     "field": "licenses.hardware",
     "text": "was: CERN OHL (OSHWA GR000001 lists 'CERN', version not stated; certified 2018-09, before OHL v2 existed)"
+   },
+   {
+    "field": "licenses.hardware",
+    "text": "was: CERN OHL v1 (OSHWA GR000001: 'CERN', certified 2018-09)"
    }
-  ]
+  ],
+  "rights_note": "OSHWA GR000001 names \"CERN\" without a version; it was certified in 2018-09, before CERN-OHL v2 (2020), and every v1.x CERN OHL is reciprocal, so the class is copyleft"
  },
  {
   "id": "cubesat-prototype-arnav",
@@ -14996,7 +15032,7 @@
   "repo": null,
   "cad": "https://www.appropedia.org/Open-source_colorimeter",
   "licenses": {
-   "hardware": "CC-BY-SA (version not stated)",
+   "hardware": "CERN-OHL-S (Appropedia project page)",
    "software": "CC-BY-SA",
    "docs": "CC-BY-3.0 (article)"
   },
@@ -15028,10 +15064,13 @@
    {
     "url": "https://reprap.org/wiki/Open-source_colorimeter",
     "checked": "2026-11-01"
+   },
+   {
+    "url": "https://www.appropedia.org/Open-source_colorimeter",
+    "checked": "2026-11-07"
    }
   ],
   "unverified": [
-   "Appropedia page not reachable from container",
    "Thingiverse thing:45443 role/licence"
   ],
   "notes": [
@@ -15042,8 +15081,13 @@
    {
     "field": "licenses.software",
     "text": "was: CC-BY-SA (per paper)"
+   },
+   {
+    "field": "licenses.hardware",
+    "text": "was: CC-BY-SA (version not stated)"
    }
-  ]
+  ],
+  "rights_note": "the Appropedia project data table lists the hardware licence as CERN-OHL-S (linked to v2, checked 2026-11-07); the 2013 paper states CC-BY-SA for the designs"
  },
  {
   "id": "ugr-arduino-autotitrator",
@@ -15056,11 +15100,11 @@
   "repo": "https://zenodo.org/records/7971518",
   "cad": "https://zenodo.org/records/7971518",
   "licenses": {
-   "hardware": "CC-BY-4.0 (Zenodo record)",
+   "hardware": "unknown (Zenodo record: CC-BY-4.0; STLs taken from mass-spec.ru)",
    "software": "CC-BY-4.0 (Zenodo record, .ino included)",
    "docs": "CC-BY-4.0"
   },
-  "rights_class": "permissive",
+  "rights_class": "unknown",
   "printed_share": "high",
   "actuation": "1x stepper syringe drive",
   "control": "Arduino firmware (.ino); reads Metrohm 713 pH meter",
@@ -15095,8 +15139,14 @@
    {
     "field": "homepage",
     "text": "was: https://digibug.ugr.es/handle/10481/85215 (institutional repository record (digibug.ugr.es))"
+   },
+   {
+    "field": "licenses.hardware",
+    "text": "was: CC-BY-4.0 (Zenodo record)"
    }
-  ]
+  ],
+  "rights_class_census": "permissive",
+  "rights_note": "the Zenodo record states CC-BY-4.0, but the printed STLs were taken unmodified from mass-spec.ru (Samokhin); whether the uploader could license them is not confirmed"
  },
  {
   "id": "quave-hplc-fraction-collector",
@@ -15472,7 +15522,8 @@
   ],
   "unverified": [
    "whether SI files carry a separate licence notice"
-  ]
+  ],
+  "rights_note": "CC-BY-4.0 comes from the publisher's open-access terms (Beilstein J. Org. Chem.) for the article and its supporting files; no separate hardware licence is stated"
  },
  {
   "id": "lboro-3d-printed-fluidics-toolkit",
