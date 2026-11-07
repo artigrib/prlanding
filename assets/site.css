@@ -666,6 +666,12 @@ code.call,.path code,.step-k code,.tl-k,.tl-meta code{font-family:var(--mono);fo
 .hero-fig{grid-row:2 / span 3}
 .hero-cta{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 .hero-note{order:3}
+/* SO-101 facts under the hero buttons (generated from the plan data) */
+.hero-facts{order:4;flex-basis:100%;margin:8px 0 0;padding-top:16px;border-top:1px solid var(--line);display:grid;gap:6px;font-size:14px;line-height:1.45}
+.hero-facts>div{display:grid;grid-template-columns:8.5rem minmax(0,1fr);gap:12px}
+.hero-facts dt{font-family:var(--mono);font-size:12px;line-height:1.75;color:var(--mute)}
+.hero-facts dd{margin:0;color:var(--ink-2)}
+@media (max-width:420px){.hero-facts>div{grid-template-columns:minmax(0,1fr);gap:0}}
 /* journey rail: five calls, each links to its place */
 .path{list-style:none;margin:clamp(28px,4vw,56px) 0 0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid var(--ink)}
 .path li{position:relative;min-width:0}
