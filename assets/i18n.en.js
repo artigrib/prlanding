@@ -209,6 +209,13 @@
       /* de-slop L3 hero */
       'Postavte si robotickou ruku SO-101.': 'Build your own SO-101 robot arm.', 'Nejdřív ji vyzkoušejte v prohlížeči.': 'Try it in your browser first.',
       'Simulaci spustíte zdarma a bez registrace. Až budete chtít skutečnou ruku, řekneme vám, které díly koupit a ve kterém obchodě, a provedeme vás stavbou. Díly kupujete sami, my nic neprodáváme.': 'Run the simulation free, no sign-up. When you want the real arm, we tell you which parts to buy from which shop and guide you through the build. You buy the parts yourself; we sell nothing.',
+      /* de-slop L4 SO-101 path */
+      'Tři kroky k vlastní ruce. Než utratíte korunu, vyzkoušíte si je v prohlížeči.': 'Three steps to your own arm. Try each one in the browser before you spend anything.',
+      'Vyzkoušet v simulaci': 'Try it in the simulation', 'Koupit díly podle plánu': 'Buy the parts with the plan', 'Postavit podle návodu': 'Build it with the guide',
+      'Projít deset misí': 'Play the ten missions', 'Otevřít plán nákupu': 'Open the buying plan',
+      'SO-101 se staví jako pár: ovládací rukou (leader) hýbete vy a výkonná ruka (follower) ji kopíruje. Díly koupíte přímo u dodavatelů podle našeho plánu. U každé ceny je datum ověření a plán vám pomůže zkontrolovat variantu serv.': 'The SO-101 is built as a pair: you move the leader arm and the follower arm copies it. You buy the parts directly from suppliers using our plan. Every price shows when we checked it, and the plan helps you check the servo variant.',
+      "Obr. 4 — Bojová aréna v prohlížeči, kamera za robotem. Project SVRN právě flipperem vyhodil Klepeto.": "Fig. 4 — Combat arena in the browser, chase camera. Project SVRN has just flipped Klepeto with its flipper.",
+      "Obr. 5 — Panel Připojit AI ve stavu „Simulaci ovládá: Claude Code“. Každý krok AI se zapisuje do panelu.": "Fig. 5 — The Connect AI panel while “Claude Code” controls the simulation (Czech interface shown). Every AI step is logged in the panel.",
       /* de-slop L2 labels */
       'Zjistit, co koupit a za kolik': 'See what to buy and what it costs', 'Poslat mi upozornění': 'Email me when it’s ready', 'Odebírat novinky': 'Subscribe to updates',
       'Najít robota ve 3 otázkách': 'Find a robot in 3 questions', 'Jak s adresou nakládáme': 'How we handle your address',

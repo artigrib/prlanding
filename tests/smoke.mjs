@@ -268,7 +268,7 @@ await check('kit so101 + home link the buying plan, waitlist stays', '/sada/so10
   if ((await p.locator('#box-plan').getAttribute('href')) !== '../../plan/so101/') throw new Error('what-you-need → plan link');
   if (!/Co budete potřebovat/.test(await p.locator('#obsah summary').innerText()) || !/Dejte mi vědět/.test(await p.locator('#po-btn').innerText())) throw new Error('kit page copy');
   const home = await (await p.request.get(BASE + '/')).text();
-  if (!/href="plan\/so101\/" data-cta="plan">Plán nákupu dílů</.test(home) || !/href="sada\/so101\/">Stránka SO-101</.test(home)) throw new Error('home step 03 links');
+  if (!/href="plan\/so101\/" data-cta="plan">Otevřít plán nákupu</.test(home) || /href="sada\/so101\/">Stránka SO-101</.test(home)) throw new Error('home step 03 links');
 });
 await check('legacy sada.html redirects', '/sada.html?r=svrn', async p => {
   await p.waitForURL(/\/sada\/svrn\/$/);

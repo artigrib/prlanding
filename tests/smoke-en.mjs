@@ -239,7 +239,7 @@ await check('en kit so101 links the buying plan', '/en/kit/so101/', async (p, e)
   const h = await p.locator('#plan-cta').getAttribute('href');
   if (!/en\/plan\/so101\/$/.test(h || '')) e.push('plan link: ' + h);
   const home = await (await p.request.get(BASE + '/en/')).text();
-  if (!/href="[^"]*en\/plan\/so101\/" data-cta="plan">Parts buying plan</.test(home)) e.push('home step 03 has no plan link');
+  if (!/href="[^"]*en\/plan\/so101\/" data-cta="plan">Open the buying plan</.test(home)) e.push('home step 03 has no plan link');
   if (!/What you’ll need/.test(await p.locator('#obsah summary').innerText()) || !/en\/plan\/so101\/$/.test(await p.locator('#box-plan').getAttribute('href') || '')) e.push('what-you-need section / plan link');
   if (/We print|pre-order/i.test(home)) e.push('home still claims we print / take pre-orders');
 });

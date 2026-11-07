@@ -75,25 +75,23 @@
 
 <section id="vyzkousejte" class="wrap section" aria-labelledby="vyzk-h">
 <div class="g rule">
-<div class="a1 mono">N° 02 — Vyzkoušejte, než koupíte<code class="sec-k">sim.try()</code></div>
-<h2 class="a4 h2" id="vyzk-h" style="max-width:52rem">Od simulace k robotovi na stole. Každý krok si můžete projít předem.</h2>
+<div class="a1 mono">N° 01 — Vyzkoušejte, než koupíte<code class="sec-k">sim.try()</code></div>
+<h2 class="a4 h2" id="vyzk-h" style="max-width:52rem">Tři kroky k vlastní ruce. Než utratíte korunu, vyzkoušíte si je v prohlížeči.</h2>
 </div>
 <div class="g">
 <div class="a1 hide-s"></div>
 <ol class="a4 path" aria-label="Cesta k vlastní SO-101">
-<li><a href="sim/so101/"><code>sim.try()</code><span>Simulace v prohlížeči</span></a></li>
-<li><a href="plan/so101/"><code>plan.parts()</code><span>Plán nákupu dílů</span></a></li>
-<li><a href="#stavba"><code>build.arm()</code><span>Stavba podle návodu</span></a></li>
-<li><a href="#ai"><code>ai.connect()</code><span>Připojte svou AI</span></a></li>
-<li><a href="#arena"><code>arena.fight()</code><span>Bojová aréna</span></a></li>
+<li><a href="sim/so101/"><code>sim.try()</code><span>Vyzkoušet v simulaci</span></a></li>
+<li><a href="plan/so101/"><code>plan.parts()</code><span>Koupit díly podle plánu</span></a></li>
+<li><a href="#stavba"><code>build.arm()</code><span>Postavit podle návodu</span></a></li>
 </ol>
 </div>
 <div class="g" style="margin-top:clamp(24px,5vw,80px)">
 <div class="a1 hide-s"></div>
 <ol class="a4 steps steps4">
 <li class="step"><span class="mono step-k"><span>01</span><code>sim.try()</code></span><h3>Vyzkoušejte</h3><p>Táhnete modrou kouli a ruka ji sleduje. Kliknete na kostku a ruka ji sama vezme. Myší i prstem, se skutečnou fyzikou.</p><a class="step-a" href="sim/so101/">Spustit simulaci</a></li>
-<li class="step"><span class="mono step-k"><span>02</span><code>sim.learn()</code></span><h3>Naučte se</h3><p>Deset misí, od přenesení kostky po snídani, dílnu a laboratoř. Pohyb nahrajete a ruka ho zopakuje, stejně jako při učení skutečné SO-101 s LeRobotem.</p><a class="step-a" href="sim/so101/objects.html">Předměty s fyzikou</a></li>
-<li class="step"><span class="mono step-k"><span>03</span><code>plan.parts()</code></span><h3>Nakupte díly</h3><p>Díly koupíte přímo u dodavatelů podle našeho plánu, s ověřenými cenami a kontrolou variant serv. Hotovou sadu možná nabídneme později – na stránce SO-101 se můžete zapsat.</p><span class="step-links"><a class="step-a" href="sada/so101/">Stránka SO-101</a><a class="step-a" href="plan/so101/" data-cta="plan">Plán nákupu dílů</a></span></li>
+<li class="step"><span class="mono step-k"><span>02</span><code>sim.learn()</code></span><h3>Naučte se</h3><p>Deset misí, od přenesení kostky po snídani, dílnu a laboratoř. Pohyb nahrajete a ruka ho zopakuje, stejně jako při učení skutečné SO-101 s LeRobotem.</p><a class="step-a" href="sim/so101/">Projít deset misí</a></li>
+<li class="step"><span class="mono step-k"><span>03</span><code>plan.parts()</code></span><h3>Nakupte díly</h3><p>SO-101 se staví jako pár: ovládací rukou (leader) hýbete vy a výkonná ruka (follower) ji kopíruje. Díly koupíte přímo u dodavatelů podle našeho plánu. U každé ceny je datum ověření a plán vám pomůže zkontrolovat variantu serv.</p><a class="step-a" href="plan/so101/" data-cta="plan">Otevřít plán nákupu</a></li>
 <li class="step"><span class="mono step-k"><span>04</span><code>build.arm()</code></span><h3>Postavte</h3><p>Rozložený pohled z originálních STL ukáže každý díl. ID serv, kalibraci a test si projdete na virtuální ruce, ještě než díly dorazí.</p><a class="step-a" href="sim/so101/nastaveni/">Nastavení serv nanečisto</a></li>
 </ol>
 </div>
@@ -117,7 +115,7 @@
 <section id="stavba" class="wrap section" aria-labelledby="stavba-h">
 <!--build-tl-->
 <div class="g rule">
-<div class="a1 mono">N° 03 — Stavba SO-101<code class="sec-k">build.arm()</code></div>
+<div class="a1 mono">N° 02 — Stavba SO-101<code class="sec-k">build.arm()</code></div>
 <h2 class="a4 h2" id="stavba-h" style="max-width:52rem">Sedm etap, odhad 10 až 19 hodin práce.</h2>
 </div>
 <div class="g tl-row">
@@ -140,6 +138,35 @@
 <!--/build-tl-->
 </section>
 
+
+<section id="arena" class="band section-band" aria-labelledby="arena-h">
+<div class="wrap">
+<div class="g rule rule-inv">
+<div class="a1 mono">N° 03 — Bojoví roboti<code class="sec-k">arena.fight()</code></div>
+<h2 class="a4 h2" id="arena-h" style="max-width:52rem">Roboti do 150 g. Zápas si nejdřív odehrajete v aréně.</h2>
+</div>
+<div class="g arena-row">
+<figure class="arena-fig">
+<a href="sim/arena/" class="arena-shot" data-cta="arena-shot"><img src="assets/media/arena.jpg" width="1280" height="720" alt="Bojová aréna v prohlížeči: oranžový Project SVRN vyhodil flipperem modrého robota Klepeto do vzduchu" loading="lazy" decoding="async"></a>
+<figcaption class="mono">Obr. 4 — Bojová aréna v prohlížeči, kamera za robotem. Project SVRN právě flipperem vyhodil Klepeto.</figcaption>
+</figure>
+<div class="arena-txt">
+<p class="lead">Fyzika s hmotností a třením, několik map, kamery včetně TV přenosu. Rychlý zápas, turnaj, dva hráči na jedné klávesnici nebo trénink bez časového limitu.</p>
+<ul class="ticks">
+<li>V garáži měníte kola, převody a zbraně, hmotnost se hlídá do 150 g.</li>
+<li>Project SVRN má vpředu výměnný modul: flipper, klín nebo chapadlo. Soupeři Kosa a Klepeto mají vlastní původní modely.</li>
+<li>Po zápase si zásah přehrajete zpomaleně a zápas uložíte jako soubor nebo krátký klip.</li>
+<li>První zápas provede krátký průvodce, soupeř Začátečník reaguje pomaleji. Motory, zbraně a zásahy mají vlastní zvuk.</li>
+</ul>
+<a class="btn btn-act" href="sim/arena/" data-cta="arena">Spustit bojovou arénu <span aria-hidden="true">→</span></a>
+</div>
+</div>
+<ul class="bots">
+<li><a href="sada/svrn/"><span class="bot-img"><img src="img/svrn_white.jpg" width="1200" height="900" alt="Malý bojový robot Project SVRN s pohonem 4×4 a klínem" loading="lazy" decoding="async"></span><span class="bot-t"><span class="bot-st">Postavte si</span><b>Project SVRN</b><span>Tlačný robot s pohonem 4×4, vpředu flipper, klín nebo chapadlo.</span></span></a></li>
+<li><a href="sada/vert150/"><span class="bot-img"><img src="img/vert150_white.jpg" width="1200" height="900" alt="Malý bojový robot s vertikálním rotujícím ostřím" loading="lazy" decoding="async"></span><span class="bot-t"><span class="bot-st bot-st-p">Připravujeme</span><b>Vertikální spinner 150 g</b><span>Dvoukolový robot s rotujícím ostřím. Jen pro uzavřenou arénu.</span></span></a></li>
+</ul>
+</div>
+</section>
 <section id="ai" class="wrap section" aria-labelledby="ai-h">
 <div class="g rule">
 <div class="a1 mono">N° 04 — Připojte svou AI<code class="sec-k">ai.connect()</code></div>
@@ -165,43 +192,14 @@
 </div>
 <figure class="feat-fig">
 <img src="assets/media/ai-panel.jpg" width="1110" height="360" alt="Simulace SO-101 s panelem Ovládání přes AI: Simulaci ovládá Claude Code, tlačítka STOP a Odpojit a záznam toho, co AI dělá" loading="lazy" decoding="async">
-<figcaption class="mono">Obr. 4 — Panel Připojit AI ve stavu „Simulaci ovládá: Claude Code“. Každý krok AI se zapisuje do panelu.</figcaption>
+<figcaption class="mono">Obr. 5 — Panel Připojit AI ve stavu „Simulaci ovládá: Claude Code“. Každý krok AI se zapisuje do panelu.</figcaption>
 </figure>
-</div>
-</section>
-
-<section id="arena" class="band section-band" aria-labelledby="arena-h">
-<div class="wrap">
-<div class="g rule rule-inv">
-<div class="a1 mono">N° 05 — Bojoví roboti<code class="sec-k">arena.fight()</code></div>
-<h2 class="a4 h2" id="arena-h" style="max-width:52rem">Roboti do 150 g. Zápas si nejdřív odehrajete v aréně.</h2>
-</div>
-<div class="g arena-row">
-<figure class="arena-fig">
-<a href="sim/arena/" class="arena-shot" data-cta="arena-shot"><img src="assets/media/arena.jpg" width="1280" height="720" alt="Bojová aréna v prohlížeči: oranžový Project SVRN vyhodil flipperem modrého robota Klepeto do vzduchu" loading="lazy" decoding="async"></a>
-<figcaption class="mono">Obr. 5 — Bojová aréna v prohlížeči, kamera za robotem. Project SVRN právě flipperem vyhodil Klepeto.</figcaption>
-</figure>
-<div class="arena-txt">
-<p class="lead">Fyzika s hmotností a třením, několik map, kamery včetně TV přenosu. Rychlý zápas, turnaj, dva hráči na jedné klávesnici nebo trénink bez časového limitu.</p>
-<ul class="ticks">
-<li>V garáži měníte kola, převody a zbraně, hmotnost se hlídá do 150 g.</li>
-<li>Project SVRN má vpředu výměnný modul: flipper, klín nebo chapadlo. Soupeři Kosa a Klepeto mají vlastní původní modely.</li>
-<li>Po zápase si zásah přehrajete zpomaleně a zápas uložíte jako soubor nebo krátký klip.</li>
-<li>První zápas provede krátký průvodce, soupeř Začátečník reaguje pomaleji. Motory, zbraně a zásahy mají vlastní zvuk.</li>
-</ul>
-<a class="btn btn-act" href="sim/arena/" data-cta="arena">Spustit bojovou arénu <span aria-hidden="true">→</span></a>
-</div>
-</div>
-<ul class="bots">
-<li><a href="sada/svrn/"><span class="bot-img"><img src="img/svrn_white.jpg" width="1200" height="900" alt="Malý bojový robot Project SVRN s pohonem 4×4 a klínem" loading="lazy" decoding="async"></span><span class="bot-t"><span class="bot-st">Postavte si</span><b>Project SVRN</b><span>Tlačný robot s pohonem 4×4, vpředu flipper, klín nebo chapadlo.</span></span></a></li>
-<li><a href="sada/vert150/"><span class="bot-img"><img src="img/vert150_white.jpg" width="1200" height="900" alt="Malý bojový robot s vertikálním rotujícím ostřím" loading="lazy" decoding="async"></span><span class="bot-t"><span class="bot-st bot-st-p">Připravujeme</span><b>Vertikální spinner 150 g</b><span>Dvoukolový robot s rotujícím ostřím. Jen pro uzavřenou arénu.</span></span></a></li>
-</ul>
 </div>
 </section>
 
 <section id="novinky" class="wrap section" aria-labelledby="nov-h">
 <div class="g rule">
-<div class="a1 mono">N° 06 — Co je nového<code class="sec-k">log.latest()</code></div>
+<div class="a1 mono">N° 05 — Co je nového<code class="sec-k">log.latest()</code></div>
 <h2 class="a4 h2" id="nov-h">Co jsme přidali.</h2>
 </div>
 <div class="g" style="margin-top:clamp(24px,4vw,56px)">
@@ -222,7 +220,7 @@
 
 <section id="pripravujeme" class="wrap section" aria-labelledby="prip-h">
 <div class="g rule">
-<div class="a1 mono">N° 07 — Připravujeme<code class="sec-k">roadmap.next()</code></div>
+<div class="a1 mono">N° 06 — Připravujeme<code class="sec-k">roadmap.next()</code></div>
 <h2 class="a4 h2" id="prip-h" style="max-width:52rem">Na čem pracujeme. Zatím to vyzkoušet nejde.</h2>
 </div>
 <div class="g prep-row">
@@ -247,7 +245,7 @@
 
 <section id="katalog" class="wrap section">
 <div class="g rule" style="align-items:start">
-<div class="a1 mono">N° 08 — Katalog<code class="sec-k">kits.list()</code></div>
+<div class="a1 mono">N° 07 — Katalog<code class="sec-k">kits.list()</code></div>
 <h2 class="a4s h2"><span id="robot-count2">24</span> robotů. Od prvního sestavení po výzkum.</h2>
 <div class="a10 filters" id="filters" role="group" aria-label="Filtr podle typu"></div>
 </div>
@@ -287,24 +285,10 @@
 <a class="quiz-cta" href="kviz.html" style="margin-top:56px"><span><b>Nevíte, kterého vybrat?</b><span class="muted">Tři otázky a doporučíme robota podle zkušeností a cíle, nově i pro souboje robotů.</span></span><span class="btn">Najít robota ve 3 otázkách <span aria-hidden="true">→</span></span></a>
 </section>
 
-<section id="postup" class="wrap section" aria-labelledby="post-h">
-<div class="g rule">
-<div class="a1 mono">N° 09 — Jak to funguje<code class="sec-k">kit.flow()</code></div>
-<h2 class="a4 h2" id="post-h" style="max-width:52rem">Tři kroky mezi repozitářem na GitHubu a robotem na vašem stole.</h2>
-</div>
-<div class="g" style="margin-top:clamp(24px,5vw,80px)">
-<div class="a1 hide-s"></div>
-<ol class="a4 steps">
-<li class="step"><span class="mono" style="color:var(--ink)">01</span><h3>Řekneme, co koupit</h3><p>Nic neprodáváme. Díly koupíte přímo u dodavatelů; plán nákupu ukáže kde, za kolik s dopravou a jak poznat správnou variantu serv.</p><a class="step-a" href="plan/so101/">Plán nákupu SO-101</a></li>
-<li class="step"><span class="mono" style="color:var(--ink)">02</span><h3>Provedeme stavbou</h3><p>Návod s obrázky z CAD modelu projektu, etapa po etapě, a kontrolní seznam k tisku.</p><a class="step-a" href="navody/so101-sestaveni/">Sestavení SO-101</a></li>
-<li class="step"><span class="mono" style="color:var(--ink)">03</span><h3>Trénujete předem</h3><p>Zatímco díly jedou, nastavíte serva a vyzkoušíte LeRobot na virtuální ruce v prohlížeči.</p><a class="step-a" href="navody/so101-lerobot-simulace/">LeRobot na virtuální ruce</a></li>
-</ol>
-</div>
-</section>
 
 <section id="skoly" class="wrap section" aria-labelledby="skoly-h">
 <div class="g rule">
-<div class="a1 mono">N° 10 — Pro školy a návody<code class="sec-k">docs.read()</code></div>
+<div class="a1 mono">N° 08 — Pro školy a návody<code class="sec-k">docs.read()</code></div>
 <h2 class="a4 h2" id="skoly-h" style="max-width:52rem">Hodina robotiky zdarma a návody česky.</h2>
 </div>
 <div class="g" style="margin-top:clamp(24px,4vw,56px)">
@@ -318,7 +302,7 @@
 
 <section id="komunita" class="wrap section" aria-labelledby="proto-h">
 <div class="g rule">
-<div class="a1 mono">N° 11 — Komunita<code class="sec-k">meetup.join()</code></div>
+<div class="a1 mono">N° 09 — Komunita<code class="sec-k">meetup.join()</code></div>
 <div class="a4 proto">
 <h2 class="h2" id="proto-h">PROTO ROBOT</h2>
 <p class="lead">Pražské setkání o robotice a fyzické AI: přednášky, živé ukázky a lidé, kteří roboty staví nebo chtějí začít. První proběhlo 23. 10. 2026, další připravujeme.</p>
@@ -330,7 +314,7 @@
 
 <section id="licence" class="wrap section">
 <div class="g rule">
-<div class="a1 mono">N° 12 — Licence<code class="sec-k">license.check()</code></div>
+<div class="a1 mono">N° 10 — Licence<code class="sec-k">license.check()</code></div>
 <h2 class="a4s h2">Hotovou sadu jen tam, kde to licence dovoluje.</h2>
 <p class="a10 ink2" style="margin:0;font-size:16px">Licenci konstrukčních souborů ověřujeme zvlášť od licence softwaru. Kdybychom hotovou sadu někdy nabídli, projekty s doložkou NC jen s písemným souhlasem autorů.</p>
 </div>
