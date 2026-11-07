@@ -191,6 +191,7 @@ await check('plan so101 works without storage', '/plan/so101/', async p => {
 for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
   await check(`plan so101 axe ${vp.width}px`, '/plan/so101/', async p => {
     await p.setViewportSize(vp);
+    await p.reload();   // the variant <details> picks open/closed from the width at load
     await p.waitForSelector('#plan[data-ready="1"]');
     await p.check('input[name=robot][value=pair]');
     if ((await p.locator('#variant-more').evaluate(d => d.open)) !== (vp.width >= 900)) throw new Error('variant details open state at ' + vp.width);
