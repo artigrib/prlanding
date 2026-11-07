@@ -25,6 +25,12 @@
 .plan-warn ol,.plan-warn ul{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
 .plan-warn .doc-t{background:#fff}
 .plan-warn .doc-t th,.plan-warn .doc-t td{padding:8px 12px}
+.plan-go{margin-top:20px}
+.plan-more>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.plan-more>summary::before{content:"▸";margin-right:8px;text-decoration:none}
+.plan-more[open]>summary::before{content:"▾"}
+.plan-more[open]>summary{margin-bottom:12px}
+.plan-more>summary::-webkit-details-marker{display:none}
 .plan-vt caption{text-align:left;font-weight:500;padding:8px 0}
 .plan-flags li{line-height:1.45}
 .pb{display:inline-block;font-family:var(--mono);font-size:12px;line-height:1.4;padding:1px 6px;border:1px solid currentColor;white-space:nowrap}
