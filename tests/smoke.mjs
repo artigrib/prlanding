@@ -120,6 +120,11 @@ await check('plan so101: totals, variant guard, checker, local state', '/plan/so
   if (await total() !== '369–390 €') throw new Error('default pair total ' + await total());
   if (!(await p.locator('[data-testid=plan-screws]').count()) || !/49× M2×6[\s\S]*96× M3×6/.test(await p.locator('#plan-screws').innerText())) throw new Error('screw table');
   if ((await p.locator('[data-testid=plan-alt]').count()) < 1) throw new Error('kit alternatives');
+  // primary action after the total: jump to the shopping list, shop count from the data
+  const go = p.locator('[data-testid=plan-go]');
+  if (!/^Přejít na nákupní seznam \(\d+ obchod(y|ů)?\)/.test((await go.innerText()).replace(/\s/g, ' ')) || (await go.getAttribute('href')) !== '#nakup') throw new Error('shopping-list button: ' + await go.innerText());
+  if (await p.locator('#upozorneni a[href*="sada/so101"]').count()) throw new Error('own-kit waitlist line still on the plan');
+  if (/nepodařilo přečíst/.test(await p.locator('#plan-groups').innerText())) throw new Error('unreadable review line shown');
   // each line says what it is for; servo lines per arm (C001 is both the 7.4 V follower and leader joint 2)
   const roles = (await p.locator('[data-testid=plan-role]').allInnerTexts()).join(' | ').replace(/\s/g, ' ');
   if (!/Follower 7,4 V, klouby 1–6/.test(roles) || !/Leader 7,4 V, kloub 2 \(rameno\)/.test(roles) || !/Leader 7,4 V, klouby 1 a 3 \(základna, loket\)/.test(roles)) throw new Error('line roles: ' + roles);
@@ -141,7 +146,7 @@ await check('plan so101: totals, variant guard, checker, local state', '/plan/so
   if (!(await p.locator('#plan-cfgnote').isVisible()) || !/lerobot-replay/.test(await p.locator('#plan-cfgnote').innerText())) throw new Error('follower-only note');
   if (!(await p.locator('[data-testid=plan-backorder]').count())) throw new Error('backorder note on the bus board line');
   if (!/^\d\d\.\d\d\.20\d\d$/.test(await p.locator('#stamp-date').innerText())) throw new Error('price stamp date');
-  if (!/Pozor na variantu/.test((await p.locator('.plan-warn h2').innerText()).replace(/\s+/g, ' '))) throw new Error('variant warning');
+  if (!/Než objednáte serva: zkontrolujte variantu/.test((await p.locator('.plan-warn h2').innerText()).replace(/\s+/g, ' '))) throw new Error('variant warning');
   await p.check('input[name=robot][value=pair]');
   if (await total() !== '384–405 €') throw new Error('pair total ' + await total());
   // a backordered line can be swapped to another recommended source and back
@@ -186,8 +191,10 @@ await check('plan so101 works without storage', '/plan/so101/', async p => {
 for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
   await check(`plan so101 axe ${vp.width}px`, '/plan/so101/', async p => {
     await p.setViewportSize(vp);
+    await p.reload();   // the variant <details> picks open/closed from the width at load
     await p.waitForSelector('#plan[data-ready="1"]');
     await p.check('input[name=robot][value=pair]');
+    if ((await p.locator('#variant-more').evaluate(d => d.open)) !== (vp.width >= 900)) throw new Error('variant details open state at ' + vp.width);
     await p.addScriptTag({ content: AXE });
     const r = await p.evaluate(() => window.axe.run(document, { resultTypes: ['violations'] }));
     const bad = r.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');

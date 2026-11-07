@@ -1779,7 +1779,7 @@
    "name": "Feetech STS3215-C001, 7.4 V, 1/345, ~19 kg·cm",
    "name_cs": "Servo Feetech STS3215-C001, 7,4 V, 1/345, ~19 kg·cm",
    "role": "Leader joint 2 (shoulder lift); follower joints 1–6 in the 7.4 V build",
-   "role_cs": "Leader, kloub 2 (rameno)",
+   "role_cs": "Leader, kloub 2 (rameno); ve verzi 7,4 V follower, klouby 1–6",
    "specs": {
     "voltage": "7.4 V nominal (run from 5 V PSU in SO-101)",
     "gear_ratio": "1/345",

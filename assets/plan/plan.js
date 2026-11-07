@@ -29,7 +29,7 @@ const S = {
     altH: 'Alternativa pro pár', altNote: 'Cena bez dopravy a cla, převzato', service: 'Nabídku udělá', checked: 'ověřeno',
     req: 'nutné', opt: 'volitelné', backorder: 'Sklad', printed_by_you: 'Soubory STL', fx: 'Kurz',
     part: 'Díl', need: 'Co hledat', avoid: 'Čemu se vyhnout', partFor: 'Který díl', srcs: 'Zdroje', checkedOn: 'ověřeno',
-    rv: (d) => `Co píšou kupující (k ${d})`, rvNone: 'zatím žádné recenze', rvNull: 'recenze se nepodařilo přečíst', rvCount: (n) => `${n} ${n === 1 ? 'recenze' : n < 5 ? 'recenze' : 'recenzí'}`,
+    rv: (d) => `Co píšou kupující (k ${d})`, rvCount: (n) => `${n} ${n === 1 ? 'recenze' : n < 5 ? 'recenze' : 'recenzí'}`,
     rvType: { variant_mismatch: 'jiná varianta', shipping_time: 'doručení', quality: 'kvalita', missing_parts: 'chybějící díly', positive: 'kladně' },
     noteLevel: { verify: 'Ověřte', changed: 'Změna', info: 'Info' }, guideExt: 'návod projektu',
     found2: 'V textu nalezeno', problems: 'Problém',
@@ -55,6 +55,7 @@ const S = {
       when: 'Plán po dílech níže se hodí pro vlastní výběr dodavatelů, jiné varianty (např. jiný materiál nebo 12 V jen pro follower) a když jsou sady vyprodané.',
       honest: 'Doporučujeme podle nejnižší ceny s dopravou mezi ověřenými sadami se správnými servy, které jsou skladem. Ne podle provize: odkazy nejsou affiliate.'
     },
+    goList: (n) => `Přejít na nákupní seznam (${n} ${n === 1 ? 'obchod' : n < 5 ? 'obchody' : 'obchodů'})`,
     cfgNote: 'Bez leaderu ruku po kalibraci rozhýbete jen přehráním nahraného pohybu (lerobot-replay), například datasetu z návodu se simulací. Teleoperace a vlastní ukázky potřebují leader.'
   },
   en: {
@@ -72,7 +73,7 @@ const S = {
     altH: 'Alternative for a pair', altNote: 'Price without shipping and duty, carried', service: 'Get a quote from', checked: 'checked',
     req: 'required', opt: 'optional', backorder: 'Stock', printed_by_you: 'STL files', fx: 'FX',
     part: 'Part', need: 'Look for', avoid: 'Avoid', partFor: 'Which part', srcs: 'Sources', checkedOn: 'checked',
-    rv: (d) => `What buyers say (as of ${d})`, rvNone: 'no reviews yet', rvNull: 'reviews could not be read', rvCount: (n) => `${n} review${n === 1 ? '' : 's'}`,
+    rv: (d) => `What buyers say (as of ${d})`, rvCount: (n) => `${n} review${n === 1 ? '' : 's'}`,
     rvType: { variant_mismatch: 'wrong variant', shipping_time: 'delivery', quality: 'quality', missing_parts: 'missing parts', positive: 'positive' },
     noteLevel: { verify: 'Verify', changed: 'Changed', info: 'Info' }, guideExt: 'project guide',
     found2: 'Found in the text', problems: 'Problem',
@@ -98,6 +99,7 @@ const S = {
       when: 'The parts plan below is for picking your own suppliers, other variants (e.g. another material, or 12 V for the follower only) and when kits are sold out.',
       honest: 'We recommend by the lowest landed price among verified, in-stock kits with the right servos. Never by commission: no link is an affiliate link.'
     },
+    goList: (n) => `Go to the shopping list (${n} shop${n === 1 ? '' : 's'})`,
     cfgNote: 'Without a leader, after calibration you can only move the arm by replaying recorded motion (lerobot-replay), for example a dataset from the simulation guide. Teleoperation and your own demonstrations need a leader.'
   }
 }[L];
@@ -149,6 +151,12 @@ form.addEventListener('change', () => {
   save(); render();
 });
 $('print-btn').addEventListener('click', () => window.print());
+// variant details: open on desktop, closed on phones (without JS the <details> stays open); always open when printing
+const more = $('variant-more');
+if (more) {
+  if (!window.matchMedia('(min-width: 900px)').matches) more.open = false;
+  window.addEventListener('beforeprint', () => { more.open = true; });
+}
 $('fx').textContent = nf.format(data.meta.fx_czk_per_eur);
 
 function renderSummary(p) {
@@ -159,7 +167,8 @@ function renderSummary(p) {
 <div class="k-main"><dt>${S.total}</dt><dd><b data-testid="plan-total-eur">${rng(p.totals.landed_eur, ' €')}</b><span>≈ ${rng(p.totals.landed_czk, CZK)}</span></dd></div>
 <div><dt>${S.eta}</dt><dd><b>${rng(p.eta_days)} ${S.days}</b><span>${S.slowest}</span></dd></div>
 <div><dt>${S.build}</dt><dd><b>${b.print_hours[1] ? `${S.print} ${rng(b.print_hours)} ${S.h} · ` : ''}${S.work} ${rng(b.work_hours)} ${S.h}</b><span>${S.est} · <a href="${guideUrl()}" data-testid="plan-guide-link"${extGuide() ? ' rel="noopener"' : ''}>${extGuide() ? esc(data.build_time.guide_label || S.guide) : S.guide}</a></span></dd></div>
-</dl>`;
+</dl>
+<a class="btn plan-go no-print" href="#nakup" data-testid="plan-go">${S.goList(p.groups.filter((g) => g.supplier !== 'none' && g.supplier !== 'self_print').length)} <span aria-hidden="true">↓</span></a>`;
 }
 
 function renderChecks(p) {
@@ -192,13 +201,11 @@ function renderVariants(p) {
 
 // buyer reviews on a listing: our short paraphrased signals, never copied text
 function reviews(r) {
-  if (!r || (r.count === 0 && !r.signals.length)) return '';   // "no reviews yet" tells the buyer nothing
+  // "no reviews yet" or "could not be read" tells the buyer nothing: show the line only when there is something to read
+  if (!r || (!r.signals.length && (r.count === 0 || (r.count == null && r.rating == null)))) return '';
   const warn = r.signals.some((g) => g.type === 'variant_mismatch' || g.type === 'missing_parts');
   const head = `${S.rv(date(r.checked))}:`;
-  let body;
-  if (r.count == null && r.rating == null && !r.signals.length) body = S.rvNull;
-  else if (r.count === 0) body = S.rvNone;
-  else body = [r.rating != null ? `${nf.format(r.rating)}/5` : '', r.count != null ? S.rvCount(r.count) : '',
+  const body = [r.rating != null ? `${nf.format(r.rating)}/5` : '', r.count != null ? S.rvCount(r.count) : '',
     ...r.signals.map((g) => `<span class="rv-sig rv-${esc(g.type)}">${esc(S.rvType[g.type] || g.type)}: ${esc(L === 'cs' ? g.note_cs : g.note_en)}</span>`)].filter(Boolean).join(' · ');
   return `<small class="plan-rv${warn ? ' plan-rv-warn' : ''}" data-testid="plan-reviews">${head} ${body}${r.url && r.count ? ` <a href="${esc(r.url)}" rel="noopener">${L === 'en' ? 'listing' : 'inzerát'}</a>` : ''}</small>`;
 }
