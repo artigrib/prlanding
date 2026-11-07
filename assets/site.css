@@ -749,6 +749,7 @@ code.call,.path code,.step-k code,.tl-k,.tl-meta code{font-family:var(--mono);fo
 .reg-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px}
 .reg-h h3{margin:0;font-weight:500;font-size:clamp(20px,2vw,26px);letter-spacing:-.02em}
 .reg-s{margin:0;max-width:52rem;color:var(--ink-2)}
+.reg-hz{margin:0;font-size:14px;font-weight:500;color:var(--accent-text)}
 .reg-lic{margin:0;display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline;font-size:14px;color:var(--ink-2)}
 .reg-b{display:inline-flex;align-items:center;font-family:var(--mono);font-size:12px;padding:3px 8px;border:1px solid var(--line-2);color:var(--ink)}
 .reg-b-unknown{border-style:dashed}

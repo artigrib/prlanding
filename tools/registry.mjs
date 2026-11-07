@@ -196,8 +196,8 @@ export const SUBCAT_ONE = { cs: subcatCol(1), en: subcatCol(3) };
 // no open, substantially printed design. Types as the research notes name them (data/registry has the batches' summaries).
 export const GAPS = {
   bio: {
-    cs: ['magnetické míchadlo', 'topný blok / suchá lázeň', 'vodní lázeň', 'inkubátor (jako samostatný přístroj)', 'CO2 inkubátor', 'laminární box', 'sterilizátory a tlakové nádoby (autokláv)', 'mikromanipulátor', 'počítač kolonií (hardware)', 'čtečka mikrodestiček', 'transiluminátor / zobrazování gelů', 'manipulace s mikrodestičkami'],
-    en: ['magnetic stirrer', 'heat block / dry bath', 'water bath', 'incubator (as a standalone device)', 'CO2 incubator', 'laminar flow / clean bench', 'autoclave-adjacent (sterilisers, pressure)', 'micromanipulator', 'colony counter (hardware)', 'plate reader', 'transilluminator / gel imager', 'plate handler / microplate tools']
+    cs: ['topný blok / suchá lázeň', 'vodní lázeň', 'inkubátor (jako samostatný přístroj)', 'CO2 inkubátor', 'laminární box', 'sterilizátory / autoklávy', 'mikromanipulátor', 'počítač kolonií (hardware)', 'čtečka mikrodestiček', 'transiluminátor / zobrazování gelů', 'manipulace s mikrodestičkami'],
+    en: ['heat block / dry bath', 'water bath', 'incubator (as a standalone device)', 'CO2 incubator', 'laminar flow / clean bench', 'sterilisers / autoclaves', 'micromanipulator', 'colony counter (hardware)', 'plate reader', 'transilluminator / gel imager', 'plate handler / microplate tools']
   },
   chem: {
     cs: ['míchací topná plotýnka', 'nástavcové (horní) míchadlo', 'pH metr', 'konduktometr', 'přístroj na stanovení bodu tání', 'termostatovaná lázeň', 'laboratorní stojany, svorky a držáky', 'elektrospinning'],
@@ -208,14 +208,31 @@ export const GAPS = {
     en: ['polarimeter', 'linear / translation stages', 'air track', 'dynamics carts / inclined plane', 'ripple tank / waves', 'sound / Kundt tube / resonance', 'cloud chamber', 'electrostatics (Van de Graaff, Wimshurst)', 'laser safety enclosures', 'vacuum chamber parts']
   },
   agro: {
-    cs: ['polní robotická platforma / rover pro řádkové plodiny', 'mechanický odplevelovací robot', 'laserové odplevelování', 'sklízecí robot / chapadlo na ovoce', 'odběr vzorků půdy / sondy', 'krmení hospodářských zvířat / přihrnování krmiva', 'sledování hospodářských zvířat (obojky apod.)', 'opylovací roboti', 'zemědělské drony (tištěné rámy)', 'sledování úlů / počítadla včel', 'sledování hmyzu a škůdců', 'komory pro plodnice hub', 'chov hmyzu (potemník, bráněnka)', 'počítání a třídění semen', 'otevřené traktory', 'gravitropismus rostlin / klinostaty'],
-    en: ['field robot platform / row-crop rover', 'weeding robot, mechanical', 'weeding, laser', 'harvesting robot / fruit gripper', 'soil sampling / probes', 'livestock: feeding / feed pushers', 'livestock monitoring (collars, etc.)', 'pollination robots', 'agricultural drones (printed frames)', 'beehive monitoring / bee counters', 'insect / pest monitoring', 'mushroom fruiting chambers', 'insect farming (mealworm/BSF)', 'seed counting / sorting', 'open tractors', 'plant gravitropism / clinostats']
+    cs: ['polní robotická platforma / rover pro řádkové plodiny', 'mechanický odplevelovací robot', 'laserové odplevelování', 'sklízecí robot / chapadlo na ovoce', 'odběr vzorků půdy / sondy', 'krmení hospodářských zvířat / přihrnování krmiva', 'sledování hospodářských zvířat (obojky apod.)', 'opylovací roboti', 'zemědělské drony (tištěné rámy)', 'sledování úlů / počítadla včel', 'sledování hmyzu a škůdců', 'komory pro plodnice hub', 'chov hmyzu (potemník moučný, bráněnka)', 'počítání a třídění semen', 'otevřené traktory', 'gravitropismus rostlin / klinostaty'],
+    en: ['field robot platform / row-crop rover', 'weeding robot, mechanical', 'weeding, laser', 'harvesting robot / fruit gripper', 'soil sampling / probes', 'livestock: feeding / feed pushers', 'livestock monitoring (collars, etc.)', 'pollination robots', 'agricultural drones (printed frames)', 'beehive monitoring / bee counters', 'insect / pest monitoring', 'mushroom fruiting chambers', 'insect farming (mealworms, black soldier fly)', 'seed counting / sorting', 'open tractors', 'plant gravitropism / clinostats']
   },
   desk: {
     cs: ['polargraf / svislý plotter', 'roboti na air hockey a jiné hry', 'stolní robotická ruka s dopravníkem (pracoviště typu Dobot)'],
     en: ['polargraph / vertical plotter', 'air-hockey / game robots', 'desktop robot arm with conveyor (Dobot-like workcell)']
   }
 };
+// hazard line per record: tags derived from the equipment type and the record's safety_notes (not from fit scores)
+export const HAZARDS = {
+  hv: { sub: ['gel-electrophoresis', 'electroporator'], re: /high[- ]voltage|\d\s?kV\b/i },
+  laser: { sub: [], re: /\blaser(?![- ]?cut)/i, not: /no laser|laser safety depends on/i },
+  mains: { sub: [], re: /mains[- ](powered )?heater/i },
+  rotor: { sub: ['centrifuge', 'spin-coater'], re: /high-speed rotor|spinning rotor/i },
+  radiation: { sub: [], re: /radiation|radioactive|check sources?/i },
+  gas: { sub: [], re: /compressed (inert )?gas|gas cylinder|pressuri[sz]ed gas/i }
+};
+export const HAZARD_LABELS = {
+  cs: { hv: 'vysoké napětí', laser: 'laser', mains: 'ohřev napájený ze sítě', rotor: 'rychle se otáčející rotor', radiation: 'zdroj záření', gas: 'stlačený plyn', pre: 'Pozor: ', post: ' — jen pod dohledem dospělého.' },
+  en: { hv: 'high voltage', laser: 'laser', mains: 'mains-powered heater', rotor: 'fast-spinning rotor', radiation: 'radiation source', gas: 'pressurised gas', pre: 'Caution: ', post: ' — adult supervision only.' }
+};
+export function hazardsOf(r) {
+  const s = r.safety_notes || '';
+  return Object.entries(HAZARDS).filter(([, h]) => h.sub.includes(r.subcategory) || (h.re.test(s) && !(h.not && h.not.test(s)))).map(([k]) => k);
+}
 export function renderGaps(L) {
   const T = LABELS[L];
   return '<dl class="doc-lic reg-gaps">' + Object.entries(GAPS).map(([d, g]) => `<div><dt>${esc(T.disc[d])}</dt><dd>${esc(g[L].join(', '))}</dd></div>`).join('') + '</dl>';
@@ -348,7 +365,7 @@ export function renderRegistry(L, records, cs, root) {
     const cid = CATALOGUE[r.id];
     if (cid) links.unshift(`<a class="reg-kit" href="${root}${kit(cid)}">${SHOWCASE_PATH[cid] ? T.inShow : T.inCat} <span aria-hidden="true">→</span></a>`);
     const [simV, simRaw] = simText(r.sim_model);
-    const disc = disciplineOf(r);
+    const disc = disciplineOf(r), hz = hazardsOf(r), HL = HAZARD_LABELS[L];
     if (r.fork_of) { const o = records.find((x) => x.id === r.fork_of); if (o) links.push(`<a class="reg-fork" href="#p-${esc(o.id)}">${T.forkOf} ${esc(o.name)}</a>`); }
     const text = fold([r.name, r.id, sum, T.cat[r.category], T.disc[disc], r.subcategory ? subcatLabel(L, r.subcategory, true) + ' ' + subcatLabel(L, r.subcategory) : '', thin || H.has('act') ? '' : r.actuation || '', H.has('hw') ? '' : lic.hardware || '', H.has('sw') ? '' : lic.software || ''].join(' '));
     // a field-of-use record shows "Biologie · Centrifuga"; a robot keeps "Robot na kolech · RC auto"
@@ -356,7 +373,7 @@ export function renderRegistry(L, records, cs, root) {
       : `${esc(T.disc[disc])} · ${esc(r.subcategory ? subcatLabel(L, r.subcategory, true) : T.cat[r.category])}`;
     const head = `<li class="reg-i${thin ? ' reg-thin' : ''}" id="p-${r.id}" data-cat="${r.category}"${r.subcategory ? ` data-sub="${esc(r.subcategory)}"` : ''} data-disc="${disc}" data-rights="${r.rights_class}" data-printed="${r.printed_share}" data-maker="${r.fit.maker}" data-school="${r.fit.school}" data-last="${lastKey(r)}" data-name="${esc(fold(r.name))}" data-text="${esc(text)}">
 <div class="reg-h"><h3>${esc(r.name)}</h3><span class="mono">${kind}</span></div>
-<p class="reg-s">${esc(sum)}</p>`;
+<p class="reg-s">${esc(sum)}</p>${hz.length ? `\n<p class="reg-hz">${HL.pre}${hz.map((k) => HL[k]).join(', ')}${HL.post}</p>` : ''}`;
     // record whose details are all unverified: name, summary, one link
     if (thin && !links.length) {
       const u = (r.sources || []).map((x) => x.url).find(isUrl);

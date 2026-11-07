@@ -627,6 +627,7 @@ await check('registry static list (no JS needed)', '/katalog/rejstrik/', async p
   if (!/<form class="reg-f" id="reg-f" hidden/.test(html)) throw new Error('filter form should start hidden');
   // every entry carries its field of use; the gaps section is static
   if ((html.match(/<li class="reg-i[^"]*"[^>]* data-disc="(bio|chem|phys|agro|desk|robotics)"/g) || []).length !== data.length) throw new Error('data-disc missing');
+  if (!/id="p-electropen"[\s\S]*?<p class="reg-hz">Pozor: vysoké napětí — jen pod dohledem dospělého\.<\/p>/.test(html)) throw new Error('hazard line missing');
   if (!/<h2 id="mista-h">Bílá místa<\/h2>/.test(html) || (html.match(/<dl class="doc-lic reg-gaps">/g) || []).length !== 1) throw new Error('gaps section missing');
 });
 for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
