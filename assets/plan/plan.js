@@ -22,7 +22,7 @@ const S = {
     landed: 'Celkem s dopravou', subtotal: 'Zboží', status: { verified: 'ověřeno', carried: 'převzato', unverified: 'neověřeno', estimate: 'odhad' },
     joint: 'Kloub', code: 'Kód', volt: 'Napětí', ratio: 'Převod', follower_12v: 'Follower 12 V', follower_74v: 'Follower 7,4 V', leader: 'Leader 7,4 V',
     jn: { shoulder_pan: 'základna', shoulder_lift: 'rameno', elbow_flex: 'loket', wrist_flex: 'zápěstí', wrist_roll: 'rotace zápěstí', gripper: 'chapadlo' },
-    flagsH: 'Zdroje, které nedoporučujeme nebo kde je třeba dát pozor', allJoints: 'všechny klouby', jointN: (a, j, n) => `${a}, kloub ${j} (${n})`,
+    flagsH: 'Zdroje, které nedoporučujeme nebo kde je třeba dát pozor', allJoints: 'všechny klouby', jointN: (a, j, n) => `${a}, kloub ${j} (${n})`, joints1: 'kloub', joints: 'klouby', and: 'a',
     verdict: { match: 'Sedí', likely: 'Pravděpodobně sedí', check_selection: 'Zkontrolujte vybranou variantu', mismatch: 'Nesedí', inconsistent: 'Nedoporučujeme: inzerát si odporuje', unknown: 'Nelze určit' },
     found: 'V textu', none: 'nic', tools: 'Šrouby a horny serv: viz tabulka šroubů.', time: (p, w) => `${p ? `Tisk ${p} h (tiskárna běží sama) a ` : ''}${w} h práce podle etap návodu. Je to odhad, ne slib.`, guide: 'Návod na sestavení', stage: 'Etapa', optStage: 'volitelné', guideFor: 'v návodu: etapa',
     printNote: 'Tisk', track: 'Číslo zásilky', trackHint: 'jen u vás v prohlížeči', optional: 'volitelné',
@@ -65,7 +65,7 @@ const S = {
     landed: 'Landed', subtotal: 'Goods', status: { verified: 'verified', carried: 'carried', unverified: 'unverified', estimate: 'estimate' },
     joint: 'Joint', code: 'Code', volt: 'Voltage', ratio: 'Gear ratio', follower_12v: 'Follower 12 V', follower_74v: 'Follower 7.4 V', leader: 'Leader 7.4 V',
     jn: { shoulder_pan: 'base', shoulder_lift: 'shoulder', elbow_flex: 'elbow', wrist_flex: 'wrist', wrist_roll: 'wrist roll', gripper: 'gripper' },
-    flagsH: 'Sources we do not recommend or that need care', allJoints: 'all joints', jointN: (a, j, n) => `${a}, joint ${j} (${n})`,
+    flagsH: 'Sources we do not recommend or that need care', allJoints: 'all joints', jointN: (a, j, n) => `${a}, joint ${j} (${n})`, joints1: 'joint', joints: 'joints', and: 'and',
     verdict: { match: 'Matches', likely: 'Probably matches', check_selection: 'Check the selected variant', mismatch: 'Does not match', inconsistent: 'Not recommended: the listing contradicts itself', unknown: 'Cannot tell' },
     found: 'Found', none: 'nothing', tools: 'Servo screws and horns: see the screw table.', time: (p, w) => `${p ? `Printing ${p} h (unattended) and ` : ''}${w} h of work across the guide’s stages. This is an estimate, not a promise.`, guide: 'Assembly guide', stage: 'Stage', optStage: 'optional', guideFor: 'guide: stage',
     printNote: 'Print', track: 'Tracking number', trackHint: 'stored only in your browser', optional: 'optional',
@@ -192,7 +192,7 @@ function renderVariants(p) {
 
 // buyer reviews on a listing: our short paraphrased signals, never copied text
 function reviews(r) {
-  if (!r) return '';
+  if (!r || (r.count === 0 && !r.signals.length)) return '';   // "no reviews yet" tells the buyer nothing
   const warn = r.signals.some((g) => g.type === 'variant_mismatch' || g.type === 'missing_parts');
   const head = `${S.rv(date(r.checked))}:`;
   let body;
@@ -203,6 +203,22 @@ function reviews(r) {
   return `<small class="plan-rv${warn ? ' plan-rv-warn' : ''}" data-testid="plan-reviews">${head} ${body}${r.url && r.count ? ` <a href="${esc(r.url)}" rel="noopener">${L === 'en' ? 'listing' : 'inzerát'}</a>` : ''}</small>`;
 }
 
+// what the line is for: servo lines name their arm and joints (from data.variants, so one component bought for
+// two arms reads right on each line); everything else shows the component's role from the data
+const span = (ns) => ns.reduce((acc, n) => { const r = acc[acc.length - 1]; if (r && n === r[1] + 1) r[1] = n; else acc.push([n, n]); return acc; }, [])
+  .map(([a, b]) => (a === b ? `${a}` : b === a + 1 ? `${a}, ${b}` : `${a}–${b}`));
+function roleOf(l) {
+  const arm = l.arm && data.variants.arms && data.variants.arms[l.arm];
+  const code = l.component.split('.').pop().toUpperCase();
+  const js = arm ? arm.joints.filter((j) => j.codes.includes(code)) : [];
+  if (!js.length) return pick(l, 'role') || '';
+  const parts = span(js.map((j) => j.joint));
+  const list = parts.length > 1 ? `${parts.slice(0, -1).join(', ')} ${S.and} ${parts[parts.length - 1]}` : parts[0];
+  const names = js.length < arm.joints.length ? ` (${js.map((j) => S.jn[j.name] || j.name).join(', ')})` : '';
+  return `${S[l.arm] || l.arm}, ${js.length === 1 ? S.joints1 : S.joints} ${list}${names}`;
+}
+// "check this" notes stay neutral; red only for sources we do not recommend
+const flagCls = (x) => `plan-flag${x.recommend === false ? ' plan-flag-no' : ''}`;
 const backorder = (t) => { const m = /^Backorder: \d+ expected (\d{4}-\d\d-\d\d)$/.exec(t || ''); return m ? date(m[1]) : /^Backorder/.test(t || '') ? '' : null; };
 function line(l, gi) {
   const k = `${current.robot}|${l.component}|${l.source}`;
@@ -212,11 +228,11 @@ function line(l, gi) {
     : `${money(l.price, l.currency)}${l.per > 1 ? ` / ${l.per} ${S.qty}` : ` ${S.perPiece}`} · <b>${eur(l.subtotal_eur)}</b>`;
   const qty = l.per > 1 ? `${l.qty} ${S.qty} <span class="muted">(${l.packs}× ${l.per})</span>` : `${l.qty} ${S.qty}`;
   const alts = l.alternatives.length ? `<details class="plan-alts"><summary>${S.alt} (${l.alternatives.length})</summary><ul>${l.alternatives.map((a) =>
-    `<li>${a.recommend ? '' : `<span class="pb pb-no">${S.notRec}</span> `}<a href="${esc(a.url)}" rel="noopener">${esc(a.label)}</a> · ${a.price == null ? '—' : money(a.price, a.currency) + (a.per > 1 ? ` / ${a.per} ${S.qty}` : '')} ${badge(a.status, a.checked)}${a.stock ? ` <span class="muted">${S.backorder}: ${esc(stock(a.stock))}</span>` : ''}${a.flag ? `<br><span class="plan-flag">${esc(L === 'cs' ? a.flag_reason_cs : a.flag_reason)}</span>` : ''}${a.reviews ? '<br>' + reviews(a.reviews) : ''}${a.selectable ? `<br><button type="button" class="btn-link" data-swap="${esc(l.component)}" data-src="${esc(a.id === l.default_source ? '' : a.id)}">${a.id === l.default_source ? S.useDefault : S.useSrc}<span class="sr-only"> (${esc(a.label)})</span></button>` : ''}</li>`).join('')}</ul></details>` : '';
+    `<li>${a.recommend ? '' : `<span class="pb pb-no">${S.notRec}</span> `}<a href="${esc(a.url)}" rel="noopener">${esc(a.label)}</a> · ${a.price == null ? '—' : money(a.price, a.currency) + (a.per > 1 ? ` / ${a.per} ${S.qty}` : '')} ${badge(a.status, a.checked)}${a.stock ? ` <span class="muted">${S.backorder}: ${esc(stock(a.stock))}</span>` : ''}${a.flag ? `<br><span class="${flagCls(a)}">${esc(L === 'cs' ? a.flag_reason_cs : a.flag_reason)}</span>` : ''}${a.reviews ? '<br>' + reviews(a.reviews) : ''}${a.selectable ? `<br><button type="button" class="btn-link" data-swap="${esc(l.component)}" data-src="${esc(a.id === l.default_source ? '' : a.id)}">${a.id === l.default_source ? S.useDefault : S.useSrc}<span class="sr-only"> (${esc(a.label)})</span></button>` : ''}</li>`).join('')}</ul></details>` : '';
   const bo = backorder(l.stock);
   return `<li class="plan-line" id="pl-${esc(l.component.replace(/[^a-z0-9]/gi, '-'))}">
 <span class="pl-chk"><input type="checkbox" id="${id}" data-k="${esc(k)}"${state.ordered[k] ? ' checked' : ''}><label for="${id}">${S.ordered}</label></span>
-<span class="pl-name"><b>${esc(pick(l, 'name'))}</b>${l.stock ? `<small>${S.backorder}: ${esc(stock(l.stock))}</small>` : ''}${bo != null && l.alternatives.some((a) => a.selectable) ? `<span class="plan-flag" data-testid="plan-backorder">${esc(S.backorderNote(bo))}</span>` : ''}${l.swapped ? `<small data-testid="plan-swapped">${S.swapped}</small>` : ''}${l.flag ? `<span class="plan-flag">${esc(L === 'cs' ? l.flag_reason_cs : l.flag_reason)}</span>` : ''}${l.print_hours ? `<small>${S.printNote}: ${rng(l.print_hours)} ${S.h} (${S.est})</small>` : ''}${l.note_cs ? `<small>${esc(pick(l, 'note'))}</small>` : ''}${reviews(l.reviews)}</span>
+<span class="pl-name"><b>${esc(pick(l, 'name'))}</b>${roleOf(l) ? `<span class="pl-role" data-testid="plan-role">${esc(roleOf(l))}</span>` : ''}${l.stock ? `<small>${S.backorder}: ${esc(stock(l.stock))}</small>` : ''}${bo != null && l.alternatives.some((a) => a.selectable) ? `<span class="plan-flag" data-testid="plan-backorder">${esc(S.backorderNote(bo))}</span>` : ''}${l.swapped ? `<small data-testid="plan-swapped">${S.swapped}</small>` : ''}${l.flag ? `<span class="${flagCls(l)}">${esc(L === 'cs' ? l.flag_reason_cs : l.flag_reason)}</span>` : ''}${l.print_hours ? `<small>${S.printNote}: ${rng(l.print_hours)} ${S.h} (${S.est})</small>` : ''}${l.note_cs ? `<small>${esc(pick(l, 'note'))}</small>` : ''}${reviews(l.reviews)}</span>
 <span class="pl-qty">${qty}</span>
 <span class="pl-price">${price}</span>
 <span class="pl-src">${badge(l.status, l.checked)} <a href="${esc(l.url)}" rel="noopener">${l.source === 'filament' ? S.printed_by_you : S.open}<span class="sr-only"> (${esc(pick(l, 'name'))})</span></a></span>

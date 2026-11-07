@@ -32,7 +32,9 @@
 .pb-carried,.pb-estimate{color:var(--amber);background:var(--amber-bg)}
 .pb-unverified{color:var(--ink-2)}
 .pb-no{color:#fff;background:var(--warn);border-color:var(--warn)}
-.plan-flag{display:block;color:var(--warn);font-size:14px;margin-top:2px}
+.plan-flag{display:block;color:var(--ink);font-size:14px;margin-top:4px;padding-left:8px;border-left:3px solid var(--line-2)}
+.plan-flag-no{color:var(--warn);border-left-color:var(--warn)}
+.pl-role{color:var(--ink-2);font-size:14px}
 .plan-check{display:flex;flex-direction:column;gap:8px;background:#fff;border:1px solid var(--line-2);padding:16px;margin-top:8px}
 .plan-check h3{margin:0}
 .plan-check label{font-weight:500;font-size:15px}
