@@ -27,8 +27,8 @@ test('bridge copies of the data and the plan core match the site sources (run no
 
 test('core: plan totals and variant check through the bridge copy', () => {
   assert.deepEqual(buildPlan(PLAN_DATA, { robot: 'follower_12v', print: 'self' }).totals.landed_eur, [206, 224]);
-  assert.deepEqual(buildPlan(PLAN_DATA, { robot: 'pair', print: 'self' }).totals.landed_eur, [388, 413]);
-  assert.deepEqual(buildPlan(PLAN_DATA, { robot: 'pair_74v', print: 'self' }).totals.landed_eur, [373, 398]);
+  assert.deepEqual(buildPlan(PLAN_DATA, { robot: 'pair', print: 'self' }).totals.landed_eur, [389, 414]);
+  assert.deepEqual(buildPlan(PLAN_DATA, { robot: 'pair_74v', print: 'self' }).totals.landed_eur, [374, 399]);
   assert.deepEqual(buildPlan(PLAN_DATA, { robot: 'follower_74v', print: 'self' }).screws.total, { m2: 24, m3: 50 });
   assert.equal(PlanInputs.get_build_plan.parse({}).robot, 'pair_74v', 'default = the standard pair, as on the page');
   assert.equal(PlanInputs.check_part_variant.safeParse({ listing_text: 'x', expected: 'follower_74v:2' }).success, true);

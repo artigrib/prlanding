@@ -2,7 +2,7 @@
  "$schema": "./so101.schema.json",
  "meta": {
   "robot": "so101",
-  "generated": "2026-10-30",
+  "generated": "2026-11-07",
   "fx_czk_per_eur": 24.2,
   "fx_ron_per_eur": 5.09,
   "fx_note": "Assumption: CNB daily rate not fetched; update before use.",
@@ -682,14 +682,14 @@
     430,
     446
    ],
-   "checked": "2026-10-30",
+   "checked": "2026-11-07",
    "status": "verified",
    "note": "EU shop (DE). Servo mix per the page: leader 1× 1:345, 2× 1:191, 3× 1:147; follower 6× 1:345 (7.4 V platform). Codes are not named. Camera optional (+14.25 €).",
    "note_cs": "Obchod v EU (DE). Serva podle stránky: leader 1× 1:345, 2× 1:191, 3× 1:147; follower 6× 1:345 (7,4 V). Kódy neuvádí. Kamera za příplatek (+14,25 €).",
    "reviews": {
     "rating": null,
     "count": null,
-    "checked": "2026-10-30",
+    "checked": "2026-11-07",
     "signals": [],
     "url": "https://eckstein-shop.de/lerobot-soarm101-standard-dual-arm-7-4v_1"
    },
@@ -790,7 +790,7 @@
    "ships_cz": "unverified",
    "buyers": "consumers",
    "in_stock": true,
-   "stock": "Available (rarely stocked)",
+   "stock": "Available",
    "eta_days": [
     1,
     3
@@ -799,14 +799,14 @@
     470,
     486
    ],
-   "checked": "2026-10-30",
+   "checked": "2026-11-07",
    "status": "verified",
    "note": "EU shop (DE). Leader 7.4 V: 1× 1:345, 2× 1:191, 3× 1:147; follower 6× STS3215 Pro 12 V 1:345 (30 kg·cm), 5 V 4 A and 12 V 5 A supplies. Codes are not named.",
    "note_cs": "Obchod v EU (DE). Leader 7,4 V: 1× 1:345, 2× 1:191, 3× 1:147; follower 6× STS3215 Pro 12 V 1:345 (30 kg·cm), zdroje 5 V 4 A a 12 V 5 A. Kódy neuvádí.",
    "reviews": {
     "rating": null,
     "count": null,
-    "checked": "2026-10-30",
+    "checked": "2026-11-07",
     "signals": [],
     "url": "https://eckstein-shop.de/lerobot-soarm101-pro-dual-arm-12v_1"
    },
@@ -888,14 +888,14 @@
     207,
     218
    ],
-   "checked": "2026-10-30",
+   "checked": "2026-11-07",
    "status": "verified",
    "note": "EU shop (DE). 6× STS3215 1:345 on the 7.4 V platform, Waveshare board, 5 V 4 A supply, USB-C cable, 2 clamps. Codes are not named.",
    "note_cs": "Obchod v EU (DE). 6× STS3215 1:345 (7,4 V), deska Waveshare, zdroj 5 V 4 A, kabel USB-C, 2 svěrky. Kódy neuvádí.",
    "reviews": {
     "rating": null,
     "count": null,
-    "checked": "2026-10-30",
+    "checked": "2026-11-07",
     "signals": [],
     "url": "https://eckstein-shop.de/SOARM101-LeRobot-OpenSource-6Axis-Robotic-Arm-Follower-Arm-Standard-Edition-74-V-Motor"
    },
@@ -913,10 +913,10 @@
   },
   {
    "id": "eckstein_pro_follower",
-   "name": "Eckstein SO-ARM101 Pro follower arm 12 V (ER01060-01)",
-   "name_cs": "Eckstein SO-ARM101 Pro, follower 12 V (ER01060-01)",
+   "name": "Eckstein SO-ARM101 Pro follower arm 12 V (ER01060-F)",
+   "name_cs": "Eckstein SO-ARM101 Pro, follower 12 V (ER01060-F)",
    "seller": "eckstein",
-   "url": "https://eckstein-shop.de/so-arm101-pro-follower-arm-petg-cf-black_1",
+   "url": "https://eckstein-shop.de/lerobot-soarm101-follower-arm-pro-12v_1",
    "configs": [
     "follower_12v"
    ],
@@ -925,8 +925,8 @@
     239
    ],
    "currency": "EUR",
-   "price_note": "PETG-CF black 239 €; PA6-GF up to 279 €.",
-   "price_note_cs": "PETG-CF černá 239 €; PA6-GF až 279 €.",
+   "price_note": "From 239 € (PETG-CF); PA6-GF up to 279 €.",
+   "price_note_cs": "Od 239 € (PETG-CF); PA6-GF až 279 €.",
    "servos": {
     "follower_12v": {
      "voltage_v": 12,
@@ -977,16 +977,16 @@
     247,
     259
    ],
-   "checked": "2026-10-30",
+   "checked": "2026-11-07",
    "status": "verified",
-   "note": "EU shop (DE). 6× STS3215 12 V 30 kg·cm, 12 V 5 A supply, board, USB-C, 2 clamps. This page gives no gear ratio; the shop’s dual-arm page states 1:345 for the same Pro follower.",
-   "note_cs": "Obchod v EU (DE). 6× STS3215 12 V 30 kg·cm, zdroj 12 V 5 A, deska, USB-C, 2 svěrky. Tato stránka převod neuvádí; stránka sady pro pár u stejného followeru Pro uvádí 1:345.",
+   "note": "EU shop (DE). 6× STS3215 Pro 12 V 30 kg·cm, 1:345 (stated on the page since 7 Nov), 12 V 5 A supply, board, USB-C, 2 clamps. The grey PETG-CF variant page states “ca. 3 weeks” delivery.",
+   "note_cs": "Obchod v EU (DE). 6× STS3215 Pro 12 V 30 kg·cm, převod 1:345 (stránka ho uvádí od 7. 11.), zdroj 12 V 5 A, deska, USB-C, 2 svěrky. Stránka šedé varianty z PETG-CF uvádí dodání „cca 3 týdny“.",
    "reviews": {
     "rating": null,
     "count": null,
-    "checked": "2026-10-30",
+    "checked": "2026-11-07",
     "signals": [],
-    "url": "https://eckstein-shop.de/so-arm101-pro-follower-arm-petg-cf-black_1"
+    "url": "https://eckstein-shop.de/lerobot-soarm101-follower-arm-pro-12v_1"
    },
    "missing_other": [
     "Screws are not in the contents list (the servos usually come with theirs: check against the screw table)",
@@ -1088,14 +1088,14 @@
     330,
     341
    ],
-   "checked": "2026-10-30",
+   "checked": "2026-11-07",
    "status": "verified",
-   "note": "EU seller (warehouses DE/US/CN). Leader codes per joint on the page: C044 joints 1 and 3, C001 joint 2, C046 joints 4–6; follower 6× 12 V 1:345. Out-of-stock items ship from China.",
-   "note_cs": "Prodejce v EU (sklady DE/US/CN). Kódy leaderu po kloubech: C044 klouby 1 a 3, C001 kloub 2, C046 klouby 4–6; follower 6× 12 V 1:345. Vyprodané zboží se posílá z Číny.",
+   "note": "EU seller (warehouses DE/US/CN). Leader codes per joint on the page: C044 joints 1 and 3, C001 joint 2, C046 joints 4–6; follower 6× 12 V 1:345 (no code named). Out-of-stock items ship from China.",
+   "note_cs": "Prodejce v EU (sklady DE/US/CN). Kódy leaderu po kloubech: C044 klouby 1 a 3, C001 kloub 2, C046 klouby 4–6; follower 6× 12 V 1:345 (kód neuvádí). Vyprodané zboží se posílá z Číny.",
    "reviews": {
     "rating": null,
     "count": null,
-    "checked": "2026-10-30",
+    "checked": "2026-11-07",
     "signals": [],
     "url": "https://openelab.io/de/products/seeed-studio-so-101-pro-servo-motor-kit-lerobot"
    },
@@ -1319,14 +1319,14 @@
     329,
     342
    ],
-   "checked": "2026-10-30",
+   "checked": "2026-11-07",
    "status": "verified",
    "note": "EU shop (PL), business customers with a VAT ID only. Ratios per joint on the page match the leader; follower 6× 12 V 1:345. No printed parts, no camera.",
    "note_cs": "Obchod v EU (PL), jen pro firmy s DIČ. Převody po kloubech odpovídají leaderu; follower 6× 12 V 1:345. Bez tištěných dílů a kamery.",
    "reviews": {
     "rating": null,
     "count": null,
-    "checked": "2026-10-30",
+    "checked": "2026-11-07",
     "signals": [],
     "url": "https://botland.store/robot-arms/29177-so-arm101-pro-servo-motor-kit-a-set-of-servo-motors-for-building-the-lerobot-arm-seeedstudio-114993667.html"
    },
@@ -1438,14 +1438,14 @@
     508,
     523
    ],
-   "checked": "2026-10-30",
+   "checked": "2026-11-07",
    "status": "verified",
-   "note": "EU seller (warehouses DE/US/CN). Codes on the page: leader C001 ×1, C044 ×2, C046 ×3; follower C018 ×6. 12 V 8 A and 5 V 6 A supplies, 2 boards, USB cables, 4 clamps, camera, PLA+ parts.",
-   "note_cs": "Prodejce v EU (sklady DE/US/CN). Kódy na stránce: leader C001 ×1, C044 ×2, C046 ×3; follower C018 ×6. Zdroje 12 V 8 A a 5 V 6 A, 2 desky, kabely USB, 4 svěrky, kamera, díly z PLA+.",
+   "note": "EU seller (warehouses DE/US/CN). Codes seen on 30 Oct: leader C001 ×1, C044 ×2, C046 ×3; follower C018 ×6 (not shown on the 7 Nov page). 12 V 8 A and 5 V 6 A supplies, 2 boards, USB cables, 4 clamps, camera, PLA+ parts. All three variants sold out on 7 Nov.",
+   "note_cs": "Prodejce v EU (sklady DE/US/CN). Kódy viděné 30. 10.: leader C001 ×1, C044 ×2, C046 ×3; follower C018 ×6 (stránka 7. 11. je neuvádí). Zdroje 12 V 8 A a 5 V 6 A, 2 desky, kabely USB, 4 svěrky, kamera, díly z PLA+. Všechny tři varianty 7. 11. vyprodané.",
    "reviews": {
     "rating": null,
     "count": null,
-    "checked": "2026-10-30",
+    "checked": "2026-11-07",
     "signals": [],
     "url": "https://openelab.io/pl/products/wowrobo-robotics-so-arm101-diy"
    },
@@ -1697,20 +1697,20 @@
      "price": 26.45,
      "currency": "EUR",
      "per": 1,
-     "stock": "Backorder: 141 expected 2026-11-18",
-     "delivery": "3–4 weeks",
+     "stock": "Available",
+     "delivery": "1–3 days",
      "eta_days": [
-      21,
-      28
+      1,
+      3
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": true,
      "reviews": {
       "rating": null,
       "count": 0,
-      "checked": "2026-10-30",
+      "checked": "2026-11-07",
       "signals": [],
       "url": "https://eckstein-shop.de/feetech-st-3215-c018-servo-en"
      }
@@ -1721,21 +1721,21 @@
      "label": "OpenELAB (EU tag; China warehouse if out of stock)",
      "country": "DE/CN",
      "url": "https://openelab.io/cs/collections/feetech-motor",
-     "price": 26.51,
+     "price": 27.25,
      "currency": "EUR",
      "per": 1,
-     "stock": "Not shown",
-     "delivery": "unverified",
+     "stock": "Out of stock",
+     "delivery": "Pre-order (China warehouse); time not stated",
      "eta_days": null,
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": true,
      "note": "Warehouse not stated on listing",
      "reviews": {
       "rating": null,
       "count": null,
-      "checked": "2026-10-30",
+      "checked": "2026-11-07",
       "signals": [],
       "url": "https://openelab.io/cs/products/feetech-sts3215-c018-servo-12v"
      }
@@ -1808,21 +1808,21 @@
       3
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": true,
-     "note": "C001 identified by the manufacturer number on the product page (30 Oct 2026)",
+     "note": "C001 identified by the manufacturer number on the product page (seen again 7 Nov 2026)",
      "flag": "check_label",
      "flag_reason": "The product page names STS3215-C001 (manufacturer number) but no gear ratio: check 1/345 on the box or label.",
      "flag_reason_cs": "Stránka produktu uvádí STS3215-C001 (číslo výrobce), ale ne převod: ověřte 1/345 na krabičce nebo štítku.",
      "reviews": {
       "rating": null,
       "count": 0,
-      "checked": "2026-10-30",
+      "checked": "2026-11-07",
       "signals": [],
       "url": "https://eckstein-shop.de/Feetech-STS3215-74V-19kgcm-plastic-case-metal-gear-magnetic-code-dual-shaft-TTL-serial-servo"
      },
-     "note_cs": "C001 podle čísla výrobce na stránce produktu (30. 10. 2026)"
+     "note_cs": "C001 podle čísla výrobce na stránce produktu (znovu ověřeno 7. 11. 2026)"
     },
     {
      "id": "openelab",
@@ -1830,24 +1830,24 @@
      "label": "OpenELAB",
      "country": "DE/CN",
      "url": "https://openelab.io/cs/collections/feetech-motor",
-     "price": 23.57,
+     "price": 24.1,
      "currency": "EUR",
      "per": 1,
-     "stock": "Not shown",
-     "delivery": "unverified",
+     "stock": "Out of stock",
+     "delivery": "Pre-order (China warehouse); time not stated",
      "eta_days": null,
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": false,
      "note": "Listing text says 1/191 – contradicts C001 spec",
      "flag": "mislabeled",
-     "flag_reason": "Listing text shows C001 as 1/191 (C001 is 1/345). Seen 2026-10-29.",
-     "flag_reason_cs": "Inzerát uvádí C001 jako 1/191 (C001 má 1/345). Zjištěno 29. 10. 2026.",
+     "flag_reason": "Listing title shows C001 as 1/191 (C001 is 1/345; the description says 1/345). Seen again 2026-11-07.",
+     "flag_reason_cs": "Nadpis inzerátu uvádí C001 jako 1/191 (C001 má 1/345; popis uvádí 1/345). Znovu ověřeno 7. 11. 2026.",
      "reviews": {
       "rating": null,
       "count": null,
-      "checked": "2026-10-30",
+      "checked": "2026-11-07",
       "signals": [],
       "url": "https://openelab.io/cs/products/feetech-sts3215-c001-servo"
      }
@@ -1868,14 +1868,14 @@
       2
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": true,
      "note": "≈39 € – expensive; page date stamp looked stale",
      "reviews": {
       "rating": null,
       "count": 0,
-      "checked": "2026-10-30",
+      "checked": "2026-11-07",
       "signals": [],
       "url": "https://sigmanortec.ro/en/servo-smart-serial-sts3215-360-degrees-19kg-12-bit-encoder-74v"
      }
@@ -1937,26 +1937,55 @@
      "label": "OpenELAB",
      "country": "DE/CN",
      "url": "https://openelab.io/cs/collections/feetech-motor",
-     "price": 23.57,
+     "price": 24.1,
      "currency": "EUR",
      "per": 1,
-     "stock": "Not shown",
-     "delivery": "unverified",
+     "stock": "Out of stock",
+     "delivery": "Pre-order (China warehouse); time not stated",
      "eta_days": null,
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": true,
-     "note": "Only EU listing found for C044",
+     "note": "Eckstein also lists C044 (found 7 Nov 2026)",
      "flag": "check_label",
      "flag_reason": "Same shop mislabels C001; check that the ratio on the listing and the label matches.",
      "flag_reason_cs": "Stejný obchod má chybný popis u C001; zkontrolujte převod v inzerátu i na štítku.",
      "reviews": {
       "rating": null,
       "count": null,
-      "checked": "2026-10-30",
+      "checked": "2026-11-07",
       "signals": [],
       "url": "https://openelab.io/cs/products/feetech-sts3215-c044-servo-7"
+     }
+    },
+    {
+     "id": "eckstein",
+     "supplier": "eckstein",
+     "label": "Eckstein – Feetech STS3215 7.4 V 1/191 (HAN ST-3215-C044)",
+     "country": "DE",
+     "url": "https://eckstein-shop.de/feetech-sts3215-so-arm101-servomotor-7v4-14kgcm-360grad-magnetencoder_1",
+     "price": 24.35,
+     "currency": "EUR",
+     "per": 1,
+     "stock": "Available",
+     "delivery": "1–3 days",
+     "eta_days": [
+      1,
+      3
+     ],
+     "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
+     "checked": "2026-11-07",
+     "status": "verified",
+     "recommend": true,
+     "note": "Found 7 Nov 2026: the product page names HAN ST-3215-C044 and a 1/191 gear ratio.",
+     "note_cs": "Nalezeno 7. 11. 2026: stránka produktu uvádí HAN ST-3215-C044 a převod 1/191.",
+     "reviews": {
+      "rating": null,
+      "count": null,
+      "checked": "2026-11-07",
+      "signals": [],
+      "url": "https://eckstein-shop.de/feetech-sts3215-so-arm101-servomotor-7v4-14kgcm-360grad-magnetencoder_1"
      }
     },
     {
@@ -2016,22 +2045,24 @@
      "currency": "EUR",
      "per": 1,
      "stock": "Backorder: 38 expected 2026-11-04",
-     "delivery": "10–12 days",
+     "delivery": "9–11 days",
      "eta_days": [
-      10,
-      12
+      9,
+      11
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": true,
      "reviews": {
       "rating": null,
       "count": 0,
-      "checked": "2026-10-30",
+      "checked": "2026-11-07",
       "signals": [],
       "url": "https://eckstein-shop.de/feetech/servo-sts3215-C046-7-4v-19kg-0-360-magnetencoder_1"
-     }
+     },
+     "note": "On 7 Nov 2026 the shop still showed “38 expected on 04.11.2026”, a date already past: ask the shop for the current date.",
+     "note_cs": "Obchod 7. 11. 2026 stále uváděl „38 ks očekáváno 04.11.2026“, tedy datum, které už uplynulo: aktuální termín ověřte u obchodu."
     },
     {
      "id": "openelab",
@@ -2039,14 +2070,14 @@
      "label": "OpenELAB",
      "country": "DE/CN",
      "url": "https://openelab.io/cs/collections/feetech-motor",
-     "price": 23.57,
+     "price": 24.1,
      "currency": "EUR",
      "per": 1,
-     "stock": "Not shown",
-     "delivery": "unverified",
+     "stock": "Out of stock",
+     "delivery": "Pre-order (China warehouse); time not stated",
      "eta_days": null,
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": true,
      "flag": "check_label",
@@ -2055,7 +2086,7 @@
      "reviews": {
       "rating": null,
       "count": null,
-      "checked": "2026-10-30",
+      "checked": "2026-11-07",
       "signals": [],
       "url": "https://openelab.io/cs/products/feetech-sts3215-c046-servo"
      }
@@ -2122,23 +2153,25 @@
      "price": 5.95,
      "currency": "EUR",
      "per": 1,
-     "stock": "Available",
-     "delivery": "1–3 days",
+     "stock": "Backorder: 96 expected 2026-10-30",
+     "delivery": "4–6 days",
      "eta_days": [
-      1,
-      3
+      4,
+      6
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": true,
      "reviews": {
       "rating": null,
       "count": 0,
-      "checked": "2026-10-30",
+      "checked": "2026-11-07",
       "signals": [],
       "url": "https://eckstein-shop.de/WaveShare-Serial-Bus-Servo-Driver-Board-for-ST-SC-Serial-Bus-Servos-EN"
-     }
+     },
+     "note": "On 7 Nov 2026 the shop showed “96 pcs expected on 30.10.2026”, a date already past: ask the shop for the current date.",
+     "note_cs": "Obchod 7. 11. 2026 uváděl „96 ks očekáváno 30.10.2026“, tedy datum, které už uplynulo: aktuální termín ověřte u obchodu."
     },
     {
      "id": "aliexpress",
@@ -2223,13 +2256,13 @@
       3
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": true,
      "reviews": {
       "rating": null,
       "count": 0,
-      "checked": "2026-10-30",
+      "checked": "2026-11-07",
       "signals": [],
       "url": "https://eckstein-shop.de/sengoog-12v5a-wandnetzteil-eu-stecker-ce_1"
      },
@@ -2252,13 +2285,13 @@
       3
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": true,
      "reviews": {
       "rating": null,
       "count": 0,
-      "checked": "2026-10-30",
+      "checked": "2026-11-07",
       "signals": [],
       "url": "https://eckstein-shop.de/gaofande-12v5a-eu-wandnetzteil-gfd-a9-ce_1"
      },
@@ -2291,20 +2324,20 @@
      "price": 9.65,
      "currency": "EUR",
      "per": 1,
-     "stock": "Available",
-     "delivery": "1–3 days",
+     "stock": "Backorder: 10 expected 2026-11-13",
+     "delivery": "ca. 3 weeks",
      "eta_days": [
-      1,
-      3
+      21,
+      21
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": true,
      "reviews": {
       "rating": null,
       "count": 0,
-      "checked": "2026-10-30",
+      "checked": "2026-11-07",
       "signals": [],
       "url": "https://eckstein-shop.de/WaveShare-Power-Supply-5V-4A-for-Jetson-Nano-55x21mm-DC-Jack-EN"
      },
@@ -2314,9 +2347,9 @@
     {
      "id": "eckstein",
      "supplier": "eckstein",
-     "label": "Eckstein – QITA/BOYAXUAN 5 V 4 A EU",
+     "label": "Eckstein – BOYAXUAN 5 V 4 A EU (CP07075)",
      "country": "DE",
-     "url": "https://eckstein-shop.de/?k=2378&lang=eng",
+     "url": "https://eckstein-shop.de/boyaxuan-5v4a-eu-wandnetzteil-usb-hub-gs_1",
      "price": 9.99,
      "currency": "EUR",
      "per": 1,
@@ -2327,18 +2360,18 @@
       3
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": false,
      "reviews": {
       "rating": null,
       "count": 0,
-      "checked": "2026-10-30",
+      "checked": "2026-11-07",
       "signals": [],
       "url": "https://eckstein-shop.de/boyaxuan-5v4a-eu-wandnetzteil-usb-hub-gs_1"
      },
-     "note": "No product page found (category only); plug size not confirmed",
-     "note_cs": "Stránku produktu jsme nenašli (jen kategorie); konektor neověřen"
+     "note": "Product page found (7 Nov 2026): 5 V 4 A, 20 W, GS/CE. Plug size not stated on the page.",
+     "note_cs": "Stránka produktu nalezena (7. 11. 2026): 5 V 4 A, 20 W, GS/CE. Velikost konektoru stránka neuvádí."
     }
    ]
   },
@@ -2582,13 +2615,13 @@
      "delivery": "unverified",
      "eta_days": null,
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": true,
      "reviews": {
       "rating": null,
       "count": null,
-      "checked": "2026-10-30",
+      "checked": "2026-11-07",
       "signals": [],
       "url": "https://openelab.io/pl/products/seeed-studio-so-101-pro-servo-motor-kit-lerobot"
      }
@@ -2647,7 +2680,7 @@
       3
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": true,
      "note": "From 29.99 € (PLA) to 34.99 € (PETG-CF); no screws",
@@ -2715,7 +2748,7 @@
      "supplier": "eckstein",
      "label": "Eckstein – SO-ARM 101 leader printed parts (ED-SO013)",
      "country": "DE",
-     "url": "https://eckstein-shop.de/the-robot-studio-so-arm-101-leader-3d-print-structural-parts",
+     "url": "https://eckstein-shop.de/the-robot-studio-so-arm-101-leader-3d-print-structural-parts_3",
      "price": 29.99,
      "currency": "EUR",
      "per": 1,
@@ -2726,11 +2759,11 @@
       3
      ],
      "vat_customs": "EU seller: price incl. VAT (DE 19 % shown; OSS may switch to CZ 21 % at checkout, ~+1.7 %). No customs.",
-     "checked": "2026-10-30",
+     "checked": "2026-11-07",
      "status": "verified",
      "recommend": true,
-     "note": "PLA black 29.99 €; no screws",
-     "note_cs": "PLA černá 29,99 €; bez šroubů"
+     "note": "From 29.99 € (PLA) to 34.99 €; no screws",
+     "note_cs": "Od 29,99 € (PLA) do 34,99 €; bez šroubů"
     }
    ],
    "other_options": [
