@@ -64,7 +64,7 @@ test('plan totals: follower 12 V, self-printed', () => {
   assert.deepEqual(p.totals.landed_eur, [206, 224]);
   assert.deepEqual(p.totals.landed_czk, [5000, 5420]);
   assert.equal(Math.round(sum(p.groups.map((g) => g.landed_eur[0]))), Math.round(lo));
-  assert.deepEqual(p.eta_days, [21, 28], 'C018 backorder sets the ETA');
+  assert.deepEqual(p.eta_days, [4, 6], 'bus board backorder (4–6 days) sets the ETA');
   assert.equal(p.checked.oldest, '2026-10-30');
   assert.ok(p.groups.find((g) => g.supplier === 'hornbach').lines[0].packs === 1, '2 clamps = 1 pack of 2');
   assert.deepEqual(p.variants.map((v) => v.arm), ['follower_12v']);
@@ -74,7 +74,7 @@ test('plan totals: follower 12 V, self-printed', () => {
 
 test('plan totals: pair, self-printed and print service', () => {
   const p = buildPlan(data, { robot: 'pair', print: 'self' });
-  assert.deepEqual(p.totals.landed_eur, [388, 413]);
+  assert.deepEqual(p.totals.landed_eur, [384, 405]);
   assert.deepEqual(p.variants.map((v) => v.arm), ['follower_12v', 'leader']);
   const servos = p.groups.flatMap((g) => g.lines).filter((l) => /servo\.c0/.test(l.component));
   assert.equal(sum(servos.map((l) => l.qty)), 12);
