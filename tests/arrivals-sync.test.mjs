@@ -60,7 +60,7 @@ for (const config of CONFIGS) for (const print of ['self', 'service']) {
         const c = comps[it.component];
         assert.equal(it.code, c.code || null);
         // the label shows quantity and variant code, in both languages
-        const shown = `${it.qty}×${c.code || c.short ? ' ' + (c.code || c.short) : ''}`;
+        const shown = `${it.qty}×${c.code || c.short ? '\u00a0' + (c.code || c.short) : ''}`;   // no-break space: never wraps between count and code
         for (const n of [a.name, a.name_cs]) assert.ok(n.includes(shown), `${a.id}: "${n}" lacks "${shown}"`);
       }
     }

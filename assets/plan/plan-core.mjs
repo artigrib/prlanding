@@ -193,7 +193,7 @@ function arrivalList(data, cfg, groups, arrivals) {
     const order = (x) => { const i = cfg.lines.findIndex((l) => l.component === x.component && (l.arm || null) === x.arm); return i < 0 ? -1 : i; };
     items.sort((x, y) => order(x) - order(y));
     if (!items.length) return { ...a, items };
-    const one = (x) => (x.component === 'printed' ? ARM_LABEL[x.arm] || '' : `${x.qty}×${x.code || x.short ? ' ' + (x.code || x.short) : ''}`);
+    const one = (x) => (x.component === 'printed' ? ARM_LABEL[x.arm] || '' : `${x.qty}×${x.code || x.short ? '\u00a0' + (x.code || x.short) : ''}`);
     const byArm = [];
     for (const x of items) {
       const k = x.component === 'printed' ? null : x.arm;
@@ -201,8 +201,8 @@ function arrivalList(data, cfg, groups, arrivals) {
       if (!g) byArm.push((g = { arm: k, xs: [] }));
       g.xs.push(one(x));
     }
-    const text = byArm.map((g) => (g.arm ? `${ARM_LABEL[g.arm] || g.arm} ${g.xs.join(', ')}` : g.xs.join(', '))).join(' · ');
-    return { ...a, items, name: `${a.name} · ${text}`, name_cs: `${a.name_cs} · ${text}` };
+    const text = byArm.map((g) => (g.arm ? `${ARM_LABEL[g.arm] || g.arm}\u00a0${g.xs.join(', ')}` : g.xs.join(', '))).join(' · ');
+    return { ...a, items, name: `${a.name}\u00a0· ${text}`, name_cs: `${a.name_cs}\u00a0· ${text}` };
   });
 }
 
