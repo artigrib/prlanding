@@ -1617,48 +1617,55 @@
    "name": "Servos (each parcel kept separate and labelled)",
    "name_cs": "Serva (každý balík zvlášť a popsaný)",
    "needed_for_wizard": true,
-   "guide_stage": "e0"
+   "guide_stage": "e0",
+   "components": ["so101.servo.c001", "so101.servo.c018", "so101.servo.c044", "so101.servo.c046"]
   },
   {
    "id": "board",
    "name": "Bus servo board(s)",
    "name_cs": "Řídicí deska (desky) serv",
    "needed_for_wizard": true,
-   "guide_stage": "e4"
+   "guide_stage": "e4",
+   "components": ["so101.bus_board"]
   },
   {
    "id": "psu",
    "name": "Power supply(ies)",
    "name_cs": "Napájecí zdroj(e)",
    "needed_for_wizard": true,
-   "guide_stage": "e4"
+   "guide_stage": "e4",
+   "components": ["so101.psu_12v", "so101.psu_5v"]
   },
   {
    "id": "usb",
    "name": "USB-C data cable(s)",
    "name_cs": "Datový kabel (kabely) USB-C",
    "needed_for_wizard": true,
-   "guide_stage": "e2"
+   "guide_stage": "e2",
+   "components": ["so101.usb_c"]
   },
   {
    "id": "clamps",
    "name": "Clamps",
    "name_cs": "Svěrky",
    "needed_for_wizard": false,
-   "guide_stage": "e5"
+   "guide_stage": "e5",
+   "components": ["so101.clamps"]
   },
   {
    "id": "printed",
    "name": "Printed parts",
    "name_cs": "Tištěné díly",
    "needed_for_wizard": false,
-   "guide_stage": "e3"
+   "guide_stage": "e3",
+   "components": ["printed"]
   }
  ],
  "components": [
   {
    "id": "so101.servo.c018",
    "group": "SO-101",
+   "code": "C018",
    "name": "Feetech STS3215-C018, 12 V, 1/345, 30 kg·cm",
    "name_cs": "Servo Feetech STS3215-C018, 12 V, 1/345, 30 kg·cm",
    "role": "Follower joints 1–6 (recommended high-torque follower)",
@@ -1768,6 +1775,7 @@
   {
    "id": "so101.servo.c001",
    "group": "SO-101",
+   "code": "C001",
    "name": "Feetech STS3215-C001, 7.4 V, 1/345, ~19 kg·cm",
    "name_cs": "Servo Feetech STS3215-C001, 7,4 V, 1/345, ~19 kg·cm",
    "role": "Leader joint 2 (shoulder lift); follower joints 1–6 in the 7.4 V build",
@@ -1907,6 +1915,7 @@
   {
    "id": "so101.servo.c044",
    "group": "SO-101",
+   "code": "C044",
    "name": "Feetech STS3215-C044, 7.4 V, 1/191",
    "name_cs": "Servo Feetech STS3215-C044, 7,4 V, 1/191",
    "role": "Leader joints 1 (base) and 3 (elbow)",
@@ -1985,6 +1994,7 @@
   {
    "id": "so101.servo.c046",
    "group": "SO-101",
+   "code": "C046",
    "name": "Feetech STS3215-C046, 7.4 V, 1/147",
    "name_cs": "Servo Feetech STS3215-C046, 7,4 V, 1/147",
    "role": "Leader joints 4–6 (wrist flex, wrist roll, gripper)",
@@ -2181,6 +2191,7 @@
   {
    "id": "so101.psu_12v",
    "group": "SO-101",
+   "short": "12 V",
    "name": "Power supply 12 V ≥5 A, DC 5.5 × 2.1 mm, EU plug, CE",
    "name_cs": "Zdroj 12 V ≥5 A, DC 5,5 × 2,1 mm, EU zástrčka, CE",
    "role": "Follower (12 V servos)",
@@ -2259,6 +2270,7 @@
   {
    "id": "so101.psu_5v",
    "group": "SO-101",
+   "short": "5 V",
    "name": "Power supply 5 V ≥4 A, DC 5.5 × 2.1 mm, EU plug, CE",
    "name_cs": "Zdroj 5 V ≥4 A, DC 5,5 × 2,1 mm, EU zástrčka, CE",
    "role": "Leader (and 7.4 V follower)",
