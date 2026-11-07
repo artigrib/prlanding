@@ -199,13 +199,13 @@ function assertEnglish(html, page) {
 /* ---------- one header menu for every page (home, kits, quiz, content pages, 404; CZ + EN) ----------
    path = the file being written (from the site root); root = '../' chain to the site root ('/' for 404.html). */
 const NAV = {
-  cs: [['sim', 'sim/so101/', 'Simulace'], ['arena', 'sim/arena/', 'Aréna'], ['katalog', '#katalog', 'Katalog'], ['navody', 'navody/', 'Návody'], ['skoly', 'pro-skoly/', 'Pro školy']],
-  en: [['sim', 'sim/so101/?lang=en', 'Simulation'], ['arena', 'sim/arena/?lang=en', 'Arena'], ['katalog', 'en/#katalog', 'Kits'], ['navody', 'en/guides/', 'Guides'], ['skoly', 'en/for-schools/', 'For schools']]
+  cs: [['sim', 'sim/so101/', 'Simulace'], ['plan', 'plan/so101/', 'Plán nákupu'], ['katalog', '#katalog', 'Katalog'], ['navody', 'navody/', 'Návody'], ['skoly', 'pro-skoly/', 'Pro školy']],
+  en: [['sim', 'sim/so101/?lang=en', 'Simulation'], ['plan', 'en/plan/so101/', 'Parts plan'], ['katalog', 'en/#katalog', 'Kits'], ['navody', 'en/guides/', 'Guides'], ['skoly', 'en/for-schools/', 'For schools']]
 };
 function siteNav(path, root) {
   const L = path.startsWith('en/') ? 'en' : 'cs';
   const home = path === 'index.html' || path === 'en/index.html';
-  const cur = /^(navody|en\/guides)\//.test(path) ? 'navody' : /^(pro-skoly|en\/for-schools)\//.test(path) ? 'skoly' : '';
+  const cur = /^(navody|en\/guides)\//.test(path) ? 'navody' : /^(pro-skoly|en\/for-schools)\//.test(path) ? 'skoly' : /^(en\/)?plan\/so101\//.test(path) ? 'plan' : '';
   // the registry sits inside the catalogue section, but the Katalog link points at the home page: "true", not "page"
   const inCat = /^(katalog|en\/catalogue)\//.test(path);
   const links = NAV[L].map(([k, h, t]) => {
@@ -368,11 +368,16 @@ function kitPage(r0, L) {
 }
 for (const r of R) { kitPage(r, 'cs'); kitPage(r, 'en'); }
 
-// home hero: "what's new" strip = the newest item of the home news list (N° Co je nového), so the two never disagree
+// home hero: "what's new" strip = the newest item of the home news list (N° Co je nového) that leads to the SO-101 path
+// (the SO-101 sim or a buying plan), so the strip never pulls visitors off the main path; no such item = no strip
 function heroNew(html) {
-  const m = /<ol class="a4 news" reversed>\s*<li><time datetime="([^"]+)">([^<]+)<\/time><span><b>([^<]+)<\/b>[\s\S]*?<\/span><a href="([^"]+)">/.exec(html);
-  if (!m) throw new Error('index.html: news list not found for the hero strip');
-  return `<a class="hero-new" href="${m[4]}" data-cta="hero-new"><span class="hero-new-k">Novinka</span><time datetime="${m[1]}">${m[2]}</time><b>${m[3]}</b><span aria-hidden="true">→</span></a>`;
+  const list = /<ol class="a4 news" reversed>([\s\S]*?)<\/ol>/.exec(html);
+  if (!list) throw new Error('index.html: news list not found for the hero strip');
+  for (const m of list[1].matchAll(/<li><time datetime="([^"]+)">([^<]+)<\/time><span><b>([^<]+)<\/b>[\s\S]*?<\/span><a href="([^"]+)">/g)) {
+    if (!/^(sim\/so101\/|plan\/)/.test(m[4])) continue;
+    return `<a class="hero-new" href="${m[4]}" data-cta="hero-new"><span class="hero-new-k">Novinka</span><time datetime="${m[1]}">${m[2]}</time><b>${m[3]}</b><span aria-hidden="true">→</span></a>`;
+  }
+  return '';
 }
 // real photos: drop assets/photos/<id>.jpg (+ optional <id>.json {w,h,alt_cs,alt_en,cap_cs,cap_en}) and the next build
 // shows it instead of the render. No photo = the render stays, labelled as a render (never a stock or fake photo).
@@ -595,7 +600,7 @@ ${lds.map(l => `<script type="application/ld+json">${JSON.stringify(l).replace(/
 <div class="wrap"><div class="hbar">
 <div class="brand"><i aria-hidden="true"></i><a href="${(root + home) || './'}">printedrobotics</a>${switcher(L, page, c.cs, c.en)}</div>
 ${siteNav(page + 'index.html', root)}
-<a class="pill" href="${root}${en ? 'en/quiz/' : 'kviz.html'}">${en ? 'Find a robot' : 'Najít robota'} <span aria-hidden="true">→</span></a>
+<a class="pill" href="${root}${en ? 'en/plan/so101/' : 'plan/so101/'}">${en ? '<span class="pill-l">SO-101 parts plan</span><span class="pill-s">Parts plan</span>' : '<span class="pill-l">Plán nákupu SO-101</span><span class="pill-s">Plán nákupu</span>'} <span aria-hidden="true">→</span></a>
 </div></div>
 </header>
 <nav class="wrap crumb doc-crumb" aria-label="${en ? 'Breadcrumb' : 'Drobečková navigace'}">${crumbHtml}</nav>

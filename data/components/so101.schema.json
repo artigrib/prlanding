@@ -619,6 +619,13 @@
           "guide_stage": {
             "type": "string",
             "pattern": "^e[0-9]$"
+          },
+          "components": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
           }
         }
       }
