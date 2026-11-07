@@ -87,16 +87,17 @@
         .replace(/(\d) (?=(Kč|EUR|USD|€|V|A|h|mm|cm|m|kg|g|Nm|ks|%|dní|let|os)\b)/g, '$1 ')
         .replace(/ [—–] /g, ' – ');
       if (u !== t) n.nodeValue = u;
-      if (/SO-1\d\d/.test(u) && n.parentNode.closest && !n.parentNode.classList.contains('nw') && n.parentNode.closest('h1,h2,h3,.btn,button,.pill,.step-a,.hero-new')) nw.push(n);
+      if (/SO-1\d\d/.test(u) && n.parentNode.closest && !n.parentNode.classList.contains('nw') && !n.parentNode.classList.contains('nwt') && n.parentNode.closest('h1,h2,h3,.btn,button,.pill,.step-a,.hero-new')) nw.push(n);
     }
-    // headings and buttons: "SO-101" never breaks at its hyphen (wrapped in a no-wrap span; the text itself is unchanged)
+    // headings and buttons: "SO-101" never breaks at its hyphen (a no-wrap span; the text itself is unchanged). The whole
+    // text node goes into one wrapper span so a flex button (.btn: space-between) still sees a single item
     nw.forEach(function (n) {
-      var f = document.createDocumentFragment();
+      var w = document.createElement('span'); w.className = 'nwt';
       n.nodeValue.split(/(SO-1\d\d)/).forEach(function (p, i) {
         if (!p) return;
-        if (i % 2) { var s = document.createElement('span'); s.className = 'nw'; s.textContent = p; f.appendChild(s); } else f.appendChild(document.createTextNode(p));
+        if (i % 2) { var s = document.createElement('span'); s.className = 'nw'; s.textContent = p; w.appendChild(s); } else w.appendChild(document.createTextNode(p));
       });
-      n.parentNode.replaceChild(f, n);
+      n.parentNode.replaceChild(w, n);
     });
   }
   var typoQueued = false;
