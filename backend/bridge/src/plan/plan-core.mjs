@@ -173,6 +173,40 @@ const maxRange = (a, b) => [Math.max(a[0], b[0]), Math.max(a[1], b[1])];
 const pickReviews = (r) => (r ? { rating: r.rating, count: r.count, checked: r.checked, url: r.url || null, signals: r.signals.map((g) => ({ ...g })) } : null);
 const fill = (t, vars) => String(t).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
 
+// Arrival checklist ("Co už dorazilo"): an arrival with components lists what this plan buys for it (quantity, servo
+// variant code, arm), taken from the plan's own lines so the checklist and the shopping list cannot drift apart.
+// "printed" stands for the printed parts: one set per arm, whether you print them or order them from a service.
+const ARM_LABEL = { follower_74v: 'follower', follower_12v: 'follower', follower: 'follower', leader: 'leader' };
+function arrivalList(data, cfg, groups, arrivals) {
+  const comps = Object.fromEntries(data.components.map((c) => [c.id, c]));
+  const lines = groups.flatMap((g) => g.lines);
+  const printed = (l) => l.component.startsWith(`${data.meta.robot}.printed`);
+  return arrivals.map((a) => {
+    if (!a.components) return a;
+    const items = [];
+    if (a.components.includes('printed') && lines.some(printed)) for (const arm of cfg.arms || [null]) items.push({ component: 'printed', qty: 1, arm, code: null, short: null });
+    for (const l of lines) {
+      if (!a.components.includes(l.component)) continue;
+      const c = comps[l.component];
+      const it = items.find((x) => x.component === l.component && x.arm === l.arm);
+      if (it) it.qty += l.qty; else items.push({ component: l.component, qty: l.qty, arm: l.arm, code: c.code || null, short: c.short || null });
+    }
+    const order = (x) => { const i = cfg.lines.findIndex((l) => l.component === x.component && (l.arm || null) === x.arm); return i < 0 ? -1 : i; };
+    items.sort((x, y) => order(x) - order(y));
+    if (!items.length) return { ...a, items };
+    const one = (x) => (x.component === 'printed' ? ARM_LABEL[x.arm] || '' : `${x.qty}×${x.code || x.short ? ' ' + (x.code || x.short) : ''}`);
+    const byArm = [];
+    for (const x of items) {
+      const k = x.component === 'printed' ? null : x.arm;
+      let g = byArm.find((y) => y.arm === k);
+      if (!g) byArm.push((g = { arm: k, xs: [] }));
+      g.xs.push(one(x));
+    }
+    const text = byArm.map((g) => (g.arm ? `${ARM_LABEL[g.arm] || g.arm} ${g.xs.join(', ')}` : g.xs.join(', '))).join(' · ');
+    return { ...a, items, name: `${a.name} · ${text}`, name_cs: `${a.name_cs} · ${text}` };
+  });
+}
+
 /**
  * Build a purchase plan.
  * @param {object} data  data/components/<robot>.json
@@ -345,7 +379,7 @@ export function buildPlan(data, opts = {}) {
     tools: data.tools.filter((t) => (!t.only_print || t.only_print === print) && (!t.only_config || t.only_config === robot)),
     tools_note: data.tools_note || null, tools_note_cs: data.tools_note_cs || null,
     build_time: build,
-    arrivals: data.arrivals.filter((a) => (!a.only_config || a.only_config === robot) && (!a.only_option || Object.entries(a.only_option).every(([k, v]) => [].concat(v).includes(options[k])))),
+    arrivals: arrivalList(data, cfg, out, data.arrivals.filter((a) => (!a.only_config || a.only_config === robot) && (!a.only_option || Object.entries(a.only_option).every(([k, v]) => [].concat(v).includes(options[k]))))),
     notes: (data.notes || []).filter((n) => !n.only_option || Object.entries(n.only_option).every(([k, v]) => [].concat(v).includes(options[k])))
       .map((n) => ({ ...n, text: fill(n.text, noteVars), text_cs: fill(n.text_cs, noteVars) })),
     safety: data.safety || [],
