@@ -243,7 +243,7 @@ test('hazard line: derived from equipment type and safety notes, shown in CZ and
 });
 
 test('licences the review downgraded: unknown with a rights_note; CERN OHL without a version only copyleft when certified before v2', () => {
-  for (const id of ['isaac879-pan-tilt-slider', 'ugr-arduino-autotitrator', 'smartphone-spectrophotometer-winters']) {
+  for (const id of ['isaac879-pan-tilt-slider', 'ugr-arduino-autotitrator', 'smartphone-spectrophotometer-winters', 'laser-xy-scanner']) {
     const r = records.find((x) => x.id === id); assert.equal(r.rights_class, 'unknown', id); assert.ok(r.rights_note, id);
   }
   for (const id of ['satnogs-rotator', 'openpfge']) {
