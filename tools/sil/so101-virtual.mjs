@@ -10,6 +10,7 @@
 //
 //   node tools/sil/so101-virtual.mjs --leader            # follower + leader, ports /tmp/so101-follower, /tmp/so101-leader
 //   node tools/sil/so101-virtual.mjs ctl sweep follower  # send a command to a running runner
+//   node tools/sil/so101-virtual.mjs --camera up --camera side   # + virtual cameras for a policy (LeRobot `type: zmq`)
 //
 // Docs: navody/so101-lerobot-simulace (CZ), en/navody/so101-lerobot-simulace (EN).
 // Linux and macOS (pty). Windows: no pty — see the docs (com0com, untested).
@@ -19,6 +20,7 @@ import { loadScene, MjPlant, HandPlant, JOINT_NAMES } from './lib/plant.mjs';
 import { openVirtualPort } from './lib/pty.mjs';
 import { HandMover, PICK_PLACE, REST, middle, sweepSegments, parseTrajectory } from './lib/motion.mjs';
 import { startServer } from './lib/server.mjs';
+import { startCameras, parseSize } from './lib/camera.mjs';
 
 const HELP = `SO-101 virtual arm for LeRobot (software in the loop)
 
@@ -40,6 +42,12 @@ Options:
   --ctl-port N           localhost control port (default 8765)
   --mirror               serve a live WebSocket mirror at ws://127.0.0.1:<ctl-port>/mirror for the browser sim
   --mirror-origin URL    extra allowed page origin for the mirror (localhost pages are always allowed)
+  --camera NAME[=VIEW]   add a virtual camera, published over ZeroMQ for LeRobot's built-in ZMQ camera
+                         (type: zmq, camera_name: NAME). VIEW: up, side, front, wrist (default: VIEW = NAME).
+                         Repeat for more cameras. Preview: http://127.0.0.1:<ctl-port>/camera/NAME.png
+  --camera-port N        ZeroMQ PUB port on 127.0.0.1 (default 5555)
+  --camera-size WxH      image size (default 640x480)
+  --camera-fps N         frames rendered per second, all cameras together (default 15; software rendering)
   --hz N                 physics/servo update rate (default 250)
   --quiet                no periodic status line
   -h, --help
@@ -84,6 +92,10 @@ const { values: opt } = parseArgs({
     mirror: { type: 'boolean', default: false },
     'mirror-origin': { type: 'string', multiple: true, default: [] },
     hz: { type: 'string', default: '250' },
+    camera: { type: 'string', multiple: true, default: [] },
+    'camera-port': { type: 'string', default: '5555' },
+    'camera-size': { type: 'string', default: '640x480' },
+    'camera-fps': { type: 'string', default: '15' },
     quiet: { type: 'boolean', default: false },
     help: { type: 'boolean', short: 'h', default: false }
   }
@@ -177,7 +189,7 @@ function status() {
     servos: A.arm.servos.map((s) => ({ id: s.id, powered: s.powered, torque: s.mem[40], present: s.reg('Present_Position'), goal: s.reg('Goal_Position'), homing: s.reg('Homing_Offset'), min: s.reg('Min_Position_Limit'), max: s.reg('Max_Position_Limit'), temp: s.mem[63] })),
     packets: { rx: A.rx, tx: A.tx }
   });
-  return { t: +fPlant.d.time.toFixed(3), follower: one(arms.follower), ...(arms.leader ? { leader: one(arms.leader) } : {}), cube: fPlant.cube().map((v) => +v.toFixed(4)) };
+  return { t: +fPlant.d.time.toFixed(3), follower: one(arms.follower), ...(arms.leader ? { leader: one(arms.leader) } : {}), cube: fPlant.cube().map((v) => +v.toFixed(4)), tip: (fPlant.tip() || []).map((v) => +v.toFixed(4)), ...(cameras ? { cameras: cameras.status() } : {}) };
 }
 async function command(line) {
   const [c, a, ...more] = line.split(/\s+/).filter(Boolean);
@@ -207,6 +219,21 @@ async function command(line) {
   }
 }
 
+// ---------------- virtual cameras (optional; started before the ports so LeRobot never waits on it) ----------------
+let cameras = null;
+if (opt.camera.length) {
+  const [width, height] = parseSize(opt['camera-size']);
+  const fps = Math.max(1, Math.min(60, +opt['camera-fps'] || 15));
+  cameras = await startCameras({ mj: scene.mj, m: scene.m, d: scene.d, specs: opt.camera, width, height, fps, port: +opt['camera-port'], log })
+    .catch((e) => { log(`cameras: ${e.code === 'EADDRINUSE' ? `port ${opt['camera-port']} is in use` : e.message}`); process.exit(2); });
+  if (cameras) log(`cameras: ${cameras.cams.map((c) => `${c.name} (${c.preset})`).join(', ')}  ${width}x${height} @ ${fps} fps  ->  zmq tcp://127.0.0.1:${cameras.port}  (LeRobot: type: zmq, server_address: 127.0.0.1, port: ${cameras.port}, camera_name: <name>)`);
+}
+const cameraGet = (url) => {
+  const mm = /^\/camera\/([A-Za-z0-9_.-]+)\.png$/.exec(url);
+  const png = mm && cameras && cameras.previewPNG(mm[1]);
+  return png ? { type: 'image/png', body: png } : null;
+};
+
 // ---------------- ports ----------------
 for (const A of Object.values(arms)) {
   const link = A.name === 'leader' ? opt['leader-port'] : opt['follower-port'];
@@ -223,7 +250,7 @@ for (const A of Object.values(arms)) {
 }
 if (arms.leader && !opt['auto-hand']) { try { leaderMotion(opt['leader-motion']); } catch (e) { log('leader motion:', e.message); } log(`leader motion: ${arms.leader.hand.name}`); }
 
-const srv = await startServer({ port: +opt['ctl-port'], mirror: opt.mirror, extraOrigins: opt['mirror-origin'], onCommand: command, getStatus: status })
+const srv = await startServer({ port: +opt['ctl-port'], mirror: opt.mirror, extraOrigins: opt['mirror-origin'], onCommand: command, getStatus: status, onGet: cameraGet })
   .catch((e) => { log(`control port ${opt['ctl-port']} unavailable (${e.code}); commands only via stdin`); return null; });
 if (srv) log(`control: http://127.0.0.1:${opt['ctl-port']}  (node tools/sil/so101-virtual.mjs ctl status)${opt.mirror ? `  mirror: ws://127.0.0.1:${opt['ctl-port']}/mirror` : ''}`);
 
@@ -240,6 +267,7 @@ const timer = setInterval(() => {
     factoryStep(A, clock());
   }
   fPlant.step(dt);
+  if (cameras) cameras.tick(now / 1000);
   mirrorAcc += dt; statusAcc += dt;
   if (srv && opt.mirror && mirrorAcc >= 1 / 30) {
     mirrorAcc = 0;
@@ -289,6 +317,7 @@ function shutdown(code = 0) {
   clearInterval(timer);
   for (const A of Object.values(arms)) A.port && A.port.close();
   srv && srv.close();
+  cameras && cameras.close();
   if (process.stdin.isTTY) try { process.stdin.setRawMode(false); } catch (e) { /* not a tty any more */ }
   setTimeout(() => process.exit(code), 100);
 }

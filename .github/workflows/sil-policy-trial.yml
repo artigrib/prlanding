@@ -1,0 +1,67 @@
+name: sil-policy-trial
+
+# Opt-in, not on every push: a real pretrained ACT policy from the Hugging Face Hub drives the virtual
+# SO-101 for 20 s on CPU, through unmodified LeRobot 0.6.1 and the runner's virtual cameras.
+# Downloads PyTorch (CPU), LeRobot, the model (about 210 MB) and torchvision's ImageNet ResNet18 weights
+# (about 45 MB, from download.pytorch.org; ACT builds its vision backbone from them). Run it by hand
+# (Actions -> Run workflow) or put the label "policy-trial" on a pull request. Public model, no token.
+# SECURITY: labelling a pull request runs THAT pull request's tools/sil/policy_trial.py and runner code,
+# including from a fork. Read the diff before applying the label.
+on:
+  workflow_dispatch:
+    inputs:
+      policy:
+        description: Hub repo id of a LeRobot policy trained for the SO-101 follower
+        default: samarth-shukla6/act-svla-so101-pickplace
+      revision:
+        description: Hub commit of the policy (empty = the commit we tested for the default policy, see tools/sil/policy_trial.py)
+        default: ''
+      cameras:
+        description: Camera names the policy expects (NAME or NAME=VIEW; views up, side, front, wrist)
+        default: up,side
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  trial:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'policy-trial'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: PyTorch 2.11 (CPU build) + LeRobot 0.6.1 + pyzmq
+        run: |
+          python -m pip install -q torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -q "lerobot[feetech,dataset]==0.6.1" "pyzmq>=26.2.1,<28" torch==2.11.0 torchvision==0.26.0 --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Run the policy against the virtual SO-101 for 20 s
+        env:
+          POLICY: ${{ inputs.policy || 'samarth-shukla6/act-svla-so101-pickplace' }}
+          REVISION: ${{ inputs.revision }}
+          CAMERAS: ${{ inputs.cameras || 'up,side' }}
+        run: |
+          nproc; python -c "import torch, torchvision; print('torch', torch.__version__, 'torchvision', torchvision.__version__, 'threads', torch.get_num_threads())"
+          rev=(); [ -n "$REVISION" ] && rev=(--revision "$REVISION")
+          python tools/sil/policy_trial.py --out "$RUNNER_TEMP/trial" --policy "$POLICY" --cameras "$CAMERAS" --duration 20 "${rev[@]}"
+          cat "$RUNNER_TEMP/trial/summary.md" >> "$GITHUB_STEP_SUMMARY"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: policy-trial
+          path: |
+            ${{ runner.temp }}/trial/*.log
+            ${{ runner.temp }}/trial/*.md
+            ${{ runner.temp }}/trial/*.json
+            ${{ runner.temp }}/trial/*.png
+            ${{ runner.temp }}/trial/command.txt
+          if-no-files-found: warn

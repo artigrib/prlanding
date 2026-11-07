@@ -5,6 +5,7 @@
 //               which this server never answers, so random sites cannot drive the virtual arm)
 //   GET  /status                                                       -> JSON state
 //   GET  /mirror  (WebSocket upgrade, only with --mirror)              -> JSON state frames, ~30 Hz
+//   GET  /camera/<name>.png  (only with --camera)                      -> newest frame of a virtual camera
 //
 // Binds 127.0.0.1 only.
 import http from 'node:http';
@@ -23,12 +24,16 @@ export function wsFrame(text) {
 }
 export const wsAccept = (key) => crypto.createHash('sha1').update(key + WS_GUID).digest('base64');
 
-export function startServer({ port, mirror = false, extraOrigins = [], onCommand, getStatus }) {
+export function startServer({ port, mirror = false, extraOrigins = [], onCommand, getStatus, onGet = null }) {
   const clients = new Set();
   const originOk = (o) => !o || LOCAL_ORIGIN.test(o) || extraOrigins.includes(o);
   const server = http.createServer((req, res) => {
     const json = (code, obj) => { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
     if (req.method === 'GET' && req.url === '/status') return json(200, getStatus());
+    if (req.method === 'GET' && onGet) {
+      const r = onGet(req.url);
+      if (r) { res.writeHead(200, { 'content-type': r.type, 'cache-control': 'no-store' }); res.end(r.body); return; }
+    }
     if (req.method === 'POST' && req.url === '/cmd') {
       if (req.headers['x-sil'] !== '1') return json(403, { ok: false, error: 'missing X-SIL header' });
       let body = '';

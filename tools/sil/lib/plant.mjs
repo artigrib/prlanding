@@ -34,6 +34,7 @@ export class MjPlant {
     this.driven = JOINT_NAMES.map(() => false);
     this.ts = m.opt.timestep; this.acc = 0;
     this.cubeBody = id('mjOBJ_BODY', 'cube');
+    this.tipSite = id('mjOBJ_SITE', 'gripperframe');
   }
   setCtrl(i, v) { const [lo, hi] = this.range[i]; this.d.ctrl[this.act[i]] = Math.min(hi, Math.max(lo, v)); }
   // ---- plant interface (lib/sts3215-emu.js) ----
@@ -54,6 +55,8 @@ export class MjPlant {
   }
   qs() { return this.qadr.map((a) => this.d.qpos[a]); }
   cube() { const x = this.d.xpos, c = 3 * this.cubeBody; return [x[c], x[c + 1], x[c + 2]]; }
+  /** Gripper frame (between the jaw tips) in world coordinates, metres. */
+  tip() { const x = this.d.site_xpos, c = 3 * this.tipSite; return this.tipSite < 0 ? null : [x[c], x[c + 1], x[c + 2]]; }
   /** Cube pose as MuJoCo free-joint qpos [x y z qw qx qy qz]. */
   cubePose() { const a = this.m.jnt_qposadr[this.m.body_jntadr[this.cubeBody]]; return Array.from(this.d.qpos.subarray(a, a + 7)); }
   /** Put the cube back to its start pose (from the keyframe) and stop it. */

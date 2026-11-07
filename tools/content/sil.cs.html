@@ -15,7 +15,7 @@
 <p class="lead">Díly na SO-101 putují poštou obvykle 21 až 28 dní. Ten čas můžete využít: náš program <code>so101-virtual</code> spustí virtuální ruku SO-101 ve fyzikální simulaci MuJoCo a vystaví ji jako sériový port. Skutečný, neupravený LeRobot s ní pak mluví úplně stejně jako se skutečnou řídicí deskou. Nastavíte ID serv, zkalibrujete, ovládáte follower leaderem, nahrajete dataset a přehrajete ho.</p>
 <p class="doc-note"><i aria-hidden="true"></i><span><b>Ověřeno 30. 10. 2026</b> s LeRobot 0.6.1 (PyPI), feetech-servo-sdk 1.0.0, Python 3.12, Node.js 22 na Linuxu (x86_64). macOS by měl fungovat stejně, ale vyzkoušený není; Windows viz <a href="#windows">níže</a>. Virtuální ruka je nácvik: hodnoty z výroby i zatížení a teplo jsou přibližné, ne změřené na skutečných servech.</span></p>
 <ol class="toc" aria-label="Obsah">
-<li><a href="#princip">Jak to funguje</a></li><li><a href="#instalace">Instalace</a></li><li><a href="#spusteni">Spuštění</a></li><li><a href="#id">ID serv</a></li><li><a href="#kalibrace">Kalibrace</a></li><li><a href="#teleoperace">Teleoperace</a></li><li><a href="#nahravani">Dataset</a></li><li><a href="#prehrani">Přehrání</a></li><li><a href="#nahled">Živý náhled</a></li><li><a href="#limity">Co je emulované</a></li><li><a href="#windows">Windows</a></li><li><a href="#problemy">Když to nejde</a></li>
+<li><a href="#princip">Jak to funguje</a></li><li><a href="#instalace">Instalace</a></li><li><a href="#spusteni">Spuštění</a></li><li><a href="#id">ID serv</a></li><li><a href="#kalibrace">Kalibrace</a></li><li><a href="#teleoperace">Teleoperace</a></li><li><a href="#nahravani">Dataset</a></li><li><a href="#prehrani">Přehrání</a></li><li><a href="#politika">Hotová politika</a></li><li><a href="#nahled">Živý náhled</a></li><li><a href="#limity">Co je emulované</a></li><li><a href="#windows">Windows</a></li><li><a href="#problemy">Když to nejde</a></li>
 </ol>
 </div>
 </section>
@@ -118,7 +118,7 @@ lerobot-record \
     --dataset.single_task="Put the cube in the bowl" \
     --dataset.num_episodes=2 --dataset.episode_time_s=12 --dataset.reset_time_s=4 \
     --dataset.push_to_hub=false --play_sounds=false</code></pre>
-<p>Vznikne dataset ve formátu LeRobot (parquet s polohami kloubů a akcemi, 30 snímků za sekundu) ve složce <code>~/so101_sil_dataset</code>. Nic se nenahrává na Hugging Face a nepotřebujete žádný token. Kamery virtuální ruka zatím nemá, takže dataset obsahuje jen polohy kloubů.</p>
+<p>Vznikne dataset ve formátu LeRobot (parquet s polohami kloubů a akcemi, 30 snímků za sekundu) ve složce <code>~/so101_sil_dataset</code>. Nic se nenahrává na Hugging Face a nepotřebujete žádný token. Bez přepínače <code>--camera</code> obsahuje dataset jen polohy kloubů; virtuální kamery popisuje <a href="#politika">další oddíl</a>.</p>
 </div>
 </div>
 </section>
@@ -133,14 +133,56 @@ lerobot-record \
     --robot.type=so101_follower --robot.port=/tmp/so101-follower --robot.id=sil_follower \
     --dataset.repo_id=local/so101_sil --dataset.root=$HOME/so101_sil_dataset --dataset.episode=0 \
     --play_sounds=false</code></pre>
-<p class="src">Spuštění natrénované politiky (<code>lerobot-rollout</code>) jsme zatím nezkoušeli: politiky ACT a Diffusion v LeRobotu vyžadují kameru, kterou virtuální ruka nemá.</p>
+<p class="src">Natrénovanou politiku s kamerami (<code>lerobot-rollout</code>) spustíte podle <a href="#politika">dalšího oddílu</a>.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="politika">
+<div class="g rule">
+<div class="a1 mono">09 — Politika</div>
+<div class="a4 prose">
+<h2>První úloha s hotovou politikou</h2>
+<p>Politika je neuronová síť, která z obrazu kamer a z poloh kloubů počítá, kam má ruka jet. Na Hugging Face Hubu jsou veřejné politiky natrénované na SO-101. Virtuální ruka umí od 7. 11. 2026 i virtuální kamery, takže takovou politiku pustíte proti ní ještě předtím, než ruku složíte. Je to zkouška celé cesty kamera → politika → serva, ne závod o úspěšnost: politika se učila na jiném stole, s jinými kamerami a na skutečných fotkách.</p>
+<p class="doc-note"><i aria-hidden="true"></i><span><b>Ověřeno 7. 11. 2026</b> s LeRobot 0.6.1 a pyzmq 27, jen na procesoru: tři běhy skutečné politiky na GitHub Actions (ubuntu-latest, 4 jádra, Python 3.12, PyTorch 2.11, Node.js 24) a běhy se stejně velkou sítí na našem stroji se dvěma jádry (Python 3.13, PyTorch 2.7, Node.js 22). Skript a workflow jsou v repozitáři: <code>tools/sil/policy_trial.py</code>, workflow <code>sil-policy-trial</code>.</span></p>
+<h3>Kterou politiku</h3>
+<p>Použijeme <a href="https://huggingface.co/samarth-shukla6/act-svla-so101-pickplace">samarth-shukla6/act-svla-so101-pickplace</a>: politika ACT s licencí Apache-2.0, 51,7 milionu parametrů (soubor 206 MB). Je natrénovaná na veřejném datasetu <a href="https://huggingface.co/datasets/lerobot/svla_so101_pickplace">lerobot/svla_so101_pickplace</a> (Apache-2.0, 50 epizod, 11 939 snímků, 30 snímků za sekundu; ve svém <code>meta/info.json</code> uvádí <code>robot_type</code> <code>so100_follower</code>, přestože nese jméno SO-101) se dvěma kamerami <code>up</code> a <code>side</code> 640 × 480. Vybrali jsme ji, protože je malá, má povolující licenci, známé názvy a rozlišení kamer a běží na procesoru. Karta modelu je ale jen obecná šablona LeRobotu: neuvádí úspěšnost ani kde přesně kamery stály.</p>
+<p class="src">Zvažovali jsme i <a href="https://huggingface.co/pepijn223/odsc-so101-act">pepijn223/odsc-so101-act</a> (Apache-2.0, natrénovaná přímo v MuJoCo). Ta ale patří k vlastní scéně s pěti předměty, chce kamery <code>top</code> a <code>wrist</code> 384 × 384 a úhly v radiánech, takže s <code>lerobot-rollout</code> a followerem SO-101 bez převodu nepojede. Politiky SmolVLA mají kolem 450 milionů parametrů a na procesoru jsou mnohem pomalejší.</p>
+<h3>1. Virtuální ruka s kamerami</h3>
+<pre tabindex="0"><code>pip install "pyzmq&gt;=26.2.1,&lt;28"        # kamera ZMQ v LeRobotu ho potřebuje
+node tools/sil/so101-virtual.mjs --auto-hand --camera up --camera side</code></pre>
+<p>Program vypíše řádek <code>cameras: up (up), side (side)  640x480 @ 15 fps  -&gt;  zmq tcp://127.0.0.1:5555</code>. Scénu kreslí vlastním jednoduchým vykreslovačem (plné barvy, bez textur a stínů) a snímky posílá přes ZeroMQ ve formátu vestavěné kamery LeRobotu <code>type: zmq</code>. LeRobot se tedy nemění a nic se neinstaluje do jeho kódu. Co politika vidí, ukáže prohlížeč na <code>http://127.0.0.1:8765/camera/up.png</code> a <code>…/camera/side.png</code>. Další pohledy: <code>front</code> a <code>wrist</code> (kamera na zápěstí z modelu ruky); jiný název pro LeRobot zadáte jako <code>--camera top=up</code>.</p>
+<figure class="doc-fig"><img src="{root}assets/media/sil-cameras.jpg" alt="Dva snímky virtuálních kamer: vlevo pohled shora na stůl s rukou, kostkou a miskou, vpravo pohled ze strany" width="960" height="360" loading="lazy"><figcaption>Obr. 1 – Virtuální kamery <code>up</code> (shora) a <code>side</code> (ze strany) tak, jak je dostane politika. Skutečná kamera vidí texturu stolu, stíny, kabely a odlesky.</figcaption></figure>
+<h3>2. Kalibrace a spuštění</h3>
+<p>Follower zkalibrujte jako v oddílu <a href="#kalibrace">Kalibrace</a> (stačí jednou). Pak ve druhém terminálu:</p>
+<pre tabindex="0"><code>lerobot-rollout --strategy.type=base \
+    --policy.path=samarth-shukla6/act-svla-so101-pickplace \
+    --policy.pretrained_revision=c903979a9d73104d38f6daac5266962128a99219 --policy.device=cpu \
+    --robot.type=so101_follower --robot.port=/tmp/so101-follower --robot.id=sil_follower \
+    --robot.use_degrees=false \
+    --robot.cameras="{ up: {type: zmq, server_address: 127.0.0.1, port: 5555, camera_name: up, width: 640, height: 480, fps: 30}, side: {type: zmq, server_address: 127.0.0.1, port: 5555, camera_name: side, width: 640, height: 480, fps: 30} }" \
+    --task="Pick up the cube and place it in the bowl" --duration=20 --play_sounds=false</code></pre>
+<p><code>--policy.pretrained_revision</code> drží přesně tu verzi modelu, kterou jsme zkoušeli; bez něj LeRobot stáhne nejnovější. <b>Proč <code>--robot.use_degrees=false</code>.</b> Dataset té politiky je nahraný v jednotkách −100 až 100 (tak je zapisoval starší LeRobot), LeRobot 0.6.1 ale u SO-101 standardně posílá stupně. Se špatnými jednotkami dostane politika nesmyslné polohy kloubů. Názvy kamer (<code>up</code>, <code>side</code>) se musí shodovat s tím, co politika čeká; najdete je v <code>config.json</code> modelu.</p>
+<p><b>Co uvidíte.</b> Při prvním spuštění LeRobot stáhne model (asi 210 MB, bez tokenu) a váhy sítě ResNet18 pro torchvision (asi 45 MB). Pak <code>ZMQCamera(up@127.0.0.1:5555) connected</code>, ruka zapne motory a začne se hýbat. Hlášky „Record loop is running slower (… Hz) than the target FPS (30.0 Hz)“ jsou na procesoru normální. Po 20 sekundách „Duration limit reached (20s)“, ruka se vrátí do výchozí polohy a „Rollout finished“.</p>
+<p><b>Čas na procesoru.</b> ACT spočítá najednou 100 kroků (3,3 s pohybu) a během výpočtu ruka stojí. Na našem stroji se dvěma sdílenými jádry trval jeden výpočet 0,8 až 5 s. Na GitHub Actions se čtyřmi jádry LeRobot ohlásil zpomalení smyčky jen pětkrát až šestkrát za běh a celý běh s <code>--duration=20</code> trval 34 až 37 s (včetně načtení modelu a návratu ruky).</p>
+<p>Celé to i se záznamem pohybu kloubů a snímky kamer udělá jeden příkaz (spustí virtuální ruku, zkalibruje ji a pustí politiku): <code>python3 tools/sil/policy_trial.py --out /tmp/trial</code>. Výsledek je v <code>/tmp/trial/summary.md</code>.</p>
+<h3>Co čekat a kde jsou limity</h3>
+<p>Ve všech třech bězích se ruka hýbala celou dobu a chapadlo se otevíralo a zavíralo. Ve dvou bězích, kde jsme to měřili, se chapadlo z 26 až 29 cm od kostky během 3 až 4 s dostalo na 4,9 až 5,6 cm od ní a kleslo až 0,5 cm nad stůl. Kostku ale nevzalo a nepohnulo s ní (posun 0,0 cm). Pohyb je trhaný, protože ruka během každého výpočtu stojí. Proč úloha nevyjde:</p>
+<ul>
+<li>Politika se učila na skutečných fotkách z jiného stolu. Naše virtuální kamery stojí jinde a obraz je kreslený, takže politika vidí něco, co nikdy neviděla.</li>
+<li>Kalibrace se liší: například rotace zápěstí má v datasetu rozsah −92 až −20, u naší virtuální ruky vychází jinak. Stejné číslo tedy neznamená stejnou polohu.</li>
+<li>Fyzika je přiblížení (tření, pružnost a vůle serv chybí), kostka a miska leží jinde než v datasetu.</li>
+<li>Úspěch nebo neúspěch ve virtuální scéně neříká, jak politika pojede na skutečné ruce. Spolehlivou politiku pro svůj stůl získáte až z vlastních ukázek (<a href="#nahravani">lerobot-record</a> a <code>lerobot-train</code>).</li>
+</ul>
+<h3>Později na skutečné ruce</h3>
+<p>Stejný příkaz funguje se skutečnou rukou: změníte port a kamery (<code>type: opencv</code>). Dělejte to až ve chvíli, kdy ruka spolehlivě funguje při teleoperaci. Politika může ruku poslat kamkoli v rozsahu, který jste nastavili kalibrací, a to i rychle. Uvolněte pracovní prostor, prsty mimo chapadlo, ruku mějte u vypínače napájení a začněte s omezením <code>--robot.max_relative_target=5</code> (LeRobot pak cíl každého kroku přiblíží k aktuální poloze nejvýš o 5 jednotek kloubu). Děti jen pod dohledem dospělého. Náš průvodce v prohlížeči skutečnou ruku bez parametru <code>?real=1</code> vůbec nepustí; politiku na skutečné ruce spouštíte na vlastní odpovědnost.</p>
 </div>
 </div>
 </section>
 
 <section class="section" id="nahled">
 <div class="g rule">
-<div class="a1 mono">09 — Živý náhled</div>
+<div class="a1 mono">10 — Živý náhled</div>
 <div class="a4 prose">
 <h2>Virtuální ruku vidíte v prohlížeči</h2>
 <p>S přepínačem <code>--mirror</code> posílá program polohy kloubů a kostky přes WebSocket, jen na tomto počítači (127.0.0.1). Simulaci spusťte ze stažené kopie webu a otevřete ji s parametrem <code>?mirror=8765</code>:</p>
@@ -153,7 +195,7 @@ lerobot-record \
 
 <section class="section" id="limity">
 <div class="g rule">
-<div class="a1 mono">10 — Emulace</div>
+<div class="a1 mono">11 — Emulace</div>
 <div class="a4 prose">
 <h2>Co je skutečné a co emulované</h2>
 <table class="doc-t">
@@ -171,7 +213,7 @@ lerobot-record \
 
 <section class="section" id="windows">
 <div class="g rule">
-<div class="a1 mono">11 — Windows</div>
+<div class="a1 mono">12 — Windows</div>
 <div class="a4 prose">
 <h2>Windows: přes WSL, nebo com0com (neověřeno)</h2>
 <p>Windows nemá pseudoterminály. Nejjednodušší je spustit program i LeRobot ve WSL (Ubuntu), kde vše funguje jako na Linuxu. Nativně by šlo použít pár virtuálních COM portů z ovladače com0com a program upravit, aby četl jeden z nich; to jsme nezkoušeli.</p>
@@ -181,7 +223,7 @@ lerobot-record \
 
 <section class="section" id="problemy">
 <div class="g rule">
-<div class="a1 mono">12 — Když to nejde</div>
+<div class="a1 mono">13 — Když to nejde</div>
 <div class="a4 prose">
 <ul>
 <li class="fix"><b>„There is no status packet!“</b> Odpověď nepřišla do 50 ms. Na hodně vytíženém počítači se to občas stane (jako uvolněný kabel u skutečné ruky). Příkaz spusťte znovu, případně zavřete náročné programy.</li>
@@ -202,6 +244,11 @@ lerobot-record \
 <li>Hugging Face: <a href="https://github.com/huggingface/lerobot/tree/v0.6.1/src/lerobot/motors/feetech">LeRobot 0.6.1 – motors/feetech</a> (tabulka registrů, kalibrace, Apache-2.0).</li>
 <li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/il_robots">LeRobot – Getting started with real-world robots</a> (nahrávání a přehrání datasetu).</li>
 <li>Google DeepMind: <a href="https://mujoco.org/">MuJoCo</a>; model ruky z MuJoCo Menagerie (Apache-2.0).</li>
+<li>samarth-shukla6: <a href="https://huggingface.co/samarth-shukla6/act-svla-so101-pickplace">act-svla-so101-pickplace</a> (karta modelu, <code>config.json</code>, <code>train_config.json</code>; Apache-2.0; ověřená revize <code>c903979a9d73</code>).</li>
+<li>Hugging Face: <a href="https://huggingface.co/datasets/lerobot/svla_so101_pickplace">lerobot/svla_so101_pickplace</a> (<code>meta/info.json</code>, <code>meta/stats.json</code>; Apache-2.0).</li>
+<li>Hugging Face: <a href="https://github.com/huggingface/lerobot/tree/v0.6.1/src/lerobot/cameras/zmq">LeRobot 0.6.1 – cameras/zmq</a> a <a href="https://github.com/huggingface/lerobot/blob/v0.6.1/src/lerobot/scripts/lerobot_rollout.py">lerobot_rollout.py</a> (formát zpráv kamery ZMQ, spuštění politiky; Apache-2.0).</li>
+<li>Zhao a kol.: <a href="https://arxiv.org/abs/2304.13705">Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware</a> (ACT), 2023.</li>
+<li>ZeroMQ: <a href="https://rfc.zeromq.org/spec/23/">ZMTP 3.0</a> (protokol, který program mluví).</li>
 </ol>
 </div>
 </section>
