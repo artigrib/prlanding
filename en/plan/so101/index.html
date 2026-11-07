@@ -61,18 +61,18 @@
 <form id="plan-form" class="plan-form">
 <fieldset>
 <legend>What are you building</legend>
-<label class="plan-opt"><input type="radio" name="robot" value="pair" checked><span><b>Pair: leader + follower</b><small>The control arm (leader, always 7.4 V) and the working arm (follower). Teleoperation, data collection and learning. This is what the guide follows.</small></span></label>
-<label class="plan-opt"><input type="radio" name="robot" value="follower"><span><b>Follower only</b><small>No control arm. After calibration you can only move it by replaying recorded motion; you can add a leader later.</small></span></label>
+<label class="plan-opt"><input type="radio" name="robot" value="pair" checked><span><b>Pair: leader + follower</b><small>Choose this to control the arm and teach it. You move the control arm (leader) and the working arm (follower) copies it. This is what the guide follows.</small></span></label>
+<label class="plan-opt"><input type="radio" name="robot" value="follower"><span><b>Follower only</b><small>A cheaper start, but you can’t steer the arm. After calibration it only moves by replaying recorded motion. You can add a leader later.</small></span></label>
 </fieldset>
 <fieldset>
 <legend>Follower servos</legend>
-<label class="plan-opt"><input type="radio" name="fv" value="74v" checked><span><b>7.4 V (standard)</b><small>6× C001 (1/345), 5 V supply. The SO-ARM100 bill of materials finds them sufficient; both arms use the same supply type.</small></span></label>
-<label class="plan-opt"><input type="radio" name="fv" value="12v"><span><b>12 V (stronger)</b><small>6× C018 (1/345, 30 kg·cm), 12 V ≥5 A supply. The leader stays 7.4 V on 5 V: do not swap the supplies.</small></span></label>
+<label class="plan-opt"><input type="radio" name="fv" value="74v" checked><span><b>7.4 V (standard)</b><small>Standard, enough for the first motion and for learning (per the SO-ARM100 bill of materials). 6× C001 (1/345), 5 V supply, the same as the leader’s.</small></span></label>
+<label class="plan-opt"><input type="radio" name="fv" value="12v"><span><b>12 V (stronger)</b><small>30 kg·cm instead of ~19 for the C001. 6× C018 (1/345), 12 V ≥5 A supply. The leader stays 7.4 V on 5 V: don’t swap the supplies.</small></span></label>
 </fieldset>
 <fieldset>
 <legend>Printed parts</legend>
-<label class="plan-opt"><input type="radio" name="print" value="self" checked><span><b>I’ll print them myself</b><small>The STL files are freely available. PLA+.</small></span></label>
-<label class="plan-opt"><input type="radio" name="print" value="service"><span><b>Print service</b><small>Upload the STLs and get a quote.</small></span></label>
+<label class="plan-opt"><input type="radio" name="print" value="self" checked><span><b>I’ll print them myself</b><small>Cheapest if you have a 3D printer. The STL files are free to download. PLA+.</small></span></label>
+<label class="plan-opt"><input type="radio" name="print" value="service"><span><b>Print service</b><small>No printer of your own. Upload the STLs and get a quote. Ready-printed parts you can order are listed below the shopping list.</small></span></label>
 </fieldset>
 </form>
 <p class="plan-cfgnote" id="plan-cfgnote" hidden></p>
@@ -87,8 +87,10 @@
 <div class="a1 mono">02 — Servo variant</div>
 <div class="a4">
 <div class="plan-warn" role="note" aria-labelledby="warn-h">
-<h2 id="warn-h">Watch the variant</h2>
+<h2 id="warn-h">Before you order servos: check the variant</h2>
 <p>STS3215 servos look the same but differ in voltage and gear ratio. A wrong variant only shows during assembly: the leader is stiff or sags, and a 12 V supply destroys a 7.4 V servo. The gear ratio is only on the label and the listing, and listings can be wrong.</p>
+<details class="plan-more" id="variant-more" open>
+<summary>Variant table, how to check it, and a listing checker</summary>
 <div id="variant-table"></div>
 <h3>How to check the variant</h3>
 <ol id="variant-how"></ol>
@@ -100,9 +102,10 @@
 <select id="chk-exp"></select>
 <label for="chk-text">Listing text</label>
 <textarea id="chk-text" rows="3" placeholder="e.g. Feetech STS3215 C001 7.4V 1/345"></textarea>
-<button type="button" class="btn btn-o" id="chk-btn">Check</button>
+<button type="button" class="btn btn-o" id="chk-btn">Check the listing</button>
 <p id="chk-out" class="plan-chk-out" aria-live="polite"></p>
 </div>
+</details>
 </div>
 </div>
 </div>
@@ -160,13 +163,13 @@
 <h2>We are not the seller</h2>
 <ul>
 <li>You buy the parts directly from the suppliers. The seller is always the shop: you pay it, and it owes you the warranty and the right of withdrawal. We don’t order, don’t pay and can’t see your orders.</li>
-<li>Prices and stock change every week. Each line shows the date it was checked and the source status (verified, carried, unverified, estimate). Check the price at the shop before you order.</li>
+<li>Prices and stock change every week. Each line shows the date it was checked and the source status (verified, copied from source, unverified, estimate). Check the price at the shop before you order.</li>
 <li>The landed cost is a range: goods incl. VAT, a possible switch to Czech 21 % VAT at EU shops (up to +1.7 %) and our shipping estimate. The exchange rate is a fixed assumption of <span id="fx"></span> CZK/€.</li>
 <li>Always check the servo variant on the listing and on the label. We can’t vouch for a shop’s listing, but we’ll gladly fix an error in the plan.</li>
 <li>No link is an affiliate link. If that ever changes, we’ll say so right next to the link.</li>
 </ul>
 <p class="src">Data: <a href="../../../data/components/so101.json">data/components/so101.json</a> · SO-101 files: <a href="https://github.com/TheRobotStudio/SO-ARM100">TheRobotStudio/SO-ARM100</a> (Apache-2.0).</p>
-<p>We compare ready-made kits from shops <a href="#plan-kits">at the top, next to the configuration</a>. On the <a href="../../../en/kit/so101/">SO-101 kit</a> page you can leave your email in case we ever offer our own kit.</p>
+<p>We compare ready-made kits from shops <a href="#plan-kits">at the top, next to the configuration</a>.</p>
 </div>
 </div>
 </section>

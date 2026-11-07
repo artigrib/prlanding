@@ -25,18 +25,18 @@
 <form id="plan-form" class="plan-form">
 <fieldset>
 <legend>Co stavíte</legend>
-<label class="plan-opt"><input type="radio" name="robot" value="pair" checked><span><b>Pár: leader + follower</b><small>Ovládací ruka (leader, vždy 7,4 V) a výkonná ruka (follower). Teleoperace, sběr dat a učení. Tak postupuje návod.</small></span></label>
-<label class="plan-opt"><input type="radio" name="robot" value="follower"><span><b>Jen follower</b><small>Bez ovládací ruky. Po kalibraci ruku rozhýbete jen přehráním nahraného pohybu; leader můžete dokoupit později.</small></span></label>
+<label class="plan-opt"><input type="radio" name="robot" value="pair" checked><span><b>Pár: leader + follower</b><small>Vyberte, pokud chcete ruku ovládat a učit. Ovládací rukou (leader) hýbete vy a výkonná ruka (follower) ji kopíruje. Podle toho postupuje návod.</small></span></label>
+<label class="plan-opt"><input type="radio" name="robot" value="follower"><span><b>Jen follower</b><small>Levnější začátek, ale ruku nebudete ovládat. Po kalibraci ji rozhýbete jen přehráním nahraného pohybu. Leader můžete dokoupit později.</small></span></label>
 </fieldset>
 <fieldset>
 <legend>Serva followeru</legend>
-<label class="plan-opt"><input type="radio" name="fv" value="74v" checked><span><b>7,4 V (standard)</b><small>6× C001 (1/345), zdroj 5 V. Kusovník SO-ARM100 je považuje za dostatečná; obě ruce mají stejný zdroj.</small></span></label>
-<label class="plan-opt"><input type="radio" name="fv" value="12v"><span><b>12 V (silnější)</b><small>6× C018 (1/345, 30 kg·cm), zdroj 12 V ≥5 A. Leader zůstává 7,4 V se zdrojem 5 V: zdroje nezaměňte.</small></span></label>
+<label class="plan-opt"><input type="radio" name="fv" value="74v" checked><span><b>7,4 V (standard)</b><small>Standard, stačí na první pohyb i učení (podle kusovníku SO-ARM100). 6× C001 (1/345), zdroj 5 V, stejný jako u leaderu.</small></span></label>
+<label class="plan-opt"><input type="radio" name="fv" value="12v"><span><b>12 V (silnější)</b><small>30 kg·cm místo ~19 u C001. 6× C018 (1/345), zdroj 12 V ≥5 A. Leader zůstává 7,4 V se zdrojem 5 V: zdroje nezaměňte.</small></span></label>
 </fieldset>
 <fieldset>
 <legend>Tištěné díly</legend>
-<label class="plan-opt"><input type="radio" name="print" value="self" checked><span><b>Vytisknu si sám</b><small>Soubory STL jsou volně k dispozici, PLA+.</small></span></label>
-<label class="plan-opt"><input type="radio" name="print" value="service"><span><b>Tiskový servis</b><small>Nahrajete STL a necháte si udělat nabídku.</small></span></label>
+<label class="plan-opt"><input type="radio" name="print" value="self" checked><span><b>Vytisknu si sám</b><small>Nejlevnější, pokud máte 3D tiskárnu. Soubory STL jsou volně k dispozici, PLA+.</small></span></label>
+<label class="plan-opt"><input type="radio" name="print" value="service"><span><b>Tiskový servis</b><small>Bez vlastní tiskárny. Nahrajete STL a necháte si udělat nabídku. Hotové vytištěné díly k objednání najdete pod nákupním seznamem.</small></span></label>
 </fieldset>
 </form>
 <p class="plan-cfgnote" id="plan-cfgnote" hidden></p>
@@ -51,8 +51,10 @@
 <div class="a1 mono">02 — Varianta serv</div>
 <div class="a4">
 <div class="plan-warn" role="note" aria-labelledby="warn-h">
-<h2 id="warn-h">Pozor na variantu</h2>
+<h2 id="warn-h">Než objednáte serva: zkontrolujte variantu</h2>
 <p>Serva STS3215 vypadají stejně, ale liší se napětím a převodem. Špatná varianta se pozná až při sestavení: leader jde ztuha nebo se propadá, 12V zdroj zničí 7,4V servo. Převod je jen na štítku a v inzerátu a inzeráty bývají chybné.</p>
+<details class="plan-more" id="variant-more" open>
+<summary>Tabulka variant, jak je ověřit a kontrola inzerátu</summary>
 <div id="variant-table"></div>
 <h3>Jak variantu ověřit</h3>
 <ol id="variant-how"></ol>
@@ -64,9 +66,10 @@
 <select id="chk-exp"></select>
 <label for="chk-text">Text inzerátu</label>
 <textarea id="chk-text" rows="3" placeholder="Např. Feetech STS3215 C001 7.4V 1/345"></textarea>
-<button type="button" class="btn btn-o" id="chk-btn">Zkontrolovat</button>
+<button type="button" class="btn btn-o" id="chk-btn">Zkontrolovat inzerát</button>
 <p id="chk-out" class="plan-chk-out" aria-live="polite"></p>
 </div>
+</details>
 </div>
 </div>
 </div>
@@ -124,13 +127,13 @@
 <h2>Nejsme prodejce</h2>
 <ul>
 <li>Díly kupujete přímo u dodavatelů. Prodávajícím je vždy daný obchod: u něj platíte, od něj máte záruku a právo na vrácení. My neobjednáváme, neplatíme a nevidíme vaše objednávky.</li>
-<li>Ceny a dostupnost se mění každý týden. U každé položky uvádíme datum ověření a stav zdroje (ověřeno, převzato, neověřeno, odhad). Před objednáním cenu zkontrolujte u obchodu.</li>
+<li>Ceny a dostupnost se mění každý týden. U každé položky uvádíme datum ověření a stav zdroje (ověřeno, převzato ze zdroje, neověřeno, odhad). Před objednáním cenu zkontrolujte u obchodu.</li>
 <li>Cena s dopravou je rozpětí: zboží s DPH, u obchodů z EU možné navýšení DPH na českých 21 % (až +1,7 %) a doprava podle našeho odhadu. Kurz je pevný předpoklad <span id="fx"></span> Kč/€.</li>
 <li>Variantu serv vždy ověřte v inzerátu i na štítku. Za chybu v inzerátu obchodu neručíme, ale rádi ji opravíme v plánu.</li>
 <li>Odkazy nejsou affiliate. Kdyby se to někdy změnilo, napíšeme to přímo u odkazu.</li>
 </ul>
 <p class="src">Zdroj dat: <a href="{root}data/components/so101.json">data/components/so101.json</a> · soubory SO-101: <a href="https://github.com/TheRobotStudio/SO-ARM100">TheRobotStudio/SO-ARM100</a> (Apache-2.0).</p>
-<p>Hotové sady od obchodů porovnáváme <a href="#plan-kits">nahoře u konfigurace</a>. Na stránce <a href="{root}sada/so101/">Sada SO-101</a> si můžete nechat poslat upozornění, kdybychom vlastní sadu nabídli my.</p>
+<p>Hotové sady od obchodů porovnáváme <a href="#plan-kits">nahoře u konfigurace</a>.</p>
 </div>
 </div>
 </section>

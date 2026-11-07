@@ -16,7 +16,7 @@
 <p class="lead">Postavte si pár rukou SO-101 (ovládací leader a výkonnou follower) od vybalení po první pohyb. Sedm etap, u každé odhad času, náročnost, kontrolní seznam a co dělat, když to nejde.</p>
 <p class="doc-note"><i aria-hidden="true"></i><span><b>Jak číst tento návod.</b> Postup, šrouby a příkazy přebíráme z <a href="https://huggingface.co/docs/lerobot/so101">oficiálního návodu LeRobot</a> a z <a href="https://github.com/TheRobotStudio/SO-ARM100">repozitáře SO-ARM100</a> (stav k 29. 10. 2026). Doplňky, které v oficiálních zdrojích nejsou, označujeme <b>naše poznámka</b>. Všechny časy jsou <b>odhady</b>: zdokumentovanou vlastní stavbu zatím nemáme, upřesníme je podle ní. Když se tento návod a oficiální dokumentace liší, platí oficiální dokumentace.</span></p>
 <ol class="toc" aria-label="Obsah">
-<li><a href="#prehled">Přehled</a></li><li><a href="#e0">0 Před stavbou</a></li><li><a href="#e1">1 Tisk</a></li><li><a href="#e2">2 ID serv</a></li><li><a href="#e3">3 Mechanika</a></li><li><a href="#e4">4 Elektronika</a></li><li><a href="#e5">5 První pohyb</a></li><li><a href="#e6">6 Simulace a realita</a></li><li><a href="#zdroje">Zdroje</a></li>
+<li><a href="#prehled">Přehled</a></li><li><a href="#e0">0 Před stavbou</a></li><li><a href="#e1">1 Tisk</a></li><li><a href="#e2">2 ID serv</a></li><li><a href="#e3">3 Mechanika</a></li><li><a href="#e4">4 Elektronika</a></li><li><a href="#e5">5 První pohyb</a></li><li><a href="#e6">6 Simulace a realita</a></li><li><a href="#problemy">Když něco nejde</a></li><li><a href="#zdroje">Zdroje</a></li>
 </ol>
 <p class="doc-act"><a class="btn btn-o" href="{root}navody/so101-sestaveni/kontrolni-seznam/">Kontrolní seznam k vytištění <span aria-hidden="true">→</span></a><a class="btn btn-o" href="{root}sim/so101/nastaveni/">Nastavení serv nanečisto <span aria-hidden="true">→</span></a></p>
 </div>
@@ -161,7 +161,7 @@ lerobot-setup-motors \
     --teleop.type=so101_leader \
     --teleop.port=/dev/ttyACM1     # port leaderu z lerobot-find-port</code></pre>
 <p class="src">LeRobot před zápisem ID ověří jen to, že mluví se servem STS3215; napětí ani převod nepozná. Variantu proto hlídejte podle popisků z etapy 0.</p>
-<p>Skript vás vyzve „Connect the controller board to the 'gripper' motor only and press enter.“ Připojte <b>jen jedno servo</b>, bez dalšího serva v řetězu. Začíná se chapadlem (ID 6) a končí otočením základny (ID 1).<sup><a href="#zdroje">1</a></sup></p>
+<p>Skript vás vyzve „Connect the controller board to the 'gripper' motor only and press enter.“ Připojte <b>jen jedno servo</b>, bez dalšího serva v řetězu. Začíná se chapadlem (ID 6) a končí otočením základny (ID 1).<sup><a href="#zdroje">1</a></sup> Naše poznámka: zatímco skript čeká na Enter, můžete zdroj vytáhnout a servo přepojit bez napětí; před stisknutím Enteru zdroj zase zapojte.</p>
 <h3>Kontrolní seznam</h3>
 <ul class="chk">
 <li>LeRobot nainstalovaný, port obou desek zapsaný.</li>
@@ -374,6 +374,60 @@ lerobot-calibrate \
 </div>
 </section>
 
+<section class="section" id="problemy">
+<div class="g rule">
+<div class="a1 mono">Když něco nejde</div>
+<div class="a4 prose">
+<h2>Nejčastější potíže: příznak, příčina, řešení</h2>
+<p>Přehled potíží, na které stavitel narazí nejčastěji, seřazený podle toho, kde se projeví. Hlášky LeRobotu v uvozovkách jsou přesné texty z verze 0.6.1.<sup><a href="#zdroje">7</a></sup> Kde už řešení popisuje některá etapa, odkazujeme na ni. Potíže při zkoušce proti virtuální ruce řeší návod <a href="{root}navody/so101-lerobot-simulace/#problemy">Než dorazí díly</a>.</p>
+<p class="doc-note"><i aria-hidden="true"></i><span><b>Bezpečnost napájení.</b> Než přepojíte kabel serva nebo desky, vytáhněte zdroj ze zásuvky. Číslo 7,4 V v názvu serva není napětí zdroje: kusovník SO-101 napájí tato serva zdrojem 5 V, 12V serva followeru zdrojem 12 V (aspoň 5 A).<sup><a href="#zdroje">2</a></sup> Naše poznámka: 12V zdroj nikdy nepřipojujte k ruce se servy 7,4 V. Baterie (například LiPo) kusovník nepoužívá a tento návod je nepopisuje; poškozený nebo zkratovaný LiPo článek může začít hořet. Používejte síťový zdroj s označením CE.</span></p>
+
+<h3>Instalace LeRobotu</h3>
+<ul>
+<li class="fix"><b>pip nenajde <code>lerobot==0.6.1</code>.</b> Příčina: starší Python; LeRobot 0.6.1 vyžaduje Python 3.12 nebo novější.<sup><a href="#zdroje">3</a></sup> Řešení: založte prostředí s Pythonem 3.12 podle <a href="#instalace">instalace v etapě 2</a>.</li>
+<li class="fix"><b>Hláška „'feetech-servo-sdk' is required but not installed“.</b> Příčina: LeRobot je nainstalovaný bez doplňku pro serva Feetech. Řešení: <code>pip install "lerobot[feetech,core-scripts]==0.6.1"</code> v aktivovaném prostředí.<sup><a href="#zdroje">7</a></sup></li>
+<li class="fix"><b>Příkaz <code>lerobot-find-port</code> nebo <code>lerobot-setup-motors</code> neexistuje.</b> Příčina (naše poznámka): v novém okně terminálu není aktivované prostředí, do kterého jste LeRobot instalovali. Řešení: <code>source .venv-lerobot/bin/activate</code>, na Windows <code>.venv-lerobot\Scripts\activate</code>.</li>
+</ul>
+
+<h3>Port a USB</h3>
+<ul>
+<li class="fix"><b>Hláška „Could not connect on port '…'. Make sure you are using the correct port.“</b> Příčina: v příkazu je jiný port, než má deska, deska není připojená, nebo (na Linuxu) nemáte k portu přístup, viz další bod. LeRobot tuto hlášku vypíše při každé chybě otevření portu; vlastní příčina, například „Permission denied“, stojí ve výpisu nad ní. Řešení: spusťte znovu <code>lerobot-find-port</code> a port opište přesně.<sup><a href="#zdroje">7</a></sup> Naše poznámka: na Linuxu se číslo <code>/dev/ttyACM…</code> může po odpojení a připojení desek změnit; zjistěte ho znovu.</li>
+<li class="fix"><b>Na Linuxu „Permission denied“ u <code>/dev/ttyACM0</code></b> (hláška operačního systému). Příčina: uživatel nemá přístup k portu. Řešení: <code>sudo chmod 666 /dev/ttyACM0</code> (a stejně pro druhou desku).<sup><a href="#zdroje">1</a></sup> Naše poznámka: po novém připojení desky může být potřeba příkaz zopakovat.</li>
+<li class="fix"><b><code>lerobot-find-port</code> hlásí „Could not detect the port. No difference was found“.</b> Příčina: počítač desku vůbec nevidí.<sup><a href="#zdroje">7</a></sup> Řešení: použijte datový kabel USB-C (plán nákupu ho vede jako datový; naše poznámka: kabel jen na nabíjení datové vodiče nemá) a na Windows doinstalujte ovladač převodníku, viz <a href="#e2">poznámka k Windows v etapě 2</a>.</li>
+<li class="fix"><b><code>lerobot-find-port</code> hlásí „Could not detect the port. More than one port was found“.</b> Příčina: mezi oběma výpisy se změnil víc než jeden port, například jste odpojili obě desky najednou. Řešení: příkaz spusťte znovu a odpojte jen jednu desku.<sup><a href="#zdroje">7</a></sup></li>
+<li class="fix"><b>Při teleoperaci se hýbe špatná ruka nebo nic.</b> Příčina: prohozené porty followeru a leaderu. Oficiální příklady mají u obou rukou stejný port, každá ruka ale má svůj. Řešení: porty z etapy 2, viz <a href="#e5">etapa 5</a>.</li>
+</ul>
+
+<h3>ID serv a rychlost sběrnice</h3>
+<ul>
+<li class="fix"><b>Hláška „Motor 'gripper' (model 'sts3215') was not found. Make sure it is connected.“</b> Příčina: servo neodpovídá. Řešení: zkontrolujte zdroj (USB serva nenapájí), kabel USB, 3pinový kabel a propojky Waveshare na kanálu B, jak to popisuje <a href="#e2">etapa 2</a>.<sup><a href="#zdroje">1, 7</a></sup></li>
+<li class="fix"><b>Hláška „Found one motor on baudrate=… with id=… but it has a model number … different than the one expected“.</b> Příčina: k desce je připojené servo jiného modelu než STS3215; konfigurace SO-101 v LeRobotu počítá na všech šesti kloubech se STS3215.<sup><a href="#zdroje">7</a></sup> Řešení: připojte správné servo, vždy jen jedno.</li>
+<li class="fix"><b>Serva z jiného robota nebo s neznámou rychlostí sběrnice.</b> Příčina: jiné ID a jiná rychlost sběrnice (baudrate) než u SO-101.<sup><a href="#zdroje">1</a></sup> Řešení: projděte s nimi <code>lerobot-setup-motors</code>. Skript zkusí všechny rychlosti, které servo podporuje, najde jediné připojené servo a zapíše mu ID i výchozí rychlost LeRobotu 1 000 000 Bd.<sup><a href="#zdroje">7</a></sup> Proto musí být připojené vždy jen jedno servo.</li>
+<li class="fix"><b>Po sestavení hláška „motor check failed“ se seznamem „Missing motor IDs“.</b> Příčina: servo s tímto ID v řetězu neodpovídá; nejčastěji uvolněný kabel, který odřízne i všechna serva za sebou (<a href="#e4">etapa 4</a>), nebo servo, kterému se ID nezapsalo. Řešení: zkontrolujte konektory u chybějícího ID; když nepomůže, nastavte to servo samotné znovu (<a href="#e2">etapa 2</a>). Seznam „Motors with incorrect model numbers“ znamená servo jiného modelu než STS3215.<sup><a href="#zdroje">7</a></sup></li>
+</ul>
+
+<h3>Varianta serva a převod</h3>
+<ul>
+<li class="fix"><b>LeRobot servo přijal, ale kloub se chová jinak než ostatní</b> (leader jde ztuha nebo sám padá). Příčina: zaměněná varianta. LeRobot kontroluje jen číslo modelu serva, a to je u STS3215 jedno.<sup><a href="#zdroje">7</a></sup> Naše poznámka: všechny varianty STS3215 se podle všeho hlásí stejným číslem modelu, napětí ani převod tedy LeRobot nerozliší. Řešení: porovnejte popisky serv s <a href="#e0">tabulkou převodů v etapě 0</a> a vyměňte servo; podrobnosti u leaderu v <a href="#e3">etapě 3</a>. Inzerát můžete před objednáním zkontrolovat v <a href="{root}plan/so101/">plánu nákupu</a>.</li>
+<li class="fix"><b>V jedné ruce jsou serva 12 V i 7,4 V.</b> Příčina: záměna při vybalení. Řešení: zdroj hned vytáhněte a serva roztřiďte podle popisků. Serva 12 V a 7,4 V se nesmí míchat na jedné sběrnici ani na jednom zdroji.<sup><a href="#zdroje">2</a></sup></li>
+</ul>
+
+<h3>Napájení</h3>
+<ul>
+<li class="fix"><b>Zdroj neodpovídá servům</b> (12 V u ruky se servy 7,4 V, nebo 5 V u followeru 12 V). Příčina: zdroje obou rukou se snadno zamění, oba doporučené mají konektor 5,5 × 2,1 mm. Řešení: zdroj vytáhněte a zapojte ten, který patří k servům dané ruky: 5 V (≥ 4 A) pro 7,4V serva, 12 V (≥ 5 A) jen pro follower 12 V.<sup><a href="#zdroje">2</a></sup> Naše poznámka: zdroje si popište stejně jako ruce (L/F).</li>
+<li class="fix"><b>Konektor nesedí, nebo serva při zátěži slábnou a restartují se.</b> Řešení popisuje <a href="#e4">etapa 4</a>.</li>
+</ul>
+
+<h3>Kalibrace</h3>
+<ul>
+<li class="fix"><b>Hláška „Mismatch between calibration values in the motor and the calibration file or no calibration file found“.</b> Příčina: ruka pod tímto ID ještě kalibraci nemá, hodnoty v servech se liší od uloženého souboru, nebo jste použili jiné <code>--robot.id</code> / <code>--teleop.id</code> než při kalibraci. Řešení: používejte stále stejné ID. Když kalibrace pro ID existuje, LeRobot nabídne „Press ENTER to use provided calibration file…“; písmeno <code>c</code> a Enter spustí novou kalibraci.<sup><a href="#zdroje">7</a></sup></li>
+<li class="fix"><b>Hláška „Some motors have the same min and max values“.</b> Příčina: Enter jste stiskli dřív, než se vypsaným kloubem pohnulo. Řešení: kalibraci zopakujte a každým kloubem projeďte celý rozsah, teprve pak Enter.<sup><a href="#zdroje">1, 7</a></sup></li>
+<li class="fix"><b>Kloub jde na opačnou stranu, jen kousek, nebo ruka při kalibraci klesne.</b> Řešení popisuje <a href="#e5">etapa 5</a>.</li>
+</ul>
+</div>
+</div>
+</section>
+
 <section class="section" id="zdroje">
 <div class="g rule">
 <div class="a1 mono">Zdroje</div>
@@ -384,6 +438,7 @@ lerobot-calibrate \
 <li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/il_robots">LeRobot – Getting started with real-world robots</a> (teleoperace). Ověřeno 29. 10. 2026.</li>
 <li>Zdrojový kód LeRobot: <a href="https://github.com/huggingface/lerobot/blob/main/src/lerobot/robots/so_follower/so_follower.py">so_follower.py</a> a <a href="https://github.com/huggingface/lerobot/blob/main/src/lerobot/motors/motors_bus.py">motors_bus.py</a> (kalibrace, omezení chapadla). Větev main, 29. 10. 2026.</li>
 <li>Waveshare a Eckstein: <a href="https://www.waveshare.com/wiki/Bus_Servo_Adapter_(A)">Bus Servo Adapter (A), wiki</a> a <a href="https://eckstein-shop.de/WaveShare-Serial-Bus-Servo-Driver-Board-for-ST-SC-Serial-Bus-Servos-EN">Serial Bus Servo Driver Board u obchodu Eckstein</a> (napájecí zdířka 5,5 × 2,1 mm, vstup 9–12,6 V). Ověřeno 30. 10. 2026.</li>
+<li>Zdrojový kód LeRobot 0.6.1 (tag v0.6.1): <a href="https://github.com/huggingface/lerobot/blob/v0.6.1/src/lerobot/motors/feetech/feetech.py">feetech.py</a>, <a href="https://github.com/huggingface/lerobot/blob/v0.6.1/src/lerobot/motors/motors_bus.py">motors_bus.py</a>, <a href="https://github.com/huggingface/lerobot/blob/v0.6.1/src/lerobot/robots/so_follower/so_follower.py">so_follower.py</a>, <a href="https://github.com/huggingface/lerobot/blob/v0.6.1/src/lerobot/teleoperators/so_leader/so_leader.py">so_leader.py</a> a <a href="https://github.com/huggingface/lerobot/blob/v0.6.1/src/lerobot/scripts/lerobot_find_port.py">lerobot_find_port.py</a> (chybové hlášky, hledání serva a rychlosti sběrnice, kalibrace). Ověřeno 7. 11. 2026.</li>
 </ol>
 </div>
 </section>

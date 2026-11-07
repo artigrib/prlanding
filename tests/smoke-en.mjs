@@ -141,7 +141,9 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
     await p.check('input[name=robot][value=pair]');
     await noCzech(p, e);
     if (!/^\d+–\d+ €$/.test((await p.locator('[data-testid=plan-total-eur]').innerText()).trim())) e.push('total');
-    if (!/Watch the variant/.test((await p.locator('.plan-warn h2').innerText()).replace(/\s+/g, ' '))) e.push('variant box heading');
+    if (!/Before you order servos: check the variant/.test((await p.locator('.plan-warn h2').innerText()).replace(/\s+/g, ' '))) e.push('variant box heading');
+    if (!/^Go to the shopping list \(\d+ shops?\)/.test((await p.locator('[data-testid=plan-go]').innerText()).replace(/\s/g, ' '))) e.push('shopping-list button');
+    if ((await p.locator('#variant-more').evaluate(d => d.open)) !== (vp.width >= 900)) e.push('variant details open state');
     if (!(await p.locator('.plan-flags .pb-no').count())) e.push('no "not recommended" source shown for the pair');
     if ((await p.locator('#plan-arrivals a[href*="/en/guides/so101-assembly/#e"]').count()) !== 6) e.push('arrival links to the English guide stages');
     if (!/en\/guides\/so101-assembly\/$/.test(await p.locator('[data-testid=plan-guide-link]').evaluate(a => a.href))) e.push('build-time guide link');

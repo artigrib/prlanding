@@ -772,3 +772,6 @@ code.call,.path code,.step-k code,.tl-k,.tl-meta code{font-family:var(--mono);fo
 @media (max-width:420px){.reg-f{grid-template-columns:minmax(0,1fr)}}
 .reg-na{color:var(--mute)}
 .reg-b-thin{border-style:dashed;color:var(--ink-2)}
+/* "SO-101" in headings and buttons never breaks at its hyphen (app.js typo()); last in the file so .hero-h1 span{display:block} cannot win */
+span.nwt{display:inline}
+span.nw{display:inline;white-space:nowrap}
