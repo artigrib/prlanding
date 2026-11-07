@@ -9851,7 +9851,7 @@
    "software": "CC-BY-SA-4.0",
    "docs": "CC-BY-SA-4.0"
   },
-  "rights_class": "copyleft",
+  "rights_class": "unknown",
   "printed_share": "high",
   "actuation": "2x 28BYJ-48 steppers + ULN2003; 2 W 445 nm laser diode",
   "control": "Arduino Nano",
@@ -9880,7 +9880,8 @@
   "unverified": [
    "Thingiverse CAD licence"
   ],
-  "rights_note": "CC-BY-SA-4.0 is the repo LICENSE; the CAD/STL files are hosted on Thingiverse (thing:2710048), whose licence field was not read"
+  "rights_class_census": "copyleft",
+  "rights_note": "CC-BY-SA-4.0 is the repo LICENSE and the README claims it for \"this work\", but the CAD/STL files are hosted only on Thingiverse (thing:2710048), whose licence field was not read; the hardware licence is not established"
  },
  {
   "id": "telebot",
