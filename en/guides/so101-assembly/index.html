@@ -51,7 +51,7 @@
 <p class="lead">Build a pair of SO-101 arms (the leader you guide by hand and the follower that copies it) from unboxing to first motion. Seven stages, each with a time estimate, difficulty, checklist and what to do when it doesn’t work.</p>
 <p class="doc-note"><i aria-hidden="true"></i><span><b>How to read this guide.</b> Steps, screws and commands come from the <a href="https://huggingface.co/docs/lerobot/so101">official LeRobot guide</a> and the <a href="https://github.com/TheRobotStudio/SO-ARM100">SO-ARM100 repository</a> (as of 29 Oct 2026). Additions that are not in the official sources are marked <b>our note</b>. All times are <b>estimates</b>: we don’t have a documented build of our own yet and will update them from it. Where this guide and the official documentation differ, the official documentation wins.</span></p>
 <ol class="toc" aria-label="Contents">
-<li><a href="#overview">Overview</a></li><li><a href="#e0">0 Before you build</a></li><li><a href="#e1">1 Printing</a></li><li><a href="#e2">2 Servo IDs</a></li><li><a href="#e3">3 Mechanics</a></li><li><a href="#e4">4 Electronics</a></li><li><a href="#e5">5 First motion</a></li><li><a href="#e6">6 Sim and real</a></li><li><a href="#sources">Sources</a></li>
+<li><a href="#overview">Overview</a></li><li><a href="#e0">0 Before you build</a></li><li><a href="#e1">1 Printing</a></li><li><a href="#e2">2 Servo IDs</a></li><li><a href="#e3">3 Mechanics</a></li><li><a href="#e4">4 Electronics</a></li><li><a href="#e5">5 First motion</a></li><li><a href="#e6">6 Sim and real</a></li><li><a href="#troubleshooting">Troubleshooting</a></li><li><a href="#sources">Sources</a></li>
 </ol>
 <p class="doc-act"><a class="btn btn-o" href="../../../en/guides/so101-assembly/checklist/">Printable checklist <span aria-hidden="true">→</span></a><a class="btn btn-o" href="../../../sim/so101/nastaveni/?lang=en">Servo setup dry run <span aria-hidden="true">→</span></a></p>
 </div>
@@ -420,6 +420,59 @@ lerobot-calibrate \
 </div>
 </section>
 
+<section class="section" id="troubleshooting">
+<div class="g rule">
+<div class="a1 mono">Troubleshooting</div>
+<div class="a4 prose">
+<h2>Common problems: symptom, cause, fix</h2>
+<p>The problems builders run into most often, grouped by where they show up. Messages in quotes are the exact text printed by LeRobot 0.6.1.<sup><a href="#sources">7</a></sup> Where a stage already covers the fix, we link to it. Problems with the virtual-arm dry run are covered in <a href="../../../en/guides/so101-lerobot-simulation/#problemy">Before the parts arrive</a>.</p>
+<p class="doc-note"><i aria-hidden="true"></i><span><b>Power safety.</b> Unplug the power supply before you reconnect any servo or board cable. The 7.4 V in a servo’s name is not the supply voltage: the SO-101 bill of materials powers these servos from a 5 V supply, and the 12 V follower servos from a 12 V supply (at least 5 A).<sup><a href="#sources">2</a></sup> Never connect a 12 V supply to an arm with 7.4 V servos. The bill of materials uses no batteries (such as LiPo) and this guide does not cover them; a damaged or short-circuited LiPo cell can catch fire. Use a CE-marked mains adapter.</span></p>
+
+<h3>Installing LeRobot</h3>
+<ul>
+<li class="fix"><b>pip can’t find <code>lerobot==0.6.1</code>.</b> Cause: an older Python; LeRobot 0.6.1 requires Python 3.12 or newer.<sup><a href="#sources">3</a></sup> Fix: create an environment with Python 3.12 as in the <a href="#install">installation step in stage 2</a>.</li>
+<li class="fix"><b>Message “'feetech-servo-sdk' is required but not installed”.</b> Cause: LeRobot was installed without the Feetech servo extra. Fix: <code>pip install "lerobot[feetech,core-scripts]==0.6.1"</code> in the activated environment.<sup><a href="#sources">7</a></sup></li>
+<li class="fix"><b>The command <code>lerobot-find-port</code> or <code>lerobot-setup-motors</code> is not found.</b> Cause (our note): the new terminal window does not have the environment you installed LeRobot into activated. Fix: <code>source .venv-lerobot/bin/activate</code>, on Windows <code>.venv-lerobot\Scripts\activate</code>.</li>
+</ul>
+
+<h3>Port and USB</h3>
+<ul>
+<li class="fix"><b>Message “Could not connect on port '…'. Make sure you are using the correct port.”</b> Cause: the command names a different port from the board’s. Fix: run <code>lerobot-find-port</code> again and copy the port exactly.<sup><a href="#sources">7</a></sup> Our note: on Linux the <code>/dev/ttyACM…</code> number can change after you unplug and replug the boards; look it up again.</li>
+<li class="fix"><b>“Permission denied” on <code>/dev/ttyACM0</code> (Linux).</b> Cause: your user has no access to the port. Fix: <code>sudo chmod 666 /dev/ttyACM0</code> (and the same for the second board).<sup><a href="#sources">1</a></sup> Our note: you may need to repeat it after replugging the board.</li>
+<li class="fix"><b><code>lerobot-find-port</code> finds no port after you unplug the board.</b> Cause: the computer doesn’t see the board at all. Fix: use a USB-C data cable (the buying plan lists a data cable; our note: a charge-only cable has no data wires) and on Windows install the USB–serial driver, see the <a href="#e2">Windows note in stage 2</a>.</li>
+<li class="fix"><b>During teleoperation the wrong arm moves, or nothing.</b> Cause: the follower and leader ports are swapped. The official examples use the same port for both arms, but each arm has its own. Fix: use the ports from stage 2, see <a href="#e5">stage 5</a>.</li>
+</ul>
+
+<h3>Servo IDs and bus speed</h3>
+<ul>
+<li class="fix"><b>Message “Motor 'gripper' (model 'sts3215') was not found. Make sure it is connected.”</b> Cause: the servo doesn’t answer. Fix: check the power supply (USB doesn’t power the servos), the USB cable, the 3-pin cable and the Waveshare jumpers on channel B, as <a href="#e2">stage 2</a> describes.<sup><a href="#sources">1, 7</a></sup></li>
+<li class="fix"><b>Message “Found one motor on baudrate=… with id=… but it has a model number … different than the one expected”.</b> Cause: the servo on the board is not an STS3215; LeRobot’s SO-101 configuration expects an STS3215 on all six joints.<sup><a href="#sources">7</a></sup> Fix: connect the right servo, always only one.</li>
+<li class="fix"><b>Servos from another robot, or with an unknown bus speed.</b> Cause: an ID and bus speed (baud rate) different from the SO-101’s.<sup><a href="#sources">1</a></sup> Fix: run them through <code>lerobot-setup-motors</code>. The script tries every speed the servo supports, finds the single connected servo and writes its ID and LeRobot’s default speed of 1,000,000 baud.<sup><a href="#sources">7</a></sup> That is why only one servo may be connected at a time.</li>
+<li class="fix"><b>After assembly, a “motor check failed” message listing “Missing motor IDs”.</b> Cause: the servo with that ID in the chain doesn’t answer; most often a loose cable, which also cuts off every servo after it (<a href="#e4">stage 4</a>), or a servo whose ID was never written. Fix: check the connectors at the missing ID; if that doesn’t help, set that servo up again on its own (<a href="#e2">stage 2</a>). A “Motors with incorrect model numbers” list means a servo that is not an STS3215.<sup><a href="#sources">7</a></sup></li>
+</ul>
+
+<h3>Servo variant and gear ratio</h3>
+<ul>
+<li class="fix"><b>LeRobot accepted the servo, but one joint behaves differently</b> (the leader is stiff or drops by itself). Cause: a swapped variant. Every variant is an STS3215, and LeRobot detects neither voltage nor gear ratio.<sup><a href="#sources">7</a></sup> Fix: compare the servo labels with the <a href="#e0">gear-ratio table in stage 0</a> and swap the servo; leader details are in <a href="#e3">stage 3</a>. You can check a listing before ordering in the <a href="../../../en/plan/so101/">buying plan</a>.</li>
+<li class="fix"><b>One arm has both 12 V and 7.4 V servos.</b> Cause: a mix-up when unpacking. Fix: unplug the supply at once and sort the servos by their labels. They must never share a bus or a supply.<sup><a href="#sources">2</a></sup></li>
+</ul>
+
+<h3>Power</h3>
+<ul>
+<li class="fix"><b>The supply doesn’t match the servos</b> (12 V on an arm with 7.4 V servos, or 5 V on the 12 V follower). Cause: the two arms’ supplies are easy to swap, both recommended ones have a 5.5 × 2.1 mm plug. Fix: unplug it and connect the one that belongs to that arm’s servos: 5 V (≥ 4 A) for 7.4 V servos, 12 V (≥ 5 A) only for the 12 V follower.<sup><a href="#sources">2</a></sup> Our note: label the supplies like the arms (L/F).</li>
+<li class="fix"><b>The plug doesn’t fit, or the servos weaken and restart under load.</b> <a href="#e4">Stage 4</a> covers the fix.</li>
+</ul>
+
+<h3>Calibration</h3>
+<ul>
+<li class="fix"><b>Message “Mismatch between calibration values in the motor and the calibration file or no calibration file found”.</b> Cause: the arm has no calibration under this ID yet, the values stored in the servos differ from the saved file, or you used a different <code>--robot.id</code> / <code>--teleop.id</code> than when calibrating. Fix: always use the same ID. When a calibration exists for the ID, LeRobot offers “Press ENTER to use provided calibration file…”; typing <code>c</code> and Enter runs a new calibration.<sup><a href="#sources">7</a></sup></li>
+<li class="fix"><b>Message “Some motors have the same min and max values”.</b> Cause: you pressed Enter before moving the listed joint. Fix: repeat the calibration and move every joint through its full range before pressing Enter.<sup><a href="#sources">1, 7</a></sup></li>
+<li class="fix"><b>A joint moves the wrong way or only a little, or the arm drops during calibration.</b> <a href="#e5">Stage 5</a> covers the fix.</li>
+</ul>
+</div>
+</div>
+</section>
+
 <section class="section" id="sources">
 <div class="g rule">
 <div class="a1 mono">Sources</div>
@@ -430,6 +483,7 @@ lerobot-calibrate \
 <li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/il_robots">LeRobot – Getting started with real-world robots</a> (teleoperation). Checked 29 Oct 2026.</li>
 <li>LeRobot source code: <a href="https://github.com/huggingface/lerobot/blob/main/src/lerobot/robots/so_follower/so_follower.py">so_follower.py</a> and <a href="https://github.com/huggingface/lerobot/blob/main/src/lerobot/motors/motors_bus.py">motors_bus.py</a> (calibration, gripper limit). Main branch, 29 Oct 2026.</li>
 <li>Waveshare and Eckstein: <a href="https://www.waveshare.com/wiki/Bus_Servo_Adapter_(A)">Bus Servo Adapter (A) wiki</a> and the <a href="https://eckstein-shop.de/WaveShare-Serial-Bus-Servo-Driver-Board-for-ST-SC-Serial-Bus-Servos-EN">Serial Bus Servo Driver Board at Eckstein</a> (5.5 × 2.1 mm power jack, 9–12.6 V input). Checked 30 Oct 2026.</li>
+<li>LeRobot 0.6.1 source code (tag v0.6.1): <a href="https://github.com/huggingface/lerobot/blob/v0.6.1/src/lerobot/motors/feetech/feetech.py">feetech.py</a>, <a href="https://github.com/huggingface/lerobot/blob/v0.6.1/src/lerobot/motors/motors_bus.py">motors_bus.py</a>, <a href="https://github.com/huggingface/lerobot/blob/v0.6.1/src/lerobot/robots/so_follower/so_follower.py">so_follower.py</a> and <a href="https://github.com/huggingface/lerobot/blob/v0.6.1/src/lerobot/teleoperators/so_leader/so_leader.py">so_leader.py</a> (error messages, finding a servo and its bus speed, calibration). Checked 7 Nov 2026.</li>
 </ol>
 </div>
 </section>
