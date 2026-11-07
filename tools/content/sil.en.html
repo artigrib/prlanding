@@ -15,7 +15,7 @@
 <p class="lead">SO-101 parts usually take 21 to 28 days in the post. You can use that time: our <code>so101-virtual</code> program runs a virtual SO-101 in the MuJoCo physics simulation and exposes it as a serial port. The real, unmodified LeRobot then talks to it exactly as it would to a real servo board. You set servo IDs, calibrate, drive the follower with the leader, record a dataset and replay it.</p>
 <p class="doc-note"><i aria-hidden="true"></i><span><b>Tested on 30 Oct 2026</b> with LeRobot 0.6.1 (PyPI), feetech-servo-sdk 1.0.0, Python 3.12 and Node.js 22 on Linux (x86_64). macOS should work the same way but is untested; for Windows see <a href="#windows">below</a>. The virtual arm is for practice: factory values, load and heat are approximate, not measured on real servos.</span></p>
 <ol class="toc" aria-label="Contents">
-<li><a href="#princip">How it works</a></li><li><a href="#instalace">Install</a></li><li><a href="#spusteni">Start</a></li><li><a href="#id">Servo IDs</a></li><li><a href="#kalibrace">Calibration</a></li><li><a href="#teleoperace">Teleoperation</a></li><li><a href="#nahravani">Dataset</a></li><li><a href="#prehrani">Replay</a></li><li><a href="#nahled">Live view</a></li><li><a href="#limity">What is emulated</a></li><li><a href="#windows">Windows</a></li><li><a href="#problemy">Troubleshooting</a></li>
+<li><a href="#princip">How it works</a></li><li><a href="#instalace">Install</a></li><li><a href="#spusteni">Start</a></li><li><a href="#id">Servo IDs</a></li><li><a href="#kalibrace">Calibration</a></li><li><a href="#teleoperace">Teleoperation</a></li><li><a href="#nahravani">Dataset</a></li><li><a href="#prehrani">Replay</a></li><li><a href="#politika">Pretrained policy</a></li><li><a href="#nahled">Live view</a></li><li><a href="#limity">What is emulated</a></li><li><a href="#windows">Windows</a></li><li><a href="#problemy">Troubleshooting</a></li>
 </ol>
 </div>
 </section>
@@ -118,7 +118,7 @@ lerobot-record \
     --dataset.single_task="Put the cube in the bowl" \
     --dataset.num_episodes=2 --dataset.episode_time_s=12 --dataset.reset_time_s=4 \
     --dataset.push_to_hub=false --play_sounds=false</code></pre>
-<p>This creates a LeRobot-format dataset (parquet with joint positions and actions, 30 frames per second) in <code>~/so101_sil_dataset</code>. Nothing is uploaded to Hugging Face and no token is needed. The virtual arm has no cameras yet, so the dataset holds joint positions only.</p>
+<p>This creates a LeRobot-format dataset (parquet with joint positions and actions, 30 frames per second) in <code>~/so101_sil_dataset</code>. Nothing is uploaded to Hugging Face and no token is needed. Without the <code>--camera</code> switch the dataset holds joint positions only; the virtual cameras are covered in the <a href="#politika">next section</a>.</p>
 </div>
 </div>
 </section>
@@ -133,14 +133,55 @@ lerobot-record \
     --robot.type=so101_follower --robot.port=/tmp/so101-follower --robot.id=sil_follower \
     --dataset.repo_id=local/so101_sil --dataset.root=$HOME/so101_sil_dataset --dataset.episode=0 \
     --play_sounds=false</code></pre>
-<p class="src">We have not yet tried running a trained policy (<code>lerobot-rollout</code>): the ACT and Diffusion policies in LeRobot need a camera, which the virtual arm does not have.</p>
+<p class="src">To run a trained policy with cameras (<code>lerobot-rollout</code>), see the <a href="#politika">next section</a>.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="politika">
+<div class="g rule">
+<div class="a1 mono">09 — Policy</div>
+<div class="a4 prose">
+<h2>First task with a pretrained policy</h2>
+<p>A policy is a neural network that turns camera images and joint positions into where the arm should go next. The Hugging Face Hub has public policies trained on the SO-101. Since 7 Nov 2026 the virtual arm also has virtual cameras, so you can run such a policy against it before you build the arm. It is a test of the whole camera → policy → servos path, not a success-rate contest: the policy learned on a different table, with different cameras and from real photos.</p>
+<p class="doc-note"><i aria-hidden="true"></i><span><b>Tested on 7 Nov 2026</b> with LeRobot 0.6.1 and pyzmq 27, CPU only: two runs of the real policy on GitHub Actions (ubuntu-latest, 4 cores, Python 3.12, PyTorch 2.11, Node.js 24) and runs with a network of the same size on our two-core machine (Python 3.13, PyTorch 2.7, Node.js 22). The script and the workflow are in the repository: <code>tools/sil/policy_trial.py</code>, workflow <code>sil-policy-trial</code>.</span></p>
+<h3>Which policy</h3>
+<p>We use <a href="https://huggingface.co/samarth-shukla6/act-svla-so101-pickplace">samarth-shukla6/act-svla-so101-pickplace</a>: an ACT policy under the Apache-2.0 licence, 51.6 million parameters (a 206 MB file). It was trained on the public dataset <a href="https://huggingface.co/datasets/lerobot/svla_so101_pickplace">lerobot/svla_so101_pickplace</a> (Apache-2.0, 50 episodes, 11,939 frames, 30 frames per second) with two cameras, <code>up</code> and <code>side</code>, at 640 × 480. We picked it because it is small, permissively licensed, has known camera names and resolution, and runs on a CPU. Its model card is only the generic LeRobot template, though: it gives no success rate and does not say where the cameras were.</p>
+<p class="src">We also looked at <a href="https://huggingface.co/pepijn223/odsc-so101-act">pepijn223/odsc-so101-act</a> (Apache-2.0, trained directly in MuJoCo). It belongs to its own five-object scene, wants <code>top</code> and <code>wrist</code> cameras at 384 × 384 and joint angles in radians, so it does not run with <code>lerobot-rollout</code> and the SO-101 follower without conversion. SmolVLA policies have about 450 million parameters and are much slower on a CPU.</p>
+<h3>1. The virtual arm with cameras</h3>
+<pre tabindex="0"><code>pip install "pyzmq&gt;=26.2.1,&lt;28"        # LeRobot's ZMQ camera needs it
+node tools/sil/so101-virtual.mjs --auto-hand --camera up --camera side</code></pre>
+<p>The program prints <code>cameras: up (up), side (side)  640x480 @ 15 fps  -&gt;  zmq tcp://127.0.0.1:5555</code>. It draws the scene with its own simple renderer (flat colours, no textures or shadows) and sends the frames over ZeroMQ in the format of LeRobot's built-in <code>type: zmq</code> camera. So LeRobot stays unmodified and nothing is added to its code. To see what the policy sees, open <code>http://127.0.0.1:8765/camera/up.png</code> and <code>…/camera/side.png</code> in a browser. Other views: <code>front</code> and <code>wrist</code> (the wrist camera from the arm model); give a different name for LeRobot with <code>--camera top=up</code>.</p>
+<figure class="doc-fig"><img src="{root}assets/media/sil-cameras.jpg" alt="Two virtual camera frames: on the left a top-down view of the table with the arm, cube and bowl, on the right a side view" width="960" height="360" loading="lazy"><figcaption>Fig. 1 – The virtual cameras <code>up</code> (top-down) and <code>side</code> as the policy receives them. A real camera sees the table's texture, shadows, cables and glare.</figcaption></figure>
+<h3>2. Calibrate and run</h3>
+<p>Calibrate the follower as in <a href="#kalibrace">Calibration</a> (once is enough). Then, in a second terminal:</p>
+<pre tabindex="0"><code>lerobot-rollout --strategy.type=base \
+    --policy.path=samarth-shukla6/act-svla-so101-pickplace --policy.device=cpu \
+    --robot.type=so101_follower --robot.port=/tmp/so101-follower --robot.id=sil_follower \
+    --robot.use_degrees=false \
+    --robot.cameras="{ up: {type: zmq, server_address: 127.0.0.1, port: 5555, camera_name: up, width: 640, height: 480, fps: 30}, side: {type: zmq, server_address: 127.0.0.1, port: 5555, camera_name: side, width: 640, height: 480, fps: 30} }" \
+    --task="Pick up the cube and place it in the bowl" --duration=20 --play_sounds=false</code></pre>
+<p><b>Why <code>--robot.use_degrees=false</code>.</b> This policy's dataset was recorded in units of −100 to 100 (as older LeRobot versions wrote them), while LeRobot 0.6.1 sends degrees for the SO-101 by default. With the wrong units the policy gets meaningless joint positions. The camera names (<code>up</code>, <code>side</code>) must match what the policy expects; you find them in the model's <code>config.json</code>.</p>
+<p><b>What you will see.</b> On the first run LeRobot downloads the model (about 210 MB, no token). Then <code>ZMQCamera(up@127.0.0.1:5555) connected</code>, the arm switches its motors on and starts to move. Messages like “Record loop is running slower (… Hz) than the target FPS (30.0 Hz)” are normal on a CPU. After 20 seconds you get “Duration limit reached (20s)”, the arm returns to where it started and “Rollout finished”.</p>
+<p><b>CPU time.</b> ACT computes 100 steps at once (3.3 s of motion) and the arm stands still while it computes. On our machine with two shared cores one computation took 0.8 to 5 s. On GitHub Actions with four cores LeRobot reported a slow loop only five or six times per run, and a whole run with <code>--duration=20</code> took 36 to 37 s (including loading the model and returning the arm).</p>
+<p>One command does all of it, with a record of the joint motion and camera snapshots (it starts the virtual arm, calibrates it and runs the policy): <code>python3 tools/sil/policy_trial.py --out /tmp/trial</code>. The result is in <code>/tmp/trial/summary.md</code>.</p>
+<h3>What to expect, and the limits</h3>
+<p>In both of our runs the arm moved the whole time, and not at random: within 4 s the gripper went from 29 cm away from the cube to 5.6 cm from it, came down to 0.5 cm above the table and opened and closed. It did not pick up the cube or move it, though (0.0 cm). The motion is jerky because the arm stands still during each computation. Why the task does not work out:</p>
+<ul>
+<li>The policy learned from real photos of a different table. Our virtual cameras stand elsewhere and the image is drawn, so the policy sees something it has never seen.</li>
+<li>The calibration differs: for example, wrist roll spans −92 to −20 in the dataset and comes out differently on our virtual arm. The same number does not mean the same pose.</li>
+<li>The physics is an approximation (servo friction, elasticity and backlash are missing), and the cube and bowl are not where they were in the dataset.</li>
+<li>Success or failure in the virtual scene says nothing about how the policy will do on a real arm. A reliable policy for your own table comes from your own demonstrations (<a href="#nahravani">lerobot-record</a> and <code>lerobot-train</code>).</li>
+</ul>
+<h3>Later, on the real arm</h3>
+<p>The same command works with the real arm: change the port and the cameras (<code>type: opencv</code>). Only do it once the arm works reliably in teleoperation. A policy can send the arm anywhere within the range you set during calibration, and quickly. Clear the workspace, keep fingers away from the gripper, keep a hand on the power switch and start with <code>--robot.max_relative_target=5</code> (LeRobot then moves each step's target at most 5 joint units away from the current position). Children only with an adult present. Our browser guide does not drive a real arm at all without the <code>?real=1</code> parameter; running a policy on a real arm is at your own risk.</p>
 </div>
 </div>
 </section>
 
 <section class="section" id="nahled">
 <div class="g rule">
-<div class="a1 mono">09 — Live view</div>
+<div class="a1 mono">10 — Live view</div>
 <div class="a4 prose">
 <h2>See the virtual arm in your browser</h2>
 <p>With <code>--mirror</code> the program streams the joint angles and the cube pose over a WebSocket, on this computer only (127.0.0.1). Serve the downloaded copy of the website and open the simulation with <code>?mirror=8765</code>:</p>
@@ -153,7 +194,7 @@ lerobot-record \
 
 <section class="section" id="limity">
 <div class="g rule">
-<div class="a1 mono">10 — Emulation</div>
+<div class="a1 mono">11 — Emulation</div>
 <div class="a4 prose">
 <h2>What is real and what is emulated</h2>
 <table class="doc-t">
@@ -171,7 +212,7 @@ lerobot-record \
 
 <section class="section" id="windows">
 <div class="g rule">
-<div class="a1 mono">11 — Windows</div>
+<div class="a1 mono">12 — Windows</div>
 <div class="a4 prose">
 <h2>Windows: use WSL, or com0com (untested)</h2>
 <p>Windows has no pseudo-terminals. The simplest way is to run the program and LeRobot inside WSL (Ubuntu), where everything works as on Linux. Natively you could use a pair of virtual COM ports from the com0com driver and adapt the program to read one of them; we have not tried that.</p>
@@ -181,7 +222,7 @@ lerobot-record \
 
 <section class="section" id="problemy">
 <div class="g rule">
-<div class="a1 mono">12 — Troubleshooting</div>
+<div class="a1 mono">13 — Troubleshooting</div>
 <div class="a4 prose">
 <ul>
 <li class="fix"><b>"There is no status packet!"</b> No reply within 50 ms. It can happen now and then on a very busy computer (like a loose cable on a real arm). Run the command again, or close heavy programs.</li>
@@ -202,6 +243,11 @@ lerobot-record \
 <li>Hugging Face: <a href="https://github.com/huggingface/lerobot/tree/v0.6.1/src/lerobot/motors/feetech">LeRobot 0.6.1 – motors/feetech</a> (register table, calibration, Apache-2.0).</li>
 <li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/il_robots">LeRobot – Getting started with real-world robots</a> (recording and replaying a dataset).</li>
 <li>Google DeepMind: <a href="https://mujoco.org/">MuJoCo</a>; arm model from MuJoCo Menagerie (Apache-2.0).</li>
+<li>samarth-shukla6: <a href="https://huggingface.co/samarth-shukla6/act-svla-so101-pickplace">act-svla-so101-pickplace</a> (model card, <code>config.json</code>, <code>train_config.json</code>; Apache-2.0).</li>
+<li>Hugging Face: <a href="https://huggingface.co/datasets/lerobot/svla_so101_pickplace">lerobot/svla_so101_pickplace</a> (<code>meta/info.json</code>, <code>meta/stats.json</code>; Apache-2.0).</li>
+<li>Hugging Face: <a href="https://github.com/huggingface/lerobot/tree/v0.6.1/src/lerobot/cameras/zmq">LeRobot 0.6.1 – cameras/zmq</a> and <a href="https://github.com/huggingface/lerobot/blob/v0.6.1/src/lerobot/scripts/lerobot_rollout.py">lerobot_rollout.py</a> (ZMQ camera message format, running a policy; Apache-2.0).</li>
+<li>Zhao et al.: <a href="https://arxiv.org/abs/2304.13705">Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware</a> (ACT), 2023.</li>
+<li>ZeroMQ: <a href="https://rfc.zeromq.org/spec/23/">ZMTP 3.0</a> (the protocol the program speaks).</li>
 </ol>
 </div>
 </section>
