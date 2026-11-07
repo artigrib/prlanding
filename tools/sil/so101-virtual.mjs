@@ -189,7 +189,7 @@ function status() {
     servos: A.arm.servos.map((s) => ({ id: s.id, powered: s.powered, torque: s.mem[40], present: s.reg('Present_Position'), goal: s.reg('Goal_Position'), homing: s.reg('Homing_Offset'), min: s.reg('Min_Position_Limit'), max: s.reg('Max_Position_Limit'), temp: s.mem[63] })),
     packets: { rx: A.rx, tx: A.tx }
   });
-  return { t: +fPlant.d.time.toFixed(3), follower: one(arms.follower), ...(arms.leader ? { leader: one(arms.leader) } : {}), cube: fPlant.cube().map((v) => +v.toFixed(4)), ...(cameras ? { cameras: cameras.status() } : {}) };
+  return { t: +fPlant.d.time.toFixed(3), follower: one(arms.follower), ...(arms.leader ? { leader: one(arms.leader) } : {}), cube: fPlant.cube().map((v) => +v.toFixed(4)), tip: (fPlant.tip() || []).map((v) => +v.toFixed(4)), ...(cameras ? { cameras: cameras.status() } : {}) };
 }
 async function command(line) {
   const [c, a, ...more] = line.split(/\s+/).filter(Boolean);

@@ -139,7 +139,7 @@ def main():
                 except OSError:
                     time.sleep(0.2); continue
                 torque = sum(x["torque"] for x in s["follower"]["servos"])
-                trace.append({"wall": time.time(), "t": s["t"], "q": s["follower"]["q"], "torque": torque, "cube": s["cube"], "subscribers": s.get("cameras", {}).get("subscribers")})
+                trace.append({"wall": time.time(), "t": s["t"], "q": s["follower"]["q"], "torque": torque, "cube": s["cube"], "tip": s.get("tip"), "subscribers": s.get("cameras", {}).get("subscribers")})
                 if torque and started is None:
                     started = time.time()
                 if started and snap_at and time.time() - started >= snap_at[0] * args.duration:
@@ -178,6 +178,13 @@ def main():
                 lines.append(f"| {n} | {min(v):.2f} | {max(v):.2f} | {path:.2f} |")
             c0, c1 = active[0]["cube"], active[-1]["cube"]
             moved = sum((a - b) ** 2 for a, b in zip(c0, c1)) ** 0.5
+            near = [(sum((a - b) ** 2 for a, b in zip(x["tip"], x["cube"])) ** 0.5, x) for x in active if x.get("tip")]
+            if near:
+                dmin, xmin = min(near, key=lambda p: p[0])
+                lines += ["", f"- gripper came within {dmin * 100:.1f} cm of the cube (gripper frame at {[round(v, 3) for v in xmin['tip']]}, "
+                              f"{xmin['wall'] - active[0]['wall']:.0f} s into the run); at the start it was {near[0][0] * 100:.1f} cm away"]
+                z = [x["tip"][2] for x in active if x.get("tip")]
+                lines.append(f"- gripper height above the table: {min(z) * 100:.1f} to {max(z) * 100:.1f} cm")
             lines += ["", f"- cube moved {moved * 100:.1f} cm (start {[round(x, 3) for x in c0]}, end {[round(x, 3) for x in c1]})",
                       f"- torque on for {active[-1]['wall'] - active[0]['wall']:.0f} s"]
         else:
