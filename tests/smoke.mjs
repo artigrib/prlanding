@@ -44,7 +44,7 @@ await check('3d flow cards', '/3d/', async p => {
   if ((await p.content()).includes('[doplnit]')) throw new Error('[doplnit] visible');
 });
 
-await check('catalog filter', '/', async p => {
+await check('catalog filter', '/katalog/', async p => {
   await p.waitForSelector('#filters .filter');
   const before = await p.locator('#cards .card:visible').count();
   const btns = p.locator('#filters .filter');
@@ -283,6 +283,7 @@ for (const id of ['so101', 'svrn', 'vert150', 'uc2', 'sidekick', 'poseidon', 'op
 }
 // lab category (Laboratoř): its own filter, UC2 card, a kit page in the lab crumb without a simulation, no serious axe issues
 await check('catalog lab filter', '/?typ=lab', async p => {
+  await p.waitForURL(/\/katalog\/\?typ=lab/);
   await p.waitForSelector('#filters .filter[data-f="lab"][aria-pressed="true"]');
   const hrefs = await p.locator('#cards a.card').evaluateAll(as => as.map(a => a.getAttribute('href')));
   const LAB = /sada\/(uc2|sidekick|poseidon|openflexure)\/$/;
@@ -568,7 +569,8 @@ for (const vp of [{ width: 360, height: 780 }, { width: 1440, height: 900 }]) {
       const sm = await (await p.request.get(BASE + '/sitemap.xml')).text();
       if (!/sim\/origin\//.test(sm) || !/en\/sim\/origin\//.test(sm)) throw new Error('origin sim not in the sitemap');
       const home = await (await p.request.get(BASE + '/')).text();
-      if (!/<a class="card card-show" href="sim\/origin\/"[\s\S]*?Nejsme s RoboParty spojeni[\s\S]*?Vyzkoušet v simulaci/.test(home)) throw new Error('catalogue showcase card');
+      const cat = await (await p.request.get(BASE + '/katalog/')).text();
+      if (!/<a class="card card-show" href="\.\.\/sim\/origin\/"[\s\S]*?Nejsme s RoboParty spojeni[\s\S]*?Vyzkoušet v simulaci/.test(cat)) throw new Error('catalogue showcase card');
       if (!/<li><time datetime="2026-10-30">[^<]*<\/time><span><b>Humanoid ROBOTO ORIGIN v prohlížeči<\/b>[\s\S]*?<a href="sim\/origin\/">/.test(home)) throw new Error('news item');
       if (/sada\/origin|predobjednavka[^"]*origin/.test(home)) throw new Error('buy path for the showcase');
     }
@@ -691,14 +693,14 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
     if (offsite.length) throw new Error('off-site requests: ' + offsite.join(', '));
   });
 }
-await check('home catalogue links the registry and back', '/', async p => {
+await check('home catalogue links the registry and the registry links katalog/', '/', async p => {
   const h = await p.locator('#katalog a[data-cta="registry"]').getAttribute('href');
   if (new URL(h, p.url()).pathname !== '/katalog/rejstrik/') throw new Error('registry link ' + h);
   const n = JSON.parse(fs.readFileSync(new URL('../data/registry/projects.json', import.meta.url), 'utf8')).length;
   const t = (await p.locator('#katalog a[data-cta="registry"]').textContent()).replace(/\s+/g, ' ').trim();
   if (t !== `Všech ${n} tisknutelných projektů v rejstříku →`) throw new Error('registry link text: ' + t);
   const html = await (await p.request.get(BASE + '/katalog/rejstrik/')).text();
-  if (!/<a href="\.\.\/\.\.\/#katalog">/.test(html)) throw new Error('no link back to #katalog');
+  if (!/<a href="\.\.\/\.\.\/katalog\/">/.test(html)) throw new Error('no link back to katalog/');
   const sm = await (await p.request.get(BASE + '/sitemap.xml')).text();
   if (!sm.includes('<loc>https://printedrobotics.cz/katalog/rejstrik/</loc>') || !sm.includes('<loc>https://printedrobotics.cz/en/catalogue/registry/</loc>')) throw new Error('registry not in the sitemap');
 });

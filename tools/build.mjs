@@ -118,7 +118,9 @@ const CONTENT = [
   // draft: PR-Bench leaderboard (bench/), mock sample data until the first real run from the VPS; noindex, unlinked
   { id: 'bench', cs: 'bench/', en: 'en/bench/', nav: null, draft: true },
   // registry of open 3D-printable projects behind the curated catalogue (data/registry, tools/registry.mjs)
-  { id: 'rejstrik', cs: 'katalog/rejstrik/', en: 'en/catalogue/registry/', nav: 'katalog' }
+  { id: 'rejstrik', cs: 'katalog/rejstrik/', en: 'en/catalogue/registry/', nav: 'katalog' },
+  // the full catalogue with filters; the home page shows a featured selection and links here
+  { id: 'katalog', cs: 'katalog/', en: 'en/catalogue/', nav: 'katalog' }
 ];
 const CONTENT_EN = Object.fromEntries(CONTENT.map(c => [c.cs, c.en]));
 
@@ -371,7 +373,7 @@ for (const r of R) { kitPage(r, 'cs'); kitPage(r, 'en'); }
 // home hero: "what's new" strip = the newest item of the home news list (N° Co je nového) that leads to the SO-101 path
 // (the SO-101 sim or a buying plan), so the strip never pulls visitors off the main path; no such item = no strip
 function heroNew(html) {
-  const list = /<ol class="a4 news" reversed>([\s\S]*?)<\/ol>/.exec(html);
+  const list = /<!--news-->([\s\S]*?)<!--\/news-->/.exec(html);
   if (!list) throw new Error('index.html: news list not found for the hero strip');
   for (const m of list[1].matchAll(/<li><time datetime="([^"]+)">([^<]+)<\/time><span><b>([^<]+)<\/b>[\s\S]*?<\/span><a href="([^"]+)">/g)) {
     if (!/^(sim\/so101\/|plan\/)/.test(m[4])) continue;
@@ -447,6 +449,7 @@ function buildTimeline(L) {
   const fig = photoSlot('so101-build', L, en
     ? { no: 'Fig. 3', src: 'img/so101_white.jpg', w: 1200, h: 900, alt: 'SO-101 robot arm, a render from the project CAD', cap: 'SO-101 rendered from the project CAD. A photo from our own build will replace it.', photoCap: 'Our SO-101 build.' }
     : { no: 'Obr. 3', src: 'img/so101_white.jpg', w: 1200, h: 900, alt: 'Robotická ruka SO-101, vizualizace z CAD projektu', cap: 'Vizualizace SO-101 z CAD projektu. Nahradí ji fotka z naší stavby.', photoCap: 'Naše stavba SO-101.' });
+  const figOut = fig.replace('<figure class="ph ph-empty"', '<figure class="ph ph-empty hide-s"');   // a real photo (assets/photos) shows on phones too
   return `<div class="g rule">
 <div class="a1 mono">N° 02 — ${en ? 'Building the SO-101' : 'Stavba SO-101'}<code class="sec-k">build.arm()</code></div>
 <h2 class="a4 h2" id="stavba-h" style="max-width:52rem">${esc(intro)}.</h2>
@@ -460,7 +463,7 @@ ${rows}
 <p class="tl-sum"><span class="mono">${en ? 'total' : 'celkem'}</span><b>${t.total} h ${en ? 'of work' : 'práce'}</b><span class="mono">+ ${en ? 'printer' : 'tiskárna'} ≈ ${t.print} h</span></p>
 <a class="btn" href="navody/so101-sestaveni/" data-cta="build-guide">${en ? 'Open the assembly guide' : 'Otevřít návod ke stavbě'} <span aria-hidden="true">→</span></a>
 </div>
-${fig}
+${figOut}
 </div>`;
 }
 // home: catalogue cards in the static HTML (scripts re-render the same cards with filters)
@@ -474,11 +477,34 @@ const showCard = (r, L) => `<a class="card card-show" href="sim/${r.sim}/" data-
   `<span class="card-meta"><span class="mono" style="color:var(--ink)">OH</span><span class="mono">${L === 'en' ? 'Open hardware' : 'Otevřený hardware'}</span></span>` +
   `<span><h3>${esc(r.name)}</h3><span class="type">${esc(r.type)}</span></span><span class="spec1">${r.card.map(c => esc(c[1])).join(' · ')}</span>` +
   `<p class="desc">${esc(r.short)} <span class="mono-s">${esc(r.notAffiliated)}</span></p><span class="go">${L === 'en' ? 'Try it in the simulator' : 'Vyzkoušet v simulaci'} <span aria-hidden="true">→</span></span></a>`;
+// home catalogue = the SO-101 family + one or two per category; the whole catalogue (filters, all cards) is katalog/
+const FEATURED = ['so101', 'lekiwi', 'xle', 'so102', 'otto', 'duck', 'sawppy', 'svrn', 'uc2'];
+for (const id of FEATURED) if (!R.some(r => r.id === id)) throw new Error('FEATURED: unknown kit ' + id);
+const NLAB = R.length - NROBOTS;
+const czPl = (n, one, few, many) => n === 1 ? one : n >= 2 && n <= 4 ? few : many;
+// "24 robotů a 4 laboratorní přístroje": counted from data.js (same rule as the filters: cat 'lab' = lab device)
+const catCount = L => L === 'en'
+  ? `${NROBOTS} robots${NLAB ? ` and ${NLAB} lab instrument${NLAB === 1 ? '' : 's'}` : ''}`
+  : `${NROBOTS} ${czPl(NROBOTS, 'robot', 'roboti', 'robotů')}${NLAB ? ` a ${NLAB} ${czPl(NLAB, 'laboratorní přístroj', 'laboratorní přístroje', 'laboratorních přístrojů')}` : ''}`;
+const catHead = L => L === 'en' ? `${catCount('en')}. From a first build to research.` : `${catCount('cs')}. Od prvního sestavení po výzkum.`;
+const catAll = L => `<!--cat-all--><p class="cat-all"><a class="btn btn-o" href="katalog/" data-cta="catalogue">${L === 'en' ? `Full catalogue (${R.length})` : `Celý katalog (${R.length})`} <span aria-hidden="true">→</span></a></p><!--/cat-all-->`;
+// news: the 3 newest stay in view, the rest folds into <details> (works without JS); idempotent: all items are re-read each build
+function foldNews(html, L) {
+  const m = /<!--news-->([\s\S]*?)<!--\/news-->/.exec(html);
+  if (!m) throw new Error('index.html: news region not found');
+  const items = m[1].match(/<li>[\s\S]*?<\/li>/g) || [];
+  if (items.length < 4) throw new Error('index.html: news region has too few items');
+  const more = items.slice(3);
+  return html.replace(m[0], () => `<!--news-->\n<ol class="a4 news" reversed>\n${items.slice(0, 3).join('\n')}\n</ol>\n<details class="a4 news-more"><summary>${L === 'en' ? `All updates (${items.length})` : `Všechny novinky (${items.length})`}</summary>\n<ol class="news">\n${more.join('\n')}\n</ol>\n</details>\n<!--/news-->`);
+}
 let home = read('index.html');
-home = home.replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->|<div class="cards" id="cards"><\/div>/, `<div class="cards" id="cards">\n${cards}\n${W.cs.PR_SHOWCASE.map(r => showCard(r, 'cs')).join('\n')}\n</div><!--/cards-->`)
+home = foldNews(home, 'cs');
+home = home.replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->|<div class="cards" id="cards"><\/div>/, `<div class="cards" id="cards">\n${cards.split('\n').filter((c, i) => FEATURED.includes(R[i].id)).join('\n')}\n</div><!--/cards-->`)
+  .replace(/<!--cat-h-->[\s\S]*?<!--\/cat-h-->/, () => `<!--cat-h-->${catHead('cs')}<!--/cat-h-->`)
+  .replace(/<!--cat-all-->[\s\S]*?<!--\/cat-all-->/, () => catAll('cs'))
   .replace(/<noscript><p>Pro katalog zapněte JavaScript[\s\S]*?<\/noscript>\n?/, '')
   .replace(/id="robot-count">\d+</, `id="robot-count">${NROBOTS}<`).replace(/id="robot-count2">\d+</, `id="robot-count2">${NROBOTS}<`);
-if (!home.includes('<!--/cards-->')) throw new Error('index.html: cards placeholder not found');
+if (!home.includes('<!--/cards-->') || !home.includes('<p class="cat-all">') || !home.includes('<details class="a4 news-more">')) throw new Error('index.html: cards, cat-all or news placeholder not found');
 // catalogue -> registry link (the registry page links back to #katalog)
 const regLink = L => `<!--registry-link--><p class="reg-link"><a href="katalog/rejstrik/" data-cta="registry">${L === 'en' ? `All ${REG.records.length} printable projects in the registry` : `Všech ${REG.records.length} tisknutelných projektů v rejstříku`} <span aria-hidden="true">→</span></a></p><!--/registry-link-->`;
 if (!/<!--registry-link-->[\s\S]*?<!--\/registry-link-->/.test(home)) throw new Error('index.html: registry-link placeholder not found');
@@ -499,7 +525,10 @@ if (home.includes('<!--/cards-->')) {
   const meta = (re, v) => en => en.replace(re, v);
   let en = home
     .replace('<html lang="cs">', '<html lang="en">')
-    .replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->/, `<div class="cards" id="cards">\n${enCards}\n${W.en.PR_SHOWCASE.map(r => showCard(r, 'en')).join('\n')}\n</div><!--/cards-->`)
+    .replace(/<div class="cards" id="cards">[\s\S]*?<\/div><!--\/cards-->/, `<div class="cards" id="cards">\n${enCards.split('\n').filter((c, i) => FEATURED.includes(W.en.PR_ROBOTS[i].id)).join('\n')}\n</div><!--/cards-->`)
+    .replace(/<!--cat-h-->[\s\S]*?<!--\/cat-h-->/, () => `<!--cat-h-->${catHead('en')}<!--/cat-h-->`)
+    .replace(/<!--cat-all-->[\s\S]*?<!--\/cat-all-->/, () => catAll('en'))
+    .replace(/<summary>Všechny novinky \((\d+)\)<\/summary>/, '<summary>All updates ($1)</summary>')
     .replace(/<title>[^<]*<\/title>/, '<title>printedrobotics.cz — try a robot in your browser, then build it</title>')
     .replace(/<meta name="description" content="[^"]*">/, '<meta name="description" content="Try the SO-101 robot arm in a physics simulation right in your browser, and combat robots in the arena. Then we tell you what to buy and where, and guide you through the build.">')
     .replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${SITE}en/">`)
@@ -568,6 +597,16 @@ function kitsByLicence(L) {
   const kit = id => (L === 'en' ? `en/kit/${id}/` : `sada/${id}/`);
   return '<dl class="doc-lic">' + Object.keys(groups).map(hw => `<div><dt>${esc(hw)}</dt><dd>${groups[hw].map(r => `<a href="{root}${kit(r.id)}">${esc(r.name)}</a> <span class="muted">(${esc(r.author)})</span>`).join(', ')}</dd></div>`).join('') + '</dl>';
 }
+function catalogBlock(L) {
+  const D = W[L], kit = id => (L === 'en' ? `en/kit/${id}/` : `sada/${id}/`);
+  const html = D.PR_ROBOTS.map((r, i) => `<a class="card" href="{root}${kit(r.id)}"><div class="tile"><span class="tag${r.preparing ? ' tag-p' : ''}">${r.preparing ? 'Připravujeme' : 'Postavte si'}</span><img src="{root}img/${r.id}_white.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
+    `<span class="card-meta"><span class="mono" style="color:var(--ink)">${no(i)}</span><span class="mono">${esc(r.preparing ? 'Připravujeme' : r.level)}</span></span>` +
+    `<span><h3>${esc(r.name)}</h3><span class="type">${esc(r.type)}</span></span><span class="spec1">${r.card.map(x => esc(x[1])).join(' · ')}</span>` +
+    `<p class="desc">${esc(r.short)}</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>`).join('\n') + '\n' +
+    D.PR_SHOWCASE.map(r => showCard(r, L).replace('href="sim/', L === 'en' && r.sim === 'origin' ? 'href="{root}en/sim/' : 'href="{root}sim/').replace('src="img/', 'src="{root}img/')).join('\n');
+  const block = `<div class="filters" id="filters" role="group" aria-label="Filtr podle typu"></div>\n<p class="mono count" id="count" aria-live="polite"></p>\n<div class="cards" id="cards">\n${html}\n</div>`;
+  return L === 'en' ? translateHtml(block) : block;
+}
 function contentPage(c, L) {
   const src = read(`tools/content/${c.id}.${L}.html`);
   const mm = /^<!--meta\s*([\s\S]*?)-->\n?/.exec(src);
@@ -576,6 +615,7 @@ function contentPage(c, L) {
   const page = c[L], url = SITE + page, root = '../'.repeat(page.split('/').length - 1);
   const en = L === 'en', home = en ? 'en/' : '';
   let body = expandBt(src.slice(mm[0].length), L, page).replace('<!--kits:licence-->', () => kitsByLicence(L))
+    .replace('<!--catalog-->', () => catalogBlock(L)).replace(/\{cat:count\}/g, () => catCount(L)).replace(/\{cat:n\}/g, R.length)
     .replace('<!--registry-->', () => renderRegistry(L, REG.records, REG.cs, root)).replace('<!--registry-gaps-->', () => renderGaps(L)).replace(/\{reg:count\}/g, REG.records.length)
     .replace(/\{reg:checked\}/g, () => { const d = checkedDate(REG.records); return L === 'en' ? d : d.split('-').map(Number).reverse().join('. '); })
     .replace(/\{root\}/g, root);
