@@ -1,0 +1,81 @@
+{
+  "//": "Lab devices (cat 'lab'): no simulation. Model = the author's UC2 v2 STL files (TheBOX/SimpleBOX/BUILD_ME/STL) placed on the 50 mm grid per APPLICATIONS/APP_SIMPLE-Smartphone_Microscope/mechanical/Readme.md; optics, magnets and screws not modelled.",
+  "id": "uc2",
+  "glb": true,
+  "render": true,
+  "noElectronics": true,
+  "noSoftware": true,
+  "fastenersListed": true,
+  "credit": "Vizualizace z dílů openUC2 (CERN-OHL-1.2): jednoduchý mikroskop pro telefon, mechanická verze. Sestavu jsme poskládali podle návodu a fotografií autorů; sestavený CAD model autoři nezveřejňují.",
+  "name": "UC2",
+  "type": "Modulární optická stavebnice",
+  "cat": "lab",
+  "level": "Začátečník",
+  "hw": "CERN-OHL-1.2",
+  "sw": "MIT",
+  "author": "openUC2 (B. Diederich a kol.)",
+  "alt": "Mikroskop pro chytrý telefon složený z tištěných kostek UC2 na základní desce",
+  "short": "Optické pokusy z tištěných kostek o hraně 50 mm. Model ukazuje jednoduchý mikroskop pro chytrý telefon.",
+  "lead": "Otevřený modulární systém pro optiku a mikroskopii: tištěné kostky o hraně 50 mm drží pohromadě kuličkové magnety v základní desce a do kostek se zasouvají vložky se zrcadly, čočkami nebo držákem vzorku. Model ukazuje mechanickou verzi jednoduchého mikroskopu pro chytrý telefon podle návodu autorů: objektiv v zaostřovací kostce (Z-stage), dvě zrcadla pod 45°, okulár s držákem telefonu a držák vzorku nad objektivem. Tato sestava nemá elektroniku ani software.",
+  "bomCost": "≈ 65 EUR (odhad autorů pro tuto sestavu)",
+  "printTime": "—",
+  "software": "Pro tuto sestavu žádný (mechanická verze)",
+  "repo": "https://github.com/openUC2/UC2-GIT",
+  "docs": "https://github.com/openUC2/UC2-GIT/tree/master/APPLICATIONS/APP_SIMPLE-Smartphone_Microscope/mechanical",
+  "card": [["Kostka", "50 mm"], ["Sestava", "mikroskop pro telefon"]],
+  "bom": [
+    ["Objektiv mikroskopu (např. 10×, NA 0,25)", "1×"],
+    ["Okulár (např. 20×)", "1×"],
+    ["Zrcátko (např. 30 × 30 mm)", "2×"],
+    ["Kuličkový magnet 5 mm", "32–36×"],
+    ["Šroub M3 × 12 (DIN 912)", "32–56×"],
+    ["Šroub M3 × 8 (DIN 912, pozinkovaný)", "7×"],
+    ["Šroub M3 × 30 a matice M3, nemagnetické", "1×"],
+    ["Chytrý telefon", "1×"]
+  ],
+  "specs": [
+    ["Kostka", "50 mm, tištěná nebo vstřikovaná"],
+    ["Spojení", "kuličkové magnety 5 mm v základní desce"],
+    ["Moduly sestavy", "Z-stage, 2× zrcadlo 45°, okulár s držákem telefonu, držák vzorku, 2 prázdné kostky"],
+    ["Zaostření", "hrubé ≈ 30 mm posunem objektivu, jemné ≈ ±6 mm ozubeným kolem"],
+    ["Optika", "objektiv (160 mm od zrcadla) + okulár"],
+    ["Elektronika", "žádná (mechanická verze)"]
+  ],
+  "license": {
+    "hw": "CERN-OHL-1.2",
+    "sw": "MIT",
+    "status": "verified",
+    "checked": "2026-11-01",
+    "sources": ["https://github.com/openUC2/UC2-GIT/blob/afc9de36f27d5a387e6b9ef1d85ae0cf33b4d3d6/License.md"]
+  },
+  "related": ["stackchan", "otto", "so101"],
+  "en": {
+    "credit": "Render from openUC2 parts (CERN-OHL-1.2): simple smartphone microscope, mechanical version. We arranged the assembly following the authors’ guide and photos; the authors do not publish an assembled CAD model.",
+    "type": "Modular optics kit",
+    "author": "openUC2 (B. Diederich et al.)",
+    "alt": "Smartphone microscope built from printed UC2 cubes on a baseplate",
+    "short": "Optics experiments from printed 50 mm cubes. The model shows the simple smartphone microscope.",
+    "lead": "An open toolbox for optics and microscopy: printed 50 mm cubes are held together by ball magnets in a baseplate, and inserts with mirrors, lenses or a sample holder slide into the cubes. The model shows the mechanical version of the simple smartphone microscope from the authors’ guide: an objective in a focusing cube (Z-stage), two 45° mirrors, an eyepiece with a phone holder and a sample holder above the objective. This setup has no electronics and no software.",
+    "bomCost": "≈ 65 EUR (the authors’ estimate for this setup)",
+    "software": "None for this setup (mechanical version)",
+    "card": [["Cube", "50 mm"], ["Setup", "smartphone microscope"]],
+    "bom": [
+      ["Microscope objective (e.g. 10×, NA 0.25)", "1×"],
+      ["Eyepiece (e.g. 20×)", "1×"],
+      ["Mirror (e.g. 30 × 30 mm)", "2×"],
+      ["Ball magnet 5 mm", "32–36×"],
+      ["M3 × 12 screw (DIN 912)", "32–56×"],
+      ["M3 × 8 screw (DIN 912, galvanised steel)", "7×"],
+      ["M3 × 30 screw and M3 nut, non-magnetic", "1×"],
+      ["Smartphone", "1×"]
+    ],
+    "specs": [
+      ["Cube", "50 mm, printed or injection-moulded"],
+      ["Connection", "5 mm ball magnets in the baseplate"],
+      ["Modules in this setup", "Z-stage, 2× 45° mirror, eyepiece with phone holder, sample holder, 2 empty cubes"],
+      ["Focusing", "coarse ≈ 30 mm by sliding the objective, fine ≈ ±6 mm with a gear"],
+      ["Optics", "objective (160 mm from the mirror) + eyepiece"],
+      ["Electronics", "none (mechanical version)"]
+    ]
+  }
+}

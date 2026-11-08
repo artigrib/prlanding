@@ -1,0 +1,55 @@
+{
+  "id": "so101",
+  "glb": true,
+  "sim": "so101",
+  "name": "SO-101",
+  "type": "Robotická ruka",
+  "cat": "arm",
+  "level": "Začátečník",
+  "hw": "Apache-2.0",
+  "sw": "Apache-2.0",
+  "author": "The Robot Studio a Hugging Face",
+  "render": true,
+  "alt": "Robotická ruka SO-101",
+  "short": "Ruka s pěti osami a chapadlem pro AI a teleoperaci s knihovnou LeRobot. Pár ovládací + výkonná ruka.",
+  "lead": "Ruka s pěti osami a chapadlem pro učení robotů a teleoperaci. Ovládací ruku (leader) vedete vlastní rukou, výkonná ruka (follower) pohyb opakuje – a s knihovnou LeRobot se úlohu naučí sama.",
+  "bomCost": "≈ 130 USD / ruka (ceny v USA podle kusovníku projektu, bez dopravy a DPH; pro ČR viz plán nákupu)",
+  "printTime": "≈ 16,5 h za pár",
+  "software": "LeRobot (Python)",
+  "setups": true,
+  "repo": "https://github.com/TheRobotStudio/SO-ARM100",
+  "docs": "https://huggingface.co/docs/lerobot/so101",
+  "card": [["Osy", "5 + chapadlo"], ["Software", "LeRobot"]],
+  "specs": [
+    ["Stupně volnosti", "5 os + chapadlo"],
+    ["Pohon", "Feetech STS3215"],
+    ["Napájení", "5 V (serva 7,4 V); follower s 12V servy: 12 V"],
+    ["Tisk", "PLA+, vrstva 0,2 mm"],
+    ["Doba tisku", "≈ 16,5 h za pár"]
+  ],
+  "license": {
+    "hw": "Apache-2.0",
+    "sw": "Apache-2.0",
+    "status": "verified",
+    "checked": "2026-10-30",
+    "sources": ["https://github.com/TheRobotStudio/SO-ARM100/blob/main/LICENSE", "https://github.com/huggingface/lerobot/blob/main/LICENSE"]
+  },
+  "related": ["hand", "lekiwi", "xle"],
+  "en": {
+    "type": "Robot arm",
+    "author": "The Robot Studio and Hugging Face",
+    "alt": "SO-101 robot arm",
+    "short": "Five-axis arm with a gripper for AI and teleoperation with LeRobot. A leader + follower pair.",
+    "lead": "Five-axis arm with a gripper for robot learning and teleoperation. You guide the leader arm by hand, the follower copies the motion – and with LeRobot it learns to do the task on its own.",
+    "bomCost": "≈ 130 USD per arm (US prices from the project’s bill of materials, without shipping and VAT; for Czechia see the buying plan)",
+    "printTime": "≈ 16.5 h per pair",
+    "card": [["Axes", "5 + gripper"], ["Software", "LeRobot"]],
+    "specs": [
+      ["Degrees of freedom", "5 axes + gripper"],
+      ["Actuators", "Feetech STS3215"],
+      ["Power", "5 V (7.4 V servos); follower with 12 V servos: 12 V"],
+      ["Print", "PLA+, 0.2 mm layers"],
+      ["Print time", "≈ 16.5 h per pair"]
+    ]
+  }
+}

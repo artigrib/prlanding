@@ -1,0 +1,43 @@
+{
+  "id": "sawppy",
+  "glb": true,
+  "name": "Sawppy",
+  "type": "Rover",
+  "cat": "mobile",
+  "level": "Střední",
+  "hw": "MIT",
+  "sw": "MIT",
+  "author": "Roger Cheng",
+  "render": true,
+  "alt": "Šestikolový rover Sawppy",
+  "short": "Šestikolový rover podle marsovských vozítek.",
+  "lead": "Šestikolový rover podle marsovských vozítek Curiosity a Perseverance.",
+  "bomCost": "pod 500 USD",
+  "printTime": "—",
+  "software": "Python / Arduino",
+  "repo": "https://github.com/Roger-random/Sawppy_Rover",
+  "docs": "https://github.com/Roger-random/Sawppy_Rover",
+  "card": [["Kola", "6, rocker-bogie"], ["Pohon", "LX-16A"]],
+  "bom": [
+    ["Servo LewanSoul LX-16A", "10×"],
+    ["Hliníkové profily 15 mm", "1 sada"],
+    ["Ložiska a hřídele", "1 sada"],
+    ["Řídicí deska a baterie", "1×"]
+  ],
+  "specs": [["Kola", "6, rocker-bogie"], ["Pohon", "serva LX-16A"]],
+  "related": ["exomy", "lekiwi", "spot"],
+  "en": {
+    "alt": "Sawppy six-wheel rover",
+    "short": "Six-wheel rover modelled on the Mars rovers.",
+    "lead": "Six-wheel rover modelled on the Mars rovers Curiosity and Perseverance.",
+    "bomCost": "under 500 USD",
+    "card": [["Wheels", "6, rocker-bogie"], ["Drive", "LX-16A"]],
+    "bom": [
+      ["LewanSoul LX-16A servo", "10×"],
+      ["15 mm aluminium extrusions", "1 set"],
+      ["Bearings and shafts", "1 set"],
+      ["Controller board and battery", "1×"]
+    ],
+    "specs": [["Wheels", "6, rocker-bogie"], ["Drive", "LX-16A servos"]]
+  }
+}

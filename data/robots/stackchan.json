@@ -1,0 +1,65 @@
+{
+  "id": "stackchan",
+  "credit": "Vizualizace z modelu Stack-chan (Apache-2.0)",
+  "glb": true,
+  "render": true,
+  "name": "Stack-chan",
+  "type": "Stolní robot-společník",
+  "cat": "desk",
+  "level": "Začátečník",
+  "hw": "Apache-2.0",
+  "sw": "Apache-2.0",
+  "author": "Shinya Ishikawa (meganetaaan) a komunita",
+  "alt": "Stolní robot Stack-chan s displejem místo obličeje na otočné hlavě",
+  "short": "Malý stolní společník: displej s tváří, dvě serva a hlava, která se otáčí a kývá.",
+  "lead": "Malý stolní společník, kterému obličej kreslí displej modulu M5Stack. Dvě serva otáčejí a naklánějí hlavu, chování se programuje v JavaScriptu nebo blocích přímo v prohlížeči.",
+  "bomCost": "—",
+  "printTime": "—",
+  "software": "JavaScript (Moddable), bloky v prohlížeči",
+  "repo": "https://github.com/stack-chan/stack-chan",
+  "docs": "https://github.com/stack-chan/stack-chan/blob/develop/case/README.md",
+  "card": [["Osy", "2 (otáčení + náklon)"], ["Řízení", "M5Stack (ESP32)"]],
+  "bom": [
+    ["Modul M5Stack Core (Basic/Gray/Go/Fire)", "1×"],
+    ["Mikroservo SG90 (nebo sériové RS30X / SCS0009)", "2×"],
+    ["Deska Stack-chan pro serva", "1×"],
+    ["Akumulátor Li-Pol 3,7 V s konektorem PH 2pin", "1×"],
+    ["Šrouby M2 × 4 mm", "4×"],
+    ["Šrouby M2 × 8 mm", "2×"],
+    ["Šrouby M3 × 15 mm (volitelně)", "2×"]
+  ],
+  "specs": [
+    ["Stupně volnosti", "2 (otáčení + náklon hlavy)"],
+    ["Pohon", "2× SG90, RS30X nebo SCS0009"],
+    ["Řízení", "M5Stack Core / Core2 / CoreS3"],
+    ["Tištěné díly", "skořepina, nožky, držák serv, zadní kryt baterie"],
+    ["Napájení", "akumulátor 3,7 V nebo externích 5 V"]
+  ],
+  "related": ["otto", "so101", "hand"],
+  "en": {
+    "credit": "Render from the Stack-chan model (Apache-2.0)",
+    "type": "Desktop companion robot",
+    "author": "Shinya Ishikawa (meganetaaan) and community",
+    "alt": "Stack-chan desktop robot with a display for a face on a pan-tilt head",
+    "short": "Small desktop companion: a display face, two servos and a head that turns and nods.",
+    "lead": "Small desktop companion whose face is drawn on an M5Stack module display. Two servos pan and tilt the head; behaviour is programmed in JavaScript or with blocks right in the browser.",
+    "software": "JavaScript (Moddable), blocks in the browser",
+    "card": [["Axes", "2 (pan + tilt)"], ["Controller", "M5Stack (ESP32)"]],
+    "bom": [
+      ["M5Stack Core module (Basic/Gray/Go/Fire)", "1×"],
+      ["SG90 micro servo (or serial RS30X / SCS0009)", "2×"],
+      ["Stack-chan servo board", "1×"],
+      ["3.7 V Li-Po battery with PH 2-pin connector", "1×"],
+      ["M2 × 4 mm screws", "4×"],
+      ["M2 × 8 mm screws", "2×"],
+      ["M3 × 15 mm screws (optional)", "2×"]
+    ],
+    "specs": [
+      ["Degrees of freedom", "2 (head pan + tilt)"],
+      ["Actuators", "2× SG90, RS30X or SCS0009"],
+      ["Controller", "M5Stack Core / Core2 / CoreS3"],
+      ["Printed parts", "shell, feet, servo bracket, battery back cover"],
+      ["Power", "3.7 V battery or external 5 V"]
+    ]
+  }
+}

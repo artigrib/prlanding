@@ -1,0 +1,39 @@
+{
+  "id": "hand",
+  "glb": true,
+  "name": "AmazingHand",
+  "type": "Robotická dlaň",
+  "cat": "arm",
+  "level": "Střední",
+  "hw": "CC BY 4.0",
+  "sw": "Apache-2.0",
+  "author": "Pollen Robotics",
+  "render": true,
+  "alt": "Robotická dlaň AmazingHand se čtyřmi prsty",
+  "short": "Čtyřprstá dlaň s 8 stupni volnosti a pohony uvnitř.",
+  "lead": "Čtyřprstá dlaň s 8 stupni volnosti a pohony uvnitř. Samostatně pro výzkum úchopu, nebo jako doplněk k ruce.",
+  "bomCost": "pod 200 EUR",
+  "printTime": "—",
+  "software": "Python / Arduino",
+  "repo": "https://github.com/pollen-robotics/AmazingHand",
+  "docs": "https://github.com/pollen-robotics/AmazingHand",
+  "card": [["Osy", "8 DOF"], ["Hmotnost", "≈ 400 g"]],
+  "bom": [["Mikroservo Feetech", "8×"], ["Řídicí deska serv", "1×"], ["Zdroj", "1×"], ["Čepy a šrouby", "1 sada"]],
+  "specs": [["Stupně volnosti", "8"], ["Prsty", "4 × 2 články"], ["Hmotnost", "≈ 400 g"]],
+  "related": ["so101", "lekiwi", "thor"],
+  "en": {
+    "type": "Robot hand",
+    "alt": "AmazingHand four-finger robot hand",
+    "short": "Four-finger hand with 8 degrees of freedom and the actuators inside.",
+    "lead": "Four-finger hand with 8 degrees of freedom and the actuators inside. Use it on its own for grasping research, or as an add-on to an arm.",
+    "bomCost": "under 200 EUR",
+    "card": [["Axes", "8 DOF"], ["Weight", "≈ 400 g"]],
+    "bom": [
+      ["Feetech micro servo", "8×"],
+      ["Servo driver board", "1×"],
+      ["Power supply", "1×"],
+      ["Pins and screws", "1 set"]
+    ],
+    "specs": [["Degrees of freedom", "8"], ["Fingers", "4 × 2 segments"], ["Weight", "≈ 400 g"]]
+  }
+}

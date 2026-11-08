@@ -1,0 +1,58 @@
+{
+  "id": "duck",
+  "glb": true,
+  "name": "Open Duck Mini v2",
+  "type": "Dvounohý robot",
+  "cat": "legged",
+  "level": "Pokročilý",
+  "hw": "Apache-2.0",
+  "sw": "Apache-2.0",
+  "author": "Antoine Pirrone a komunita",
+  "render": true,
+  "alt": "Dvounohý robot Open Duck Mini v2",
+  "short": "Malý chodící robot řízený RL politikou. 51 tištěných dílů včetně TPU.",
+  "lead": "Malý chodící robot řízený naučenou RL politikou. 51 tištěných dílů včetně pružných chodidel z TPU.",
+  "bomCost": "pod 400 USD",
+  "printTime": "—",
+  "software": "Python, RL politika",
+  "repo": "https://github.com/apirrone/Open_Duck_Mini",
+  "docs": "https://github.com/apirrone/Open_Duck_Mini",
+  "card": [["Výška", "≈ 42 cm"], ["Řízení", "RPi Zero 2W"]],
+  "bom": [
+    ["Serva Feetech (nohy a krk)", "dle BOM"],
+    ["Raspberry Pi Zero 2W", "1×"],
+    ["IMU", "1×"],
+    ["Baterie", "1×"],
+    ["Ložiska", "1 sada"]
+  ],
+  "specs": [
+    ["Výška", "≈ 42 cm"],
+    ["Řízení", "RPi Zero 2W"],
+    ["Tištěné díly", "51 (PLA + TPU)"],
+    ["Chůze", "RL politika"]
+  ],
+  "related": ["spot", "otto", "so101"],
+  "en": {
+    "type": "Bipedal robot",
+    "author": "Antoine Pirrone and community",
+    "alt": "Open Duck Mini v2 bipedal robot",
+    "short": "Small walking robot driven by an RL policy. 51 printed parts including TPU.",
+    "lead": "Small walking robot driven by a learned RL policy. 51 printed parts, including flexible TPU feet.",
+    "bomCost": "under 400 USD",
+    "software": "Python, RL policy",
+    "card": [["Height", "≈ 42 cm"], ["Controller", "RPi Zero 2W"]],
+    "bom": [
+      ["Feetech servos (legs and neck)", "per BOM"],
+      ["Raspberry Pi Zero 2W", "1×"],
+      ["IMU", "1×"],
+      ["Battery", "1×"],
+      ["Bearings", "1 set"]
+    ],
+    "specs": [
+      ["Height", "≈ 42 cm"],
+      ["Controller", "RPi Zero 2W"],
+      ["Printed parts", "51 (PLA + TPU)"],
+      ["Walking", "RL policy"]
+    ]
+  }
+}

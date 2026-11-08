@@ -1,0 +1,46 @@
+{
+  "id": "otto",
+  "glb": true,
+  "name": "Otto DIY",
+  "type": "Výukový robot",
+  "cat": "legged",
+  "level": "Začátečník",
+  "hw": "CC BY-SA 4.0",
+  "sw": "GPL-3.0",
+  "author": "Otto DIY",
+  "render": true,
+  "alt": "Výukový robot Otto DIY",
+  "short": "Malý chodící robot pro školy a kroužky — pod vedením dospělého.",
+  "lead": "Malý chodící robot pro školy a kroužky — první setkání s Arduinem a programováním, pod vedením dospělého.",
+  "bomCost": "—",
+  "printTime": "—",
+  "software": "Arduino, bloky",
+  "repo": "https://www.ottodiy.com",
+  "docs": "https://www.ottodiy.com",
+  "card": [["Serva", "4× SG90"], ["Řízení", "Arduino Nano"]],
+  "bom": [
+    ["Mikroservo SG90", "4×"],
+    ["Arduino Nano a deska", "1×"],
+    ["Ultrazvukový senzor", "1×"],
+    ["Bzučák", "1×"],
+    ["Držák baterií", "1×"]
+  ],
+  "specs": [["Serva", "4× SG90"], ["Řízení", "Arduino Nano"], ["Určeno", "14+, ve škole s dospělým"]],
+  "related": ["spot", "duck", "so101"],
+  "en": {
+    "type": "Educational robot",
+    "alt": "Otto DIY educational robot",
+    "short": "Small walking robot for schools and clubs — with adult supervision.",
+    "lead": "Small walking robot for schools and clubs — a first encounter with Arduino and programming, with adult supervision.",
+    "software": "Arduino, blocks",
+    "card": [["Servos", "4× SG90"], ["Controller", "Arduino Nano"]],
+    "bom": [
+      ["SG90 micro servo", "4×"],
+      ["Arduino Nano and board", "1×"],
+      ["Ultrasonic sensor", "1×"],
+      ["Buzzer", "1×"],
+      ["Battery holder", "1×"]
+    ],
+    "specs": [["Servos", "4× SG90"], ["Controller", "Arduino Nano"], ["Intended for", "14+, at school with an adult"]]
+  }
+}
