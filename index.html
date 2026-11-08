@@ -138,32 +138,19 @@
 </section>
 
 
-<section id="arena" class="band section-band" aria-labelledby="arena-h">
+<section id="arena" class="band band-s section-band" aria-labelledby="arena-h">
 <div class="wrap">
 <div class="g rule rule-inv">
 <div class="a1 mono">N° 03 — Bojoví roboti<code class="sec-k">arena.fight()</code></div>
-<h2 class="a4 h2" id="arena-h" style="max-width:52rem">Roboti do 150 g. Zápas si nejdřív odehrajete v aréně.</h2>
+<h2 class="a4 h2" id="arena-h">Bojová aréna v prohlížeči.</h2>
 </div>
-<div class="g arena-row">
-<figure class="arena-fig">
-<a href="sim/arena/" class="arena-shot" data-cta="arena-shot"><img src="assets/media/arena.jpg" width="1280" height="720" alt="Bojová aréna v prohlížeči: oranžový Project SVRN vyhodil flipperem modrého robota Klepeto do vzduchu" loading="lazy" decoding="async"></a>
-<figcaption class="mono">Obr. 4 — Bojová aréna v prohlížeči, kamera za robotem. Project SVRN právě flipperem vyhodil Klepeto.</figcaption>
-</figure>
+<div class="g arena-row arena-tease">
 <div class="arena-txt">
-<p class="lead">Fyzika s hmotností a třením, několik map, kamery včetně TV přenosu. Rychlý zápas, turnaj, dva hráči na jedné klávesnici nebo trénink bez časového limitu.</p>
-<ul class="ticks">
-<li>V garáži měníte kola, převody a zbraně, hmotnost se hlídá do 150 g.</li>
-<li>Project SVRN má vpředu výměnný modul: flipper, klín nebo chapadlo. Soupeři Kosa a Klepeto mají vlastní původní modely.</li>
-<li>Po zápase si zásah přehrajete zpomaleně a zápas uložíte jako soubor nebo krátký klip.</li>
-<li>První zápas provede krátký průvodce, soupeř Začátečník reaguje pomaleji. Motory, zbraně a zásahy mají vlastní zvuk.</li>
-</ul>
+<p class="lead">Robota do 150 g si upravíte v garáži a pošlete ho do zápasu proti počítači nebo kamarádovi na jedné klávesnici.</p>
 <a class="btn btn-o" href="sim/arena/" data-cta="arena">Spustit bojovou arénu <span aria-hidden="true">→</span></a>
 </div>
+<a href="sim/arena/" class="arena-shot arena-thumb" data-cta="arena-shot" tabindex="-1" aria-hidden="true"><img src="assets/media/arena.jpg" width="1280" height="720" alt="" loading="lazy" decoding="async"></a>
 </div>
-<ul class="bots">
-<li><a href="sada/svrn/"><span class="bot-img"><img src="img/svrn_white.jpg" width="1200" height="900" alt="Malý bojový robot Project SVRN s pohonem 4×4 a klínem" loading="lazy" decoding="async"></span><span class="bot-t"><span class="bot-st">Postavte si</span><b>Project SVRN</b><span>Tlačný robot s pohonem 4×4, vpředu flipper, klín nebo chapadlo.</span></span></a></li>
-<li><a href="sada/vert150/"><span class="bot-img"><img src="img/vert150_white.jpg" width="1200" height="900" alt="Malý bojový robot s vertikálním rotujícím ostřím" loading="lazy" decoding="async"></span><span class="bot-t"><span class="bot-st bot-st-p">Připravujeme</span><b>Vertikální spinner 150 g</b><span>Dvoukolový robot s rotujícím ostřím. Jen pro uzavřenou arénu.</span></span></a></li>
-</ul>
 </div>
 </section>
 <section id="ai" class="wrap section" aria-labelledby="ai-h">
@@ -171,7 +158,8 @@
 <div class="a1 mono">N° 04 — Připojte svou AI<code class="sec-k">ai.connect()</code></div>
 <h2 class="a4 h2" id="ai-h" style="max-width:52rem">Ruku v simulaci může řídit váš Claude.</h2>
 </div>
-<div class="g feat-row feat-row-r">
+<div class="g feat-row feat-row-solo">
+<div class="a1 hide-s"></div>
 <div class="feat-txt">
 <p class="lead">Claude nebo jiný asistent s podporou MCP dostane nástroje k ovládání simulované SO-101: pohyb kloubů, chapadlo, snímek kamery a mise. Ruka se hýbe ve vaší záložce, i když je na pozadí.</p>
 <ol class="ai-steps">
@@ -179,20 +167,9 @@
 <li>Otevřete simulaci a v panelu klikněte na Připojit AI. Zobrazí se kód.</li>
 <li>Řekněte Claudovi kód a v záložce povolte připojení.</li>
 </ol>
-<p class="mono feat-k">Zkuste říct Claudovi</p>
-<ul class="prompts">
-<li>„Seber kostku a polož ji do misky.“</li>
-<li>„Zatanči s rukou.“</li>
-<li>„Vyřeš misi 3.“</li>
-<li>„Ukaž mi snímek shora.“</li>
-</ul>
 <a class="btn btn-act" href="sim/so101/" data-cta="ai-sim">Otevřít simulaci <span aria-hidden="true">→</span></a>
 <span class="mono-s">Jen simulace: skutečnou ruku AI neovládá. Server zprávy jen přeposílá a nic neukládá. Kdykoli zastavíte tlačítkem STOP.</span>
 </div>
-<figure class="feat-fig">
-<img src="assets/media/ai-panel.jpg" width="1110" height="360" alt="Simulace SO-101 s panelem Ovládání přes AI: Simulaci ovládá Claude Code, tlačítka STOP a Odpojit a záznam toho, co AI dělá" loading="lazy" decoding="async">
-<figcaption class="mono">Obr. 5 — Panel Připojit AI ve stavu „Simulaci ovládá: Claude Code“. Každý krok AI se zapisuje do panelu.</figcaption>
-</figure>
 </div>
 </section>
 
@@ -204,13 +181,11 @@
 <div class="g" style="margin-top:clamp(24px,4vw,56px)">
 <div class="a1 hide-s"></div>
 <!--news-->
-<ol class="a4 news" reversed>
+<details class="a4 news-more"><summary>Všechny novinky (9)</summary>
+<ol class="news" reversed>
 <li><time datetime="2026-10-30">30. 10. 2026</time><span><b>Humanoid ROBOTO ORIGIN v prohlížeči</b>Otevřený humanoid od RoboParty chodí v simulaci podle politiky, kterou autoři natrénovali a zveřejnili. Řídíte ho klávesami nebo joystickem a můžete do něj strčit. Je to ukázka: díly neprodáváme a s RoboParty nejsme spojeni.</span><a href="sim/origin/">Simulace</a></li>
 <li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Ovládejte simulaci přes AI</b>Claude nebo jiný klient MCP ovládá simulovanou SO-101 ve vaší záložce, i když je na pozadí. V panelu klikněte na Připojit AI a pošlete AI zobrazený kód.</span><a href="sim/so101/">Simulace</a></li>
 <li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Mise 06–10 s předměty</b>Třídicí linka, snídaně, uklizený stůl, dílna a laboratoř. 59 naskenovaných předmětů s fyzikou (NVIDIA SimReady a Google Scanned Objects, CC BY 4.0).</span><a href="sim/so101/objects.html">Předměty</a></li>
-</ol>
-<details class="a4 news-more"><summary>Všechny novinky (9)</summary>
-<ol class="news">
 <li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Web v angličtině</b>Katalog, stránky sad, kvíz, návody i obě simulace jsou i anglicky. Jazyk přepnete v záhlaví.</span><a href="en/">English</a></li>
 <li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Pro školy a návody</b>45minutová hodina se simulací SO-101, pracovní list k tisku a hodnoticí tabulka. K tomu návody česky: SO-101 a LeRobot, bojoví roboti 150 g, licence.</span><a href="pro-skoly/">Pro školy</a></li>
 <li><time datetime="2026-10-29">29. 10. 2026</time><span><b>Project SVRN s výměnnými moduly</b>V aréně má SVRN vpředu flipper, klín nebo chapadlo. Modul vyberete v garáži, fyzika se mění s ním.</span><a href="sim/arena/">Aréna</a></li>
@@ -254,15 +229,9 @@
 <h2 class="a4s h2"><!--cat-h-->24 robotů a 4 laboratorní přístroje.<!--/cat-h--></h2>
 </div>
 <div class="cards" id="cards">
-<a class="card" href="sada/so101/"><div class="tile"><span class="tag">Postavte si</span><img src="img/so101_white.jpg" alt="Robotická ruka SO-101" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">01</span><span class="mono">Začátečník</span></span><span><h3>SO-101</h3><span class="type">Robotická ruka</span></span><span class="spec1">5 + chapadlo · LeRobot</span><p class="desc">Ruka s pěti osami a chapadlem pro AI a teleoperaci s knihovnou LeRobot. Pár ovládací + výkonná ruka.</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>
-<a class="card" href="sada/lekiwi/"><div class="tile"><span class="tag">Postavte si</span><img src="img/lekiwi_white.jpg" alt="Mobilní robot LeKiwi s omni koly a rukou SO-101" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">02</span><span class="mono">Střední</span></span><span><h3>LeKiwi</h3><span class="type">Mobilní manipulátor</span></span><span class="spec1">3× omni kolo · Raspberry Pi 5</span><p class="desc">Holonomní tříkolová základna s rukou SO-101, Raspberry Pi 5 a dvěma kamerami.</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>
-<a class="card" href="sada/xle/"><div class="tile"><span class="tag tag-p">Připravujeme</span><img src="img/xle_white.jpg" alt="Robot XLeRobot se dvěma rukama na vozíku" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">03</span><span class="mono">Připravujeme</span></span><span><h3>XLeRobot</h3><span class="type">Dvouruký domácí robot</span></span><span class="spec1">2× SO-101 · VR, gamepad</span><p class="desc">Dvě ruce SO-101 na mobilní základně. Teleoperace přes VR či gamepad.</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>
-<a class="card" href="sada/duck/"><div class="tile"><span class="tag">Postavte si</span><img src="img/duck_white.jpg" alt="Dvounohý robot Open Duck Mini v2" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">04</span><span class="mono">Pokročilý</span></span><span><h3>Open Duck Mini v2</h3><span class="type">Dvounohý robot</span></span><span class="spec1">≈ 42 cm · RPi Zero 2W</span><p class="desc">Malý chodící robot řízený RL politikou. 51 tištěných dílů včetně TPU.</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>
-<a class="card" href="sada/otto/"><div class="tile"><span class="tag">Postavte si</span><img src="img/otto_white.jpg" alt="Výukový robot Otto DIY" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">06</span><span class="mono">Začátečník</span></span><span><h3>Otto DIY</h3><span class="type">Výukový robot</span></span><span class="spec1">4× SG90 · Arduino Nano</span><p class="desc">Malý chodící robot pro školy a kroužky — pod vedením dospělého.</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>
-<a class="card" href="sada/sawppy/"><div class="tile"><span class="tag">Postavte si</span><img src="img/sawppy_white.jpg" alt="Šestikolový rover Sawppy" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">08</span><span class="mono">Střední</span></span><span><h3>Sawppy</h3><span class="type">Rover</span></span><span class="spec1">6, rocker-bogie · LX-16A</span><p class="desc">Šestikolový rover podle marsovských vozítek.</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>
-<a class="card" href="sada/so102/"><div class="tile"><span class="tag">Postavte si</span><img src="img/so102_white.jpg" alt="Robotická ruka SO-ARM 102 s paralelním chapadlem" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">11</span><span class="mono">Střední</span></span><span><h3>SO-ARM 102</h3><span class="type">Robotická ruka</span></span><span class="spec1">300 g · 483 mm</span><p class="desc">Tužší a rychlejší nástupce SO-101. Paralelní chapadlo, díly z PET-CF a stejná kinematika pro LeRobot.</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>
-<a class="card" href="sada/svrn/"><div class="tile"><span class="tag">Postavte si</span><img src="img/svrn_white.jpg" alt="Malý bojový robot Project SVRN s pohonem 4×4 a klínem" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">17</span><span class="mono">Začátečník</span></span><span><h3>Project SVRN</h3><span class="type">Bojový robot 150 g</span></span><span class="spec1">do 150 g · 4× N10</span><p class="desc">Modulární bojový robot do 150 g: tlačný robot (pusher) s pohonem 4×4, k tomu flipper nebo chapadlo.</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>
-<a class="card" href="sada/uc2/"><div class="tile"><span class="tag">Postavte si</span><img src="img/uc2_white.jpg" alt="Mikroskop pro chytrý telefon složený z tištěných kostek UC2 na základní desce" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">22</span><span class="mono">Začátečník</span></span><span><h3>UC2</h3><span class="type">Modulární optická stavebnice</span></span><span class="spec1">50 mm · mikroskop pro telefon</span><p class="desc">Optické pokusy z tištěných kostek o hraně 50 mm. Model ukazuje jednoduchý mikroskop pro chytrý telefon.</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>
+<a class="card" href="sada/so101/"><div class="tile"><span class="tag">Postavte si</span><img src="img/so101_white.jpg" alt="Robotická ruka SO-101" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">01</span><span class="mono">Začátečník</span></span><span><h3>SO-101</h3><span class="type">Robotická ruka</span></span><span class="spec1">5 + chapadlo · LeRobot</span><p class="desc">Ruka s pěti osami a chapadlem pro AI a teleoperaci s knihovnou LeRobot. Pár ovládací + výkonná ruka.</p><span class="go">Detail projektu <span aria-hidden="true">→</span></span></a>
+<a class="card" href="sada/lekiwi/"><div class="tile"><span class="tag">Postavte si</span><img src="img/lekiwi_white.jpg" alt="Mobilní robot LeKiwi s omni koly a rukou SO-101" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">02</span><span class="mono">Střední</span></span><span><h3>LeKiwi</h3><span class="type">Mobilní manipulátor</span></span><span class="spec1">3× omni kolo · Raspberry Pi 5</span><p class="desc">Holonomní tříkolová základna s rukou SO-101, Raspberry Pi 5 a dvěma kamerami.</p><span class="go">Detail projektu <span aria-hidden="true">→</span></span></a>
+<a class="card" href="sada/so102/"><div class="tile"><span class="tag">Postavte si</span><img src="img/so102_white.jpg" alt="Robotická ruka SO-ARM 102 s paralelním chapadlem" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">11</span><span class="mono">Střední</span></span><span><h3>SO-ARM 102</h3><span class="type">Robotická ruka</span></span><span class="spec1">300 g · 483 mm</span><p class="desc">Tužší a rychlejší nástupce SO-101. Paralelní chapadlo, díly z PET-CF a stejná kinematika pro LeRobot.</p><span class="go">Detail projektu <span aria-hidden="true">→</span></span></a>
 </div><!--/cards-->
 <!--cat-all--><p class="cat-all"><a class="btn btn-o" href="katalog/" data-cta="catalogue">Celý katalog (28) <span aria-hidden="true">→</span></a></p><!--/cat-all-->
 <!--registry-link--><p class="reg-link"><a href="katalog/rejstrik/" data-cta="registry">Všech 309 tisknutelných projektů v rejstříku <span aria-hidden="true">→</span></a></p><!--/registry-link-->

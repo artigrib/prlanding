@@ -42,7 +42,7 @@
 <header class="site-h" id="site-h">
 <div class="wrap"><div class="hbar">
 <div class="brand"><i aria-hidden="true"></i><a href="../en/">printedrobotics</a><!--lang-sw--><span class="lang-sw"><a href="../" hreflang="cs" lang="cs" data-lang="cs" title="Čeština">CZ</a><span class="sep" aria-hidden="true">/</span><span aria-current="true" lang="en" title="English">EN</span></span><!--/lang-sw--></div>
-<nav class="nav" aria-label="Main menu"><a href="../sim/so101/?lang=en">Simulation</a><a href="../en/plan/so101/">Parts plan</a><a href="#katalog" data-sec="katalog">Kits</a><a href="../en/guides/">Guides</a><a href="../en/for-schools/">For schools</a></nav>
+<nav class="nav" aria-label="Main menu"><a href="../sim/so101/?lang=en">Simulation</a><a href="../en/plan/so101/">Parts plan</a><a href="#katalog" data-sec="katalog">Projects</a><a href="../en/guides/">Guides</a><a href="../en/for-schools/">For schools</a></nav>
 <a class="pill" href="../en/plan/so101/"><span class="pill-l">SO-101 parts plan</span><span class="pill-s">Parts plan</span> <span aria-hidden="true">→</span></a>
 </div></div>
 </header>
@@ -139,32 +139,19 @@
 </section>
 
 
-<section id="arena" class="band section-band" aria-labelledby="arena-h">
+<section id="arena" class="band band-s section-band" aria-labelledby="arena-h">
 <div class="wrap">
 <div class="g rule rule-inv">
 <div class="a1 mono">N° 03 — Combat robots<code class="sec-k">arena.fight()</code></div>
-<h2 class="a4 h2" id="arena-h" style="max-width:52rem">Robots up to 150 g. Fight your first match in the arena.</h2>
+<h2 class="a4 h2" id="arena-h">A combat arena in your browser.</h2>
 </div>
-<div class="g arena-row">
-<figure class="arena-fig">
-<a href="../sim/arena/?lang=en" class="arena-shot" data-cta="arena-shot"><img src="../assets/media/arena.jpg" width="1280" height="720" alt="Combat arena in the browser: the orange Project SVRN flips the blue robot Klepeto into the air" loading="lazy" decoding="async"></a>
-<figcaption class="mono">Fig. 4 — Combat arena in the browser, chase camera. Project SVRN has just flipped Klepeto with its flipper.</figcaption>
-</figure>
+<div class="g arena-row arena-tease">
 <div class="arena-txt">
-<p class="lead">Physics with mass and friction, several maps, cameras including a TV broadcast view. Quick match, tournament, two players on one keyboard, or practice with no time limit.</p>
-<ul class="ticks">
-<li>In the garage you swap wheels, gearing and weapons; weight is kept under 150 g.</li>
-<li>Project SVRN has a swappable front module: flipper, wedge or grabber. Opponents Kosa and Klepeto have their own original models.</li>
-<li>After the match, replay a hit in slow motion and save the match as a file or a short clip.</li>
-<li>A short guide walks you through the first match, and the Beginner opponent reacts more slowly. Motors, weapons and hits have their own sound.</li>
-</ul>
+<p class="lead">Tune a robot of up to 150 g in the garage, then fight the computer or a friend on the same keyboard.</p>
 <a class="btn btn-o" href="../sim/arena/?lang=en" data-cta="arena">Start the combat arena <span aria-hidden="true">→</span></a>
 </div>
+<a href="../sim/arena/?lang=en" class="arena-shot arena-thumb" data-cta="arena-shot" tabindex="-1" aria-hidden="true"><img src="../assets/media/arena.jpg" width="1280" height="720" alt="" loading="lazy" decoding="async"></a>
 </div>
-<ul class="bots">
-<li><a href="../en/kit/svrn/"><span class="bot-img"><img src="../img/svrn_white.jpg" width="1200" height="900" alt="Project SVRN small combat robot with 4×4 drive and a wedge" loading="lazy" decoding="async"></span><span class="bot-t"><span class="bot-st">Build it yourself</span><b>Project SVRN</b><span>A 4×4 pusher with a flipper, wedge or grabber at the front.</span></span></a></li>
-<li><a href="../en/kit/vert150/"><span class="bot-img"><img src="../img/vert150_white.jpg" width="1200" height="900" alt="Small combat robot with a vertical spinning blade" loading="lazy" decoding="async"></span><span class="bot-t"><span class="bot-st bot-st-p">Coming soon</span><b>150 g vertical spinner</b><span>Two-wheel robot with a spinning blade. Enclosed arena only.</span></span></a></li>
-</ul>
 </div>
 </section>
 <section id="ai" class="wrap section" aria-labelledby="ai-h">
@@ -172,7 +159,8 @@
 <div class="a1 mono">N° 04 — Connect your AI<code class="sec-k">ai.connect()</code></div>
 <h2 class="a4 h2" id="ai-h" style="max-width:52rem">Your Claude can drive the simulated arm.</h2>
 </div>
-<div class="g feat-row feat-row-r">
+<div class="g feat-row feat-row-solo">
+<div class="a1 hide-s"></div>
 <div class="feat-txt">
 <p class="lead">Claude or another assistant with MCP support gets tools to control the simulated SO-101: joint moves, the gripper, a camera snapshot and missions. The arm moves in your browser tab, even when the tab is in the background.</p>
 <ol class="ai-steps">
@@ -180,20 +168,9 @@
 <li>Open the simulation and click Connect AI in the panel. A code appears.</li>
 <li>Give Claude the code and allow the connection in the tab.</li>
 </ol>
-<p class="mono feat-k">Try telling Claude</p>
-<ul class="prompts">
-<li>“Pick up the cube and put it in the bowl.”</li>
-<li>“Make the arm dance.”</li>
-<li>“Solve mission 3.”</li>
-<li>“Show me a picture from the top.”</li>
-</ul>
 <a class="btn btn-act" href="../sim/so101/?lang=en" data-cta="ai-sim">Open the simulation <span aria-hidden="true">→</span></a>
 <span class="mono-s">Simulation only: the AI cannot control a real arm. Our server only relays messages and stores nothing. Press STOP at any time.</span>
 </div>
-<figure class="feat-fig">
-<img src="../assets/media/ai-panel.jpg" width="1110" height="360" alt="SO-101 simulation with the AI control panel: the simulation is controlled by Claude Code, STOP and Disconnect buttons and a log of what the AI does" loading="lazy" decoding="async">
-<figcaption class="mono">Fig. 5 — The Connect AI panel while “Claude Code” controls the simulation (Czech interface shown). Every AI step is logged in the panel.</figcaption>
-</figure>
 </div>
 </section>
 
@@ -205,13 +182,11 @@
 <div class="g" style="margin-top:clamp(24px,4vw,56px)">
 <div class="a1 hide-s"></div>
 <!--news-->
-<ol class="a4 news" reversed>
+<details class="a4 news-more"><summary>All updates (9)</summary>
+<ol class="news" reversed>
 <li><time datetime="2026-10-30">30 Oct 2026</time><span><b>The ROBOTO ORIGIN humanoid in your browser</b>RoboParty’s open humanoid walks in the simulation with the policy its authors trained and published. Steer it with the keys or a joystick, and push it. It is a showcase: we do not sell parts and we are not affiliated with RoboParty.</span><a href="../en/sim/origin/">Simulation</a></li>
 <li><time datetime="2026-10-29">29 Oct 2026</time><span><b>Control the simulation with AI</b>Claude or another MCP client controls the simulated SO-101 in your browser tab, even in the background. Click Connect AI in the panel and give the AI the code it shows.</span><a href="../sim/so101/?lang=en">Simulation</a></li>
 <li><time datetime="2026-10-29">29 Oct 2026</time><span><b>Missions 06–10 with objects</b>Sorting line, breakfast, tidy desk, workshop and lab. 59 scanned objects with physics (NVIDIA SimReady and Google Scanned Objects, CC BY 4.0).</span><a href="../sim/so101/objects.html?lang=en">Objects</a></li>
-</ol>
-<details class="a4 news-more"><summary>All updates (9)</summary>
-<ol class="news">
 <li><time datetime="2026-10-29">29 Oct 2026</time><span><b>The site in English</b>The catalogue, kit pages, quiz, guides and both simulations are available in English. Switch the language in the header.</span><a href="../en/">English</a></li>
 <li><time datetime="2026-10-29">29 Oct 2026</time><span><b>For schools, and guides</b>A 45-minute lesson with the SO-101 simulation, a printable worksheet and a marking rubric. Plus guides: SO-101 and LeRobot, 150 g combat robots, licences.</span><a href="../en/for-schools/">For schools</a></li>
 <li><time datetime="2026-10-29">29 Oct 2026</time><span><b>Project SVRN with swappable modules</b>In the arena SVRN carries a flipper, wedge or grabber at the front. Pick the module in the garage; the physics changes with it.</span><a href="../sim/arena/?lang=en">Arena</a></li>
@@ -255,15 +230,9 @@
 <h2 class="a4s h2"><!--cat-h-->24 robots and 4 lab instruments.<!--/cat-h--></h2>
 </div>
 <div class="cards" id="cards">
-<a class="card" href="../en/kit/so101/"><div class="tile"><span class="tag">Build it yourself</span><img src="../img/so101_white.jpg" alt="SO-101 robot arm" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">01</span><span class="mono">Beginner</span></span><span><h3>SO-101</h3><span class="type">Robot arm</span></span><span class="spec1">5 + gripper · LeRobot</span><p class="desc">Five-axis arm with a gripper for AI and teleoperation with LeRobot. A leader + follower pair.</p><span class="go">Kit details <span aria-hidden="true">→</span></span></a>
-<a class="card" href="../en/kit/lekiwi/"><div class="tile"><span class="tag">Build it yourself</span><img src="../img/lekiwi_white.jpg" alt="LeKiwi mobile robot with omni wheels and an SO-101 arm" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">02</span><span class="mono">Intermediate</span></span><span><h3>LeKiwi</h3><span class="type">Mobile manipulator</span></span><span class="spec1">3× omni wheel · Raspberry Pi 5</span><p class="desc">Holonomic three-wheel base with an SO-101 arm, Raspberry Pi 5 and two cameras.</p><span class="go">Kit details <span aria-hidden="true">→</span></span></a>
-<a class="card" href="../en/kit/xle/"><div class="tile"><span class="tag tag-p">Coming soon</span><img src="../img/xle_white.jpg" alt="XLeRobot with two arms on a cart" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">03</span><span class="mono">Coming soon</span></span><span><h3>XLeRobot</h3><span class="type">Two-armed home robot</span></span><span class="spec1">2× SO-101 · VR, gamepad</span><p class="desc">Two SO-101 arms on a mobile base. Teleoperation via VR or gamepad.</p><span class="go">Kit details <span aria-hidden="true">→</span></span></a>
-<a class="card" href="../en/kit/duck/"><div class="tile"><span class="tag">Build it yourself</span><img src="../img/duck_white.jpg" alt="Open Duck Mini v2 bipedal robot" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">04</span><span class="mono">Advanced</span></span><span><h3>Open Duck Mini v2</h3><span class="type">Bipedal robot</span></span><span class="spec1">≈ 42 cm · RPi Zero 2W</span><p class="desc">Small walking robot driven by an RL policy. 51 printed parts including TPU.</p><span class="go">Kit details <span aria-hidden="true">→</span></span></a>
-<a class="card" href="../en/kit/otto/"><div class="tile"><span class="tag">Build it yourself</span><img src="../img/otto_white.jpg" alt="Otto DIY educational robot" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">06</span><span class="mono">Beginner</span></span><span><h3>Otto DIY</h3><span class="type">Educational robot</span></span><span class="spec1">4× SG90 · Arduino Nano</span><p class="desc">Small walking robot for schools and clubs — with adult supervision.</p><span class="go">Kit details <span aria-hidden="true">→</span></span></a>
-<a class="card" href="../en/kit/sawppy/"><div class="tile"><span class="tag">Build it yourself</span><img src="../img/sawppy_white.jpg" alt="Sawppy six-wheel rover" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">08</span><span class="mono">Intermediate</span></span><span><h3>Sawppy</h3><span class="type">Rover</span></span><span class="spec1">6, rocker-bogie · LX-16A</span><p class="desc">Six-wheel rover modelled on the Mars rovers.</p><span class="go">Kit details <span aria-hidden="true">→</span></span></a>
-<a class="card" href="../en/kit/so102/"><div class="tile"><span class="tag">Build it yourself</span><img src="../img/so102_white.jpg" alt="SO-ARM 102 robot arm with a parallel gripper" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">11</span><span class="mono">Intermediate</span></span><span><h3>SO-ARM 102</h3><span class="type">Robot arm</span></span><span class="spec1">300 g · 483 mm</span><p class="desc">Stiffer, faster successor to the SO-101. Parallel gripper, PET-CF parts and the same kinematics for LeRobot.</p><span class="go">Kit details <span aria-hidden="true">→</span></span></a>
-<a class="card" href="../en/kit/svrn/"><div class="tile"><span class="tag">Build it yourself</span><img src="../img/svrn_white.jpg" alt="Project SVRN small combat robot with 4×4 drive and a wedge" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">17</span><span class="mono">Beginner</span></span><span><h3>Project SVRN</h3><span class="type">150 g combat robot</span></span><span class="spec1">up to 150 g · 4× N10</span><p class="desc">Modular combat robot up to 150 g: a 4×4 pusher, plus a flipper or grabber module.</p><span class="go">Kit details <span aria-hidden="true">→</span></span></a>
-<a class="card" href="../en/kit/uc2/"><div class="tile"><span class="tag">Build it yourself</span><img src="../img/uc2_white.jpg" alt="Smartphone microscope built from printed UC2 cubes on a baseplate" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">22</span><span class="mono">Beginner</span></span><span><h3>UC2</h3><span class="type">Modular optics kit</span></span><span class="spec1">50 mm · smartphone microscope</span><p class="desc">Optics experiments from printed 50 mm cubes. The model shows the simple smartphone microscope.</p><span class="go">Kit details <span aria-hidden="true">→</span></span></a>
+<a class="card" href="../en/kit/so101/"><div class="tile"><span class="tag">Build it yourself</span><img src="../img/so101_white.jpg" alt="SO-101 robot arm" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">01</span><span class="mono">Beginner</span></span><span><h3>SO-101</h3><span class="type">Robot arm</span></span><span class="spec1">5 + gripper · LeRobot</span><p class="desc">Five-axis arm with a gripper for AI and teleoperation with LeRobot. A leader + follower pair.</p><span class="go">Project details <span aria-hidden="true">→</span></span></a>
+<a class="card" href="../en/kit/lekiwi/"><div class="tile"><span class="tag">Build it yourself</span><img src="../img/lekiwi_white.jpg" alt="LeKiwi mobile robot with omni wheels and an SO-101 arm" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">02</span><span class="mono">Intermediate</span></span><span><h3>LeKiwi</h3><span class="type">Mobile manipulator</span></span><span class="spec1">3× omni wheel · Raspberry Pi 5</span><p class="desc">Holonomic three-wheel base with an SO-101 arm, Raspberry Pi 5 and two cameras.</p><span class="go">Project details <span aria-hidden="true">→</span></span></a>
+<a class="card" href="../en/kit/so102/"><div class="tile"><span class="tag">Build it yourself</span><img src="../img/so102_white.jpg" alt="SO-ARM 102 robot arm with a parallel gripper" loading="lazy" width="1200" height="900"></div><span class="card-meta"><span class="mono" style="color:var(--ink)">11</span><span class="mono">Intermediate</span></span><span><h3>SO-ARM 102</h3><span class="type">Robot arm</span></span><span class="spec1">300 g · 483 mm</span><p class="desc">Stiffer, faster successor to the SO-101. Parallel gripper, PET-CF parts and the same kinematics for LeRobot.</p><span class="go">Project details <span aria-hidden="true">→</span></span></a>
 </div><!--/cards-->
 <!--cat-all--><p class="cat-all"><a class="btn btn-o" href="../en/catalogue/" data-cta="catalogue">Full catalogue (28) <span aria-hidden="true">→</span></a></p><!--/cat-all-->
 <!--registry-link--><p class="reg-link"><a href="../en/catalogue/registry/" data-cta="registry">All 309 printable projects in the registry <span aria-hidden="true">→</span></a></p><!--/registry-link-->

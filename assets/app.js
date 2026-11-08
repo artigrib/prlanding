@@ -185,7 +185,7 @@
           '<span class="spec1">' + r.card.map(function (s) { return esc(s[1]); }).join(' · ') + '</span>' +
           '<p class="desc">' + esc(r.short) + '</p>' +
           '<dl class="dl2">' + r.card.map(function (s) { return '<div><dt>' + esc(s[0]) + '</dt><dd>' + esc(s[1]) + '</dd></div>'; }).join('') + '</dl>' +
-          '<span class="go">Detail sady <span aria-hidden="true">→</span></span></a>';
+          '<span class="go">Detail projektu <span aria-hidden="true">→</span></span></a>';
       }).join('') + (window.PR_SHOWCASE || []).filter(function (r) { return filter === 'all' || r.cat === filter; }).map(showCard).join('');
     }
     // showcases: open projects we present but do not sell; the card opens the simulation (no kit page, no order form)
@@ -638,7 +638,7 @@
           '<div style="display:flex;flex-direction:column;gap:14px"><div class="card-meta mono"><span>' + b.level + '</span><span>' + status(b) + '</span></div><span class="muted" style="font-size:17px">Doporučujeme postavit si</span><h1 class="p-name" style="margin-top:-6px" tabindex="-1" id="q-h">' + esc(b.name) + '</h1>' +
           '<ul class="reasons">' + REASONS[b.id].map(function (t) { return '<li><span>' + t + '</span></li>'; }).join('') + '</ul>' +
           '<a class="btn btn-act" href="' + href(b.id) + c + (b.preparing ? '#predobjednavka">Dejte mi vědět' : '#obsah">Co budete potřebovat') + ' <span aria-hidden="true">→</span></a>' +
-          '<a class="btn btn-o" href="' + href(b.id) + c + '">Detail sady <span aria-hidden="true">→</span></a></div></div>' +
+          '<a class="btn btn-o" href="' + href(b.id) + c + '">Detail projektu <span aria-hidden="true">→</span></a></div></div>' +
           '<div><div class="mono" style="border-top:1px solid var(--ink);padding-top:12px;margin-bottom:16px">Také by vás mohlo bavit</div><div class="alts">' +
           res.slice(1).map(function (id) { var x = byId[id]; return '<a href="' + href(x.id) + cfg(x, ans) + '">' + tile(x, 'white') + '<span><b style="font-size:21px;font-weight:500;letter-spacing:-.03em;display:block">' + esc(x.name) + '</b><span class="muted" style="font-size:15px">' + (x.preparing ? 'Připravujeme' : x.level) + ' · ' + esc(x.type) + '</span></span></a>'; }).join('') +
           '</div></div>' + '<button type="button" id="restart" class="linkbtn" style="align-self:flex-start">Začít kvíz znovu</button></div></div>';

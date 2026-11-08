@@ -204,7 +204,7 @@ function assertEnglish(html, page) {
    path = the file being written (from the site root); root = '../' chain to the site root ('/' for 404.html). */
 const NAV = {
   cs: [['sim', 'sim/so101/', 'Simulace'], ['plan', 'plan/so101/', 'Plán nákupu'], ['katalog', '#katalog', 'Katalog'], ['navody', 'navody/', 'Návody'], ['skoly', 'pro-skoly/', 'Pro školy']],
-  en: [['sim', 'sim/so101/?lang=en', 'Simulation'], ['plan', 'en/plan/so101/', 'Parts plan'], ['katalog', 'en/#katalog', 'Kits'], ['navody', 'en/guides/', 'Guides'], ['skoly', 'en/for-schools/', 'For schools']]
+  en: [['sim', 'sim/so101/?lang=en', 'Simulation'], ['plan', 'en/plan/so101/', 'Parts plan'], ['katalog', 'en/#katalog', 'Projects'], ['navody', 'en/guides/', 'Guides'], ['skoly', 'en/for-schools/', 'For schools']]
 };
 function siteNav(path, root) {
   const L = path.startsWith('en/') ? 'en' : 'cs';
@@ -473,14 +473,14 @@ const NROBOTS = R.filter(r => r.cat !== 'lab').length;   // the "N robotů" head
 const cards = R.map((r, i) => `<a class="card" href="sada/${r.id}/"><div class="tile"><span class="tag${r.preparing ? ' tag-p' : ''}">${r.preparing ? 'Připravujeme' : 'Postavte si'}</span><img src="img/${r.id}_white.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
   `<span class="card-meta"><span class="mono" style="color:var(--ink)">${no(i)}</span><span class="mono">${esc(r.preparing ? 'Připravujeme' : r.level)}</span></span>` +
   `<span><h3>${esc(r.name)}</h3><span class="type">${esc(r.type)}</span></span><span class="spec1">${r.card.map(c => esc(c[1])).join(' · ')}</span>` +
-  `<p class="desc">${esc(r.short)}</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>`).join('\n');
+  `<p class="desc">${esc(r.short)}</p><span class="go">Detail projektu <span aria-hidden="true">→</span></span></a>`).join('\n');
 // showcases (PR_SHOWCASE): open projects we present but do not sell; the card links to the simulation, no kit page
 const showCard = (r, L) => `<a class="card card-show" href="sim/${r.sim}/" data-showcase="${r.id}"><div class="tile"><span class="tag tag-s">${L === 'en' ? 'Showcase' : 'Ukázka'}</span><img src="img/${r.id}_poster.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
   `<span class="card-meta"><span class="mono" style="color:var(--ink)">OH</span><span class="mono">${L === 'en' ? 'Open hardware' : 'Otevřený hardware'}</span></span>` +
   `<span><h3>${esc(r.name)}</h3><span class="type">${esc(r.type)}</span></span><span class="spec1">${r.card.map(c => esc(c[1])).join(' · ')}</span>` +
   `<p class="desc">${esc(r.short)} <span class="mono-s">${esc(r.notAffiliated)}</span></p><span class="go">${L === 'en' ? 'Try it in the simulator' : 'Vyzkoušet v simulaci'} <span aria-hidden="true">→</span></span></a>`;
-// home catalogue = the SO-101 family + one or two per category; the whole catalogue (filters, all cards) is katalog/
-const FEATURED = ['so101', 'lekiwi', 'xle', 'so102', 'otto', 'duck', 'sawppy', 'svrn', 'uc2'];
+// home catalogue = three SO-101 family projects; the whole catalogue (filters, all cards) is katalog/
+const FEATURED = ['so101', 'lekiwi', 'so102'];
 for (const id of FEATURED) if (!R.some(r => r.id === id)) throw new Error('FEATURED: unknown kit ' + id);
 const NLAB = R.length - NROBOTS;
 const czPl = (n, one, few, many) => n === 1 ? one : n >= 2 && n <= 4 ? few : many;
@@ -490,14 +490,14 @@ const catCount = L => L === 'en'
   : `${NROBOTS} ${czPl(NROBOTS, 'robot', 'roboti', 'robotů')}${NLAB ? ` a ${NLAB} ${czPl(NLAB, 'laboratorní přístroj', 'laboratorní přístroje', 'laboratorních přístrojů')}` : ''}`;
 const catHead = L => L === 'en' ? `${catCount('en')}.` : `${catCount('cs')}.`;
 const catAll = L => `<!--cat-all--><p class="cat-all"><a class="btn btn-o" href="katalog/" data-cta="catalogue">${L === 'en' ? `Full catalogue (${R.length})` : `Celý katalog (${R.length})`} <span aria-hidden="true">→</span></a></p><!--/cat-all-->`;
-// news: the 3 newest stay in view, the rest folds into <details> (works without JS); idempotent: all items are re-read each build
+// news: every item folds into one closed <details> "Všechny novinky (n)" (works without JS); all items stay in the
+// region so heroNew() and the tests can read them; idempotent: all items are re-read each build
 function foldNews(html, L) {
   const m = /<!--news-->([\s\S]*?)<!--\/news-->/.exec(html);
   if (!m) throw new Error('index.html: news region not found');
   const items = m[1].match(/<li>[\s\S]*?<\/li>/g) || [];
-  if (items.length < 4) throw new Error('index.html: news region has too few items');
-  const more = items.slice(3);
-  return html.replace(m[0], () => `<!--news-->\n<ol class="a4 news" reversed>\n${items.slice(0, 3).join('\n')}\n</ol>\n<details class="a4 news-more"><summary>${L === 'en' ? `All updates (${items.length})` : `Všechny novinky (${items.length})`}</summary>\n<ol class="news">\n${more.join('\n')}\n</ol>\n</details>\n<!--/news-->`);
+  if (items.length < 1) throw new Error('index.html: news region has no items');
+  return html.replace(m[0], () => `<!--news-->\n<details class="a4 news-more"><summary>${L === 'en' ? `All updates (${items.length})` : `Všechny novinky (${items.length})`}</summary>\n<ol class="news" reversed>\n${items.join('\n')}\n</ol>\n</details>\n<!--/news-->`);
 }
 let home = read('index.html');
 home = foldNews(home, 'cs');
@@ -522,7 +522,7 @@ if (home.includes('<!--/cards-->')) {
   const enCards = W.en.PR_ROBOTS.map((r, i) => `<a class="card" href="sada/${r.id}/"><div class="tile"><span class="tag${r.preparing ? ' tag-p' : ''}">${r.preparing ? 'Připravujeme' : 'Postavte si'}</span><img src="img/${r.id}_white.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
     `<span class="card-meta"><span class="mono" style="color:var(--ink)">${no(i)}</span><span class="mono">${esc(r.preparing ? 'Připravujeme' : r.level)}</span></span>` +
     `<span><h3>${esc(r.name)}</h3><span class="type">${esc(r.type)}</span></span><span class="spec1">${r.card.map(c => esc(c[1])).join(' · ')}</span>` +
-    `<p class="desc">${esc(r.short)}</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>`).join('\n');
+    `<p class="desc">${esc(r.short)}</p><span class="go">Detail projektu <span aria-hidden="true">→</span></span></a>`).join('\n');
   const page = 'en/', root = '../';
   const meta = (re, v) => en => en.replace(re, v);
   let en = home
@@ -604,7 +604,7 @@ function catalogBlock(L) {
   const html = D.PR_ROBOTS.map((r, i) => `<a class="card" href="{root}${kit(r.id)}"><div class="tile"><span class="tag${r.preparing ? ' tag-p' : ''}">${r.preparing ? 'Připravujeme' : 'Postavte si'}</span><img src="{root}img/${r.id}_white.jpg" alt="${esc(r.alt)}" loading="lazy" width="1200" height="900"></div>` +
     `<span class="card-meta"><span class="mono" style="color:var(--ink)">${no(i)}</span><span class="mono">${esc(r.preparing ? 'Připravujeme' : r.level)}</span></span>` +
     `<span><h3>${esc(r.name)}</h3><span class="type">${esc(r.type)}</span></span><span class="spec1">${r.card.map(x => esc(x[1])).join(' · ')}</span>` +
-    `<p class="desc">${esc(r.short)}</p><span class="go">Detail sady <span aria-hidden="true">→</span></span></a>`).join('\n') + '\n' +
+    `<p class="desc">${esc(r.short)}</p><span class="go">Detail projektu <span aria-hidden="true">→</span></span></a>`).join('\n') + '\n' +
     D.PR_SHOWCASE.map(r => showCard(r, L).replace('href="sim/', L === 'en' && r.sim === 'origin' ? 'href="{root}en/sim/' : 'href="{root}sim/').replace('src="img/', 'src="{root}img/')).join('\n');
   const block = `<div class="filters" id="filters" role="group" aria-label="Filtr podle typu"></div>\n<p class="mono count" id="count" aria-live="polite"></p>\n<div class="cards" id="cards">\n${html}\n</div>`;
   return L === 'en' ? translateHtml(block) : block;
