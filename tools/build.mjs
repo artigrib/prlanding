@@ -448,7 +448,7 @@ function buildTimeline(L) {
     ? { no: 'Fig. 3', src: 'img/so101_white.jpg', w: 1200, h: 900, alt: 'SO-101 robot arm, a render from the project CAD', cap: 'SO-101 rendered from the project CAD. A photo from our own build will replace it.', photoCap: 'Our SO-101 build.' }
     : { no: 'Obr. 3', src: 'img/so101_white.jpg', w: 1200, h: 900, alt: 'Robotická ruka SO-101, vizualizace z CAD projektu', cap: 'Vizualizace SO-101 z CAD projektu. Nahradí ji fotka z naší stavby.', photoCap: 'Naše stavba SO-101.' });
   return `<div class="g rule">
-<div class="a1 mono">N° 03 — ${en ? 'Building the SO-101' : 'Stavba SO-101'}<code class="sec-k">build.arm()</code></div>
+<div class="a1 mono">N° 02 — ${en ? 'Building the SO-101' : 'Stavba SO-101'}<code class="sec-k">build.arm()</code></div>
 <h2 class="a4 h2" id="stavba-h" style="max-width:52rem">${esc(intro)}.</h2>
 </div>
 <div class="g tl-row">
