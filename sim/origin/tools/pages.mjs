@@ -5,7 +5,7 @@ import fs from 'node:fs';
 const T = {
   cs: {
     path: 'sim/origin/', up: '../../', other: '../../en/sim/origin/', lang: 'cs',
-    title: 'ROBOTO ORIGIN v simulaci – otevřený humanoid v prohlížeči | printedrobotics.cz',
+    title: 'ROBOTO ORIGIN: otevřený humanoid v simulaci',
     desc: 'Otevřený humanoid ROBOTO ORIGIN (RoboParty) ve fyzikální simulaci MuJoCo: chůze řízená naučenou politikou, klouby na posuvnících, strčení myší.',
     bar: 'ROBOTO ORIGIN · simulace', back: 'Katalog', stage: '3D simulace humanoidního robota',
     canvas: 'Humanoid ROBOTO ORIGIN na podlaze s mřížkou. Chůze klávesami W A S D nebo joystickem, kliknutím do robota do něj strčíte.',
@@ -29,8 +29,8 @@ const T = {
   },
   en: {
     path: 'en/sim/origin/', up: '../../../', other: '../../../sim/origin/', lang: 'en',
-    title: 'ROBOTO ORIGIN in simulation – an open humanoid in your browser | printedrobotics.cz',
-    desc: 'The open-source ROBOTO ORIGIN humanoid (RoboParty) in a MuJoCo physics simulation: walking driven by its trained policy, joint sliders, push it with a click.',
+    title: 'ROBOTO ORIGIN: an open humanoid in simulation',
+    desc: 'The open-source ROBOTO ORIGIN humanoid (RoboParty) in a MuJoCo simulation: walking driven by its trained policy, joint sliders, push it with a click.',
     bar: 'ROBOTO ORIGIN · simulation', back: 'Catalogue', stage: '3D simulation of a humanoid robot',
     canvas: 'The ROBOTO ORIGIN humanoid on a grid floor. Walk with W A S D or the joystick; click the robot to push it.',
     hint: 'Drag to orbit · scroll to zoom · click the robot to push it',
@@ -71,6 +71,8 @@ for (const L of ['cs', 'en']) {
 <meta property="og:description" content="${t.ogDesc}">
 <meta property="og:url" content="https://printedrobotics.cz/${t.path}">
 <meta property="og:image" content="https://printedrobotics.cz/img/origin_poster.jpg">
+<meta property="og:image:width" content="800"><meta property="og:image:height" content="600">
+<meta name="twitter:card" content="summary_large_image">
 <meta property="og:locale" content="${t.locale}">
 <meta name="theme-color" content="#FFFFFF">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E8461E'/%3E%3C/svg%3E">
