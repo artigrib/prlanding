@@ -332,7 +332,8 @@ await check('origin sim (en)', '/en/sim/origin/?test=1', async (p, e) => {
   const panel = (await p.locator('.panel').innerText()).replace(/\s+/g, ' ');
   for (const t of ['not affiliated with RoboParty', 'physics is approximate', 'RoboParty trained and published', 'graphics card']) if (!panel.includes(t)) e.push('honest note missing: ' + t);
   const home = await (await p.request.get(BASE + '/en/')).text();
-  if (!/<a class="card card-show" href="\.\.\/en\/sim\/origin\/"[\s\S]*?not affiliated with RoboParty[\s\S]*?Try it in the simulator/.test(home)) e.push('English catalogue showcase card');
+  const cat = await (await p.request.get(BASE + '/en/catalogue/')).text();
+  if (!/<a class="card card-show" href="\.\.\/\.\.\/en\/sim\/origin\/"[\s\S]*?not affiliated with RoboParty[\s\S]*?Try it in the simulator/.test(cat)) e.push('English catalogue showcase card');
   if (!/<b>The ROBOTO ORIGIN humanoid in your browser<\/b>[\s\S]*?<a href="\.\.\/en\/sim\/origin\/">/.test(home)) e.push('English news item');
   if ((await p.locator('html').getAttribute('lang')) !== 'en') e.push('lang');
   await noCzech(p, e);

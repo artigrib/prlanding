@@ -61,6 +61,8 @@ test('lab wording is data-driven: no electronics/software claims, magnet rule on
   const fake = { id: 'x', cat: 'arm', bom: [['Magnetický enkodér AS5600', '1×']], specs: [], lead: 'Má magnetický enkodér.' };
   assert.ok(!CS.PR_SAFETY(fake).some((w) => /magnety/.test(w)), 'magnetický enkodér is not a loose magnet');
   assert.ok(CS.PR_SAFETY({ id: 'y', cat: 'lab', bom: [['Kuličkový magnet 5 mm', '32×']], specs: [], lead: '' }).some((w) => /magnety/.test(w)));
-  // the "N robotů" heading counts robots only
-  assert.ok(new RegExp(`id="robot-count2">${CS.PR_ROBOTS.filter((r) => r.cat !== 'lab').length}<`).test(read('index.html')));
+  // the catalogue heading counts robots and lab devices separately, from the data
+  const nr = CS.PR_ROBOTS.filter((r) => r.cat !== 'lab').length, nl = CS.PR_ROBOTS.length - nr;
+  assert.ok(read('index.html').includes(`<!--cat-h-->${nr} robotů a ${nl} laboratorní`), 'home catalogue heading');
+  assert.ok(read('katalog/index.html').includes(`${nr} robotů a ${nl} laboratorní`), 'catalogue page heading');
 });

@@ -162,10 +162,11 @@
   /* printable pages (worksheet): a button opens the print dialog (save as PDF from there) */
   document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-print]'); if (b) { e.preventDefault(); window.print(); } });
 
-  /* ---------- home ---------- */
-  if (page === 'home') {
+  /* ---------- catalogue (katalog/, en/catalogue/): filters + every card. The home page shows a static featured
+     selection; an old shared link /?typ=… goes to the full catalogue with that filter ---------- */
+  if (page === 'home' && qs('typ')) location.replace(ROOT + (document.documentElement.lang === 'en' ? 'en/catalogue/' : 'katalog/') + '?typ=' + encodeURIComponent(qs('typ')) + '#katalog');
+  if ($('#filters') && $('#cards')) {
     var FILTERS = [['all', 'Vše'], ['arm', 'Ruce a dlaně'], ['mobile', 'Mobilní'], ['legged', 'Kráčející'], ['desk', 'Stolní'], ['combat', 'Bojoví roboti'], ['lab', 'Laboratoř']];
-    ['#robot-count', '#robot-count2'].forEach(function (sel) { var el = $(sel); if (el) el.textContent = R.filter(function (r) { return r.cat !== 'lab'; }).length; });   // robots only: lab devices are not robots
     var filter = qs('typ'); if (!FILTERS.some(function (f) { return f[0] === filter; })) filter = 'all';
     function renderFilters() {
       $('#filters').innerHTML = FILTERS.map(function (f) {
@@ -190,7 +191,7 @@
     // showcases: open projects we present but do not sell; the card opens the simulation (no kit page, no order form)
     function showCard(r) {
       var en = document.documentElement.lang === 'en';
-      return '<a class="card card-show" href="' + ROOT + 'sim/' + r.sim + '/" data-showcase="' + r.id + '"><div class="tile"><span class="tag tag-s">' + (en ? 'Showcase' : 'Ukázka') + '</span>' +
+      return '<a class="card card-show" href="' + ROOT + (en && r.sim === 'origin' ? 'en/' : '') + 'sim/' + r.sim + '/" data-showcase="' + r.id + '"><div class="tile"><span class="tag tag-s">' + (en ? 'Showcase' : 'Ukázka') + '</span>' +
         '<img src="' + ROOT + 'img/' + r.id + '_poster.jpg" alt="' + esc(r.alt) + '" loading="lazy" width="1200" height="900"></div>' +
         '<span class="card-meta"><span class="mono" style="color:var(--ink)">OH</span><span class="mono">' + (en ? 'Open hardware' : 'Otevřený hardware') + '</span></span>' +
         '<span><h3>' + esc(r.name) + '</h3><span class="type">' + esc(r.type) + '</span></span>' +
@@ -205,6 +206,10 @@
       try { sessionStorage.setItem('pr-typ', filter); } catch (e3) {}
     });
     renderFilters(); renderCards();
+  }
+
+  /* ---------- home ---------- */
+  if (page === 'home') {
     $('#lic-body').innerHTML = window.PR_LICENSES.map(function (l) {
       return '<tr><th scope="row">' + l[0] + '</th><td><span class="mk ' + l[1] + '" aria-hidden="true"></span>' + l[2] + '</td><td class="ink2">' + l[3] + '</td></tr>';
     }).join('');
@@ -316,7 +321,7 @@
     var crumb = $('#crumb-back');
     if (crumb) {
       var typ = null; try { typ = sessionStorage.getItem('pr-typ'); } catch (e) {}
-      if (typ && typ !== 'all') crumb.href = ROOT + '?typ=' + typ + '#katalog';
+      if (typ && typ !== 'all') crumb.href = ROOT + (document.documentElement.lang === 'en' ? 'en/catalogue/' : 'katalog/') + '?typ=' + typ + '#katalog';
       crumb.addEventListener('click', function (e) {
         var ref = document.referrer;
         if (ref && ref.indexOf(location.origin) === 0 && !/\/sada\/|kviz|\/en\/(kit|quiz)\//.test(ref.replace(location.origin, '')) && history.length > 1) { e.preventDefault(); history.back(); }

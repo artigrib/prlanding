@@ -738,6 +738,14 @@ code.call,.path code,.step-k code,.tl-k,.tl-meta code{font-family:var(--mono);fo
 @media (max-width:860px){.sec-k{display:inline;margin:0 0 0 10px}}
 /* registry (/katalog/rejstrik/): static list from tools/registry.mjs, filters from assets/registry.js */
 .reg-link{margin:40px 0 0;font-size:18px}
+/* home: link from the featured cards to the full catalogue; news: older items folded */
+.cat-all{margin:32px 0 0}
+.news-more{margin-top:8px}
+.news-more>summary{display:inline-flex;align-items:center;min-height:44px;font-size:15px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.news-more[open]>summary{margin-bottom:8px}
+.news-more>.news{border-top:0}
+.lic-more>summary{display:inline-flex;align-items:center;min-height:44px;font-size:15px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.lic-more[open]>summary{margin-bottom:16px}
 .reg-link a{text-underline-offset:3px}
 .mk.u{border:1px dashed var(--line-2)}
 .reg-rights dt{display:flex;align-items:center}
