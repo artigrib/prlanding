@@ -7,8 +7,8 @@
   W.PR_I18N_EN = {
     strings: {
       /* header, footer, shared */
-      'Hlavní menu': 'Main menu', 'Katalog': 'Kits', 'Katalog /': 'Kits /', 'Ruce a dlaně': 'Arms and hands', 'Mobilní': 'Mobile', 'Kráčející': 'Walking', 'Stolní': 'Desktop', 'Bojoví roboti': 'Combat robots', 'Laboratoř': 'Lab', 'Jak to funguje': 'How it works', 'Licence': 'Licences',
-      'Najít robota': 'Find a robot', 'Zavřít kvíz': 'Close quiz', 'Drobečková navigace': 'Breadcrumb', '← Katalog': '← Kits',
+      'Hlavní menu': 'Main menu', 'Katalog': 'Projects', 'Katalog /': 'Projects /', 'Ruce a dlaně': 'Arms and hands', 'Mobilní': 'Mobile', 'Kráčející': 'Walking', 'Stolní': 'Desktop', 'Bojoví roboti': 'Combat robots', 'Laboratoř': 'Lab', 'Jak to funguje': 'How it works', 'Licence': 'Licences',
+      'Najít robota': 'Find a robot', 'Zavřít kvíz': 'Close quiz', 'Drobečková navigace': 'Breadcrumb', '← Katalog': '← Projects',
       'Praha · Nic neprodáváme, díly koupíte u dodavatelů': 'Prague · We sell nothing; you buy the parts from suppliers',
       'Všechny projekty patří svým autorům.': 'All projects belong to their authors.',
       'Přejít k formuláři': 'Skip to the form', 'Přejít na obsah': 'Skip to content',
@@ -75,7 +75,7 @@
       'Vyberte, co chcete připojit.': 'Choose what you want to connect.',
       'Vizualizace se připravuje': 'Render in progress',
       /* catalogue */
-      'Postavte si': 'Build it yourself', 'Připravujeme': 'Coming soon', 'Detail sady': 'Kit details', 'Vše': 'All',
+      'Postavte si': 'Build it yourself', 'Připravujeme': 'Coming soon', 'Detail projektu': 'Project details', 'Vše': 'All',
       'Filtr podle typu': 'Filter by type', 'Tabulka licencí': 'Licence table',
       'Licence hardwaru': 'Hardware licence', 'Prodej sady': 'Selling a kit', 'Naše povinnost': 'Our obligation',
       /* product page: static template */
@@ -242,6 +242,8 @@
       'Rozložený pohled z originálních STL ukáže každý díl. ID serv, kalibraci a test si projdete na virtuální ruce, ještě než díly dorazí.': 'An exploded view from the original STLs shows every part. Walk through servo IDs, calibration and testing on a virtual arm before the parts arrive.',
       'Nastavení serv nanečisto': 'Servo setup dry run',
       'Roboti do 150 g. Zápas si nejdřív odehrajete v aréně.': 'Robots up to 150 g. Fight your first match in the arena.',
+      'Bojová aréna v prohlížeči.': 'A combat arena in your browser.',
+      'Robota do 150 g si upravíte v garáži a pošlete ho do zápasu proti počítači nebo kamarádovi na jedné klávesnici.': 'Tune a robot of up to 150 g in the garage, then fight the computer or a friend on the same keyboard.',
       'Bojová aréna v prohlížeči: oranžový Project SVRN vyhodil flipperem modrého robota Klepeto do vzduchu': 'Combat arena in the browser: the orange Project SVRN flips the blue robot Klepeto into the air',
       'Obr. 2 — Bojová aréna v prohlížeči, kamera za robotem. Project SVRN právě flipperem vyhodil Klepeto.': 'Fig. 2 — Combat arena in the browser, chase camera. Project SVRN has just flipped Klepeto.',
       'Fyzika s hmotností a třením, několik map, kamery včetně TV přenosu. Rychlý zápas, turnaj, dva hráči na jedné klávesnici nebo trénink bez časového limitu.': 'Physics with mass and friction, several maps, cameras including a TV broadcast view. Quick match, tournament, two players on one keyboard, or practice with no time limit.',

@@ -57,7 +57,7 @@ const alts = html => Object.fromEntries([...html.matchAll(/<link rel="alternate"
 
 /* ---------- 2. browser checks ---------- */
 // Czech-only letters, plus common Czech UI words that have no diacritics
-const CZ = /[ěřůčšžťďňĚŘŮČŠŽŤĎŇ]|[áéíóúý]\p{L}|\b(Rameno|Loket|Chapadlo|Klouby|Kloub|Mise|Znovu|Hotovo|Kostka|Miska|Simulace|Zkusit|Postavte|Kalibrace|Serva|Teplota|Zapnout|Spustit|Poloha|Diagnostika|Turnaj|Kamera|Pauza|Barva|Soupe\p{L}*|Zpomal\p{L}*|Vidlice|Agrese|Kontrola|Sada|Detail sady|Katalog|Licence a)\b/u;
+const CZ = /[ěřůčšžťďňĚŘŮČŠŽŤĎŇ]|[áéíóúý]\p{L}|\b(Rameno|Loket|Chapadlo|Klouby|Kloub|Mise|Znovu|Hotovo|Kostka|Miska|Simulace|Zkusit|Postavte|Kalibrace|Serva|Teplota|Zapnout|Spustit|Poloha|Diagnostika|Turnaj|Kamera|Pauza|Barva|Soupe\p{L}*|Zpomal\p{L}*|Vidlice|Agrese|Kontrola|Sada|Detail sady|Detail projektu|Katalog|Licence a)\b/u;
 // names and quoted titles that legitimately contain such letters
 const OK = /Čeština|Zásilkovna|Česká pošta|González|Ángel|Muffin578|„150g vert“|Jazyk \/ Language|Norée/;
 const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
