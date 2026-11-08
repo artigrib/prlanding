@@ -101,6 +101,8 @@ const tpl = read('tools/sada.template.html');
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const unesc = s => String(s).replace(/&(amp|lt|gt|quot|#39|nbsp);/g, (m, e) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'", nbsp: '\u00A0' })[e]);
 const ROOT = '../../';
+// schema.org BreadcrumbList from [name, path from the site root] pairs (the last one is the page itself)
+const crumbLd = items => ({ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: items.map(([n, p], i) => ({ '@type': 'ListItem', position: i + 1, name: n, item: SITE + p })) });
 const no = i => String(i + 1).padStart(2, '0');
 const clip = (t, n) => t.length <= n ? t : t.slice(0, t.lastIndexOf(' ', n - 1)).replace(/[,;:–-]$/, '') + '…';
 
@@ -239,21 +241,23 @@ function writePage(path, html) {
 }
 
 /* ---------- product pages ---------- */
+// search titles for kits people look up by name (≤ 60 chars; the rest use the generated "<name> – postavte si: <type>")
+const KIT_TITLE = { so101: { cs: 'SO-101: robotická ruka k 3D tisku | printedrobotics.cz', en: 'SO-101: a 3D-printable robot arm | printedrobotics.cz' } };
 function kitPage(r0, L) {
   const D = W[L], r = D.PR_ROBOTS.find(x => x.id === r0.id), byId = Object.fromEntries(D.PR_ROBOTS.map(x => [x.id, x]));
   const page = PATH.kit(L, r.id), url = SITE + page, root = '../'.repeat(page.split('/').length - 1);
   // search-intent title (≤ ~60 chars) and a description cut at a word boundary to ≤ 155 chars
   let title, desc, ogTitle;
   if (L === 'en') {
-    const t1 = `Build ${r.name}: ${r.type.toLowerCase()} | printedrobotics.cz`;
-    title = t1.length <= 64 ? t1 : `Build ${r.name} | printedrobotics.cz`;
+    const t1 = KIT_TITLE[r.id]?.en || `Build ${r.name}: ${r.type.toLowerCase()} | printedrobotics.cz`;
+    title = t1.length <= 60 ? t1 : `Build ${r.name} | printedrobotics.cz`;
     desc = clip(r.preparing
       ? `${r.name}: we’re checking the licence and the bill of materials with the authors. ${r.short} Leave your email and you’ll be the first to know.`
       : `Build ${r.name} from the open-source project: what you need ${D.PR_BOM_CAD(r) ? '(compiled from the CAD and docs)' : D.PR_BOM_SRC(r) ? 'from the project’s source files' : 'from the bill of materials'}, the guide and the licence. ${r.short}`, 155);
     ogTitle = `Build ${r.name}`;
   } else {
-    const t1 = `${r.name} – postavte si: ${r.type.toLowerCase()} | printedrobotics.cz`;
-    title = t1.length <= 64 ? t1 : `${r.name} – postavte si | printedrobotics.cz`;
+    const t1 = KIT_TITLE[r.id]?.cs || `${r.name} – postavte si: ${r.type.toLowerCase()} | printedrobotics.cz`;
+    title = t1.length <= 60 ? t1 : `${r.name} – postavte si | printedrobotics.cz`;
     desc = clip(r.preparing
       ? `${r.name}: licenci a kusovník ověřujeme s autory. ${r.short} Nechte e-mail, dáme vědět jako prvním.`
       : `Postavte si ${r.name} z otevřeného projektu: co budete potřebovat ${D.PR_BOM_CAD(r) ? 'podle CAD a dokumentace' : D.PR_BOM_SRC(r) ? 'podle zdrojových souborů' : 'podle kusovníku'}, návod a licence. ${r.short}`, 155);
@@ -308,7 +312,8 @@ function kitPage(r0, L) {
     `<meta name="twitter:card" content="summary_large_image">`,
     `<link rel="preload" as="image" href="${root}img/${r.id}_white.jpg" fetchpriority="high">`,
     `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`,
-    `<script type="application/ld+json">${JSON.stringify(faqLd).replace(/</g, '\\u003c')}</script>`
+    `<script type="application/ld+json">${JSON.stringify(faqLd).replace(/</g, '\\u003c')}</script>`,
+    `<script type="application/ld+json">${JSON.stringify(crumbLd([[L === 'en' ? 'Catalogue' : 'Katalog', L === 'en' ? 'en/catalogue/' : 'katalog/'], [r.name, page]])).replace(/</g, '\\u003c')}</script>`
   ].join('\n');
 
   let html = tpl
@@ -420,6 +425,28 @@ function heroFacts(L) {
   ];
   return `<dl class="hero-facts" aria-label="${en ? 'SO-101 at a glance' : 'SO-101 v kostce'}">${rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`;
 }
+// {px:pair} / {px:one} in page titles and descriptions: SO-101 parts with shipping in €, the same numbers as heroFacts()
+function pxTokens(L) {
+  const nf = new Intl.NumberFormat(L === 'en' ? 'en-GB' : 'cs-CZ', { maximumFractionDigits: 1 });
+  const rng = r => (r[0] === r[1] ? nf.format(r[0]) : `${nf.format(r[0])}–${nf.format(r[1])}`) + ' €';
+  const cfgs = Object.keys(SO101.configs);
+  return { pair: rng(buildPlan(SO101).totals.landed_eur), one: rng(buildPlan(SO101, { config: cfgs.find(c => !SO101.configs[c].arms.includes('leader')) }).totals.landed_eur) };
+}
+const PX = { cs: pxTokens('cs'), en: pxTokens('en') };
+const expandPx = (s, L, where) => String(s).replace(/\{px:([a-z]+)\}/g, (m, k) => { if (!(k in PX[L])) throw new Error(`${where}: unknown price token ${m}`); return PX[L][k]; });
+// home: search title + description (the hero shows the same price), and a WebSite entity next to the Organization
+const HOME_META = {
+  cs: { title: 'SO-101: simulace, díly a návod | printedrobotics.cz', description: 'Robotickou ruku SO-101 si vyzkoušíte v simulaci v prohlížeči. Díly na pár za {px:pair} s dopravou koupíte sami u dodavatelů, stavbou vás provede návod.' },
+  en: { title: 'SO-101 arm: simulation, parts, guide | printedrobotics.cz', description: 'Try the SO-101 robot arm in a browser simulation. Parts for a pair cost {px:pair} with shipping, bought from suppliers yourself; a guide covers the build.' }
+};
+function homeMeta(html, L) {
+  const m = HOME_META[L], site = { '@context': 'https://schema.org', '@type': 'WebSite', name: 'printedrobotics.cz', url: SITE + PATH.home(L), inLanguage: L };
+  return html
+    .replace(/<title>[^<]*<\/title>/, () => `<title>${esc(m.title)}</title>`)
+    .replace(/<meta name="description" content="[^"]*">/, () => `<meta name="description" content="${esc(expandPx(m.description, L, 'home'))}">`)
+    .replace(/\n<script type="application\/ld\+json" id="ld-website">[^<]*<\/script>/, '')
+    .replace('</head>', () => `<script type="application/ld+json" id="ld-website">${JSON.stringify(site).replace(/</g, '\\u003c')}</script>\n</head>`);
+}
 // real photos: drop assets/photos/<id>.jpg (+ optional <id>.json {w,h,alt_cs,alt_en,cap_cs,cap_en}) and the next build
 // shows it instead of the render. No photo = the render stays, labelled as a render (never a stock or fake photo).
 function photoSlot(id, L, fb) {
@@ -523,6 +550,7 @@ home = home.replace(/<!--hero-new-->[\s\S]*?<!--\/hero-new-->/, `<!--hero-new-->
   .replace(/<!--build-tl-->[\s\S]*?<!--\/build-tl-->/, `<!--build-tl-->\n${buildTimeline('cs')}\n<!--/build-tl-->`)
   .replace(/<!--hero-facts-->[\s\S]*?<!--\/hero-facts-->/, () => `<!--hero-facts-->${heroFacts('cs')}<!--/hero-facts-->`);
 home = fillPhotos(home, 'cs');
+home = homeMeta(home, 'cs');
 if (!home.includes('<!--/hero-new-->') || !home.includes('<!--/build-tl-->') || !home.includes('<dl class="hero-facts"')) throw new Error('index.html: hero-new or build-tl placeholder not found');
 // Czech home gets its hreflang pair + switcher; the English home is rendered from it
 if (home.includes('<!--/cards-->')) {
@@ -539,8 +567,6 @@ if (home.includes('<!--/cards-->')) {
     .replace(/<!--cat-h-->[\s\S]*?<!--\/cat-h-->/, () => `<!--cat-h-->${catHead('en')}<!--/cat-h-->`)
     .replace(/<!--cat-all-->[\s\S]*?<!--\/cat-all-->/, () => catAll('en'))
     .replace(/<summary>Všechny novinky \((\d+)\)<\/summary>/, '<summary>All updates ($1)</summary>')
-    .replace(/<title>[^<]*<\/title>/, '<title>printedrobotics.cz — try a robot in your browser, then build it</title>')
-    .replace(/<meta name="description" content="[^"]*">/, '<meta name="description" content="Try the SO-101 robot arm in a physics simulation right in your browser, and combat robots in the arena. Then we tell you what to buy and where, and guide you through the build.">')
     .replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${SITE}en/">`)
     .replace(/<meta property="og:title" content="[^"]*">/, '<meta property="og:title" content="Try a robot in your browser, then build it">')
     .replace(/<meta property="og:description" content="[^"]*">/, '<meta property="og:description" content="Free SO-101 arm simulation and a combat robot arena in your browser. Open-source robots: what to buy and where, a build guide and LeRobot practice on a virtual arm.">')
@@ -550,6 +576,7 @@ if (home.includes('<!--/cards-->')) {
     .replace(/"description":"Open-source roboty: simulace v prohlížeči, plán nákupu dílů u dodavatelů a návody ke stavbě\. Nic neprodáváme\."/, '"description":"Open-source robots: browser simulations, a parts buying plan with suppliers and build guides. We sell nothing."')
     .replace(/<body data-page="home"/, `<body data-page="home" data-root="${root}"`);
   en = fillPhotos(en, 'en');
+  en = homeMeta(en, 'en');
   en = en.replace(/<!--registry-link-->[\s\S]*?<!--\/registry-link-->/, () => regLink('en'));
   en = en.replace(/<!--build-tl-->[\s\S]*?<!--\/build-tl-->/, `<!--build-tl-->\n${buildTimeline('en')}\n<!--/build-tl-->`)
     .replace(/<!--hero-facts-->[\s\S]*?<!--\/hero-facts-->/, () => `<!--hero-facts-->${heroFacts('en')}<!--/hero-facts-->`);
@@ -622,6 +649,7 @@ function contentPage(c, L) {
   const mm = /^<!--meta\s*([\s\S]*?)-->\n?/.exec(src);
   if (!mm) throw new Error(`tools/content/${c.id}.${L}.html: missing <!--meta {...}--> header`);
   const meta = JSON.parse(mm[1]);
+  for (const k of ['title', 'description', 'ogDesc']) if (meta[k]) meta[k] = expandPx(expandBt(meta[k], L, c.id), L, c.id);
   const page = c[L], url = SITE + page, root = '../'.repeat(page.split('/').length - 1);
   const en = L === 'en', home = en ? 'en/' : '';
   let body = expandBt(src.slice(mm[0].length), L, page).replace('<!--kits:licence-->', () => kitsByLicence(L))
@@ -642,6 +670,23 @@ function contentPage(c, L) {
       : { '@context': 'https://schema.org', '@type': 'WebPage', name: meta.ogTitle, description: meta.description, inLanguage: L, url, image: img, publisher: org },
     { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: crumbs.map(([n, p], i) => ({ '@type': 'ListItem', position: i + 1, name: n, item: SITE + p })) }
   ];
+  // HowTo from the guide's own stages (meta.howto): <section class="section" id="e0…"> with its label, heading and sub-headings
+  if (meta.howto) {
+    const secs = [...body.matchAll(/<section class="section" id="(e\d+)">([\s\S]*?)(?=<section class="section"|$)/g)].map(([, id, sec]) => [id, sec, [...sec.matchAll(/<h3>([\s\S]*?)<\/h3>/g)].map(m => stripTags(m[1]))]);
+    // sub-headings every stage repeats ("Kontrolní seznam", "Když to nejde") say nothing about the step: left out
+    const common = h => secs.filter(x => x[2].some(y => y.startsWith(h))).length >= secs.length / 2;
+    const steps = secs.map(([id, sec, h3all]) => {
+      const label = /<div class="a1 mono">[^<—]*—\s*([^<]+)<\/div>/.exec(sec), h2 = /<h2>([\s\S]*?)<\/h2>/.exec(sec), img = /<img [^>]*src="([^"]+)"/.exec(sec);
+      if (!label || !h2) throw new Error(`${page}: HowTo stage ${id} without a label or heading`);
+      const h3 = h3all.filter(h => !common(h.replace(/\s*\(.*$/, '')));
+      const step = { '@type': 'HowToStep', name: stripTags(label[1]), text: stripTags(h2[1]) + (h3.length ? ': ' + h3.join('; ') : ''), url: url + '#' + id };
+      if (img) step.image = new URL(img[1], url).href;
+      return step;
+    });
+    if (steps.length < 3) throw new Error(page + ': HowTo needs the guide stages');
+    const h1 = /<h1>([\s\S]*?)<\/h1>/.exec(body);
+    lds.push({ '@context': 'https://schema.org', '@type': 'HowTo', name: stripTags(h1 ? h1[1] : meta.ogTitle), description: meta.description, inLanguage: L, url, image: img, step: steps });
+  }
   if (faq.length) lds.push({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(f => ({ '@type': 'Question', name: f[0], acceptedAnswer: { '@type': 'Answer', text: f[1] } })) });
   const crumbHtml = crumbs.slice(0, -1).map(([n, p]) => `<a href="${(root + p) || './'}">${esc(n)}</a><span aria-hidden="true">/</span>`).join('') + `<span style="color:var(--ink)">${esc(crumbs.at(-1)[0])}</span>`;
   const html = `<!doctype html>
@@ -710,7 +755,9 @@ ${en ? `<script src="${root}assets/data.en.js"></script>\n<script src="${root}as
 for (const c of CONTENT) { contentPage(c, 'cs'); contentPage(c, 'en'); }
 
 // sitemap with hreflang pairs; sim/so101 is an indexable landing page, sim/arena is noindex
-const pairs = [['', fs.existsSync('en/index.html') ? 'en/' : null], ['kviz.html', 'en/quiz/'], ...R.map(r => [PATH.kit('cs', r.id), PATH.kit('en', r.id)]), ...CONTENT.filter(c => !c.draft).map(c => [c.cs, c.en]), ['sim/so101/', read('sim/so101/index.html').includes('hreflang="en"') ? 'sim/so101/?lang=en' : null], ['sim/origin/', 'en/sim/origin/']];
+const pairs = [['', fs.existsSync('en/index.html') ? 'en/' : null], ['kviz.html', 'en/quiz/'], ...R.map(r => [PATH.kit('cs', r.id), PATH.kit('en', r.id)]), ...CONTENT.filter(c => !c.draft).map(c => [c.cs, c.en]), ['sim/so101/', read('sim/so101/index.html').includes('hreflang="en"') ? 'sim/so101/?lang=en' : null], ['sim/origin/', 'en/sim/origin/'],
+  // indexable SO-101 sim tools linked from the guides (one URL each; English via ?lang=en at runtime)
+  ['sim/so101/nastaveni/', null], ['sim/so101/lerobot.html', null]];
 const loc = (u, alt) => `  <url><loc>${SITE}${u}</loc>${alt ? `<xhtml:link rel="alternate" hreflang="cs" href="${SITE}${alt[0]}"/><xhtml:link rel="alternate" hreflang="en" href="${SITE}${alt[1]}"/>` : ''}</url>`;
 const urls = [];
 for (const [cs, en] of pairs) { urls.push(loc(cs, en && [cs, en])); if (en) urls.push(loc(en, [cs, en])); }

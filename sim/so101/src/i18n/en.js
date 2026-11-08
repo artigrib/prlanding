@@ -10,13 +10,13 @@ const ids = (s) => dec(s).replace(/\(([^)]+)\)/g, (m, n) => '(' + T(n) + ')');
 
 const strings = {
   /* page titles and meta (translated at runtime for ?lang=en) */
-  'SO-101 v simulaci – vyzkoušejte si robotickou ruku | printedrobotics.cz': 'SO-101 simulator – try the robot arm in your browser | printedrobotics.cz',
+  'Simulace SO-101 v prohlížeči | printedrobotics.cz': 'SO-101 simulation in your browser | printedrobotics.cz',
   'SO-101 a předměty – fyzikální knihovna objektů | printedrobotics.cz': 'SO-101 and objects – a physics object library | printedrobotics.cz',
-  'Nastavení serv SO-101 nanečisto – virtuální ruka | printedrobotics.cz': 'SO-101 servo setup dry run – virtual arm | printedrobotics.cz',
+  'Nastavení serv SO-101 nanečisto | printedrobotics.cz': 'SO-101 servo setup dry run | printedrobotics.cz',
   'Vyzkoušejte si robotickou ruku SO-101 přímo v prohlížeči. Fyzikální simulace MuJoCo: ovládejte klouby a přeneste kostku do misky.': 'Try the SO-101 robot arm right in your browser. MuJoCo physics simulation: control the joints and move the cube into the bowl.',
   'SO-101 v simulaci': 'SO-101 in simulation', 'Ovládejte robotickou ruku SO-101 v prohlížeči a přeneste kostku do misky.': 'Control the SO-101 robot arm in your browser and move the cube into the bowl.',
   'Naskenované předměty s fyzikou (hmotnost, tření, konvexní kolize) na stole s robotickou rukou SO-101. MuJoCo v prohlížeči.': 'Scanned objects with physics (mass, friction, convex collisions) on a table with the SO-101 robot arm. MuJoCo in the browser.',
-  'Vyzkoušejte si nastavení robotické ruky SO-101 ještě předtím, než vám dorazí díly: ID serv, kalibrace, test a hledání závad na virtuální ruce přímo v prohlížeči.': 'Try setting up the SO-101 robot arm before your parts arrive: servo IDs, calibration, testing and troubleshooting on a virtual arm right in your browser.',
+  'Nastavte si robotickou ruku SO-101 ještě předtím, než dorazí díly: ID serv, kalibrace, test a hledání závad na virtuální ruce přímo v prohlížeči.': 'Set up the SO-101 robot arm before your parts arrive: servo IDs, calibration, testing and troubleshooting on a virtual arm right in your browser.',
   'Nastavení SO-101 nanečisto': 'SO-101 setup dry run', 'Průvodce nastavením serv SO-101 na virtuální ruce: ID, kalibrace, test a diagnostika závad.': 'SO-101 servo setup wizard on a virtual arm: IDs, calibration, testing and fault diagnostics.',
   /* shell, loading, failure */
   'SO-101 · simulace': 'SO-101 · simulation', 'Zpět na SO-101': 'Back to SO-101', 'Domů': 'Home',
