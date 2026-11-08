@@ -1,0 +1,83 @@
+{
+  "//": "license: Printables licence field was blank when fetched 2026-10-30 (data/components/svrn.json meta.project.licence)",
+  "id": "svrn",
+  "glb": true,
+  "glbShow": ["opt_modul_flipper"],
+  "render": true,
+  "sim": "arena",
+  "credit": "Vizualizace podle Project SVRN – Shoverobotics (CC BY 4.0), moduly printedrobotics.cz",
+  "name": "Project SVRN",
+  "type": "Bojový robot 150 g",
+  "cat": "combat",
+  "level": "Začátečník",
+  "hw": "CC BY 4.0",
+  "sw": "—",
+  "author": "Shoverobotics (Jordan Gell)",
+  "alt": "Malý bojový robot Project SVRN s pohonem 4×4 a klínem",
+  "short": "Modulární bojový robot do 150 g: tlačný robot (pusher) s pohonem 4×4, k tomu flipper nebo chapadlo.",
+  "lead": "Modulární platforma pro soutěže antweight do 150 g, navržená pro nováčky. Základ je tlačný robot s pohonem všech čtyř kol, který lze osadit klínem, flipperem nebo chapadlem. Řídí ho Malenki Nano HV (verze pro čtyři motory N10) – přijímač a regulátory na jedné destičce – a ovládá se běžným vysílačem FlySky. Bez rotující zbraně, takže se hodí na první zápasy v České lize bojových robotů.",
+  "bomCost": "—",
+  "printTime": "—",
+  "software": "bez programování (RC vysílač)",
+  "repo": "https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai",
+  "docs": "https://forum.bristolbotbuilders.com/t/project-svrn-modular-3d-printed-robot-files/472",
+  "card": [["Hmotnost", "do 150 g"], ["Pohon", "4× N10"]],
+  "bom": [
+    ["Převodový motor N10", "4×"],
+    ["Malenki Nano HV (přijímač + regulátory)", "1×"],
+    ["Akumulátor LiPo 2S", "1×"],
+    ["Vypínač", "1×"],
+    ["Kolo", "4×"],
+    ["Servo KingMax C507 (modul flipper)", "1×"],
+    ["Vysílač FlySky (AFHDS 2A), např. FS-i6X", "1×"],
+    ["Šrouby a matice", "dle návodu"]
+  ],
+  "specs": [
+    ["Hmotnostní třída", "150 g (UK antweight, US fairyweight)"],
+    ["Půdorys", "v limitu CCRL 15 × 15 cm"],
+    ["Pohon", "4× N10, 4×4"],
+    ["Zbraň", "klín, flipper nebo chapadlo (moduly)"],
+    ["Varianty", "4 motory, nebo 2 motory s řemenem"],
+    ["Řízení", "Malenki Nano HV, FlySky AFHDS 2A"],
+    ["Napájení", "LiPo 2S"],
+    ["Tisk", "PLA, PC nebo PA12; boční pancíř a držáky z TPU"],
+    ["Doba tisku", "—"]
+  ],
+  "license": {
+    "hw": "CC-BY-4.0",
+    "status": "unverified",
+    "checked": "2026-10-30",
+    "sources": ["https://www.printables.com/model/1272536-project-svrn-combat-robot-150g-uk-antweight-us-fai"]
+  },
+  "related": ["vert150", "otto", "exomy"],
+  "en": {
+    "credit": "Render after Project SVRN by Shoverobotics (CC BY 4.0), modules by printedrobotics.cz",
+    "type": "150 g combat robot",
+    "alt": "Project SVRN small combat robot with 4×4 drive and a wedge",
+    "short": "Modular combat robot up to 150 g: a 4×4 pusher, plus a flipper or grabber module.",
+    "lead": "Modular platform for 150 g antweight competitions, designed for newcomers. The base is a four-wheel-drive pusher that takes a wedge, flipper or grabber module. It runs on a Malenki Nano HV (the version for four N10 motors) – receiver and speed controllers on one board – and is driven with a standard FlySky transmitter. No spinning weapon, so it suits first fights in the Czech combat robot league.",
+    "software": "no programming (RC transmitter)",
+    "card": [["Weight", "up to 150 g"], ["Drive", "4× N10"]],
+    "bom": [
+      ["N10 gear motor", "4×"],
+      ["Malenki Nano HV (receiver + speed controllers)", "1×"],
+      ["2S LiPo battery", "1×"],
+      ["Power switch", "1×"],
+      ["Wheel", "4×"],
+      ["KingMax C507 servo (flipper module)", "1×"],
+      ["FlySky transmitter (AFHDS 2A), e.g. FS-i6X", "1×"],
+      ["Screws and nuts", "per instructions"]
+    ],
+    "specs": [
+      ["Weight class", "150 g (UK antweight, US fairyweight)"],
+      ["Footprint", "within the CCRL 15 × 15 cm limit"],
+      ["Drive", "4× N10, 4×4"],
+      ["Weapon", "wedge, flipper or grabber (modules)"],
+      ["Variants", "4 motors, or 2 motors with a belt"],
+      ["Control", "Malenki Nano HV, FlySky AFHDS 2A"],
+      ["Power", "2S LiPo"],
+      ["Print", "PLA, PC or PA12; TPU side armour and mounts"],
+      ["Print time", "—"]
+    ]
+  }
+}

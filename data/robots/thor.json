@@ -1,0 +1,45 @@
+{
+  "id": "thor",
+  "glb": true,
+  "name": "Thor",
+  "type": "Robotická ruka",
+  "cat": "arm",
+  "level": "Pokročilý",
+  "hw": "CC BY-SA 4.0",
+  "sw": "CC BY-SA 4.0",
+  "author": "Ángel L. M. (AngelLM)",
+  "render": true,
+  "alt": "Robotická ruka Thor na krokových motorech",
+  "short": "Průmyslová kinematika na krokových motorech, ROS 2. Výška 625 mm.",
+  "lead": "Průmyslová kinematika na krokových motorech, řízení G-kódem, ROS 2 a MoveIt 2. Výška 625 mm, nosnost 750 g.",
+  "bomCost": "pod 350 EUR",
+  "printTime": "≈ 113 h",
+  "software": "GRBL, ROS 2",
+  "repo": "https://github.com/AngelLM/Thor",
+  "docs": "http://thor.angel-lm.com/documentation/",
+  "card": [["Osy", "6 DOF"], ["Nosnost", "750 g"]],
+  "bom": [
+    ["Krokové motory NEMA a drivery", "dle BOM"],
+    ["Řídicí deska", "1×"],
+    ["Řemeny a řemenice GT2", "1 sada"],
+    ["Ložiska", "1 sada"]
+  ],
+  "specs": [["Stupně volnosti", "6"], ["Výška", "625 mm"], ["Nosnost", "750 g"], ["Doba tisku", "≈ 113 h"]],
+  "related": ["so101", "hand", "exomy"],
+  "en": {
+    "type": "Robot arm",
+    "alt": "Thor robot arm driven by stepper motors",
+    "short": "Industrial-style kinematics on stepper motors, ROS 2. 625 mm tall.",
+    "lead": "Industrial-style kinematics on stepper motors, controlled with G-code, ROS 2 and MoveIt 2. 625 mm tall, 750 g payload.",
+    "bomCost": "under 350 EUR",
+    "printTime": "≈ 113 h",
+    "card": [["Axes", "6 DOF"], ["Payload", "750 g"]],
+    "bom": [
+      ["NEMA stepper motors and drivers", "per BOM"],
+      ["Controller board", "1×"],
+      ["GT2 belts and pulleys", "1 set"],
+      ["Bearings", "1 set"]
+    ],
+    "specs": [["Degrees of freedom", "6"], ["Height", "625 mm"], ["Payload", "750 g"], ["Print time", "≈ 113 h"]]
+  }
+}

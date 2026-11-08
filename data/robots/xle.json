@@ -1,0 +1,47 @@
+{
+  "id": "xle",
+  "glb": true,
+  "name": "XLeRobot",
+  "type": "Dvouruký domácí robot",
+  "cat": "mobile",
+  "level": "Pokročilý",
+  "hw": "Apache-2.0 (ověřujeme)",
+  "sw": "Apache-2.0",
+  "preparing": true,
+  "author": "Gaotian Wang a kol.",
+  "render": true,
+  "alt": "Robot XLeRobot se dvěma rukama na vozíku",
+  "short": "Dvě ruce SO-101 na mobilní základně. Teleoperace přes VR či gamepad.",
+  "lead": "Dvě ruce SO-101 na mobilní základně. Teleoperace přes VR nebo gamepad, výzkum sim2real.",
+  "bomCost": "od 660 USD",
+  "printTime": "—",
+  "software": "LeRobot, ManiSkill",
+  "repo": "https://github.com/Vector-Wangel/XLeRobot",
+  "docs": "https://xlerobot.readthedocs.io",
+  "card": [["Ruce", "2× SO-101"], ["Ovládání", "VR, gamepad"]],
+  "bom": [
+    ["Ruka SO-101: serva a řídicí desky", "2 sady"],
+    ["Mobilní základna", "1×"],
+    ["Baterie", "1×"],
+    ["Kamery", "3×"]
+  ],
+  "specs": [["Ruce", "2× SO-101"], ["Ovládání", "VR, gamepad"]],
+  "related": ["lekiwi", "so101", "hand"],
+  "en": {
+    "type": "Two-armed home robot",
+    "hw": "Apache-2.0 (being verified)",
+    "author": "Gaotian Wang et al.",
+    "alt": "XLeRobot with two arms on a cart",
+    "short": "Two SO-101 arms on a mobile base. Teleoperation via VR or gamepad.",
+    "lead": "Two SO-101 arms on a mobile base. Teleoperation via VR or gamepad, sim2real research.",
+    "bomCost": "from 660 USD",
+    "card": [["Arms", "2× SO-101"], ["Control", "VR, gamepad"]],
+    "bom": [
+      ["SO-101 arm: servos and driver boards", "2 sets"],
+      ["Mobile base", "1×"],
+      ["Battery", "1×"],
+      ["Cameras", "3×"]
+    ],
+    "specs": [["Arms", "2× SO-101"], ["Control", "VR, gamepad"]]
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "id": "exomy",
+  "glb": true,
+  "name": "ExoMy",
+  "type": "Rover",
+  "cat": "mobile",
+  "level": "Střední",
+  "hw": "GPL-3.0",
+  "sw": "GPL-3.0",
+  "author": "ESA Planetary Robotics Lab",
+  "render": true,
+  "alt": "Šestikolový rover ExoMy",
+  "short": "Šestikolový rover podle mise ExoMars.",
+  "lead": "Šestikolový rover podle mise ExoMars, ovládaný z prohlížeče nebo gamepadem.",
+  "bomCost": "do 500 EUR",
+  "printTime": "—",
+  "software": "ROS, webové rozhraní",
+  "repo": "https://github.com/esa-prl/ExoMy",
+  "docs": "https://github.com/esa-prl/ExoMy/wiki",
+  "card": [["Kola", "6, rocker-bogie"], ["Řízení", "Raspberry Pi"]],
+  "bom": [
+    ["Raspberry Pi", "1×"],
+    ["PWM deska", "1×"],
+    ["Servo pohonu", "6×"],
+    ["Servo řízení", "6×"],
+    ["Baterie a měnič", "1×"]
+  ],
+  "specs": [["Kola", "6, rocker-bogie"], ["Řízení", "Raspberry Pi"]],
+  "related": ["sawppy", "lekiwi", "thor"],
+  "en": {
+    "alt": "ExoMy six-wheel rover",
+    "short": "Six-wheel rover based on the ExoMars mission.",
+    "lead": "Six-wheel rover based on the ExoMars mission, driven from a web browser or a gamepad.",
+    "bomCost": "up to 500 EUR",
+    "software": "ROS, web interface",
+    "card": [["Wheels", "6, rocker-bogie"], ["Controller", "Raspberry Pi"]],
+    "bom": [
+      ["Raspberry Pi", "1×"],
+      ["PWM board", "1×"],
+      ["Drive servo", "6×"],
+      ["Steering servo", "6×"],
+      ["Battery and converter", "1×"]
+    ],
+    "specs": [["Wheels", "6, rocker-bogie"], ["Controller", "Raspberry Pi"]]
+  }
+}

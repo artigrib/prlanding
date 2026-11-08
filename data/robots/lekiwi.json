@@ -1,0 +1,66 @@
+{
+  "id": "lekiwi",
+  "glb": true,
+  "name": "LeKiwi",
+  "type": "Mobilní manipulátor",
+  "cat": "mobile",
+  "level": "Střední",
+  "hw": "Apache-2.0",
+  "sw": "Apache-2.0",
+  "author": "SIGRobotics UIUC",
+  "render": true,
+  "alt": "Mobilní robot LeKiwi s omni koly a rukou SO-101",
+  "short": "Holonomní tříkolová základna s rukou SO-101, Raspberry Pi 5 a dvěma kamerami.",
+  "lead": "Holonomní tříkolová základna s rukou SO-101, Raspberry Pi 5 a dvěma kamerami. Pro sběr dat a teleoperaci v LeRobot.",
+  "bomCost": "—",
+  "printTime": "—",
+  "software": "LeRobot (Python)",
+  "repo": "https://github.com/SIGRobotics-UIUC/LeKiwi",
+  "docs": "https://huggingface.co/docs/lerobot/lekiwi",
+  "card": [["Pohon", "3× omni kolo"], ["Řízení", "Raspberry Pi 5"]],
+  "bom": [
+    ["Raspberry Pi 5", "1×"],
+    ["Omni kolo", "3×"],
+    ["Serva pohonu základny", "3×"],
+    ["Ruka SO-101: serva a řídicí deska", "1 sada"],
+    ["Napájení 5 V nebo 12 V", "1×"],
+    ["RGB kamera", "2×"]
+  ],
+  "specs": [
+    ["Pohon", "3× omni kolo"],
+    ["Řízení", "Raspberry Pi 5"],
+    ["Ruka", "SO-101"],
+    ["Kamery", "2× RGB"],
+    ["Varianty", "5 V a 12 V"]
+  ],
+  "license": {
+    "hw": "Apache-2.0",
+    "sw": "Apache-2.0",
+    "status": "verified",
+    "checked": "2026-10-30",
+    "sources": ["https://github.com/SIGRobotics-UIUC/LeKiwi/blob/main/LICENSE.txt", "https://github.com/huggingface/lerobot/blob/main/LICENSE"]
+  },
+  "related": ["xle", "hand", "so101"],
+  "en": {
+    "type": "Mobile manipulator",
+    "alt": "LeKiwi mobile robot with omni wheels and an SO-101 arm",
+    "short": "Holonomic three-wheel base with an SO-101 arm, Raspberry Pi 5 and two cameras.",
+    "lead": "Holonomic three-wheel base with an SO-101 arm, Raspberry Pi 5 and two cameras. Built for data collection and teleoperation in LeRobot.",
+    "card": [["Drive", "3× omni wheel"], ["Controller", "Raspberry Pi 5"]],
+    "bom": [
+      ["Raspberry Pi 5", "1×"],
+      ["Omni wheel", "3×"],
+      ["Base drive servos", "3×"],
+      ["SO-101 arm: servos and driver board", "1 set"],
+      ["5 V or 12 V power supply", "1×"],
+      ["RGB camera", "2×"]
+    ],
+    "specs": [
+      ["Drive", "3× omni wheel"],
+      ["Controller", "Raspberry Pi 5"],
+      ["Arm", "SO-101"],
+      ["Cameras", "2× RGB"],
+      ["Variants", "5 V and 12 V"]
+    ]
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "id": "spot",
+  "glb": true,
+  "name": "SpotMicro",
+  "type": "Čtyřnohý robot",
+  "cat": "legged",
+  "level": "Střední",
+  "hw": "CC BY (Thingiverse)",
+  "sw": "MIT",
+  "author": "KDY0523 a komunita SpotMicroAI",
+  "render": true,
+  "alt": "Čtyřnohý robot SpotMicro",
+  "short": "Robotický pes na servech s Raspberry Pi.",
+  "lead": "Robotický pes na servech s Raspberry Pi. Oblíbený projekt s velkou komunitou.",
+  "bomCost": "—",
+  "printTime": "—",
+  "software": "ROS / Python",
+  "repo": "https://www.thingiverse.com/thing:3445283",
+  "docs": "https://spotmicroai.readthedocs.io/",
+  "card": [["Osy", "12 DOF"], ["Řízení", "Raspberry Pi"]],
+  "bom": [
+    ["Servo s vysokým momentem", "12×"],
+    ["Raspberry Pi", "1×"],
+    ["PWM deska PCA9685", "1×"],
+    ["Baterie a měnič", "1×"],
+    ["Ložiska a šrouby", "1 sada"]
+  ],
+  "specs": [["Stupně volnosti", "12"], ["Řízení", "Raspberry Pi"]],
+  "related": ["duck", "otto", "lekiwi"],
+  "en": {
+    "type": "Quadruped robot",
+    "author": "KDY0523 and the SpotMicroAI community",
+    "alt": "SpotMicro quadruped robot",
+    "short": "Servo-driven robot dog with a Raspberry Pi.",
+    "lead": "Servo-driven robot dog with a Raspberry Pi. A popular project with a large community.",
+    "card": [["Axes", "12 DOF"], ["Controller", "Raspberry Pi"]],
+    "bom": [
+      ["High-torque servo", "12×"],
+      ["Raspberry Pi", "1×"],
+      ["PCA9685 PWM board", "1×"],
+      ["Battery and converter", "1×"],
+      ["Bearings and screws", "1 set"]
+    ],
+    "specs": [["Degrees of freedom", "12"], ["Controller", "Raspberry Pi"]]
+  }
+}
