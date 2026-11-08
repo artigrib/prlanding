@@ -172,6 +172,7 @@ function setAlternates(html, csPath, enPath) {
   html = html.replace(/\n<link rel="alternate" hreflang="[^"]*" href="[^"]*">/g, '');
   return html.replace(/(<link rel="canonical" href="[^"]*">)/, `$1\n${alternates(csPath, enPath)}`);
 }
+const enDate = iso => new Date(iso + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 // i18n assets: stylesheet, switcher in the header, English data/dictionary before app.js (idempotent)
 function wireI18n(html, L, page, csPath, enPath, root) {
   html = html
@@ -183,6 +184,7 @@ function wireI18n(html, L, page, csPath, enPath, root) {
     .replace(/(<div class="brand"><i aria-hidden="true"><\/i><a href="[^"]*">printedrobotics<\/a>)/, `$1${switcher(L, page, csPath, enPath)}`)
     .replace(`<script src="${root}assets/app.js"></script>`, (L === 'en' ? `<script src="${root}assets/i18n.en.js"></script>\n` : '') + `<script src="${root}assets/i18n.js" data-auto></script>\n<script src="${root}assets/app.js"></script>`);
   if (L === 'en') html = html
+    .replace(/<time datetime="(\d{4}-\d\d-\d\d)">\d{1,2}\. \d{1,2}\. \d{4}<\/time>/g, (m, iso) => `<time datetime="${iso}">${enDate(iso)}</time>`)   // English dates: 29 Oct 2026
     .replace(`<script src="${root}assets/data.js"></script>`, m => m + `\n<script src="${root}assets/data.en.js"></script>`)
     .replace(`<script src="${root}assets/media.js"></script>`, m => m + `\n<script src="${root}assets/media.en.js"></script>`);
   if (!html.includes('class="lang-sw"') || !html.includes('assets/i18n.js')) throw new Error('i18n wiring failed: ' + page);
@@ -388,7 +390,7 @@ function heroFacts(L) {
   const en = L === 'en';
   const nf = new Intl.NumberFormat(en ? 'en-GB' : 'cs-CZ', { maximumFractionDigits: 1 });
   const rng = (r, u) => (r[0] === r[1] ? nf.format(r[0]) : `${nf.format(r[0])}–${nf.format(r[1])}`) + ' ' + u;
-  const day = iso => { const [y, m, d] = iso.split('-'); return `${+d}. ${+m}. ${y}`; };
+  const day = iso => { if (en) return enDate(iso); const [y, m, d] = iso.split('-'); return `${+d}. ${+m}. ${y}`; };
   const cfgs = Object.keys(SO101.configs), pair = buildPlan(SO101), one = buildPlan(SO101, { config: cfgs.find(c => !SO101.configs[c].arms.includes('leader')) });
   if (pair.print !== 'self' || !pair.config.arms.includes('leader')) throw new Error('so101.json: the default plan is no longer a self-printed pair; update heroFacts()');
   const ck = pair.checked, checked = ck.oldest === ck.newest ? day(ck.oldest)
@@ -447,8 +449,8 @@ function buildTimeline(L) {
       `<span class="tl-h">${t[s.id]} h${extra}</span><span class="tl-bar" aria-hidden="true"><i style="left:0;width:${pct(s.hours[0])}%"></i><i class="tl-r" style="left:${pct(s.hours[0])}%;width:${pct(s.hours[1] - s.hours[0])}%"></i></span></a></li>`;
   }).join('\n');
   const fig = photoSlot('so101-build', L, en
-    ? { no: 'Fig. 3', src: 'img/so101_white.jpg', w: 1200, h: 900, alt: 'SO-101 robot arm, a render from the project CAD', cap: 'SO-101 rendered from the project CAD. A photo from our own build will replace it.', photoCap: 'Our SO-101 build.' }
-    : { no: 'Obr. 3', src: 'img/so101_white.jpg', w: 1200, h: 900, alt: 'Robotická ruka SO-101, vizualizace z CAD projektu', cap: 'Vizualizace SO-101 z CAD projektu. Nahradí ji fotka z naší stavby.', photoCap: 'Naše stavba SO-101.' });
+    ? { no: 'Fig. 3', src: 'img/so101_white.jpg', w: 1200, h: 900, alt: 'SO-101 robot arm, a render from the project CAD', cap: 'SO-101 rendered from the project CAD. We do not have a photo of our own build yet.', photoCap: 'Our SO-101 build.' }
+    : { no: 'Obr. 3', src: 'img/so101_white.jpg', w: 1200, h: 900, alt: 'Robotická ruka SO-101, vizualizace z CAD projektu', cap: 'Vizualizace SO-101 z CAD projektu. Fotku z vlastní stavby zatím nemáme.', photoCap: 'Naše stavba SO-101.' });
   const figOut = fig.replace('<figure class="ph ph-empty"', '<figure class="ph ph-empty hide-s"');   // a real photo (assets/photos) shows on phones too
   return `<div class="g rule">
 <div class="a1 mono">N° 02 — ${en ? 'Building the SO-101' : 'Stavba SO-101'}<code class="sec-k">build.arm()</code></div>
@@ -486,7 +488,7 @@ const czPl = (n, one, few, many) => n === 1 ? one : n >= 2 && n <= 4 ? few : man
 const catCount = L => L === 'en'
   ? `${NROBOTS} robots${NLAB ? ` and ${NLAB} lab instrument${NLAB === 1 ? '' : 's'}` : ''}`
   : `${NROBOTS} ${czPl(NROBOTS, 'robot', 'roboti', 'robotů')}${NLAB ? ` a ${NLAB} ${czPl(NLAB, 'laboratorní přístroj', 'laboratorní přístroje', 'laboratorních přístrojů')}` : ''}`;
-const catHead = L => L === 'en' ? `${catCount('en')}. From a first build to research.` : `${catCount('cs')}. Od prvního sestavení po výzkum.`;
+const catHead = L => L === 'en' ? `${catCount('en')}.` : `${catCount('cs')}.`;
 const catAll = L => `<!--cat-all--><p class="cat-all"><a class="btn btn-o" href="katalog/" data-cta="catalogue">${L === 'en' ? `Full catalogue (${R.length})` : `Celý katalog (${R.length})`} <span aria-hidden="true">→</span></a></p><!--/cat-all-->`;
 // news: the 3 newest stay in view, the rest folds into <details> (works without JS); idempotent: all items are re-read each build
 function foldNews(html, L) {
