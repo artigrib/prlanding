@@ -1,4 +1,4 @@
-// DOM for the UX layer: mode switch, smart-move controls, mission picker, teach & replay, stage toolbar,
+// DOM for the UX layer: HUD (top row, action bar, camera, Nástroje drawer, ☰ menu), mission picker, teach & replay,
 // wrist-cam frame, toasts, win dialog extras, keyboard shortcuts dialog. Formal Czech ("vy").
 
 import { MISSIONS } from '../missions.js';
@@ -12,9 +12,7 @@ const I = {
   cam: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.4-6.4M21 12a9 9 0 0 1-15.4 6.4"/><path d="M18.5 2.5v3.6h-3.6M5.5 21.5v-3.6h3.6"/><circle cx="12" cy="12" r="2.6"/></svg>',
   wrist: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6.5" width="13" height="11" rx="1.5"/><path d="M15.5 10.5l6-3.2v9.4l-6-3.2z"/></svg>',
   snd: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9h4l5-4v14l-5-4h-4z"/><path class="on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg>',
-  help: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.4a2.8 2.8 0 1 1 3.9 2.6c-.8.4-1.2 1-1.2 1.9v.6"/><circle cx="12" cy="17.6" r=".6"/></svg>',
-  parts: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 17.5h7M17.5 14v7"/></svg>',
-  gear: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.8"/><circle cx="12" cy="12" r="6.6"/><path d="M12 2.6v2.8M12 18.6v2.8M2.6 12h2.8M18.6 12h2.8M5.4 5.4l2 2M16.6 16.6l2 2M5.4 18.6l2-2M16.6 7.4l2-2"/></svg>'
+  menu: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6h14M3 10h14M3 14h14"/></svg>'
 };
 
 // Hint ladder (4 rungs). The hint box shows the current rung's text and offers the next rung as its only action:
@@ -28,159 +26,91 @@ const HINT_STEPS = [
   { id: 'solution', next: 'Ukázat řešení' }
 ];
 
-// Panel IA (sim-panel-ia): 1. mission card (goal, stars, hint ladder Poradit → Ukázat řešení, Další mise),
-// 2. one control block (Táhnout ruku | Klouby, gripper, Domů / Znovu, one-line help + "?"),
-// 3. tools (Učit ukázkou, Připojit AI, Skutečná ruka), settings in a ⚙ popover on the stage toolbar.
-// Phones (≤ 860 px): the panel is a bottom sheet (3 snap points) with tabs Mise / Ovládání / Nástroje and one
-// sticky action row (Chapadlo · Domů · Poradit).
+// HUD (sim-hud stage 1): the 3D scene takes the whole area under the site header; controls sit on its edges.
+//   top row: mission chip "01 / 10 · title ▾" (picker + brief) · objective pill (the one instruction line) · stars,
+//            timer, ☰ (missions, parts, setup wizard, shortcuts, intro, settings, about)
+//   bottom:  action bar Chapadlo · Znovu · Poradit (hint popover, incl. "Zeptej se AI"); camera Volný | Zápěstí
+//   right:   tab "Nástroje" → drawer (Táhnout ruku | Klouby + sliders, wrist, Domů, Učit ukázkou, export, Připojit AI)
+// Phones (≤ 860 px, portrait): top row + objective under it, scene, thumb bar Chapadlo · Znovu · Poradit · Nástroje;
+// Nástroje and ☰ open as bottom / full-height sheets.
 export class Panel {
   constructor(ux) {
     this.ux = ux;
     this.stage = document.querySelector('.stage');
-    this.panelEl = document.querySelector('.panel');
-    // the bottom sheet: phones in portrait; landscape phones (≤ 500 px high) keep the side panel
+    this.panelEl = document.querySelector('.panel');   // the "Nástroje" drawer
+    this.under = $('ux-under');                         // action bar (+ hint popover, + the guide strip on phones)
+    // phones in portrait: thumb bar and sheets; compact (phones, landscape phones): no site header
     this.mq = matchMedia('(max-width:860px) and (min-height:501px)');
-    this.hintLevel = 0;
+    this.mqCompact = matchMedia('(max-width:860px), (max-height:500px)');
+    this.hintLevel = 0; this.hintOpen = false;
+    document.body.classList.add('ux-hud');
+    this.topUI();
     this.missionUI();
+    this.actionUI();
     this.modeUI();
     this.teachUI();
     this.stageUI();
+    this.drawerUI();
+    this.menuUI();
     this.winUI();
     this.helpUI();
-    this.flowsUI();
-    this.sheetUI();
   }
 
-  // ---------- hint ladder, phone action row ----------
-  flowsUI() {
-    const ux = this.ux;
-    // HUD nudge after 20 s without success: the next step of the hint ladder (desktop; phones have the action row)
-    this.hintBtn = h(`<button type="button" class="ux-hintbtn" id="ux-hint" hidden>Poradit <span aria-hidden="true">?</span></button>`);
-    $('hud').appendChild(this.hintBtn);
-    this.hintBtn.addEventListener('click', () => this.hint());
-    // phones: top of the bottom sheet = handle, status line (HUD), guide strip, the one action row
-    const under = this.under = h(`<div class="ux-under">
-      <button type="button" class="ux-handle" id="ux-handle" aria-expanded="false" aria-label="Rozbalit panel"><i aria-hidden="true"></i></button>
-      <div class="ux-qrow">
-        <button type="button" class="btn btn-o" id="ux-qgrip">Otevřít chapadlo</button>
-        <button type="button" class="btn btn-o" id="ux-qhome">Domů <span aria-hidden="true">⌂</span></button>
-        <button type="button" class="btn btn-o" id="ux-qhint" aria-controls="ux-hintbox">Poradit <span aria-hidden="true">?</span></button>
-      </div></div>`);
-    this.sheetHead = h(`<div class="ux-sheethead"></div>`);
-    this.sheetHead.appendChild(under);
-    this.panelEl.insertBefore(this.sheetHead, this.panelEl.firstChild);
-    // in the drawing mission the gripper holds the marker: this button lifts / lowers the pen instead
-    $('ux-qgrip').addEventListener('click', () => (ux.runner.m.draw ? ux.togglePenUp() : ux.toggleGrip()));
-    $('ux-qhome').addEventListener('click', () => this.goHome());
-    $('ux-qhint').addEventListener('click', () => this.hint());
-    const hud = $('hud');
-    // phones: the win card is a compact strip at the top of the sheet, so the result (cube in the bowl) stays visible
-    const win = $('win');
-    const place = () => {
-      const q = under.querySelector('.ux-qrow');
-      if (this.mq.matches) { under.insertBefore(hud, q); under.insertBefore(win, q); win.classList.add('strip'); }
-      else { if (hud.parentNode !== this.stage) this.stage.appendChild(hud); if (win.parentNode !== this.stage) this.stage.appendChild(win); win.classList.remove('strip'); }
-    };
-    place(); this.mq.addEventListener ? this.mq.addEventListener('change', place) : this.mq.addListener(place);
+  // ---------- top row: stars, timer, ☰ ----------
+  topUI() {
+    const r = $('ux-topr');
+    this.mStars = h(`<span class="ux-stars ux-tstars" id="ux-mstars" role="img" aria-label="Zatím nesplněno"></span>`);
+    this.timer = h(`<span class="ux-timer mono" id="ux-timer" aria-hidden="true">0:00</span>`);
+    this.menuBtn = h(`<button type="button" class="ux-menub" id="ux-menu-b" aria-expanded="false" aria-controls="ux-menu" aria-label="Menu">${I.menu}</button>`);
+    r.append(this.mStars, this.timer, this.menuBtn);
   }
 
-  // ---------- phones: bottom sheet with tabs Mise / Ovládání / Nástroje, 3 snap points ----------
-  sheetUI() {
-    const pn = this.panelEl;
-    const secs = this.secs = [['mission', 'Mise', 'mission-h'], ['ctl', 'Ovládání', 'ux-ctl-h'], ['tools', 'Nástroje', 'ux-tools-h']]
-      .map(([k, l, lab]) => ({ k, l, lab, el: $('ux-sec-' + k) })).filter((s) => s.el);
-    const tabs = this.tabsEl = h(`<div class="ux-tabs" role="tablist" aria-label="Panel simulace">${secs.map((s) =>
-      `<button type="button" role="tab" id="ux-tab-${s.k}" aria-controls="ux-sec-${s.k}" aria-selected="false" tabindex="-1">${s.l}</button>`).join('')}</div>`);
-    // phones: number, stars and the h1 move into a compact head above the tabs (always visible)
-    this.mHead = h(`<div class="mission ux-mhead"></div>`);
-    this.sheetHead.appendChild(this.mHead);
-    this.sheetHead.appendChild(tabs);
-    this.tab = 'mission'; this.snap = 0;
-    const btns = [...tabs.querySelectorAll('[role=tab]')];
-    for (const b of btns) b.addEventListener('click', () => { this.selectTab(b.id.slice(7)); if (this.snap < 1) this.setSnap(1); });
-    tabs.addEventListener('keydown', (e) => {
-      const i = btns.indexOf(document.activeElement); if (i < 0) return;
-      const n = e.key === 'ArrowRight' ? (i + 1) % btns.length : e.key === 'ArrowLeft' ? (i + btns.length - 1) % btns.length
-        : e.key === 'Home' ? 0 : e.key === 'End' ? btns.length - 1 : -1;
-      if (n < 0) return;
-      e.preventDefault(); e.stopPropagation(); btns[n].focus(); this.selectTab(btns[n].id.slice(7));
-    });
-    const handle = $('ux-handle');
-    handle.addEventListener('click', () => { if (!this.dragged) this.setSnap((this.snap + 1) % 3); this.dragged = false; });
-    // drag the handle / status line: follow the finger, then snap to the nearest of the three heights
-    const grip = this.under;
-    let y0 = 0, h0 = 0, drag = false;
-    grip.addEventListener('pointerdown', (e) => {
-      if (!this.mq.matches || e.target.closest('.ux-qrow, .ux-coach, button:not(#ux-handle), a')) return;
-      drag = true; this.dragged = false; y0 = e.clientY; h0 = pn.getBoundingClientRect().height;
-      pn.classList.add('ux-dragging');
-    });
-    addEventListener('pointermove', (e) => {
-      if (!drag) return;
-      const dy = y0 - e.clientY; if (Math.abs(dy) > 6) this.dragged = true;
-      if (this.dragged) pn.style.height = Math.max(this.snapPx(0), Math.min(this.snapPx(2), h0 + dy)) + 'px';
-    });
-    const end = () => {
-      if (!drag) return; drag = false; pn.classList.remove('ux-dragging');
-      if (!this.dragged) { pn.style.height = ''; return; }
-      const cur = pn.getBoundingClientRect().height;
-      let best = 0; for (let i = 1; i < 3; i++) if (Math.abs(this.snapPx(i) - cur) < Math.abs(this.snapPx(best) - cur)) best = i;
-      pn.style.height = ''; this.setSnap(best);
-    };
-    addEventListener('pointerup', end); addEventListener('pointercancel', end);
-    const apply = () => {
-      const on = this.mq.matches;
-      for (const s of secs) {
-        if (on) { s.el.setAttribute('role', 'tabpanel'); s.el.setAttribute('aria-labelledby', 'ux-tab-' + s.k); s.el.hidden = s.k !== this.tab; }
-        else { s.el.removeAttribute('role'); s.el.setAttribute('aria-labelledby', s.lab); s.el.hidden = false; }
-      }
-      if (on) { this.mHead.append(this.mTop, this.mTitle); }
-      else if (this.mTop.parentNode === this.mHead) { this.mBox.prepend(this.mTop, this.mTitle); }
-      if (!on) { pn.style.height = ''; delete pn.dataset.snap; } else this.setSnap(this.snap);
-    };
-    // touching the 3D scene puts the sheet back down: the scene is the main thing
-    this.stage.addEventListener('pointerdown', () => { if (this.mq.matches && this.snap > 0) this.setSnap(0); });
-    this.selectTab(this.tab);
-    apply(); this.mq.addEventListener ? this.mq.addEventListener('change', apply) : this.mq.addListener(apply);
-  }
-  /** sheet heights: 0 = peek (the space under the stage), 1 = 58 % of the area below the header, 2 = all of it */
-  snapPx(i) {
-    const vh = innerHeight, top = document.querySelector('.bar').getBoundingClientRect().bottom;
-    if (i === 0) return Math.max(0, vh - this.stage.getBoundingClientRect().bottom);
-    if (i === 1) return Math.round((vh - Math.max(0, top)) * 0.58);   // same as .panel[data-snap="1"] in ux.css
-    return Math.round(vh - Math.max(0, top));
-  }
-  setSnap(i) {
-    this.snap = i;
-    if (!this.mq.matches) return;
-    this.panelEl.dataset.snap = String(i);
-    const hd = $('ux-handle');
-    hd.setAttribute('aria-expanded', String(i > 0));
-    hd.setAttribute('aria-label', i === 2 ? 'Sbalit panel' : 'Rozbalit panel');
-    if (i === 0) this.panelEl.scrollTop = 0;
-  }
-  selectTab(k) {
-    this.tab = k;
-    for (const b of this.tabsEl.querySelectorAll('[role=tab]')) { const on = b.id === 'ux-tab-' + k; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; }
-    if (this.mq.matches) for (const s of this.secs) s.el.hidden = s.k !== k;
+  // ---------- action bar: gripper / pen, Znovu, Poradit (+ Nástroje on phones); hint popover ----------
+  actionUI() {
+    const ux = this.ux, bar = $('ux-abar');
+    // the one prominent action: the gripper (in the drawing mission the gripper holds the marker: pen up / down)
+    this.gripBtn = h(`<button type="button" class="ux-ab ux-ab-main" id="ux-grip" aria-pressed="false">Zavřít chapadlo <span class="kbd" aria-hidden="true">␣</span></button>`);
+    this.penUpBtn = h(`<button type="button" class="ux-ab ux-ab-main" id="ux-penup" aria-pressed="false" hidden>Pero nahoru <span class="kbd" aria-hidden="true">P</span></button>`);
+    bar.prepend(this.gripBtn, this.penUpBtn);
+    this.hintB = h(`<button type="button" class="ux-ab" id="ux-mhint" aria-controls="ux-hintbox" aria-expanded="false">Poradit</button>`);
+    this.toolsQ = h(`<button type="button" class="ux-ab ux-ab-tools" id="ux-qtools" aria-controls="panel" aria-expanded="false">Nástroje</button>`);
+    bar.append(this.hintB, this.toolsQ);
+    this.gripBtn.addEventListener('click', () => ux.toggleGrip());
+    this.penUpBtn.addEventListener('click', () => ux.togglePenUp());
+    this.hintB.addEventListener('click', () => (this.hintOpen && !this.hintBox.hidden ? this.closeHint(false) : this.hint()));
+    // hint ladder popover above the bar: the tip first, "Ukázat řešení" only after it (never the primary action)
+    const hb = this.hintBox = h(`<div class="ux-hintbox" id="ux-hintbox" role="dialog" aria-modal="false" aria-labelledby="ux-hintstep" hidden>
+      <div class="ux-hinttop"><p class="mono" id="ux-hintstep"></p><button type="button" class="ux-x" aria-label="Zavřít nápovědu">×</button></div>
+      <p class="ux-hinttext" aria-live="polite"></p><div class="ux-hintnext"></div></div>`);
+    this.under.appendChild(hb);
+    this.hintText = hb.querySelector('.ux-hinttext');
+    this.hintStepEl = hb.querySelector('#ux-hintstep');
+    hb.querySelector('.ux-x').addEventListener('click', () => this.closeHint(true));
+    // the last rung: "Ukázat řešení" (#demo keeps its id and its app.js click handler)
+    const demo = $('demo');
+    demo.title = 'Ruka úlohu vyřeší sama – bez hvězdiček';
+    this.hintNextBtn = h(`<button type="button" class="ux-link ux-solve" id="ux-hintnext">Další krok <span aria-hidden="true">→</span></button>`);
+    this.hintNextBtn.addEventListener('click', () => this.hintNext());
+    hb.querySelector('.ux-hintnext').append(this.hintNextBtn, demo);
   }
 
   goHome() { const ux = this.ux; ux.ctl.cancel(); ux.pending = null; ux.app.goHome(); ux.ctl.syncFromCtrl(); }
 
   /**
-   * Hint ladder. "Poradit" (mission card, phone action row, HUD nudge) only ever opens the ladder; it never
-   * runs the solution, so a double tap cannot jump to the answer. The next step is offered inside the hint
-   * box only. HINT_STEPS is the ladder (wave B adds: strategy text → ghost subgoal → partial demo → solution).
+   * Hint ladder. "Poradit" only ever opens the ladder (popover above the action bar); it never runs the solution,
+   * so a double tap cannot jump to the answer. The next step is offered inside the hint box only.
    */
   hint() {
     if (this.ux.app.won) return;
     this.offered = false;
     if (this.hintLevel < 1) this.hintLevel = 1;
+    this.hintOpen = true;
     this.showHint(true);
-    // phones: the sheet opens on the hint box; desktops also get the tip as a toast over the scene
-    // (after the DOM translation of ?lang=en has run on the new text)
-    if (this.mq.matches) { this.selectTab('mission'); if (this.snap < 1) this.setSnap(1); }
-    else setTimeout(() => this.toast(this.hintText.innerText.replace(/\s*\n+\s*/g, ' ').trim(), null, 7000), 0);
+  }
+  closeHint(refocus) {
+    if (!this.hintOpen) return;
+    this.hintOpen = false; this.showHint();
+    if (refocus) this.hintB.focus({ preventScroll: true });
   }
   /** the next rung, from the button inside the hint box (rung 4 is #demo with its own handler) */
   hintNext() {
@@ -191,16 +121,14 @@ export class Panel {
     if (!ok) this.toast('Teď to nejde ukázat – zkuste Znovu (R).', 'err');
     this.showHint(true);
   }
-  /** Stuck (no progress / failed grasps): show "Poradit" on the stage, never open the ladder by itself. */
+  /** Stuck (no progress / failed grasps): mark "Poradit", never open the ladder by itself. */
   offerHint(reason) {
     if (this.ux.app.won || this.offered) return;
     this.offered = true;
-    $('ux-qhint').classList.add('ux-offer');
     this.toast(reason === 'grasp' ? 'Chapadlo se zavřelo naprázdno. Poradit vám ukáže postup.' : 'Nevíte, jak dál? Poradit vám dá tip.', null, 4000);
   }
   showHint(fresh) {
     const ux = this.ux, m = ux.runner.m, lv = this.hintLevel, won = !!ux.app.won, cur = HINT_STEPS[lv - 1];
-    if (!lv) $('ux-qhint').classList.toggle('ux-offer', !!this.offered && !won);
     if (lv && cur && fresh) {
       let html;
       if (cur.id === 'strategy') {
@@ -212,57 +140,30 @@ export class Panel {
         html = `<span>${cur.id === 'partial' && !grasp ? 'Ruka se postaví na začátek – dokončete to vy. Mise se pak počítá jako splněná, bez hvězdiček.' : cur.text}</span>`;
       }
       if (this.hintText.innerHTML !== html) this.hintText.innerHTML = html;
-      $('ux-qhint').classList.remove('ux-offer');
     }
-    this.hintBox.hidden = !lv || won;
+    this.hintBox.hidden = !lv || won || !this.hintOpen;
+    this.hintB.setAttribute('aria-expanded', String(!this.hintBox.hidden));
     this.hintStepEl.textContent = `Nápověda ${lv} / ${HINT_STEPS.length}`;
     const nx = HINT_STEPS[lv];
     const nb = this.hintNextBtn, demo = $('demo');
     nb.hidden = !nx || nx.id === 'solution';
     if (nx && nx.id !== 'solution') nb.firstChild.textContent = nx.next + ' ';
     demo.hidden = !nx || nx.id !== 'solution';
-    $('ux-mhint').hidden = won;
+    this.hintB.hidden = won;
   }
 
-  // ---------- mission header + picker ----------
+  // ---------- mission chip + picker (with the current mission's brief) ----------
   missionUI() {
-    const box = this.mBox = document.querySelector('.mission');
-    this.mNum = box.querySelector('p.mono');
-    this.mTitle = box.querySelector('h1');
-    this.mDesc = box.querySelector('p.ink2');
-    const top = this.mTop = h(`<div class="ux-mtop"></div>`);
-    box.insertBefore(top, this.mNum);
-    top.appendChild(this.mNum);
-    this.mStars = h(`<span class="ux-stars" id="ux-mstars" role="img" aria-label="Zatím nesplněno"></span>`);
-    top.appendChild(this.mStars);
-    const row = h(`<div class="ux-mrow">
-      <button type="button" class="btn btn-o ux-mini" id="ux-mhint" aria-controls="ux-hintbox">Poradit <span aria-hidden="true">?</span></button>
-      <button type="button" class="ux-link" id="ux-pick-mission" aria-haspopup="dialog">Vybrat misi <span aria-hidden="true">▾</span></button>
-    </div>`);
-    box.appendChild(row);
-    // hint ladder: the tip first, "Ukázat řešení" only after it (never the primary action)
-    const hb = this.hintBox = h(`<div class="ux-hintbox" id="ux-hintbox" hidden>
-      <p class="mono" id="ux-hintstep"></p><p class="ux-hinttext" aria-live="polite"></p><div class="ux-hintnext"></div></div>`);
-    box.appendChild(hb);
-    this.hintText = hb.querySelector('.ux-hinttext');
-    this.hintStepEl = hb.querySelector('#ux-hintstep');
-    // the last rung: "Ukázat řešení" (#demo keeps its id and its app.js click handler)
-    const demo = $('demo');
-    demo.classList.remove('btn'); demo.classList.add('ux-link', 'ux-solve');
-    demo.title = 'Ruka úlohu vyřeší sama – bez hvězdiček';
-    this.hintNextBtn = h(`<button type="button" class="ux-link ux-solve" id="ux-hintnext">Další krok <span aria-hidden="true">→</span></button>`);
-    this.hintNextBtn.addEventListener('click', () => this.hintNext());
-    hb.querySelector('.ux-hintnext').append(this.hintNextBtn, demo);
-    row.querySelector('#ux-mhint').addEventListener('click', () => this.hint());
-    // after a win: the primary action of the card is the next mission
-    this.mNext = h(`<button type="button" class="btn btn-act ux-mnext" id="ux-mnext" hidden>Další mise <span aria-hidden="true">→</span></button>`);
-    box.appendChild(this.mNext);
-    this.mNext.addEventListener('click', () => this.ux.nextMission());
-    row.querySelector('#ux-pick-mission').addEventListener('click', () => this.openPicker());
-
+    $('ux-pick-mission').addEventListener('click', () => this.openPicker());
+    this.chipN = $('ux-chip-n'); this.chipT = $('mission-h');
     const dlg = this.picker = h(`<div class="ux-modal" id="ux-picker" hidden role="dialog" aria-modal="true" aria-labelledby="ux-picker-h">
       <div class="ux-modal-in">
         <div class="ux-modal-top"><p class="mono">Mise</p><button type="button" class="ux-x" aria-label="Zavřít">×</button></div>
+        <section class="mission ux-brief" aria-labelledby="ux-brief-h">
+          <div class="ux-mtop"><p class="mono"></p><span class="ux-stars ux-bstars" role="img"></span></div>
+          <h3 id="ux-brief-h"></h3>
+          <p class="ink2"></p>
+        </section>
         <h2 id="ux-picker-h">Vyberte si úkol</h2>
         <div class="ux-cards"></div>
         <p class="mono ux-progline" id="ux-cards-line"></p>
@@ -270,12 +171,18 @@ export class Panel {
       </div></div>`);
     document.body.appendChild(dlg);
     trapFocus(dlg);
+    const box = this.mBox = dlg.querySelector('.mission');
+    this.mNum = box.querySelector('p.mono'); this.mTitle = box.querySelector('h3'); this.mDesc = box.querySelector('p.ink2');
+    this.bStars = box.querySelector('.ux-bstars');
+    // after a win: the next mission is offered in the brief too (the win card has its own button)
+    this.mNext = h(`<button type="button" class="btn btn-act ux-mnext" id="ux-mnext" hidden>Další mise <span aria-hidden="true">→</span></button>`);
+    box.appendChild(this.mNext);
+    this.mNext.addEventListener('click', () => { this.closePicker(); this.ux.nextMission(); });
     dlg.querySelector('.ux-x').addEventListener('click', () => this.closePicker());
     dlg.addEventListener('click', (e) => { if (e.target === dlg) this.closePicker(); });
     this.cards = dlg.querySelector('.ux-cards');
     this.cardsLine = dlg.querySelector('#ux-cards-line');
   }
-
   renderCards() {
     const prog = this.ux.progress;
     this.cards.textContent = '';
@@ -308,69 +215,41 @@ export class Panel {
   closePicker() { this.picker.hidden = true; if (this.lastFocus) this.lastFocus.focus({ preventScroll: true }); }
 
   showMission(m, prog) {
-    this.mNum.textContent = `Mise ${m.n} / ${String(MISSIONS.length).padStart(2, '0')}`;
+    const nn = `${m.n} / ${String(MISSIONS.length).padStart(2, '0')}`;
+    this.chipN.textContent = nn;
+    this.chipT.textContent = m.short || m.title;
+    this.mNum.textContent = `Mise ${nn}`;
     this.mTitle.textContent = m.title;
     this.mDesc.textContent = m.desc;
-    // credits for the scanned / authored objects (CC BY 4.0 needs attribution where they are shown)
-    if (!this.credit) {
-      this.credit = h(`<p class="mono-s muted ux-credit"><a href="objects/LICENSES.md" target="_blank" rel="noopener"></a></p>`);
-      this.mDesc.parentNode.insertBefore(this.credit, this.mDesc.nextSibling);
-    }
+    // credits for the scanned / authored objects (CC BY 4.0 needs attribution where they are shown): on the stage
     this.credit.hidden = !m.objects;
     if (m.objects) this.credit.firstChild.textContent = m.credit || 'Objekty: NVIDIA SimReady (CC BY 4.0)';
     const s = prog ? prog.stars : 0;
-    this.mStars.innerHTML = starStr(s) + badgeStr(prog, true);
-    this.mStars.setAttribute('aria-label', s ? `Nejlepší hodnocení ${s} ze 3 hvězdiček` : prog ? 'Splněno, zatím bez hvězdiček' : 'Zatím nesplněno');
+    this.mStars.innerHTML = this.bStars.innerHTML = starStr(s) + badgeStr(prog, true);
+    const lab = s ? `Nejlepší hodnocení ${s} ze 3 hvězdiček` : prog ? 'Splněno, zatím bez hvězdiček' : 'Zatím nesplněno';
+    this.mStars.setAttribute('aria-label', lab); this.bStars.setAttribute('aria-label', lab);
     document.title = `${m.title} – SO-101 v simulaci | printedrobotics.cz`;
-    // hint ladder starts again with every mission; a win swaps "Poradit" for "Další mise →"
-    if (m.id !== this.hintFor) { this.hintFor = m.id; this.hintLevel = 0; }
+    // hint ladder starts again with every mission; a win hides "Poradit" (the win card offers "Další mise →")
+    if (m.id !== this.hintFor) { this.hintFor = m.id; this.hintLevel = 0; this.hintOpen = false; }
     this.offered = false;
     const won = !!this.ux.app.won, last = MISSIONS[MISSIONS.length - 1].id === m.id;
     this.mNext.hidden = !won || last;
     this.showHint();
   }
 
-  // ---------- mode switch + smart controls ----------
+  // ---------- drawer "Nástroje" → Ovládání: mode switch, drawing tools, wrist sliders ----------
   modeUI() {
-    const mount = $('ux-mode'), ux = this.ux;
+    const mount = $('ux-mode');
     // ONE mode switch. "Táhnout ruku" = IK target ball + physics pull of any part (links 'pull');
     // "Klouby" = joint sliders + grabbing a part turns only that joint (links 'joint'). See ux.setMode().
     mount.appendChild(h(`<div class="ux-seg ux-modeseg" role="radiogroup" aria-label="Způsob ovládání">
       <button type="button" role="radio" data-mode="smart" data-tip="Ruka sleduje modrou kouli (M)">Táhnout ruku</button>
       <button type="button" role="radio" data-mode="joints" data-tip="Každý kloub zvlášť (M)">Klouby</button>
     </div>`));
-    // one-line contextual help + "?" with the full list (open by itself only in the first session)
-    const hl = h(`<div class="ux-hl"><p class="ux-hlt" id="ux-hlt"></p>
-      <button type="button" class="ux-q" id="ux-tips-b" aria-expanded="false" aria-controls="ux-tips" aria-label="Jak ovládat">?</button></div>`);
-    mount.appendChild(hl);
-    const tap = (s) => (ux.touch ? s.replace(/Klikněte/g, 'Klepněte').replace(/klikněte/g, 'klepněte').replace('Dvojklik', 'Dvojí klepnutí') : s);
-    const tips = this.tipsBox = h(`<div class="ux-tipsbox" id="ux-tips" hidden>
-      <ul class="ux-tips" data-for="smart">
-        <li><i class="dot" aria-hidden="true"></i><span>Táhněte <b>modrou kouli</b>, ruka ji sleduje. Červená = tam nedosáhne.</span></li>
-        <li><i aria-hidden="true">↕</i><span>Šipky nad a pod koulí mění výšku.</span></li>
-        <li><i aria-hidden="true">⟳</i><span>Kroužek, kolečko myši nebo druhý prst otáčí zápěstím.</span></li>
-        <li class="ux-tip-pull"><i aria-hidden="true">✥</i><span>Chyťte kteroukoli část ruky – povolí a nechá se vést jako skutečná.</span></li>
-        <li><i aria-hidden="true">☝</i><span>${tap('Mise 01–03: klikněte na předmět – ruka ho sama vezme, pak klikněte, kam ho položit. Bez hvězdiček; od mise 04 už ne.')}</span></li>
-      </ul>
-      <ul class="ux-tips" data-for="joints">
-        <li><i aria-hidden="true">⇆</i><span>Posuvníky natočí každý kloub zvlášť.</span></li>
-        <li><i aria-hidden="true">✥</i><span>${tap('Chyťte díl ruky ve 3D a otočte jen jeho kloubem. Dvojklik ho vrátí do výchozí polohy.')}</span></li>
-        <li><i aria-hidden="true">#</i><span>Klávesy 1–6 vyberou kloub, šipky ← → s ním otáčí.</span></li>
-      </ul></div>`);
-    mount.appendChild(tips);
-    this.grabSeg = tips.querySelector('.ux-tip-pull');   // hidden with ?real=1 (no physics pull on armed hardware)
-    const tb = $('ux-tips-b');
-    const setTips = (on) => { tips.hidden = !on; tb.setAttribute('aria-expanded', String(on)); };
-    tb.addEventListener('click', () => setTips(tips.hidden));
-    setTips(!store.get('tips-seen', false) && !ux.TEST);
-    store.set('tips-seen', true);
-    // the one prominent action: the gripper (in the drawing mission the gripper holds the marker)
-    mount.appendChild(h(`<button type="button" class="btn ux-gripbtn" id="ux-grip" aria-pressed="false" data-tip="Mezerník">Zavřít chapadlo <span class="kbd" aria-hidden="true">␣</span></button>`));
     const smart = this.smart = h(`<div class="ux-smart" id="ux-smart">
       <div class="ux-draw" id="ux-draw" hidden>
-        <button type="button" class="btn btn-o" id="ux-pen" aria-pressed="false" data-tip="Nakreslete na stůl čáru, ruka ji projede (K)">Nakreslit prstem <span aria-hidden="true">✎</span></button>
         <div class="ux-row2">
-          <button type="button" class="btn btn-o" id="ux-penup" aria-pressed="false" data-tip="Zvednout / položit fix (P)">Pero nahoru <span class="kbd" aria-hidden="true">P</span></button>
+          <button type="button" class="btn btn-o" id="ux-pen" aria-pressed="false" data-tip="Nakreslete na stůl čáru, ruka ji projede (K)">Nakreslit prstem <span aria-hidden="true">✎</span></button>
           <button type="button" class="btn btn-o" id="ux-drawview">3D pohled</button>
         </div>
         <p class="mono" id="ux-help-l">Pomoc při kreslení</p>
@@ -381,28 +260,27 @@ export class Panel {
         </div>
         <p class="mono-s muted">Magnet přitahuje fix k předloze. Zelený kroužek = na čáře, oranžový = kousek vedle.</p>
       </div>
-      <details class="ux-fine" id="ux-fine">
-        <summary>Zápěstí a náklon chapadla</summary>
+      <div class="ux-fine" id="ux-fine" role="group" aria-labelledby="ux-fine-h">
+        <p class="mono" id="ux-fine-h">Zápěstí a náklon chapadla</p>
         <div class="jn"><label for="ux-roll">Rotace zápěstí</label><output for="ux-roll" id="ux-roll-o"></output>
           <input type="range" id="ux-roll" step="any"></div>
         <div class="jn"><label for="ux-pitch">Náklon chapadla</label><output for="ux-pitch" id="ux-pitch-o"></output>
           <input type="range" id="ux-pitch" min="0" max="90" step="1"></div>
         <p class="mono-s muted ux-ik">Úhly kloubů dopočítává inverzní kinematika (metoda tlumených nejmenších čtverců), stejně jako u skutečných robotů.</p>
-      </details>
+      </div>
     </div>`);
     mount.appendChild(smart);
     this.seg = [...mount.querySelectorAll('[data-mode]')];
     for (const b of this.seg) b.addEventListener('click', () => this.ux.setMode(b.dataset.mode));
-    this.gripBtn = $('ux-grip'); this.penBtn = $('ux-pen'); this.drawBox = $('ux-draw');
-    $('ux-penup').addEventListener('click', () => this.ux.togglePenUp());
+    this.penBtn = $('ux-pen'); this.drawBox = $('ux-draw');
     $('ux-drawview').addEventListener('click', () => {
       const ux = this.ux, top = ux.cameras.view === 'look';
       if (top) ux.cameras.set('orbit'); else ux.cameras.set('orbit', ux.runner.m.look);
       $('ux-drawview').textContent = top ? 'Pohled shora' : '3D pohled';
     });
     for (const b of this.drawBox.querySelectorAll('[data-h]')) b.addEventListener('click', () => this.ux.setDrawHelp(+b.dataset.h));
-    this.gripBtn.addEventListener('click', () => this.ux.toggleGrip());
     this.penBtn.addEventListener('click', () => this.ux.togglePen());
+    $('home').addEventListener('click', () => this.goHome());
     const roll = this.roll = $('ux-roll'), pitch = this.pitch = $('ux-pitch');
     const [lo, hi] = this.ux.ctl.kin.c.range[4];
     roll.min = lo; roll.max = hi;
@@ -410,28 +288,20 @@ export class Panel {
     pitch.addEventListener('input', () => this.ux.setPitch(+pitch.value * Math.PI / 180));
   }
 
-  /** drawing tools only in the drawing mission; the mission's own tip lives in the hint ladder ("Poradit") */
+  /** drawing tools only in the drawing mission (pen up / down takes the gripper's place in the action bar) */
   showTips(m) {
     this.drawBox.hidden = !m.draw;
     this.gripBtn.hidden = !!m.draw;
-    if (!m.draw) this.gripOpen = undefined;   // let tick() rewrite the phone button label
+    this.penUpBtn.hidden = !m.draw;
+    if (!m.draw) this.gripOpen = undefined;   // let tick() rewrite the button label
     if (m.draw) { this.showDraw(this.ux); $('ux-drawview').textContent = '3D pohled'; }
-    this.showHelpLine();
-  }
-  showHelpLine() {
-    const ux = this.ux, smart = ux.mode === 'smart';
-    const t = !smart ? 'Posuvníky natočí každý kloub zvlášť.'
-      : ux.runner.m.draw ? 'Táhněte po papíře – fix kreslí.' : 'Táhněte modrou kouli – ruka ji sleduje.';
-    const el = $('ux-hlt'); if (el.textContent !== t) el.textContent = t;
-    for (const u of this.tipsBox.querySelectorAll('[data-for]')) u.hidden = u.dataset.for !== (smart ? 'smart' : 'joints');
   }
 
   /** grab behaviour follows the mode switch now (no own control); kept for ux.js / tests */
   showGrabMode() {}
 
   showDraw(ux) {
-    const d = ux.draw, b = $('ux-penup'), q = $('ux-qgrip');
-    if (q) { q.textContent = d.penDown ? 'Pero nahoru' : 'Pero dolů'; q.setAttribute('aria-pressed', String(!d.penDown)); }
+    const d = ux.draw, b = this.penUpBtn;
     b.firstChild.textContent = d.penDown ? 'Pero nahoru ' : 'Pero dolů ';
     b.setAttribute('aria-pressed', String(!d.penDown));
     for (const x of this.drawBox.querySelectorAll('[data-h]')) x.setAttribute('aria-checked', String(+x.dataset.h === d.help));
@@ -442,13 +312,10 @@ export class Panel {
     this.smart.hidden = mode !== 'smart';
     $('joints').hidden = mode === 'smart';
     document.body.classList.toggle('ux-smartmode', mode === 'smart');
-    this.showHelpLine();
   }
   showGrip(open) {
     this.gripBtn.firstChild.textContent = open ? 'Zavřít chapadlo ' : 'Otevřít chapadlo ';
     this.gripBtn.setAttribute('aria-pressed', String(!open));
-    const q = $('ux-qgrip');
-    if (q && !this.ux.runner.m.draw) { q.textContent = open ? 'Zavřít chapadlo' : 'Otevřít chapadlo'; q.setAttribute('aria-pressed', String(!open)); }
   }
   showPen(on) { this.penBtn.setAttribute('aria-pressed', String(on)); this.stage.classList.toggle('ux-pen-on', on); }
   showRoll(r) {
@@ -533,46 +400,37 @@ export class Panel {
   openTeach(on, reveal) {
     const b = $('ux-teach-b'), body = $('ux-teach-body');
     body.hidden = !on; b.setAttribute('aria-expanded', String(on));
-    if (on && reveal && this.mq.matches) { this.selectTab('tools'); if (this.snap < 1) this.setSnap(1); }
+    if (on && reveal) this.openDrawer(false);
   }
-  /** "Připojit AI" (src/agent/index.js mounts its box right after #ux-teach): only styled as a tool row here */
+  /** "Připojit AI" (src/agent/index.js mounts its box right after #ux-teach): a tool row of the drawer */
   mountAI() {
     const box = document.querySelector('.ai-box'), teach = $('ux-teach');
     if (!box || !teach) return;
     if (box.previousElementSibling !== teach) teach.after(box);
     box.classList.add('ux-tool');
-    // the agent's "Zeptej se AI na tuto misi" link belongs to the mission card's action row (not the phone head)
-    const ask = $('ai-ask-mission'), row = this.mBox.querySelector('.ux-mrow');
-    if (ask && row) row.after(ask);
+    // "Zeptej se AI na tuto misi" is the last row of the hint popover (Poradit); its prompt opens in the drawer
+    const ask = $('ai-ask-mission');
+    if (ask) {
+      this.hintBox.appendChild(ask);
+      ask.addEventListener('click', () => { this.closeHint(false); this.openDrawer(false); }, true);
+    }
+    // the AI panel opened from elsewhere (reload while paired, the win card's "Záznam AI"): show the drawer
+    const open = $('ai-open');
+    if (open && window.MutationObserver) new MutationObserver(() => { if (open.getAttribute('aria-expanded') === 'true') this.openDrawer(false); })
+      .observe(open, { attributes: true, attributeFilter: ['aria-expanded'] });
   }
 
-  // ---------- stage overlays ----------
+  // ---------- stage overlays: camera, wrist PiP, toast, REC, replay bar, credit ----------
   stageUI() {
     const st = this.stage;
-    const bar = this.toolbar = h(`<div class="ux-tools" role="toolbar" aria-label="Pohled a nastavení">
-      <button type="button" class="ux-tb" id="ux-view" aria-label="Přepnout pohled (C)" data-tip="Přepnout pohled (C)">${I.cam}<span class="ux-tbl" id="ux-view-l">Volný</span></button>
-      <button type="button" class="ux-tb" id="ux-wrist" aria-pressed="false" aria-label="Kamera na zápěstí" data-tip="Kamera na zápěstí (V)">${I.wrist}<span class="ux-tbl">Zápěstí</span></button>
-      <button type="button" class="ux-tb" id="ux-parts" aria-pressed="false" aria-label="Rozložený pohled" data-tip="Rozložený pohled – z čeho se skládá (X)">${I.parts}<span class="ux-tbl">Díly</span></button>
-      <button type="button" class="ux-tb" id="ux-set" aria-expanded="false" aria-controls="ux-setpop" aria-label="Nastavení" data-tip="Barva, detail, zvuk, zkratky">${I.gear}<span class="ux-tbl">Nastavení</span></button>
+    // camera: Volný (cycles the view, C) | Zápěstí (wrist camera picture-in-picture, V)
+    const cam = this.camSeg = h(`<div class="ux-cam" role="group" aria-label="Kamera">
+      <button type="button" class="ux-tb" id="ux-view" aria-label="Přepnout pohled (C)">${I.cam}<span class="ux-tbl" id="ux-view-l">Volný</span></button>
+      <button type="button" class="ux-tb" id="ux-wrist" aria-pressed="false" aria-label="Kamera na zápěstí (V)">${I.wrist}<span class="ux-tbl">Zápěstí</span></button>
     </div>`);
-    st.appendChild(bar);
-    // settings popover: filament colour, model detail (qualityUI), sound, shortcuts
-    const pop = this.setPop = h(`<div class="ux-pop" id="ux-setpop" role="dialog" aria-modal="false" aria-labelledby="ux-set-h" hidden>
-      <div class="ux-modal-top"><p class="mono" id="ux-set-h">Nastavení</p><button type="button" class="ux-x" aria-label="Zavřít nastavení">×</button></div>
-      <button type="button" class="btn btn-o ux-setbtn" id="ux-sound" aria-pressed="false">${I.snd}<span>Zvuk</span> <span class="kbd" aria-hidden="true">S</span></button>
-      <button type="button" class="btn btn-o ux-setbtn" id="ux-help">${I.help}<span>Klávesové zkratky a nápověda</span> <span class="kbd" aria-hidden="true">?</span></button>
-    </div>`);
-    st.appendChild(pop);
-    const colors = document.querySelector('.colors');
-    if (colors) pop.insertBefore(colors, $('ux-sound'));
-    pop.querySelector('.ux-x').addEventListener('click', () => this.closeSet(true));
-    $('ux-set').addEventListener('click', () => (pop.hidden ? this.openSet() : this.closeSet(true)));
-    document.addEventListener('pointerdown', (e) => { if (!pop.hidden && !pop.contains(e.target) && !$('ux-set').contains(e.target)) this.closeSet(false); }, true);
+    st.appendChild(cam);
     $('ux-view').addEventListener('click', () => this.ux.cycleView());
     $('ux-wrist').addEventListener('click', () => this.ux.setWrist(!this.ux.cameras.wristOn));
-    $('ux-sound').addEventListener('click', () => this.ux.setSound(!this.ux.sound.on));
-    $('ux-help').addEventListener('click', () => { this.closeSet(false); this.openHelp(); });
-    $('ux-parts').addEventListener('click', () => this.ux.toggleExplode());
 
     this.pip = h(`<div class="ux-pip" hidden aria-hidden="true"><span class="mono-s">Kamera na zápěstí</span></div>`);
     st.appendChild(this.pip);
@@ -582,30 +440,119 @@ export class Panel {
     st.appendChild(this.recBadge);
     this.playBar = h(`<div class="ux-playbar" hidden><span class="mono-s">Přehrávám ukázku</span><b><i id="ux-play-p"></i></b></div>`);
     st.appendChild(this.playBar);
-    this.timer = h(`<span class="ux-timer mono" id="ux-timer" aria-hidden="true">0:00</span>`);
-    $('hud').appendChild(this.timer);
     this.penHint = h(`<p class="ux-penhint mono-s" hidden>Nakreslete čáru po stole prstem nebo myší – ruka ji zopakuje</p>`);
     st.appendChild(this.penHint);
+    // credits for the scanned / authored objects (CC BY 4.0 needs attribution where they are shown)
+    this.credit = h(`<p class="mono-s ux-credit" hidden><a href="objects/LICENSES.md" target="_blank" rel="noopener"></a></p>`);
+    st.appendChild(this.credit);
   }
-  /** friend's record from a challenge link, shown in the HUD until the page is left */
+  /** shared time from a challenge link, shown next to the timer until the page is left */
   showChallenge(t) {
-    if (!this.chal) { this.chal = h(`<span class="ux-chal mono"></span>`); $('hud').appendChild(this.chal); }
+    if (!this.chal) { this.chal = h(`<span class="ux-chal mono"></span>`); $('ux-topr').insertBefore(this.chal, this.menuBtn); }
     this.chal.textContent = t;
   }
   showView(v) { $('ux-view-l').textContent = VIEW_LABELS[v].replace('Volný pohled', 'Volný'); }
   showWrist(on) { $('ux-wrist').setAttribute('aria-pressed', String(on)); this.pip.hidden = !on; this.pipCache = null; }
   showSound(on) { $('ux-sound').setAttribute('aria-pressed', String(on)); $('ux-sound').classList.toggle('muted', !on); }
-  openSet() {
-    this.setPop.hidden = false; $('ux-set').setAttribute('aria-expanded', 'true');
-    const f = this.setPop.querySelector('[aria-checked=true], button:not(.ux-x)'); if (f) f.focus();
-  }
-  closeSet(refocus) {
-    if (this.setPop.hidden) return;
-    this.setPop.hidden = true; $('ux-set').setAttribute('aria-expanded', 'false');
-    if (refocus) $('ux-set').focus({ preventScroll: true });
-  }
-  popOpen() { return !this.setPop.hidden; }
   showExplode(on) { $('ux-parts').setAttribute('aria-pressed', String(on)); }
+
+  // ---------- "Nástroje": right-edge tab + drawer (phones: bottom sheet) ----------
+  drawerUI() {
+    const pn = this.panelEl;
+    const x = h(`<button type="button" class="ux-x" id="ux-drawer-x" aria-label="Zavřít nástroje">×</button>`);
+    pn.querySelector('.ux-dhead').appendChild(x);
+    this.edgeTab = h(`<button type="button" class="ux-edge" id="ux-tools-tab" aria-controls="panel" aria-expanded="false">Nástroje</button>`);
+    this.stage.appendChild(this.edgeTab);
+    pn.hidden = true;
+    x.addEventListener('click', () => this.closeDrawer(true));
+    for (const b of [this.edgeTab, this.toolsQ]) b.addEventListener('click', () => (pn.hidden ? this.openDrawer(true, b) : this.closeDrawer(true)));
+    // phones: touching the 3D scene puts the sheets away (the scene is the main thing)
+    this.stage.addEventListener('pointerdown', () => { if (this.mq.matches) { this.closeDrawer(false); this.closeMenu(false); } });
+  }
+  drawerOpen() { return !this.panelEl.hidden; }
+  /** focus: true = move focus into the drawer (user opened it), false = just show it (programmatic reveal) */
+  openDrawer(focus, from) {
+    const pn = this.panelEl;
+    if (!pn.hidden) return;
+    this.closeMenu(false);
+    this.drawerFrom = from || document.activeElement;
+    pn.hidden = false;
+    document.body.classList.add('ux-drawer-open');
+    for (const b of [this.edgeTab, this.toolsQ]) b.setAttribute('aria-expanded', 'true');
+    if (focus) $('ux-drawer-x').focus({ preventScroll: true });
+  }
+  closeDrawer(refocus) {
+    const pn = this.panelEl;
+    if (pn.hidden) return;
+    const had = pn.contains(document.activeElement);
+    pn.hidden = true;
+    document.body.classList.remove('ux-drawer-open');
+    for (const b of [this.edgeTab, this.toolsQ]) b.setAttribute('aria-expanded', 'false');
+    if (refocus || had) {
+      const f = [this.drawerFrom, this.edgeTab, this.toolsQ].find((b) => b && b.isConnected && b.offsetParent && !pn.contains(b));
+      if (f) f.focus({ preventScroll: true });
+    }
+  }
+
+  // ---------- ☰ menu: missions, parts, setup wizard, shortcuts, intro, settings, language (phones), about ----------
+  menuUI() {
+    const menu = this.menu = h(`<div class="ux-menu" id="ux-menu" role="dialog" aria-modal="false" aria-labelledby="ux-menu-h" hidden>
+      <div class="ux-menutop"><h2 class="mono" id="ux-menu-h">Menu</h2><button type="button" class="ux-x" aria-label="Zavřít menu">×</button></div>
+      <ul class="ux-mlist">
+        <li><button type="button" class="ux-mi" id="ux-m-missions">Mise <span class="ux-mi-r" aria-hidden="true">→</span></button></li>
+        <li><button type="button" class="ux-mi" id="ux-parts" aria-pressed="false">Z čeho je ruka (díly) <span class="kbd" aria-hidden="true">X</span></button></li>
+        <li><a class="ux-mi" href="nastaveni/"><span>Nastavení serv nanečisto<span class="mono-s muted ux-mi-s">Příprava na skutečnou ruku: ID, kalibrace, test – bez hardwaru</span></span> <span class="ux-mi-r" aria-hidden="true">→</span></a></li>
+        <li><button type="button" class="ux-mi" id="ux-help">Ovládání a zkratky <span class="kbd" aria-hidden="true">?</span></button></li>
+        <li><button type="button" class="ux-mi" id="ux-tour">Ukázat úvod znovu</button></li>
+      </ul>
+      <section class="ux-mset" aria-labelledby="ux-set-h">
+        <h3 class="mono" id="ux-set-h">Nastavení</h3>
+        <button type="button" class="ux-mi" id="ux-sound" aria-pressed="false"><span class="ux-mi-i">${I.snd}<span>Zvuk</span></span> <span class="kbd" aria-hidden="true">S</span></button>
+      </section>
+      <div class="ux-mlang" hidden><p class="mono">Jazyk</p></div>
+    </div>`);
+    document.querySelector('main.sim').appendChild(menu);
+    const set = menu.querySelector('.ux-mset'), colors = document.querySelector('.colors'), about = document.querySelector('.ux-about');
+    if (colors) set.appendChild(colors);
+    if (about) menu.appendChild(about);
+    menu.querySelector('.ux-x').addEventListener('click', () => this.closeMenu(true));
+    this.menuBtn.addEventListener('click', () => (menu.hidden ? this.openMenu() : this.closeMenu(true)));
+    document.addEventListener('pointerdown', (e) => { if (!menu.hidden && !menu.contains(e.target) && !this.menuBtn.contains(e.target)) this.closeMenu(false); }, true);
+    $('ux-m-missions').addEventListener('click', () => { this.closeMenu(true); this.openPicker(); });
+    $('ux-parts').addEventListener('click', () => { this.closeMenu(true); this.ux.toggleExplode(); });
+    $('ux-help').addEventListener('click', () => { this.closeMenu(true); this.openHelp(); });
+    $('ux-tour').addEventListener('click', () => { this.closeMenu(true); this.ux.onboarding.start(true); });
+    $('ux-sound').addEventListener('click', () => this.ux.setSound(!this.ux.sound.on));
+    // compact layouts hide the site header: its language switch moves into the menu
+    const ls = $('lang-sw'), home = ls && ls.parentNode, slot = menu.querySelector('.ux-mlang');
+    const place = () => {
+      if (!ls) return;
+      const c = this.mqCompact.matches;
+      if (c && ls.parentNode !== slot) slot.appendChild(ls); else if (!c && ls.parentNode !== home) home.appendChild(ls);
+      slot.hidden = !c;
+    };
+    place(); this.mqCompact.addEventListener ? this.mqCompact.addEventListener('change', place) : this.mqCompact.addListener(place);
+  }
+  menuOpen() { return !this.menu.hidden; }
+  openMenu() {
+    this.closeHint(false);
+    if (this.mq.matches) this.closeDrawer(false);
+    this.menu.hidden = false; this.menuBtn.setAttribute('aria-expanded', 'true');
+    const f = this.menu.querySelector('.ux-mi'); if (f) f.focus({ preventScroll: true });
+  }
+  closeMenu(refocus) {
+    if (this.menu.hidden) return;
+    const had = this.menu.contains(document.activeElement);
+    this.menu.hidden = true; this.menuBtn.setAttribute('aria-expanded', 'false');
+    if (refocus || had) this.menuBtn.focus({ preventScroll: true });
+  }
+  /** an open non-modal overlay (Esc closes the top one first: menu → hint popover → drawer) */
+  popOpen() { return this.menuOpen() || this.hintOpen && !this.hintBox.hidden || this.drawerOpen(); }
+  closeSet(refocus) {
+    if (this.menuOpen()) this.closeMenu(refocus);
+    else if (this.hintOpen && !this.hintBox.hidden) this.closeHint(refocus);
+    else this.closeDrawer(refocus);
+  }
 
   /** wrist-cam rectangle in canvas CSS px (cached until resize) */
   pipRect() {
@@ -634,8 +581,9 @@ export class Panel {
     this.showRoll(ux.ctl.active ? ux.ctl.roll : ux.app.d.ctrl[ux.app.act[4]]);
     const open = (ux.ctl.active ? ux.ctl.grip : ux.app.d.ctrl[ux.app.act[5]]) > 0.5;
     if (open !== this.gripOpen) { this.gripOpen = open; this.showGrip(open); }
+    // stuck: "Poradit" is marked (never opened by itself)
     const hint = !!this.offered && !r.won && !ux.ctl.busy() && !ux.pending && !ux.teach.replaying && !ux.explode.on;
-    if (hint === this.hintBtn.hidden) this.hintBtn.hidden = !hint;
+    if (hint !== this.offerOn) { this.offerOn = hint; this.hintB.classList.toggle('ux-offer', hint); }
   }
 
   // ---------- model detail (quality) ----------
@@ -692,7 +640,7 @@ export class Panel {
   /** by: null = the visitor, 'assisted' = "Ukázat řešení", 'replay' = a recorded demonstration (no stars then). */
   showWin(m, res, best, isNew, by) {
     const again = document.getElementById('again');
-    if (this.mq.matches) { this.selectTab('mission'); this.setSnap(0); }   // the win card sits right above the sheet
+    this.closeHint(false); this.closeMenu(false); this.closeDrawer(false);   // the result and the win card stay in view
     this.winStars.hidden = !!by;
     if (by) {
       const n = this.ux.aiSteps || 0;
@@ -762,13 +710,15 @@ export class Panel {
 
   /** "Záznam AI" on the win card: open the "Připojit AI" panel (its own log is inside) and show the log */
   openAILog() {
-    if (this.mq.matches) { this.selectTab('tools'); this.setSnap(2); }
+    this.openDrawer(false);
     const so = window.so101, go = () => { const l = document.querySelector('.ai-logbox'); if (l) { l.scrollIntoView({ block: 'nearest' }); const o = $('ai-open'); if (o) o.focus({ preventScroll: true }); } };
     if (so && so.openPanel) Promise.resolve(so.openPanel()).then(go, go); else go();
   }
 
-  // ---------- help ----------
+  // ---------- help: how to move the arm (the old panel tips) + keyboard shortcuts ----------
   helpUI() {
+    const ux = this.ux;
+    const tap = (s) => (ux.touch ? s.replace(/Klikněte/g, 'Klepněte').replace(/klikněte/g, 'klepněte').replace('Dvojklik', 'Dvojí klepnutí') : s);
     const keys = [
       ['Myš / prst', 'tažením otáčíte pohled, kolečkem či dvěma prsty přibližujete'],
       ['Modrá koule', 'tažením vedete ruku (Táhnout ruku)'],
@@ -797,20 +747,36 @@ export class Panel {
       <div class="ux-modal-in">
         <div class="ux-modal-top"><p class="mono">Nápověda</p><button type="button" class="ux-x" aria-label="Zavřít">×</button></div>
         <h2 id="ux-help-h">Ovládání a zkratky</h2>
+        <div class="ux-tipsbox" id="ux-tips">
+          <div><h3 class="mono">Táhnout ruku</h3>
+          <ul class="ux-tips" data-for="smart">
+            <li><i class="dot" aria-hidden="true"></i><span>Táhněte <b>modrou kouli</b>, ruka ji sleduje. Červená = tam nedosáhne.</span></li>
+            <li><i aria-hidden="true">↕</i><span>Šipky nad a pod koulí mění výšku.</span></li>
+            <li><i aria-hidden="true">⟳</i><span>Kroužek, kolečko myši nebo druhý prst otáčí zápěstím.</span></li>
+            <li class="ux-tip-pull"><i aria-hidden="true">✥</i><span>Chyťte kteroukoli část ruky – povolí a nechá se vést jako skutečná.</span></li>
+            <li><i aria-hidden="true">☝</i><span>${tap('Mise 01–03: klikněte na předmět – ruka ho sama vezme, pak klikněte, kam ho položit. Bez hvězdiček; od mise 04 už ne.')}</span></li>
+          </ul></div>
+          <div><h3 class="mono">Klouby</h3>
+          <ul class="ux-tips" data-for="joints">
+            <li><i aria-hidden="true">⇆</i><span>Posuvníky natočí každý kloub zvlášť.</span></li>
+            <li><i aria-hidden="true">✥</i><span>${tap('Chyťte díl ruky ve 3D a otočte jen jeho kloubem. Dvojklik ho vrátí do výchozí polohy.')}</span></li>
+            <li><i aria-hidden="true">#</i><span>Klávesy 1–6 vyberou kloub, šipky ← → s ním otáčí.</span></li>
+          </ul></div>
+        </div>
+        <h3 class="mono">Klávesové zkratky</h3>
         <dl class="ux-keys">${keys.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
         <label class="ux-check"><input type="checkbox" id="ux-keys-on"> Zkratky jednou klávesou (písmena, číslice, mezerník) fungují kdekoli na stránce. Vypnuté fungují jen se zaměřenou 3D scénou.</label>
-        <div class="ux-row2"><button type="button" class="btn btn-o" id="ux-tour">Spustit průvodce znovu</button></div>
       </div></div>`);
     document.body.appendChild(dlg);
     trapFocus(dlg);
+    this.grabSeg = dlg.querySelector('.ux-tip-pull');   // hidden with ?real=1 (no physics pull on armed hardware)
     dlg.querySelector('.ux-x').addEventListener('click', () => this.closeHelp());
     dlg.addEventListener('click', (e) => { if (e.target === dlg) this.closeHelp(); });
     const ko = $('ux-keys-on');
     ko.checked = this.ux.keysOn;
     ko.addEventListener('change', () => { this.ux.keysOn = ko.checked; store.set('keys-on', ko.checked); });
-    $('ux-tour').addEventListener('click', () => { this.closeHelp(); this.ux.onboarding.start(true); });
   }
-  openHelp() { this.lastFocus = document.activeElement; this.help.hidden = false; this.help.querySelector('.ux-x').focus(); }
+  openHelp() { this.closeMenu(false); this.lastFocus = document.activeElement; this.help.hidden = false; this.help.querySelector('.ux-x').focus(); }
   closeHelp() { this.help.hidden = true; if (this.lastFocus) this.lastFocus.focus({ preventScroll: true }); }
   modalOpen() { return !this.help.hidden || !this.picker.hidden; }
   closeModals() { if (!this.help.hidden) this.closeHelp(); if (!this.picker.hidden) this.closePicker(); }

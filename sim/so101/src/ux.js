@@ -151,7 +151,7 @@ class UX {
   start() {
     this.runner.select(this.startRoute(new URLSearchParams(location.search)));
     // hint buttons (both play the planner's solution, see startDemo): which one was used
-    addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('#ux-hint,#ux-qhint'); if (b) track('hint_used', { mission: this.runner.m.id, level: b.id === 'ux-hint' ? 1 : 2 }); }, true);
+    addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('#ux-mhint,#ux-hintnext'); if (b) track('hint_used', { mission: this.runner.m.id, level: b.id === 'ux-mhint' ? 1 : 2 }); }, true);
     if (this.runner.m.objects && !this.world.lib) this.runner.select('bowl');   // app.js loads the object scene when needed
     this.setMode(this.mode, true);
     this.panel.showPitch(this.ctl.pitch);

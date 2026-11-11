@@ -28,6 +28,7 @@ try {
 }
 let fails = 0;
 const ok = (cond, msg) => { console.log((cond ? 'ok   ' : 'FAIL ') + msg); if (!cond) fails++; };
+const openTools = async (pg) => { if (!(await pg.locator('#ai-open').isVisible())) await pg.click(await pg.locator('#ux-tools-tab').isVisible() ? '#ux-tools-tab' : '#ux-qtools'); };   // HUD stage 1: "Připojit AI" is in the Nástroje drawer
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 /**
  * Simulated time is pumped from the test (the page's frame loop is paused). The pump yields: after each slice it
@@ -84,6 +85,7 @@ try {
   await startPump(page);
 
   // ---- pairing through the panel ----
+  await openTools(page);
   await page.click('#ai-open');
   const codeEl = page.getByTestId('agent-code');
   await codeEl.filter({ hasText: /^[A-Z]{4}-[A-Z]{4}$/ }).waitFor({ timeout: 20000 });
@@ -161,6 +163,7 @@ try {
   await page.getByTestId('agent-bar-stop').click();   // release
   ok(/Plynulý pohyb přes 5 bodů/.test(await page.getByTestId('agent-log').innerText()), 'activity log: "Plynulý pohyb přes 5 bodů"');
   // "Zeptej se AI" on the mission card: the prompt for the current mission
+  if (!(await page.locator('#ai-ask-mission').isVisible())) await page.click('#ux-mhint');   // HUD stage 1: inside the Poradit popover
   await page.click('#ai-ask-mission');
   const mp = await page.getByTestId('agent-mission-prompt').innerText();
   ok(/Pro misi 01/.test(mp) && /Spusť misi 01/.test(mp), '"Zeptej se AI": prompt for mission 01');
@@ -214,6 +217,7 @@ try {
   const en = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   await en.goto(`http://127.0.0.1:${sport}/sim/so101/?test=1&lang=en&relay=${encodeURIComponent(relay)}`);
   await en.waitForFunction(() => window.__sim && (window.__sim.ready || window.__sim.error), null, { timeout: 300000 });
+  await openTools(en);
   await en.click('#ai-open');
   await en.getByTestId('agent-code').filter({ hasText: /^[A-Z]{4}-[A-Z]{4}$/ }).waitFor({ timeout: 20000 });
   const enText = await en.evaluate(() => [document.querySelector('.ai-box').innerText, document.querySelector('.ai-bar').innerText].join('\n'));
@@ -231,6 +235,7 @@ try {
     await pg.goto(`http://127.0.0.1:${sport}/sim/so101/?test=1&ai_timeout=800&relay=${encodeURIComponent(url)}`);
     await pg.waitForFunction(() => window.__sim && (window.__sim.ready || window.__sim.error), null, { timeout: 300000 });
     const t0 = Date.now();
+    await openTools(pg);
     await pg.click('#ai-open');
     await pg.locator('#ai-panel[data-state=retry]').waitFor({ timeout: 15000 });
     const retryText = await pg.locator('.ai-status').innerText();

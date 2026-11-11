@@ -59,22 +59,13 @@
 .ux-keys dd{margin:0;color:var(--ink-2)}
 
 /* ---------- stage overlays ---------- */
-.hud{max-width:calc(100% - 96px)}
-.ux-timer{margin-left:4px;padding-left:10px;border-left:1px solid var(--line);font-variant-numeric:tabular-nums}
-.ux-tools{position:absolute;right:16px;top:16px;display:flex;flex-direction:column;gap:6px;z-index:3}
-.ux-tb{position:relative;width:48px;height:48px;border:1px solid var(--ink);background:#fff;color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;padding:0}
-.ux-tb svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.ux-tb:hover{background:var(--sand)}
-.ux-tb[aria-pressed=true]{background:var(--ink);color:#fff}
-.ux-tbl{font:500 9.5px/1 var(--mono);letter-spacing:.02em}
-#ux-view svg{width:19px;height:19px}
 #ux-sound .off{display:none}
 #ux-sound.muted .on{display:none}
 #ux-sound.muted .off{display:inline}
 [data-tip]{position:relative}
 @media (hover:hover){
   .ux-tb[data-tip]:hover::after,.ux-tb[data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;right:calc(100% + 8px);top:50%;transform:translateY(-50%);white-space:nowrap;background:var(--ink);color:#fff;font:500 12.5px/1 var(--sans);padding:8px 10px;pointer-events:none}
-  .panel [data-tip]:hover::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);white-space:nowrap;background:var(--ink);color:#fff;font:500 12.5px/1 var(--sans);padding:7px 9px;pointer-events:none;z-index:4}
+  .panel [data-tip]:hover::after,.ux-abar [data-tip]:hover::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);white-space:nowrap;background:var(--ink);color:#fff;font:500 12.5px/1 var(--sans);padding:7px 9px;pointer-events:none;z-index:4}
 }
 .ux-pip{position:absolute;right:16px;bottom:16px;width:min(260px,32%);aspect-ratio:4/3;border:1px solid var(--ink);pointer-events:none;box-shadow:6px 6px 0 rgba(14,14,14,.08)}
 .ux-pip span{position:absolute;left:0;top:0;background:var(--ink);color:#fff;padding:3px 7px;font-size:11px}
@@ -111,22 +102,6 @@
 @keyframes ux-star{from{transform:scale(0) rotate(-40deg);opacity:0}to{transform:none;opacity:1}}
 .win .ux-winstats{color:var(--ink);font-size:13px}
 
-@media (max-width:860px){
-  .hud{max-width:calc(100% - 80px)}
-  .ux-tools{right:10px;top:10px;gap:5px}
-  .ux-tb{width:44px;height:44px}
-  .ux-tbl{display:none}
-  .ux-pip{left:10px;right:auto;bottom:10px;width:132px}
-  .ux-toast{top:56px;font-size:14px}
-  .ux-recb{left:12px;top:56px}
-  .ux-playbar{left:10px;right:10px;bottom:10px}
-  .ux-keys{grid-template-columns:1fr}
-  .ux-keys div{grid-template-columns:104px 1fr}
-  .ux-coach{padding:14px}
-  .win .ux-winstats{display:block}
-  .ux-winstars{font-size:28px}
-  .ux-penhint{bottom:10px;font-size:11px}
-}
 @media (prefers-reduced-motion:reduce){.ux-coach-ring::after{display:none}}
 
 /* model detail */
@@ -165,11 +140,6 @@
 }
 
 /* ---------- usability round 1 ---------- */
-.ux-hintbtn{margin-left:6px;border:1px solid var(--accent);background:var(--accent);color:var(--ink);font:600 13px/1 var(--sans);padding:6px 10px;cursor:pointer;min-height:32px;animation:ux-pulse 1.6s ease-in-out infinite}
-.ux-hintbtn:hover{background:var(--accent-d)}
-@keyframes ux-pulse{50%{box-shadow:0 0 0 5px rgba(232,70,30,.25)}}
-#ux-mode .row-b{margin-top:12px}
-.ux-under{display:none}
 .ux-exlink{align-self:flex-start;margin-top:4px}
 .ux-setup{display:flex;flex-direction:column;gap:8px}
 .ux-setup>.mono{border-top:1px solid var(--ink);padding-top:12px}
@@ -181,7 +151,7 @@
 .win{z-index:8}
 #win-h:focus{outline:none}
 /* exploded view: the parts are the scene */
-.ux-exploding .hud,.ux-exploding .ux-tools .ux-tb:not(#ux-parts),.ux-exploding .hint,.ux-exploding .ux-recb{display:none!important}
+.ux-exploding .hud,.ux-exploding .ux-cam,.ux-exploding .ux-edge,.ux-exploding .ux-pip,.ux-exploding .ux-recb,.ux-exploding .ux-credit,.stage.ux-exploding~.ux-under{display:none!important}
 .ux-explode.inpanel{position:static;width:auto;max-height:none;box-shadow:6px 6px 0 var(--accent);margin-bottom:4px}
 /* onboarding strip (phones) */
 .ux-coach.strip{position:static;width:auto;box-shadow:none;border-width:1px 0 0;padding:10px 16px 12px;gap:4px;transform:none!important}
@@ -189,17 +159,6 @@
 .ux-coach.strip .ux-coach-t{font-size:14px}
 .ux-coach.strip .ux-coach-b .btn{min-height:40px}
 
-@media (max-width:860px){
-  .stage{min-height:max(300px,52vh)}
-  .ux-under{display:block;position:sticky;top:max(300px,52svh);z-index:3;background:#fff;border-bottom:1px solid var(--ink)}
-  .ux-under .hud{position:static;max-width:none;border:0;border-bottom:1px solid var(--line);padding:8px 12px;font-size:14px}
-  .ux-qrow{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px;padding:8px 10px}
-  .ux-qrow .btn{min-height:48px;padding:0 10px;font-size:14.5px;justify-content:center;gap:6px}
-  .ux-qrow .btn[aria-pressed=true]{background:var(--ink);color:#fff}
-  .ux-hintbtn{display:none}
-  .ux-toast{top:12px}
-  .ux-recb{top:12px}
-}
 .jn output.ux-lim{color:var(--accent-text);font-weight:500}
 #c:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .ux-tb svg{width:20px;height:20px}
@@ -216,9 +175,9 @@
 /* button rows never overflow narrow phones (320 px) */
 .ux-row2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .ux-row3{grid-template-columns:1.2fr 1fr 1fr}
-.ux-row2 .btn,.ux-row3 .btn,.ux-qrow .btn{min-width:0;white-space:normal;line-height:1.15}
+.ux-row2 .btn,.ux-row3 .btn{min-width:0;white-space:normal;line-height:1.15}
 .ux-row3>*{min-width:0}
-@media (max-width:360px){.ux-row3{grid-template-columns:repeat(3,minmax(0,1fr))}.ux-row2 .btn,.ux-row3 .btn,.ux-qrow .btn{padding:0 8px;font-size:13.5px;gap:4px}}
+@media (max-width:360px){.ux-row3{grid-template-columns:repeat(3,minmax(0,1fr))}.ux-row2 .btn,.ux-row3 .btn{padding:0 8px;font-size:13.5px;gap:4px}}
 .ux-seg3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .ux-draw{display:flex;flex-direction:column;gap:8px}
 .ux-draw .mono,.ux-draw .mono-s{margin:0}
@@ -313,47 +272,108 @@
 @media (prefers-reduced-motion: reduce){.ai-mprompt.flash{animation:none;box-shadow:0 0 0 2px var(--accent)}}
 .ai-askm{display:block;padding:6px 0;min-height:40px}
 
-/* ---------- panel IA (sim-panel-ia): mission card → one control block → tools; settings popover; phone sheet ---------- */
-.panel{gap:22px;padding-top:20px;position:relative}
+/* mastery badges (✋ drag, ⚙ joints, ✓ done without stars) and the hint ladder's offer */
+.ux-badges{display:inline-flex;gap:4px;margin-left:8px;font-size:15px;line-height:1;font-weight:400}
+.ux-badge{font-weight:400;color:var(--ink)}
+.ux-badge.ux-done{color:var(--ok)}
+.ux-hintnow{display:inline-block;margin-top:6px;color:var(--ink-2)}
+#ux-shift-note{margin:0;font-size:14px;color:var(--ink);border-left:3px solid var(--accent);padding:6px 10px;background:var(--sand)}
+
+/* =====================================================================================================
+   HUD stage 1 (src/ui/panel.js): the scene takes the whole area under the site header; controls on its edges.
+   Site style: Inter Tight + Geist Mono, ink #0E0E0E, accent #E8461E, 1 px ink borders, square corners.
+   ===================================================================================================== */
+.sim{display:block;position:relative;height:calc(100% - var(--bh));height:calc(100dvh - var(--bh))}
+.stage{position:absolute;inset:0;background:linear-gradient(#fff,var(--sand))}
+
+/* ---- top row: mission chip · objective pill · stars, timer, ☰ ---- */
+.ux-top{position:absolute;left:16px;right:16px;top:16px;display:flex;align-items:center;gap:12px;z-index:4;pointer-events:none}
+.ux-top>*{pointer-events:auto}
+.ux-back{display:none;flex:none;width:44px;height:44px;align-items:center;justify-content:center;background:#fff;border:1px solid var(--ink);text-decoration:none;font-size:18px;color:var(--ink)}
+.ux-back:hover{background:var(--sand);color:var(--ink)}
+.ux-chiph{margin:0;font:inherit;flex:0 1 auto;min-width:0}
+.ux-chip{height:44px;max-width:360px;padding:0 14px;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--ink);font:500 15px/1.2 var(--sans);color:var(--ink);cursor:pointer;min-width:0}
+.ux-chip:hover{background:var(--sand)}
+.ux-chip-n{flex:none;font:400 12px/1 var(--mono);color:var(--mute);letter-spacing:.01em}
+.ux-chip-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ux-chip-v{flex:none;font-size:12px}
+.ux-top .hud{position:static;margin:0 auto;flex:0 1 auto;min-width:0;max-width:min(600px,100%);min-height:44px;padding:8px 20px;gap:10px;background:var(--ink);color:#fff;border:0;font-size:16px;font-weight:500;line-height:1.3}
+.ux-top .hud-dot{width:8px;height:8px}
+.ux-top .hud.ok .hud-dot{background:#7D93FF}
+.ux-topr{display:flex;align-items:center;gap:8px;margin-left:auto;flex:none}
+.ux-tstars{height:44px;padding:0 12px;display:inline-flex;align-items:center;gap:2px;background:#fff;border:1px solid var(--line);font-size:16px}
+.ux-tstars i{color:var(--line-2)}
+.ux-tstars .ux-badges{margin-left:6px}
+.ux-timer{height:44px;padding:0 12px;display:inline-flex;align-items:center;background:#fff;border:1px solid var(--line);font:400 14px/1 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+.ux-chal{height:44px;display:inline-flex;align-items:center;padding:0 10px;background:#fff;border:1px solid var(--accent);color:var(--accent-text);white-space:nowrap;font-size:13px}
+.ux-menub{width:44px;height:44px;flex:none;display:flex;align-items:center;justify-content:center;padding:0;background:#fff;border:1px solid var(--ink);color:var(--ink);cursor:pointer}
+.ux-menub svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
+.ux-menub:hover{background:var(--sand)}
+.ux-menub[aria-expanded=true]{background:var(--ink);color:#fff}
+
+/* ---- bottom centre: action bar + hint popover ---- */
+.ux-under{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:5;display:flex;flex-direction:column;align-items:center;max-width:calc(100% - 32px)}
+.ux-abar{display:flex;background:#fff;border:1px solid var(--ink)}
+.ux-ab{height:56px;padding:0 20px;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:var(--ink);border:0;font:500 16px/1.15 var(--sans);cursor:pointer;white-space:nowrap}
+.ux-abar>.ux-ab:not([hidden])~.ux-ab{border-left:1px solid var(--ink)}
+.ux-ab:hover{background:var(--sand)}
+.ux-ab[disabled]{color:var(--line-2);cursor:not-allowed}
+.ux-ab-main{background:var(--accent);font-weight:600;padding:0 22px}
+.ux-ab-main:hover{background:var(--accent-d)}
+.ux-ab-main:focus-visible{outline-color:var(--ink)}
+.ux-ab .kbd{font-size:11px;line-height:1.4;padding:0 6px;border-radius:0}
+.ux-ab-main .kbd{opacity:1}
+.ux-ab-tools{display:none}
+.ux-ab.ux-offer{box-shadow:inset 0 0 0 3px var(--accent);animation:ux-pulse 1.6s ease-in-out infinite}
+@keyframes ux-pulse{50%{box-shadow:inset 0 0 0 3px var(--accent),0 0 0 5px rgba(232,70,30,.25)}}
+.ux-ab,.ux-ab-main{transition:none}
+.ux-hintbox{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);width:min(440px,calc(100vw - 32px));background:#fff;border:1px solid var(--ink);box-shadow:6px 6px 0 rgba(14,14,14,.12);padding:10px 16px 12px;display:flex;flex-direction:column;gap:6px;z-index:6}
+.ux-hinttop{display:flex;justify-content:space-between;align-items:center}
+.ux-hinttop .mono{margin:0}
+.ux-hinttop .ux-x{margin:-6px -10px -4px 0}
+.ux-hinttext{margin:0;font-size:15px;line-height:1.45;color:var(--ink)}
+.ux-hintnow{display:inline-block;margin-top:6px;color:var(--ink-2)}
+.ux-hintnext{display:flex;flex-wrap:wrap;gap:0 16px}
+.ux-solve{align-self:flex-start;padding:6px 0;min-height:44px;font-size:15px;display:inline-flex;gap:8px;align-items:center}
+.ux-hintbox .ai-askm{display:flex;align-items:center;gap:8px;min-height:44px;padding:4px 0 0;border-top:1px solid var(--line);margin-top:4px;width:100%}
+
+/* ---- bottom left: camera Volný | Zápěstí; wrist PiP above it ---- */
+.ux-cam{position:absolute;left:16px;bottom:16px;display:flex;background:#fff;border:1px solid var(--ink);z-index:3}
+.ux-tb{position:relative;height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border:0;background:#fff;color:var(--ink);font:500 14px/1 var(--sans);cursor:pointer}
+.ux-tb+.ux-tb{border-left:1px solid var(--ink)}
+.ux-tb svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ux-tb:hover{background:var(--sand)}
+.ux-tb[aria-pressed=true]{background:var(--ink);color:#fff}
+.ux-tbl{font:inherit}
+.ux-pip{left:16px;right:auto;bottom:76px;width:min(260px,30%)}
+.ux-credit{position:absolute;right:16px;bottom:16px;margin:0;z-index:3;background:rgba(255,255,255,.9);padding:2px 6px;font-size:11px}
+.ux-credit a{color:var(--mute)}
+
+/* ---- overlays that used to sit under the old HUD line ---- */
+.ux-toast{top:76px}
+.ux-recb{left:16px;top:76px}
+.ux-playbar{left:50%;right:auto;bottom:92px;transform:translateX(-50%);width:min(420px,calc(100% - 32px))}
+.ux-penhint{bottom:92px}
+.ai-bar{bottom:92px}
+
+/* ---- right edge: "Nástroje" tab + drawer ---- */
+.ux-edge{position:absolute;right:0;top:50%;transform:translateY(-50%) rotate(180deg);writing-mode:vertical-rl;width:44px;padding:18px 0;background:#fff;border:1px solid var(--ink);border-left:0;font:500 14px/1 var(--sans);color:var(--ink);cursor:pointer;z-index:4}
+.ux-edge:hover{background:var(--sand)}
+.ux-drawer-open .ux-edge{display:none}
+.panel{position:absolute;top:0;right:0;bottom:0;width:min(360px,100%);z-index:7;border-left:1px solid var(--ink);padding:0 20px 24px;gap:20px;overflow-y:auto;overscroll-behavior:contain;background:#fff;box-shadow:-8px 0 24px rgba(14,14,14,.08)}
+.ux-dhead{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 -20px;padding:10px 12px 10px 20px;background:#fff;border-bottom:1px solid var(--line)}
+.ux-dhead h2{margin:0;font-size:22px;font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.ux-dhead .ux-x{margin:0}
 .ux-sec{display:flex;flex-direction:column;gap:12px}
-.ux-sec>h2.mono,.ux-sechead h2.mono{font-weight:400;margin:0;font-size:13px}
-.ux-ctl,.ux-toolsec{border-top:1px solid var(--ink);padding-top:12px}
-.ux-sechead{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px}
-.ux-sechead .row-b{display:flex;gap:6px}
-.btn.ux-mini{min-height:36px;padding:0 10px;font-size:14px;gap:6px;justify-content:center;font-weight:500}
-@media (pointer:coarse){.btn.ux-mini{min-height:44px}}
-/* mission card */
-.mission{gap:8px}
-.mission h1{margin:0}
-.mission p.ink2{font-size:15px}
-.ux-mtop{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.ux-mrow{margin-top:4px}
-.ux-hintbox{border-left:3px solid var(--ok);background:var(--sand);padding:10px 12px;display:flex;flex-direction:column;gap:2px}
-.ux-hintbox>.mono{margin:0}
-.ux-hinttext{margin:0;font-size:15px;color:var(--ink)}
-.ux-solve{align-self:flex-start;padding:6px 0;min-height:40px;font-size:15px;display:inline-flex;gap:8px;align-items:center}
-.ux-mnext{width:100%}
-.ux-credit{margin:0}
-/* control block */
-#ux-mode{gap:12px}
-.ux-hl{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.ux-hlt{margin:0;font-size:15px;color:var(--ink-2)}
-.ux-q{flex:none;width:32px;height:32px;border-radius:50%;border:1px solid var(--ink);background:#fff;color:var(--ink);font:600 15px/1 var(--sans);cursor:pointer;padding:0}
-.ux-q:hover{background:var(--sand)}
-.ux-q[aria-expanded=true]{background:var(--ink);color:#fff}
-.ux-tipsbox{background:var(--sand);padding:12px}
-.ux-gripbtn{width:100%}
-.ux-gripbtn[aria-pressed=true]{background:var(--ink)}
-.ux-smart{margin-top:0;gap:12px}
-.ux-draw #ux-pen{width:100%;min-height:48px}
-.ux-fine{border-top:1px solid var(--line);padding-top:4px}
-.ux-fine>summary{cursor:pointer;font-weight:500;font-size:15px;min-height:40px;display:flex;align-items:center;gap:8px;list-style:none}
-.ux-fine>summary::-webkit-details-marker{display:none}
-.ux-fine>summary::before{content:"▸";font-size:12px;color:var(--mute);transition:transform .12s}
-.ux-fine[open]>summary::before{transform:rotate(90deg)}
-.ux-fine[open]{display:flex;flex-direction:column;gap:8px}
+.ux-sech{margin:0;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
 .ux-ctl .joints legend{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;padding:0;margin:0}
-/* tools */
+#ux-mode{display:flex;flex-direction:column;gap:12px}
+.ux-smart{margin-top:0;gap:12px}
+.ux-fine{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:12px}
+.ux-fine>.mono{margin:0}
+.ux-homebtn{width:100%;min-height:48px;font-size:15px}
+.ux-homebtn>span:first-child{display:inline-flex;gap:8px}
+.ux-toolsec{border-top:1px solid var(--line);padding-top:16px}
 .ux-tool{display:flex;flex-direction:column;gap:4px}
 .ux-tool .btn{width:100%}
 .ux-toolsub,.ux-tool>.mono-s{margin:0}
@@ -361,101 +381,126 @@
 .ux-toolbtn[aria-expanded=true] .ux-chev{transform:rotate(180deg)}
 .ux-teach-body{display:flex;flex-direction:column;gap:10px;margin-top:8px}
 .ux-teach-body>.ink2{margin:0;font-size:14.5px}
-.ux-toolsec .ai-box{gap:4px}
+.ux-toolsec .ai-box{gap:4px;margin-top:8px}
 .ux-toolsec .ai-box>*{order:3}
 .ux-toolsec .ai-box>#ai-h{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;padding:0}
 .ux-toolsec .ai-box>#ai-open{order:1;width:100%}
 .ux-toolsec .ai-box>.ai-lead{order:2;font:12px/1.5 var(--mono);color:var(--mute);letter-spacing:.02em}
 .ux-toolsec .ai-box>#ai-panel{margin-top:6px}
-.ux-about{margin-top:6px}
-.ux-about>summary{cursor:pointer;font:12px/1.4 var(--mono);color:var(--mute);min-height:32px;display:flex;align-items:center;text-decoration:underline;text-underline-offset:3px}
+
+@media (min-width:861px) and (min-height:501px){
+  .ux-drawer-open .ux-top{right:376px}
+  .ux-drawer-open .ux-under{left:calc((100% - 360px) / 2)}
+}
+
+/* ---- ☰ menu ---- */
+.ux-menu{position:absolute;top:68px;right:16px;width:340px;max-width:calc(100% - 32px);max-height:calc(100% - 84px);overflow-y:auto;overscroll-behavior:contain;background:#fff;border:1px solid var(--ink);box-shadow:6px 6px 0 rgba(14,14,14,.12);z-index:9;display:flex;flex-direction:column}
+.ux-menutop{position:sticky;top:0;z-index:1;display:flex;justify-content:space-between;align-items:center;padding:6px 6px 6px 16px;background:#fff;border-bottom:1px solid var(--ink)}
+.ux-menutop h2{margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.ux-menutop .ux-x{margin:0}
+.ux-mlist{list-style:none;margin:0;padding:0}
+.ux-mlist li{border-bottom:1px solid var(--line)}
+.ux-mi{width:100%;min-height:52px;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:0;font:500 16px/1.25 var(--sans);color:var(--ink);text-decoration:none;text-align:left;cursor:pointer}
+.ux-mi:hover{background:var(--sand);color:var(--ink)}
+.ux-mi[aria-pressed=true]{background:var(--ink);color:#fff}
+.ux-mi:focus-visible{outline-offset:-3px}
+.ux-mi-s{display:block;margin-top:3px;font-weight:400;line-height:1.4}
+.ux-mi-r{flex:none}
+.ux-mi-i{display:flex;align-items:center;gap:10px}
+.ux-mi svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ux-mset{padding:14px 16px 16px;display:flex;flex-direction:column;gap:14px;border-bottom:1px solid var(--line)}
+.ux-mset>h3{margin:0;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.ux-mset>.ux-mi{border:1px solid var(--ink);min-height:48px;padding:0 12px}
+.ux-mset .colors .mono,.ux-mset .ux-quality>.mono{border-top:0;padding-top:0}
+.ux-menu .ux-vol{width:auto;height:44px;border:1px solid var(--line);padding:0 12px;margin-top:-8px}
+.ux-menu .ux-vol input{writing-mode:horizontal-tb;direction:ltr;width:100%;height:32px}
+.ux-mlang{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.ux-mlang .lang-sw a,.ux-mlang .lang-sw span{min-width:44px;min-height:44px;font-size:14px}
+.ux-menu .ux-about{padding:6px 16px 14px;margin:0}
+.ux-about>summary{cursor:pointer;font:12px/1.4 var(--mono);color:var(--mute);min-height:44px;display:flex;align-items:center;text-decoration:underline;text-underline-offset:3px}
 .ux-about>summary::-webkit-details-marker{display:none}
 .ux-about .foot{margin:4px 0 0}
-/* settings popover (stage toolbar ⚙) */
-.ux-tb[aria-expanded=true]{background:var(--ink);color:#fff}
-.ux-pop{position:absolute;right:76px;top:16px;width:300px;max-height:calc(100% - 32px);overflow:auto;background:#fff;border:1px solid var(--ink);box-shadow:6px 6px 0 rgba(14,14,14,.12);padding:12px 16px 16px;display:flex;flex-direction:column;gap:14px;z-index:9}
-.ux-pop .ux-modal-top .ux-x{width:40px;height:40px;margin:-4px -8px -4px 0}
-.ux-pop .colors .mono,.ux-pop .ux-quality>.mono{border-top:0;padding-top:0}
-.ux-setbtn{min-height:44px;justify-content:flex-start;gap:10px;font-size:15px;padding:0 12px}
-.ux-setbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
-.ux-setbtn .kbd{margin-left:auto}
-.ux-sheethead,.ux-tabs{display:none}
 
+/* ---- mission picker: the current mission's brief ---- */
+.ux-brief{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border:1px solid var(--ink);background:var(--sand)}
+.ux-brief h3{margin:0;font-weight:500;font-size:20px;letter-spacing:-.02em;line-height:1.15}
+.ux-brief p.ink2{margin:0;font-size:15px}
+.ux-mtop{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.ux-mnext{width:100%;margin-top:4px}
+.ux-bstars i{color:var(--line-2)}
+.ux-stars i.on{color:var(--accent)}
+.ux-help-tips,.ux-tipsbox{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;background:var(--sand);padding:12px 14px}
+.ux-tipsbox h3,.ux-modal-in>h3.mono{margin:0 0 8px;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.ux-modal-in>h3.mono{margin:6px 0 0}
+
+/* ---- phones in portrait: top row + objective, scene, thumb bar; sheets ---- */
 @media (max-width:860px) and (min-height:501px){
-  :root{--peek:max(170px,min(290px,calc(42svh - var(--bh) - 4px)))}
-  html,body{overflow:hidden;height:100%}
-  .sim{display:block;height:calc(100svh - var(--bh))}
-  .stage{position:relative;top:auto;z-index:auto;height:calc(100svh - var(--bh) - var(--peek));min-height:0;border-bottom:0}
-  .panel{position:fixed;left:0;right:0;bottom:0;height:var(--peek);z-index:6;border-top:1px solid var(--ink);border-left:0;padding:0 var(--pad) calc(20px + env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;gap:16px;transition:height .22s ease;box-shadow:0 -6px 18px rgba(14,14,14,.08)}
-  /* the opened sheet (tabs) leaves at least 40 % of the area under the header to the 3D scene (b11) */
-  .panel[data-snap="1"]{height:calc((100svh - var(--bh)) * .58)}
-  /* first-task guide: the sheet grows a little so the guide strip fits under the action row; the scene keeps > 40 % */
-  :root:has(.ux-under.ux-coaching .ux-coach.strip:not([hidden])){--peek:max(170px,min(390px,calc(54svh - var(--bh))))}
-  .ux-coach.strip{max-height:calc(var(--peek) - 150px);overflow-y:auto;overscroll-behavior:contain}
+  html,body{height:100%;overflow:hidden}
+  .bar{display:none}
+  .sim{display:flex;flex-direction:column;height:100%;height:100svh}
+  .stage{position:relative;inset:auto;flex:1 1 auto;min-height:0;height:auto;top:auto;z-index:auto;border-bottom:0}
+  .ux-top{left:8px;right:8px;top:8px;gap:6px;flex-wrap:wrap}
+  .ux-back{display:flex}
+  .ux-chiph{flex:1 1 0}
+  .ux-chip{width:100%;max-width:none;padding:0 10px;gap:6px;font-size:14px}
+  .ux-chip-n{font-size:11px}
+  .ux-chip-v{margin-left:auto}
+  .ux-topr{margin-left:0;gap:6px}
+  .ux-tstars{display:none}
+  .ux-timer{padding:0 8px;font-size:13px}
+  .ux-top .hud{order:5;flex:1 0 100%;margin:0;max-width:none;padding:8px 14px;font-size:15px}
+  .ux-chal{position:absolute;right:0;top:104px;height:32px}
+  .ux-under{position:relative;left:auto;bottom:auto;transform:none;max-width:none;flex:none;background:#fff;align-items:stretch}
+  .ux-abar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:0;border-top:1px solid var(--ink);padding-bottom:env(safe-area-inset-bottom)}
+  .ux-abar>.ux-ab:not([hidden])~.ux-ab{border-left:1px solid var(--line)}
+  .ux-ab{height:72px;padding:0 6px;font-size:14px;line-height:1.2;white-space:normal;text-align:center;min-width:0}
+  .ux-ab-main{padding:0 6px}
+  .ux-ab .kbd{display:none}
+  .ux-ab-tools{display:flex}
+  .ux-ab-tools[aria-expanded=true]{background:var(--ink);color:#fff}
+  .ux-edge{display:none}
+  .ux-hintbox{width:calc(100% - 16px)}
+  .ux-cam{left:8px;bottom:8px}
+  .ux-tb{padding:0 10px;font-size:13px}
+  .ux-pip{left:8px;bottom:60px;width:132px}
+  .ux-credit{right:8px;bottom:60px}
+  .ux-toast{top:112px;font-size:14px}
+  .ux-recb{left:8px;top:112px}
+  .ux-playbar{bottom:60px;width:calc(100% - 16px)}
+  .ux-penhint{bottom:60px;font-size:11px}
+  .ai-bar{bottom:60px}
+  /* "Nástroje" sheet: takes the thumb bar's place and pushes the scene up instead of covering it (the arm stays
+     visible while the sliders move it); the scene keeps ≥ 40 % of the screen (b11) */
+  .panel{position:relative;top:auto;left:auto;right:auto;bottom:auto;flex:0 0 auto;width:auto;height:52svh;max-height:none;border-left:0;border-top:1px solid var(--ink);box-shadow:none;padding:0 16px calc(16px + env(safe-area-inset-bottom));z-index:auto;gap:16px}
+  .ux-drawer-open .ux-under,.ux-drawer-open .ux-cam,.ux-drawer-open .ux-pip{display:none}
+  .ux-dhead{margin:0 -16px;padding:4px 8px 8px 16px;flex-wrap:wrap}
+  .ux-dhead::before{content:"";flex:0 0 100%;height:12px;background:linear-gradient(var(--line),var(--line)) center/36px 4px no-repeat}
+  /* ☰: a full-height sheet */
+  .ux-menu{position:fixed;inset:0;width:auto;max-width:none;max-height:none;border:0;box-shadow:none;z-index:30}
+  /* first-task guide: a strip right above the thumb bar, the scene keeps > 40 % */
+  .ux-coach.strip{max-height:30svh;overflow-y:auto;overscroll-behavior:contain}
   .ux-coach.strip .ux-coach-dots{display:none}
-  .panel[data-snap="2"]{height:calc(100svh - var(--bh))}
-  .panel.ux-dragging{transition:none}
-  .ux-sheethead{display:block;position:sticky;top:0;z-index:3;background:#fff;margin:0 calc(-1 * var(--pad))}
-  .ux-under{display:block;position:static;top:auto;border-bottom:0}
-  .ux-handle{display:flex;width:100%;height:24px;align-items:center;justify-content:center;border:0;background:#fff;cursor:grab;padding:0;touch-action:none}
-  .ux-handle i{width:44px;height:4px;border-radius:2px;background:var(--line-2);display:block}
-  .ux-under .hud{border-top:0;touch-action:none}
-  .ux-qrow{padding:6px 10px 8px}
-  .ux-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--ink)}
-  .ux-tabs button{min-height:44px;border:0;background:#fff;font:500 15px/1 var(--sans);color:var(--ink-2);cursor:pointer;padding:0 6px}
-  .ux-tabs button[aria-selected=true]{color:var(--ink);box-shadow:inset 0 -3px 0 var(--accent)}
-  .ux-sec>h2.mono,.ux-sechead h2.mono{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-  .ux-ctl,.ux-toolsec{border-top:0;padding-top:0}
-  .ux-sechead{justify-content:flex-end;min-height:0}
-  /* one action row on phones: no duplicates in the sheet */
-  #home,#ux-grip,#ux-mhint{display:none}
-  .mission h1{font-size:22px}
-  .ux-pop{right:62px;top:10px;left:10px;width:auto;max-height:calc(100% - 20px)}
+  .ux-tipsbox{grid-template-columns:1fr}
+  .ux-explode{bottom:8px}
 }
-.ux-setbtn>span:not(.kbd){flex:1;text-align:left}
-#ux-set .ux-tbl{font-size:8px;letter-spacing:-.03em}
-/* buttons that flip between white and black (aria-pressed) switch at once: a background transition caught
-   mid-way on a busy frame (win: confetti + camera) showed black text on black */
-.btn[aria-pressed],.ux-qrow .btn{transition:none}
-.ux-hintnext{display:flex;flex-wrap:wrap;gap:4px 16px}
-/* phones: compact win strip at the top of the sheet (result in the 3D view stays visible) */
-@media (max-width:860px) and (min-height:501px){
-  .win.strip{position:static;left:auto;top:auto;transform:none;width:auto;max-width:none;max-height:none;box-shadow:none;border-width:1px 0 0;border-color:var(--line);padding:10px 12px 12px;gap:6px;animation:none;z-index:auto;overflow:visible}
-  .win.strip .win-k,.win.strip>p:not(.mono){display:none}
-  .win.strip h2{font-size:18px}
-  .win.strip .ux-winstars{font-size:20px;gap:3px}
-  .win.strip .win-b{margin-top:2px}
-  .win.strip .win-b .btn{min-height:44px}
-  .ux-under:has(.win.strip:not([hidden])) .ux-qrow,.ux-under:has(.win.strip:not([hidden])) .hud{display:none}
-}
-
-/* phones: the mission title stays pinned above the tabs (compact), so every tab has the page's h1 */
-.ux-mhead{display:none}
-@media (max-width:860px) and (min-height:501px){
-  .ux-mhead{display:flex;flex-direction:column;gap:0;padding:6px 16px 8px;border-top:1px solid var(--line)}
-  .ux-mhead .ux-mtop .mono{font-size:12px}
-  .ux-mhead .ux-stars{font-size:15px}
-  .ux-mhead h1{font-size:18px;line-height:1.2;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .ux-under:has(.win.strip:not([hidden])) ~ .ux-mhead{display:none}
-}
-/* landscape phones (low and narrow): keep the side panel, no bottom sheet */
-@media (max-width:860px) and (max-height:500px){
-  .sim{display:grid;grid-template-columns:minmax(0,1fr) min(340px,44vw);height:calc(100svh - var(--bh))}
-  .stage{position:relative;top:auto;z-index:auto;height:auto;min-height:0;border-bottom:0}
-  .panel{border-left:1px solid var(--ink);overflow-y:auto;padding:14px 16px 20px;gap:16px}
-  .ux-under,.ux-sheethead{display:none}
-  .hud{left:10px;top:10px;font-size:13px;padding:5px 10px}
-  .mission h1{font-size:20px}
-  /* the win card sits at the top: the result (cube in the bowl) stays visible below it */
-  .win{top:8px;bottom:auto;max-height:calc(100% - 16px);padding:12px 16px;gap:6px}
+/* landscape phones: the desktop HUD, smaller, without the site header */
+@media (max-height:500px){
+  .bar{display:none}
+  .sim{height:100%;height:100svh}
+  .ux-top{left:8px;right:8px;top:8px;gap:6px}
+  .ux-back{display:flex}
+  .ux-tstars{display:none}
+  .ux-top .hud{font-size:14px;padding:6px 14px}
+  .ux-under{bottom:8px}
+  .ux-ab{height:48px;padding:0 14px;font-size:15px}
+  .ux-cam{left:8px;bottom:8px}
+  .ux-pip{bottom:60px;width:min(200px,28%)}
+  .ux-toast,.ux-recb{top:60px}
+  .ux-menu{top:60px;right:8px;max-height:calc(100% - 68px)}
+  .panel{width:min(340px,60vw);padding:0 16px 16px}
+  .ux-dhead{margin:0 -16px;padding-left:16px}
+  .win{top:8px;bottom:auto;transform:translateX(-50%);max-height:calc(100% - 16px);padding:12px 16px;gap:6px}
   .win .win-k{display:none}
   .win h2{font-size:19px}
-  .ux-winstars{font-size:22px}
 }
-/* mastery badges (✋ drag, ⚙ joints, ✓ done without stars) and the hint ladder's offer */
-.ux-badges{display:inline-flex;gap:4px;margin-left:8px;font-size:15px;line-height:1;font-weight:400}
-.ux-badge{font-weight:400;color:var(--ink)}
-.ux-badge.ux-done{color:var(--ok)}
-.ux-hintnow{display:inline-block;margin-top:6px;color:var(--ink-2)}
-.ux-qrow .btn.ux-offer{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
-#ux-shift-note{margin:0;font-size:14px;color:var(--ink);border-left:3px solid var(--accent);padding:6px 10px;background:var(--sand)}
+@media (pointer:coarse){.ux-mi .kbd{display:none}}

@@ -9,6 +9,11 @@ const dec = (s) => String(s).replace(/(\d),(\d)/g, '$1.$2');
 const ids = (s) => dec(s).replace(/\(([^)]+)\)/g, (m, n) => '(' + T(n) + ')');
 
 const strings = {
+  /* HUD stage 1: scene first, one objective line, action bar, "Nástroje" drawer, ☰ menu */
+  'Ukázky a AI': 'Demos and AI', 'Akce': 'Actions', 'Menu': 'Menu', 'Jazyk': 'Language',
+  'Zavřít nápovědu': 'Close the hint', 'Zavřít nástroje': 'Close tools', 'Zavřít menu': 'Close the menu',
+  'Z čeho je ruka (díly)': 'What the arm is made of (parts)', 'Ukázat úvod znovu': 'Show the intro again',
+  'Klávesové zkratky': 'Keyboard shortcuts',
   /* newcomer UX fixes: status line while the planner moves, grasp distance hints, untranslated playtest strings */
   'Kostka je v misce…': 'The cube is in the bowl…', 'Kostka do misky': 'Cube into the bowl',
   '3 ★: do 30 s a odchylka pod 4 mm': '3 ★: under 30 s with less than 4 mm offset',
@@ -313,8 +318,8 @@ const strings = {
   'v režimu Táhnout ruku ji tahem vedete (celá povolí); v režimu Klouby otočíte jen tím kloubem, dvojklik = výchozí poloha': 'in Drag the arm mode you guide it by pulling (all of it gives way); in Joints mode you turn only that joint, double-click = home position',
   'Robotická ruka SO-101 na stole s předměty mise. Ovládání: modrá koule (režim Táhnout ruku), klik na předmět, šipky a mezerník, nebo posuvníky kloubů v režimu Klouby.': 'SO-101 robot arm on a table with the mission objects. Controls: the blue ball (Drag the arm mode), clicking an object, arrow keys and Space, or the joint sliders in Joints mode.',
   'Máte sdílenou ukázku – spusťte ji tlačítkem Přehrát v nástroji Učit ukázkou': 'You have a shared demo – start it with Play in the Teach by demonstration tool',
-  'Táhněte prstem za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klepnutí na čelisti otevře / zavře chapadlo. Režim „Klouby“ v panelu otáčí jen jedním kloubem.': 'Pull any part with your finger – the arm gives way and lets you guide it like a real one. Tap the jaws to open / close the gripper. Joints mode in the panel turns just one joint.',
-  'Táhněte myší za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klik na čelisti otevře / zavře chapadlo. Režim „Klouby“ v panelu otáčí jen jedním kloubem, klávesy 1–6 vyberou kloub.': 'Pull any part with the mouse – the arm gives way and lets you guide it like a real one. Click the jaws to open / close the gripper. Joints mode in the panel turns just one joint; keys 1–6 select a joint.',
+  'Táhněte prstem za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klepnutí na čelisti otevře / zavře chapadlo. Režim „Klouby“ v Nástrojích otáčí jen jedním kloubem.': 'Pull any part with your finger – the arm gives way and lets you guide it like a real one. Tap the jaws to open / close the gripper. Joints mode in Tools turns just one joint.',
+  'Táhněte myší za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klik na čelisti otevře / zavře chapadlo. Režim „Klouby“ v Nástrojích otáčí jen jedním kloubem, klávesy 1–6 vyberou kloub.': 'Pull any part with the mouse – the arm gives way and lets you guide it like a real one. Click the jaws to open / close the gripper. Joints mode in Tools turns just one joint; keys 1–6 select a joint.',
   'Klepněte na': 'Tap', '– ruka ji sama vezme. Pak klepněte na': '– the arm picks it up by itself. Then tap',
   'Záznam AI': 'AI log', 'V záznamu AI uvidíte každý její krok. Pak zkuste misi vyřešit sami.': 'The AI log shows each of its steps. Then try the mission yourself.',
   /* mastery & hint ladder – mastery-hints (wave B) */

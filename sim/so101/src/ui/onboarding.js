@@ -33,8 +33,8 @@ const STEPS = [
   {
     anchor: 'elbow', title: () => 'Chyťte kteroukoli část ruky a otočte s ní',
     text: (u) => (u.touch
-      ? 'Táhněte prstem za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klepnutí na čelisti otevře / zavře chapadlo. Režim „Klouby“ v panelu otáčí jen jedním kloubem.'
-      : 'Táhněte myší za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klik na čelisti otevře / zavře chapadlo. Režim „Klouby“ v panelu otáčí jen jedním kloubem, klávesy 1–6 vyberou kloub.'),
+      ? 'Táhněte prstem za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klepnutí na čelisti otevře / zavře chapadlo. Režim „Klouby“ v Nástrojích otáčí jen jedním kloubem.'
+      : 'Táhněte myší za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klik na čelisti otevře / zavře chapadlo. Režim „Klouby“ v Nástrojích otáčí jen jedním kloubem, klávesy 1–6 vyberou kloub.'),
     done: (k) => k === 'link'
   }
 ];
@@ -61,11 +61,10 @@ export class Onboarding {
     this.pts = [{}, {}, {}, {}];
   }
 
-  /** phones: strip under the stage (inside the sticky .ux-under); desktops: floating inside the stage */
+  /** phones: strip under the stage, right above the thumb bar (.ux-under); desktops: floating inside the stage */
   place() {
     const narrow = this.mq.matches, el = this.el;
-    // phones: after the action row, so a long step never pushes the gripper button out of the sheet (b08)
-    if (narrow) { const u = this.ux.panel.under, q = u.querySelector('.ux-qrow'); u.insertBefore(el, q ? q.nextSibling : null); el.style.transform = ''; el.classList.add('strip'); }
+    if (narrow) { const u = this.ux.panel.under; u.insertBefore(el, document.getElementById('ux-abar')); el.style.transform = ''; el.classList.add('strip'); }
     else { this.ux.panel.stage.appendChild(el); el.classList.remove('strip'); }
   }
 
@@ -158,7 +157,7 @@ export class Onboarding {
     const cands = [[x + 70, y + 40], [x - w - 70, y + 40], [x + 70, y - hh - 40], [x - w - 70, y - hh - 40], [x - w / 2, y + 80], [x - w / 2, y - hh - 80]];
     let best = null, bestBad = Infinity;
     for (const [cx0, cy0] of cands) {
-      const cx = Math.min(Math.max(12, cx0), st.width - w - 72), cy = Math.min(Math.max(12, cy0), st.height - hh - 12);
+      const cx = Math.min(Math.max(12, cx0), st.width - w - 56), cy = Math.min(Math.max(76, cy0), st.height - hh - 96);   // clear of the top row, edge tab and action bar
       let bad = 0;
       for (let k = 0; k < 3; k++) {
         const q = P[k];
