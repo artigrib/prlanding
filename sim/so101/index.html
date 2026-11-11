@@ -69,13 +69,15 @@
       </div>
     </div>
 
-    <div class="win" id="win" hidden role="dialog" aria-modal="false" aria-labelledby="win-h">
-      <p class="mono win-k">Mise splněna</p>
+    <!-- result card (HUD stage 2): header, headline, stars, measured values vs the next star, next mission, actions;
+         filled by src/ui/panel.js showWin() -->
+    <div class="win ux-result" id="win" hidden role="dialog" aria-modal="false" aria-labelledby="win-h" aria-describedby="ux-wstars ux-wvals ux-wline ux-wnext" tabindex="-1">
+      <p class="mono win-k"><span id="ux-wk">Mise splněna</span><span class="ux-wdemo" hidden>s ukázkou</span></p>
       <h2 id="win-h" tabindex="-1">Hotovo! Kostka je v misce.</h2>
       <p>Přesně takové úlohy se skutečná SO-101 učí s knihovnou LeRobot: předvedete je ovládací rukou a výkonná ruka je pak zvládne sama.</p>
       <div class="win-b">
         <a class="btn btn-act" id="cta" href="../../plan/so101/">Chci skutečnou SO-101 <span aria-hidden="true">→</span></a>
-        <button type="button" class="btn btn-o" id="again">Zkusit znovu</button>
+        <button type="button" class="btn btn-o" id="again">Zkusit znovu <span class="kbd" aria-hidden="true">R</span></button>
       </div>
     </div>
   </section>
