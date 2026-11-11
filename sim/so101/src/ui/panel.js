@@ -875,8 +875,8 @@ const suffix = (unit) => (unit === 'rad' ? '°' : ' mm');
 export function fmtPrec(v, limit, unit) {
   return shown(toUnit(v, unit), limit == null ? null : toUnit(limit, unit), false, (w, f) => `${w}${f ? ',' + f : ''}`) + suffix(unit);
 }
-/** a limit as written in the rules: 4 mm, 2,5 mm, 4,01° (0.07 rad) */
-export function fmtLimit(v, unit) { return String(+toUnit(v, unit).toFixed(2)).replace('.', ',') + suffix(unit); }
+/** a limit as written in the rules: 4 mm, 2,5 mm, 4° (0.07 rad = 4,01°, shown to 0,1° like the measured tilt) */
+export function fmtLimit(v, unit) { return String(+toUnit(v, unit).toFixed(unit === 'rad' ? 1 : 2)).replace('.', ',') + suffix(unit); }
 
 export function fmt(t) { t = Math.max(0, t || 0); const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + String(s).padStart(2, '0'); }
 /** mastery badges: ✋ won by hand in Táhnout ruku, ⚙ won in Klouby (src/mastery.js) */
