@@ -111,6 +111,14 @@ Findings: scratchpad usability report (P0/P1/P2). Changes:
   Focus moves to the card (read once by its name and description, no live-region line), Esc puts it away.
   Phones in portrait: a bottom sheet under the scene (the scene shrinks, stays whole). No "Přehrát pokus" yet: the
   sim does not record the player's run unless "Učit ukázkou" is recording.
+- **Side view** (HUD stage 3, `src/ui/sideview.js`, geometry in `src/sidegeom.js`): orthographic inset above the
+  camera toggle (240×140, phones 144×84), looking radially from beyond the target towards the arm base (63–89° to the
+  default camera's line of sight in every mission, so its hidden depth offset is left/right in the inset). Target:
+  the nearest object still to pick / push, while holding one its place target, the paper in the drawing mission.
+  Height = tip z − object z, whole cm, "ve výšce" inside the grasp band (`GRASP.dz`), the same numbers as the grasp
+  hint. Drawn into a render target at 0.75 px per CSS px, only when the arm / target moved and at most every 3rd frame;
+  every frame blits it (one quad). ☰ › Nastavení › "Pohled z boku" (`pr-sim-side`), on by default everywhere
+  (swiftshader: −3.1 % fps at 1440×900, −3.5 % at 390×844 while moving). `role="img"` with the measurement as its name.
 
 ### Physics grab (branch `so101-grab`)
 - `src/grab.js` (node-tested in `tests/grab.test.mjs`): like MuJoCo `simulate`'s perturbation – a spring-damper force

@@ -8,6 +8,7 @@ import { runOutcome, mergeRecord, migrateProgress, partialPlan, HintCoach, PROGR
 import { Extras } from './ui/extras.js';
 import { Gizmo } from './ui/gizmo.js';
 import { Cameras } from './ui/cameras.js';
+import { SideView } from './ui/sideview.js';
 import { Teach } from './ui/teach.js';
 import { Panel } from './ui/panel.js';
 import { Sound } from './audio/sound.js';
@@ -103,6 +104,7 @@ class UX {
     this.panel = new Panel(this);
     this.gizmo = new Gizmo(this);
     this.cameras = new Cameras(this);
+    this.side = new SideView(this);   // "Pohled z boku" inset (depth cue, playtest problem 4)
     this.sound = new Sound(this);
     this.confetti = new Confetti(this.panel.stage, this.reduced);
     this.onboarding = new Onboarding(this);
@@ -158,6 +160,7 @@ class UX {
     this.panel.showSound(this.sound.on);
     this.panel.showTeach(this.teach);
     this.panel.showView('orbit');
+    this.panel.showSide(this.side.on);
     if (!this.touch && !this.TEST && matchMedia('(min-width:861px)').matches && store.get('wrist', false)) this.setWrist(true);
     this.app.reset();          // applies the mission layout through onReset()
     if (this.runner.m.look) this.cameras.set('orbit', this.runner.m.look);
@@ -415,6 +418,7 @@ class UX {
   setPitch(p) { this.ctl.pitch = p; this.panel.showPitch(p); if (!this.ctl.active) this.ctl.begin(); this.onUserMove('pitch'); }
   cycleView() { const v = this.cameras.cycle(); this.panel.showView(v); }
   setWrist(on) { this.cameras.setWrist(on); this.panel.showWrist(on); store.set('wrist', on); }
+  setSide(on) { this.side.set(on); this.panel.showSide(on); }
   setSound(on) { this.sound.set(on); this.panel.showSound(on); if (on) this.sound.blip(660, 0.08); }
   toggleExplode() {
     const on = this.explode.toggle(); this.panel.showExplode(on);
@@ -799,6 +803,8 @@ class UX {
       this.app.camera.updateMatrixWorld(); this.panel.showView(v);
     };
     api.wrist = (on) => this.setWrist(on);
+    api.side = (on) => this.setSide(on);
+    api.sideState = () => { const s = this.side; return { on: s.on, shown: !s.el.hidden && !!s.el.offsetParent, label: s.el.getAttribute('aria-label'), text: s.hEl.textContent, name: s.nameEl.textContent, drawn: s.drawn || 0, rect: s.rectOf() }; };
     api.ux = () => ({
       mission: this.runner.m.id, won: this.runner.won, result: this.runner.result, hud: this.app.hudText,
       mode: this.mode, active: this.ctl.active, busy: this.ctl.busy() || !!this.pending,

@@ -175,6 +175,24 @@ async function touchDrag(page, from, to, steps = 8) {
       await S(p, () => document.activeElement && document.activeElement.blur());
     }
 
+    // HUD stage 3: "Pohled z boku" – on by default on desktop, an image with the measured height as its name,
+    // ☰ › Nastavení › "Pohled z boku" switches it off and on
+    {
+      await S(p, () => { const u = window.__sim._ux, c = u.world.pos('cube', [0, 0, 0]); u.ctl.begin(); u.ctl.setTarget(c[0], c[1], c[2] + 0.06); });
+      await S(p, () => window.__sim.advance(2)); await S(p, () => window.__sim.renderNow());
+      const s1 = await S(p, () => { const st = window.__sim.sideState(), u = window.__sim._ux, tip = u.ctl.actualTip(new Float64Array(3)), c = u.world.pos('cube', [0, 0, 0]);
+        const el = document.querySelector('.ux-side'), r = el.getBoundingClientRect(), cam = document.querySelector('.ux-cam').getBoundingClientRect();
+        return { ...st, role: el.getAttribute('role'), dzcm: Math.round((tip[2] - c[2]) * 100), box: [Math.round(r.left), Math.round(r.bottom), Math.round(r.width), Math.round(r.height)], camTop: Math.round(cam.top) }; });
+      ok(s1.on && s1.shown && s1.role === 'img' && s1.drawn > 0 && s1.name === 'oranžová kostka' && s1.text === s1.dzcm + ' cm' && new RegExp('^Pohled z boku: chapadlo ' + s1.dzcm + ' cm nad cílem \\(oranžová kostka\\)').test(s1.label)
+        && s1.box[1] <= s1.camTop && s1.box[2] >= 230 && s1.box[3] >= 130, 'side view: on by default on desktop, above the camera toggle, height label = grasp-hint height ' + JSON.stringify(s1));
+      await p.click('#ux-menu-b'); await p.click('#ux-side-b');
+      const s2 = await S(p, () => ({ ...window.__sim.sideState(), pressed: document.getElementById('ux-side-b').getAttribute('aria-pressed'), stored: localStorage.getItem('pr-sim-side') }));
+      await p.click('#ux-side-b');
+      const s3 = await S(p, () => ({ ...window.__sim.sideState(), pressed: document.getElementById('ux-side-b').getAttribute('aria-pressed') }));
+      await p.keyboard.press('Escape');
+      ok(!s2.on && !s2.shown && s2.pressed === 'false' && s2.stored === 'false' && s3.on && s3.shown && s3.pressed === 'true', '☰ › Pohled z boku switches the inset off and on (remembered) ' + JSON.stringify([s2.pressed, s2.stored, s3.pressed]));
+    }
+
     // ---- usability P0 regressions ----
     // P0-3: pick-and-place missions start with the gripper open; HUD coaches from the gripper state
     await S(p, () => window.__sim.reset()); await S(p, () => window.__sim.advance(0.5));
@@ -691,6 +709,15 @@ async function touchDrag(page, from, to, steps = 8) {
     // ---------------- phone ----------------
     const ph = await open(browser, base + '?test=1&mise=bowl&detail=low', { width: 390, height: 844 }, true);
     await shot(ph, 'phone-01-start');
+    {
+      // HUD stage 3: the side view is on by default on phones too (it costs < 10 % fps) and covers no object
+      const g = await S(ph, () => { const s = window.__sim, u = s._ux; s.renderNow();
+        const el = document.querySelector('.ux-side').getBoundingClientRect(), cam = document.querySelector('.ux-cam').getBoundingClientRect(), st = document.querySelector('.stage').getBoundingClientRect();
+        const pts = u.world.active().map((e) => [e.name, s.screen(e.name)]).concat([['tip', s.screen('target')]]);
+        return { ...s.sideState(), hit: pts.filter(([, q]) => q.x > el.left - 6 && q.x < el.right + 6 && q.y > el.top - 6 && q.y < el.bottom + 6).map(([n]) => n),
+          box: [el.left, el.top, el.right, el.bottom].map(Math.round), camTop: Math.round(cam.top), stage: [Math.round(st.left), Math.round(st.bottom)] }; });
+      ok(g.on && g.shown && !g.hit.length && g.box[3] <= g.camTop && g.box[0] >= g.stage[0] && g.box[2] - g.box[0] >= 120, 'phone: side view on, above the camera toggle, covers no object ' + JSON.stringify(g));
+    }
     a = await S(ph, () => window.__sim.screen('target'));
     const pt0 = await ux(ph);
     await touchDrag(ph, a, { x: a.x - 60, y: a.y + 50 });

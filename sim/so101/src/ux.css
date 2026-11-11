@@ -346,6 +346,20 @@
 .ux-tb[aria-pressed=true]{background:var(--ink);color:#fff}
 .ux-tbl{font:inherit}
 .ux-pip{left:16px;right:auto;bottom:76px;width:min(260px,30%)}
+/* "Pohled z boku" (HUD stage 3, src/ui/sideview.js): orthographic inset above the camera toggle; the WebGL view is
+   drawn into this rectangle, the figure only frames it and carries the height line and label */
+.ux-side{position:absolute;left:16px;bottom:76px;width:240px;height:140px;margin:0;border:1px solid var(--ink);pointer-events:none;z-index:3;box-shadow:6px 6px 0 rgba(14,14,14,.08)}
+.ux-side figcaption{position:absolute;left:0;top:0;background:var(--ink);color:#fff;padding:3px 7px;font-size:11px;line-height:1.3;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box}
+.ux-side-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.ux-side-lv{stroke:var(--accent);stroke-width:2}
+.ux-side-lh{stroke:var(--ink);stroke-width:1;stroke-dasharray:4 3}
+.ux-side-tip{fill:var(--accent);stroke:#fff;stroke-width:1.5}
+.ux-side-h{position:absolute;left:0;top:0;background:#fff;border:1px solid var(--accent);color:var(--accent-text);padding:1px 6px;font-size:12px;line-height:1.4;white-space:nowrap}
+.ux-side.ok .ux-side-lv{stroke:var(--ok)}
+.ux-side.ok .ux-side-tip{fill:var(--ok)}
+.ux-side.ok .ux-side-h{border-color:var(--ok);color:var(--ok)}
+.ux-side-on .ux-pip{bottom:232px}
+.ux-exploding .ux-side{display:none}
 .ux-credit{position:absolute;right:16px;bottom:16px;margin:0;z-index:3;background:rgba(255,255,255,.9);padding:2px 6px;font-size:11px}
 .ux-credit a{color:var(--mute)}
 
@@ -463,6 +477,11 @@
   .ux-cam{left:8px;bottom:8px}
   .ux-tb{padding:0 10px;font-size:13px}
   .ux-pip{left:8px;bottom:60px;width:132px}
+  .ux-side{left:8px;bottom:60px;width:144px;height:84px;box-shadow:none}
+  .ux-side figcaption{font-size:10px;padding:2px 5px}
+  .ux-side-k{display:none}
+  .ux-side-h{font-size:11px;padding:0 4px}
+  .ux-side-on .ux-pip{bottom:152px}
   .ux-credit{right:8px;bottom:60px}
   .ux-toast{top:112px;font-size:14px}
   .ux-recb{left:8px;top:112px}
@@ -472,7 +491,7 @@
   /* "Nástroje" sheet: takes the thumb bar's place and pushes the scene up instead of covering it (the arm stays
      visible while the sliders move it); the scene keeps ≥ 40 % of the screen (b11) */
   .panel{position:relative;top:auto;left:auto;right:auto;bottom:auto;flex:0 0 auto;width:auto;height:52svh;max-height:none;border-left:0;border-top:1px solid var(--ink);box-shadow:none;padding:0 16px calc(16px + env(safe-area-inset-bottom));z-index:auto;gap:16px}
-  .ux-drawer-open .ux-under,.ux-drawer-open .ux-cam,.ux-drawer-open .ux-pip{display:none}
+  .ux-drawer-open .ux-under,.ux-drawer-open .ux-cam,.ux-drawer-open .ux-pip,.ux-drawer-open .ux-side{display:none}
   .ux-dhead{margin:0 -16px;padding:4px 8px 8px 16px;flex-wrap:wrap}
   .ux-dhead::before{content:"";flex:0 0 100%;height:12px;background:linear-gradient(var(--line),var(--line)) center/36px 4px no-repeat}
   /* ☰: a full-height sheet */
@@ -495,6 +514,8 @@
   .ux-ab{height:48px;padding:0 14px;font-size:15px}
   .ux-cam{left:8px;bottom:8px}
   .ux-pip{bottom:60px;width:min(200px,28%)}
+  .ux-side{left:8px;bottom:60px;width:168px;height:98px}
+  .ux-side-on .ux-pip{bottom:166px}
   .ux-toast,.ux-recb{top:60px}
   .ux-menu{top:60px;right:8px;max-height:calc(100% - 68px)}
   .panel{width:min(340px,60vw);padding:0 16px 16px}
