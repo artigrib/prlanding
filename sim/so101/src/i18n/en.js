@@ -9,6 +9,16 @@ const dec = (s) => String(s).replace(/(\d),(\d)/g, '$1.$2');
 const ids = (s) => dec(s).replace(/\(([^)]+)\)/g, (m, n) => '(' + T(n) + ')');
 
 const strings = {
+  /* newcomer UX fixes: status line while the planner moves, grasp distance hints, untranslated playtest strings */
+  'Kostka je v misce…': 'The cube is in the bowl…', 'Kostka do misky': 'Cube into the bowl',
+  '3 ★: do 30 s a odchylka pod 4 mm': '3 ★: under 30 s with less than 4 mm offset',
+  'Táhněte modrou kouli nad kostku': 'Drag the blue ball over the cube',
+  'tlačítkem Zavřít chapadlo': 'with the Close the gripper button', 'tlačítkem Otevřít chapadlo': 'with the Open the gripper button',
+  'Ruka předvádí řešení – sledujte ji': 'The arm is showing the solution – watch it',
+  'Ruka sama bere předmět…': 'The arm is picking it up by itself…', 'Ruka sama pokládá předmět…': 'The arm is putting it down by itself…',
+  'Ruka jede po naplánované cestě…': 'The arm is following the planned path…',
+  'Jakmile ruka předmět vezme, odnese ho tam.': 'As soon as the arm has picked it up, it will carry it there.',
+  'Řešení ukázala ruka sama – zkuste to teď vy, koulí nebo klouby.': 'The arm showed the solution itself – now you try, with the ball or the joints.',
   /* page titles and meta (translated at runtime for ?lang=en) */
   'Simulace SO-101 v prohlížeči | printedrobotics.cz': 'SO-101 simulation in your browser | printedrobotics.cz',
   'SO-101 a předměty – fyzikální knihovna objektů | printedrobotics.cz': 'SO-101 and objects – a physics object library | printedrobotics.cz',
@@ -76,7 +86,7 @@ const strings = {
   'Modrá je hotová. Klikněte na oranžovou kostku, pak na oranžovou misku': 'Blue is done. Click the orange cube, then the orange bowl',
   'Modrá je hotová, teď oranžová do oranžové misky': 'Blue is done, now orange into the orange bowl',
   'Klikněte na kostku a pak na misku stejné barvy': 'Click a cube and then the bowl of the same colour', 'Oranžová do oranžové, modrá do modré': 'Orange to orange, blue to blue',
-  'Dostrkejte míček do branky': 'Push the ball into the goal', 'Míček se uchopit nedá. Zavřete chapadlo a dostrkejte ho jako hokejkou do branky.': 'The ball can’t be grabbed. Close the gripper and push it into the goal like a hockey stick.',
+  'Dostrkejte míček do branky': 'Push the ball into the goal', 'Od této mise ručně: klik na předmět už ruku nepohne. Míček se uchopit nedá – zavřete chapadlo a dostrkejte ho jako hokejkou do branky.': 'From this mission on, by hand: clicking an object no longer moves the arm. The ball can’t be grabbed – close the gripper and push it into the goal like a hockey stick.',
   'Míček do branky': 'Ball into the goal', '– ruka ho dostrká do branky. Nebo ho strkejte koulí se zavřeným chapadlem.': '– the arm pushes it into the goal. Or push it with the ball, gripper closed.',
   '3 ★: do 25 s a míček blízko středu branky': '3 ★: under 25 s with the ball near the centre of the goal', 'Gól! Míček se zastavuje…': 'Goal! The ball is stopping…',
   'Klikněte na míček – ruka ho dostrká, nebo ho strkejte koulí': 'Click the ball – the arm pushes it, or push it with the blue ball',
@@ -154,7 +164,7 @@ const strings = {
   'Přesně takhle se skutečná SO-101 učí: z nahraných ukázek. Zkuste misi vyřešit sami.': 'This is exactly how a real SO-101 learns: from recorded demonstrations. Try solving the mission yourself.',
   'Teď to zkuste vy': 'Now you try', 'zvládnuto.': 'done.', '· nový rekord': '· new record',
   'Myš / prst': 'Mouse / finger', 'tažením otáčíte pohled, kolečkem či dvěma prsty přibližujete': 'drag to rotate the view, scroll or pinch to zoom', 'Modrá koule': 'Blue ball',
-  'tažením vedete ruku (chytrý pohyb)': 'drag to guide the arm (smart move)', 'ruka ji vezme; klik na misku nebo stůl ji položí': 'the arm picks it up; click the bowl or table to put it down',
+  'tažením vedete ruku (chytrý pohyb)': 'drag to guide the arm (smart move)', 'ruka ji vezme, klik na misku nebo stůl ji položí (mise 01–03)': 'the arm picks it up, click the bowl or table to put it down (missions 01–03)',
   'posun cíle po stole': 'move the target across the table', 'výška cíle (také Q / E)': 'target height (also Q / E)', 'Mezerník / G': 'Space / G', 'otevřít / zavřít chapadlo': 'open / close the gripper',
   'chytrý pohyb ↔ klouby': 'smart move ↔ joints', 'kreslení: pero nahoru / dolů': 'drawing: pen up / down', 'vybrat kloub (pak ← → otáčí, Esc zruší)': 'select a joint (then ← → turns it, Esc cancels)',
   'výběr mise': 'choose a mission', 'Část ruky': 'Part of the arm', 'tažením otočíte jejím kloubem, dvojklik = výchozí poloha': 'drag to turn its joint, double-click = home position',
@@ -289,8 +299,8 @@ const strings = {
   'Táhněte modrou kouli – ruka ji sleduje.': 'Drag the blue ball – the arm follows it.', 'Táhněte po papíře – fix kreslí.': 'Drag across the paper – the marker draws.',
   'Posuvníky natočí každý kloub zvlášť.': 'The sliders turn each joint on its own.',
   'Chyťte kteroukoli část ruky – povolí a nechá se vést jako skutečná.': 'Grab any part of the arm – it gives way and lets you guide it like a real one.',
-  'Klikněte na předmět – ruka ho sama vezme. Pak klikněte, kam ho položit.': 'Click an object – the arm picks it up by itself. Then click where to put it.',
-  'Klepněte na předmět – ruka ho sama vezme. Pak klepněte, kam ho položit.': 'Tap an object – the arm picks it up by itself. Then tap where to put it.',
+  'Mise 01–03: klikněte na předmět – ruka ho sama vezme, pak klikněte, kam ho položit. Bez hvězdiček; od mise 04 už ne.': 'Missions 01–03: click an object – the arm picks it up by itself, then click where to put it. No stars; from mission 04 on it’s off.',
+  'Mise 01–03: klepněte na předmět – ruka ho sama vezme, pak klepněte, kam ho položit. Bez hvězdiček; od mise 04 už ne.': 'Missions 01–03: tap an object – the arm picks it up by itself, then tap where to put it. No stars; from mission 04 on it’s off.',
   'Chyťte díl ruky ve 3D a otočte jen jeho kloubem. Dvojklik ho vrátí do výchozí polohy.': 'Grab a part of the arm in 3D and turn just its joint. Double-click returns it to the home position.',
   'Chyťte díl ruky ve 3D a otočte jen jeho kloubem. Dvojí klepnutí ho vrátí do výchozí polohy.': 'Grab a part of the arm in 3D and turn just its joint. Double-tap returns it to the home position.',
   'Klávesy 1–6 vyberou kloub, šipky ← → s ním otáčí.': 'Keys 1–6 select a joint, the ← → arrows turn it.',
@@ -309,7 +319,7 @@ const strings = {
   'Záznam AI': 'AI log', 'V záznamu AI uvidíte každý její krok. Pak zkuste misi vyřešit sami.': 'The AI log shows each of its steps. Then try the mission yourself.',
   /* mastery & hint ladder – mastery-hints (wave B) */
   'Dostaňte kostku do modré misky.': 'Get the cube into the blue bowl.',
-  'Teď ručně: koulí nad oranžovou kostku, sjeďte dolů, sevřete chapadlo a položte ji přesně na modrou. Hvězdičky jsou za ruční přenesení.': 'Now by hand: move the ball over the orange cube, go down, close the gripper and put it exactly on the blue one. Stars are for carrying by hand.',
+  'Koulí nad oranžovou kostku, sjeďte dolů, sevřete chapadlo a položte ji přesně na modrou. Hvězdičky jsou jen za ruční přenesení, klik na kostku je bez nich.': 'Move the ball over the orange cube, go down, close the gripper and put it exactly on the blue one. Stars are only for carrying it by hand; clicking the cube earns none.',
   'Táhněte modrou kouli nad oranžovou kostku': 'Drag the blue ball over the orange cube', 'Zavřete chapadlo a strkejte míček koulí k brance': 'Close the gripper and push the ball to the goal with the blue ball',
   'Teď klikněte na misku': 'Now click the bowl', 'Teď klepněte na misku': 'Now tap the bowl',
   'Postup: koulí nad kostku, sjeďte dolů, sevřete chapadlo, zvedněte, přeneste nad misku a pusťte.': 'How: move the ball over the cube, go down, close the gripper, lift, carry it over the bowl and let go.',
@@ -501,6 +511,10 @@ Object.assign(strings, {
 });
 
 const patterns = [
+  /* newcomer UX fixes: star rules, grasp distance hints */
+  [/^3 ★ do (\d+) s, 2 ★ do (\d+) s$/, '3 ★ under $1 s, 2 ★ under $2 s'],
+  [/^Výš a nad kostku – ještě (\d+) cm vedle$/, 'Up and over the cube – $1 cm off'], [/^Blíž nad kostku – ještě (\d+) cm$/, 'Closer over the cube – $1 cm to go'],
+  [/^Níž – ještě (\d+) cm$/, 'Lower – $1 cm to go'], [/^Otevřete chapadlo a sjeďte níž – ještě (\d+) cm$/, 'Open the gripper and go lower – $1 cm to go'],
   [/^Splněno! (.+)\.$/, (m, a) => `Done! ${T(a)}.`],
   [/^Čas ([^·]+?) · (.+)$/, (m, a, b) => `Time ${a} · ` + b.split(' · ').map((x) => (/^rekord (.+)$/.test(x) ? x.replace(/^rekord /, 'record ') : /^přesnost (.+) mm$/.test(x) ? x.replace(/^přesnost (.+) mm$/, (q, v) => `accuracy ${dec(v)} mm`) : T(x))).join(' · ')],
   [/^Vyřešila to AI v (\d+) (?:kroku|krocích) — zkusíte to sami\?$/, (m, a) => `The AI solved it in ${a} step${a === '1' ? '' : 's'} — want to try it yourself?`],

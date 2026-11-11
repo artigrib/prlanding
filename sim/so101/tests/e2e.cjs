@@ -135,6 +135,23 @@ async function touchDrag(page, from, to, steps = 8) {
     await p.keyboard.press('Space'); await S(p, () => window.__sim.advance(0.6));
     const g1 = await S(p, () => window.__sim.state().ctrl[5]);
     ok(Math.abs(g1 - g0) > 0.5, `Space toggles the gripper (${g0.toFixed(2)} -> ${g1.toFixed(2)})`);
+    // playtest a27 / a19: Space with a focused panel button toggles the gripper and never presses the button;
+    // Enter still activates it
+    {
+      await S(p, () => { window.__rc = 0; document.getElementById('reset').addEventListener('click', () => window.__rc++); window.__sim._ux.runner.start(); });
+      for (const id of ['reset', 'ux-tips-b', 'ux-mhint']) {
+        const before = await S(p, (i) => ({ g: window.__sim.state().ctrl[5], exp: document.getElementById('ux-tips-b').getAttribute('aria-expanded'), hint: window.__sim._ux.panel.hintLevel, rc: window.__rc, t: window.__sim._ux.runner.started }), id);
+        await S(p, (i) => document.getElementById(i).focus(), id);
+        await p.keyboard.press('Space'); await S(p, () => window.__sim.advance(0.6));
+        const after = await S(p, () => ({ g: window.__sim.state().ctrl[5], exp: document.getElementById('ux-tips-b').getAttribute('aria-expanded'), hint: window.__sim._ux.panel.hintLevel, rc: window.__rc, t: window.__sim._ux.runner.started }));
+        ok(Math.abs(after.g - before.g) > 0.5 && after.rc === before.rc && after.exp === before.exp && after.hint === before.hint && after.t,
+          `Space with #${id} focused toggles the gripper only (${JSON.stringify([before, after])})`);
+      }
+      await S(p, () => document.getElementById('reset').focus());
+      await p.keyboard.press('Enter');
+      ok((await S(p, () => window.__rc)) === 1, 'Enter on a focused panel button still activates it');
+      await S(p, () => document.activeElement && document.activeElement.blur());
+    }
 
     // ---- usability P0 regressions ----
     // P0-3: pick-and-place missions start with the gripper open; HUD coaches from the gripper state
@@ -303,8 +320,16 @@ async function touchDrag(page, from, to, steps = 8) {
     ok(busy.busy, 'click on the cube starts a planned pick');
     await S(p, () => window.__sim.advance(0.3));
     await shot(p, 'desk-03-path-preview');
-    const tPick = await advanceUntil(p, () => window.__sim.ux().held === 'cube' && !window.__sim.ux().busy, 14, 1);
+    // one voice (playtest a02): while the planner moves the arm, the status line never coaches a manual grasp
+    let tPick = -1; const autoHud = new Set();
+    for (let t = 0.5; t <= 14; t += 0.5) {
+      await S(p, () => window.__sim.advance(0.5));
+      const u = await ux(p);
+      if (u.busy) autoHud.add(u.hud);
+      if (u.held === 'cube' && !u.busy) { tPick = t; break; }
+    }
     ok(tPick > 0, `cube picked after ${tPick}s`);
+    ok(autoHud.size > 0 && [...autoHud].every((h) => /^Ruka /.test(h)), 'status line during the planned pick shows the arm\'s step, no grasp coaching (' + [...autoHud].join(' | ') + ')');
     a = await S(p, () => window.__sim.screen('bowl'));
     await p.mouse.click(a.x, a.y);
     const tWin = await advanceUntil(p, () => window.__sim.ux().won, 16, 1);
@@ -318,6 +343,25 @@ async function touchDrag(page, from, to, steps = 8) {
     }
     await S(p, () => window.__sim.advance(0.4));
     await shot(p, 'desk-04-win');
+    // the guide says "now click the bowl" while the arm is still picking (playtest A4): that click waits for the pick
+    {
+      await S(p, () => window.__sim.reset());
+      a = await S(p, () => window.__sim.screen('cube')); await p.mouse.click(a.x, a.y);
+      await S(p, () => window.__sim.advance(1));
+      a = await S(p, () => window.__sim.screen('bowl')); await p.mouse.click(a.x, a.y);
+      const tq = await advanceUntil(p, () => window.__sim.ux().won, 30, 2);
+      ok(tq > 0, `a bowl click during the pick is carried out after it (won after ${tq}s more)`);
+    }
+    // from mission 04 a click on an object does nothing, so the cursor is no pointer over it (playtest a48)
+    {
+      await S(p, () => window.__sim.mission('ball')); await S(p, () => window.__sim.renderNow());
+      const b = await S(p, () => window.__sim.screen('ball'));
+      await p.mouse.move(b.x + 40, b.y + 40); await p.waitForTimeout(80); await p.mouse.move(b.x, b.y); await p.waitForTimeout(80); await p.mouse.move(b.x + 1, b.y);
+      const cur = await S(p, () => ({ cur: document.getElementById('c').style.cursor }));
+      const pk = await S(p, ([x, y]) => (window.__sim._ux.gizmo.pickAt({ clientX: x, clientY: y }) || {}).name, [b.x + 1, b.y]);
+      ok(pk !== 'ball' || cur.cur !== 'pointer', `mission 04: no pointer cursor over the ball (${cur.cur || 'default'}, picked ${pk})`);
+      await S(p, () => window.__sim.mission('bowl'));
+    }
 
     // every mission: automatic solution
     for (const id of await S(p, () => window.__sim.missions.filter((m) => !window.__sim.objectMissions.includes(m)))) {   // object missions: below
@@ -508,6 +552,17 @@ async function touchDrag(page, from, to, steps = 8) {
     await shot(o, 'desk-10-onboarding');
     await o.close();
 
+    // ---------------- language: a browser that is not cs/sk starts in English (playtest A0) ----------------
+    for (const [loc, want] of [['en-US', 'en'], ['cs-CZ', 'cs']]) {
+      const ctx = await browser.newContext({ locale: loc, viewport: { width: 800, height: 600 } });
+      const lp = await ctx.newPage();
+      await lp.goto(base + '?detail=low&mise=bowl', { waitUntil: 'domcontentloaded' });
+      const got = await lp.waitForFunction(() => document.documentElement.lang !== 'cs' || document.getElementById('lang-sw').children.length > 0, null, { timeout: 60000 })
+        .then(() => lp.evaluate(() => document.documentElement.lang)).catch(() => '?');
+      ok(got === want, `browser ${loc}, no ?lang= → page language ${got}`);
+      await ctx.close();
+    }
+
     // ---------------- phone onboarding (P0-2) ----------------
     const po = await open(browser, base + '?test=1&onboard=1&detail=low', { width: 390, height: 844 }, true);
     await po.waitForFunction(() => { const c = document.querySelector('.ux-coach'); return c && !c.hidden && !!c.closest('.ux-under'); }, null, { timeout: 30000 }).catch(() => {});
@@ -515,6 +570,21 @@ async function touchDrag(page, from, to, steps = 8) {
       return { inUnder: !!c.closest('.ux-under'), top: r.top, stageBottom: st.bottom, visible: !c.hidden }; });
     ok(pr.visible && pr.inUnder && pr.top >= pr.stageBottom - 1, 'P0-2: phone guide is a strip under the stage, not over it ' + JSON.stringify(pr));
     await shot(po, 'phone-00-onboarding');
+    // playtest b08: no guide step pushes the action row (gripper button) off-screen or covers it
+    for (let i = 0; i < 5; i++) {
+      const g = await S(po, () => { const q = document.getElementById('ux-qgrip').getBoundingClientRect(), c = document.querySelector('.ux-coach').getBoundingClientRect(), st = document.querySelector('.stage').getBoundingClientRect();
+        return { step: document.getElementById('ux-coach-k').textContent, grip: [Math.round(q.top), Math.round(q.bottom)], coach: [Math.round(c.top), Math.round(c.bottom)], vh: innerHeight, stage: Math.round(st.height) }; });
+      ok(g.grip[1] <= g.vh && g.grip[0] >= 0 && (g.coach[0] >= g.grip[1] - 1 || g.coach[1] <= g.grip[0] + 1) && g.stage >= 0.4 * (g.vh - 56),
+        'phone guide step keeps the gripper button on screen and uncovered, scene ≥ 40 % ' + JSON.stringify(g));
+      if (i === 4) await shot(po, 'phone-00b-guide-5');
+      await S(po, () => document.querySelector('.ux-coach [data-a=next]').click()); await po.waitForTimeout(450);
+    }
+    // playtest b11: the opened sheet (a tab) leaves at least 40 % of the area under the header to the scene
+    {
+      await S(po, () => document.getElementById('ux-tab-ctl').click()); await po.waitForTimeout(500);
+      const f = await S(po, () => { const pn = document.querySelector('.panel').getBoundingClientRect(), bar = document.querySelector('.bar').getBoundingClientRect(); return +((pn.top - bar.bottom) / (innerHeight - bar.bottom)).toFixed(2); });
+      ok(f >= 0.4, `phone: the opened sheet leaves ${Math.round(f * 100)} % of the scene visible`);
+    }
     await po.close();
 
     // ---------------- phone ----------------

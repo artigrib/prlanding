@@ -143,11 +143,11 @@ export class Panel {
     this.selectTab(this.tab);
     apply(); this.mq.addEventListener ? this.mq.addEventListener('change', apply) : this.mq.addListener(apply);
   }
-  /** sheet heights: 0 = peek (the space under the stage), 1 = about 62 % of the screen, 2 = all below the header */
+  /** sheet heights: 0 = peek (the space under the stage), 1 = 58 % of the area below the header, 2 = all of it */
   snapPx(i) {
     const vh = innerHeight, top = document.querySelector('.bar').getBoundingClientRect().bottom;
     if (i === 0) return Math.max(0, vh - this.stage.getBoundingClientRect().bottom);
-    if (i === 1) return Math.round(vh * 0.62);
+    if (i === 1) return Math.round((vh - Math.max(0, top)) * 0.58);   // same as .panel[data-snap="1"] in ux.css
     return Math.round(vh - Math.max(0, top));
   }
   setSnap(i) {
@@ -204,7 +204,7 @@ export class Panel {
     if (lv && cur && fresh) {
       let html;
       if (cur.id === 'strategy') {
-        let now = ux.runner.last && ux.runner.last.text || '';
+        let now = ux.handNow();   // the strategy is manual, so is its "Teď:" step (never "click the cube")
         if (ux.touch) now = now.replace(/Klikněte/g, 'Klepněte');
         html = `<span>${m.strategy || ''}</span>` + (now ? `<br><span class="ux-hintnow"><b>Teď:</b> <span>${now}</span></span>` : '');
       } else {
@@ -350,7 +350,7 @@ export class Panel {
         <li><i aria-hidden="true">↕</i><span>Šipky nad a pod koulí mění výšku.</span></li>
         <li><i aria-hidden="true">⟳</i><span>Kroužek, kolečko myši nebo druhý prst otáčí zápěstím.</span></li>
         <li class="ux-tip-pull"><i aria-hidden="true">✥</i><span>Chyťte kteroukoli část ruky – povolí a nechá se vést jako skutečná.</span></li>
-        <li><i aria-hidden="true">☝</i><span>${tap('Klikněte na předmět – ruka ho sama vezme. Pak klikněte, kam ho položit.')}</span></li>
+        <li><i aria-hidden="true">☝</i><span>${tap('Mise 01–03: klikněte na předmět – ruka ho sama vezme, pak klikněte, kam ho položit. Bez hvězdiček; od mise 04 už ne.')}</span></li>
       </ul>
       <ul class="ux-tips" data-for="joints">
         <li><i aria-hidden="true">⇆</i><span>Posuvníky natočí každý kloub zvlášť.</span></li>
@@ -700,7 +700,7 @@ export class Panel {
         : by === 'assisted' ? 'Tohle zvládla ruka sama.' : 'Ukázka splnila misi.';
       this.winStats.textContent = `Čas ${fmt(res.time)} · hvězdičky se počítají jen vám`;
       this.winText.textContent = by === 'ai' ? 'V záznamu AI uvidíte každý její krok. Pak zkuste misi vyřešit sami.'
-        : by === 'assisted' ? 'Řešení ukázala ruka sama – zkuste to teď vy. Stačí kliknout na kostku a pak na misku.'
+        : by === 'assisted' ? (this.ux.clickPicks() ? 'Řešení ukázala ruka sama – zkuste to teď vy. Stačí kliknout na kostku a pak na misku.' : 'Řešení ukázala ruka sama – zkuste to teď vy, koulí nebo klouby.')
         : 'Přesně takhle se skutečná SO-101 učí: z nahraných ukázek. Zkuste misi vyřešit sami.';
       again.firstChild.textContent = 'Teď to zkuste vy ';
       again.classList.add('btn-act'); again.classList.remove('btn-o');
@@ -772,7 +772,7 @@ export class Panel {
     const keys = [
       ['Myš / prst', 'tažením otáčíte pohled, kolečkem či dvěma prsty přibližujete'],
       ['Modrá koule', 'tažením vedete ruku (Táhnout ruku)'],
-      ['Klik na kostku', 'ruka ji vezme; klik na misku nebo stůl ji položí'],
+      ['Klik na kostku', 'ruka ji vezme, klik na misku nebo stůl ji položí (mise 01–03)'],
       ['←  →  ↑  ↓', 'posun cíle po stole'],
       ['PgUp / PgDn', 'výška cíle (také Q / E)'],
       ['A / D', 'rotace zápěstí'],

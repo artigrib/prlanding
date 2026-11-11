@@ -10,7 +10,8 @@
  *
  * Language:
  *   site pages – path based: /en/… pages carry <html lang="en">, everything else is Czech.
- *   sims       – ?lang=en|cs, else the visitor's saved choice (localStorage pr-lang), else Czech.
+ *   sims       – ?lang=en|cs, else the visitor's saved choice (localStorage pr-lang), else Czech; a sim that opts in
+ *                (initSim(dict, { browser: true })) starts in English when the browser's first language is not cs/sk.
  * Never redirects. Accept-Language is only used for a one-time, dismissible suggestion banner.
  */
 (function (G) {
@@ -98,10 +99,18 @@
   }
 
   /* ---------- language detection ---------- */
-  function detect(kind) {
+  function detect(kind, opts) {
     var html = G.document && document.documentElement.getAttribute('lang');
     if (kind === 'site') return html === 'en' ? 'en' : 'cs';
-    return qsLang() || (store(KEY) === 'en' ? 'en' : null) || 'cs';
+    var saved = store(KEY);
+    if (qsLang()) return qsLang();
+    if (saved === 'en' || saved === 'cs') return saved;
+    // no explicit choice: opted-in sims follow the browser (anything but Czech / Slovak → English); no redirect, no reload
+    if (opts && opts.browser && G.navigator) {
+      var first = String((navigator.languages && navigator.languages[0]) || navigator.language || '').toLowerCase();
+      if (first && !/^(cs|sk)\b/.test(first)) return 'en';
+    }
+    return 'cs';
   }
   function setLang(l) {
     lang = l === 'en' ? 'en' : 'cs';
@@ -217,9 +226,9 @@
       if (lang === 'en') { observe(document.documentElement); linkFixer(); }
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', banner); else banner();
     },
-    /* sims: PRI18N.initSim(dict) before building UI; returns the language */
-    initSim: function (dict) {
-      setLang(detect('sim'));
+    /* sims: PRI18N.initSim(dict[, { browser: true }]) before building UI; returns the language */
+    initSim: function (dict, opts) {
+      setLang(detect('sim', opts));
       if (qsLang()) remember(qsLang());
       if (dict) addDict('en', dict);
       wireSwitcher();

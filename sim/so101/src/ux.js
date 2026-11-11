@@ -118,7 +118,12 @@ class UX {
     this.pickList = [];
 
     this.ctl.on('grip', (open) => { this.sound.grip(open); this.onboarding.notify('grip'); });
-    this.ctl.on('done', () => { this.gizmo.fadePath(); });
+    this.ctl.on('done', () => {
+      this.gizmo.fadePath();
+      // a place target clicked while the pick was still running (the guide already says "click the bowl"): do it now
+      const q = this.queued; this.queued = null;
+      if (q && !this.app.won) this.onPick(q.name, q.point);
+    });
     this.ctl.on('floor', () => {   // once per gesture: "you hit the table"
       if (this.floorNoted) return; this.floorNoted = true;
       this.panel.toast('Níž to nejde, tam je stůl'); this.sound.blip(140, 0.06, 'square', 0.05);
@@ -201,11 +206,15 @@ class UX {
     this.ctl.actualTip(ctx.tip);
     ctx.gripOpen = c[act[5]] > 0.5;
     ctx.smart = this.mode === 'smart'; ctx.touch = this.touch; ctx.auto = r.auto;
+    // moving by hand (no click-to-grab coaching): the player has dragged / turned joints, the mission refuses clicks,
+    // the hint ladder is open, or the first-task guide is on its hands-on steps
+    ctx.hand = r.manual.drag || r.manual.joints || !autopilotAllowed(r.m) || this.panel.hintLevel > 0 || this.onboarding.i >= 2;
     this.extras.inkAt(ctx.tip);
     const res = r.tick(dt);
     // HUD (live region: write only on change)
     let text = res.text;
     if (this.teach.replaying) text = this.touch ? 'Přehrávám ukázku – zastavíte ji tlačítkem Stop' : 'Přehrávám ukázku – Esc ji zastaví';
+    else if (!r.won && (this.ctl.busy() || this.pending)) text = this.autoText();   // one voice: no manual coaching while the planner moves
     else if (this.mode === 'smart' && this.ctl.active && !this.ctl.reachable && !this.ctl.busy()) text = 'Mimo dosah – zkuste cíl blíž k ruce';
     if (this.app.won) text = 'Mise splněna';
     if (text !== this.app.hudText) { this.hudEl.textContent = text; this.app.hudText = text; this.announce(text); }
@@ -241,7 +250,7 @@ class UX {
   }
 
   onReset() {
-    this.ctl.cancel(); this.pending = null;
+    this.ctl.cancel(); this.pending = null; this.queued = null;
     if (this.coach) this.coach.reset();
     this.aiSteps = 0;
     if (!this.replayResetting) this.teach.stopReplay();
@@ -281,6 +290,27 @@ class UX {
     this.panel.toast('Ruka plánuje řešení…');
     return true;
   }
+
+  /** Status line while a planned motion runs (click-to-grab, hint rung 3, solution): the guide's step when it is
+   *  showing one of its click steps, otherwise what the arm is doing – never manual grasp coaching. */
+  autoText() {
+    const ob = this.onboarding;
+    if (ob.i >= 0 && ob.i <= 1 && !ob.el.hidden) return ob.stepTitle();
+    if (this.runner.assisted) return 'Ruka předvádí řešení – sledujte ji';
+    const plan = this.pending ? this.pending.plan : this.ctl.plan && this.ctl.plan.plan, k = (plan && plan.kind) || '';
+    if (/^pick/.test(k)) return 'Ruka sama bere předmět…';
+    if (/^place/.test(k)) return 'Ruka sama pokládá předmět…';
+    return 'Ruka jede po naplánované cestě…';
+  }
+  /** the mission's next step as if moving by hand (hint ladder "Teď:"); the drawing mission keeps its own line */
+  handNow() {
+    const r = this.runner, c = r.ctx;
+    if (r.m.draw || r.won) return (r.last && r.last.text) || '';
+    const h = c.hand; c.hand = true;
+    try { const res = r.m.check(c, 0); return (res && res.text) || ''; } finally { c.hand = h; }
+  }
+  /** click-to-grab on objects is allowed in this mission (missions 01–03) */
+  clickPicks() { return autopilotAllowed(this.runner.m); }
 
   /** Screen-reader announcements: milestones only (no numbers that change every frame), at most 1 per second. */
   announce(text) {
@@ -456,6 +486,13 @@ class UX {
     // from mission 04 the player carries by hand; the planner stays available as a hint rung (Poradit)
     if (name !== 'table' && !autopilotAllowed(this.runner.m) && !this.hintRun) {
       this.panel.toast(this.touch ? 'Od mise 04 přenášíte sami – koulí nebo klouby. Když nevíte, klepněte na Poradit.' : 'Od mise 04 přenášíte sami – koulí nebo klouby. Když nevíte, klikněte na Poradit.');
+      return;
+    }
+    // the arm is still picking: a click on the place target waits for the pick instead of being refused
+    const running = this.pending ? this.pending.plan : this.ctl.plan && this.ctl.plan.plan;
+    if (running && /^pick$/.test(running.kind || '') && (this.runner.m.targets || {})[name] === 'place') {
+      this.queued = { name, point: point && Array.from(point) };
+      this.panel.toast('Jakmile ruka předmět vezme, odnese ho tam.');
       return;
     }
     if (this.mode !== 'smart') this.setMode('smart');
@@ -649,12 +686,18 @@ class UX {
         if (this.panel.popOpen()) { this.panel.closeSet(true); return; }
         if (this.links.sel >= 0) { this.links.deselect(); return; }
         if (this.onboarding.active()) { this.onboarding.finish(); return; }
-        this.ctl.cancel(); this.pending = null; this.gizmo.clearPath(); this.teach.stopReplay(); return;
+        this.ctl.cancel(); this.pending = null; this.queued = null; this.gizmo.clearPath(); this.teach.stopReplay(); return;
       }
       if (this.panel.modalOpen()) return;
-      if (k === ' ' && tag === 'BUTTON') return;   // let a focused button handle Space
       // WCAG 2.1.4: single-character shortcuts can be switched off; then they only work while the 3D view has focus
+      // (and Space activates a focused button natively again)
       if (k.length === 1 && !this.keysOn && tg !== this.app.renderer.domElement) return;
+      // Space is the gripper, also while a panel button has focus (a stray Space pressed "Znovu" and lost the run,
+      // or advanced the hint ladder). The button keeps Enter and its click; dialogs (win card, guide, pickers) keep Space.
+      if (k === ' ' && (tag === 'BUTTON' || tag === 'SUMMARY')) {
+        if (tg.closest('[role=dialog],dialog,#win')) return;
+        this.spaceEaten = true;
+      }
       // Tab on the focused canvas cycles the joints 1…6, then leaves the canvas (no focus trap)
       if (k === 'Tab' && tg === this.app.renderer.domElement) {
         const n = this.links.sel + (e.shiftKey ? -1 : 1);
@@ -708,6 +751,8 @@ class UX {
       }
       if (used) e.preventDefault();
     });
+    // the button default fires on keyup in some browsers: swallow the keyup of a Space that toggled the gripper
+    addEventListener('keyup', (e) => { if (e.key === ' ' && this.spaceEaten) { this.spaceEaten = false; e.preventDefault(); } });
   }
 
   // ================= test hooks (window.__sim with ?test=1) =================

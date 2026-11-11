@@ -27,19 +27,36 @@ const near2 = (a, b, r) => Math.hypot(a[0] - b[0], a[1] - b[1]) < r;
 
 /**
  * Grasp coaching from the gripper state (P0-3): what to do next when the tip is above / at a cube at p.
- * Returns null when the tip is not near the cube.
+ * Returns null when the tip is not near the cube. The numbers are the ones of the grasp itself: aligned = within 2 cm
+ * sideways and 1.5 cm in height (then "close the gripper"), the hover band reaches 3 cm sideways and 12 cm up.
  */
+export const GRASP = { dh: 0.02, dz: 0.015, hoverDh: 0.03, hoverDz: 0.12 };
 export function graspHint(c, p) {
   const t = c.tip, dh = Math.hypot(t[0] - p[0], t[1] - p[1]), dz = t[2] - p[2];
-  const key = c.touch ? 'tlačítkem Chapadlo pod scénou' : 'mezerníkem';
-  if (dh < 0.02 && dz > -0.015 && dz < 0.015) {
+  const key = c.touch ? (c.gripOpen ? 'tlačítkem Zavřít chapadlo' : 'tlačítkem Otevřít chapadlo') : 'mezerníkem';
+  if (dh < GRASP.dh && dz > -GRASP.dz && dz < GRASP.dz) {
     return c.gripOpen ? `Teď sevřete chapadlo (${key})` : 'Držíte ji – zvedněte kouli nahoru';
   }
-  if (dh < 0.03 && dz >= 0.015 && dz < 0.12) {
+  if (dh < GRASP.hoverDh && dz >= GRASP.dz && dz < GRASP.hoverDz) {
     return c.gripOpen ? 'Sjeďte dolů ke kostce a sevřete chapadlo' : `Otevřete chapadlo (${key}) a sjeďte níž`;
   }
   return null;
 }
+/**
+ * Moving by hand and within reach of the cube (closer sideways than the 12 cm hover band of graspHint) but not
+ * aligned yet: the next correction from the measured offset – over the cube first, then down.
+ * Returns null when the tip is farther away (the mission's own idle text then says what to do).
+ */
+export function reachHint(c, p) {
+  const t = c.tip, dh = Math.hypot(t[0] - p[0], t[1] - p[1]), dz = t[2] - p[2];
+  if (dh >= GRASP.hoverDz) return null;
+  const cm = (v) => Math.max(1, Math.round(v * 100));
+  if (dh >= GRASP.dh) return dz < GRASP.dz ? `Výš a nad kostku – ještě ${cm(dh)} cm vedle` : `Blíž nad kostku – ještě ${cm(dh)} cm`;
+  if (dz >= GRASP.dz) return c.gripOpen ? `Níž – ještě ${cm(dz)} cm` : `Otevřete chapadlo a sjeďte níž – ještě ${cm(dz)} cm`;
+  return null;
+}
+/** graspHint, then (moving by hand) reachHint */
+function coach(c, p) { return graspHint(c, p) || (c.hand ? reachHint(c, p) : null); }
 function stars3(t, t3, t2) { return t <= t3 ? 3 : t <= t2 ? 2 : 1; }
 
 // helper: is the object resting in a bowl?
@@ -68,14 +85,14 @@ export const MISSIONS = [
       }
       c.s.hold = 0;
       if (cube[2] > 0.03) return { text: c.auto ? 'Teď klikněte na misku' : 'Výborně! Přeneste ji nad misku a pusťte' };
-      const gh = graspHint(c, cube); if (gh) return { text: gh };
-      return { text: c.smart ? 'Klikněte na kostku' : 'Natočte ruku ke kostce a sjeďte k ní' };
+      const gh = coach(c, cube); if (gh) return { text: gh };
+      return { text: !c.smart ? 'Natočte ruku ke kostce a sjeďte k ní' : c.hand ? 'Táhněte modrou kouli nad kostku' : 'Klikněte na kostku' };
     },
     solve: (ctl, w) => pickPlace(ctl, w, 'cube', bowlDrop(w, 'bowl'))
   },
   {
     id: 'stack', n: '02', title: 'Postavte věž',
-    desc: 'Teď ručně: koulí nad oranžovou kostku, sjeďte dolů, sevřete chapadlo a položte ji přesně na modrou. Hvězdičky jsou za ruční přenesení.',
+    desc: 'Koulí nad oranžovou kostku, sjeďte dolů, sevřete chapadlo a položte ji přesně na modrou. Hvězdičky jsou jen za ruční přenesení, klik na kostku je bez nich.',
     short: 'Věž ze dvou kostek',
     layout: { cube: [0.26, -0.10, 0.3], cube_b: [0.20, 0.10] },
     openStart: true,
@@ -96,7 +113,7 @@ export const MISSIONS = [
       c.s.hold = 0;
       if (onTop) return { text: 'Teď kostku pusťte', ok: true };
       if (a[2] > 0.03) return { text: 'Přeneste oranžovou kostku nad modrou a pomalu ji spusťte' };
-      const gh = graspHint(c, a); if (gh) return { text: gh };
+      const gh = coach(c, a); if (gh) return { text: gh };
       return { text: c.smart ? 'Táhněte modrou kouli nad oranžovou kostku' : 'Uchopte oranžovou kostku' };
     },
     solve: (ctl, w) => { const b = w.pos('cube_b', [0, 0, 0]); return pickPlace(ctl, w, 'cube', [b[0], b[1], b[2] + 0.0265]); }
@@ -120,15 +137,19 @@ export const MISSIONS = [
       }
       c.s.hold = 0;
       if (wrong) return { text: 'Pozor, kostka je ve špatné misce' };
+      let near = null, nd = Infinity;
       for (const [n, done] of [['cube', o], ['cube_b', b]]) {
         if (done) continue;
         const pp = w.pos(n, c.s.a || (c.s.a = new Float64Array(3)));
         if (pp[2] > 0.03) return { text: n === 'cube' ? 'Teď ji položte do oranžové misky' : 'Teď ji položte do modré misky', ok: o || b };
         const gh = graspHint(c, pp); if (gh) return { text: gh, ok: o || b };
+        const d = Math.hypot(c.tip[0] - pp[0], c.tip[1] - pp[1]); if (d < nd) { nd = d; near = n; }
       }
-      if (o) return { text: c.smart ? 'Oranžová je hotová. Klikněte na modrou kostku, pak na modrou misku' : 'Oranžová je hotová, teď modrá do modré misky', ok: true };
-      if (b) return { text: c.smart ? 'Modrá je hotová. Klikněte na oranžovou kostku, pak na oranžovou misku' : 'Modrá je hotová, teď oranžová do oranžové misky', ok: true };
-      return { text: c.smart ? 'Klikněte na kostku a pak na misku stejné barvy' : 'Oranžová do oranžové, modrá do modré' };
+      const rh = c.hand && near ? reachHint(c, w.pos(near, c.s.a)) : null; if (rh) return { text: rh, ok: o || b };
+      const click = c.smart && !c.hand;
+      if (o) return { text: click ? 'Oranžová je hotová. Klikněte na modrou kostku, pak na modrou misku' : 'Oranžová je hotová, teď modrá do modré misky', ok: true };
+      if (b) return { text: click ? 'Modrá je hotová. Klikněte na oranžovou kostku, pak na oranžovou misku' : 'Modrá je hotová, teď oranžová do oranžové misky', ok: true };
+      return { text: click ? 'Klikněte na kostku a pak na misku stejné barvy' : 'Oranžová do oranžové, modrá do modré' };
     },
     solve: (ctl, w) => {
       const [a, b] = pickPlace(ctl, w, 'cube', bowlDrop(w, 'bowl2'), null, true);
@@ -138,7 +159,7 @@ export const MISSIONS = [
   },
   {
     id: 'ball', n: '04', title: 'Dostrkejte míček do branky',
-    desc: 'Míček se uchopit nedá. Zavřete chapadlo a dostrkejte ho jako hokejkou do branky.',
+    desc: 'Od této mise ručně: klik na předmět už ruku nepohne. Míček se uchopit nedá – zavřete chapadlo a dostrkejte ho jako hokejkou do branky.',
     short: 'Míček do branky',
     layout: { ball: [0.20, -0.06], goal: [0.20, 0.17, Math.PI / 2] },
     strategy: 'Zavřete chapadlo a sjeďte za míček, na stranu odvrácenou od branky. Pak koulí táhněte směrem k brance.',
