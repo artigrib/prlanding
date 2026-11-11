@@ -104,6 +104,13 @@ Findings: scratchpad usability report (P0/P1/P2). Changes:
   speed-limited; floor cursor green/orange/red by deviation; steep top-down camera with a "3D pohled" toggle;
   K = "Nakreslit prstem" (finger trace → planner). Scoring retuned (85 % coverage, 9 mm hit, 3 ★ < 60 s & < 2.5 mm).
 - **Win card** is a 2-column grid that never overflows (tests/win-layout.cjs: tablets, phones, 320–1366 px sweep).
+- **Result card** (HUD stage 2, `#win`): header `Mise NN / 10 · splněno` (+ `s ukázkou` when the autopilot, hint rung 3,
+  the full solution or a replay carried the run), the mission's `done` text, stars, measured values vs the **next** star
+  from `nextStar()` (thresholds are data: `m.stars = { t3, t2, p3, p2, prec, unit }`, `rate()` is derived from them),
+  the next mission's number and short title, Další mise (Enter) / Zkusit znovu (R); staged extras as a link row.
+  Focus moves to the card (read once by its name and description, no live-region line), Esc puts it away.
+  Phones in portrait: a bottom sheet under the scene (the scene shrinks, stays whole). No "Přehrát pokus" yet: the
+  sim does not record the player's run unless "Učit ukázkou" is recording.
 
 ### Physics grab (branch `so101-grab`)
 - `src/grab.js` (node-tested in `tests/grab.test.mjs`): like MuJoCo `simulate`'s perturbation – a spring-damper force

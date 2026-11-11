@@ -9,6 +9,16 @@ const dec = (s) => String(s).replace(/(\d),(\d)/g, '$1.$2');
 const ids = (s) => dec(s).replace(/\(([^)]+)\)/g, (m, n) => '(' + T(n) + ')');
 
 const strings = {
+  /* HUD stage 2: result card (measured values vs the next star, demo label, next mission) */
+  'Váš čas': 'Your time', 'Čas': 'Time', 'Hvězdičky': 'Stars', 'jen ručně, bez ukázky': 'by hand only, no demo',
+  's ukázkou': 'with a demo', 'Ručně, bez ukázky.': 'By hand, no demo.', 'splněno': 'met',
+  'S ukázkou – hvězdičky jsou za ruční přenesení.': 'With a demo – stars are for doing it by hand.',
+  'To byla poslední mise.': 'That was the last mission.', 'Výsledek mise': 'Mission result',
+  'Kostka je v misce.': 'The cube is in the bowl.', 'Věž stojí.': 'The tower stands.', 'Obě kostky jsou na svém místě.': 'Both cubes are in place.',
+  'Gól!': 'Goal!', 'Všechny díly jsou roztříděné.': 'All parts are sorted.', 'Snídaně je na talíři.': 'Breakfast is on the plate.',
+  'Stůl je uklizený.': 'The table is tidy.', 'Šroubovák je v držáku.': 'The screwdriver is in its holder.', 'Lahvička je ve stojánku.': 'The vial is in the rack.',
+  'Odchylka': 'Offset', 'Od středu branky': 'From the goal centre', 'Průměrná odchylka čáry': 'Average line offset',
+  'Odchylka od osy drážky': 'Offset from the slot axis', 'Náklon': 'Tilt',
   /* HUD stage 1: scene first, one objective line, action bar, "Nástroje" drawer, ☰ menu */
   'Ukázky a AI': 'Demos and AI', 'Akce': 'Actions', 'Menu': 'Menu', 'Jazyk': 'Language',
   'Zavřít nápovědu': 'Close the hint', 'Zavřít nástroje': 'Close tools', 'Zavřít menu': 'Close the menu',
@@ -516,6 +526,11 @@ Object.assign(strings, {
 });
 
 const patterns = [
+  /* HUD stage 2: result card */
+  [/^Mise (\d+) \/ (\d+) · splněno$/, 'Mission $1 / $2 · complete'], [/^Pro (\d) ★$/, 'For $1 ★'],
+  [/^do (\d+:\d\d)$/, 'under $1'], [/^pod (\d+(?:,\d+)?) mm$/, (m, a) => `under ${dec(a)} mm`], [/^pod (\d+(?:,\d+)?)°$/, (m, a) => `under ${dec(a)}°`],
+  [/^(\d+:\d\d),(\d+)$/, '$1.$2'], [/^(\d+,\d+) mm$/, (m, a) => `${dec(a)} mm`], [/^(\d+,\d+)°$/, (m, a) => `${dec(a)}°`],
+  [/^Další: (\d+) · (.+)$/, (m, a, b) => `Next: ${a} · ${T(b)}`],
   /* newcomer UX fixes: star rules, grasp distance hints */
   [/^3 ★ do (\d+) s, 2 ★ do (\d+) s$/, '3 ★ under $1 s, 2 ★ under $2 s'],
   [/^Výš a nad kostku – ještě (\d+) cm vedle$/, 'Up and over the cube – $1 cm off'], [/^Blíž nad kostku – ještě (\d+) cm$/, 'Closer over the cube – $1 cm to go'],

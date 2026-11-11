@@ -75,13 +75,14 @@ export const MISSIONS = [
     openStart: true,
     strategy: 'Postup: koulí nad kostku, sjeďte dolů, sevřete chapadlo, zvedněte, přeneste nad misku a pusťte.',
     targets: { cube: 'pick', bowl: 'place' },
-    rate: (t) => stars3(t, 25, 60),
+    stars: { t3: 25, t2: 60 },
+    done: 'Kostka je v misce',
     starsHint: '3 ★ do 25 s, 2 ★ do 60 s',
     check(c, dt) {
       const w = c.w, cube = w.pos('cube', c.s.a || (c.s.a = new Float64Array(3)));
       if (inBowl(w, 'cube', 'bowl')) {
         c.s.hold = w.speed('cube') < 0.05 ? (c.s.hold || 0) + dt : 0;
-        return { text: 'Kostka je v misce…', ok: true, won: c.s.hold > 0.5 };
+        return { text: this.done + '…', ok: true, won: c.s.hold > 0.5 };
       }
       c.s.hold = 0;
       if (cube[2] > 0.03) return { text: c.auto ? 'Teď klikněte na misku' : 'Výborně! Přeneste ji nad misku a pusťte' };
@@ -99,7 +100,8 @@ export const MISSIONS = [
     strategy: 'Oranžovou kostku uchopte a zvedněte. Nad modrou ji kroužkem zápěstí natočte, aby hrany lícovaly, a pomalu spusťte.',
     advice: 'Pro 3 ★ pokládejte pomalu a natočte kostku kroužkem zápěstí tak, aby lícovala s modrou.',
     targets: { cube: 'pick', cube_b: 'place' },
-    rate: (t, prec) => Math.min(stars3(t, 30, 75), prec < 0.004 ? 3 : prec < 0.008 ? 2 : 1),
+    stars: { t3: 30, t2: 75, p3: 0.004, p2: 0.008, prec: 'Odchylka', unit: 'mm' },
+    done: 'Věž stojí',
     starsHint: '3 ★: do 30 s a odchylka pod 4 mm',
     check(c, dt) {
       const w = c.w, a = w.pos('cube', c.s.a || (c.s.a = new Float64Array(3))), b = w.pos('cube_b', c.s.b || (c.s.b = new Float64Array(3)));
@@ -108,7 +110,7 @@ export const MISSIONS = [
       const free = Math.hypot(c.tip[0] - a[0], c.tip[1] - a[1], c.tip[2] - a[2]) > 0.03 || c.gripOpen;
       if (onTop && free) {
         c.s.hold = w.speed('cube') < 0.05 ? (c.s.hold || 0) + dt : 0;
-        return { text: `Věž stojí, odchylka ${(off * 1000).toFixed(1)} mm…`, ok: true, won: c.s.hold > 0.6, prec: off };
+        return { text: `${this.done}, odchylka ${(off * 1000).toFixed(1)} mm…`, ok: true, won: c.s.hold > 0.6, prec: off };
       }
       c.s.hold = 0;
       if (onTop) return { text: 'Teď kostku pusťte', ok: true };
@@ -126,14 +128,15 @@ export const MISSIONS = [
     openStart: true,
     strategy: 'Jednu kostku po druhé: uchopit, zvednout, nad misku stejné barvy, pustit.',
     targets: { cube: 'pick', cube_b: 'pick', bowl: 'place', bowl2: 'place' },
-    rate: (t) => stars3(t, 50, 110),
+    stars: { t3: 50, t2: 110 },
+    done: 'Obě kostky jsou na svém místě',
     starsHint: '3 ★ do 50 s, 2 ★ do 110 s',
     check(c, dt) {
       const w = c.w, o = inBowl(w, 'cube', 'bowl2'), b = inBowl(w, 'cube_b', 'bowl');
       const wrong = inBowl(w, 'cube', 'bowl') || inBowl(w, 'cube_b', 'bowl2');
       if (o && b) {
         c.s.hold = w.speed('cube') + w.speed('cube_b') < 0.08 ? (c.s.hold || 0) + dt : 0;
-        return { text: 'Obě kostky jsou na svém místě…', ok: true, won: c.s.hold > 0.5 };
+        return { text: this.done + '…', ok: true, won: c.s.hold > 0.5 };
       }
       c.s.hold = 0;
       if (wrong) return { text: 'Pozor, kostka je ve špatné misce' };
@@ -164,7 +167,8 @@ export const MISSIONS = [
     layout: { ball: [0.20, -0.06], goal: [0.20, 0.17, Math.PI / 2] },
     strategy: 'Zavřete chapadlo a sjeďte za míček, na stranu odvrácenou od branky. Pak koulí táhněte směrem k brance.',
     targets: { ball: 'push', goal: 'push' },
-    rate: (t, prec) => Math.min(stars3(t, 25, 60), prec < 0.02 ? 3 : 2),
+    stars: { t3: 25, t2: 60, p3: 0.02, p2: null, prec: 'Od středu branky', unit: 'mm' },
+    done: 'Gól!',
     starsHint: '3 ★: do 25 s a míček blízko středu branky',
     check(c, dt) {
       const w = c.w, p = w.pos('ball', c.s.a || (c.s.a = new Float64Array(3))), g = w.pos('goal', c.s.b || (c.s.b = new Float64Array(3))), yaw = w.yaw('goal');
@@ -173,7 +177,7 @@ export const MISSIONS = [
       const inside = lx > -0.045 && lx < 0.042 && Math.abs(ly) < 0.05 && p[2] < 0.04;
       if (inside) {
         c.s.hold = w.speed('ball') < 0.03 ? (c.s.hold || 0) + dt : 0;
-        return { text: 'Gól! Míček se zastavuje…', ok: true, won: c.s.hold > 0.5, prec: Math.hypot(dx, dy) };
+        return { text: this.done + ' Míček se zastavuje…', ok: true, won: c.s.hold > 0.5, prec: Math.hypot(dx, dy) };
       }
       c.s.hold = 0;
       return { text: c.smart ? 'Zavřete chapadlo a strkejte míček koulí k brance' : 'Sjeďte za míček a strkejte ho k brance' };
@@ -193,7 +197,8 @@ export const MISSIONS = [
     draw: true,
     targets: {},
     // tuned so a beginner finishes in < 2 min; 3 ★ still needs a precise line
-    rate: (t, prec) => Math.min(stars3(t, 60, 150), prec < 0.0025 ? 3 : prec < 0.005 ? 2 : 1),
+    stars: { t3: 60, t2: 150, p3: 0.0025, p2: 0.005, prec: 'Průměrná odchylka čáry', unit: 'mm' },
+    done: 'Hvězda je hotová!',
     starsHint: '3 ★: do 60 s a průměrná odchylka čáry pod 2,5 mm',
     check(c) {
       const s = c.s;
@@ -212,7 +217,7 @@ export const MISSIONS = [
         if (seg < 0.03) { s.errSum += seg; s.errN++; }
       }
       const cov = s.n / TRACE.checkpoints.length, prec = s.errN ? s.errSum / s.errN : 1;
-      if (cov >= TRACE.done) return { text: 'Hvězda je hotová!', ok: true, won: true, prec, progress: cov };
+      if (cov >= TRACE.done) return { text: this.done, ok: true, won: true, prec, progress: cov };
       if (s.n) return { text: `Obkresleno ${Math.round(cov * 100)} %`, ok: cov > 0.5, prec, progress: cov };
       return { text: c.smart ? (c.touch ? 'Táhněte prstem po papíře – fix kreslí. Nebo zvolte Nakreslit prstem' : 'Táhněte myší po papíře – fix kreslí. P zvedne pero') : 'Sjeďte hrotem k papíru a táhněte po hvězdě', progress: 0 };
     },
@@ -230,13 +235,14 @@ export const MISSIONS = [
     strategy: 'Matice do oranžové, šrouby do modré. Díl uchopte uprostřed, zvedněte a pusťte nad přihrádkou.',
     advice: 'Pro 3 ★ berte díly v pořadí od nejbližšího k přihrádkám – ruka pak jezdí kratší cesty.',
     targets: { nut1: 'pick', nut2: 'pick', nut3: 'pick', bolt1: 'pick', bolt2: 'pick', bolt3: 'pick', bin_nut: 'place', bin_bolt: 'place' },
-    rate: (t) => stars3(t, 100, 200),
+    stars: { t3: 100, t2: 200 },
+    done: 'Všechny díly jsou roztříděné',
     starsHint: '3 ★ do 100 s, 2 ★ do 200 s',
     sort: { nut1: 'bin_nut', nut2: 'bin_nut', nut3: 'bin_nut', bolt1: 'bin_bolt', bolt2: 'bin_bolt', bolt3: 'bin_bolt' },
     check(c, dt) {
       return sortCheck(c, dt, this.sort, {
         wrong: (n) => (/^nut/.test(n) ? 'Pozor, matice patří do oranžové přihrádky' : 'Pozor, šroub patří do modré přihrádky'),
-        done: 'Všechny díly jsou roztříděné…',
+        done: this.done + '…',
         idle: 'Uchopte díl a odneste ho do přihrádky'
       });
     },
@@ -252,11 +258,12 @@ export const MISSIONS = [
     strategy: 'Každý kus jídla uchopte uprostřed, zvedněte nad talíř a pusťte. Banán berte v půlce.',
     advice: 'Banán je nejtěžší (0,24 kg) – nechte ho chytit ruku uprostřed, jinak se v chapadle převáží.',
     targets: { apple: 'pick', banana: 'pick', cupcake: 'pick', plate: 'place' },
-    rate: (t) => stars3(t, 60, 130),
+    stars: { t3: 60, t2: 130 },
+    done: 'Snídaně je na talíři',
     starsHint: '3 ★ do 60 s, 2 ★ do 130 s',
     sort: { apple: 'plate', banana: 'plate', cupcake: 'plate' },
     check(c, dt) {
-      return sortCheck(c, dt, this.sort, { done: 'Snídaně je na talíři…', idle: 'Přeneste jablko, banán a muffin na talíř' });
+      return sortCheck(c, dt, this.sort, { done: this.done + '…', idle: 'Přeneste jablko, banán a muffin na talíř' });
     },
     spot: (w, fx, held) => ({ apple: [-0.045, 0.045], banana: [0.025, -0.035], cupcake: [0.05, 0.05] }[held] || [0, 0]),
     solve: (ctl, w) => libSolve(ctl, w, 'breakfast')
@@ -271,11 +278,12 @@ export const MISSIONS = [
     strategy: 'Lžičku a vidličku před puštěním natočte kroužkem zápěstí podél podnosu. Tenké věci berte těsně nad stolem.',
     advice: 'Tenkou lžičku a vidličku ruka bere těsně nad stolem – pro 3 ★ je nechte uchopit uprostřed.',
     targets: { mug: 'pick', spoon: 'pick', fork: 'pick', sponge: 'pick', tray: 'place' },
-    rate: (t) => stars3(t, 80, 160),
+    stars: { t3: 80, t2: 160 },
+    done: 'Stůl je uklizený',
     starsHint: '3 ★ do 80 s, 2 ★ do 160 s',
     sort: { mug: 'tray', spoon: 'tray', fork: 'tray', sponge: 'tray' },
     check(c, dt) {
-      return sortCheck(c, dt, this.sort, { done: 'Stůl je uklizený…', idle: 'Přeneste všechno na podnos' });
+      return sortCheck(c, dt, this.sort, { done: this.done + '…', idle: 'Přeneste všechno na podnos' });
     },
     spot: (w, fx, held) => ({ mug: [-0.06, 0.035], sponge: [0.065, 0.035], spoon: [0.0, -0.05], fork: [0.0, -0.015] }[held] || [0, 0]),
     align: { spoon: Math.PI / 2, fork: Math.PI / 2 },
@@ -290,7 +298,8 @@ export const MISSIONS = [
     strategy: 'Šroubovák uchopte, nad držákem ho kroužkem zápěstí natočte podél drážky a pomalu položte.',
     advice: 'Pro 3 ★ musí šroubovák ležet v drážce do 3 mm od osy.',
     targets: { screwdriver: 'pick', holder: 'place' },
-    rate: (t, prec) => Math.min(stars3(t, 30, 70), prec < 0.003 ? 3 : prec < 0.008 ? 2 : 1),
+    stars: { t3: 30, t2: 70, p3: 0.003, p2: 0.008, prec: 'Odchylka od osy drážky', unit: 'mm' },
+    done: 'Šroubovák je v držáku',
     starsHint: '3 ★: do 30 s a odchylka od osy drážky pod 3 mm',
     check(c, dt) {
       const w = c.w, s = c.s;
@@ -298,7 +307,7 @@ export const MISSIONS = [
         const d = alignErr(w, 'screwdriver', 'holder');
         if (d.ang < 0.35) {
           s.hold = w.speed('screwdriver') < 0.03 ? (s.hold || 0) + dt : 0;
-          return { text: `Šroubovák je v držáku, odchylka ${(d.off * 1000).toFixed(1)} mm…`, ok: true, won: s.hold > 0.6, prec: d.off };
+          return { text: `${this.done}, odchylka ${(d.off * 1000).toFixed(1)} mm…`, ok: true, won: s.hold > 0.6, prec: d.off };
         }
         s.hold = 0;
         return { text: 'Šroubovák leží našikmo – natočte ho podél drážky' };
@@ -319,7 +328,8 @@ export const MISSIONS = [
     strategy: 'Lahvičku berte vysoko, nad otvorem ji držte svisle a spusťte ji pomalu rovně dolů.',
     advice: 'Pro 3 ★ musí lahvička stát v otvoru svisle (náklon pod 4°) – pokládejte ji pomalu a rovně shora.',
     targets: { vial: 'pick', rack: 'place' },
-    rate: (t, prec) => Math.min(stars3(t, 40, 90), prec < 0.07 ? 3 : 2),
+    stars: { t3: 40, t2: 90, p3: 0.07, p2: null, prec: 'Náklon', unit: 'rad' },
+    done: 'Lahvička je ve stojánku',
     precText: (p) => `náklon ${(p * 180 / Math.PI).toFixed(1)}°`,
     starsHint: '3 ★: do 40 s a lahvička svisle (náklon pod 4°)',
     check(c, dt) {
@@ -327,7 +337,7 @@ export const MISSIONS = [
       if (slot >= 0 && heldFree(c, 'vial')) {
         const tilt = Math.acos(Math.min(1, w.axis('vial', 2)[2]));
         s.hold = w.speed('vial') < 0.03 ? (s.hold || 0) + dt : 0;
-        return { text: `Lahvička je ve stojánku, náklon ${(tilt * 180 / Math.PI).toFixed(1)}°…`, ok: true, won: s.hold > 0.6, prec: tilt };
+        return { text: `${this.done}, náklon ${(tilt * 180 / Math.PI).toFixed(1)}°…`, ok: true, won: s.hold > 0.6, prec: tilt };
       }
       s.hold = 0;
       if (w.axis('vial', 2)[2] < 0.5 && w.com('vial', SA)[2] < 0.03) return { text: 'Lahvička se převrhla. Zkuste to znovu (R).' };
@@ -338,6 +348,34 @@ export const MISSIONS = [
     solve: (ctl, w) => libSolve(ctl, w, 'lab')
   }
 ];
+
+/**
+ * Star rating from a mission's thresholds (m.stars): time stars (≤ t3 → 3, ≤ t2 → 2, else 1); missions that rate
+ * precision too take the lower of the time and the precision stars (prec < p3 → 3, < p2 → 2, else 1; no p2 = at
+ * least 2). prec is in metres, or radians for unit 'rad'.
+ */
+export function rateBy(S, t, prec) {
+  const ts = stars3(t, S.t3, S.t2);
+  if (S.p3 == null) return ts;
+  return Math.min(ts, prec < S.p3 ? 3 : S.p2 == null || prec < S.p2 ? 2 : 1);
+}
+for (const m of MISSIONS) m.rate = (t, prec) => rateBy(m.stars, t, prec);
+
+/**
+ * What the next star asks for, from the measured run (result card): the rating, the star level above it (3 when
+ * already 3) and per criterion the measured value, its limit for that level (null = no limit at that level) and
+ * whether the value already meets it. prec is null for missions that rate time only.
+ */
+export function nextStar(m, time, prec) {
+  const S = m.stars, stars = m.rate(time, prec), next = Math.min(3, stars + 1);
+  const tl = next === 3 ? S.t3 : next === 2 ? S.t2 : null;
+  const out = { stars, next, time: { v: time, limit: tl, met: tl == null || time <= tl }, prec: null };
+  if (S.p3 != null) {
+    const pl = next === 3 ? S.p3 : next === 2 ? S.p2 : null;
+    out.prec = { v: prec, limit: pl, met: pl == null || prec < pl, label: S.prec, unit: S.unit };
+  }
+  return out;
+}
 
 export function distToPolyline(p, c) {
   let best = Infinity;

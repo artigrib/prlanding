@@ -361,10 +361,84 @@ async function touchDrag(page, from, to, steps = 8) {
       const r = await ux(p);
       ok(r.result.kind === 'auto' && r.result.stars === 0 && r.progress.bowl && r.progress.bowl.done && !r.progress.bowl.stars,
         'autopilot win counts as "Splněno" without stars (' + JSON.stringify([r.result.kind, r.result.stars, r.progress.bowl]) + ')');
-      ok(/Splněno/.test(await S(p, () => document.getElementById('win-h').textContent)), 'win card says "Splněno"');
+      const card = await S(p, () => ({ k: document.getElementById('ux-wk').textContent, demo: !document.querySelector('#win .ux-wdemo').hidden, on: document.querySelectorAll('#ux-wstars span.on').length }));
+      ok(/· splněno$/.test(card.k) && card.demo && card.on === 0, 'result card: "splněno", marked "s ukázkou", no stars ' + JSON.stringify(card));
     }
     await S(p, () => window.__sim.advance(0.4));
     await shot(p, 'desk-04-win');
+    // ---------------- result card (HUD stage 2) ----------------
+    {
+      // a run by hand: the mission's plan driven straight through the controller (not the click-to-grab preview),
+      // so the sim measures and rates it like a manual run
+      const handRun = async (id) => {
+        await S(p, (m) => window.__sim.mission(m), id);
+        await S(p, () => { if (window.__srObs) return; window.__srN = 0; window.__srObs = new MutationObserver(() => window.__srN++); window.__srObs.observe(document.getElementById('sr'), { childList: true, characterData: true, subtree: true }); });
+        await S(p, () => { const u = window.__sim._ux; u.runner.start(); u.ctl.run(u.runner.m.solve(u.ctl, u.world)); });
+        return advanceUntil(p, () => window.__sim.ux().won, 60, 2);
+      };
+      const card = () => S(p, () => {
+        const w = document.getElementById('win');
+        return { open: !w.hidden, focus: document.activeElement === w, k: document.getElementById('ux-wk').textContent, h: document.getElementById('win-h').textContent,
+          on: document.querySelectorAll('#ux-wstars span.on').length, label: document.getElementById('ux-wstars').getAttribute('aria-label'),
+          vals: [...document.querySelectorAll('#ux-wvals > div')].map((d) => [d.querySelector('dt').textContent, d.querySelector('dd').textContent]),
+          demo: !w.querySelector('.ux-wdemo').hidden, next: document.getElementById('ux-wnext').textContent, sr: window.__srN,
+          desc: w.getAttribute('aria-describedby').split(' ').every((id) => document.getElementById(id)) };
+      });
+      const fmtT = (t) => { const n = Math.round(t * 10); return Math.floor(n / 600) + ':' + String(Math.floor(n / 10) % 60).padStart(2, '0') + ',' + (n % 10); };
+      ok((await handRun('bowl')) > 0, 'mission 01 won by hand (controller run)');
+      // from the win on, nothing more goes to the live region (HUD milestones during the run are separate)
+      await S(p, () => new Promise((res) => setTimeout(res, 50)));
+      await S(p, () => { window.__srN = 0; window.__sim.advance(1); });
+      await S(p, () => new Promise((res) => setTimeout(res, 50)));
+      let r = await ux(p), c = await card();
+      ok(r.result.kind === 'manual' && r.result.stars >= 1 && c.open && c.focus && c.k === 'Mise 01 / 10 · splněno' && c.h === 'Kostka je v misce.' && !c.demo,
+        'result card opens with focus on it: header, headline (done text), no demo label ' + JSON.stringify(c));
+      ok(c.on === r.result.stars && c.label === `${r.result.stars} ze 3 hvězdiček`, `result card shows the ${r.result.stars} ★ earned`);
+      ok(c.vals[0][0] === 'Váš čas' && c.vals[0][1] === fmtT(r.result.time) && /^Pro [23] ★$/.test(c.vals[1][0]) && /^do (0:25|1:00)/.test(c.vals[1][1]),
+        'result card: measured time and the next star\'s limit ' + JSON.stringify(c.vals) + ' t=' + r.result.time);
+      ok(c.next === 'Další: 02 · Věž ze dvou kostek' && c.desc, 'result card names the next mission ' + c.next);
+      ok(c.sr === 0, 'the win is announced once (the card takes focus, no extra live-region line) – #sr changes: ' + c.sr);
+      await shot(p, 'desk-04b-result');
+      // Esc puts the card away (focus to the 3D view); Enter on the card = Další mise
+      await p.keyboard.press('Escape');
+      const esc = await S(p, () => ({ hidden: document.getElementById('win').hidden, f: document.activeElement && document.activeElement.id }));
+      ok(esc.hidden && esc.f === 'c', 'Esc closes the result card, focus back on the 3D view ' + JSON.stringify(esc));
+      await handRun('bowl');
+      await p.keyboard.press('Enter');
+      const nx = await S(p, () => ({ m: window.__sim.ux().mission, hidden: document.getElementById('win').hidden }));
+      ok(nx.m === 'stack' && nx.hidden, 'Enter on the result card goes to the next mission ' + JSON.stringify(nx));
+      // "Zkusit znovu" (R) restarts the mission and closes the card
+      await handRun('bowl');
+      await p.keyboard.press('r');
+      const rr = await S(p, () => ({ m: window.__sim.ux().mission, hidden: document.getElementById('win').hidden, won: window.__sim.ux().won }));
+      ok(rr.m === 'bowl' && rr.hidden && !rr.won, 'R on the result card = Zkusit znovu ' + JSON.stringify(rr));
+      // precision mission: the measured line offset in mm and its limit for the next star
+      ok((await handRun('trace')) > 0, 'mission 05 won by hand (controller run)');
+      r = await ux(p); c = await card();
+      const mm = (r.result.prec * 1000);
+      const shownMm = parseFloat((c.vals[2] || ['', ''])[1].replace(',', '.'));
+      ok(c.vals.length === 4 && c.vals[2][0] === 'Průměrná odchylka čáry' && /mm$/.test(c.vals[2][1]) && Math.abs(shownMm - mm) <= 0.051 && /^pod (2,5|5) mm/.test(c.vals[3][1]),
+        `mission 05 card: line offset ${c.vals[2] && c.vals[2][1]} (measured ${mm.toFixed(3)} mm) and its limit ` + JSON.stringify(c.vals));
+      await shot(p, 'desk-04c-result-trace');
+      // "Další mise" (button) goes to the next mission (03 → 04; 05 → 06 would reload into the object scene)
+      await handRun('sort');
+      await S(p, () => document.getElementById('ux-next').click());
+      ok((await ux(p)).mission === 'ball', '"Další mise" on the result card opens mission 04');
+      // hint rung 3 (the arm grasps, the player finishes): the card marks the run "s ukázkou", no stars
+      await S(p, () => window.__sim.mission('bowl'));
+      await S(p, () => window.__sim.hintRung(3));
+      await advanceUntil(p, () => window.__sim.ux().held === 'cube' && !window.__sim.ux().busy, 20, 1);
+      await S(p, () => { const u = window.__sim._ux, b = u.world.pos('bowl', [0, 0, 0]); u.ctl.begin(); u.ctl.setTarget(b[0], b[1], 0.09); });
+      await S(p, () => window.__sim.advance(3));
+      await S(p, () => window.__sim._ux.ctl.setGrip(true));
+      const tw = await advanceUntil(p, () => window.__sim.ux().won, 12, 1);
+      r = await ux(p); c = await card();
+      const run = await S(p, () => window.__sim.run());
+      ok(tw > 0 && run.auto && r.result.kind === 'auto' && c.demo && c.on === 0 && c.vals[1][0] === 'Hvězdičky',
+        'after hint rung 3 the result card says "s ukázkou" and gives no stars ' + JSON.stringify({ tw, auto: run.auto, kind: r.result && r.result.kind, c }));
+      await shot(p, 'desk-04d-result-demo');
+      await S(p, () => window.__sim.reset());
+    }
     // the guide says "now click the bowl" while the arm is still picking (playtest A4): that click waits for the pick
     {
       await S(p, () => window.__sim.reset());
@@ -640,6 +714,16 @@ async function touchDrag(page, from, to, steps = 8) {
     await advanceUntil(ph, () => window.__sim.ux().won, 30, 3);
     await S(ph, () => window.__sim.advance(0.3));
     await shot(ph, 'phone-05-win');
+    {
+      // phone 390×844: the result card is a bottom sheet under the scene, buttons ≥ 44 px, the scene stays visible
+      const g = await S(ph, () => {
+        const w = document.getElementById('win'), r = w.getBoundingClientRect(), st = document.querySelector('.stage').getBoundingClientRect();
+        const btns = [...w.querySelectorAll('.win-b > :not([hidden]), .ux-wlinks > :not([hidden])')].map((b) => Math.round(b.getBoundingClientRect().height));
+        return { open: !w.hidden, top: Math.round(r.top), bottom: Math.round(r.bottom), vh: innerHeight, stageTop: Math.round(st.top), stageBottom: Math.round(st.bottom), btns, docW: document.documentElement.scrollWidth, vw: innerWidth };
+      });
+      ok(g.open && g.bottom <= g.vh + 1 && g.top >= g.stageBottom - 1 && g.stageBottom - g.stageTop >= 0.38 * g.vh && g.btns.length >= 2 && g.btns.every((x) => x >= 44) && g.docW <= g.vw,
+        'phone: result card is a bottom sheet, scene visible above it, buttons ≥ 44 px ' + JSON.stringify(g));
+    }
     await ph.close();
   } catch (e) { console.log('FAIL exception', e); fails++; diagnose('exception ' + (e && e.message)); }
   await diag;

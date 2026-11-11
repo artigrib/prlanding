@@ -504,3 +504,69 @@
   .win h2{font-size:19px}
 }
 @media (pointer:coarse){.ux-mi .kbd{display:none}}
+
+/* ---- result card (HUD stage 2): the style frame Result-1440; phones: a bottom sheet with the scene above ---- */
+.win.ux-result{width:min(520px,calc(100% - 32px));max-width:none;padding:32px;gap:20px;box-shadow:none;z-index:12}
+.win.ux-result:focus{outline:none}   /* focus is moved here so the card is read once; it is not a control */
+.ux-result .win-k{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.ux-result .ux-wdemo{border:1px solid var(--ink);color:var(--ink);padding:1px 8px}
+.ux-result h2{font-size:36px;line-height:1.05;letter-spacing:-.02em;font-weight:600}
+.ux-result .ux-winstars{font-size:40px;gap:6px;line-height:1}
+.ux-result .ux-winstars span{color:var(--line)}
+.ux-result .ux-winstars span.on{color:var(--accent)}
+.ux-wvals{margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--ink);border-bottom:1px solid var(--ink)}
+.ux-wvals>div{padding:14px 16px 14px 0;min-width:0}
+.ux-wvals>div:nth-child(odd){border-right:1px solid var(--line)}
+.ux-wvals>div:nth-child(even){padding:14px 0 14px 16px}
+.ux-wvals>div:nth-child(n+3){border-top:1px solid var(--line)}
+.ux-wvals dt{font:11px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.ux-wvals dd{margin:4px 0 0;font-size:24px;line-height:1.1;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.ux-wok{color:var(--ok);margin-left:8px;font-size:22px}
+.ux-wvals dd.ux-wtxt{font-size:17px;line-height:1.3;font-weight:500;padding-top:4px}
+.ux-result p.ux-wline{font-size:15px;line-height:1.5;color:var(--ink-2)}
+.ux-result .ux-winstats{margin:-12px 0 0;color:var(--ink)}
+.ux-result .ux-wnext{margin:-12px 0 0}
+.ux-result .win-b{display:flex;flex-wrap:wrap;gap:10px;margin:0}
+.ux-result .win-b .btn{width:auto;flex:0 0 auto;min-height:56px;padding:0 18px;font-size:16px;white-space:nowrap}
+.ux-result .win-b .ux-primary{flex:1 1 200px;padding:0 20px;font-size:17px;font-weight:600}
+.ux-result .ux-wkey{display:inline-flex;align-items:center;gap:10px}
+.ux-result .win-b .kbd{font-size:11px}
+.ux-wlinks{display:flex;flex-wrap:wrap;gap:0 20px;margin-top:-10px}
+.ux-wlinks .ux-wl{font-size:14.5px}
+/* desktop: the card over a dimmed, still visible scene (the frame: scene at ~35 %) */
+@media (min-width:861px) and (min-height:501px){
+  .ux-result-open .stage::after{content:"";position:absolute;inset:0;background:rgba(247,247,245,.62);z-index:7;pointer-events:none}
+}
+@media (pointer:coarse){.ux-result .kbd{display:none}}
+/* phones in portrait: a bottom sheet over the lower scene; the thumb bar steps aside, the arm stays visible above */
+@media (max-width:860px) and (min-height:501px){
+  .ux-result-open .ux-under{display:none}
+  .win.ux-result p{display:block}
+  .win.ux-result .win-k{display:flex}
+  .win.ux-result{position:relative;inset:auto;flex:0 0 auto;transform:none;width:auto;max-width:none;max-height:58svh;overflow-y:auto;overscroll-behavior:contain;
+    border-width:1px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));gap:12px;animation:none}
+  .ux-result h2{font-size:24px}
+  .ux-result .ux-winstars{font-size:28px;margin-top:-4px}
+  .ux-wvals>div{padding:8px 12px 8px 0}
+  .ux-wvals>div:nth-child(even){padding:8px 0 8px 12px}
+  .ux-wvals dd{font-size:20px}
+  .ux-wvals dd.ux-wtxt{font-size:15px}
+  .ux-wok{font-size:17px;margin-left:6px}
+  .ux-result p.ux-wline{font-size:14px}
+  .ux-result .ux-winstats,.ux-result .ux-wnext{margin-top:-6px}
+  .ux-result .win-b{gap:8px}
+  .ux-result .win-b .btn{flex:1 1 0;min-width:40%;min-height:48px;padding:0 14px;white-space:normal}
+  .ux-result .win-b .ux-primary{flex-basis:100%;min-height:52px}
+  .ux-result .win-b #again{flex:1 1 0}
+  .ux-wlinks{margin-top:-6px}
+}
+@media (max-height:500px){
+  .win.ux-result{padding:12px 16px;gap:8px}
+  .ux-result h2{font-size:19px}
+  .ux-result .ux-winstars{font-size:22px}
+  .ux-wvals dd{font-size:17px}
+  .ux-result .win-b .btn{min-height:44px}
+}
+/* motion: stars appear one by one (≤ 600 ms); nothing moves with prefers-reduced-motion or calm mode (?klid=1) */
+@media (prefers-reduced-motion:reduce){.ux-result .ux-winstars span.on,.win.ux-result{animation:none}}
+.ux-reduced .ux-result .ux-winstars span.on,.ux-reduced .win.ux-result{animation:none}

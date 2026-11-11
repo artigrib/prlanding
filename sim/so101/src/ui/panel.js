@@ -1,7 +1,7 @@
 // DOM for the UX layer: HUD (top row, action bar, camera, Nástroje drawer, ☰ menu), mission picker, teach & replay,
 // wrist-cam frame, toasts, win dialog extras, keyboard shortcuts dialog. Formal Czech ("vy").
 
-import { MISSIONS } from '../missions.js';
+import { MISSIONS, nextStar } from '../missions.js';
 import { VIEW_LABELS } from './cameras.js';
 import { store } from './store.js';
 
@@ -612,18 +612,31 @@ export class Panel {
       : hi ? 'Původní tvary dílů, 325 tisíc trojúhelníků (≈ 1 MB).' : loading ? 'Načítám detailní díly…' : '';
   }
 
-  // ---------- win dialog ----------
+  // ---------- result card (HUD stage 2; the element keeps its id #win) ----------
+  // header "Mise 01 / 10 · splněno" (+ "s ukázkou") · headline (the mission's done text) · stars · measured values
+  // vs the next star (time, precision where the mission rates it) · one line (by hand / with a demo, advice) ·
+  // badges and record · what comes next · Další mise (Enter) / Zkusit znovu (R) · staged extras as links.
+  // Desktop: a card over a dimmed scene; phones: a bottom sheet with the scene above it.
   winUI() {
-    const win = $('win');
-    this.winStars = h(`<div class="ux-winstars" aria-hidden="true"><span>★</span><span>★</span><span>★</span></div>`);
-    win.insertBefore(this.winStars, win.querySelector('h2'));
-    this.winStats = h(`<p class="mono ux-winstats"></p>`);
-    win.insertBefore(this.winStats, win.querySelector('.win-b'));
-    this.nextBtn = h(`<button type="button" class="btn btn-o" id="ux-next">Další mise <span aria-hidden="true">→</span></button>`);
-    win.querySelector('.win-b').appendChild(this.nextBtn);
+    const win = this.win = $('win');
+    this.winK = $('ux-wk'); this.winDemo = win.querySelector('.ux-wdemo');
+    this.winH = $('win-h');
+    this.winStars = h(`<div class="ux-winstars" id="ux-wstars" role="img"><span aria-hidden="true">★</span><span aria-hidden="true">★</span><span aria-hidden="true">★</span></div>`);
+    this.winVals = h(`<dl class="ux-wvals" id="ux-wvals"></dl>`);
+    this.winH.after(this.winStars, this.winVals);
+    this.winText = win.querySelector('p:not(.mono)');
+    this.winText.id = 'ux-wline'; this.winText.classList.add('ux-wline');
+    this.defaultWin = this.winText.textContent;
+    this.winStats = h(`<p class="mono-s ux-winstats" hidden></p>`);
+    this.winNext = h(`<p class="mono-s ux-wnext" id="ux-wnext"></p>`);
+    this.winText.after(this.winStats, this.winNext);
+    const wb = win.querySelector('.win-b');
+    this.nextBtn = h(`<button type="button" class="btn btn-act" id="ux-next">Další mise <span class="ux-wkey" aria-hidden="true"><span class="kbd">Enter</span><span>→</span></span></button>`);
+    wb.appendChild(this.nextBtn);
     this.nextBtn.addEventListener('click', () => this.ux.nextMission());
     // staged bridge (growth panel B): first win → practice by hand, 2nd → how it is built, 3rd+ → the real arm
-    const wb = win.querySelector('.win-b');
+    this.winLinks = h(`<div class="ux-wlinks"></div>`);
+    wb.after(this.winLinks);
     this.guideBtn = h(`<button type="button" class="btn btn-o" id="ux-wguide">Teď ručně <span aria-hidden="true">→</span></button>`);
     this.exBtn = h(`<button type="button" class="btn btn-o" id="ux-wexplode">Z čeho se ruka skládá <span aria-hidden="true">→</span></button>`);
     this.shareBtn = h(`<button type="button" class="btn btn-o" id="ux-wshare">Sdílet rekord <span aria-hidden="true">↗</span></button>`);
@@ -631,62 +644,103 @@ export class Panel {
     for (const b of [this.guideBtn, this.exBtn, this.shareBtn, this.aiLogBtn]) { b.hidden = true; wb.appendChild(b); }
     this.aiLogBtn.addEventListener('click', () => this.openAILog());
     this.guideBtn.addEventListener('click', () => this.ux.onboarding.afterWin());
-    this.exBtn.addEventListener('click', () => { $('win').hidden = true; if (!this.ux.explode.on) this.ux.toggleExplode(); });
+    this.exBtn.addEventListener('click', () => { this.closeWin(false); if (!this.ux.explode.on) this.ux.toggleExplode(); });
     this.shareBtn.addEventListener('click', () => this.ux.shareRecord());
-    this.winText = win.querySelector('p:not(.mono)');
-    this.winH = $('win-h');
-    this.defaultWin = this.winText.textContent;
+    if (this.ux.reduced) document.body.classList.add('ux-reduced');
+    // phones in portrait: a bottom sheet under the scene (the scene shrinks and stays whole above it, like the
+    // "Nástroje" sheet); otherwise a card over the scene
+    const place = () => {
+      const sheet = this.mq.matches, st = this.stage;
+      if (sheet && win.parentNode === st) st.after(win); else if (!sheet && win.parentNode !== st) st.appendChild(win);
+    };
+    place(); this.mq.addEventListener ? this.mq.addEventListener('change', place) : this.mq.addListener(place);
   }
-  /** by: null = the visitor, 'assisted' = "Ukázat řešení", 'replay' = a recorded demonstration (no stars then). */
+  /** by: null = the visitor, 'assisted' = "Ukázat řešení", 'ai' = the AI, 'replay' = a recorded demonstration (no stars then). */
   showWin(m, res, best, isNew, by) {
-    const again = document.getElementById('again');
+    const again = document.getElementById('again'), idx = MISSIONS.indexOf(m), next = MISSIONS[idx + 1];
     this.closeHint(false); this.closeMenu(false); this.closeDrawer(false);   // the result and the win card stay in view
+    const manual = !by && res.kind === 'manual';
+    this.winK.textContent = `Mise ${m.n} / ${String(MISSIONS.length).padStart(2, '0')} · splněno`;
+    // a run the autopilot, hint rung 3, the full solution or a replayed demonstration carried: "s ukázkou"
+    this.winDemo.hidden = manual || by === 'ai';
     this.winStars.hidden = !!by;
-    if (by) {
-      const n = this.ux.aiSteps || 0;
-      this.winH.textContent = by === 'ai' ? `Vyřešila to AI v ${n} ${n === 1 ? 'kroku' : 'krocích'} — zkusíte to sami?`
-        : by === 'assisted' ? 'Tohle zvládla ruka sama.' : 'Ukázka splnila misi.';
-      this.winStats.textContent = `Čas ${fmt(res.time)} · hvězdičky se počítají jen vám`;
-      this.winText.textContent = by === 'ai' ? 'V záznamu AI uvidíte každý její krok. Pak zkuste misi vyřešit sami.'
-        : by === 'assisted' ? (this.ux.clickPicks() ? 'Řešení ukázala ruka sama – zkuste to teď vy. Stačí kliknout na kostku a pak na misku.' : 'Řešení ukázala ruka sama – zkuste to teď vy, koulí nebo klouby.')
-        : 'Přesně takhle se skutečná SO-101 učí: z nahraných ukázek. Zkuste misi vyřešit sami.';
-      again.firstChild.textContent = 'Teď to zkuste vy ';
-      again.classList.add('btn-act'); again.classList.remove('btn-o');
-    } else if (res.kind === 'auto') {
-      // the autopilot (click-to-grab or a hint rung) carried it: done, unlocks the next mission, no stars
-      this.winStars.hidden = true;
-      this.winH.textContent = m.id === 'bowl' ? 'Splněno! Kostka je v misce.' : 'Splněno! ' + m.short + '.';
-      this.winStats.textContent = `Čas ${fmt(res.time)} · hvězdičky jsou za ruční přenesení`;
-      this.winText.textContent = 'Přenášela ruka podle vašeho kliknutí. Hvězdičky a odznak ✋ získáte, když předmět přenesete sami koulí, odznak ⚙ v režimu Klouby.';
-      again.firstChild.textContent = 'Zkusit ručně ';
-      again.classList.remove('btn-act'); again.classList.add('btn-o');
-    } else {
-      this.winH.textContent = m.id === 'bowl' ? 'Hotovo! Kostka je v misce.' : 'Hotovo! ' + m.short + ' zvládnuto.';
-      const sp = this.winStars.children;
-      for (let i = 0; i < 3; i++) { sp[i].className = i < res.stars ? 'on' : ''; sp[i].style.animationDelay = (0.15 + i * 0.18) + 's'; }
-      this.winStars.setAttribute('aria-label', `${res.stars} ze 3 hvězdiček`);
-      let st = `Čas ${fmt(res.time)}`;
-      if (res.prec && m.precText) st += ` · ${m.precText(res.prec)}`;
-      else if (res.prec) st += ` · přesnost ${(res.prec * 1000).toFixed(1)} mm`;
-      st += ` · ${'★'.repeat(res.stars)}${'☆'.repeat(3 - res.stars)}`;
-      if (res.badges && res.badges.drag) st += ' · ✋ ručně';
-      if (res.badges && res.badges.joints) st += ' · ⚙ klouby';
-      if (isNew) st += ' · nový rekord';
-      else if (best && best.stars && best.time != null) st += ` · rekord ${fmt(best.time)}`;
-      this.winStats.textContent = st;
-      this.winText.textContent = res.stars < 3 && m.advice ? m.advice : this.defaultWin;
+    const stars = manual ? res.stars : 0, sp = this.winStars.children;
+    for (let i = 0; i < 3; i++) { sp[i].className = i < stars ? 'on' : ''; sp[i].style.animationDelay = (0.15 + i * 0.18) + 's'; }
+    this.winStars.setAttribute('aria-label', `${stars} ze 3 hvězdiček`);
+    this.winVals.textContent = '';
+    const cell = (dt, dd, ok) => this.winVals.appendChild(h(`<div><dt>${dt}</dt><dd${/\d/.test(dd) ? '' : ' class="ux-wtxt"'}><span>${dd}</span>${ok ? '<span class="ux-wok" aria-hidden="true">✓</span>' : ''}</dd></div>`));
+    let stats = [];
+    if (manual) {
+      const ns = nextStar(m, res.time, res.prec);
+      cell('Váš čas', fmtTime(res.time, ns.time.limit));
+      cell(`Pro ${ns.next} ★`, `do ${fmt(ns.time.limit)}`, ns.time.met);
+      if (ns.prec) {
+        cell(ns.prec.label, fmtPrec(ns.prec.v, ns.prec.limit, ns.prec.unit));
+        cell(`Pro ${ns.next} ★`, ns.prec.limit == null ? 'splněno' : `pod ${fmtLimit(ns.prec.limit, ns.prec.unit)}`, ns.prec.met);
+      }
+      this.winH.textContent = /[.!]$/.test(m.done) ? m.done : m.done + '.';
+      this.winText.innerHTML = '<span>Ručně, bez ukázky.</span>' + (res.stars < 3 && m.advice ? ` <span>${m.advice}</span>` : '');
+      if (res.badges && res.badges.drag) stats.push('✋ ručně');
+      if (res.badges && res.badges.joints) stats.push('⚙ klouby');
+      if (isNew) stats.push('nový rekord');
+      else if (best && best.stars && best.time != null) stats.push(`rekord ${fmt(best.time)}`);
       again.firstChild.textContent = 'Zkusit znovu ';
       again.classList.remove('btn-act'); again.classList.add('btn-o');
+    } else {
+      cell(by ? 'Čas' : 'Váš čas', fmtTime(res.time, null));
+      cell('Hvězdičky', 'jen ručně, bez ukázky');
+      if (!by && m.stars.p3 != null) {
+        cell(m.stars.prec, fmtPrec(res.prec, m.stars.p3, m.stars.unit));
+        cell('Pro 3 ★', `pod ${fmtLimit(m.stars.p3, m.stars.unit)}`, res.prec < m.stars.p3);
+      }
+      if (by) {
+        const n = this.ux.aiSteps || 0;
+        this.winH.textContent = by === 'ai' ? `Vyřešila to AI v ${n} ${n === 1 ? 'kroku' : 'krocích'} — zkusíte to sami?`
+          : by === 'assisted' ? 'Tohle zvládla ruka sama.' : 'Ukázka splnila misi.';
+        this.winText.textContent = by === 'ai' ? 'V záznamu AI uvidíte každý její krok. Pak zkuste misi vyřešit sami.'
+          : by === 'assisted' ? (this.ux.clickPicks() ? 'Řešení ukázala ruka sama – zkuste to teď vy. Stačí kliknout na kostku a pak na misku.' : 'Řešení ukázala ruka sama – zkuste to teď vy, koulí nebo klouby.')
+          : 'Přesně takhle se skutečná SO-101 učí: z nahraných ukázek. Zkuste misi vyřešit sami.';
+        again.firstChild.textContent = 'Teď to zkuste vy ';
+        again.classList.add('btn-act'); again.classList.remove('btn-o');
+      } else {
+        // the autopilot (click-to-grab or hint rung 3) carried it: done, unlocks the next mission, no stars
+        this.winH.textContent = /[.!]$/.test(m.done) ? m.done : m.done + '.';
+        this.winText.textContent = 'S ukázkou – hvězdičky jsou za ruční přenesení.';
+        again.firstChild.textContent = 'Zkusit ručně ';
+        again.classList.remove('btn-act'); again.classList.add('btn-o');
+      }
     }
-    const last = MISSIONS[MISSIONS.length - 1].id === m.id;
-    this.nextBtn.hidden = last;
+    this.winStats.textContent = stats.join(' · '); this.winStats.hidden = !stats.length;
+    // what comes next: the next mission's number and short title (the mission list has no "what it adds" data)
+    this.winNext.textContent = next ? `Další: ${next.n} · ${next.short}` : 'To byla poslední mise.';
+    this.nextBtn.hidden = !next;
   }
+  /** one more item for the badges / record line (e.g. a friend's shared time) */
+  addStat(t) { const s = this.winStats; s.textContent = s.textContent ? s.textContent + ' · ' + t : t; s.hidden = false; }
+  winOpen() { return !this.win.hidden; }
+  /** show the card and move focus to it (the dialog's name and description are read once) */
+  openWin() {
+    this.win.hidden = false;
+    document.body.classList.add('ux-result-open');
+    this.win.focus({ preventScroll: true });
+  }
+  /** Esc: put the card away (the run stays won; R or the mission picker go on) */
+  closeWin(refocus) {
+    if (this.win.hidden) return;
+    const had = this.win.contains(document.activeElement);
+    this.win.hidden = true;
+    document.body.classList.remove('ux-result-open');
+    if (refocus || had) this.ux.app.renderer.domElement.focus({ preventScroll: true });
+  }
+  /** the card's primary action (Enter): Další mise, or "Teď ručně" / "Teď to zkuste vy" where that leads */
+  winPrimary() { return this.win.querySelector('.win-b .ux-primary:not([hidden])'); }
 
   /**
    * Which buttons the win card shows, in order; the first is the primary one.
    *   by (assisted / replay): "Teď to zkuste vy", Další mise · guided first win: "Teď ručně", Další mise
    *   own win 2: Další mise, "Z čeho se ruka skládá" · own win 3+: Další mise, "Chci skutečnou SO-101"
    *   a 3 ★ own win also offers "Sdílet rekord". No purchase button before the 3rd win.
+   * Result card: the primary and Další mise / Zkusit znovu are the button row; the staged extras are a link row.
    */
   stageWin(m, { by, guided, wins, stars }) {
     const ids = { cta: $('cta'), again: $('again'), next: this.nextBtn, guide: this.guideBtn, ex: this.exBtn, share: this.shareBtn, ailog: this.aiLogBtn };
@@ -697,14 +751,15 @@ export class Panel {
     else if (guided) order = ['guide', 'next'];
     else { order = ['next']; if (wins === 2) order.push('ex'); else if (wins >= 3) order.push('cta'); order.push('again'); if (stars === 3) order.push('share'); }
     if (last) order = order.filter((k) => k !== 'next');
-    const wb = $('win').querySelector('.win-b');
-    for (const k of Object.keys(ids)) { const b = ids[k]; b.hidden = !order.includes(k); b.classList.remove('ux-primary', 'ux-full', 'btn-act'); if (k !== 'cta') b.classList.add('btn-o'); }
+    const wb = this.win.querySelector('.win-b'), links = this.winLinks;
+    for (const k of Object.keys(ids)) { const b = ids[k]; b.hidden = !order.includes(k); b.classList.remove('ux-primary', 'ux-full', 'btn-act', 'btn-o', 'ux-wl'); b.classList.add('btn'); }
     order.forEach((k, i) => {
-      const b = ids[k]; wb.appendChild(b);
-      if (i === 0) { b.classList.add('ux-primary', 'btn-act'); b.classList.remove('btn-o'); }
+      const b = ids[k];
+      if (i === 0) { b.classList.add('ux-primary', 'btn-act'); wb.appendChild(b); }
+      else if (k === 'next' || k === 'again' || k === 'guide') { b.classList.add('btn-o'); wb.appendChild(b); }
+      else { b.classList.remove('btn'); b.classList.add('ux-link', 'ux-wl'); links.appendChild(b); }
     });
-    if ((order.length - 1) % 2 === 1) ids[order[order.length - 1]].classList.add('ux-full');   // odd secondary count
-    if (!order.includes('cta')) ids.cta.classList.remove('btn-act'); else if (order[0] !== 'cta') { ids.cta.classList.remove('btn-act'); ids.cta.classList.add('btn-o'); }
+    links.hidden = !links.querySelector(':scope > :not([hidden])');
     return order;
   }
 
@@ -800,6 +855,28 @@ function progressOf(prog) {
   return { done, stars, n: MISSIONS.length };
 }
 function progressText(pr) { return `${pr.done} / ${pr.n} misí · ${pr.stars} ★ z ${pr.n * 3}`; }
+
+/**
+ * Measured values on the result card, Czech decimal comma (src/i18n/en.js turns it into a point). The shown value
+ * never rounds across the limit it is compared with: 1 decimal, more only when rounding would flip the comparison.
+ */
+function shown(v, limit, le, put) {
+  for (let d = 1; d <= 3; d++) {
+    const p = 10 ** d, n = Math.round(v * p), r = n / p;
+    if (limit == null || (le ? r <= limit : r < limit) === (le ? v <= limit : v < limit)) return put(Math.floor(n / p), String(n % p).padStart(d, '0'));
+  }
+  return put(Math.floor(v), '');
+}
+export function fmtTime(t, limit) {
+  return shown(Math.max(0, t || 0), limit, true, (w, f) => `${Math.floor(w / 60)}:${String(w % 60).padStart(2, '0')}${f ? ',' + f : ''}`);
+}
+const toUnit = (v, unit) => (unit === 'rad' ? v * 180 / Math.PI : v * 1000);
+const suffix = (unit) => (unit === 'rad' ? '°' : ' mm');
+export function fmtPrec(v, limit, unit) {
+  return shown(toUnit(v, unit), limit == null ? null : toUnit(limit, unit), false, (w, f) => `${w}${f ? ',' + f : ''}`) + suffix(unit);
+}
+/** a limit as written in the rules: 4 mm, 2,5 mm, 4° (0.07 rad = 4,01°, shown to 0,1° like the measured tilt) */
+export function fmtLimit(v, unit) { return String(+toUnit(v, unit).toFixed(unit === 'rad' ? 1 : 2)).replace('.', ',') + suffix(unit); }
 
 export function fmt(t) { t = Math.max(0, t || 0); const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + String(s).padStart(2, '0'); }
 /** mastery badges: ✋ won by hand in Táhnout ruku, ⚙ won in Klouby (src/mastery.js) */

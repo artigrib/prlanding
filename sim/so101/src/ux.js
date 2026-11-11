@@ -217,7 +217,8 @@ class UX {
     else if (!r.won && (this.ctl.busy() || this.pending)) text = this.autoText();   // one voice: no manual coaching while the planner moves
     else if (this.mode === 'smart' && this.ctl.active && !this.ctl.reachable && !this.ctl.busy()) text = 'Mimo dosah – zkuste cíl blíž k ruce';
     if (this.app.won) text = 'Mise splněna';
-    if (text !== this.app.hudText) { this.hudEl.textContent = text; this.app.hudText = text; this.announce(text); }
+    // the result card is announced once, by focus (its name and description): no live-region line at the win
+    if (text !== this.app.hudText) { this.hudEl.textContent = text; this.app.hudText = text; if (!r.won) this.announce(text); }
     const ok = !!res.ok || this.app.won;
     if (ok !== this.app.hudOk) { document.getElementById('hud').classList.toggle('ok', ok); this.app.hudOk = ok; }
     if (r.won && !this.app.won) this.win();
@@ -265,6 +266,7 @@ class UX {
     }
     this.ctl.syncFromCtrl();
     this.confetti.clear();
+    document.body.classList.remove('ux-result-open');
     this.draw.active = false; this.draw.penDown = true;
     if (this.links.drag || this.links.pend) this.links.cancelPress();
     this.grab.reset();
@@ -598,12 +600,11 @@ class UX {
     const ch = this.challenge;
     if (own && ch && ch.id === m.id) {
       const d = ch.time - res.time;
-      if (Number.isFinite(d)) this.panel.winStats.textContent += ` · sdílený čas ${fmtT(ch.time)}`;   // descriptive, no beat / lost framing
+      if (Number.isFinite(d)) this.panel.addStat(`sdílený čas ${fmtT(ch.time)}`);   // descriptive, no beat / lost framing
     }
     this.panel.showMission(m, this.progress[m.id]);
-    document.getElementById('win').hidden = false;
-    document.getElementById('win-h').focus({ preventScroll: true });
-    this.confetti.burst();
+    this.panel.openWin();
+    this.confetti.burst();   // skipped with prefers-reduced-motion / calm mode (src/ui/fx.js)
     this.sound.success();
     this.cameras.cinematic();
     if (this.teach.recording) this.panel.toast('Mise splněna. Nahrávání můžete zastavit.');
@@ -683,12 +684,18 @@ class UX {
       const k = e.key;
       if (k === 'Escape') {
         if (this.panel.modalOpen()) { this.panel.closeModals(); return; }
+        if (this.panel.winOpen()) { this.panel.closeWin(true); return; }
         if (this.panel.popOpen()) { this.panel.closeSet(true); return; }
         if (this.links.sel >= 0) { this.links.deselect(); return; }
         if (this.onboarding.active()) { this.onboarding.finish(); return; }
         this.ctl.cancel(); this.pending = null; this.queued = null; this.gizmo.clearPath(); this.teach.stopReplay(); return;
       }
       if (this.panel.modalOpen()) return;
+      // result card: Enter = its primary action (Další mise) unless a control has focus (that keeps its own Enter)
+      if (k === 'Enter' && this.panel.winOpen() && !(tg && tg.closest && tg.closest('button,a,input,select,textarea,summary'))) {
+        const b = this.panel.winPrimary(); if (b) { e.preventDefault(); b.click(); }
+        return;
+      }
       // WCAG 2.1.4: single-character shortcuts can be switched off; then they only work while the 3D view has focus
       // (and Space activates a focused button natively again)
       if (k.length === 1 && !this.keysOn && tg !== this.app.renderer.domElement) return;
