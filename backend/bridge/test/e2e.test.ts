@@ -259,6 +259,8 @@ test('e2e: real MuJoCo sim (sim/so101) through its own "Připojit AI" panel', { 
   assert.equal(err, undefined, 'sim failed to load: ' + err);
   // simulated time is pumped from here (the page's own frame loop is slow with software GL)
   await page.evaluate(() => { const s = (window as any).__sim; s._app.sim.paused = true; setInterval(() => s.advance(1 / 20), 20); });
+  // HUD stage 1: "Připojit AI" lives in the Nástroje drawer (right-edge tab)
+  if (!(await page.locator('#ai-open').isVisible())) await page.locator('#ux-tools-tab').click();
   await page.locator('#ai-open').click();
   await page.getByTestId('agent-code').filter({ hasText: /^[A-Z]{4}-[A-Z]{4}$/ }).waitFor({ timeout: 20_000 });
   const client = await mcpClient('modern');

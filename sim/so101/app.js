@@ -52,7 +52,6 @@ async function main() {
   copy.done();
   const sim = new ArmSim(ctx, {
     canvas: $('c'),
-    onInteract: () => { $('hint').hidden = true; },
     onContextLost: () => {
       track('sim_load_failed', { sim: 'so101', reason: 'context_lost' }, { once: true });
       $('fail-msg').textContent = 'Grafika prohlížeče se resetovala. Počkejte chvíli, nebo obnovte stránku.';
@@ -69,7 +68,6 @@ async function main() {
   catch (e) { console.warn('UX layer disabled:', e); app.ux = null; sim.onRender = null; }
   $('loader').hidden = true;
   $('hud').hidden = false;
-  $('hint').hidden = false;
   $('sr').textContent = 'Simulace je připravena, ovládání je dostupné.';
   track('sim_loaded', { sim: 'so101', ms: Math.round(performance.now() - t0), detail: ctx.objects ? 'objects' : 'plain' });
   if (TEST) { window.__sim = app.api(); window.__sim.loadMs = Math.round(performance.now() - t0); }

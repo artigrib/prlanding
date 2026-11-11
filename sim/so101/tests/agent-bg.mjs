@@ -135,6 +135,7 @@ try {
       page.on('pageerror', (e) => { console.log('PAGEERROR', e.message); fails++; });
       await page.goto(SIM);
       await page.waitForFunction(() => window.__sim && (window.__sim.ready || window.__sim.error), null, { timeout: 300000 });
+      if (!(await page.locator('#ai-open').isVisible())) await page.click('#ux-tools-tab');   // HUD stage 1: Nástroje drawer
       await page.click('#ai-open');
       const codeEl = page.getByTestId('agent-code');
       await codeEl.filter({ hasText: /^[A-Z]{4}-[A-Z]{4}$/ }).waitFor({ timeout: 20000 });

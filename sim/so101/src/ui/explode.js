@@ -111,14 +111,12 @@ export class Explode {
       ux.gizmo.enabled = false;
       this.want = 0.8; this.el.hidden = false; this.framed = false;
       ux.panel.stage.classList.add('ux-exploding');
-      // phones: the card goes to the top of the panel, the stage keeps only the parts (P1-6)
-      if (matchMedia('(max-width:860px)').matches) { const pn = document.querySelector('.panel'); pn.insertBefore(this.el, pn.firstChild); this.el.classList.add('inpanel'); }
+      ux.panel.closeDrawer(false); ux.panel.closeHint(false);   // the parts are the scene (P1-6); the card sits at the bottom
       ux.cameras.frameArm();
     } else {
       this.stopPlay(); this.want = 0; this.el.hidden = true; this.tip.hidden = true; this.unhover();
       ux.gizmo.enabled = true; ux.ctl.syncFromCtrl();
       ux.panel.stage.classList.remove('ux-exploding');
-      if (this.el.classList.contains('inpanel')) { ux.panel.stage.appendChild(this.el); this.el.classList.remove('inpanel'); }
     }
     return this.on;
   }

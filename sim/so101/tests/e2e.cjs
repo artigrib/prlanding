@@ -139,17 +139,39 @@ async function touchDrag(page, from, to, steps = 8) {
     // Enter still activates it
     {
       await S(p, () => { window.__rc = 0; document.getElementById('reset').addEventListener('click', () => window.__rc++); window.__sim._ux.runner.start(); });
-      for (const id of ['reset', 'ux-tips-b', 'ux-mhint']) {
-        const before = await S(p, (i) => ({ g: window.__sim.state().ctrl[5], exp: document.getElementById('ux-tips-b').getAttribute('aria-expanded'), hint: window.__sim._ux.panel.hintLevel, rc: window.__rc, t: window.__sim._ux.runner.started }), id);
+      // HUD stage 1: the old "?" tips button (#ux-tips-b) is gone (the tips live in ☰ → Ovládání a zkratky);
+      // the right-edge "Nástroje" tab takes its place here: Space must not open the drawer
+      for (const id of ['reset', 'ux-tools-tab', 'ux-mhint']) {
+        const before = await S(p, (i) => ({ g: window.__sim.state().ctrl[5], exp: document.getElementById('ux-tools-tab').getAttribute('aria-expanded'), hint: window.__sim._ux.panel.hintLevel, rc: window.__rc, t: window.__sim._ux.runner.started }), id);
         await S(p, (i) => document.getElementById(i).focus(), id);
         await p.keyboard.press('Space'); await S(p, () => window.__sim.advance(0.6));
-        const after = await S(p, () => ({ g: window.__sim.state().ctrl[5], exp: document.getElementById('ux-tips-b').getAttribute('aria-expanded'), hint: window.__sim._ux.panel.hintLevel, rc: window.__rc, t: window.__sim._ux.runner.started }));
+        const after = await S(p, () => ({ g: window.__sim.state().ctrl[5], exp: document.getElementById('ux-tools-tab').getAttribute('aria-expanded'), hint: window.__sim._ux.panel.hintLevel, rc: window.__rc, t: window.__sim._ux.runner.started }));
         ok(Math.abs(after.g - before.g) > 0.5 && after.rc === before.rc && after.exp === before.exp && after.hint === before.hint && after.t,
           `Space with #${id} focused toggles the gripper only (${JSON.stringify([before, after])})`);
       }
       await S(p, () => document.getElementById('reset').focus());
       await p.keyboard.press('Enter');
       ok((await S(p, () => window.__rc)) === 1, 'Enter on a focused panel button still activates it');
+      await S(p, () => document.activeElement && document.activeElement.blur());
+    }
+    // HUD stage 1: Nástroje drawer, ☰ menu and the Poradit popover – focus moves in, Esc closes, focus returns
+    {
+      await p.click('#ux-tools-tab');
+      const d1 = await S(p, () => ({ open: !document.getElementById('panel').hidden, focus: document.getElementById('panel').contains(document.activeElement), ai: !!document.getElementById('ai-open') && document.getElementById('ai-open').offsetParent !== null }));
+      await p.keyboard.press('Escape');
+      const d2 = await S(p, () => ({ open: !document.getElementById('panel').hidden, focus: document.activeElement && document.activeElement.id }));
+      ok(d1.open && d1.focus && d1.ai && !d2.open && d2.focus === 'ux-tools-tab', 'Nástroje drawer: opens with focus inside (Připojit AI there), Esc closes it, focus back on the tab ' + JSON.stringify([d1, d2]));
+      await p.click('#ux-menu-b');
+      const m1 = await S(p, () => ({ open: !document.getElementById('ux-menu').hidden, focus: document.getElementById('ux-menu').contains(document.activeElement),
+        items: ['ux-m-missions', 'ux-parts', 'ux-help', 'ux-tour', 'ux-sound'].every((i) => document.getElementById('ux-menu').contains(document.getElementById(i))) && !!document.querySelector('#ux-menu a[href="nastaveni/"]') && !!document.querySelector('#ux-menu .colors') && !!document.querySelector('#ux-menu .ux-about') }));
+      await p.keyboard.press('Escape');
+      const m2 = await S(p, () => ({ open: !document.getElementById('ux-menu').hidden, focus: document.activeElement && document.activeElement.id }));
+      ok(m1.open && m1.focus && m1.items && !m2.open && m2.focus === 'ux-menu-b', '☰ menu: missions, parts, setup wizard, shortcuts, intro, sound, colour, about; Esc returns focus ' + JSON.stringify([m1, m2]));
+      await p.click('#ux-mhint');
+      const h1 = await S(p, () => ({ open: !document.getElementById('ux-hintbox').hidden, ask: document.getElementById('ux-hintbox').contains(document.getElementById('ai-ask-mission')), lv: window.__sim._ux.panel.hintLevel }));
+      await p.keyboard.press('Escape');
+      const h2 = await S(p, () => !document.getElementById('ux-hintbox').hidden);
+      ok(h1.open && h1.ask && h1.lv === 1 && !h2, 'Poradit opens the hint popover (rung 1, with "Zeptej se AI"), Esc closes it ' + JSON.stringify(h1));
       await S(p, () => document.activeElement && document.activeElement.blur());
     }
 
@@ -572,18 +594,23 @@ async function touchDrag(page, from, to, steps = 8) {
     await shot(po, 'phone-00-onboarding');
     // playtest b08: no guide step pushes the action row (gripper button) off-screen or covers it
     for (let i = 0; i < 5; i++) {
-      const g = await S(po, () => { const q = document.getElementById('ux-qgrip').getBoundingClientRect(), c = document.querySelector('.ux-coach').getBoundingClientRect(), st = document.querySelector('.stage').getBoundingClientRect();
+      const g = await S(po, () => { const q = document.getElementById('ux-grip').getBoundingClientRect(), c = document.querySelector('.ux-coach').getBoundingClientRect(), st = document.querySelector('.stage').getBoundingClientRect();
         return { step: document.getElementById('ux-coach-k').textContent, grip: [Math.round(q.top), Math.round(q.bottom)], coach: [Math.round(c.top), Math.round(c.bottom)], vh: innerHeight, stage: Math.round(st.height) }; });
       ok(g.grip[1] <= g.vh && g.grip[0] >= 0 && (g.coach[0] >= g.grip[1] - 1 || g.coach[1] <= g.grip[0] + 1) && g.stage >= 0.4 * (g.vh - 56),
         'phone guide step keeps the gripper button on screen and uncovered, scene ≥ 40 % ' + JSON.stringify(g));
       if (i === 4) await shot(po, 'phone-00b-guide-5');
       await S(po, () => document.querySelector('.ux-coach [data-a=next]').click()); await po.waitForTimeout(450);
     }
-    // playtest b11: the opened sheet (a tab) leaves at least 40 % of the area under the header to the scene
+    // playtest b11: the opened "Nástroje" sheet leaves at least 40 % of the screen to the scene (HUD stage 1: the
+    // thumb bar's "Nástroje" opens it; the site header is hidden on phones)
     {
-      await S(po, () => document.getElementById('ux-tab-ctl').click()); await po.waitForTimeout(500);
-      const f = await S(po, () => { const pn = document.querySelector('.panel').getBoundingClientRect(), bar = document.querySelector('.bar').getBoundingClientRect(); return +((pn.top - bar.bottom) / (innerHeight - bar.bottom)).toFixed(2); });
+      await S(po, () => document.getElementById('ux-qtools').click()); await po.waitForTimeout(500);
+      const f = await S(po, () => { const pn = document.querySelector('.panel'), r = pn.getBoundingClientRect(); return pn.hidden ? -1 : +(r.top / innerHeight).toFixed(2); });
       ok(f >= 0.4, `phone: the opened sheet leaves ${Math.round(f * 100)} % of the scene visible`);
+      const fo = await S(po, () => document.querySelector('.panel').contains(document.activeElement));
+      await po.keyboard.press('Escape'); await po.waitForTimeout(200);
+      const back = await S(po, () => ({ hidden: document.getElementById('panel').hidden, focus: document.activeElement && document.activeElement.id }));
+      ok(fo && back.hidden && back.focus === 'ux-qtools', 'phone: the sheet takes focus, Esc closes it and focus returns to "Nástroje" ' + JSON.stringify(back));
     }
     await po.close();
 
@@ -603,9 +630,9 @@ async function touchDrag(page, from, to, steps = 8) {
     ok((await ux(ph)).busy, 'tap on the cube starts a pick on a phone');
     const tp = await advanceUntil(ph, () => window.__sim.ux().held === 'cube' && !window.__sim.ux().busy, 14, 1);
     ok(tp > 0, 'phone: cube picked');
-    await ph.evaluate(() => window.scrollTo(0, 500));
+    await S(ph, () => document.getElementById('ux-qtools').click()); await ph.waitForTimeout(400);
     await shot(ph, 'phone-03-panel');
-    await ph.evaluate(() => window.scrollTo(0, 0));
+    await S(ph, () => document.getElementById('ux-drawer-x').click());
     await S(ph, () => window.__sim.explode(true)); await ph.waitForTimeout(2000);
     await shot(ph, 'phone-04-explode');
     await S(ph, () => window.__sim.explode(false));
