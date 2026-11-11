@@ -9,6 +9,7 @@ import { Extras } from './ui/extras.js';
 import { Gizmo } from './ui/gizmo.js';
 import { Cameras } from './ui/cameras.js';
 import { SideView } from './ui/sideview.js';
+import { Locks } from './ui/locks.js';
 import { Teach } from './ui/teach.js';
 import { Panel } from './ui/panel.js';
 import { Sound } from './audio/sound.js';
@@ -38,6 +39,7 @@ export async function install(page, env) {
   // "Připojit AI": the agent API (window.so101) + panel; never with ?real=1 (see src/agent/index.js)
   try { (await import('./agent/index.js')).installAgent(ux, page); } catch (e) { console.warn('AI panel disabled:', e); }
   ux.panel.mountAI();   // the AI entry is a row of the panel's "Nástroje" (tools) block
+  ux.locks.update();    // "Připojit AI" and "Zeptej se AI" exist now: mark them
   // count the AI's motions since the last reset: the win card credits "Vyřešila to AI v N krocích"
   if (ux.agent && ux.agent.on) ux.agent.on('motion', (e) => { if (e.phase === 'start') ux.aiSteps = (ux.aiSteps || 0) + 1; });
   return ux;
@@ -105,6 +107,7 @@ class UX {
     this.gizmo = new Gizmo(this);
     this.cameras = new Cameras(this);
     this.side = new SideView(this);   // "Pohled z boku" inset (depth cue, playtest problem 4)
+    this.locks = new Locks(this);     // progressive unlocking: one new control per mission (src/unlock.js)
     this.sound = new Sound(this);
     this.confetti = new Confetti(this.panel.stage, this.reduced);
     this.onboarding = new Onboarding(this);
@@ -155,19 +158,21 @@ class UX {
     // hint buttons (both play the planner's solution, see startDemo): which one was used
     addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('#ux-mhint,#ux-hintnext'); if (b) track('hint_used', { mission: this.runner.m.id, level: b.id === 'ux-mhint' ? 1 : 2 }); }, true);
     if (this.runner.m.objects && !this.world.lib) this.runner.select('bowl');   // app.js loads the object scene when needed
+    this.locks.update();
     this.setMode(this.mode, true);
     this.panel.showPitch(this.ctl.pitch);
     this.panel.showSound(this.sound.on);
     this.panel.showTeach(this.teach);
     this.panel.showView('orbit');
     this.panel.showSide(this.side.on);
-    if (!this.touch && !this.TEST && matchMedia('(min-width:861px)').matches && store.get('wrist', false)) this.setWrist(true);
+    if (!this.touch && !this.TEST && matchMedia('(min-width:861px)').matches && store.get('wrist', false)) this.setWrist(true, true);
     this.app.reset();          // applies the mission layout through onReset()
     if (this.runner.m.look) this.cameras.set('orbit', this.runner.m.look);
     this.teach.load();         // the demonstration from the last visit, if any
     this.teach.loadFromHash().then((n) => {   // a shared link (#ukazka=…) wins over the stored one
       if (!n) { if (this.teach.rejected) this.panel.toast('Odkaz s ukázkou je poškozený nebo příliš velký – nic jsme nenahráli', 'err'); return; }
       this.selectMission(this.teach.demo.mission.id);
+      this.locks.open('teach');   // a teacher's shared demo opens "Učit ukázkou" whatever the mission
       this.panel.openTeach(true, true);
       this.panel.toast('Máte sdílenou ukázku – spusťte ji tlačítkem Přehrát v nástroji Učit ukázkou');
     });
@@ -182,6 +187,7 @@ class UX {
     if (q.get('onboard') === '1') setTimeout(() => this.onboarding.start(), 600);
     else if (!this.TEST && !q.has('mise') && !q.has('mirror'))   // ?mirror: LeRobot drives the arm, no first-task guide
       setTimeout(() => this.onboarding.maybeStart(), 600);
+    this.started = true;
   }
 
   // ================= hooks called by app.js =================
@@ -277,6 +283,8 @@ class UX {
     this.gizmo.clearPath();
     this.cameras.stopCinematic();
     this.panel.showMission(this.runner.m, this.progress[this.runner.m.id]);
+    this.locks.update();
+    this.panel.showNews(this.locks.announce(this.runner.m));
     this.held = null;
     if (this.teach.recording && !this.recResetting) { this.teach.stopRec(); this.panel.toast('Nahrávání zastaveno (mise začala znovu)'); }
     this.panel.showTips(this.runner.m);
@@ -328,6 +336,8 @@ class UX {
 
   // ================= actions =================
   setMode(mode, quiet) {
+    // Klouby unlocks in mission 06: M / the switch say so; a stored mode from an earlier visit falls back quietly
+    if (mode === 'joints' && this.locks && !this.locks.gate('joints', quiet)) { if (!quiet) return; mode = 'smart'; }
     if (!quiet && mode !== this.mode) track('mode_changed', { mode });
     this.mode = mode; store.set('mode', mode);
     // one switch for both: "Táhnout ruku" pulls the whole arm when a part is grabbed, "Klouby" turns one joint
@@ -414,10 +424,10 @@ class UX {
     this.panel.showPen(this.penTool);
     this.panel.penHint.hidden = !this.penTool;
   }
-  setRoll(r) { if (!this.ctl.active) this.ctl.begin(); this.ctl.setRoll(r); this.onUserMove('roll'); }
-  setPitch(p) { this.ctl.pitch = p; this.panel.showPitch(p); if (!this.ctl.active) this.ctl.begin(); this.onUserMove('pitch'); }
+  setRoll(r) { if (!this.locks.gate('wrist')) return; if (!this.ctl.active) this.ctl.begin(); this.ctl.setRoll(r); this.onUserMove('roll'); }
+  setPitch(p) { if (!this.locks.gate('tilt')) return; this.ctl.pitch = p; this.panel.showPitch(p); if (!this.ctl.active) this.ctl.begin(); this.onUserMove('pitch'); }
   cycleView() { const v = this.cameras.cycle(); this.panel.showView(v); }
-  setWrist(on) { this.cameras.setWrist(on); this.panel.showWrist(on); store.set('wrist', on); }
+  setWrist(on, quiet) { if (on && !this.locks.gate('wrist', quiet)) return; this.cameras.setWrist(on); this.panel.showWrist(on); store.set('wrist', on); }
   setSide(on) { this.side.set(on); this.panel.showSide(on); }
   setSound(on) { this.sound.set(on); this.panel.showSound(on); if (on) this.sound.blip(660, 0.08); }
   toggleExplode() {
@@ -430,11 +440,13 @@ class UX {
 
   toggleRec() {
     const t = this.teach;
+    if (!t.recording && !this.locks.gate('teach')) return;
     if (t.recording) { t.stopRec(); if (t.demo) { track('teach_recorded', { mission: this.runner.m.id }); this.panel.toast('Ukázka nahrána. Přehrajte si ji.'); } else this.panel.toast('Ukázka byla příliš krátká', 'err'); }
     else { t.startRec(); this.runner.start(); this.panel.toast('Nahrávám. Vyřešte úkol a pak nahrávání zastavte.'); }
   }
   togglePlay() {
     const t = this.teach;
+    if (!t.replaying && !this.locks.gate('teach')) return;
     if (t.replaying) { t.stopReplay(); return; }
     if (t.startReplay()) this.panel.toast('Ruka opakuje vaši ukázku');
   }
@@ -607,6 +619,7 @@ class UX {
       if (Number.isFinite(d)) this.panel.addStat(`sdílený čas ${fmtT(ch.time)}`);   // descriptive, no beat / lost framing
     }
     this.panel.showMission(m, this.progress[m.id]);
+    this.locks.update();   // a win unlocks the next mission's control right away
     this.panel.openWin();
     this.confetti.burst();   // skipped with prefers-reduced-motion / calm mode (src/ui/fx.js)
     this.sound.success();
@@ -710,7 +723,7 @@ class UX {
         this.spaceEaten = true;
       }
       // Tab on the focused canvas cycles the joints 1…6, then leaves the canvas (no focus trap)
-      if (k === 'Tab' && tg === this.app.renderer.domElement) {
+      if (k === 'Tab' && tg === this.app.renderer.domElement && this.locks.ok('joints')) {
         const n = this.links.sel + (e.shiftKey ? -1 : 1);
         if (n >= 0 && n <= 5) { this.links.select(n); e.preventDefault(); } else this.links.deselect();
         return;
@@ -757,7 +770,7 @@ class UX {
           // 1–6 = joints (Shift+1–5 = missions; e.code keeps working on Czech layouts)
           const dg = /^Digit([1-6])$/.exec(e.code || '') ? +e.code.slice(5) : (k >= '1' && k <= '6' ? +k : 0);
           if (dg && e.shiftKey && dg <= MISSIONS.length) this.selectMission(MISSIONS[dg - 1].id);
-          else if (dg && !e.shiftKey) this.links.select(dg - 1);
+          else if (dg && !e.shiftKey) { if (this.locks.gate('joints')) this.links.select(dg - 1); }
           else used = false;
       }
       if (used) e.preventDefault();
@@ -804,6 +817,7 @@ class UX {
     };
     api.wrist = (on) => this.setWrist(on);
     api.side = (on) => this.setSide(on);
+    api.locks = () => { const L = this.locks; return { level: L.level, all: L.all, off: L.off, ok: Object.fromEntries(['wrist', 'ask', 'joints', 'teach', 'export', 'tilt', 'ai'].map((k) => [k, L.ok(k)])) }; };
     api.sideState = () => { const s = this.side; return { on: s.on, shown: !s.el.hidden && !!s.el.offsetParent, label: s.el.getAttribute('aria-label'), text: s.hEl.textContent, name: s.nameEl.textContent, drawn: s.drawn || 0, rect: s.rectOf() }; };
     api.ux = () => ({
       mission: this.runner.m.id, won: this.runner.won, result: this.runner.result, hud: this.app.hudText,

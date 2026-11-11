@@ -359,6 +359,18 @@
 .ux-side.ok .ux-side-tip{fill:var(--ok)}
 .ux-side.ok .ux-side-h{border-color:var(--ok);color:var(--ok)}
 .ux-side-on .ux-pip{bottom:232px}
+/* progressive unlocking (src/ui/locks.js): locked = visible, grey, "od mise NN" (style frames Main / Tools-390) */
+.ux-locked,.ux-locked:hover,.ux-seg button.ux-locked,.ux-seg button.ux-locked:hover{color:var(--line-2);background:#fff;cursor:not-allowed}
+input[type=range].ux-locked{filter:grayscale(1);opacity:.45}
+.jn:has(input.ux-locked) label,.jn:has(input.ux-locked) output{color:var(--line-2)}
+.btn.ux-locked{border-color:var(--line)}
+.ux-lockt{font:400 11px/1.2 var(--mono);color:var(--line-2);letter-spacing:.01em;white-space:nowrap}
+.ux-lockt[hidden]{display:none}
+.ux-seg button .ux-lockt,.ux-toolbtn .ux-lockt,.ai-box .ux-lockt{margin-left:8px}
+.ux-tb .ux-lockt{margin-left:-2px}
+.jn .ux-lockt{margin-left:6px}
+.ux-new{margin:0;padding:6px 10px;background:#fff;border-left:3px solid var(--accent);font-size:14.5px;color:var(--ink)}
+.ux-mi-note{margin:-6px 0 0}
 .ux-exploding .ux-side{display:none}
 .ux-credit{position:absolute;right:16px;bottom:16px;margin:0;z-index:3;background:rgba(255,255,255,.9);padding:2px 6px;font-size:11px}
 .ux-credit a{color:var(--mute)}

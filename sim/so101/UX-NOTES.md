@@ -71,7 +71,8 @@ if it *drives* the arm, call `app.ux.ctl.cancel()` first (same as the sliders).
 ## URL parameters
 
 `?mise=stack` (bowl, stack, sort, ball, trace) opens a mission directly and skips onboarding;
-`?onboard=1` forces the tutorial; `?test=1` exposes `window.__sim`.
+`?onboard=1` forces the tutorial; `?test=1` exposes `window.__sim` (everything unlocked; `&lock=1` keeps the
+progressive unlocking on).
 
 ## Usability round 1 (branch `so101-flows`)
 
@@ -119,6 +120,14 @@ Findings: scratchpad usability report (P0/P1/P2). Changes:
   hint. Drawn into a render target at 0.75 px per CSS px, only when the arm / target moved and at most every 3rd frame;
   every frame blits it (one quad). ☰ › Nastavení › "Pohled z boku" (`pr-sim-side`), on by default everywhere
   (swiftshader: −3.1 % fps at 1440×900, −3.5 % at 390×844 while moving). `role="img"` with the measurement as its name.
+- **Progressive unlocking** (HUD stage 3, table `src/unlock.js`, page `src/ui/locks.js`): one new control per mission,
+  game-UX doc B3. 01 base set (Táhnout ruku, chapadlo, Znovu, Poradit, Volný pohled, Domů, pohled z boku, click-to-pick
+  01–03 as before) · 02 wrist rotation (A/D, ring, wheel, slider) + wrist camera (V) · 03 "Zeptej se AI" in Poradit ·
+  06 Klouby (M, 1–6) · 07 Učit ukázkou (T/L) · 09 export JSON · 10 gripper tilt + Připojit AI. Level = current mission or
+  the one after the last win (`pr-sim-progress`), so a win unlocks at once and returning visitors keep it. Locked =
+  visible, grey, "od mise NN" / "· M02", `aria-disabled` (sliders `disabled`); a click or shortcut toasts "Odemkne se
+  v misi NN". The mission where something arrives says "Nové: …" once (toast + brief, `pr-sim-unlock-seen`).
+  ☰ › Nastavení › "Odemknout vše" (`pr-sim-unlock-all`). `?test=1` is unlocked unless `&lock=1`.
 
 ### Physics grab (branch `so101-grab`)
 - `src/grab.js` (node-tested in `tests/grab.test.mjs`): like MuJoCo `simulate`'s perturbation – a spring-damper force

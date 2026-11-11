@@ -39,7 +39,7 @@ export class Gizmo {
     const stem2 = stem.clone(); stem2.position.z = -0.022;
     // wrist ring (horizontal) with a notch that shows the jaw direction
     const ringMat = this.ringMat = new T.MeshStandardMaterial({ color: BLUE, roughness: 0.4, transparent: true, opacity: 0.75 });
-    const ring = new T.Mesh(new T.TorusGeometry(0.03, 0.0016, 8, 64), ringMat);
+    const ring = this.ring = new T.Mesh(new T.TorusGeometry(0.03, 0.0016, 8, 64), ringMat);
     const notch = this.notch = new T.Group();
     const nb = new T.Mesh(new T.BoxGeometry(0.012, 0.004, 0.004), mat); nb.position.x = 0.03;
     const nb2 = nb.clone(); nb2.position.x = -0.03;
@@ -54,6 +54,7 @@ export class Gizmo {
     this.hRing = new T.Mesh(new T.TorusGeometry(0.03, 0.007, 6, 32), inv);
     root.add(this.hMove, this.hUp, this.hDown, this.hRing);
     this.handles = [this.hMove, this.hUp, this.hDown, this.hRing];
+    this.allHandles = this.handles;
     W.add(root);
 
     // drop line + floor marker (unscaled, world units)
@@ -97,6 +98,12 @@ export class Gizmo {
     }
     this.app.world.add(G);
     this.ghostAlpha = 0;
+  }
+
+  /** wrist rotation locked (progressive unlocking): no ring, no ring handle (the ball and arrows stay) */
+  lockRoll(on) {
+    this.ring.visible = this.notch.visible = !on;
+    this.handles = on ? this.allHandles.filter((x) => x !== this.hRing) : this.allHandles;
   }
 
   setColor(ok) {
@@ -403,7 +410,7 @@ export class Gizmo {
       e.stopPropagation(); e.preventDefault();
       const ctl = this.ctl, t = ctl.target;
       if (D.twist && this.pointers.size >= 2) {
-        ctl.setRoll(D.twist.r0 - (this.twistAngle() - D.twist.a0));
+        if (this.ux.locks.gate('wrist')) ctl.setRoll(D.twist.r0 - (this.twistAngle() - D.twist.a0));
         return;
       }
       if (e.pointerId !== D.id) return;
@@ -477,6 +484,7 @@ export class Gizmo {
     if (this.ux.mode !== 'smart' || e.target !== this.canvas) return;
     if (!(this.drag || this.hitHandle(e))) return;
     e.preventDefault(); e.stopPropagation();
+    if (!this.ux.locks.gate('wrist')) return;   // wrist rotation unlocks in mission 02
     if (!this.ctl.active) this.ctl.begin();
     this.ctl.setRoll(this.ctl.roll + Math.sign(e.deltaY) * 0.12);
     this.ux.onUserMove('wheel');

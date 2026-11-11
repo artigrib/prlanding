@@ -13,6 +13,7 @@ const I = {
   wrist: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6.5" width="13" height="11" rx="1.5"/><path d="M15.5 10.5l6-3.2v9.4l-6-3.2z"/></svg>',
   snd: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9h4l5-4v14l-5-4h-4z"/><path class="on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg>',
   side: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15"/><path d="M7 16.5h10"/><path d="M14 7.5v6.5M12.2 9.3L14 7.5l1.8 1.8M12.2 12.2L14 14l1.8-1.8"/></svg>',
+  unlock: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10"/><path d="M8 10.5V7a4 4 0 0 1 7.6-1.7"/></svg>',
   menu: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6h14M3 10h14M3 14h14"/></svg>'
 };
 
@@ -164,6 +165,7 @@ export class Panel {
           <div class="ux-mtop"><p class="mono"></p><span class="ux-stars ux-bstars" role="img"></span></div>
           <h3 id="ux-brief-h"></h3>
           <p class="ink2"></p>
+          <p class="ux-new" id="ux-new" hidden></p>
         </section>
         <h2 id="ux-picker-h">Vyberte si úkol</h2>
         <div class="ux-cards"></div>
@@ -175,6 +177,7 @@ export class Panel {
     const box = this.mBox = dlg.querySelector('.mission');
     this.mNum = box.querySelector('p.mono'); this.mTitle = box.querySelector('h3'); this.mDesc = box.querySelector('p.ink2');
     this.bStars = box.querySelector('.ux-bstars');
+    this.mNew = box.querySelector('#ux-new');
     // after a win: the next mission is offered in the brief too (the win card has its own button)
     this.mNext = h(`<button type="button" class="btn btn-act ux-mnext" id="ux-mnext" hidden>Další mise <span aria-hidden="true">→</span></button>`);
     box.appendChild(this.mNext);
@@ -237,6 +240,9 @@ export class Panel {
     this.mNext.hidden = !won || last;
     this.showHint();
   }
+
+  /** progressive unlocking: "Nové: …" in the brief of the mission where a control arrives (src/ui/locks.js) */
+  showNews(text) { this.mNew.hidden = !text; if (text && this.mNew.textContent !== text) this.mNew.textContent = text; }
 
   // ---------- drawer "Nástroje" → Ovládání: mode switch, drawing tools, wrist sliders ----------
   modeUI() {
@@ -511,6 +517,8 @@ export class Panel {
         <h3 class="mono" id="ux-set-h">Nastavení</h3>
         <button type="button" class="ux-mi" id="ux-sound" aria-pressed="false"><span class="ux-mi-i">${I.snd}<span>Zvuk</span></span> <span class="kbd" aria-hidden="true">S</span></button>
         <button type="button" class="ux-mi" id="ux-side-b" aria-pressed="false"><span class="ux-mi-i">${I.side}<span>Pohled z boku</span></span></button>
+        <button type="button" class="ux-mi" id="ux-unlock-b" aria-pressed="false" aria-describedby="ux-unlock-s"><span class="ux-mi-i">${I.unlock}<span>Odemknout vše</span></span></button>
+        <p class="mono-s muted ux-mi-note" id="ux-unlock-s">Ovládání přibývá s misemi. Tímto ho máte celé hned – třeba pro výuku.</p>
       </section>
       <div class="ux-mlang" hidden><p class="mono">Jazyk</p></div>
     </div>`);
@@ -527,6 +535,7 @@ export class Panel {
     $('ux-tour').addEventListener('click', () => { this.closeMenu(true); this.ux.onboarding.start(true); });
     $('ux-sound').addEventListener('click', () => this.ux.setSound(!this.ux.sound.on));
     $('ux-side-b').addEventListener('click', () => this.ux.setSide(!this.ux.side.on));
+    $('ux-unlock-b').addEventListener('click', () => this.ux.locks.setAll(!this.ux.locks.all));
     // compact layouts hide the site header: its language switch moves into the menu
     const ls = $('lang-sw'), home = ls && ls.parentNode, slot = menu.querySelector('.ux-mlang');
     const place = () => {

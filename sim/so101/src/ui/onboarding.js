@@ -32,9 +32,12 @@ const STEPS = [
   },
   {
     anchor: 'elbow', title: () => 'Chyťte kteroukoli část ruky a otočte s ní',
-    text: (u) => (u.touch
+    // Klouby arrives in mission 06 (src/unlock.js): until then the step does not send the visitor to it
+    text: (u) => (!u.locks || u.locks.ok('joints') ? (u.touch
       ? 'Táhněte prstem za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klepnutí na čelisti otevře / zavře chapadlo. Režim „Klouby“ v Nástrojích otáčí jen jedním kloubem.'
-      : 'Táhněte myší za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klik na čelisti otevře / zavře chapadlo. Režim „Klouby“ v Nástrojích otáčí jen jedním kloubem, klávesy 1–6 vyberou kloub.'),
+      : 'Táhněte myší za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klik na čelisti otevře / zavře chapadlo. Režim „Klouby“ v Nástrojích otáčí jen jedním kloubem, klávesy 1–6 vyberou kloub.')
+      : u.touch ? 'Táhněte prstem za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klepnutí na čelisti otevře / zavře chapadlo.'
+        : 'Táhněte myší za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klik na čelisti otevře / zavře chapadlo.'),
     done: (k) => k === 'link'
   }
 ];

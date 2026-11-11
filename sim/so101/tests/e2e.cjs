@@ -666,6 +666,65 @@ async function touchDrag(page, from, to, steps = 8) {
     await shot(o, 'desk-10-onboarding');
     await o.close();
 
+    // ---------------- progressive unlocking (HUD stage 3; ?test=1 keeps everything unlocked unless ?lock=1) ----------------
+    {
+      const lk = await open(browser, base + '?test=1&lock=1&mise=bowl&detail=low', { width: 1280, height: 800 });
+      const st = () => S(lk, () => {
+        const q = (sel) => document.querySelector(sel), lab = (sel) => { const e = q(sel); return e && { dis: e.getAttribute('aria-disabled') || (e.disabled ? 'disabled' : null), text: e.textContent.replace(/\s+/g, ' ').trim(), name: e.getAttribute('aria-label') }; };
+        return { ...window.__sim.locks(), mode: window.__sim.ux().mode, wristOn: window.__sim._ux.cameras.wristOn, roll: window.__sim._ux.ctl.roll,
+          toast: q('.ux-toast').hidden ? '' : q('.ux-toast').textContent, wrist: lab('#ux-wrist'), joints: lab('#ux-mode [data-mode=joints]'), teach: lab('#ux-teach-b'),
+          rollIn: lab('#ux-roll'), rollLabel: q('label[for="ux-roll"]').textContent.replace(/\s+/g, ' ').trim(), ai: lab('#ai-open'), ask: lab('#ai-ask-mission'), news: q('#ux-new').hidden ? '' : q('#ux-new').textContent };
+      });
+      let L = await st();
+      ok(!L.off && L.level === 1 && !L.ok.wrist && !L.ok.joints && !L.ok.teach && !L.ok.ai && L.wrist.dis === 'true' && /· M02/.test(L.wrist.text) && /od mise 02/.test(L.wrist.name)
+        && L.joints.dis === 'true' && /od mise 06/.test(L.joints.text) && L.teach.dis === 'true' && /od mise 07/.test(L.teach.text) && L.rollIn.dis === 'disabled' && /od mise 02/.test(L.rollLabel)
+        && L.ai.dis === 'true' && /od mise 10/.test(L.ai.text) && L.ask.dis === 'true' && /od mise 03/.test(L.ask.text),
+        'unlock: mission 01 shows the locked controls greyed with "od mise NN" ' + JSON.stringify(L));
+      // a shortcut of a locked control: a short toast, nothing happens
+      await S(lk, () => document.activeElement && document.activeElement.blur());
+      await lk.keyboard.press('v'); const tv = await st();
+      await lk.keyboard.press('m'); const tm = await st();
+      await lk.keyboard.press('a'); const ta = await st();
+      await lk.click('#ux-wrist', { force: true }); const tc = await st();   // aria-disabled: Playwright would wait for "enabled"
+      ok(tv.toast === 'Odemkne se v misi 02' && !tv.wristOn && tm.toast === 'Odemkne se v misi 06' && tm.mode === 'smart' && ta.toast === 'Odemkne se v misi 02' && Math.abs(ta.roll - L.roll) < 1e-9
+        && tc.toast === 'Odemkne se v misi 02' && !tc.wristOn, 'unlock: V / M / A and a click on a locked control toast "Odemkne se v misi NN" and do nothing ' + JSON.stringify([tv.toast, tm.toast, ta.toast, tc.toast]));
+      // win mission 01 (click the cube, then the bowl): the wrist unlocks at once; mission 02 says what is new, once
+      await S(lk, () => window.__sim.pick('cube'));
+      await advanceUntil(lk, () => window.__sim.ux().held === 'cube' && !window.__sim.ux().busy, 14, 1);
+      await S(lk, () => window.__sim.pick('bowl'));
+      const tw = await advanceUntil(lk, () => window.__sim.ux().won, 20, 1);
+      L = await st();
+      ok(tw > 0 && L.level === 2 && L.ok.wrist && L.wrist.dis === null && !/M02/.test(L.wrist.text) && L.rollIn.dis === null && !L.ok.joints, 'unlock: winning mission 01 unlocks the wrist right away ' + JSON.stringify([tw, L.level, L.wrist]));
+      await S(lk, () => document.getElementById('ux-next').click());
+      await lk.waitForFunction(() => /^Nové:/.test(document.querySelector('.ux-toast').textContent) && !document.querySelector('.ux-toast').hidden, null, { timeout: 15000 }).catch(() => {});
+      L = await st();
+      ok(L.toast === 'Nové: otáčení zápěstí a kamera na zápěstí' && L.news === L.toast, 'unlock: mission 02 announces "Nové: otáčení zápěstí…" in a toast and in the brief ' + JSON.stringify([L.toast, L.news]));
+      await lk.keyboard.press('v'); const tv2 = await st();
+      ok(tv2.wristOn, 'unlock: V now turns the wrist camera on');
+      await S(lk, () => window.__sim.wrist(false));
+      await S(lk, () => window.__sim.reset()); await lk.waitForTimeout(1200);
+      const again = await S(lk, () => document.querySelector('.ux-toast').hidden ? '' : document.querySelector('.ux-toast').textContent);
+      ok(!/^Nové/.test(again), 'unlock: "Nové" is said once (not again after Znovu) ' + again);
+      await shot(lk, 'desk-11-unlock-m02');
+      // ☰ › Nastavení › Odemknout vše
+      await lk.click('#ux-menu-b'); await lk.click('#ux-unlock-b');
+      L = await st();
+      const pressed = await S(lk, () => document.getElementById('ux-unlock-b').getAttribute('aria-pressed'));
+      await lk.keyboard.press('Escape');
+      await lk.keyboard.press('m'); const tj = await st();
+      ok(pressed === 'true' && L.all && L.ok.joints && L.ok.teach && L.ok.ai && L.joints.dis === null && L.teach.dis === null && tj.mode === 'joints',
+        '☰ › Odemknout vše unlocks every control (M switches to Klouby) ' + JSON.stringify([pressed, L.ok, tj.mode]));
+      await lk.close();
+      // a returning visitor (missions 01–05 won) sees everything up to mission 06 at once, nothing announced for it
+      const rv = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
+      await rv.addInitScript(() => { if (!sessionStorage.getItem('x')) { sessionStorage.setItem('x', 1); localStorage.setItem('pr-sim-progress', JSON.stringify({ bowl: { done: true, v: 2, stars: 3, time: 20 }, stack: { done: true, v: 2, stars: 0 }, sort: { done: true, v: 2, stars: 0 }, ball: { done: true, v: 2, stars: 1, time: 50 }, trace: { done: true, v: 2, stars: 0 } })); localStorage.setItem('pr-sim-progress-v', '2'); } });
+      await rv.goto(base + '?test=1&lock=1&mise=bowl&detail=low');
+      await rv.waitForFunction(() => window.__sim && (window.__sim.ready || window.__sim.error), null, { timeout: 300000 });
+      const R = await S(rv, () => ({ ...window.__sim.locks(), news: !document.getElementById('ux-new').hidden }));
+      ok(R.level === 6 && R.ok.wrist && R.ok.ask && R.ok.joints && !R.ok.teach && !R.news, 'unlock: a returning visitor with missions 01–05 won has everything up to Klouby (06) ' + JSON.stringify(R));
+      await rv.close();
+    }
+
     // ---------------- language: a browser that is not cs/sk starts in English (playtest A0) ----------------
     for (const [loc, want] of [['en-US', 'en'], ['cs-CZ', 'cs']]) {
       const ctx = await browser.newContext({ locale: loc, viewport: { width: 800, height: 600 } });

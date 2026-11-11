@@ -9,6 +9,15 @@ const dec = (s) => String(s).replace(/(\d),(\d)/g, '$1.$2');
 const ids = (s) => dec(s).replace(/\(([^)]+)\)/g, (m, n) => '(' + T(n) + ')');
 
 const strings = {
+  /* HUD stage 3: progressive unlocking (src/unlock.js, src/ui/locks.js) */
+  'Odemknout vše': 'Unlock everything',
+  'Ovládání přibývá s misemi. Tímto ho máte celé hned – třeba pro výuku.': 'Controls arrive mission by mission. This gives you all of them now – handy for teaching.',
+  'otáčení zápěstí a kamera na zápěstí': 'wrist rotation and the wrist camera', 'Zeptej se AI v nápovědě Poradit': 'Ask the AI in the Hint popover',
+  'režim Klouby v Nástrojích (jak ruku vidí motory)': 'Joints mode in Tools (how the motors see the arm)',
+  'Učit ukázkou v Nástrojích: nahrajte tah a pusťte ho znovu': 'Teach by demonstration in Tools: record a move and play it back',
+  'export ukázky (formát podobný LeRobot)': 'demo export (a LeRobot-like format)', 'náklon chapadla a Připojit AI': 'gripper tilt and Connect AI',
+  'Táhněte prstem za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klepnutí na čelisti otevře / zavře chapadlo.': 'Pull any part with your finger – the arm gives way and lets you guide it like a real one. Tap the jaws to open / close the gripper.',
+  'Táhněte myší za kteroukoli část – ruka povolí a nechá se vést jako skutečná. Klik na čelisti otevře / zavře chapadlo.': 'Pull any part with the mouse – the arm gives way and lets you guide it like a real one. Click the jaws to open / close the gripper.',
   /* HUD stage 3: side view inset (src/ui/sideview.js) */
   'Pohled z boku': 'Side view', 'papír': 'paper', 've výšce': 'level',
   /* HUD stage 2: result card (measured values vs the next star, demo label, next mission) */
@@ -528,6 +537,10 @@ Object.assign(strings, {
 });
 
 const patterns = [
+  /* HUD stage 3: progressive unlocking */
+  [/^od mise (\d+)$/, 'from mission $1'], [/^Odemkne se v misi (\d+)$/, 'Unlocks in mission $1'],
+  [/^(.+), od mise (\d+)$/, (m, a, b) => `${T(a)}, from mission ${b}`],
+  [/^Nové: (.+)$/, (m, a) => 'New: ' + a.split(', ').map((x) => T(x)).join(', ')],
   /* HUD stage 3: side view inset */
   [/^Pohled z boku: chapadlo (?:(\d+) cm (nad|pod) cílem|ve výšce cíle) \((.+)\)(?:, (\d+) cm vedle)?$/, (m, a, b, c, d) =>
     `Side view: gripper ${a ? `${a} cm ${b === 'nad' ? 'above' : 'below'} the target` : 'level with the target'} (${T(c)})${d ? `, ${d} cm to the side` : ''}`],
@@ -639,7 +652,7 @@ const patterns = [
 ];
 
 // pieces of composed messages, translated as a whole by the patterns above (for tools/i18n-extract.mjs)
-const fragments = ['Pohled z boku: {}', 'chapadlo ve výšce cíle ({})', 'chapadlo {} cm {} cílem ({})', ', {} cm vedle', 'STOP uvolněn. {} Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.', 'STOP uvolněn. {} Řízení zapnete tlačítkem „Znovu zapnout moment“.', 'Pauza po dlouhé relaci: pohyb půjde aktivovat za {}.', 'Skutečná ruka · POHYB POVOLEN · {} · zbývá {}', 'Skutečná ruka · jen čtení (shadow) · pauza {}', '· další: {}', '{} / {} misí · {} ★ z {}', '· sdílený čas {}', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
+const fragments = ['Nové: {}', 'Odemkne se v misi {}', 'od mise {}', '{}, od mise {}', 'Pohled z boku: {}', 'chapadlo ve výšce cíle ({})', 'chapadlo {} cm {} cílem ({})', ', {} cm vedle', 'STOP uvolněn. {} Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.', 'STOP uvolněn. {} Řízení zapnete tlačítkem „Znovu zapnout moment“.', 'Pauza po dlouhé relaci: pohyb půjde aktivovat za {}.', 'Skutečná ruka · POHYB POVOLEN · {} · zbývá {}', 'Skutečná ruka · jen čtení (shadow) · pauza {}', '· další: {}', '{} / {} misí · {} ★ z {}', '· sdílený čas {}', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
 
 // object library names: generated map, hand-written keys above win
 for (const [k, v] of Object.entries(objectNames)) if (!(k in strings)) strings[k] = v;
