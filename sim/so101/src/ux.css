@@ -387,7 +387,12 @@
   .sim{display:block;height:calc(100svh - var(--bh))}
   .stage{position:relative;top:auto;z-index:auto;height:calc(100svh - var(--bh) - var(--peek));min-height:0;border-bottom:0}
   .panel{position:fixed;left:0;right:0;bottom:0;height:var(--peek);z-index:6;border-top:1px solid var(--ink);border-left:0;padding:0 var(--pad) calc(20px + env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;gap:16px;transition:height .22s ease;box-shadow:0 -6px 18px rgba(14,14,14,.08)}
-  .panel[data-snap="1"]{height:62svh}
+  /* the opened sheet (tabs) leaves at least 40 % of the area under the header to the 3D scene (b11) */
+  .panel[data-snap="1"]{height:calc((100svh - var(--bh)) * .58)}
+  /* first-task guide: the sheet grows a little so the guide strip fits under the action row; the scene keeps > 40 % */
+  :root:has(.ux-under.ux-coaching .ux-coach.strip:not([hidden])){--peek:max(170px,min(390px,calc(54svh - var(--bh))))}
+  .ux-coach.strip{max-height:calc(var(--peek) - 150px);overflow-y:auto;overscroll-behavior:contain}
+  .ux-coach.strip .ux-coach-dots{display:none}
   .panel[data-snap="2"]{height:calc(100svh - var(--bh))}
   .panel.ux-dragging{transition:none}
   .ux-sheethead{display:block;position:sticky;top:0;z-index:3;background:#fff;margin:0 calc(-1 * var(--pad))}

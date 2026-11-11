@@ -64,7 +64,8 @@ export class Onboarding {
   /** phones: strip under the stage (inside the sticky .ux-under); desktops: floating inside the stage */
   place() {
     const narrow = this.mq.matches, el = this.el;
-    if (narrow) { const u = this.ux.panel.under; u.insertBefore(el, u.querySelector('.ux-qrow')); el.style.transform = ''; el.classList.add('strip'); }
+    // phones: after the action row, so a long step never pushes the gripper button out of the sheet (b08)
+    if (narrow) { const u = this.ux.panel.under, q = u.querySelector('.ux-qrow'); u.insertBefore(el, q ? q.nextSibling : null); el.style.transform = ''; el.classList.add('strip'); }
     else { this.ux.panel.stage.appendChild(el); el.classList.remove('strip'); }
   }
 
@@ -97,6 +98,8 @@ export class Onboarding {
     store.set('onboarded', true);
   }
   active() { return this.i >= 0; }
+  /** title of the current step (the status line repeats it while the arm carries out a guided click) */
+  stepTitle() { return this.i >= 0 && STEPS[this.i] ? STEPS[this.i].title(this.ux) : ''; }
 
   notify(kind) {
     if (this.i < 0) return;

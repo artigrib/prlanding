@@ -437,7 +437,7 @@ export class Gizmo {
       else if (this.ux.drawMode() && (() => { const p = this.tablePoint(e); return p && this.ux.onPaper(p); })()) cur = 'crosshair';
       else if (this.ux.links.enabled() && this.ux.links.hover(e)) cur = 'grab';
       else if (this.ux.penTool && this.tablePoint(e)) cur = 'crosshair';
-      else if (this.pickAt(e)) cur = 'pointer';
+      else { const pk = this.pickAt(e); if (pk && (pk.name === 'table' || this.ux.clickPicks())) cur = 'pointer'; }   // from mission 04 a click on an object does nothing: no pointer
       this.hover = cur === 'grab';
       if (this.canvas.style.cursor !== cur) this.canvas.style.cursor = cur;
     }
