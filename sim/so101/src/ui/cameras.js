@@ -1,4 +1,5 @@
 // Camera presets (orbit / top / side), wrist camera picture-in-picture and the cinematic orbit on success.
+// The side-view inset (src/ui/sideview.js) draws right after the main view.
 
 const VIEWS = {
   // three.js coordinates: (x, z_mj, -y_mj). target, position for wide and narrow screens
@@ -139,6 +140,7 @@ export class Cameras {
     const r = this.app.renderer, s = this.app.scene;
     r.shadowMap.autoUpdate = false; r.shadowMap.needsUpdate = true;
     r.render(s, this.app.camera);
+    if (this.ux.side) this.ux.side.render(r);   // "Pohled z boku" inset (src/ui/sideview.js)
     if (!this.wristOn) return;
     const rect = this.ux.panel.pipRect();   // CSS px within the canvas
     if (!rect) return;

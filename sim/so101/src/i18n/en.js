@@ -9,6 +9,8 @@ const dec = (s) => String(s).replace(/(\d),(\d)/g, '$1.$2');
 const ids = (s) => dec(s).replace(/\(([^)]+)\)/g, (m, n) => '(' + T(n) + ')');
 
 const strings = {
+  /* HUD stage 3: side view inset (src/ui/sideview.js) */
+  'Pohled z boku': 'Side view', 'papír': 'paper', 've výšce': 'level',
   /* HUD stage 2: result card (measured values vs the next star, demo label, next mission) */
   'Váš čas': 'Your time', 'Čas': 'Time', 'Hvězdičky': 'Stars', 'jen ručně, bez ukázky': 'by hand only, no demo',
   's ukázkou': 'with a demo', 'Ručně, bez ukázky.': 'By hand, no demo.', 'splněno': 'met',
@@ -526,6 +528,9 @@ Object.assign(strings, {
 });
 
 const patterns = [
+  /* HUD stage 3: side view inset */
+  [/^Pohled z boku: chapadlo (?:(\d+) cm (nad|pod) cílem|ve výšce cíle) \((.+)\)(?:, (\d+) cm vedle)?$/, (m, a, b, c, d) =>
+    `Side view: gripper ${a ? `${a} cm ${b === 'nad' ? 'above' : 'below'} the target` : 'level with the target'} (${T(c)})${d ? `, ${d} cm to the side` : ''}`],
   /* HUD stage 2: result card */
   [/^Mise (\d+) \/ (\d+) · splněno$/, 'Mission $1 / $2 · complete'], [/^Pro (\d) ★$/, 'For $1 ★'],
   [/^do (\d+:\d\d)$/, 'under $1'], [/^pod (\d+(?:,\d+)?) mm$/, (m, a) => `under ${dec(a)} mm`], [/^pod (\d+(?:,\d+)?)°$/, (m, a) => `under ${dec(a)}°`],
@@ -634,7 +639,7 @@ const patterns = [
 ];
 
 // pieces of composed messages, translated as a whole by the patterns above (for tools/i18n-extract.mjs)
-const fragments = ['STOP uvolněn. {} Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.', 'STOP uvolněn. {} Řízení zapnete tlačítkem „Znovu zapnout moment“.', 'Pauza po dlouhé relaci: pohyb půjde aktivovat za {}.', 'Skutečná ruka · POHYB POVOLEN · {} · zbývá {}', 'Skutečná ruka · jen čtení (shadow) · pauza {}', '· další: {}', '{} / {} misí · {} ★ z {}', '· sdílený čas {}', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
+const fragments = ['Pohled z boku: {}', 'chapadlo ve výšce cíle ({})', 'chapadlo {} cm {} cílem ({})', ', {} cm vedle', 'STOP uvolněn. {} Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.', 'STOP uvolněn. {} Řízení zapnete tlačítkem „Znovu zapnout moment“.', 'Pauza po dlouhé relaci: pohyb půjde aktivovat za {}.', 'Skutečná ruka · POHYB POVOLEN · {} · zbývá {}', 'Skutečná ruka · jen čtení (shadow) · pauza {}', '· další: {}', '{} / {} misí · {} ★ z {}', '· sdílený čas {}', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
 
 // object library names: generated map, hand-written keys above win
 for (const [k, v] of Object.entries(objectNames)) if (!(k in strings)) strings[k] = v;

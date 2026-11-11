@@ -12,6 +12,7 @@ const I = {
   cam: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.4-6.4M21 12a9 9 0 0 1-15.4 6.4"/><path d="M18.5 2.5v3.6h-3.6M5.5 21.5v-3.6h3.6"/><circle cx="12" cy="12" r="2.6"/></svg>',
   wrist: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6.5" width="13" height="11" rx="1.5"/><path d="M15.5 10.5l6-3.2v9.4l-6-3.2z"/></svg>',
   snd: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9h4l5-4v14l-5-4h-4z"/><path class="on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg>',
+  side: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15"/><path d="M7 16.5h10"/><path d="M14 7.5v6.5M12.2 9.3L14 7.5l1.8 1.8M12.2 12.2L14 14l1.8-1.8"/></svg>',
   menu: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6h14M3 10h14M3 14h14"/></svg>'
 };
 
@@ -453,6 +454,7 @@ export class Panel {
   }
   showView(v) { $('ux-view-l').textContent = VIEW_LABELS[v].replace('Volný pohled', 'Volný'); }
   showWrist(on) { $('ux-wrist').setAttribute('aria-pressed', String(on)); this.pip.hidden = !on; this.pipCache = null; }
+  showSide(on) { $('ux-side-b').setAttribute('aria-pressed', String(on)); }
   showSound(on) { $('ux-sound').setAttribute('aria-pressed', String(on)); $('ux-sound').classList.toggle('muted', !on); }
   showExplode(on) { $('ux-parts').setAttribute('aria-pressed', String(on)); }
 
@@ -508,6 +510,7 @@ export class Panel {
       <section class="ux-mset" aria-labelledby="ux-set-h">
         <h3 class="mono" id="ux-set-h">Nastavení</h3>
         <button type="button" class="ux-mi" id="ux-sound" aria-pressed="false"><span class="ux-mi-i">${I.snd}<span>Zvuk</span></span> <span class="kbd" aria-hidden="true">S</span></button>
+        <button type="button" class="ux-mi" id="ux-side-b" aria-pressed="false"><span class="ux-mi-i">${I.side}<span>Pohled z boku</span></span></button>
       </section>
       <div class="ux-mlang" hidden><p class="mono">Jazyk</p></div>
     </div>`);
@@ -523,6 +526,7 @@ export class Panel {
     $('ux-help').addEventListener('click', () => { this.closeMenu(true); this.openHelp(); });
     $('ux-tour').addEventListener('click', () => { this.closeMenu(true); this.ux.onboarding.start(true); });
     $('ux-sound').addEventListener('click', () => this.ux.setSound(!this.ux.sound.on));
+    $('ux-side-b').addEventListener('click', () => this.ux.setSide(!this.ux.side.on));
     // compact layouts hide the site header: its language switch moves into the menu
     const ls = $('lang-sw'), home = ls && ls.parentNode, slot = menu.querySelector('.ux-mlang');
     const place = () => {
