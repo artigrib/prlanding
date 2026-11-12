@@ -2,7 +2,10 @@
 """Convert SO-101 simulator demonstrations into a LeRobot v2.1 dataset (joints only, no videos).
 
 Input: demo JSON files downloaded from the simulator (printedrobotics.cz/sim/so101, "Teach by
-demonstration" -> download; format printedrobotics.cz/so101-sim-demo@1). One file = one episode.
+demonstration" -> download; format printedrobotics.cz/so101-sim-demo@1). One file = one episode, or, for a
+conveyor mission whose demo carries per-item segments, one episode per item (--whole keeps one per file).
+Demos with environment frames (frames[].env, conveyor missions) also get observation.environment_state
+(18 float32, see ENV_NAMES).
 Output: the same layout as the in-browser exporter (sim/so101/src/export/lerobot.js):
 
   OUT/meta/info.json, tasks.jsonl, episodes.jsonl, episodes_stats.jsonl, stats.json
@@ -16,7 +19,8 @@ Usage:
 
 Then, e.g.:  huggingface-cli upload user/so101-sim-demos so101-sim-demos --repo-type dataset
 Recent LeRobot releases (>= 0.4) read format v3.0; convert with their script
-`python -m lerobot.datasets.v30.convert_dataset_v21_to_v30 --repo-id=user/so101-sim-demos`.
+`python -m lerobot.scripts.convert_dataset_v21_to_v30 --repo-id=user/so101-sim-demos` (the module path in
+LeRobot 0.6.1).
 See docs/lerobot-export.md.
 """
 import argparse
@@ -42,7 +46,16 @@ MISSION_TASKS = {
     "sort": "Sort the colours",
     "ball": "Push the ball into the goal",
     "trace": "Trace the star",
+    "waste_hand": "Sort the waste into bins by material",
+    "waste_teach": "Sort the waste into bins by material",
+    "waste_line": "Sort the waste into bins by material",
 }
+# observation.environment_state (sim/so101/src/policy/episodes.js ENV_NAMES): target item, then next item
+ENV_KEY = "observation.environment_state"
+ENV_CLASSES = ["paper", "plastic", "glass", "metal"]
+ENV_NAMES = [k + "." + n for k in ("target", "next") for n in ["x", "y", "z", "yaw_sin", "yaw_cos"] + ENV_CLASSES]
+ENV_DIM = len(ENV_NAMES)
+OUTCOMES = ["sorted", "wrong", "dropped", "missed"]
 HF_FEATURES = {
     "action": {"feature": {"dtype": "float32", "_type": "Value"}, "length": 6, "_type": "Sequence"},
     "observation.state": {"feature": {"dtype": "float32", "_type": "Value"}, "length": 6, "_type": "Sequence"},
@@ -64,6 +77,42 @@ def is_row(v):
         isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) for x in v)
 
 
+def _num(x, lo, hi):
+    return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) and lo <= x <= hi
+
+
+def env_vector(e):
+    """One frames[].env object -> 18 floats (an absent item is all zeros). Raises ValueError when malformed."""
+    if not isinstance(e, dict) or not _num(e.get("belt"), -0.2, 0.2) or "target" not in e or "next" not in e:
+        raise ValueError("bad env frames")
+    out = [0.0] * ENV_DIM
+    for k, s in enumerate((e["target"], e["next"])):
+        if s is None:
+            continue
+        p = s.get("pos") if isinstance(s, dict) else None
+        if (not isinstance(s.get("item"), str) or s.get("class") not in ENV_CLASSES or not isinstance(p, list)
+                or len(p) != 3 or not all(_num(x, -2, 2) for x in p) or not _num(s.get("yaw"), -10, 10)):
+            raise ValueError("bad env frames")
+        o = 9 * k
+        out[o:o + 5] = [float(p[0]), float(p[1]), float(p[2]), math.sin(s["yaw"]), math.cos(s["yaw"])]
+        out[o + 5 + ENV_CLASSES.index(s["class"])] = 1.0
+    return out
+
+
+def parse_segments(segs, n):
+    if not isinstance(segs, list):
+        raise ValueError("bad segments")
+    out = []
+    for s in segs:
+        if (not isinstance(s, dict) or s.get("class") not in ENV_CLASSES or s.get("outcome") not in OUTCOMES
+                or not isinstance(s.get("from"), int) or not isinstance(s.get("to"), int)
+                or s["from"] < 0 or s["to"] > n - 1 or s["to"] - s["from"] + 1 < 5):
+            raise ValueError("bad segments")
+        out.append({"item": s.get("item"), "class": s["class"], "outcome": s["outcome"], "bin": s.get("bin"),
+                    "from": s["from"], "to": s["to"]})
+    return out
+
+
 def parse_demo(j, task=None):
     if not isinstance(j, dict):
         raise ValueError("not a demo: expected an object")
@@ -77,7 +126,7 @@ def parse_demo(j, task=None):
     frames = eps[0]["frames"]
     if len(frames) < 2 or len(frames) > MAX_FRAMES:
         raise ValueError("demo too short or too long")
-    t, state, action, prev = [], [], [], -math.inf
+    t, state, action, env_raw, prev = [], [], [], [], -math.inf
     for f in frames:
         ts = f.get("timestamp")
         if not isinstance(ts, (int, float)) or not math.isfinite(ts) or ts < 0 or ts < prev:
@@ -86,16 +135,40 @@ def parse_demo(j, task=None):
             raise ValueError("bad frame row")
         prev = ts
         t.append(float(ts)); state.append([float(x) for x in f["observation.state"]]); action.append([float(x) for x in f["action"]])
-    mission = (j.get("printedrobotics") or {}).get("mission")
+        env_raw.append(f.get("env", None) if "env" in f else ...)
+    pr = j.get("printedrobotics") or {}
+    mission = pr.get("mission")
     name = task or MISSION_TASKS.get(mission) or (eps[0].get("task") or "").strip() or "SO-101 simulator demonstration"
-    return {"task": name[:500], "t": t, "state": state, "action": action}
+    env = segments = None
+    if any(e is not ... for e in env_raw):   # env on every frame or on none
+        if any(e is ... for e in env_raw):
+            raise ValueError("bad env frames")
+        env = [env_vector(e) for e in env_raw]
+        if pr.get("segments") is not None:
+            segments = parse_segments(pr["segments"], len(frames))
+    elif pr.get("segments") is not None:
+        raise ValueError("segments without env frames")
+    return {"task": name[:500], "t": t, "state": state, "action": action, "env": env, "segments": segments, "item": None}
+
+
+def split_demo(ep, per_item=True):
+    """One episode per item segment (when the demo has them), else the whole demo."""
+    if not per_item or not ep["segments"]:
+        return [ep]
+    out = []
+    for s in ep["segments"]:
+        sl = slice(s["from"], s["to"] + 1)
+        out.append({"task": ep["task"], "t": ep["t"][sl], "state": ep["state"][sl], "action": ep["action"][sl],
+                    "env": ep["env"][sl], "segments": None,
+                    "item": {"item": s["item"], "class": s["class"], "outcome": s["outcome"], "bin": s["bin"]}})
+    return out
 
 
 def resample(ep, fps=FPS):
     """Exact fps grid (LeRobot checks timestamps against frame_index / fps), linear interpolation."""
     T = ep["t"]; t0 = T[0]
     n = int(math.floor((T[-1] - t0) * fps + 1e-6)) + 1
-    k, st, ac = 0, [], []
+    k, st, ac, en = 0, [], [], ([] if ep.get("env") else None)
     for i in range(n):
         t = t0 + i / fps
         while k < len(T) - 2 and T[k + 1] <= t:
@@ -104,7 +177,9 @@ def resample(ep, fps=FPS):
         f = max(0.0, min(1.0, (t - T[k]) / span)) if span > 0 else 0.0
         st.append([a + (b - a) * f for a, b in zip(ep["state"][k], ep["state"][k2])])
         ac.append([a + (b - a) * f for a, b in zip(ep["action"][k], ep["action"][k2])])
-    return {"task": ep["task"], "n": n, "state": st, "action": ac}
+        if en is not None:   # nearest recorded frame: a one-hot or a change of target is not blended
+            en.append(list(ep["env"][k if f < 0.5 else k2]))
+    return {"task": ep["task"], "n": n, "state": st, "action": ac, "env": en, "item": ep.get("item")}
 
 
 def stats(rows):
@@ -123,23 +198,46 @@ def merge_stats(lst):
             "mean": mean, "std": [math.sqrt(v) for v in var], "count": [tot]}
 
 
-def features():
+def features(env=False):
     vec = lambda: {"dtype": "float32", "shape": [6], "names": list(NAMES)}
     one = lambda dt: {"dtype": dt, "shape": [1], "names": None}
-    return {"action": vec(), "observation.state": vec(), "timestamp": one("float32"), "frame_index": one("int64"),
-            "episode_index": one("int64"), "index": one("int64"), "task_index": one("int64")}
+    out = {"action": vec(), "observation.state": vec()}
+    if env:
+        out[ENV_KEY] = {"dtype": "float32", "shape": [ENV_DIM], "names": list(ENV_NAMES)}
+    out.update({"timestamp": one("float32"), "frame_index": one("int64"),
+                "episode_index": one("int64"), "index": one("int64"), "task_index": one("int64")})
+    return out
 
 
-SCHEMA = pa.schema([
-    ("action", pa.list_(pa.float32())), ("observation.state", pa.list_(pa.float32())),
-    ("timestamp", pa.float32()), ("frame_index", pa.int64()), ("episode_index", pa.int64()),
-    ("index", pa.int64()), ("task_index", pa.int64()),
-], metadata={"huggingface": json.dumps({"info": {"features": HF_FEATURES}})})
+def schema(env=False):
+    hf = dict(HF_FEATURES)
+    cols = [("action", pa.list_(pa.float32())), ("observation.state", pa.list_(pa.float32()))]
+    if env:
+        cols.append((ENV_KEY, pa.list_(pa.float32())))
+        hf = {"action": HF_FEATURES["action"], "observation.state": HF_FEATURES["observation.state"],
+              ENV_KEY: {"feature": {"dtype": "float32", "_type": "Value"}, "length": ENV_DIM, "_type": "Sequence"},
+              **{k: v for k, v in HF_FEATURES.items() if k not in ("action", "observation.state")}}
+    cols += [("timestamp", pa.float32()), ("frame_index", pa.int64()), ("episode_index", pa.int64()),
+             ("index", pa.int64()), ("task_index", pa.int64())]
+    return pa.schema(cols, metadata={"huggingface": json.dumps({"info": {"features": hf}})})
 
 
-def card(repo_id, license_, n_ep, n_fr, tasks):
+def card(repo_id, license_, n_ep, n_fr, tasks, env=False, items=()):
     names = ", ".join("`%s`" % n for n in NAMES)
     lic = "CC BY 4.0" if license_ == "cc-by-4.0" else license_
+    env_line = item_line = ""
+    if env:
+        env_line = (f"\n- `{ENV_KEY}` ({ENV_DIM} float32, simulator ground truth, no camera): the target item (in the jaws, else the most\n"
+                    "  downstream item on the belt) and the next item on the belt, each `x, y, z` (centre of mass, m, world frame),\n"
+                    f"  `yaw_sin, yaw_cos` and a class one-hot ({', '.join(ENV_CLASSES)}); an absent item is all zeros.\n"
+                    "  A real `so101_follower` has no such sensor: a policy trained on it runs only in the simulator.")
+    counts = {}
+    for it in items:
+        if it:
+            counts[it["outcome"]] = counts.get(it["outcome"], 0) + 1
+    if counts:
+        item_line = ("\n- One episode per waste item, cut at the mission's events (approach → 0.5 s after the release, or the miss):\n  "
+                     + ", ".join("%d %s" % (v, k) for k, v in counts.items()) + ".")
     return f"""---
 license: {license_}
 task_categories:
@@ -162,23 +260,27 @@ Teleoperated demonstrations of the **SO-101** robot arm recorded in the browser 
 [printedrobotics.cz/sim/so101](https://printedrobotics.cz/sim/so101/?lang=en)
 (MuJoCo physics, robot model from MuJoCo Menagerie / The Robot Studio, Apache-2.0).
 
-- **Source: simulation.** Not recorded on real hardware; no camera streams, joint positions only.
+- **Source: simulation.** Not recorded on real hardware; no camera streams, joint positions only{" plus the simulator's item state" if env else ""}.
 - Format: [LeRobot](https://github.com/huggingface/lerobot) dataset {CODEBASE_VERSION}, robot_type `{ROBOT_TYPE}`, {FPS} fps,
   {n_ep} episode(s), {n_fr} frames.
 - `observation.state` and `action`: {names}.
   Joints in degrees (0 = the simulator's zero pose), gripper 0–100 % open.
   These follow LeRobot's SO-101 naming and degree mode, but the zero offsets of a calibrated real arm differ.
-- Tasks: {", ".join('"%s"' % t for t in tasks)}.
+- Tasks: {", ".join('"%s"' % t for t in tasks)}.{env_line}{item_line}
 - Licence: {lic}.
 
 Made with the free SO-101 simulator by [printedrobotics.cz](https://printedrobotics.cz/?lang=en).
 """
 
 
-def convert(demos, out, repo_id=None, task=None, license_="cc-by-4.0"):
-    eps = [resample(parse_demo(j, task)) for j in demos]
+def convert(demos, out, repo_id=None, task=None, license_="cc-by-4.0", per_item=True):
+    eps = [resample(x) for j in demos for x in split_demo(parse_demo(j, task), per_item)]
     if not eps:
         raise ValueError("no demonstrations")
+    env = eps[0]["env"] is not None
+    if any((ep["env"] is not None) != env for ep in eps):
+        raise ValueError("mixed demos: only some have environment state (conveyor missions); export them separately")
+    SCHEMA = schema(env)
     tasks, task_idx, episodes, ep_stats, index = [], {}, [], [], 0
     for e, ep in enumerate(eps):
         if ep["task"] not in task_idx:
@@ -188,15 +290,20 @@ def convert(demos, out, repo_id=None, task=None, license_="cc-by-4.0"):
         st = [[f32(x) for x in r] for r in ep["state"]]
         ac = [[f32(x) for x in r] for r in ep["action"]]
         fi = list(range(n)); gi = [index + i for i in fi]
-        table = pa.table({"action": ac, "observation.state": st, "timestamp": ts, "frame_index": fi,
-                          "episode_index": [e] * n, "index": gi, "task_index": [ti] * n}, schema=SCHEMA)
+        cols = {"action": ac, "observation.state": st}
+        if env:
+            en = [[f32(x) for x in r] for r in ep["env"]]
+            cols[ENV_KEY] = en
+        cols.update({"timestamp": ts, "frame_index": fi, "episode_index": [e] * n, "index": gi, "task_index": [ti] * n})
+        table = pa.table(cols, schema=SCHEMA)
         p = os.path.join(out, "data", "chunk-%03d" % (e // CHUNK), "episode_%06d.parquet" % e)
         os.makedirs(os.path.dirname(p), exist_ok=True)
         pq.write_table(table, p)
         episodes.append({"episode_index": e, "tasks": [ep["task"]], "length": n})
         col = lambda v: [[x] for x in v]
+        st_env = {ENV_KEY: stats(en)} if env else {}
         ep_stats.append({"episode_index": e, "stats": {
-            "action": stats(ac), "observation.state": stats(st), "timestamp": stats(col(ts)),
+            "action": stats(ac), "observation.state": stats(st), **st_env, "timestamp": stats(col(ts)),
             "frame_index": stats(col(fi)), "episode_index": stats(col([e] * n)), "index": stats(col(gi)),
             "task_index": stats(col([ti] * n))}})
         index += n
@@ -206,7 +313,7 @@ def convert(demos, out, repo_id=None, task=None, license_="cc-by-4.0"):
         "total_episodes": E, "total_frames": index, "total_tasks": len(tasks), "total_videos": 0,
         "total_chunks": (E - 1) // CHUNK + 1, "chunks_size": CHUNK, "fps": FPS, "splits": {"train": "0:%d" % E},
         "data_path": "data/chunk-{episode_chunk:03d}/episode_{episode_index:06d}.parquet", "video_path": None,
-        "features": features(), "source": "simulation", "license": license_,
+        "features": features(env), "source": "simulation", "license": license_,
     }
     agg = {k: merge_stats([s["stats"][k] for s in ep_stats]) for k in ep_stats[0]["stats"]}
     os.makedirs(os.path.join(out, "meta"), exist_ok=True)
@@ -226,7 +333,7 @@ def convert(demos, out, repo_id=None, task=None, license_="cc-by-4.0"):
     wjsonl("episodes_stats.jsonl", ep_stats)
     wjson("stats.json", agg)
     with open(os.path.join(out, "README.md"), "w", encoding="utf-8") as fh:
-        fh.write(card(repo_id, license_, E, index, tasks))
+        fh.write(card(repo_id, license_, E, index, tasks, env, [ep["item"] for ep in eps]))
     return info
 
 
@@ -237,6 +344,7 @@ def main(argv=None):
     ap.add_argument("--repo-id", help="name shown in the dataset card, e.g. user/so101-sim-demos")
     ap.add_argument("--task", help="task instruction for all episodes (default: from the mission)")
     ap.add_argument("--license", default="cc-by-4.0", help="dataset licence id (default cc-by-4.0)")
+    ap.add_argument("--whole", action="store_true", help="one episode per file even when a demo has per-item segments")
     a = ap.parse_args(argv)
     if os.path.isdir(a.out) and os.listdir(a.out):
         ap.error("output folder is not empty: %s" % a.out)
@@ -244,7 +352,7 @@ def main(argv=None):
     for p in a.demos:
         with open(p, encoding="utf-8") as fh:
             demos.append(json.load(fh))
-    info = convert(demos, a.out, a.repo_id, a.task, a.license)
+    info = convert(demos, a.out, a.repo_id, a.task, a.license, per_item=not a.whole)
     print("wrote %s: %d episode(s), %d frames" % (a.out, info["total_episodes"], info["total_frames"]))
 
 

@@ -8,6 +8,10 @@
 //   data/chunk-000/episode_000000.parquet …, README.md (dataset card: CC BY 4.0, source: simulation),
 //   optionally zipped (store-only zip, no dependencies).
 //
+// Conveyor missions (11 on): demos with env frames (frames[].env, src/policy/episodes.js) also export
+// observation.environment_state (18 float32: target item then next item, each position 3 + yaw sin/cos 2 + class
+// one-hot 4), and a demo cut into per-item segments (printedrobotics.segments) becomes one episode per item.
+//
 // Pure module: no DOM access except downloadLeRobot(); the Parquet writer (vendor/hyparquet-writer,
 // MIT) is imported lazily. Tested in node: sim/so101/tests/lerobot-export.test.mjs.
 // Usage and the LeRobot schema it follows: docs/lerobot-export.md.
@@ -21,6 +25,9 @@ export const DEFAULT_LICENSE = 'cc-by-4.0';
 const MAX_FRAMES = 200 * FPS;                 // the simulator records at most 180 s
 const CHUNK = 1000;                           // episodes per chunk (LeRobot default)
 const DEMO_FORMAT = 'printedrobotics.cz/so101-sim-demo@1';
+import { ENV_NAMES, ENV_DIM, envVector, validEnv, validSegments } from '../policy/episodes.js';
+export { ENV_NAMES };
+export const ENV_KEY = 'observation.environment_state';   // LeRobot's OBS_ENV_STATE (lerobot/utils/constants.py)
 const WRITER_URL = new URL('../../vendor/hyparquet-writer/hyparquet-writer.min.js', import.meta.url);
 
 /** English task instructions for the simulator missions (the demo JSON carries the Czech title). */
@@ -29,14 +36,19 @@ export const MISSION_TASKS = {
   stack: 'Build a tower',
   sort: 'Sort the colours',
   ball: 'Push the ball into the goal',
-  trace: 'Trace the star'
+  trace: 'Trace the star',
+  waste_hand: 'Sort the waste into bins by material',
+  waste_teach: 'Sort the waste into bins by material',
+  waste_line: 'Sort the waste into bins by material'
 };
 
 const isRow = (v) => Array.isArray(v) && v.length === 6 && v.every((x) => typeof x === 'number' && Number.isFinite(x));
 
 /**
- * Validate a demo JSON and return its single episode as plain arrays.
- * @returns {{ task: string, mission: string|null, t: number[], state: number[][], action: number[][] }}
+ * Validate a demo JSON and return its single episode as plain arrays. env: the environment-state vectors per frame
+ * (null for demos without env frames: older demos and missions without a belt); segments: per-item cuts or null.
+ * @returns {{ task: string, mission: string|null, t: number[], state: number[][], action: number[][],
+ *   env: number[][]|null, segments: object[]|null }}
  */
 export function parseDemo(j, { task } = {}) {
   if (!j || typeof j !== 'object') throw new Error('not a demo: expected an object');
@@ -47,18 +59,27 @@ export function parseDemo(j, { task } = {}) {
   const n = ep.frames.length;
   if (n < 2) throw new Error('demo too short');
   if (n > MAX_FRAMES) throw new Error('demo too long');
-  const t = [], state = [], action = [];
+  const t = [], state = [], action = [], envRaw = [];
   let prev = -Infinity;
   for (const f of ep.frames) {
     if (!f || typeof f !== 'object') throw new Error('bad frame');
     const ts = f.timestamp;
     if (typeof ts !== 'number' || !Number.isFinite(ts) || ts < 0 || ts < prev) throw new Error('bad timestamp');
     if (!isRow(f['observation.state']) || !isRow(f.action)) throw new Error('bad frame row');
-    t.push(prev = ts); state.push(f['observation.state'].slice()); action.push(f.action.slice());
+    t.push(prev = ts); state.push(f['observation.state'].slice()); action.push(f.action.slice()); envRaw.push(f.env);
   }
-  const mission = (j.printedrobotics && typeof j.printedrobotics.mission === 'string') ? j.printedrobotics.mission : null;
+  const pr = (j.printedrobotics && typeof j.printedrobotics === 'object') ? j.printedrobotics : {};
+  const mission = typeof pr.mission === 'string' ? pr.mission : null;
   const name = task || MISSION_TASKS[mission] || (typeof ep.task === 'string' && ep.task.trim()) || 'SO-101 simulator demonstration';
-  return { task: String(name).slice(0, 500), mission, t, state, action };
+  // env on every frame or on none; segments only with env
+  let env = null, segments = null;
+  if (!envRaw.every((e) => e === undefined)) {
+    const ok = validEnv(envRaw, n);
+    if (!ok) throw new Error('bad env frames');
+    env = ok.map(envVector);
+    if (pr.segments != null) { segments = validSegments(pr.segments, n); if (!segments) throw new Error('bad segments'); }
+  } else if (pr.segments != null) throw new Error('segments without env frames');
+  return { task: String(name).slice(0, 500), mission, t, state, action, env, segments };
 }
 
 /**
@@ -69,7 +90,7 @@ export function parseDemo(j, { task } = {}) {
 export function resample(ep, fps = FPS) {
   const T = ep.t, t0 = T[0], dur = T[T.length - 1] - t0;
   const n = Math.floor(dur * fps + 1e-6) + 1;
-  const state = new Array(n), action = new Array(n);
+  const state = new Array(n), action = new Array(n), env = ep.env ? new Array(n) : null;
   let k = 0;
   for (let i = 0; i < n; i++) {
     const t = t0 + i / fps;
@@ -78,8 +99,10 @@ export function resample(ep, fps = FPS) {
     const f = span > 0 ? Math.max(0, Math.min(1, (t - T[k]) / span)) : 0;
     const lerp = (A) => A[k].map((a, j) => a + (A[k2][j] - a) * f);
     state[i] = lerp(ep.state); action[i] = lerp(ep.action);
+    // environment state: the nearest recorded frame (a one-hot or a change of target must not be blended)
+    if (env) env[i] = ep.env[f < 0.5 ? k : k2].slice();
   }
-  return { task: ep.task, mission: ep.mission, n, state, action };
+  return { task: ep.task, mission: ep.mission, n, state, action, env, item: ep.item || null };
 }
 
 const f32 = (x) => Math.fround(x);
@@ -102,35 +125,75 @@ function mergeStats(list) {                  // weighted merge of per-episode st
   };
 }
 
-/** LeRobot feature spec of this dataset (meta/info.json "features"). */
-export function features() {
+/**
+ * LeRobot feature spec of this dataset (meta/info.json "features"). env: add observation.environment_state
+ * (LeRobot maps that exact key to FeatureType.ENV, lerobot/utils/feature_utils.py dataset_to_policy_features).
+ */
+export function features({ env = false } = {}) {
   const vec = { dtype: 'float32', shape: [6], names: NAMES.slice() };
   const one = (dtype) => ({ dtype, shape: [1], names: null });
   return {
     action: { ...vec, names: NAMES.slice() }, 'observation.state': { ...vec, names: NAMES.slice() },
+    ...(env ? { [ENV_KEY]: { dtype: 'float32', shape: [ENV_DIM], names: ENV_NAMES.slice() } } : {}),
     timestamp: one('float32'), frame_index: one('int64'), episode_index: one('int64'), index: one('int64'), task_index: one('int64')
   };
 }
 // Hugging Face `datasets` feature types, stored in the Parquet key-value metadata like LeRobot does
-const HF_FEATURES = (() => {
-  const seq = { feature: { dtype: 'float32', _type: 'Value' }, length: 6, _type: 'Sequence' }, val = (dtype) => ({ dtype, _type: 'Value' });
-  return { action: seq, 'observation.state': seq, timestamp: val('float32'), frame_index: val('int64'), episode_index: val('int64'), index: val('int64'), task_index: val('int64') };
-})();
-const PARQUET_SCHEMA = (() => {
+function hfFeatures(env) {
+  const seq = (length) => ({ feature: { dtype: 'float32', _type: 'Value' }, length, _type: 'Sequence' }), val = (dtype) => ({ dtype, _type: 'Value' });
+  return { action: seq(6), 'observation.state': seq(6), ...(env ? { [ENV_KEY]: seq(ENV_DIM) } : {}),
+    timestamp: val('float32'), frame_index: val('int64'), episode_index: val('int64'), index: val('int64'), task_index: val('int64') };
+}
+function parquetSchema(env) {
   const list = (name) => [
     { name, repetition_type: 'OPTIONAL', converted_type: 'LIST', num_children: 1 },
     { name: 'list', repetition_type: 'REPEATED', num_children: 1 },
     { name: 'element', type: 'FLOAT', repetition_type: 'OPTIONAL' }
   ];
   const col = (name, type) => ({ name, type, repetition_type: 'OPTIONAL' });
-  return [{ name: 'schema', num_children: 7 }, ...list('action'), ...list('observation.state'),
+  return [{ name: 'schema', num_children: env ? 8 : 7 }, ...list('action'), ...list('observation.state'), ...(env ? list(ENV_KEY) : []),
     col('timestamp', 'FLOAT'), col('frame_index', 'INT64'), col('episode_index', 'INT64'), col('index', 'INT64'), col('task_index', 'INT64')];
-})();
+}
+
+/** A parsed demo → its LeRobot episodes: one per item segment (perItem, when the demo has segments), else one. */
+export function splitDemo(ep, { perItem = true } = {}) {
+  if (!perItem || !ep.segments || !ep.segments.length) return [ep];
+  return ep.segments.map((s) => {
+    const sl = (A) => A.slice(s.from, s.to + 1);
+    return { task: ep.task, mission: ep.mission, t: sl(ep.t), state: sl(ep.state), action: sl(ep.action), env: sl(ep.env),
+      item: { item: s.item, class: s.class, outcome: s.outcome, bin: s.bin } };
+  });
+}
+
+// Stats are written with the number types LeRobot's own (numpy) stats have: min / max in the feature's dtype, mean and
+// std always floats, count an integer. JSON.stringify writes 0.0 as 0, and LeRobot's v2.1 → v3.0 converter builds one
+// Arrow table from all episodes' stats: an int in one episode and a float in the next fails it ("arrays to be
+// concatenated must be identically typed"; a one-hot std is 0 in one episode and 0.47 in another).
+const FLOAT_MARK = '#float#';   // only numbers are marked, so no real string looks like this
+function typedStats(st, feats) {
+  const out = {};
+  for (const [k, v] of Object.entries(st)) {
+    const fl = (a) => a.map((x) => (Number.isInteger(x) ? FLOAT_MARK + x : x));
+    const isF = feats[k] && feats[k].dtype === 'float32';
+    out[k] = { min: isF ? fl(v.min) : v.min, max: isF ? fl(v.max) : v.max, mean: fl(v.mean), std: fl(v.std), count: v.count };
+  }
+  return out;
+}
+const typedJSON = (o, indent) => JSON.stringify(o, null, indent).replace(/"#float#(-?\d+)"/g, '$1.0');
 
 let writerP = null;
 async function parquetWriter() { return (writerP ||= import(WRITER_URL.href).then((m) => m.parquetWriteBuffer)); }
 
-function datasetCard({ repoId, license, totalEpisodes, totalFrames, tasks }) {
+function datasetCard({ repoId, license, totalEpisodes, totalFrames, tasks, env, items }) {
+  const out = {}; for (const it of items) if (it) out[it.outcome] = (out[it.outcome] || 0) + 1;
+  const envLine = env ? `
+- \`${ENV_KEY}\` (${ENV_DIM} float32, simulator ground truth, no camera): the target item (in the jaws, else the most
+  downstream item on the belt) and the next item on the belt, each \`x, y, z\` (centre of mass, m, world frame),
+  \`yaw_sin, yaw_cos\` and a class one-hot (${ENV_NAMES.slice(5, 9).map((n) => n.split('.')[1]).join(', ')}); an absent item is all zeros.
+  A real \`so101_follower\` has no such sensor: a policy trained on it runs only in the simulator.` : '';
+  const itemLine = items.some(Boolean) ? `
+- One episode per waste item, cut at the mission's events (approach → 0.5 s after the release, or the miss):
+  ${Object.entries(out).map(([k, v]) => `${v} ${k}`).join(', ')}.` : '';
   return `---
 license: ${license}
 task_categories:
@@ -153,13 +216,13 @@ Teleoperated demonstrations of the **SO-101** robot arm recorded in the browser 
 [printedrobotics.cz/sim/so101](https://printedrobotics.cz/sim/so101/?lang=en)
 (MuJoCo physics, robot model from MuJoCo Menagerie / The Robot Studio, Apache-2.0).
 
-- **Source: simulation.** Not recorded on real hardware; no camera streams, joint positions only.
+- **Source: simulation.** Not recorded on real hardware; no camera streams, joint positions only${env ? ' plus the simulator\'s item state' : ''}.
 - Format: [LeRobot](https://github.com/huggingface/lerobot) dataset ${CODEBASE_VERSION}, robot_type \`${ROBOT_TYPE}\`, ${FPS} fps,
   ${totalEpisodes} episode(s), ${totalFrames} frames.
 - \`observation.state\` and \`action\`: ${NAMES.map((n) => '`' + n + '`').join(', ')}.
   Joints in degrees (0 = the simulator's zero pose), gripper 0–100 % open.
   These follow LeRobot's SO-101 naming and degree mode, but the zero offsets of a calibrated real arm differ.
-- Tasks: ${tasks.map((t) => '"' + t + '"').join(', ')}.
+- Tasks: ${tasks.map((t) => '"' + t + '"').join(', ')}.${envLine}${itemLine}
 - Licence: ${license === 'cc-by-4.0' ? 'CC BY 4.0' : license}.
 
 Made with the free SO-101 simulator by [printedrobotics.cz](https://printedrobotics.cz/?lang=en).
@@ -168,13 +231,16 @@ Made with the free SO-101 simulator by [printedrobotics.cz](https://printedrobot
 
 /**
  * Build all files of a LeRobot v2.1 dataset from one or more demo JSON objects.
- * @param {object[]} demos  Teach.toJSON() objects (one episode each)
- * @param {{ repoId?: string, license?: string, task?: string }} opts
+ * @param {object[]} demos  Teach.toJSON() objects (one episode each, or one per item segment)
+ * @param {{ repoId?: string, license?: string, task?: string, perItem?: boolean }} opts
  * @returns {Promise<Record<string, string|Uint8Array>>}
  */
 export async function buildDataset(demos, opts = {}) {
-  const list = (Array.isArray(demos) ? demos : [demos]).map((j) => resample(parseDemo(j, opts)));
+  const list = (Array.isArray(demos) ? demos : [demos]).flatMap((j) => splitDemo(parseDemo(j, opts), opts)).map((ep) => resample(ep));
   if (!list.length) throw new Error('no demonstrations');
+  const env = !!list[0].env;
+  if (list.some((ep) => !!ep.env !== env)) throw new Error('mixed demos: only some have environment state (conveyor missions); export them separately');
+  const HF_FEATURES = hfFeatures(env), PARQUET_SCHEMA = parquetSchema(env);
   const license = opts.license || DEFAULT_LICENSE;
   const write = await parquetWriter();
   const tasks = [], taskIdx = new Map(), files = {}, episodes = [], epStats = [];
@@ -184,12 +250,13 @@ export async function buildDataset(demos, opts = {}) {
     const ti = taskIdx.get(ep.task), n = ep.n;
     const ts = Array.from({ length: n }, (_, i) => f32(i / FPS));
     const fi = Array.from({ length: n }, (_, i) => i), gi = fi.map((i) => index + i);
-    const state = ep.state.map((r) => r.map(f32)), action = ep.action.map((r) => r.map(f32));
+    const state = ep.state.map((r) => r.map(f32)), action = ep.action.map((r) => r.map(f32)), envs = env ? ep.env.map((r) => r.map(f32)) : null;
     const kv = [{ key: 'huggingface', value: JSON.stringify({ info: { features: HF_FEATURES } }) }];
     const buf = write({
       schema: PARQUET_SCHEMA, kvMetadata: kv,
       columnData: [
         { name: 'action', data: action }, { name: 'observation.state', data: state },
+        ...(env ? [{ name: ENV_KEY, data: envs }] : []),
         { name: 'timestamp', data: ts }, { name: 'frame_index', data: fi.map(BigInt) },
         { name: 'episode_index', data: fi.map(() => BigInt(e)) }, { name: 'index', data: gi.map(BigInt) },
         { name: 'task_index', data: fi.map(() => BigInt(ti)) }
@@ -202,7 +269,7 @@ export async function buildDataset(demos, opts = {}) {
     epStats.push({
       episode_index: e,
       stats: {
-        action: stats(action), 'observation.state': stats(state), timestamp: stats(col(ts)),
+        action: stats(action), 'observation.state': stats(state), ...(env ? { [ENV_KEY]: stats(envs) } : {}), timestamp: stats(col(ts)),
         frame_index: stats(col(fi)), episode_index: stats(col(fi.map(() => e))), index: stats(col(gi)), task_index: stats(col(fi.map(() => ti)))
       }
     });
@@ -214,7 +281,7 @@ export async function buildDataset(demos, opts = {}) {
     total_episodes: E, total_frames: index, total_tasks: tasks.length, total_videos: 0,
     total_chunks: Math.floor((E - 1) / CHUNK) + 1, chunks_size: CHUNK, fps: FPS, splits: { train: `0:${E}` },
     data_path: 'data/chunk-{episode_chunk:03d}/episode_{episode_index:06d}.parquet', video_path: null,
-    features: features(),
+    features: features({ env }),
     // not read by LeRobot; kept with the data so the provenance travels with copies of the dataset
     source: 'simulation', license
   };
@@ -224,9 +291,10 @@ export async function buildDataset(demos, opts = {}) {
   files['meta/info.json'] = JSON.stringify(info, null, 4) + '\n';
   files['meta/tasks.jsonl'] = jsonl(tasks.map((task, task_index) => ({ task_index, task })));
   files['meta/episodes.jsonl'] = jsonl(episodes);
-  files['meta/episodes_stats.jsonl'] = jsonl(epStats);
-  files['meta/stats.json'] = JSON.stringify(agg, null, 4) + '\n';
-  files['README.md'] = datasetCard({ repoId: opts.repoId, license, totalEpisodes: E, totalFrames: index, tasks });
+  const feats = features({ env });
+  files['meta/episodes_stats.jsonl'] = epStats.map((r) => typedJSON({ episode_index: r.episode_index, stats: typedStats(r.stats, feats) })).join('\n') + '\n';
+  files['meta/stats.json'] = typedJSON(typedStats(agg, feats), 4) + '\n';
+  files['README.md'] = datasetCard({ repoId: opts.repoId, license, totalEpisodes: E, totalFrames: index, tasks, env, items: list.map((ep) => ep.item) });
   return files;
 }
 
