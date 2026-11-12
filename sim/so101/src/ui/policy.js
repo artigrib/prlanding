@@ -19,6 +19,7 @@ import { examplesFromDemo, train, coverage, report, CAUSES, USED } from '../poli
 import { knnSolve, KNN_LABEL } from '../policy/run.js';
 import { ENV_CLASSES, cutEpisodes } from '../policy/episodes.js';
 import { store } from './store.js';
+import { MeasureUI } from './measure.js';
 
 const $ = (id) => document.getElementById(id);
 const h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
@@ -251,12 +252,14 @@ export class PolicyUI {
           <option value="script">Skript (plánovač)</option>
           <option value="sil" disabled>Importovaná ze SIL (ACT / SmolVLA, mimo prohlížeč) – zatím není</option>
         </select></label>
+      <div id="ux-pol-meas"></div>
       <div id="ux-pol-rep"></div>
       <button type="button" class="ux-link" id="ux-pol-export">Stáhnout poslední nahrávku (JSON) <span aria-hidden="true">⤓</span></button>
       <a class="ux-link" href="lerobot.html" target="_blank" rel="noopener">Převést nahrávku na dataset LeRobot <span aria-hidden="true">→</span></a>
       <button type="button" class="ux-link" id="ux-pol-clear">Smazat všechny ukázky</button>
     </section>`);
     $('ux-sec-tools').before(this.sec);
+    this.meas = new MeasureUI(this, $('ux-pol-meas'));   // Měřicí buňka: the policy's measured profile (mission 13 input)
     $('ux-pol-learn').addEventListener('click', () => this.learn());
     $('ux-pol-run').addEventListener('click', () => this.start());
     $('ux-pol-demos').addEventListener('click', () => this.toDemos());
@@ -310,6 +313,7 @@ export class PolicyUI {
     $('ux-pol-run').disabled = this.choice === 'knn' && !n && !live;
     $('ux-pol-demos').disabled = !this.verify;
     $('ux-pol-kind').value = this.choice;
+    this.meas.render();
     const rep = $('ux-pol-rep'); rep.textContent = '';
     if (this.last || this.scriptLive) rep.appendChild(this.reportEl(this.last || this.scriptLive));
   }

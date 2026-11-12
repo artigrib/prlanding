@@ -926,6 +926,10 @@ class UX {
     api.policyLearn = () => this.policy.learn();
     api.policyRun = (kind) => this.policy.start(kind || 'knn');
     api.policyDemos = () => this.policy.toDemos();
+    // mission 12: the measuring cell (src/ui/measure.js): start ({ speed, n }) → 'cached' | 'started' | false, cancel, state
+    api.measure = (o) => this.policy.meas.start(o || {});
+    api.measureCancel = () => this.policy.meas.cancel();
+    api.measureState = () => this.policy.meas.state();
     api.objectsReady = () => (this.objView ? this.objView.ready() : true);
     api.record = (on) => { if (on !== this.teach.recording) this.toggleRec(); };
     api.replay = (loop) => { this.teach.loop = !!loop; return this.teach.startReplay(); };

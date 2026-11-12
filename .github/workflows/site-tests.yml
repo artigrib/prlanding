@@ -100,6 +100,39 @@ jobs:
           fi
           node --test "${files[@]}"
 
+  so101-profiles:
+    # Policy profiles of the waste-sorting cell (sim/so101/profiles/skript-{2,4,6}.json, the input of mission 13's line
+    # model): re-measure the first 25 trials per class of each committed profile in MuJoCo (a quarter of the n = 100
+    # per class that tools/profiles.mjs gen measures) and compare them within the tolerance of
+    # src/policy/measure.js compareTrials. One job per belt speed. A passing result is cached per hash of everything
+    # the measurement depends on, so the re-measurement runs only when one of those files changes.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        speed: ['0.02', '0.04', '0.06']
+    name: so101-profiles-${{ matrix.speed }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/cache@v4
+        id: passed
+        with:
+          path: .profile-check
+          key: so101-profiles-${{ matrix.speed }}-${{ hashFiles('sim/so101/src/**', 'sim/so101/objects/**', 'sim/so101/model/**', 'sim/so101/vendor/mujoco/**', 'sim/so101/profiles/**', 'sim/so101/tools/profiles.mjs', 'sim/so101/tests/profiles.test.mjs', 'sim/so101/tests/mj-node.mjs') }}
+      - name: Re-measure 25 trials per class and compare with the committed profile
+        if: steps.passed.outputs.cache-hit != 'true'
+        env:
+          PROFILE_CHECK_N: '25'
+          PROFILE_CHECK_SPEEDS: ${{ matrix.speed }}
+        run: node --test --test-name-pattern="regenerated" sim/so101/tests/profiles.test.mjs
+      - name: Remember the pass for these inputs
+        if: steps.passed.outputs.cache-hit != 'true'
+        run: mkdir -p .profile-check && date -u > .profile-check/passed
+
   bench-mock:
     # PR-Bench CONTROL harness with mock models only: no network, no keys (CI refuses real models)
     runs-on: ubuntu-latest
