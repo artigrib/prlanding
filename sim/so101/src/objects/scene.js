@@ -5,6 +5,10 @@
 // object mission is opened, the page compiles the scene once more with every object of these missions injected
 // (objectSceneXml); objects of the other missions wait parked on the hidden floor, like the cubes do.
 // Visual GLBs are fetched per mission, only for the objects that mission shows.
+//
+// Scene profiles (opts.scene in core.js loadSim): 'plain' = model/scene.xml as it is; 'objects' = missions 06–10
+// (LIB_ITEMS + their fixtures); 'conveyor' = the waste-sorting cell (CONVEYOR_ITEMS, a slat belt, rails, an end tote
+// and 4 bins). Each profile compiles only its own items and fixtures, so the belt never costs missions 06–10 anything.
 
 // Library objects (manifest ids) as mission items. `scale`: uniform scale applied honestly to collision mesh,
 // mass (∝ volume) and visual – used only where the real object is too small for a 3D-printed hobby gripper.
@@ -38,13 +42,19 @@ export const LIB_LABELS = {
   nut: ['matice M8', 'matici M8'], bolt: ['šroub M8', 'šroub M8'],
   apple: ['jablko', 'jablko'], banana: ['banán', 'banán'], cupcake: ['muffin', 'muffin'],
   mug: ['hrnek', 'hrnek'], spoon: ['lžička', 'lžičku'], fork: ['vidlička', 'vidličku'], sponge: ['houbička', 'houbičku'],
-  screwdriver: ['šroubovák', 'šroubovák'], vial: ['lahvička', 'lahvičku']
+  screwdriver: ['šroubovák', 'šroubovák'], vial: ['lahvička', 'lahvičku'],
+  // conveyor profile (waste sorting)
+  cup_paper: ['papírový kelímek', 'papírový kelímek'], cup_plastic: ['plastový kelímek', 'plastový kelímek'],
+  fork_plastic: ['plastová vidlička', 'plastovou vidličku'], spoon_plastic: ['plastová lžička', 'plastovou lžičku'],
+  vial_glass: ['skleněná lahvička', 'skleněnou lahvičku'], socket_s: ['nástrčná hlavice 3/8″', 'nástrčnou hlavici 3/8″'],
+  socket_l: ['nástrčná hlavice 1/2″', 'nástrčnou hlavici 1/2″'], nut_m: ['matice M8', 'matici M8']
 };
 export const labelOf = (name) => LIB_LABELS[name.replace(/\d+$/, '')] || [name, name];
 
 // Fixtures: static mocap bodies made of simple boxes / cylinders (collision group 3, drawn by objects/view.js
 // with the colours below). Sizes are MJCF half sizes. Wall thickness 4 mm, like a 3D-printed part.
-const C = { orange: '0.91 0.27 0.12 1', blue: '0.12 0.23 1 1', grey: '0.62 0.62 0.59 1', white: '0.95 0.95 0.93 1', dark: '0.17 0.17 0.17 1' };
+const C = { orange: '0.91 0.27 0.12 1', blue: '0.12 0.23 1 1', grey: '0.62 0.62 0.59 1', white: '0.95 0.95 0.93 1', dark: '0.17 0.17 0.17 1',
+  yellow: '0.96 0.76 0.1 1', green: '0.12 0.55 0.3 1' };
 function box(name, size, pos, rgba, euler) {
   return `<geom name="${name}" type="box" size="${size.join(' ')}" pos="${pos.join(' ')}"${euler ? ` euler="0 0 ${euler}"` : ''} rgba="${rgba}" group="3" friction="0.9 0.005 0.0001"/>`;
 }
@@ -65,7 +75,12 @@ export const FIXTURES = {
   plate: { label: ['talíř', 'talíř'], zone: { r: 0.105, top: 0.012 } },
   tray: { label: ['podnos', 'podnos'], zone: { hx: 0.11, hy: 0.08, top: 0.014 } },
   holder: { label: ['držák na šroubovák', 'držák na šroubovák'], zone: { hx: 0.085, hy: 0.02, top: 0.02 } },
-  rack: { label: ['stojánek na lahvičky', 'stojánek na lahvičky'], zone: { hx: 0.021, hy: 0.021, top: 0.03 }, slots: [-0.047, 0, 0.047] }
+  rack: { label: ['stojánek na lahvičky', 'stojánek na lahvičky'], zone: { hx: 0.021, hy: 0.021, top: 0.03 }, slots: [-0.047, 0, 0.047] },
+  // conveyor profile: 4 waste bins (inside 9 × 9 cm, plastic 17 × 10 cm for the 16 cm fork and spoon)
+  bin_paper: { label: ['koš na papír', 'koš na papír'], zone: { hx: 0.045, hy: 0.045, top: 0.04 } },
+  bin_plastic: { label: ['koš na plast', 'koš na plast'], zone: { hx: 0.05, hy: 0.085, top: 0.04 } },
+  bin_glass: { label: ['koš na sklo', 'koš na sklo'], zone: { hx: 0.045, hy: 0.045, top: 0.04 } },
+  bin_metal: { label: ['koš na kovy', 'koš na kovy'], zone: { hx: 0.045, hy: 0.045, top: 0.04 } }
 };
 function fixturesXml() {
   // plate: Ø 21 cm disc with a 1.2 cm rim (simple printed-looking plate: the SimReady small plate is only 9.9 cm,
@@ -109,7 +124,8 @@ ${rack.join('\n')}
 
 // where library items wait while their mission is not active (hidden floor, z = -0.75)
 export function parkSpot(i) { return [2.0 + 0.15 * (i % 6), -0.9 + 0.15 * Math.floor(i / 6), -0.745]; }
-export const FIXTURE_PARK = { bin_nut: [1.6, 0.6], bin_bolt: [1.6, 0.9], plate: [1.6, 1.2], tray: [1.6, -0.6], holder: [1.6, -0.9], rack: [1.6, -1.2] };
+export const FIXTURE_PARK = { bin_nut: [1.6, 0.6], bin_bolt: [1.6, 0.9], plate: [1.6, 1.2], tray: [1.6, -0.6], holder: [1.6, -0.9], rack: [1.6, -1.2],
+  bin_paper: [1.6, 0.6], bin_plastic: [1.6, 0.9], bin_glass: [1.6, -0.6], bin_metal: [1.6, -0.9] };
 
 /** Scale a converted object MJCF uniformly (mesh vertices via <mesh scale>, inertial pos, mass ∝ s³, inertia ∝ s⁵). */
 export function scaleMjcf(text, s) {
@@ -180,14 +196,111 @@ function applyCollision(entry, text) {
 /** Lying bolt: rotate 90° about y so the shank lies on the table (the parts come off a conveyor this way). */
 const LYING = [Math.SQRT1_2, 0, Math.SQRT1_2, 0];
 
+// ---------------------------------------------------------------- conveyor profile (waste sorting, M11–M13)
+// Batch pool: 12 items, 3 per fraction (design: redesign/campaign-trideni.md §1). The paper cup is shown at 75 %
+// (6.0 cm instead of 8.0 cm across: at full size the printed jaws, ~7.5 cm open, cannot close on it); the nut at 2.5×
+// as in mission 06. Scaling covers collision, mass and visual together (scaleMjcf), see NOTICE.txt §6.
+export const CONVEYOR_ITEMS = [
+  { name: 'cup_paper1', id: 'dishware_cup_paper_a01', scale: 0.75, fraction: 'paper' },
+  { name: 'cup_paper2', id: 'dishware_cup_paper_a01', scale: 0.75, fraction: 'paper' },
+  { name: 'cup_paper3', id: 'dishware_cup_paper_a01', scale: 0.75, fraction: 'paper' },
+  { name: 'cup_plastic1', id: 'dishware_plastic_cup_a01', fraction: 'plastic' },
+  { name: 'fork_plastic1', id: 'dishware_plastic_fork_a01', fraction: 'plastic' },
+  { name: 'spoon_plastic1', id: 'dishware_plastic_spoon_a01', fraction: 'plastic' },
+  { name: 'vial_glass1', id: 'container_vial_glass_a01', fraction: 'glass' },
+  { name: 'vial_glass2', id: 'container_vial_glass_a01', fraction: 'glass' },
+  { name: 'vial_glass3', id: 'container_vial_glass_a01', fraction: 'glass' },
+  { name: 'socket_s1', id: 'handtool_socket_3_8in_a01', fraction: 'metal' },
+  { name: 'socket_l1', id: 'handtool_socket_1_2in_a01', fraction: 'metal' },
+  { name: 'nut_m1', id: 'factory_nut_m8_loose', scale: 2.5, fraction: 'metal' }
+];
+
+// Belt along y at x = 0.24 m, carrying zone y0..y1, 10 cm wide. Slats on slide joints (velocity set every step by
+// objects/belt.js, which also wraps them): n slats of `pitch`, n · pitch = (y1 − y0) + pitch, so the carrying zone
+// is always covered. A slat whose centre has passed the head drum (y1) has "turned down around the drum": it loses
+// its contacts and is not drawn, so what it carried drops into the end tote; it wraps to the tail half a pitch later,
+// empty. Slat top at `top`, 1.5 mm above the table (slats never touch it). Side rails 15 mm high. The table of this
+// profile ends half a pitch before the head (`edge`), where the end tote hangs below the belt.
+export const BELT = {
+  x: 0.24, y0: -0.30, y1: 0.30, hw: 0.05, n: 11, pitch: 0.06, gap: 0.0005, z: 0.003, hz: 0.0015, top: 0.0045,
+  rail: { h: 0.015, t: 0.004, gap: 0.002 }, accel: 0.05, entry: 0.08, edge: 0.27,
+  tote: { hx: 0.07, y0: 0.274, y1: 0.414, floor: -0.085 }   // floor above World.rescue's −0.1 m
+};
+// Bin spots (§3): near side (0.12, ±0.17) measured as placement targets in the prototypes; far side (0.38, ±0.14)
+// not measured yet (mission PR). The plastic bin lies along y (17 cm), clear of the belt rail.
+export const CONVEYOR_BINS = { bin_paper: [0.12, -0.17], bin_plastic: [0.12, 0.17], bin_glass: [0.38, -0.14], bin_metal: [0.38, 0.14] };
+export const FRACTION_BIN = { paper: 'bin_paper', plastic: 'bin_plastic', glass: 'bin_glass', metal: 'bin_metal' };
+
+function conveyorXml() {
+  const B = BELT, R = B.rail, f = (v) => +v.toFixed(5);
+  const ya = B.y0 - B.pitch, yb = B.y1 + B.pitch / 2, ym = f((ya + yb) / 2), yh = f((yb - ya) / 2);
+  const rx = B.hw + R.gap + R.t / 2, T = B.tote, tx = T.hx + 0.002, ty = f((T.y0 + T.y1) / 2), thy = f((T.y1 - T.y0) / 2 + 0.004);
+  const dark = '0.16 0.17 0.18 1';
+  const frame = [
+    // drawn bed under the slats (no collision: the slats float 1.5 mm above the table)
+    box('belt_bed', [B.hw + R.gap, yh, 0.0006], [B.x, ym, 0.0006], '0.3 0.31 0.32 1').replace('group="3"', 'group="3" contype="0" conaffinity="0"'),
+    box('belt_rail_l', [R.t / 2, yh, R.h / 2], [f(B.x - rx), ym, R.h / 2], C.grey),
+    box('belt_rail_r', [R.t / 2, yh, R.h / 2], [f(B.x + rx), ym, R.h / 2], C.grey),
+    box('belt_tail', [rx + R.t / 2, R.t / 2, R.h / 2], [B.x, f(ya - R.t / 2 - 0.001), R.h / 2], C.grey),
+    // drums (drawn only): where the slats turn around
+    `<geom name="belt_drum_t" type="cylinder" size="0.012 ${B.hw}" pos="${B.x} ${f(ya)} -0.0105" quat="0.70711 0 0.70711 0" rgba="${C.grey}" group="3" contype="0" conaffinity="0"/>`,
+    `<geom name="belt_drum_h" type="cylinder" size="0.012 ${B.hw}" pos="${B.x} ${B.y1} -0.0105" quat="0.70711 0 0.70711 0" rgba="${C.grey}" group="3" contype="0" conaffinity="0"/>`,
+    // end tote, hanging on the table edge below the belt head: lost items land somewhere real
+    box('tote_floor', [tx, thy, 0.002], [B.x, ty, T.floor], C.grey),
+    box('tote_near', [tx, 0.002, f((0 - T.floor) / 2 - 0.0005)], [B.x, f(T.y0 - 0.002), f(T.floor / 2 - 0.0005)], C.grey),
+    box('tote_far', [tx, 0.002, f((0.02 - T.floor) / 2)], [B.x, f(T.y1 + 0.002), f((0.02 + T.floor) / 2)], C.grey),
+    box('tote_l', [0.002, thy, f(-T.floor / 2)], [f(B.x - T.hx - 0.002), ty, f(T.floor / 2)], C.grey),
+    box('tote_r', [0.002, thy, f(-T.floor / 2)], [f(B.x + T.hx + 0.002), ty, f(T.floor / 2)], C.grey)
+  ];
+  const slats = [];
+  for (let i = 0; i < B.n; i++) {
+    slats.push(`    <body name="slat${i}" pos="${B.x} ${f(B.y0 - B.pitch / 2 + i * B.pitch)} ${B.z}">
+      <joint name="slat${i}" type="slide" axis="0 1 0" damping="0" armature="10" limited="false"/>
+      <geom name="slat${i}" type="box" size="${B.hw} ${f(B.pitch / 2 - B.gap / 2)} ${B.hz}" mass="0.1" friction="0.8 0.005 0.0001" rgba="${dark}" group="3"/>
+    </body>`);
+  }
+  return `
+    <body name="belt">
+${frame.join('\n')}
+    </body>
+${slats.join('\n')}
+    <body name="bin_paper" pos="${FIXTURE_PARK.bin_paper.join(' ')} -0.75" mocap="true">
+${bin('bin_paper', 0.045, 0.045, 0.04, C.blue)}
+    </body>
+    <body name="bin_plastic" pos="${FIXTURE_PARK.bin_plastic.join(' ')} -0.75" mocap="true">
+${bin('bin_plastic', 0.05, 0.085, 0.04, C.yellow)}
+    </body>
+    <body name="bin_glass" pos="${FIXTURE_PARK.bin_glass.join(' ')} -0.75" mocap="true">
+${bin('bin_glass', 0.045, 0.045, 0.04, C.green)}
+    </body>
+    <body name="bin_metal" pos="${FIXTURE_PARK.bin_metal.join(' ')} -0.75" mocap="true">
+${bin('bin_metal', 0.045, 0.045, 0.04, C.dark)}
+    </body>`;
+}
+
+/** Scene profiles: which library items and fixtures a compiled scene contains (see the header). */
+export const PROFILES = {
+  objects: { items: LIB_ITEMS, fixtures: fixturesXml },
+  conveyor: {
+    items: CONVEYOR_ITEMS, fixtures: conveyorXml, slats: BELT.n,
+    // the table ends under the belt head (BELT.edge), so items leaving the belt drop into the tote on its edge
+    edit: (xml) => xml.replace(/(<geom name="table"[^>]*?)size="0\.40 0\.32 0\.015" pos="0\.14 0 -0\.015"/,
+      `$1size="0.40 ${+((0.32 + BELT.edge) / 2).toFixed(4)} 0.015" pos="0.14 ${+((BELT.edge - 0.32) / 2).toFixed(4)} -0.015"`)
+  }
+};
+export const SCENES = ['plain', 'objects', 'conveyor'];
+
 /**
- * Build the object-mission scene: fixtures + every LIB_ITEMS instance (parked) injected into scene.xml.
- * lib: ObjectLibrary (fetch-based). Returns { xml, items: [{ name, id, entry, scale }] }.
+ * Build an object scene: the profile's fixtures + every profile item (parked) injected into scene.xml.
+ * lib: ObjectLibrary (fetch-based). profile: 'objects' (missions 06–10, default) | 'conveyor'.
+ * Returns { xml, items: [{ name, id, entry, scale }] }.
  */
-export async function objectSceneXml(sceneXml, lib, { injectObjects, instanceXml }) {
+export async function objectSceneXml(sceneXml, lib, { injectObjects, instanceXml }, profile = 'objects') {
+  const P = PROFILES[profile];
+  if (!P) throw new Error('unknown scene profile: ' + profile);
   await lib.manifest();
   const items = [], inst = [];
-  for (const [i, it] of LIB_ITEMS.entries()) {
+  for (const [i, it] of P.items.entries()) {
     const entry = await lib.entry(it.id);
     const text = scaleMjcf(applyCollision(entry, await lib.mjcf(it.id)), it.scale);
     const p = parkSpot(i);
@@ -197,8 +310,13 @@ export async function objectSceneXml(sceneXml, lib, { injectObjects, instanceXml
     inst.push(one);
     items.push({ ...it, entry, scale: it.scale || 1 });
   }
-  const j = sceneXml.lastIndexOf('</worldbody>');
-  const withFx = sceneXml.slice(0, j) + fixturesXml() + '\n  ' + sceneXml.slice(j);
+  let xml = P.edit ? P.edit(sceneXml) : sceneXml;
+  if (P.edit && xml === sceneXml) throw new Error('scene profile edit did not apply: ' + profile);
+  // slide-joint slats (if any) come before the instances in qpos: the keyframes get their zeros first
+  if (P.slats) xml = xml.replace(/<key\b[^>]*>/g, (tag) => tag.replace(/\bqpos="([^"]*)"/, (m, a) => `qpos="${a.trim()} ${Array(P.slats).fill(0).join(' ')}"`)
+    .replace(/\bqvel="([^"]*)"/, (m, a) => `qvel="${a.trim()} ${Array(P.slats).fill(0).join(' ')}"`));
+  const j = xml.lastIndexOf('</worldbody>');
+  const withFx = xml.slice(0, j) + P.fixtures() + '\n  ' + xml.slice(j);
   return { xml: injectObjects(withFx, inst), items };
 }
 

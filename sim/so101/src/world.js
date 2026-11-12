@@ -3,7 +3,8 @@
 // Library objects + fixtures of the object missions (src/objects/scene.js) are registered when the compiled model
 // contains them (the object scene); body origin of a library object = bottom centre of its bounding box.
 
-import { LIB_ITEMS, FIXTURES, FIXTURE_PARK, parkSpot, labelOf, LYING_QUAT } from './objects/scene.js';
+import { PROFILES, FIXTURES, FIXTURE_PARK, BELT, parkSpot, labelOf, LYING_QUAT } from './objects/scene.js';
+import { Belt } from './objects/belt.js';
 
 export const OBJECTS = {
   cube:   { kind: 'free', half: 0.0125, label: 'oranžová kostka', acc: 'oranžovou kostku' },
@@ -34,12 +35,14 @@ export class World {
       } else e.mocap = m.body_mocapid[b];
       this.o[name] = e;
     }
-    // object-mission items (only in the object scene)
+    // library items of the compiled scene profile ('objects': missions 06–10, 'conveyor': waste sorting)
     this.lib = false;
-    for (const [i, it] of LIB_ITEMS.entries()) {
+    this.belt = Belt.of(mj, m, d);
+    this.scene = this.belt ? 'conveyor' : 'plain';
+    for (const [i, it] of PROFILES[this.belt ? 'conveyor' : 'objects'].items.entries()) {
       const b = mj.mj_name2id(m, O.mjOBJ_BODY.value, it.name);
       if (b < 0) continue;
-      this.lib = true;
+      this.lib = true; if (!this.belt) this.scene = 'objects';
       const j = m.body_jntadr[b], [label, acc] = labelOf(it.name);
       this.o[it.name] = { name: it.name, body: b, kind: 'free', lib: it, half: 0, label, acc, active: false,
         qadr: m.jnt_qposadr[j], vadr: m.jnt_dofadr[j], park: parkSpot(i), mass: m.body_mass[b] };
@@ -130,6 +133,32 @@ export class World {
     if (m.body_gravcomp) m.body_gravcomp[e.body] = on ? 1 : 0;
   }
 
+  /** Conveyor scene: wake a parked pool item and put it on the belt at y (entry end by default), resting on the
+   *  slats. Returns false (nothing changes) when the entry zone is not clear. */
+  spawn(name, { y = BELT.y0 + BELT.entry / 2, yaw = 0, force = false } = {}) {
+    const e = this.o[name];
+    if (!this.belt || !e || !e.lib) throw new Error('spawn: not a conveyor pool item: ' + name);
+    if (e.size) {   // the footprint must fit between the rails (a 16 cm fork goes lengthwise)
+      const hx = (Math.abs(Math.cos(yaw)) * e.size[0] + Math.abs(Math.sin(yaw)) * e.size[1]) / 2;
+      if (hx > BELT.hw + BELT.rail.gap) throw new Error(`spawn: ${name} is ${(2 * hx * 100).toFixed(1)} cm across the belt at this yaw`);
+    }
+    if (!force && !this.entryClear(name)) return false;
+    this.sleep(e, false);
+    this.place(name, BELT.x, y, null, yaw, BELT.top);
+    e.active = true; this.activeList = null;
+    this.mj.mj_forward(this.m, this.d);
+    e.restZ = this.d.xipos[3 * e.body + 2];
+    return true;
+  }
+  /** No awake item (other than `except`) has its centre of mass in the belt's entry zone. */
+  entryClear(except) {
+    for (const e of this.active()) {
+      if (!e.lib || e.name === except) continue;
+      if (this.belt.zone(this.com(e.name, [0, 0, 0])) === 'entry') return false;
+    }
+    return true;
+  }
+
   /** Set up a layout: { cube: [x, y, yaw?], bowl: [x, y, yaw?], ... }; everything else is parked. */
   layout(spec) {
     for (const name of Object.keys(this.o)) {
@@ -142,10 +171,10 @@ export class World {
     for (const e of this.activeList) if (e.lib) e.restZ = this.d.xipos[3 * e.body + 2];
   }
 
-  /** Objects that fell off the table go back to their layout spot. Returns the name or null. */
+  /** Objects that fell off the table go back to their layout spot (parked ones did not fall). Returns the name or null. */
   rescue(spec) {
     for (const name of Object.keys(spec)) {
-      const e = this.o[name]; if (e.kind !== 'free') continue;
+      const e = this.o[name]; if (e.kind !== 'free' || !e.active) continue;
       if (this.d.xpos[3 * e.body + 2] < -0.1) {
         const s = spec[name]; this.place(name, s[0], s[1], null, s[2] || 0);
         this.mj.mj_forward(this.m, this.d);

@@ -87,8 +87,9 @@ async function loadModelFiles(onProgress) {
 }
 
 /** Load MuJoCo + model + three.js. onProgress(fraction 0..1). Returns the ingredients for ArmSim.
- *  opts.objects: compile the object-mission scene (src/objects/scene.js: library objects + fixtures, ~40 kB of
- *  MJCF); the plain scene (mission 01) never fetches anything of the object library. */
+ *  opts.scene: 'plain' (default; mission 01 never fetches anything of the object library) | 'objects' (missions
+ *  06–10: library objects + fixtures, ~40 kB of MJCF) | 'conveyor' (waste sorting: slat belt, tote, bins and the
+ *  batch pool), see src/objects/scene.js PROFILES. opts.objects: true = 'objects' (older callers). */
 export async function loadSim(onProgress = () => {}, opts = {}) {
   // Progress: wasm ~ 70 %, meshes ~ 25 %, rest 5 %. Content-length may be the compressed size, so clamp.
   const prog = { wasm: 0, mesh: 0 };
@@ -103,22 +104,24 @@ export async function loadSim(onProgress = () => {}, opts = {}) {
   const mj = await loadMujoco({ wasmBinary: wasmBinary.buffer, locateFile: (p) => new URL('vendor/mujoco/' + p, BASE).href });
   mj.FS.mkdir('/m'); mj.FS.mkdir('/m/assets');
   for (const [path, bytes] of files) mj.FS.writeFile('/m/' + path, bytes);
-  let scene = '/m/scene.xml', objects = null;
-  if (opts.objects) {
+  const profile = opts.scene || (opts.objects ? 'objects' : 'plain');
+  let scene = '/m/scene.xml', objects = null, belt = null;
+  if (profile !== 'plain') {
     const [L, S] = await Promise.all([import('./src/objects/library.js'), import('./src/objects/scene.js')]);
     const lib = new L.ObjectLibrary();
     const xml = new TextDecoder().decode(files.find(([p]) => p === 'scene.xml')[1]);
-    const built = await S.objectSceneXml(xml, lib, L);
-    mj.FS.writeFile('/m/scene_objects.xml', built.xml);
-    scene = '/m/scene_objects.xml';
+    const built = await S.objectSceneXml(xml, lib, L, profile);
+    scene = `/m/scene_${profile}.xml`;
+    mj.FS.writeFile(scene, built.xml);
     objects = { lib, items: built.items, sizes: Object.fromEntries(built.items.map((it) => [it.name, S.itemSize(it)])) };
   }
   const model = mj.MjModel.from_xml_path(scene);
   const data = new mj.MjData(model);
   mj.mj_resetDataKeyframe(model, data, 0);
   mj.mj_forward(model, data);
+  if (profile === 'conveyor') belt = (await import('./src/objects/belt.js')).Belt.of(mj, model, data);
   onProgress(1);
-  return { THREE, OrbitControls: OC.OrbitControls, mj, model, data, objects };
+  return { THREE, OrbitControls: OC.OrbitControls, mj, model, data, objects, belt, scene: profile };
 }
 
 // Non-indexed geometry with "creased" normals: smooth across faces that are within
@@ -186,8 +189,9 @@ export class DemoPlayer {
  * Hooks (set by the page): onFrame(dt) before physics, onAfter(dt) after physics.
  */
 export class ArmSim {
-  constructor({ THREE, OrbitControls, mj, model, data }, opts) {
+  constructor({ THREE, OrbitControls, mj, model, data, belt }, opts) {
     this.T = THREE; this.mj = mj; this.m = model; this.d = data; this.opts = opts;
+    this.belt = belt || null;   // conveyor scene only (src/objects/belt.js)
     this.won = false; this.inBowl = 0; this.fellAt = null;
     this.onFrame = null; this.onAfter = null; this.onWin = null; this.onRender = null;
     this.ids();
@@ -455,7 +459,8 @@ export class ArmSim {
   step(dt) {
     this.ts = this.ts || this.m.opt.timestep;
     this.acc = (this.acc || 0) + dt;
-    while (this.acc >= this.ts) { this.mj.mj_step(this.m, this.d); this.acc -= this.ts; }
+    const belt = this.belt;   // conveyor scene: slat velocities are set before every physics step
+    while (this.acc >= this.ts) { if (belt) belt.step(this.ts); this.mj.mj_step(this.m, this.d); this.acc -= this.ts; }
   }
 
   loop(now) {

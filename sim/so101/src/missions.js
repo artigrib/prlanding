@@ -636,6 +636,15 @@ export function libSolve(ctl, w, id) {
  *  available as a hint rung. Mission 05 keeps "Nakreslit prstem" (the player draws the path; no stars). */
 export function autopilotAllowed(m) { return parseInt(m.n, 10) < 4; }
 
+/** Scene profile a mission needs (core.js loadSim opts.scene): `scene` if set, 'objects' for object missions. */
+export function sceneOf(m) { return m.scene || (m.objects ? 'objects' : 'plain'); }
+/** Can mission m run in the loaded scene? Plain missions also run in the object scene (their objects are compiled
+ *  in every scene); the conveyor scene runs only its own missions (the belt sits where the cubes and bowls go). */
+export function runsIn(m, scene) {
+  const need = sceneOf(m);
+  return scene === 'conveyor' ? need === 'conveyor' : need === 'plain' || need === scene;
+}
+
 export class MissionRunner {
   constructor(world) {
     this.w = world; this.i = 0; this.ctx = { w: world, tip: new Float64Array(3), s: {}, gripOpen: true, smart: true };

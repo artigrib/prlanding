@@ -9,20 +9,25 @@ import { track } from './src/analytics.js';
 const $ = (id) => document.getElementById(id);
 const TEST = new URLSearchParams(location.search).get('test') === '1';  // Playwright hook only
 
-// Object missions (chapters 06–10, src/missions.js `objects: true`) need the object scene. Same start rule as
-// ux.startRoute(): ?mise=, otherwise the stored mission, or the first unfinished one when it is done.
-// Keep both lists in sync with MISSIONS (checked by tests/missions-objects.test.mjs).
+// Scene profile per mission (core.js loadSim opts.scene, src/objects/scene.js PROFILES): object missions (chapters
+// 06–10, src/missions.js `objects: true`) need the 'objects' scene, conveyor missions (`scene: 'conveyor'`) the
+// 'conveyor' scene, the rest the plain one. Same start rule as ux.startRoute(): ?mise=, otherwise the stored mission,
+// or the first unfinished one when it is done. Keep the lists in sync with MISSIONS (tests/missions-objects.test.mjs).
 const OBJECT_MISSIONS = ['line', 'breakfast', 'tidy', 'workshop', 'lab'];
-const MISSION_ORDER = ['bowl', 'stack', 'sort', 'ball', 'trace', ...OBJECT_MISSIONS];
-function wantsObjects() {
+const CONVEYOR_MISSIONS = [];
+const MISSION_ORDER = ['bowl', 'stack', 'sort', 'ball', 'trace', ...OBJECT_MISSIONS, ...CONVEYOR_MISSIONS];
+const sceneOfId = (id) => (CONVEYOR_MISSIONS.includes(id) ? 'conveyor' : OBJECT_MISSIONS.includes(id) ? 'objects' : 'plain');
+function sceneFor() {
   const q = new URLSearchParams(location.search), mise = q.get('mise');
-  if (mise) return OBJECT_MISSIONS.includes(mise);
+  // dev / test view of the conveyor cell before its missions exist: ?scene=conveyor&test=1
+  if (TEST && !mise && q.get('scene') === 'conveyor') return 'conveyor';
+  if (mise) return sceneOfId(mise);
   try {
     const prog = JSON.parse(localStorage.getItem('pr-sim-progress') || '{}') || {};
     let id = JSON.parse(localStorage.getItem('pr-sim-mission') || '"bowl"');
     if (Object.keys(prog).length && prog[id]) id = MISSION_ORDER.find((m) => !prog[m]) || id;
-    return OBJECT_MISSIONS.includes(id);
-  } catch (e) { return false; }
+    return sceneOfId(id);
+  } catch (e) { return 'plain'; }
 }
 
 
@@ -48,7 +53,7 @@ async function main() {
   track('sim_load_start', { sim: 'so101' });
   const bar = $('prog');
   const copy = loadingCopy(t0);   // [ux-hook:loading] honest progress text on slow networks
-  const ctx = await loadSim((f) => { bar.style.width = (f * 100).toFixed(1) + '%'; copy(f); }, { objects: wantsObjects() });
+  const ctx = await loadSim((f) => { bar.style.width = (f * 100).toFixed(1) + '%'; copy(f); }, { scene: sceneFor() });
   copy.done();
   const sim = new ArmSim(ctx, {
     canvas: $('c'),
@@ -69,8 +74,15 @@ async function main() {
   $('loader').hidden = true;
   $('hud').hidden = false;
   $('sr').textContent = 'Simulace je připravena, ovládání je dostupné.';
-  track('sim_loaded', { sim: 'so101', ms: Math.round(performance.now() - t0), detail: ctx.objects ? 'objects' : 'plain' });
-  if (TEST) { window.__sim = app.api(); window.__sim.loadMs = Math.round(performance.now() - t0); }
+  // detail enum (analytics/schema.json) is plain | objects; 'conveyor' gets its own value with the first conveyor
+  // mission (schema + backend change), until then it counts as an object scene
+  track('sim_loaded', { sim: 'so101', ms: Math.round(performance.now() - t0), detail: ctx.scene === 'plain' ? 'plain' : 'objects' });
+  if (TEST) {
+    const api = app.api(); api.loadMs = Math.round(performance.now() - t0);
+    api.scene = () => ctx.scene;
+    if (ctx.belt && app.ux) api.conveyor = (await import('./src/objects/conveyor-dev.js')).conveyorDev(app, ctx);
+    window.__sim = api;
+  }
   // ?mirror=<port>: show the headless SIL runner's arm live (tools/sil/so101-virtual.mjs --mirror; localhost only)
   if (MIRROR) {
     try {
