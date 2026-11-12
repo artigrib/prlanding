@@ -11,7 +11,10 @@
 //   node tools/sil/so101-virtual.mjs --leader            # follower + leader, ports /tmp/so101-follower, /tmp/so101-leader
 //   node tools/sil/so101-virtual.mjs ctl sweep follower  # send a command to a running runner
 //   node tools/sil/so101-virtual.mjs --camera up --camera side   # + virtual cameras for a policy (LeRobot `type: zmq`)
+//   node tools/sil/so101-virtual.mjs --scene conveyor --batch 2 --camera up --camera wrist --mirror
+//                                                        # the waste-sorting cell: slat belt, 4 bins, mission batch
 //
+// Replaying browser demos into camera frames and a LeRobot dataset: tools/sil/replay.mjs.
 // Docs: navody/so101-lerobot-simulace (CZ), en/navody/so101-lerobot-simulace (EN).
 // Linux and macOS (pty). Windows: no pty — see the docs (com0com, untested).
 import fs from 'node:fs';
@@ -20,7 +23,7 @@ import { loadScene, MjPlant, HandPlant, JOINT_NAMES } from './lib/plant.mjs';
 import { openVirtualPort } from './lib/pty.mjs';
 import { HandMover, PICK_PLACE, REST, middle, sweepSegments, parseTrajectory } from './lib/motion.mjs';
 import { startServer } from './lib/server.mjs';
-import { startCameras, parseSize } from './lib/camera.mjs';
+import { startCameras, parseSize, sceneView } from './lib/camera.mjs';
 
 const HELP = `SO-101 virtual arm for LeRobot (software in the loop)
 
@@ -39,6 +42,12 @@ Options:
                          range, and as soon as LeRobot has written the half-turn homing offsets the
                          joints are swept through their ranges (you only press ENTER twice)
   --variant 7.4|12       servo variant (default 7.4)
+  --scene S              plain (default: cube + bowl) or conveyor (waste sorting: slat belt, end tote, 4 bins,
+                         the 11-item pool; the same compiled scene as the browser's missions 11-12)
+  --belt-speed V         conveyor: belt speed in m/s (default 0.02, the missions' speed; 0 = stopped)
+  --batch SEED           conveyor: run a mission batch (one item every 10 s, seeded order and yaws; seed 1 =
+                         the demo batch of missions 11/12, seed 2 = the verification batch of mission 12) and log
+                         every item's outcome (bin, tote, floor) with its time
   --ctl-port N           localhost control port (default 8765)
   --mirror               serve a live WebSocket mirror at ws://127.0.0.1:<ctl-port>/mirror for the browser sim
   --mirror-origin URL    extra allowed page origin for the mirror (localhost pages are always allowed)
@@ -60,7 +69,9 @@ Commands (stdin lines, "ctl" subcommand or POST /cmd):
   stop <arm>             stop the hand
   key <arm> <joint 0-5> <deg>          nudge one joint by hand
   wire <arm> chain|none|0-5            plug the whole chain, nothing, or one servo into the board
-  cube                   put the cube back to its start position
+  cube                   put the cube back to its start position (plain scene)
+  belt <m/s>             conveyor: set the belt speed (ramped, 0 = stop)
+  batch [SEED]           conveyor: clear the cell and start a batch (default: the --batch seed, else 1)
   status                 print state as JSON
   quit
 <arm> is follower or leader.`;
@@ -92,6 +103,9 @@ const { values: opt } = parseArgs({
     mirror: { type: 'boolean', default: false },
     'mirror-origin': { type: 'string', multiple: true, default: [] },
     hz: { type: 'string', default: '250' },
+    scene: { type: 'string', default: 'plain' },
+    'belt-speed': { type: 'string', default: '0.02' },
+    batch: { type: 'string' },
     camera: { type: 'string', multiple: true, default: [] },
     'camera-port': { type: 'string', default: '5555' },
     'camera-size': { type: 'string', default: '640x480' },
@@ -109,9 +123,42 @@ process.on('warning', (w) => { if (w.code !== 'MODULE_TYPELESS_PACKAGE_JSON') co
 const { VirtualArm } = await import('../../sim/so101/lib/sts3215-emu.js');
 
 // ---------------- the arms ----------------
-const scene = await loadScene();
+const scene = await loadScene(undefined, { scene: opt.scene }).catch((e) => { log(e.message); process.exit(2); });
 const fPlant = new MjPlant(scene);
 const arms = {};
+
+// ---------------- conveyor cell (--scene conveyor): bins at the missions' spots, belt, optional batch ----------------
+let cell = null;
+if (scene.belt) {
+  const [{ World }, { CONVEYOR_BINS }, { WasteRun, WASTE }, { ArmController }] = await Promise.all([
+    import('../../sim/so101/src/world.js'), import('../../sim/so101/src/objects/scene.js'),
+    import('../../sim/so101/src/objects/wastebatch.js'), import('../../sim/so101/src/controller.js')]);
+  const w = new World(scene.mj, scene.m, scene.d); w.sizes(scene.sizes);
+  const tipper = new ArmController(scene.mj, scene.m, scene.d, fPlant.act);   // only its forward kinematics (the mission check's tip)
+  const speed = Math.max(0, Math.min(0.06, +opt['belt-speed'] || 0));
+  cell = {
+    w, run: null, seed: opt.batch != null ? Math.max(1, +opt.batch | 0) : null, c: { started: true, tip: new Float64Array(3), gripOpen: true }, seen: 0,
+    reset(seed) {
+      w.layout(Object.fromEntries(Object.entries(CONVEYOR_BINS).map(([n, p]) => [n, [p[0], p[1], 0]])));
+      scene.belt.sync();
+      this.run = seed ? new WasteRun(w, { seed }) : null; this.seen = 0;
+    },
+    tick(dt) {
+      if (!this.run) return;
+      tipper.actualTip(this.c.tip); this.c.gripOpen = scene.d.ctrl[fPlant.act[5]] > 0.5;
+      this.run.tick(dt, this.c);
+      const ev = this.run.events;
+      for (; this.seen < ev.length; this.seen++) {
+        const e = ev[this.seen];
+        if (['bin', 'tote', 'floor', 'stuck'].includes(e.ev)) log(`item ${e.name} (${e.fraction}) -> ${e.ev === 'bin' ? `${e.bin} (${e.ok ? 'correct' : 'wrong bin'})` : e.ev} at ${e.t.toFixed(1)} s`);
+      }
+    },
+    status() { return { belt: { speed: scene.belt.speed, v: +scene.belt.v.toFixed(4) }, ...(this.run ? { batch: { seed: this.run.o.seed, t: +this.run.t.toFixed(1), ...this.run.stats() } } : {}) }; }
+  };
+  cell.reset(cell.seed);
+  scene.belt.speed = speed;
+  log(`scene conveyor: belt ${speed} m/s, bins ${Object.keys(CONVEYOR_BINS).join(', ')}${cell.seed ? `, batch seed ${cell.seed} (one item every ${WASTE.every} s)` : ''}`);
+} else if (opt.scene !== 'plain') log(`scene ${opt.scene}: library items parked, no layout`);
 
 function makeArm(name, plant, { factory, mountShift = 0 }) {
   const arm = new VirtualArm({ variant: opt.variant, plant });
@@ -149,7 +196,7 @@ if (opt.leader) {
   const lPlant = new HandPlant(fPlant.range, REST);
   arms.leader = makeArm('leader', lPlant, { factory: opt.factory, mountShift: 211 });
   // pick-and-place loop: the follower drops the cube in the bowl each round; put it back for the next one
-  arms.leader.hand.onLoop = (name) => { if (name === 'pickplace') fPlant.respawnCube(); };
+  arms.leader.hand.onLoop = (name) => { if (name === 'pickplace' && opt.scene === 'plain') fPlant.respawnCube(); };
 }
 
 function leaderMotion(spec, once = false) {
@@ -189,7 +236,7 @@ function status() {
     servos: A.arm.servos.map((s) => ({ id: s.id, powered: s.powered, torque: s.mem[40], present: s.reg('Present_Position'), goal: s.reg('Goal_Position'), homing: s.reg('Homing_Offset'), min: s.reg('Min_Position_Limit'), max: s.reg('Max_Position_Limit'), temp: s.mem[63] })),
     packets: { rx: A.rx, tx: A.tx }
   });
-  return { t: +fPlant.d.time.toFixed(3), follower: one(arms.follower), ...(arms.leader ? { leader: one(arms.leader) } : {}), cube: fPlant.cube().map((v) => +v.toFixed(4)), tip: (fPlant.tip() || []).map((v) => +v.toFixed(4)), ...(cameras ? { cameras: cameras.status() } : {}) };
+  return { t: +fPlant.d.time.toFixed(3), follower: one(arms.follower), ...(arms.leader ? { leader: one(arms.leader) } : {}), cube: fPlant.cube().map((v) => +v.toFixed(4)), tip: (fPlant.tip() || []).map((v) => +v.toFixed(4)), ...(cameras ? { cameras: cameras.status() } : {}), ...(cell ? cell.status() : {}) };
 }
 async function command(line) {
   const [c, a, ...more] = line.split(/\s+/).filter(Boolean);
@@ -197,7 +244,17 @@ async function command(line) {
   switch (c) {
     case 'status': return status();
     case 'quit': setTimeout(shutdown, 50); return { bye: true };
-    case 'cube': fPlant.respawnCube(); return {};
+    case 'cube': if (opt.scene !== 'plain') throw new Error('cube: plain scene only'); fPlant.respawnCube(); return {};
+    case 'belt': {
+      if (!cell) throw new Error('belt: conveyor scene only (--scene conveyor)');
+      const v = +a; if (!(v >= 0 && v <= 0.06)) throw new Error('belt <m/s>, 0 … 0.06');
+      scene.belt.speed = v; return { belt: v };
+    }
+    case 'batch': {
+      if (!cell) throw new Error('batch: conveyor scene only (--scene conveyor)');
+      const seed = a != null ? Math.max(1, +a | 0) : cell.seed || 1;
+      cell.reset(seed); log(`batch seed ${seed} started`); return { seed };
+    }
     case 'middle': { const A = armOf(a); A.hand.play([{ q: middle(A.plant.range), t: 1.5 }], { name: 'middle' }); return { busyS: 1.5 }; }
     case 'rest': { const A = armOf(a); A.hand.play([{ q: REST, t: 1.5 }], { name: 'rest' }); return { busyS: 1.5 }; }
     case 'sweep': { const A = armOf(a); const segs = sweepSegments(A.plant.range); A.hand.play(segs, { name: 'sweep' }); return { busyS: +segs.reduce((s, x) => s + x.t, 0).toFixed(1) }; }
@@ -224,7 +281,7 @@ let cameras = null;
 if (opt.camera.length) {
   const [width, height] = parseSize(opt['camera-size']);
   const fps = Math.max(1, Math.min(60, +opt['camera-fps'] || 15));
-  cameras = await startCameras({ mj: scene.mj, m: scene.m, d: scene.d, specs: opt.camera, width, height, fps, port: +opt['camera-port'], log })
+  cameras = await startCameras({ mj: scene.mj, m: scene.m, d: scene.d, specs: opt.camera, width, height, fps, port: +opt['camera-port'], log, view: sceneView(scene) })
     .catch((e) => { log(`cameras: ${e.code === 'EADDRINUSE' ? `port ${opt['camera-port']} is in use` : e.message}`); process.exit(2); });
   if (cameras) log(`cameras: ${cameras.cams.map((c) => `${c.name} (${c.preset})`).join(', ')}  ${width}x${height} @ ${fps} fps  ->  zmq tcp://127.0.0.1:${cameras.port}  (LeRobot: type: zmq, server_address: 127.0.0.1, port: ${cameras.port}, camera_name: <name>)`);
 }
@@ -267,11 +324,14 @@ const timer = setInterval(() => {
     factoryStep(A, clock());
   }
   fPlant.step(dt);
+  if (cell) cell.tick(dt);
   if (cameras) cameras.tick(now / 1000);
   mirrorAcc += dt; statusAcc += dt;
   if (srv && opt.mirror && mirrorAcc >= 1 / 30) {
     mirrorAcc = 0;
-    srv.broadcast({ t: fPlant.d.time, follower: { q: fPlant.qs(), torque: arms.follower.arm.servos.map((s) => s.mem[40]) }, leader: arms.leader ? { q: arms.leader.plant.qs() } : null, cube: fPlant.cubePose() });
+    const f = fPlant.mirrorFrame({ leader: arms.leader ? { q: arms.leader.plant.qs() } : null });
+    f.follower.torque = arms.follower.arm.servos.map((s) => s.mem[40]);
+    srv.broadcast(f);
   }
   if (!opt.quiet && statusAcc >= 5) {
     statusAcc = 0;
@@ -293,7 +353,7 @@ if (process.stdin.isTTY && arms.leader) {
     if (k === 'd' || k === '\u001b[C' || k === '+') return arms.leader.hand.nudge(keyJoint, 3 * Math.PI / 180);
     if (k === 'p') return leaderMotion('pickplace');
     if (k === 's') return arms.leader.hand.stop();
-    if (k === 'c') return fPlant.respawnCube();
+    if (k === 'c') return opt.scene === 'plain' && fPlant.respawnCube();
     if (k === 'm') { for (const A of Object.values(arms)) A.hand.play([{ q: middle(A.plant.range), t: 1.5 }], { name: 'middle' }); return log('both arms -> middle of range'); }
     if (k === 'w') { for (const A of Object.values(arms)) A.hand.play(sweepSegments(A.plant.range), { name: 'sweep' }); return log('sweeping every joint through its range'); }
   });

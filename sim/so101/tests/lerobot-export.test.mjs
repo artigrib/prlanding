@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { buildDataset, exportLeRobotZip, parseDemo, resample, features, NAMES, FPS, ENV_KEY, ENV_NAMES, MISSION_TASKS } from '../src/export/lerobot.js';
+import { buildDataset, exportLeRobotZip, parseDemo, resample, features, imageStats, NAMES, FPS, ENV_KEY, ENV_NAMES, MISSION_TASKS, IMAGE_PREFIX } from '../src/export/lerobot.js';
 
 // a demo in the Teach.toJSON() format: 2.5 s, physics-step jitter on the timestamps
 function synthDemo(mission = 'bowl', secs = 2.5) {
@@ -182,4 +182,49 @@ test('backward compatibility: demos without env export exactly as before; mixing
   assert.throws(spoil((j) => { j.episodes[0].frames[3].env.target.pos = [0, 'x', 0]; }), /env/);
   assert.throws(spoil((j) => { j.printedrobotics.segments[0].to = 99999; }), /segments/);
   assert.throws(() => { const j = synthDemo('waste_hand'); j.printedrobotics.segments = []; parseDemo(j); }, /segments without env/);
+});
+
+// a SIL replay (tools/sil/replay.mjs): the waste demo with two rendered cameras and per-frame image sums
+function replayDemo() {
+  const j = wasteDemo(), n = j.episodes[0].frames.length;
+  const sums = (k, c) => [k % 7, 2 + c, 3, 200, 210 + c, 220, 100 * 64, 110 * 64, 120 * 64, 100 * 100 * 64, 110 * 110 * 64, 120 * 120 * 64 + k, 64];
+  j.printedrobotics.replay = { format: 'printedrobotics.cz/so101-sil-replay@1', width: 32, height: 24,
+    cameras: [{ name: 'up', preset: 'up' }, { name: 'wrist', preset: 'wrist' }],
+    items: [{ item: 'cup_paper1', recorded: 'sorted', replay: 'sorted' }, { item: 'socket_s1', recorded: 'sorted', replay: 'wrong' }],
+    images: { dir: 'images/000', sums: { up: Array.from({ length: n }, (_, k) => sums(k, 0)), wrist: Array.from({ length: n }, (_, k) => sums(k, 1)) } } };
+  return j;
+}
+
+test('SIL replay demos: observation.images.<camera> (image dtype, PNG bytes from the loader), stats (3,1,1), diverged items left out', async () => {
+  const j = replayDemo(), asked = [];
+  const png = (demo, cam, k) => { asked.push([demo, cam, k]); return new Uint8Array([0x89, 0x50, 0x4e, 0x47, cam === 'up' ? 1 : 2, k & 255]); };
+  const files = await buildDataset([j], { images: png });
+  const info = JSON.parse(files['meta/info.json']);
+  assert.equal(info.total_episodes, 1, 'the socket ended "wrong" in the replay, "sorted" in the recording: left out');
+  for (const c of ['up', 'wrist']) assert.deepEqual(info.features[IMAGE_PREFIX + c], { dtype: 'image', shape: [24, 32, 3], names: ['height', 'width', 'channels'] });
+  assert.equal(info.total_videos, 0);
+  // the loader was asked for exactly the frames of the cup's episode (resampled onto 30 fps: the nearest frame)
+  const seg = j.printedrobotics.segments[0];
+  assert.equal(asked.length, 2 * info.total_frames);
+  assert.ok(asked.every(([d, , k]) => d === 0 && k >= seg.from && k <= seg.to));
+  const st = JSON.parse(files['meta/stats.json'])[IMAGE_PREFIX + 'up'];
+  assert.deepEqual([st.mean.length, st.mean[0].length, st.mean[0][0].length], [3, 1, 1]);
+  assert.ok(Math.abs(st.mean[0][0][0] - 100 / 255) < 1e-12 && Math.abs(st.max[2][0][0] - 220 / 255) < 1e-12);
+  assert.ok(Math.abs(imageStats([[0, 0, 0, 10, 10, 10, 10, 20, 30, 50, 200, 450, 2]]).std[0] - Math.sqrt(25 - 25) / 255) < 1e-12);
+  assert.match(files['meta/stats.json'], /"min": \[\s*\[\s*\[\s*0\.0/, 'image stats are floats, as numpy writes them');
+  const txt = new TextDecoder('latin1').decode(files['data/chunk-000/episode_000000.parquet']);
+  assert.ok(txt.includes('"' + IMAGE_PREFIX + 'up":{"_type":"Image"}'), 'HF Image feature in the Parquet metadata');
+  assert.match(files['README.md'], /observation\.images\.up`, `observation\.images\.wrist` \(32×24 RGB, PNG\)/);
+  assert.match(files['README.md'], /not photographs/);
+  // keepDiverged keeps the socket (labelled with the replay's outcome); envState: false drops the item state only
+  const k = JSON.parse((await buildDataset([j], { images: png, keepDiverged: true, envState: false }))['meta/info.json']);
+  assert.equal(k.total_episodes, 2); assert.ok(!(ENV_KEY in k.features)); assert.ok(IMAGE_PREFIX + 'up' in k.features);
+  // images: false exports without them; a replay without a loader, or damaged camera data, is refused
+  assert.ok(!(IMAGE_PREFIX + 'up' in JSON.parse((await buildDataset([j], { images: false }))['meta/info.json']).features));
+  await assert.rejects(buildDataset([j]), /PNG loader/);
+  await assert.rejects(buildDataset([j, wasteDemo()], { images: png }), /different cameras/);
+  const bad = replayDemo(); bad.printedrobotics.replay.images.sums.up.pop();
+  assert.throws(() => parseDemo(bad), /bad replay cameras/);
+  const bad2 = replayDemo(); bad2.printedrobotics.replay.cameras[1].name = 'up';
+  assert.throws(() => parseDemo(bad2), /bad replay cameras/);
 });

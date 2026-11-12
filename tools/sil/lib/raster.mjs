@@ -64,14 +64,17 @@ function primitiveMesh(type, size) {
  * to a worker). Drawn: visual geoms (groups 0-2) and, from group 3, free or mocap objects that are
  * not part of the robot (cube_b, ball, bowls, goal: the browser sim draws those itself too). Planes
  * are skipped (the floor is under the table, out of sight).
+ * opts.bodies: extra body ids whose group-3 geoms are drawn too (the conveyor's belt frame and slats);
+ * opts.colors: Map body id -> [r, g, b] (0-255) for bodies whose geoms have no colour of their own (library
+ * items: their MJCF carries collision hulls only, the browser draws textured GLBs instead).
  */
-export function extractScene(m) {
+export function extractScene(m, { bodies = null, colors = null } = {}) {
   const geoms = [];
   for (let g = 0; g < m.ngeom; g++) {
     const type = m.geom_type[g], group = m.geom_group[g], body = m.geom_bodyid[g];
     if (type === GEOM.PLANE) continue;
     if (group > 3) continue;
-    if (group === 3) {
+    if (group === 3 && !(bodies && bodies.has(body))) {
       // free or mocap top-level bodies only (scene objects), never the arm's collision shapes
       const top = m.body_parentid[body] === 0;
       const free = m.body_jntnum[body] === 1 && m.jnt_type[m.body_jntadr[body]] === 0;
@@ -89,7 +92,7 @@ export function extractScene(m) {
     }
     const mat = m.geom_matid[g];
     const src = mat >= 0 ? m.mat_rgba.subarray(4 * mat, 4 * mat + 4) : m.geom_rgba.subarray(4 * g, 4 * g + 4);
-    const rgb = [src[0], src[1], src[2]].map((c) => Math.round(255 * c));
+    const rgb = colors && colors.has(body) ? colors.get(body).slice() : [src[0], src[1], src[2]].map((c) => Math.round(255 * c));
     // per-face unit normals in the geom frame
     const nrm = new Float32Array(tris.length);
     for (let t = 0; t < tris.length; t += 3) {
@@ -105,9 +108,12 @@ export function extractScene(m) {
   return { ngeom: m.ngeom, geoms };
 }
 
-/** Current world poses of all geoms (copies, so they can be posted to a worker). */
-export function geomPoses(m, d) {
-  return { xpos: Float64Array.from(d.geom_xpos), xmat: Float64Array.from(d.geom_xmat) };
+/** Current world poses of all geoms (copies, so they can be posted to a worker). hide: geom ids not to draw
+ *  this frame (moved far below the floor: the conveyor's slats that have turned down around the head drum). */
+export function geomPoses(m, d, hide = null) {
+  const xpos = Float64Array.from(d.geom_xpos);
+  if (hide) for (const g of hide) xpos[3 * g + 2] = -1e3;
+  return { xpos, xmat: Float64Array.from(d.geom_xmat) };
 }
 
 /**

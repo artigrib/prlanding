@@ -4,15 +4,15 @@ import { parentPort } from 'node:worker_threads';
 import { renderView } from './raster.mjs';
 import { encodePNG } from './png.mjs';
 
-let scene = null, W = 0, H = 0, zbuf = null;
+let scene = null, W = 0, H = 0, zbuf = null, floorZ;
 parentPort.on('message', (msg) => {
-  if (msg.type === 'init') { scene = msg.scene; W = msg.width; H = msg.height; zbuf = new Float32Array(W * H); return; }
+  if (msg.type === 'init') { scene = msg.scene; W = msg.width; H = msg.height; zbuf = new Float32Array(W * H); floorZ = msg.floorZ; return; }
   if (msg.type !== 'render' || !scene) return;
   const t0 = performance.now();
   const timestamps = {}, images = {}, raw = {};
   for (const c of msg.cams) {
     const rgb = new Uint8Array(W * H * 3);
-    renderView(scene, msg.poses, c, { width: W, height: H, fovy: c.fovy }, rgb, zbuf);
+    renderView(scene, msg.poses, c, { width: W, height: H, fovy: c.fovy, ...(floorZ != null ? { floorZ } : {}) }, rgb, zbuf);
     images[c.name] = encodePNG(rgb, W, H, { swapRB: true }).toString('base64');
     timestamps[c.name] = msg.t;
     raw[c.name] = rgb;

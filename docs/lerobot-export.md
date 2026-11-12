@@ -79,7 +79,47 @@ Choices that matter:
   `waste_*` = "Sort the waste into bins by material"); the
   demo's Czech title is used only for unknown missions; `task` / `--task` overrides.
 - **Licence** defaults to CC BY 4.0 (`license` / `--license` to change). Every dataset is tagged `source: simulation`.
-- No videos (`total_videos: 0`, `video_path: null`), so policies that need images cannot train on it as is.
+- No videos (`total_videos: 0`, `video_path: null`), so policies that need images cannot train on it as is. For the
+  conveyor missions the SIL replay below adds rendered camera images.
+
+## Camera images: the SIL replay (`tools/sil/replay.mjs`)
+
+The browser records no images. For the conveyor missions (11 `waste_hand`, 12 `waste_teach`) the SIL tooling replays
+a downloaded demo in node and renders virtual cameras, so the dataset gets `observation.images.<camera>`:
+
+```
+node tools/sil/replay.mjs so101-ukazka-waste_teach.json [more.json …] -o OUT [--camera up --camera wrist] [--camera-size 320x240]
+python3 tools/hf/demos_to_lerobot.py OUT/replay-000.json -o OUT/lerobot-py      # the same dataset from Python
+```
+
+- **Replay** (`tools/sil/lib/replay.mjs`): the scene is compiled exactly as the page does it (`tools/sil/lib/plant.mjs`
+  `loadScene({ scene: 'conveyor' })`), the demo is imported and replayed by the page's own `Teach` (snapshot restore,
+  the mission batch restarted with the same seed, recorded actions written to `ctrl` with linear interpolation once
+  per 16 ms frame, the recorded belt command). No servo emulation in the loop ("kinematic" replay). Items, belt and
+  contacts are simulated again and are not forced to match.
+- **Divergence** is measured and reported (`OUT/report.json`, and `printedrobotics.replay` in each replayed demo):
+  joint error (degrees) and gripper error (% open) at every recorded frame, the error of the recorded target / next
+  item poses (mm, yaw in degrees), per item its largest error, and each item's outcome in the recording and in the
+  replay.
+- **What goes into the dataset** is the replay: `observation.state` (the replay's joints), the environment state and
+  the per-item segments are recomputed from the replay (its own mission events, `cutEpisodes` / `cutFrames`), on an
+  exact 30 fps grid (each frame = the 4 ms physics step nearest to `k / 30`); `action` is the recorded command at that
+  time. Images and state are therefore from the same instant.
+- **Items whose outcome changed** in the replay (recorded `sorted`, replayed `dropped`, or no episode at all) are left
+  out of the dataset (`--keep-diverged` / `keepDiverged` keeps them with the replay's label).
+- **Images**: `observation.images.<camera>`, `dtype: image`, `shape: [H, W, 3]`, `names: [height, width, channels]`;
+  Parquet column = HF `datasets` `Image` struct `{ bytes: PNG, path: null }`; HF feature `{"_type": "Image"}` in the
+  Parquet metadata. Stats per channel with LeRobot's shape `(3, 1, 1)` in 0–1, from exact per-frame pixel sums that the
+  replay stores (`printedrobotics.replay.images.sums`), so node and Python compute them without decoding PNGs.
+- **Renderer** (`tools/sil/lib/raster.mjs`): flat-shaded triangles, no textures or shadows. Library items are drawn
+  as their collision hulls in one colour per fraction (`tools/sil/lib/camera.mjs` `FRACTION_RGB`; plastic = the
+  asset's own glTF base colour, the other three set by hand). The conveyor's belt frame and slats are drawn; slats past
+  the head drum are hidden, as in the browser.
+- Other missions replay too (plain scene: one episode per demo, no item state); checked only with a synthetic demo.
+- `--no-env-state` / `envState: false` leaves `observation.environment_state` out (cameras + joints only, what a real
+  arm has); the per-item episodes stay.
+- Browser and Python write the same files from the same replay folder: `tools/hf/test_demos_to_lerobot.py` compares
+  `info.json`, tasks, episodes, the dataset card, stats (to 1e-9) and every Parquet value including the PNG bytes.
 
 ## Verified
 
@@ -112,6 +152,21 @@ Choices that matter:
   material", `dataset_to_policy_features` gives it type `ENV`, and an ACT policy built from those features
   (`validate_features` passes with no image) runs a training forward pass. Joints-only exports (3 episodes) convert
   and load too; the same export from before the stats fix fails the conversion as described above.
+
+- SIL replay with images, 12 Nov 2026 (LeRobot 0.6.1 from PyPI with `[dataset,training]`, Python 3.13, PyTorch 2.11,
+  Node.js 22, 2-core x86_64, CPU only): a 125 s mission 11 demo and a 40 s mission 12
+  demo recorded by `Teach` with the scripted planner in node, replayed with cameras `up` + `wrist` at 320×240.
+  Divergence (mission 11): joints p95 0.75°, max 10.0°; gripper p95 1.8 %; 10 of 11 item outcomes as recorded (per
+  item max position error 4–21 mm for nine of them; the spoon dropped in both runs but elsewhere, 126 mm; the fork,
+  sorted in the recording, reached no bin in the replay and is left out). Mission 12: 3 of 3 outcomes, items ≤ 17 mm.
+  Two replays of the same demo are identical (`tools/sil/test/conveyor.test.mjs`). Rendering 60 images/s at 320×240
+  on one core (PNG encoding excluded); both demos (165 s) replayed, rendered and exported in 3 min. Dataset: 13
+  episodes, 3,799 frames, 59 MB. LeRobot 0.6.1 converts it (`convert_dataset(root=…, push_to_hub=False)`, 0.4 s) and
+  loads it; images come back as `(3, 240, 320)` float tensors equal to the replay's PNGs; `lerobot-train
+  --policy.type=act` (with `--policy.pretrained_backbone_weights=null`: no download in our container) ran 3 steps
+  (batch 8, CPU); ACT lists both cameras in `image_features`, its ResNet18 backbone receives gradients, and blanking
+  the images changes the predicted action chunk. The same with `envState: false` (cameras + joints only). Node and
+  Python exports of the same replay folder: identical Parquet values and metadata, stats equal to 1e-13.
 
 ## Using it
 

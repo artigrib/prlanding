@@ -93,9 +93,21 @@ async function main() {
         tag.id = 'mirror-tag'; tag.setAttribute('role', 'status');
         tag.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:50;margin:0;padding:6px 10px;border-radius:6px;font:600 13px/1.3 system-ui,sans-serif;background:#111;color:#fff;opacity:.9';
         document.body.appendChild(tag);
-        const say = (s) => { tag.textContent = (en ? 'LeRobot mirror: ' : 'Zrcadlo LeRobot: ') + ({ live: en ? 'live' : 'živě', lost: en ? 'disconnected, retrying' : 'odpojeno, zkouším znovu', wait: en ? 'connecting…' : 'připojuji…' })[s]; };
+        const say = (s, other) => {
+          tag.textContent = (en ? 'LeRobot mirror: ' : 'Zrcadlo LeRobot: ') + ({ live: en ? 'live' : 'živě', lost: en ? 'disconnected, retrying' : 'odpojeno, zkouším znovu', wait: en ? 'connecting…' : 'připojuji…',
+            scene: en ? `the runner simulates the "${other}" scene, this page "${ctx.scene}" (open a mission of that scene)` : `běžec simuluje scénu „${other}“, tato stránka „${ctx.scene}“ (otevřete misi té scény)` })[s];
+        };
+        // object scenes: items the runner has out on the table are shown (hull proxy, then the GLB), parked ones hidden
+        const ux = app.ux, onItems = ux && ux.world && ux.world.lib ? (out) => {
+          const on = new Set(out);
+          for (const e of Object.values(ux.world.o)) {
+            if (!e.lib) continue;
+            const g = ux.extras.meshes[e.name];
+            if (on.has(e.name)) { if (g && !g.visible && ux.world.onSpawn) ux.world.onSpawn(e.name); } else if (g) g.visible = false;
+          }
+        } : null;
         say('wait');
-        window.__mirror = M.installMirror(sim, port, { onStatus: say });
+        window.__mirror = M.installMirror(sim, port, { onStatus: say, onItems, scene: ctx.scene });
       }
     } catch (e) { console.warn('mirror disabled:', e); }
   }
