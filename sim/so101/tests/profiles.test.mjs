@@ -82,6 +82,28 @@ test('kinds per class cover the pool (one instance per asset and scale), seeds a
   assert.equal(trialSeed('skript', 0.02, 'paper', 3), trialSeed('skript', 0.02, 'paper', 3));
 });
 
+test('CI cache key of so101-profiles covers every module the measurement imports, and only those', () => {
+  // the job re-measures only when a hashed file changes, so the hash must cover the import closure of the
+  // measurement (static and literal dynamic relative imports) plus the files it loads
+  const root = new URL('../../../', import.meta.url), so = new URL('../', import.meta.url);
+  const yml = fs.readFileSync(new URL('.github/workflows/site-tests.yml', root), 'utf8');
+  const key = yml.split('\n').find((l) => /key: so101-profiles-/.test(l));
+  const globs = [...key.matchAll(/'([^']+)'/g)].map((m) => m[1]);
+  const re = (g) => new RegExp('^' + g.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*\*/g, '\u0000').replace(/\*/g, '[^/]*').replace(/\u0000/g, '.*') + '$');
+  const covered = (f) => globs.some((g) => re(g).test(f));
+  const seen = new Set(), walk = (u) => {
+    const rel = 'sim/so101/' + decodeURIComponent(u.pathname.slice(so.pathname.length));
+    if (seen.has(rel)) return; seen.add(rel);
+    const src = fs.readFileSync(u, 'utf8');
+    for (const m of src.matchAll(/(?:import|export)[^;'"]*?from\s*['"](\.[^'"]+)['"]|import\(\s*['"](\.[^'"]+)['"]/g)) walk(new URL(m[1] || m[2], u));
+  };
+  walk(new URL('tools/profiles.mjs', so)); walk(new URL('tests/profiles.test.mjs', so));
+  const missing = [...seen].filter((f) => !covered(f));
+  assert.deepEqual(missing, [], 'add to the so101-profiles cache key in .github/workflows/site-tests.yml');
+  for (const f of ['sim/so101/model/scene.xml', 'sim/so101/vendor/mujoco/mujoco.wasm', 'sim/so101/profiles/skript-2.json']) assert.ok(covered(f), f);
+  for (const f of ['sim/so101/src/line/des.js', 'sim/so101/src/ui/measure.js', 'sim/so101/app.js']) assert.ok(!covered(f), `${f} is not an input of the measurement`);
+});
+
 // ---------------- the committed profiles ----------------
 test('committed profiles: skript at 2, 4 and 6 cm/s, schema, current cell, n ≥ 100 per class, measured numbers only', () => {
   for (const s of MEASURE.speeds) {
