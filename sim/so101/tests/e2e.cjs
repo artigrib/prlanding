@@ -409,7 +409,7 @@ async function touchDrag(page, from, to, steps = 8) {
       await S(p, () => { window.__srN = 0; window.__sim.advance(1); });
       await S(p, () => new Promise((res) => setTimeout(res, 50)));
       let r = await ux(p), c = await card();
-      ok(r.result.kind === 'manual' && r.result.stars >= 1 && c.open && c.focus && c.k === 'Mise 01 / 11 · splněno' && c.h === 'Kostka je v misce.' && !c.demo,
+      ok(r.result.kind === 'manual' && r.result.stars >= 1 && c.open && c.focus && c.k === 'Mise 01 / 12 · splněno' && c.h === 'Kostka je v misce.' && !c.demo,
         'result card opens with focus on it: header, headline (done text), no demo label ' + JSON.stringify(c));
       ok(c.on === r.result.stars && c.label === `${r.result.stars} ze 3 hvězdiček`, `result card shows the ${r.result.stars} ★ earned`);
       ok(c.vals[0][0] === 'Váš čas' && c.vals[0][1] === fmtT(r.result.time) && /^Pro [23] ★$/.test(c.vals[1][0]) && /^do (0:25|1:00)/.test(c.vals[1][1]),
