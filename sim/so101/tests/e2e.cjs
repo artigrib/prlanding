@@ -578,6 +578,7 @@ async function touchDrag(page, from, to, steps = 8) {
 
     // ---------------- object missions 06–10 (NVIDIA SimReady objects) ----------------
     ok(!p.reqs.some((u) => /\/so101\/objects\/|objects\/(view|library)\.js/.test(u)), 'mission 01 page fetches no object asset (manifest, MJCF, GLB) and no object loader');
+    ok(!p.reqs.some((u) => /\/src\/mobile\//.test(u)), 'mission 01 page loads nothing of the mobile scene');
     {
       // picking an object mission in the plain scene reloads into the object scene
       const q = await open(browser, base + '?test=1&mise=trace&detail=low', { width: 1280, height: 800 });
@@ -1109,6 +1110,21 @@ async function touchDrag(page, from, to, steps = 8) {
         'phone: result card is a bottom sheet, scene visible above it, buttons ≥ 44 px ' + JSON.stringify(g));
     }
     await ph.close();
+
+    // ---------------- mobile scene preview (lab transport PR 1: ?scene=mobile&test=1, no missions yet) ----------------
+    {
+      const mb = await open(browser, base + '?scene=mobile&test=1', { width: 1280, height: 800 });
+      const m0 = await S(mb, () => ({ scene: window.__sim.scene(), base: window.__sim.mobile.base(), view: window.__sim.mobile.view(), hud: document.getElementById('hud-text').textContent }));
+      ok(m0.scene === 'mobile' && Math.abs(m0.base.x + 1.25) < 1e-3 && m0.view.walls === 7 && m0.view.labels.length === 2 && /XLeRobot/.test(m0.hud),
+        'mobile scene: cart in lab A, 7 walls, 2 room labels, the HUD names the model ' + JSON.stringify({ hud: m0.hud, view: m0.view }));
+      await S(mb, () => { window.__sim.mobile.baseCtrl(0.2, 0, 0); window.__sim.advance(1); });
+      const m1 = await S(mb, () => ({ base: window.__sim.mobile.base(), view: window.__sim.mobile.view() }));
+      // forward 0.2 m/s: LeRobot matrix gives the left and right wheels ∓0.2·cos 30°/0.05 rad/s, the back wheel 0
+      ok(m1.base.x - m0.base.x > 0.15 && Math.abs(m1.view.wheelSpeeds[0] + 3.464) < 0.05 && Math.abs(m1.view.wheelSpeeds[2] - 3.464) < 0.05 && Math.abs(m1.view.wheelAngles[0]) > 1,
+        'mobile scene: the cart drives (test hook) and the wheels spin at the LeRobot wheel speeds ' + JSON.stringify(m1));
+      await shot(mb, 'mobile-01-scene');
+      await mb.close();
+    }
   } catch (e) { console.log('FAIL exception', e); fails++; diagnose('exception ' + (e && e.message)); }
   await diag;
   await browser.close(); srv.kill();

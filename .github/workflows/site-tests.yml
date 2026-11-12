@@ -124,7 +124,7 @@ jobs:
         id: passed
         with:
           path: .profile-check
-          key: so101-profiles-${{ matrix.speed }}-${{ hashFiles('sim/so101/src/policy/measure.js', 'sim/so101/src/policy/knn.js', 'sim/so101/src/policy/episodes.js', 'sim/so101/src/objects/beltpick.js', 'sim/so101/src/objects/wastebatch.js', 'sim/so101/src/objects/belt.js', 'sim/so101/src/objects/scene.js', 'sim/so101/src/objects/library.js', 'sim/so101/src/world.js', 'sim/so101/src/controller.js', 'sim/so101/src/kin.js', 'sim/so101/src/missions.js', 'sim/so101/src/analytics.js', 'sim/so101/objects/**', 'sim/so101/model/**', 'sim/so101/vendor/mujoco/**', 'sim/so101/profiles/**', 'sim/so101/tools/profiles.mjs', 'sim/so101/tests/profiles.test.mjs', 'sim/so101/tests/mj-node.mjs') }}
+          key: so101-profiles-${{ matrix.speed }}-${{ hashFiles('sim/so101/src/policy/measure.js', 'sim/so101/src/policy/knn.js', 'sim/so101/src/policy/episodes.js', 'sim/so101/src/objects/beltpick.js', 'sim/so101/src/objects/wastebatch.js', 'sim/so101/src/objects/belt.js', 'sim/so101/src/objects/scene.js', 'sim/so101/src/mobile/scene.js', 'sim/so101/src/objects/library.js', 'sim/so101/src/world.js', 'sim/so101/src/controller.js', 'sim/so101/src/kin.js', 'sim/so101/src/missions.js', 'sim/so101/src/analytics.js', 'sim/so101/objects/**', 'sim/so101/model/**', 'sim/so101/vendor/mujoco/**', 'sim/so101/profiles/**', 'sim/so101/tools/profiles.mjs', 'sim/so101/tests/profiles.test.mjs', 'sim/so101/tests/mj-node.mjs') }}
       - name: Re-measure 25 trials per class and compare with the committed profile
         if: steps.passed.outputs.cache-hit != 'true'
         env:

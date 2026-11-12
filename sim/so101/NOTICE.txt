@@ -84,3 +84,17 @@ copies of the licence texts are included next to each component.
        collision, mass and visual scaled together), so the SO-101's printed jaws can close on it.
      - M8 nut shown 2.5x larger and fork and spoon with the slice collision, as in missions 06–10 above.
      - Slat belt, side rails, drums, end tote and the four waste bins are new, simple geometry by printedrobotics.cz.
+
+7) Lab-transport cart (src/mobile/scene.js, src/mobile/view.js)
+   Base kinematics: wheelSpeeds() in src/mobile/scene.js is a JavaScript port of the body-to-wheel matrix in
+   LeKiwi._body_to_wheel_raw (wheel angles [240, 0, 120] - 90 deg, wheel_radius 0.05 m, base_radius 0.125 m) from
+   LeRobot, src/lerobot/robots/lekiwi/lekiwi.py, https://github.com/huggingface/lerobot at commit
+   e6ffde60312365c5452c46189a26872483943154, Copyright 2024 The HuggingFace Inc. team, licensed under the Apache
+   License 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Changed by printedrobotics.cz: rewritten in
+   JavaScript, returns wheel angular speeds in rad/s (no raw-tick conversion or clamp).
+   Dimensions only (no files copied): the omni wheel and base plates were measured from the STL files
+   URDF/meshes/4-Omni-Directional-Wheel_Single_Body-v1.stl and base_plate_layer{1,2}*.stl of LeKiwi,
+   https://github.com/SIGRobotics-UIUC/LeKiwi at commit efa608d7ee5a495a4803b1d28cd0c955b4f1e033 (Apache-2.0);
+   the planar-base modelling and the plate heights follow simulation/mujoco/xlerobot.xml of XLeRobot,
+   https://github.com/Vector-Wangel/XLeRobot at commit b017b5e6354bd9f61f4247a920c72622ca0aade0 (Apache-2.0).
+   The cart, wheel, room and bench geometry is new, simple geometry by printedrobotics.cz.

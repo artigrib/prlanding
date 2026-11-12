@@ -89,7 +89,8 @@ async function loadModelFiles(onProgress) {
 /** Load MuJoCo + model + three.js. onProgress(fraction 0..1). Returns the ingredients for ArmSim.
  *  opts.scene: 'plain' (default; mission 01 never fetches anything of the object library) | 'objects' (missions
  *  06–10: library objects + fixtures, ~40 kB of MJCF) | 'conveyor' (waste sorting: slat belt, tote, bins and the
- *  batch pool), see src/objects/scene.js PROFILES. opts.objects: true = 'objects' (older callers). */
+ *  batch pool), see src/objects/scene.js PROFILES | 'mobile' (lab transport: the arm on a cart in two rooms,
+ *  src/mobile/scene.js). opts.objects: true = 'objects' (older callers). */
 export async function loadSim(onProgress = () => {}, opts = {}) {
   // Progress: wasm ~ 70 %, meshes ~ 25 %, rest 5 %. Content-length may be the compressed size, so clamp.
   const prog = { wasm: 0, mesh: 0 };
@@ -111,6 +112,8 @@ export async function loadSim(onProgress = () => {}, opts = {}) {
     const lib = new L.ObjectLibrary();
     const xml = new TextDecoder().decode(files.find(([p]) => p === 'scene.xml')[1]);
     const built = await S.objectSceneXml(xml, lib, L, profile);
+    // mobile: the arm rides on the cart (src/mobile/scene.js), the scene includes the edited arm MJCF
+    if (built.arm) mj.FS.writeFile('/m/' + built.arm.file, built.arm.edit(new TextDecoder().decode(files.find(([p]) => p === 'so101.xml')[1])));
     scene = `/m/scene_${profile}.xml`;
     mj.FS.writeFile(scene, built.xml);
     objects = { lib, items: built.items, sizes: Object.fromEntries(built.items.map((it) => [it.name, S.itemSize(it)])) };
@@ -305,6 +308,14 @@ export class ArmSim {
     // one servo material per joint so a faulty servo can be tinted
     this.servoMats = SERVO_BODY.map(() => servo.clone());
     const meshCache = new Map();
+    // non-mesh geoms other than the table and the cube (the mobile scene's cart tray, rack and crate) take their MJCF
+    // rgba, one matte material per colour, like the printed fixtures in objects/view.js
+    const solid = new Map(), solidMat = (c) => {
+      const key = c.join(',');
+      if (!solid.has(key)) solid.set(key, new T.MeshStandardMaterial({ color: new T.Color().setRGB(c[0], c[1], c[2], T.SRGBColorSpace), roughness: 0.62, metalness: 0 }));
+      return solid.get(key);
+    };
+    const tableId = this.mj.mj_name2id(m, this.mj.mjtObj.mjOBJ_GEOM.value, 'table');
     this.geoms = [];
     const ngeom = m.ngeom;
     const types = m.geom_type, groups = m.geom_group, dataid = m.geom_dataid, size = m.geom_size;
@@ -333,27 +344,31 @@ export class ArmSim {
         const s = size[3 * g];
         geo = new T.BoxGeometry(2 * s, 2 * s, 2 * s);
         mat = new T.MeshStandardMaterial({ color: 0xe8461e, roughness: 0.5 });
-      } else if (type === G.BOX) {                         // the table
+      } else if (type === G.BOX) {
         geo = new T.BoxGeometry(2 * size[3 * g], 2 * size[3 * g + 1], 2 * size[3 * g + 2]);
-        mat = new T.MeshStandardMaterial({ color: 0xf6f6f3, roughness: 0.9 });
+        mat = g === tableId ? new T.MeshStandardMaterial({ color: 0xf6f6f3, roughness: 0.9 }) : solidMat(col);
       } else if (type === G.CYLINDER) {
         geo = new T.CylinderGeometry(size[3 * g], size[3 * g], 2 * size[3 * g + 1], 24);
         geo.rotateX(Math.PI / 2);                          // three cylinders are y-aligned, MuJoCo z-aligned
-        mat = servo;
+        mat = solidMat(col);
       } else continue;
       const mesh = new T.Mesh(geo, mat);
       mesh.matrixAutoUpdate = false;
-      mesh.castShadow = type !== G.BOX || bodyOf[g] === this.cubeBody;
+      mesh.castShadow = g !== tableId;
       mesh.receiveShadow = true;
       this.world.add(mesh);
       this.geoms.push([g, mesh]);
     }
 
-    // table grid (Swiss-grid nod), 5 cm pitch, drawn just above the table top
-    const grid = new T.GridHelper(0.6, 12, 0xcfcfca, 0xe2e2de);
-    grid.rotation.x = Math.PI / 2; grid.position.set(0.14, 0, 0.0004);
-    grid.material.transparent = true; grid.material.opacity = 0.9;
-    this.world.add(grid);
+    // table grid (Swiss-grid nod), 5 cm pitch, drawn just above the table top. No table (mobile scene): no grid and
+    // no shadow catcher, src/mobile/view.js draws the floor and the rooms.
+    const table = tableId >= 0;
+    if (table) {
+      const grid = new T.GridHelper(0.6, 12, 0xcfcfca, 0xe2e2de);
+      grid.rotation.x = Math.PI / 2; grid.position.set(0.14, 0, 0.0004);
+      grid.material.transparent = true; grid.material.opacity = 0.9;
+      this.world.add(grid);
+    }
 
     // bowl: smooth lathe (collision is an octagon in MJCF)
     const pts = [];
@@ -367,9 +382,11 @@ export class ArmSim {
     this.world.add(this.bowl);
 
     // soft floor shadow catcher under the table so it does not float
-    const floor = new T.Mesh(new T.CircleGeometry(1.2, 48), new T.ShadowMaterial({ opacity: 0.08 }));
-    floor.position.set(0.14, 0, -0.03); floor.receiveShadow = true;
-    this.world.add(floor);
+    if (table) {
+      const floor = new T.Mesh(new T.CircleGeometry(1.2, 48), new T.ShadowMaterial({ opacity: 0.08 }));
+      floor.position.set(0.14, 0, -0.03); floor.receiveShadow = true;
+      this.world.add(floor);
+    }
 
     this.sync();
   }
