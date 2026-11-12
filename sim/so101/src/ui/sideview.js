@@ -68,7 +68,7 @@ export class SideView {
   /** what the inset shows now: target, tip, measurement; null when there is nothing to frame */
   state() {
     const ux = this.ux, tip = ux.ctl.actualTip(this.tipBuf);
-    const t = sideTarget(ux.world, ux.runner.m, ux.heldObject(), tip, inZone);
+    const t = ux.workTarget ? ux.workTarget() : sideTarget(ux.world, ux.runner.m, ux.heldObject(), tip, inZone);   // the trackpad's selection first
     if (!t) return null;
     return { t, tip, ...measure(tip, t.p) };
   }

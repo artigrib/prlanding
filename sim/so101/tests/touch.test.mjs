@@ -79,3 +79,66 @@ test('every new touch string has an English entry', () => {
     'Předmět vypadl – otevřete chapadlo a uchopte ho znovu', 'Tahat ruku prstem za díl', 'Zapnuto: prst na ruce ji fyzikálně táhne.',
     'Vypnuto: prst na ruce otáčí pohledem, klepnutí na čelisti otevře nebo zavře chapadlo.']) assert.ok(en.strings[s], s);
 });
+
+// ---------------- trackpad scheme (src/ui/touchpad.js) ----------------
+import { PAD, padGain, Speed, tableDelta, classify, railSnap, scrubSnap, wrapDeg } from '../src/touch.js';
+
+test('trackpad gain: 0.25 mm/px slow, 1.2 mm/px fast, smooth and monotonic between', () => {
+  assert.equal(padGain(0), 0.25);
+  assert.equal(padGain(150), 0.25);
+  assert.equal(padGain(900), 1.2);
+  assert.equal(padGain(5000), 1.2);
+  let last = 0;
+  for (let v = 0; v <= 1200; v += 10) { const g = padGain(v); assert.ok(g >= last - 1e-12, `monotonic at ${v}`); last = g; }
+  assert.ok(Math.abs(padGain(525) - (0.25 + 1.2) / 2) < 1e-9, 'half-way at the midpoint (smoothstep)');
+  // precision: the M02 3★ limit (4 mm) is 16 px of slow finger travel
+  assert.equal(4 / padGain(100), 16);
+});
+
+test('finger speed from event times', () => {
+  const s = new Speed(1);   // tiny time constant: the last sample wins
+  s.reset(0);
+  assert.ok(Math.abs(s.update(10, 10) - 1000) < 1, '10 px in 10 ms = 1000 px/s');
+  assert.ok(Math.abs(s.update(1, 20) - 100) < 1);
+});
+
+test('finger → table motion is relative to the camera heading, on the table only', () => {
+  const near = (a, b) => a.every((v, i) => Math.abs(v - b[i]) < 1e-12);
+  // camera looking along +x: finger up = away (+x), finger right = camera right (−y)
+  assert.ok(near(tableDelta(0, -100, 0.25, [1, 0]), [0.025, 0]));
+  assert.ok(near(tableDelta(100, 0, 0.25, [1, 0]), [0, -0.025]));
+  // camera looking along +y: finger up = +y, right = +x; the heading's length does not matter
+  assert.ok(near(tableDelta(0, -40, 1, [0, 5]), [0, 0.04]));
+  assert.ok(near(tableDelta(40, 0, 1, [0, 5]), [0.04, 0]));
+});
+
+test('gesture classification: tap < 8 px and < 300 ms, drag beyond 8 px', () => {
+  assert.equal(classify(3, 120, true), 'tap');
+  assert.equal(classify(3, 450, true), 'long');
+  assert.equal(classify(9, 50, false), 'drag');
+  assert.equal(classify(9, 50, true), 'drag');
+  assert.equal(classify(2, 50, false), 'press');
+  assert.equal(PAD.tapPx, 8); assert.equal(PAD.tapMs, 300);
+});
+
+test('height rail: detents capture ±2 mm, the nearest wins, outside the band the finger rules', () => {
+  const det = [0.0105, 0.025];
+  assert.deepEqual(railSnap(0.012, det), { z: 0.0105, at: 0 });
+  assert.deepEqual(railSnap(0.0235, det), { z: 0.025, at: 1 });
+  assert.deepEqual(railSnap(0.018, det), { z: 0.018, at: -1 });
+  assert.deepEqual(railSnap(0.05, []), { z: 0.05, at: -1 });
+  assert.equal(PAD.rail, 0.4, '0.4 mm per px: 15 cm ≈ 375 px');
+});
+
+test('wrist strip: 15° detents, magnet and "lícuje" within 3° of the faces', () => {
+  assert.equal(wrapDeg(100, 90), 10); assert.equal(wrapDeg(-80, 90), 10); assert.equal(wrapDeg(45, 90), 45);
+  // no selection: detents at multiples of 15° (±1°)
+  assert.deepEqual(scrubSnap(30.6, null), { r: 30, mis: null, aligned: false, detent: 2 });
+  assert.deepEqual(scrubSnap(37, null), { r: 37, mis: null, aligned: false, detent: null });
+  // a cube square at roll 12°: off = raw − 12
+  const at = (raw) => scrubSnap(raw, raw - 12, 90);
+  assert.equal(at(14).aligned, true); assert.equal(at(14).r, 12);
+  assert.equal(at(12 + 90 - 2).r, 12 + 90, 'every face counts (90° symmetry)');
+  assert.equal(at(17).aligned, false); assert.equal(at(17).mis, 5);
+  assert.equal(at(44.5).r, 45, 'away from the faces the 15° detents still hold');
+});

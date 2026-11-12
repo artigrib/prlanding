@@ -609,3 +609,58 @@
 /* motion: stars appear one by one (≤ 600 ms); nothing moves with prefers-reduced-motion or calm mode (?klid=1) */
 @media (prefers-reduced-motion:reduce){.ux-result .ux-winstars span.on,.win.ux-result{animation:none}}
 .ux-reduced .ux-result .ux-winstars span.on,.ux-reduced .win.ux-result{animation:none}
+
+/* ---- trackpad touch scheme (beta, src/ui/touchpad.js; body.ux-pad) ---- */
+.ux-tscheme{display:flex;flex-direction:column;gap:6px}
+.ux-tscheme[hidden]{display:none}
+.ux-tscheme>.mono,.ux-tscheme .mono-s{margin:0}
+.ux-rail{position:absolute;right:60px;top:80px;bottom:100px;width:52px;display:flex;flex-direction:column;z-index:4;touch-action:none;user-select:none;-webkit-user-select:none}
+.ux-rail[hidden],.ux-wstrip[hidden]{display:none}
+.ux-rail-b{flex:none;height:44px;width:52px;padding:0;background:#fff;border:1px solid var(--ink);color:var(--ink);font:500 15px/1 var(--sans);cursor:pointer}
+.ux-rail-up{border-bottom:0}
+.ux-rail-dn{border-top:0}
+.ux-rail-t{position:relative;flex:1 1 auto;min-height:60px;background:rgba(255,255,255,.82);border:1px solid var(--ink);touch-action:none;cursor:ns-resize}
+.ux-rail-t::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:2px;margin-left:-1px;background:var(--line-2)}
+.ux-rail-th{position:absolute;left:6px;right:6px;top:-4px;height:8px;background:var(--accent);border:1px solid var(--ink);pointer-events:none}
+.ux-rail-d{position:absolute;left:0;right:0;height:0;border-top:2px solid var(--ink);pointer-events:none}
+.ux-rail-d.top{border-top-style:dashed}
+.ux-rail-r{position:absolute;right:58px;top:0;white-space:nowrap;background:#fff;border:1px solid var(--accent);color:var(--accent-text);padding:2px 8px;font-size:13px;line-height:1.4;pointer-events:none;opacity:0}
+.ux-rail-r.on{opacity:1}
+.ux-rail.tick .ux-rail-t,.ux-wstrip.tick{animation:ux-tick .28s ease-out}
+@keyframes ux-tick{0%{box-shadow:0 0 0 0 var(--accent)}40%{box-shadow:0 0 0 4px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+.ux-wstrip{position:absolute;left:50%;bottom:84px;transform:translateX(-50%);width:min(480px,calc(100% - 32px));height:48px;box-sizing:border-box;z-index:4;display:flex;align-items:center;gap:10px;padding:0 12px;
+  background-color:rgba(255,255,255,.82);background-image:repeating-linear-gradient(90deg,var(--line-2) 0 1px,transparent 1px 30px);background-size:30px 14px;background-repeat:repeat-x;background-position:50% 100%;
+  border:1px solid var(--ink);touch-action:none;user-select:none;-webkit-user-select:none;cursor:ew-resize}
+.ux-wstrip::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--accent);pointer-events:none}
+.ux-wstrip-k{color:var(--mute)}
+.ux-wstrip-v{font-size:13px;background:#fff;padding:0 4px}
+.ux-wstrip-ok{margin-left:auto;background:var(--ok);color:#fff;padding:2px 8px;font-size:13px}
+.ux-wstrip.ok{border-color:var(--ok)}
+.ux-padhint{position:absolute;inset:0;z-index:6;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.ux-padhint[hidden]{display:none}
+.ux-padhint-f{width:44px;height:44px;border-radius:50%;background:rgba(14,14,14,.35);border:2px solid #fff;box-shadow:0 0 0 1px var(--ink)}
+.ux-padhint.go .ux-padhint-f{animation:ux-padf 2s ease-in-out}
+.ux-padhint p{margin:0;max-width:280px;text-align:center;background:var(--ink);color:#fff;padding:6px 10px}
+@keyframes ux-padf{0%{transform:translate(-60px,30px)}45%{transform:translate(50px,-30px)}70%{transform:translate(20px,10px)}100%{transform:translate(-60px,30px)}}
+@media (prefers-reduced-motion:reduce){.ux-padhint.go .ux-padhint-f,.ux-rail.tick .ux-rail-t,.ux-wstrip.tick{animation:none}}
+/* phones, portrait: side view and camera move to the top left, the rail runs down the right edge, the strip sits above
+   the thumb bar across the full width */
+@media (max-width:860px) and (min-height:501px){
+  .ux-pad .ux-rail{right:16px;top:136px;bottom:64px}
+  .ux-pad .ux-wstrip{left:16px;right:16px;width:auto;transform:none;bottom:8px}
+  .ux-pad .ux-side{top:136px;bottom:auto}
+  .ux-pad .ux-cam{top:228px;bottom:auto}
+  .ux-pad .ux-pip,.ux-pad .ux-side-on .ux-pip{top:280px;bottom:auto}
+  .ux-pad .ux-credit{bottom:64px;right:76px}
+  .ux-pad .ux-playbar,.ux-pad .ux-penhint{bottom:64px}
+}
+/* phones, landscape: the left part is the trackpad, the rail stands in the right column above Chapadlo, the strip
+   runs along the bottom of the trackpad */
+@media (max-height:500px){
+  .ux-pad .ux-rail{right:56px;top:60px;bottom:64px}
+  .ux-pad .ux-wstrip{left:16px;right:344px;width:auto;transform:none;bottom:8px}
+  .ux-pad .ux-side{top:60px;bottom:auto}
+  .ux-pad .ux-cam{top:166px;bottom:auto}
+  .ux-pad .ux-pip,.ux-pad .ux-side-on .ux-pip{top:218px;bottom:auto}
+}
+.ux-result-open .ux-rail,.ux-result-open .ux-wstrip,.ux-drawer-open .ux-rail,.ux-drawer-open .ux-wstrip{display:none}
