@@ -584,7 +584,7 @@ Object.assign(strings, {
   'Ukažte každou frakci aspoň jednou a každý předmět dejte do jeho koše – politika kopíruje i chyby.': 'Show every material at least once and put every item into its own bin – the policy copies mistakes too.',
   'Pro všechny 3 ★: ukázky bez chyby, všechny 4 frakce, nejvýš 6 ukázek.': 'For all 3 ★: demos without mistakes, all 4 materials, at most 6 demos.',
   'Politika roztřídila odpad': 'The policy sorted the waste', 'Politika roztřídila odpad.': 'The policy sorted the waste.',
-  '★ hotovo (8 z 11) · ★ čistota ≥ 95 % · ★ nejvýš 6 ukázek': '★ done (8 of 11) · ★ purity ≥ 95 % · ★ at most 6 demos',
+  '★ hotovo (8 z 11) · ★ čistota ≥ 95 % · ★ všechny 4 frakce, nejvýš 6 ukázek': '★ done (8 of 11) · ★ purity ≥ 95 % · ★ all 4 materials, at most 6 demos',
   'Po běhu politiky ukáže rozbor u každého předmětu, podle které ukázky se rozhodla (Nástroje → Politika). Koš pro předmět u chapadla svítí.':
     'After a policy run, the analysis shows for every item which demo the decision came from (Tools → Policy). The bin for the item at the gripper lights up.',
   'Jak politika rozhoduje': 'How the policy decides', 'Nahrát ukázky skriptem': 'Record demos with the script',
@@ -619,6 +619,18 @@ Object.assign(strings, {
   'Zasáhli jste do běhu – bez hvězdiček.': 'You stepped in during the run – no stars.', 'Ukázky nahrál skript – bez hvězdiček.': 'The script recorded the demos – no stars.',
   'Co neumí: nevidí (druh a polohu zná ze simulace), pohyb je plánovače, druh bez ukázky nechá projet.': 'What it can’t do: it does not see (it knows kind and pose from the simulation), the motion is the planner’s, a kind without a demo is let through.',
   'Upravit ukázky': 'Edit the demos',
+  /* měřicí buňka (src/ui/measure.js) */
+  'Měřicí buňka': 'Measuring cell',
+  'Změří naučenou politiku na jedné buňce: fyzika MuJoCo bez vykreslování, zrychleně, každý předmět sám na pásu. Výsledek (úspěšnost, časy cyklu, příčiny selhání) je profil politiky pro linku v misi 13.':
+    'Measures the learned policy on one cell: MuJoCo physics without rendering, fast-forwarded, each item alone on the belt. The result (success rate, cycle times, causes of failure) is the policy profile for the line in mission 13.',
+  'Rychlost pásu': 'Belt speed', 'Předmětů z každé frakce': 'Items of each material', 'Změřit buňku': 'Measure the cell', 'Měří se…': 'Measuring…',
+  'Z mezipaměti: tahle politika už byla při této rychlosti změřená.': 'From the cache: this policy was already measured at this speed.',
+  'Nejdřív stiskněte Naučit – měří se naučená politika.': 'Press Teach first – the learned policy is what gets measured.',
+  'Frakce': 'Material', 'Úspěch na pokus': 'Success per attempt', 'Cyklus (medián)': 'Cycle (median)', 'Selhání': 'Failures',
+  'Stáhnout profil (JSON)': 'Download the profile (JSON)',
+  'shodil z pásu': 'knocked it off the belt', 'upustil na pás': 'dropped it onto the belt', 'upustil mimo koš': 'dropped it outside the bins',
+  'upustil do cizího koše': 'dropped it into another bin', 'špatný koš (podle ukázky)': 'wrong bin (from a demo)', 'plný koš – nechal projet': 'bin full – let it pass',
+  'nedostal se k němu': 'never got to it',
   'správně': 'correct', 'špatný koš': 'wrong bin', 'neznámá třída – nechal projet': 'unknown class – let it pass', 'minul úchop': 'missed the grasp',
   'upustil': 'dropped it', 'nestihl (mimo dosah)': 'too late (out of reach)', 'žádný koš': 'no bin', 'zasažení hráče': 'player stepped in'
 });
@@ -651,7 +663,17 @@ const patterns = [
   [/^nové dávce č\. (\d+)$/, 'a new batch, no. $1'],
   [/^(Politika roztřídila|Skript roztřídil) (\d+) z (\d+) – na splnění je potřeba (\d+)\.$/, (m, a, b, c, d) => `The ${a === 'Skript roztřídil' ? 'script' : 'policy'} sorted ${b} of ${c} – ${d} are needed to pass.`],
   [/^Mise (\d+) \/ (\d+) · nesplněno$/, 'Mission $1 / $2 · not passed'],
-  [/^★ nejvýš (\d+) ukázek$/, '★ at most $1 demos'], [/^☆ ukázek: (\d+)$/, '☆ demos: $1'],
+  /* měřicí buňka (src/ui/measure.js) */
+  [/^Měří se: (\d+) z (\d+) předmětů · (\d+:\d\d)$/, 'Measuring: $1 of $2 items · $3'],
+  [/^Změřeno v prohlížeči za (\d+:\d\d): (\d+) předmětů, (.+)× rychleji než skutečný čas\.$/, (m, a, b, c) => `Measured in the browser in ${a}: ${b} items, ${dec(c)}× faster than real time.`],
+  [/^Zrušeno po (\d+) z (\d+) předmětů – nic se neuložilo\.$/, 'Cancelled after $1 of $2 items – nothing was saved.'],
+  [/^Měření selhalo: (.*)$/, 'The measurement failed: $1'], [/^Měřicí buňka se nenačetla: (.*)$/, 'The measuring cell did not load: $1'],
+  [/^· (.+) cm\/s · (\d+) z každé frakce · naměřeno (v prohlížeči|v CI) (\d{4}-\d\d-\d\d)$/, (m, a, b, c, d) => `· ${dec(a)} cm/s · ${b} of each material · measured ${c === 'v CI' ? 'in CI' : 'in the browser'} ${d}`],
+  [/^Pro srovnání Skript \(plánovač\) při (.+) cm\/s: roztříděno (.+) % předmětů, cyklus (.+) s \(medián; (\d+) z každé frakce, naměřeno v CI (\d{4}-\d\d-\d\d)\)\.$/,
+    (m, a, b, c, d, e) => `For comparison, the Script (planner) at ${dec(a)} cm/s: ${dec(b)} % of the items sorted, cycle ${dec(c)} s (median; ${d} of each material, measured in CI ${e}).`],
+  [/^(\d+(?:,\d+)?) s$/, (m, a) => `${dec(a)} s`],
+  [/^((?:(?:minul úchop|shodil z pásu|upustil na pás|upustil mimo koš|upustil do cizího koše|špatný koš \\(podle ukázky\\)|neznámá třída – nechal projet|nestihl \\(mimo dosah\\)|plný koš – nechal projet|nedostal se k němu) \d+×)(?:, (?:minul úchop|shodil z pásu|upustil na pás|upustil mimo koš|upustil do cizího koše|špatný koš \\(podle ukázky\\)|neznámá třída – nechal projet|nestihl \\(mimo dosah\\)|plný koš – nechal projet|nedostal se k němu) \d+×)*)$/, (m, a) => a.split(', ').map((x) => { const k = x.lastIndexOf(' '); return T(x.slice(0, k)) + x.slice(k); }).join(', ')],
+  [/^★ všechny (\d+) frakce, nejvýš (\d+) ukázek$/, '★ all $1 materials, at most $2 demos'], [/^☆ ukázek: (\d+) · frakcí (\d+) ze (\d+)$/, '☆ demos: $1 · materials $2 of $3'],
   /* mission 11: waste sorting */
   [/^Roztříděno (\d+) z (\d+)…$/, 'Sorted $1 of $2…'],
   [/^Dávka skončila: (\d+) z (\d+) ve správném koši, potřeba (\d+)\. R spustí dávku znovu$/, 'Batch over: $1 of $2 in the right bin, $3 needed. R starts the batch again'],
@@ -782,7 +804,7 @@ const patterns = [
 
 // pieces of composed messages, translated as a whole by the patterns above (for tools/i18n-extract.mjs)
 const fragments = ['méně než 0,1 ms', 'ukázka', 'ukázky', 'ukázek', 'Běží:', 'Ukázané frakce:', '· dávka č. {}: {} z {} · čistota {}{}', '· ověřeno na nové dávce č. {}{}', '{}: špatný koš – {}',
-  '{}: z vašich ukázek se učí, do kterého koše, kdy na pásu a jak vysoko brát. Rukou pohybuje plánovač. Nevidí: druh a polohu předmětu zná ze simulace.', 'Natrénováno za {} z {} {}', '. Bez ukázky: {} – ty politika nechá projet', ' · ukázky se změnily, stiskněte Naučit', 'Ukázek: {} · zatím nenaučeno', 'Ukázané frakce: {}', 'Nepoužito: {} (předmět propadl nebo vypadl, žádný koš)', 'Stejná dávka č. {}', 'nové dávce č. {}', '{} (natrénováno za {})', 'Smazat ukázku č. {}', 'Dávka ukázek skončila: {} {}. Stiskněte Naučit', 'Ukázky: {} · na pásu {} · pak Naučit', 'Politika: hotovo {} z {} · na pásu {}', 'Politika roztřídila {} z {}, potřeba {}. Rozbor je v Nástroje → Politika', '{} {} z {} – na splnění je potřeba {}.', 'Mise {} / {} · nesplněno', '★ nejvýš {} ukázek', '☆ ukázek: {}', '· dávka č. {}: {} z {} · čistota {}', '· ověřeno na nové dávce č. {}', 'Běží: {}', ': špatný koš – {}', ' (podle ukázky č. {})', 'koš {}', 'Naučit ({})', 'Naučit politiku z ukázek ({})', 'Zaseklo se na pásu: {} – vezměte to rukou', '({} v cizím koši)', 'Pás stojí {}', 'Teď nad koš: {}', '☆ pás stál {}', '☆ čistota {}', 'Táhněte modrou kouli nad', 'Posuňte prstem chapadlo nad', 'Pohled z boku: {}', 'chapadlo ve výšce cíle ({})', 'chapadlo {} cm {} cílem ({})', ', {} cm vedle', 'STOP uvolněn. {} Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.', 'STOP uvolněn. {} Řízení zapnete tlačítkem „Znovu zapnout moment“.', 'Pauza po dlouhé relaci: pohyb půjde aktivovat za {}.', 'Skutečná ruka · POHYB POVOLEN · {} · zbývá {}', 'Skutečná ruka · jen čtení (shadow) · pauza {}', '· další: {}', '{} / {} misí · {} ★ z {}', '· sdílený čas {}', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
+  '{}: z vašich ukázek se učí, do kterého koše, kdy na pásu a jak vysoko brát. Rukou pohybuje plánovač. Nevidí: druh a polohu předmětu zná ze simulace.', 'Natrénováno za {} z {} {}', '. Bez ukázky: {} – ty politika nechá projet', ' · ukázky se změnily, stiskněte Naučit', 'Ukázek: {} · zatím nenaučeno', 'Ukázané frakce: {}', 'Nepoužito: {} (předmět propadl nebo vypadl, žádný koš)', 'Stejná dávka č. {}', 'nové dávce č. {}', '{} (natrénováno za {})', 'Smazat ukázku č. {}', 'Dávka ukázek skončila: {} {}. Stiskněte Naučit', 'Ukázky: {} · na pásu {} · pak Naučit', 'Politika: hotovo {} z {} · na pásu {}', 'Politika roztřídila {} z {}, potřeba {}. Rozbor je v Nástroje → Politika', '{} {} z {} – na splnění je potřeba {}.', 'Mise {} / {} · nesplněno', '★ všechny {} frakce, nejvýš {} ukázek', 'Měří se: {} z {} předmětů · {}', 'Změřeno v prohlížeči za {}: {} předmětů, {}× rychleji než skutečný čas.', 'Zrušeno po {} z {} předmětů – nic se neuložilo.', 'Měření selhalo: {}', 'Měřicí buňka se nenačetla: {}', 'Měření selhalo:', 'Měřicí buňka se nenačetla:', '· {} cm/s · {} z každé frakce · naměřeno {} {}', 'Pro srovnání Skript (plánovač) při {} cm/s: roztříděno {} předmětů, cyklus {} s (medián; {} z každé frakce, naměřeno v CI {}).', '{} z {}', '{} {}×', '☆ ukázek: {} · frakcí {} ze {}', '· dávka č. {}: {} z {} · čistota {}', '· ověřeno na nové dávce č. {}', 'Běží: {}', ': špatný koš – {}', ' (podle ukázky č. {})', 'koš {}', 'Naučit ({})', 'Naučit politiku z ukázek ({})', 'Zaseklo se na pásu: {} – vezměte to rukou', '({} v cizím koši)', 'Pás stojí {}', 'Teď nad koš: {}', '☆ pás stál {}', '☆ čistota {}', 'Táhněte modrou kouli nad', 'Posuňte prstem chapadlo nad', 'Pohled z boku: {}', 'chapadlo ve výšce cíle ({})', 'chapadlo {} cm {} cílem ({})', ', {} cm vedle', 'STOP uvolněn. {} Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.', 'STOP uvolněn. {} Řízení zapnete tlačítkem „Znovu zapnout moment“.', 'Pauza po dlouhé relaci: pohyb půjde aktivovat za {}.', 'Skutečná ruka · POHYB POVOLEN · {} · zbývá {}', 'Skutečná ruka · jen čtení (shadow) · pauza {}', '· další: {}', '{} / {} misí · {} ★ z {}', '· sdílený čas {}', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
 
 // object library names: generated map, hand-written keys above win
 for (const [k, v] of Object.entries(objectNames)) if (!(k in strings)) strings[k] = v;

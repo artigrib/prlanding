@@ -816,6 +816,37 @@ async function touchDrag(page, from, to, steps = 8) {
       ok(p1.pol.model && p1.pol.model.n === used.length && used.length >= 3 && used.every((e) => e.src === 'script' && e.y != null && e.dz != null) && p1.rows === used.length &&
         /^Natrénováno za .+ ms z \d+ ukáz/.test(p1.st) && /Ukázané frakce: /.test(p1.cov) && p1.pol.button === 'Spustit politiku' && p1.pol.step === 2,
         `Naučit: ${p1.st}; ${p1.cov}; button "${p1.pol.button}" ` + JSON.stringify(used.map((e) => e.item + '→' + e.bin)));
+      // the measuring cell (src/ui/measure.js): the trained policy measured headless on its own MjData, fast-forwarded;
+      // start → progress, Zrušit → nothing kept, a full run → per-class table, the same policy again → from the cache.
+      // The scene the player sees does not move meanwhile (its sim is paused: same time, same joints).
+      const before = await S(q, () => ({ t: window.__sim._app.sim.d.time, q: Array.from(window.__sim._app.sim.d.qpos.subarray(0, 6)) }));
+      const m0 = await S(q, () => ({ st: window.__sim.measureState(), go: !document.getElementById('ux-meas-go').disabled, shown: !!document.querySelector('#ux-sec-policy:not([hidden]) #ux-meas') }));
+      ok(m0.shown && m0.go && !m0.st.running && !m0.st.result, 'Nástroje → Politika: Měřicí buňka ready after Naučit ' + JSON.stringify(m0));
+      const go1 = await S(q, () => window.__sim.measure({ speed: 0.02, n: 5 }));
+      await q.waitForFunction(() => window.__sim.measureState().i >= 1, null, { timeout: 180000 }).catch(() => {});
+      const mid = await S(q, () => ({ st: window.__sim.measureState(), stop: !document.getElementById('ux-meas-stop').hidden, bar: !document.getElementById('ux-meas-bar').hidden, go: document.getElementById('ux-meas-go').disabled }));
+      ok(go1 === 'started' && mid.st.running && mid.st.total === 20 && mid.stop && mid.bar && mid.go && /^Měří se: \d+ z 20 předmětů · \d+:\d\d$/.test(mid.st.status),
+        `measuring cell started: ${mid.st.status}`);
+      await S(q, () => window.__sim.measureCancel());
+      await q.waitForFunction(() => !window.__sim.measureState().running, null, { timeout: 60000 }).catch(() => {});
+      const can = await S(q, () => window.__sim.measureState());
+      ok(!can.running && !can.result && /^Zrušeno po \d+ z 20 předmětů – nic se neuložilo\.$/.test(can.status), 'Zrušit stops the measurement, nothing cached: ' + can.status);
+      const go2 = await S(q, () => window.__sim.measure({ speed: 0.02, n: 1 }));
+      await q.waitForFunction(() => { const s = window.__sim.measureState(); return !s.running && !!s.result; }, null, { timeout: 300000 }).catch(() => {});
+      const res = await S(q, () => window.__sim.measureState());
+      ok(go2 === 'started' && res.result && res.result.n === 4 && res.result.n_per_class === 1 && res.result.source === 'browser' && /^[0-9a-f]{8}$/.test(res.result.model) &&
+        res.result.rows.length === 4 && res.result.rows.every((r) => r.length === 5 && /^\d+ z 1$/.test(r[1])) && /^Změřeno v prohlížeči za \d+:\d\d: 4 předmětů/.test(res.status) && !res.cached && res.ref,
+        `measuring cell result: ${res.status} ${JSON.stringify(res.result && res.result.rows)}`);
+      const go3 = await S(q, () => window.__sim.measure({ speed: 0.02, n: 1 }));
+      const hit = await S(q, () => window.__sim.measureState());
+      ok(go3 === 'cached' && hit.cached && !hit.running && hit.result && JSON.stringify(hit.result.outcomes) === JSON.stringify(res.result.outcomes) && /^Z mezipaměti/.test(hit.status),
+        'the same policy at the same speed comes from the cache: ' + hit.status);
+      const after = await S(q, () => ({ t: window.__sim._app.sim.d.time, q: Array.from(window.__sim._app.sim.d.qpos.subarray(0, 6)) }));
+      ok(after.t === before.t && after.q.every((v, i) => v === before.q[i]), 'measuring did not touch the scene the player sees');
+      await S(q, () => { window.__sim._ux.panel.openDrawer(false); document.getElementById('ux-meas').scrollIntoView({ block: 'start' }); });
+      await q.waitForTimeout(400); await S(q, () => window.__sim.renderNow());
+      await shot(q, 'desk-m12-measure');
+      await S(q, () => window.__sim._ux.panel.closeDrawer(false));
       await S(q, () => window.__sim.policyRun());
       await S(q, () => window.__sim.advance(2));
       const run1 = await S(q, () => { window.__sim.renderNow(); const c = document.querySelector('.ux-chip-run'); return { chip: !c.hidden && c.textContent, pol: window.__sim.policy(), seed: window.__sim._ux.wasteRun().o.seed, hud: window.__sim.ux().hud }; });

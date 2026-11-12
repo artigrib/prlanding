@@ -179,13 +179,17 @@ test('deterministic: the same episodes give the same model and decisions; ties g
   assert.equal(decide(train(T), obsOf(st('nut_m1', 0.24, 0, 0.01, Math.PI / 2 + 0.2), 0.02)).bin, 'bin_paper');
 });
 
-test('stars of mission 12: hotovo, purity of the policy run, at most S.demos demonstrations', () => {
+test('stars of mission 12: hotovo, purity of the policy run, at most S.demos demonstrations showing all 4 fractions', () => {
   const S = MISSIONS.find((x) => x.id === 'waste_teach').stars;
-  assert.equal(teachStars(S, { purity: 1, demos: S.demos }), 3);
-  assert.equal(teachStars(S, { purity: 1, demos: S.demos + 1 }), 2);
-  assert.equal(teachStars(S, { purity: 0.9, demos: 4 }), 2);
-  assert.equal(teachStars(S, { purity: 0.5, demos: 20 }), 1);
-  assert.equal(teachStars(S, { purity: 1, demos: 0 }), 2, 'no demonstrations: no data-efficiency star');
+  assert.equal(S.fractions, 4);
+  assert.equal(S.win, 8, 'the win stays at 8 of 11');
+  assert.equal(teachStars(S, { purity: 1, demos: S.demos, fractions: 4 }), 3);
+  assert.equal(teachStars(S, { purity: 1, demos: S.demos + 1, fractions: 4 }), 2);
+  assert.equal(teachStars(S, { purity: 0.9, demos: 4, fractions: 4 }), 2);
+  assert.equal(teachStars(S, { purity: 0.5, demos: 20, fractions: 4 }), 1);
+  assert.equal(teachStars(S, { purity: 1, demos: 0, fractions: 0 }), 2, 'no demonstrations: no data-efficiency star');
+  assert.equal(teachStars(S, { purity: 1, demos: 4, fractions: 3 }), 2, 'few demos but a fraction never shown: no data-efficiency star');
+  assert.equal(teachStars(S, { purity: 1, demos: 5 }), 2, 'coverage unknown counts as not shown');
 });
 
 // ---------------- with MuJoCo: the executor on the verification batch ----------------
@@ -231,4 +235,18 @@ test('knnSolve on the verification batch: the rule decides, the planner moves; u
   const rows = report(run().items, log, dec);
   const sp = rows.find((r) => r.item === 'spoon_plastic1');
   assert.equal(sp.cause, 'unknown');
+});
+
+test('mission 12 check hands the demonstrated fractions (c.policy.fractions) to the stars', () => {
+  const runner = new MissionRunner(world);
+  mj.mj_resetDataKeyframe(m, d, 0);
+  runner.select('waste_teach'); runner.setup(); mj.mj_forward(m, d);
+  const S = runner.m.stars;
+  runner.ctx.policy = { verify: true, demos: 5, fractions: 3 };
+  let r = runner.tick(0.01);
+  assert.equal(r.stats.demos, 5); assert.equal(r.stats.fractions, 3);
+  assert.equal(runner.m.rate(0, 0, Object.assign({}, r.stats, { purity: 1 })), 2, '3 of 4 fractions: no ukázky star');
+  runner.ctx.policy = { verify: true, demos: 5, fractions: 4 };
+  r = runner.tick(0.01);
+  assert.equal(runner.m.rate(0, 0, Object.assign({}, r.stats, { purity: 1 })), 3, `all 4 fractions, ${S.demos} demos or fewer: 3 stars`);
 });

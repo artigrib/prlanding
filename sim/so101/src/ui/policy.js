@@ -12,13 +12,14 @@
 // "zasažení hráče" (no stars). The run's per-item analysis (src/policy/knn.js report) goes to the result card on a
 // win and to Nástroje → Politika either way, with the Skript (planner) on the same batch next to it.
 
-import { MISSIONS, TEACH, FRACTION_CS } from '../missions.js';
+import { MISSIONS, TEACH, FRACTION_CS, fewDemos } from '../missions.js';
 import { FRACTION_BIN, labelOf } from '../objects/scene.js';
 import { beltSolve } from '../objects/beltpick.js';
 import { examplesFromDemo, train, coverage, report, CAUSES, USED } from '../policy/knn.js';
 import { knnSolve, KNN_LABEL } from '../policy/run.js';
 import { ENV_CLASSES, cutEpisodes } from '../policy/episodes.js';
 import { store } from './store.js';
+import { MeasureUI } from './measure.js';
 
 const $ = (id) => document.getElementById(id);
 const h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
@@ -86,7 +87,10 @@ export class PolicyUI {
   clearAll() { this.ex = []; this.model = null; this.trainedSig = ''; this.persist(); this.render(true); }
 
   // ---------------- phases ----------------
-  ctx() { return { verify: this.verify, demos: this.model ? this.model.n : 0 }; }
+  ctx() {
+    const c = this.model ? this.model.coverage : {};
+    return { verify: this.verify, demos: this.model ? this.model.n : 0, fractions: Object.values(c).filter((k) => k > 0).length };
+  }
   /** before the scene resets (R, Spustit, a replay, "Ukázat řešení"): a running recording is cut and harvested while
    *  its batch still exists */
   beforeReset() { if (this.on && this.ux.teach.recording) this.ux.teach.stopRec(); }
@@ -248,12 +252,14 @@ export class PolicyUI {
           <option value="script">Skript (plánovač)</option>
           <option value="sil" disabled>Importovaná ze SIL (ACT / SmolVLA, mimo prohlížeč) – zatím není</option>
         </select></label>
+      <div id="ux-pol-meas"></div>
       <div id="ux-pol-rep"></div>
       <button type="button" class="ux-link" id="ux-pol-export">Stáhnout poslední nahrávku (JSON) <span aria-hidden="true">⤓</span></button>
       <a class="ux-link" href="lerobot.html" target="_blank" rel="noopener">Převést nahrávku na dataset LeRobot <span aria-hidden="true">→</span></a>
       <button type="button" class="ux-link" id="ux-pol-clear">Smazat všechny ukázky</button>
     </section>`);
     $('ux-sec-tools').before(this.sec);
+    this.meas = new MeasureUI(this, $('ux-pol-meas'));   // Měřicí buňka: the policy's measured profile (mission 13 input)
     $('ux-pol-learn').addEventListener('click', () => this.learn());
     $('ux-pol-run').addEventListener('click', () => this.start());
     $('ux-pol-demos').addEventListener('click', () => this.toDemos());
@@ -307,6 +313,7 @@ export class PolicyUI {
     $('ux-pol-run').disabled = this.choice === 'knn' && !n && !live;
     $('ux-pol-demos').disabled = !this.verify;
     $('ux-pol-kind').value = this.choice;
+    this.meas.render();
     const rep = $('ux-pol-rep'); rep.textContent = '';
     if (this.last || this.scriptLive) rep.appendChild(this.reportEl(this.last || this.scriptLive));
   }
@@ -351,7 +358,7 @@ export class PolicyUI {
   fillWin(m, res, P, cell, again, manual) {
     if (!res.failed) this.finish();
     const st = res.stats, S = m.stars, p = this.kind === 'knn' ? this.last : this.scriptLive;
-    const pur = st.purity != null && st.purity >= S.purity - 1e-9, few = st.demos > 0 && st.demos <= S.demos;
+    const pur = st.purity != null && st.purity >= S.purity - 1e-9, few = fewDemos(S, st);
     // the policy label and the batch head the analysis below (one line); the cells are the measured values
     cell('Ukázky', this.kind === 'script' ? 'žádné' : `${st.demos} (natrénováno za ${msTxt(this.trainMs)})`, this.kind !== 'script' && few);
     cell('Roztříděno', `${st.correct} z ${st.n}`, st.correct >= S.win);
@@ -364,7 +371,7 @@ export class PolicyUI {
       P.winK.textContent = `Mise ${m.n} / ${String(MISSIONS.length).padStart(2, '0')} · nesplněno`;
       P.winDemo.hidden = true; P.winStars.hidden = true;
     }
-    const named = ['★ hotovo', pur ? '★ čistota ≥ 95 %' : `☆ čistota ${pct(st.purity)}`, few ? `★ nejvýš ${S.demos} ukázek` : `☆ ukázek: ${st.demos}`];
+    const named = ['★ hotovo', pur ? '★ čistota ≥ 95 %' : `☆ čistota ${pct(st.purity)}`, few ? `★ všechny ${S.fractions} frakce, nejvýš ${S.demos} ukázek` : `☆ ukázek: ${st.demos} · frakcí ${st.fractions || 0} ze ${S.fractions}`];
     const why = res.failed ? 'Níže je, co u kterého předmětu selhalo. Upravte ukázky (smazat špatné, doplnit chybějící frakce), stiskněte Naučit a Spustit znovu.'
       : this.kind === 'script' ? 'Tohle roztřídil Skript (plánovač), ne vaše politika – bez hvězdiček.'
       : p && p.intervened ? 'Zasáhli jste do běhu – bez hvězdiček.'
