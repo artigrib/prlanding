@@ -935,13 +935,13 @@ async function touchDrag(page, from, to, steps = 8) {
         dt: [...document.querySelectorAll('#ux-wvals dt')].map((e) => e.textContent), caps: [...document.querySelectorAll('#ux-wvals .ux-lhist figcaption')].map((e) => e.textContent),
         line: document.getElementById('ux-wline').textContent, where: document.getElementById('ux-wlx').textContent, again: document.getElementById('again').textContent.trim() }));
       ok(won > 0 && w.open && /splněno/.test(w.k) && w.res.stars === 3 && w.st.last.stars.stars === 3 && w.dt.join() === 'Roboti,Výkon,Čistota,Propadlo' && w.caps.length === 4 && w.caps.every((c) => /vaše běhy \(2\)/.test(c)) &&
-        /★ minimum robotů/.test(w.line) && /Rozbor linky/.test(w.where) && /Profil: Skript \(plánovač\)/.test(w.where) && /údaj výrobce/.test(w.where) && /^Upravit linku/.test(w.again),
+        /★ rezerva: i v horších 10 % běhů ≥ \d+\/min/.test(w.line) && !/čistota/.test(w.line) && /★ minimum robotů/.test(w.line) && /Rozbor linky/.test(w.where) && /Profil: Skript \(plánovač\)/.test(w.where) && /údaj výrobce/.test(w.where) && /^Upravit linku/.test(w.again),
         `the search's line meets the order: ${w.res.stars} ★, card "${w.k}", histograms "${w.caps[0]}"`);
       await shot(q, 'm13-1440-result');
       // "Jak to počítáme": the model's rules, this order's N_min search and the check against the measured mission 11 batches
       await S(q, () => { window.__sim._ux.panel.closeWin(); return window.__sim.lineExplain(); });
       const ex = await S(q, () => { const d = document.getElementById('ux-line-explain'); return { open: !d.hidden, text: d.textContent }; });
-      ok(ex.open && /Minimum robotů pro zakázku A: \d/.test(ex.text) && /Kontrola modelu: .* průměrně \d+,\d z 11/.test(ex.text) && /Co model nezná/.test(ex.text) && /Přijíždění v zakázkách: rovnoměrně/.test(ex.text),
+      ok(ex.open && /Minimum robotů pro zakázku A: \d/.test(ex.text) && /Z nich \d+ splní cíl i v horších 10 % běhů/.test(ex.text) && /Kontrola modelu: .* průměrně \d+,\d z 11/.test(ex.text) && /Co model nezná/.test(ex.text) && /Přijíždění v zakázkách: rovnoměrně/.test(ex.text),
         '"Jak to počítáme" opens with the order\'s N_min search and the model check');
       await shot(q, 'm13-1440-explain');
       await q.keyboard.press('Escape');

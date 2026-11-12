@@ -107,7 +107,7 @@ function main(args) {
       const t0 = Date.now(), r = searchOrder(d, prof);
       out[d.id] = r;
       console.error(`order ${d.id}: v ${d.v * 100} cm/s, λ ${d.lambda}/min, F ${d.F}/min, X ${pc(d.X)}: N_min ${r.n == null ? 'none (' + r.reason + ')' : r.n}` +
-        (r.n != null ? `, ${r.passing} of ${r.total} pass (${r.evaluated} run, ${r.skipped} skipped by the bound); best ${r.best.cells.map((c) => c.join('+')).join(' | ')} → ${f1(r.best.sorted)}/min; one cell at most ${f1(r.cap1.sorted)}/min (${r.cap1.cells.join('+')})` : '') +
+        (r.n != null ? `, ${r.passing} of ${r.total} pass (${r.evaluated} run, ${r.skipped} skipped by the bound); best ${r.best.cells.map((c) => c.join('+')).join(' | ')} → ${f1(r.best.sorted)}/min (p10 ${f1(r.best.p10)}); ${r.reserve} of the passing lines keep p10 ≥ F (★ rezerva); one cell at most ${f1(r.cap1.sorted)}/min (${r.cap1.cells.join('+')})` : '') +
         ` (${((Date.now() - t0) / 1000).toFixed(1)} s)`);
     }
     const js = ordersModule(out);

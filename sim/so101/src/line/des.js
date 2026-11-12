@@ -488,7 +488,8 @@ function profileAt(profiles, policy, v) {
  * along the belt (configurations()), at every speed and inflow of the order. Not searched: gaps between cells (the
  * player may leave slots empty; that only shifts when a cell meets an item another cell has just released). Each runs on the same seeds (opts.seeds, default 1 … LINE.seeds); a configuration is
  * dropped once even the upper bound on its remaining seeds could not lift the mean to F (and skipped when the bound
- * alone is below F). Returns { n, best: { config, summary, reliable }, passing (count at n), evaluated, skipped,
+ * alone is below F). Returns { n, best: { config, summary, reliable }, passing (count at n), reserve (of those, the
+ * ones whose 10th-percentile output across the seeds is ≥ F too), evaluated, skipped,
  * perN: [{ n, evaluated, passing }] }, or n = null with reason: 'inflow' (the belt brings fewer than F items/min;
  * `reach` says how many), 'cells' (no configuration of 1 … maxN cells meets it) or 'budget' (more than
  * opts.budget configurations would have to run; the search stopped and proves nothing).
@@ -511,7 +512,7 @@ export function searchNmin(order, profiles, opts = {}) {
   const live = ctx.filter((c) => c.reach >= F);
   if (!live.length) return { n: null, best: null, passing: 0, evaluated, skipped, perN, reason: 'inflow', reach: Math.max(...ctx.map((c) => c.reach)) };
   for (let n = 1; n <= maxN; n++) {
-    let best = null, passing = 0, ev = 0;
+    let best = null, passing = 0, reserve = 0, ev = 0;
     for (const { v, lambda, model, bounds } of live) {
       const models = { [policy]: model };
       for (const cs of configurations(sets, n)) {
@@ -531,11 +532,12 @@ export function searchNmin(order, profiles, opts = {}) {
         const summary = summarize(runs), m = meets(summary, order);
         if (!m.win) continue;
         passing++;
+        if (summary.sorted.p10 >= F) reserve++;
         if (!best || (m.reliable && !best.reliable) || (m.reliable === best.reliable && summary.sorted.mean > best.summary.sorted.mean)) best = { config, summary, reliable: m.reliable };
       }
     }
     perN.push({ n, evaluated: ev, passing });
-    if (best) return { n, best, passing, evaluated, skipped, perN };
+    if (best) return { n, best, passing, reserve, evaluated, skipped, perN };
   }
   return { n: null, best: null, passing: 0, evaluated, skipped, perN, reason: 'cells' };
 }

@@ -444,13 +444,13 @@ export const MISSIONS = [
     layout: Object.fromEntries(Object.entries(CONVEYOR_BINS).map(([n, p]) => [n, [p[0], p[1], 0]])),
     targets: {},
     strategy: 'Každá buňka má dva koše, takže třídí nejvýš dvě frakce. Buňka blíž začátku pásu vidí předměty dřív. Spusťte linku a podívejte se, co propadá a které buňky jsou vytížené.',
-    advice: 'Pro všechny 3 ★: splnit zakázku, čistota v každém z 20 běhů a nejvýš tolik robotů, kolik našlo vyhledávání.',
-    // Named stars (team lead's rule for mission 13, src/line/orders.js lineStars): ★ splněno = mean output ≥ F at
-    // mean purity ≥ X over the 20 seeded runs; ★ čistota = purity ≥ X in every run; ★ minimum robotů = N ≤ N_min of the
+    advice: 'Pro všechny 3 ★: splnit zakázku, mít rezervu (cíl i v horších 10 % z 20 běhů) a nejvýš tolik robotů, kolik našlo vyhledávání.',
+    // Named stars (mission 13, src/line/orders.js lineStars): ★ splněno = mean output ≥ F at mean purity ≥ X over the
+    // 20 seeded runs; ★ rezerva = the 10th-percentile output ≥ F too; ★ minimum robotů = N ≤ N_min of the
     // order (stored search, src/line/nmin.js). The order's numbers are on its card (src/line/orders.js).
     stars: {},
     done: 'Linka splnila zakázku',
-    starsHint: '★ splněno · ★ čistota v každém běhu · ★ minimum robotů',
+    starsHint: '★ splněno · ★ rezerva v horších 10 % běhů · ★ minimum robotů',
     // hint ladder: rung 2 quotes the model's capacity of one cell, rung 3 loads the search's line (src/ui/line.js)
     hints: {
       ghost: { text: (ux) => ux.line.hintText('ghost'), next: 'Kolik buněk je potřeba' },

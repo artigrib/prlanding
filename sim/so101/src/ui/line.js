@@ -13,7 +13,7 @@
 // the thumb bar, the belt runs top → bottom.
 
 import { t, isEn } from '../i18n/index.js';
-import { ORDERS, orderById, lineConfig, lineProblems, lineStars, cellsAtLeast, histogram, cleanRuns, RUNS_VER, RUNS_MAX, MAX_FRACTIONS, beltMax } from '../line/orders.js';
+import { ORDERS, orderById, lineConfig, lineProblems, lineStars, reserveAtNmin, cellsAtLeast, histogram, cleanRuns, RUNS_VER, RUNS_MAX, MAX_FRACTIONS, beltMax } from '../line/orders.js';
 import { LINE, CLASSES, simulate, cellModel, summarize, seedsOf, slotX } from '../line/des.js';
 import { EXPLAIN, M11_BATCH, SOURCE, m11Config } from '../line/explain.js';
 import { COPY, plural, VENDOR_SOURCES } from '../line/copy.js';
@@ -195,7 +195,7 @@ export class LineUI {
     return true;
   }
   finish(o, cells, runs) {
-    const summary = summarize(runs), stars = lineStars(o, summary, runs, cells.length), ux = this.ux;
+    const summary = summarize(runs), stars = lineStars(o, summary, cells.length), ux = this.ux;
     const prev = this.runs[o.id] ? this.runs[o.id].slice() : [];
     const rec = { n: cells.length, sorted: summary.sorted.mean, purity: summary.purity.mean == null ? 0 : summary.purity.mean, missed: summary.missed.mean + summary.lost.mean, win: stars.win };
     (this.runs[o.id] = this.runs[o.id] || []).push(rec);
@@ -564,7 +564,7 @@ export class LineUI {
     const p = this.profiles[o.v];
     if (p) lines.push(t(EXPLAIN.profile, { policy: t('Skript (plánovač)'), v: cm(p.speed), date: p.measured_at, source: t(SOURCE[p.source] || p.source), n: p.n }));
     const s = o.search;
-    if (s) lines.push(T('nminText', { id: o.id, n: s.n, passing: s.passing, total: s.total }));
+    if (s) lines.push(T('nminText', { id: o.id, n: s.n, passing: s.passing, total: s.total }) + ' ' + (s.reserve > 0 ? T('nminReserve', { reserve: s.reserve }) : T('nminReserveNone')));
     const m2 = await this.profile(0.02);
     if (m2) {
       if (this.m11Des == null) {
@@ -605,10 +605,10 @@ export class LineUI {
     metric('mMissed', T('vPerMin', { m: num(s.missed.mean + s.lost.mean) }), T('vBand', { p5: num(s.missed.p5), p95: num(s.missed.p95) }), false, miss, 0, mHi, 10, null, ['0', num(mHi, 0)]);
     // named stars (the measured value next to a missed one)
     const named = failed ? [T('starWinNo', { sorted: num(s.sorted.mean), F: o.F })] : [T('starWin'),
-      st.purity ? T('starPurity', { X: num(100 * o.X, 0), seeds: L.seeds }) : T('starPurityNo', { p: pct(st.minPurity) }),
+      st.reserve ? T('starReserve', { F: o.F }) : T('starReserveNo', { p10: num(st.p10), F: o.F }),
       st.fewest ? T('starMin', { n: o.search.n }) : T('starMinNo', { n: L.cells.length, nmin: o.search.n })];
     P.winText.innerHTML = (L.assisted && !failed ? `<span>${esc(T('assisted'))}</span><br>` : '') + named.map((x) => `<span>${esc(x)}</span>`).join(' · ') +
-      (failed ? `<br><span>${esc(T('starsNeedWin'))}</span>` : '');
+      (failed ? `<br><span>${esc(T('starsNeedWin'))}</span>` : !reserveAtNmin(o) ? `<br><span>${esc(T('reserveNone', { id: o.id, n: o.search.n }))}</span>` : '');
     again.firstChild.textContent = T('editLine') + ' ';
     again.classList.remove('btn-act'); again.classList.add('btn-o');
     P.winStats.hidden = true;

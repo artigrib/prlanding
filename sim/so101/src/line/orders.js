@@ -7,6 +7,9 @@
 // fewest cells for which some configuration meets it, from the exhaustive search of src/line/des.js (searchNmin), run
 // offline by `node sim/so101/tools/line.mjs orders --write` into src/line/nmin.js. tests/line-orders.test.mjs runs the
 // search again and checks the stored record, so N_min (and the ★ it gives) always follows the committed profiles.
+// The record also counts the N_min lines that keep a reserve (10th-percentile output across the 20 seeds ≥ F, the
+// ★ rezerva): order D has none (its one passing two-cell line has p10 11.93 < 12), so there the reserve and the fewest
+// robots cannot both be had; the page says so (src/ui/line.js).
 // Only orders whose N_min the search proved are listed (no budget stop, no "not reachable").
 //
 // Choice of the four orders (numbers from the stored search, src/line/nmin.js; uniform arrivals, X = 95 %):
@@ -42,8 +45,8 @@ const r3 = (x) => (x == null ? null : Math.round(x * 1000) / 1000);
 
 /**
  * The N_min search of one order, as stored in nmin.js. profiles: { [speed]: profile } of the order's policy.
- * Returns { n, evaluated, skipped, passing, total (configurations of n cells), perN, best: { cells, sorted, purity,
- * reliable }, cap1: { cells, sorted } (the best single cell: the capacity the hint quotes), accepted (items/min the
+ * Returns { n, evaluated, skipped, passing, reserve (of those, the lines with p10 output ≥ F), total (configurations
+ * of n cells), perN, best: { cells, sorted, p5, p10, p95, purity, reliable }, cap1: { cells, sorted } (the best single cell: the capacity the hint quotes), accepted (items/min the
  * belt takes), profile: { version, measured_at, n } }.
  */
 export function searchOrder(def, profiles) {
@@ -53,9 +56,9 @@ export function searchOrder(def, profiles) {
   const cap = bestOf(order, prof, 1, { seeds }), p = profiles[o.v];
   const sets = CLASSES.length + CLASSES.length * (CLASSES.length - 1) / 2;
   return {
-    n: r.n, reason: r.reason || null, evaluated: r.evaluated, skipped: r.skipped, passing: r.passing,
+    n: r.n, reason: r.reason || null, evaluated: r.evaluated, skipped: r.skipped, passing: r.passing, reserve: r.n == null ? 0 : r.reserve,
     total: r.n == null ? null : Math.pow(sets, r.n), perN: r.perN,
-    best: r.best ? { cells: r.best.config.cells.map((c) => c.fractions.slice()), sorted: r3(r.best.summary.sorted.mean), p5: r3(r.best.summary.sorted.p5), p95: r3(r.best.summary.sorted.p95), purity: r3(r.best.summary.purity.mean), reliable: r.best.reliable } : null,
+    best: r.best ? { cells: r.best.config.cells.map((c) => c.fractions.slice()), sorted: r3(r.best.summary.sorted.mean), p5: r3(r.best.summary.sorted.p5), p10: r3(r.best.summary.sorted.p10), p95: r3(r.best.summary.sorted.p95), purity: r3(r.best.summary.purity.mean), reliable: r.best.reliable } : null,
     cap1: { cells: cap.config.cells[0].fractions.slice(), sorted: r3(cap.summary.sorted.mean) },
     accepted: r3(cap.summary.accepted.mean),
     profile: { version: p.version, measured_at: p.measured_at, n: p.n }
@@ -82,19 +85,23 @@ export function lineProblems(cells) {
 }
 
 /**
- * Stars of a line run (team lead's rule for mission 13): ★ splněno = the order is met (mean output ≥ F at mean purity
- * ≥ X, des.js meets); ★ čistota = purity ≥ X in every one of the seeded runs, not only on average; ★ minimum robotů =
- * N ≤ N_min (the stored search). The two extra stars count only with the first one. runs: the per-seed runs
- * (purity of each), summary: their summary.
+ * Stars of a line run (mission 13): ★ splněno = the order is met (mean output ≥ F at mean purity ≥ X, des.js meets);
+ * ★ rezerva = the output meets F even at the 10th percentile of the seeded runs (robust, not only on average);
+ * ★ minimum robotů = N ≤ N_min (the stored search). The two extra stars count only with the first one. (A purity
+ * star would be free: the Skript profiles never put an item into a wrong bin, so purity is 100 % in every run.)
+ * summary: the summary of the per-seed runs (des.js summarize).
  */
-export function lineStars(order, summary, runs, n) {
+export function lineStars(order, summary, n) {
   const win = meets(summary, order).win;
-  const minPurity = runs.reduce((a, r) => Math.min(a, r.purity == null ? 0 : r.purity), Infinity);
-  const purity = Number.isFinite(minPurity) && minPurity >= order.X - 1e-9;
+  const p10 = summary.sorted.p10 == null ? null : summary.sorted.p10;
+  const reserve = win && p10 != null && p10 >= order.F - 1e-9;
   const nmin = order.search && order.search.n;
   const fewest = nmin != null && n <= nmin;
-  return { win, purity, fewest, minPurity: Number.isFinite(minPurity) ? minPurity : null, nmin, stars: win ? 1 + (purity ? 1 : 0) + (fewest ? 1 : 0) : 0 };
+  return { win, reserve, fewest, p10, nmin, stars: win ? 1 + (reserve ? 1 : 0) + (fewest ? 1 : 0) : 0 };
 }
+
+/** Can one line of the order earn both extra stars (some N_min line keeps the reserve)? From the stored search. */
+export const reserveAtNmin = (order) => !!(order.search && order.search.reserve > 0);
 
 /** How many cells at least, from the best single cell's capacity (the hint's "⌈F / c⌉"). */
 export const cellsAtLeast = (order) => (order.search && order.search.cap1.sorted > 0 ? Math.ceil(order.F / order.search.cap1.sorted - 1e-9) : null);
