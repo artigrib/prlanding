@@ -31,7 +31,7 @@ export const DEFAULT_LICENSE = 'cc-by-4.0';
 const MAX_FRAMES = 200 * FPS;                 // the simulator records at most 180 s
 const CHUNK = 1000;                           // episodes per chunk (LeRobot default)
 const DEMO_FORMAT = 'printedrobotics.cz/so101-sim-demo@1';
-import { ENV_NAMES, ENV_DIM, envVector, validEnv, validSegments } from '../policy/episodes.js';
+import { ENV_NAMES, ENV_DIM, envVector, validEnv, validSegments, actionLag, alignActions } from '../policy/episodes.js';
 export { ENV_NAMES };
 export const ENV_KEY = 'observation.environment_state';   // LeRobot's OBS_ENV_STATE (lerobot/utils/constants.py)
 export const IMAGE_PREFIX = 'observation.images.';           // LeRobot's OBS_IMAGES + '.' + camera name
@@ -77,6 +77,9 @@ export function parseDemo(j, { task } = {}) {
   }
   const pr = (j.printedrobotics && typeof j.printedrobotics === 'object') ? j.printedrobotics : {};
   const mission = typeof pr.mission === 'string' ? pr.mission : null;
+  // LeRobot's order: action at t = the command applied from t on. Recorder 3 stores that; recorders 1 and 2 stored the
+  // command of the frame that ended at t, read here one frame later (src/policy/episodes.js actionLag)
+  const aligned = alignActions(t, action, actionLag(pr.recorder));
   const name = task || MISSION_TASKS[mission] || (typeof ep.task === 'string' && ep.task.trim()) || 'SO-101 simulator demonstration';
   // env on every frame or on none; segments only with env
   let env = null, segments = null;
@@ -97,7 +100,7 @@ export function parseDemo(j, { task } = {}) {
     if (!ok) throw new Error('bad replay cameras');
     images = { names, width: rp.width, height: rp.height, sums, items: Array.isArray(rp.items) ? rp.items : [] };
   }
-  return { task: String(name).slice(0, 500), mission, t, state, action, env, segments, images, fidx: t.map((_, i) => i) };
+  return { task: String(name).slice(0, 500), mission, t, state, action: aligned, env, segments, images, fidx: t.map((_, i) => i) };
 }
 
 /**
@@ -270,6 +273,7 @@ Teleoperated demonstrations of the **SO-101** robot arm recorded in the browser 
 - \`observation.state\` and \`action\`: ${NAMES.map((n) => '`' + n + '`').join(', ')}.
   Joints in degrees (0 = the simulator's zero pose), gripper 0–100 % open.
   These follow LeRobot's SO-101 naming and degree mode, but the zero offsets of a calibrated real arm differ.
+  \`action\` at a frame is the position target applied from that frame's time to the next frame (LeRobot's order: state first, then the command).
 - Tasks: ${tasks.map((t) => '"' + t + '"').join(', ')}.${envLine}${camLine}${itemLine}
 - Licence: ${license === 'cc-by-4.0' ? 'CC BY 4.0' : license}.
 

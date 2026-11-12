@@ -7,13 +7,15 @@
 //   - the snapshot is restored; on the conveyor the mission's batch starts again from the first frame (same seed:
 //     same items, order, yaws and spawn times);
 //   - "kinematic": the recorded action is written straight into MuJoCo's ctrl (linear interpolation in time), as
-//     the browser does. The STS3215 servo emulation of the SIL runner (sim/so101/lib/sts3215-emu.js) is NOT in the
+//     the browser does. Recorder 3 demos hold at each time the command applied from it on; recorders 1 and 2 held the
+//     command of the frame ending there and are read one frame (1/60 s) later (src/policy/episodes.js actionLag). The STS3215 servo emulation of the SIL runner (sim/so101/lib/sts3215-emu.js) is NOT in the
 //     loop: it is not bit-identical to the browser's direct ctrl, so a replay through it would drift further;
 //   - the items, the belt and the arm's contacts are simulated again (MuJoCo, 4 ms steps). Nothing forces the
 //     replay to match the recording, so the replay is compared with it: joint and item pose error per recorded
 //     frame, and each item's outcome (sorted / wrong / dropped / missed) in both runs.
 // Output: a new demo JSON on an exact 30 fps grid whose observation.state, env and per-item segments are what the
-// REPLAY did (so they match the camera images), with the recorded action; plus, per frame and camera, an RGB image
+// REPLAY did (so they match the camera images), with the recorded action as the command applied from each frame's
+// time on (printedrobotics.recorder: 3, whatever the input's recorder was); plus, per frame and camera, an RGB image
 // from the software renderer (tools/sil/lib/raster.mjs). src/export/lerobot.js and tools/hf/demos_to_lerobot.py turn
 // that into a LeRobot dataset with observation.images.<camera>.
 
@@ -96,7 +98,9 @@ export async function replayDemo(S, j, { cameras = ['up', 'wrist'], width = 320,
   const frames = [], env = recEnv ? [] : null, rt = [], qbuf = new Array(6);
   const errJ = [], errG = [], errItem = [], errYaw = [], perItem = new Map();   // perItem: item -> [max mm, time of it]
   let renderMs = 0, renders = 0, k = 0, j0 = 0;
-  const actionAt = (t) => {       // the recorded command at time t (Teach.pre's interpolation)
+  const lag = EP.actionLag(D.recorder);
+  const actionAt = (t0) => {      // the command in force from t0 on (Teach.pre's interpolation and actionLag)
+    const t = t0 + lag;
     let i = 0; while (i < n0 - 2 && T[i + 1] < t) i++;
     const i2 = Math.min(n0 - 1, i + 1), span = T[i2] - T[i] || 1, f = Math.max(0, Math.min(1, (t - T[i]) / span));
     return D.act[i].map((a, q) => a + (D.act[i2][q] - a) * f);
@@ -165,7 +169,10 @@ export async function replayDemo(S, j, { cameras = ['up', 'wrist'], width = 320,
   };
   const out = JSON.parse(JSON.stringify(j));
   out.episodes = [{ episode_index: 0, task: j.episodes[0].task, length: frames.length, frames }];
-  out.printedrobotics = Object.assign({}, pr, segments ? { segments } : {}, {
+  // the frames' action is the command applied from each frame's time on, as recorder 3 stores it (an older input's
+  // actions were read one frame later above): the exporters must not shift them again
+  out.printedrobotics = Object.assign({}, pr, segments ? { segments } : {}, { recorder: 3, recorder_note: 'SIL replay: frames on an exact 30 fps grid; action = the command applied from the ' +
+    'frame\'s time to the next frame (recorder 3 order), read from the recording\'s recorder ' + (D.recorder || 1) + '.' }, {
     replay: {
       format: REPLAY_FORMAT,
       note: 'Kinematic replay in the SIL runner (tools/sil/replay.mjs): recorded actions written to MuJoCo ctrl, physics ' +

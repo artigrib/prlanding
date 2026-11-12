@@ -5,6 +5,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Teach, RECORDER } from '../src/ui/teach.js';
+import { parseDemo } from '../src/export/lerobot.js';
+import { actionLag, alignActions, OLD_ACTION_LAG } from '../src/policy/episodes.js';
 
 const TS = 0.004, FPS = 30;
 
@@ -88,4 +90,95 @@ test('recorder grid: the old rule (a sample 1/30 s after the previous one) gave 
   assert.ok(Math.abs(n / 10 - 20.8) < 0.2, `${n / 10} fps`);
   const r = record(10, () => 0.016);
   assert.ok(Math.abs((r.t.length - 1) / (r.t.at(-1) - r.t[0]) - FPS) < 0.3);
+});
+
+// ---------------------------------------------------------------- recorder 3: observe, then command ----------------
+/**
+ * A page-like loop that changes the command every frame (pre, before physics) and logs the command every 4 ms physics
+ * step ran on. Returns the demo and the log [{ t: step start (recording time), c: ctrl[0], f: frame }].
+ */
+function recordCommands(sec, frameDt, stop = true) {
+  const d = { time: 0, qpos: new Float64Array(6), qvel: new Float64Array(6), ctrl: new Float64Array(6), act: null,
+    mocap_pos: new Float64Array(3), mocap_quat: new Float64Array(4) };
+  const ux = { mj: {}, app: { d, m: {}, act: [0, 1, 2, 3, 4, 5], stopDemo() {} }, runner: { m: { id: 'bowl' }, ctx: { s: {} } } };
+  const teach = new Teach(ux);
+  teach.persist = () => {};
+  const T0 = 0.7531;
+  d.time = T0;
+  teach.startRec();
+  const log = [];
+  let acc = 0, steps = 0;
+  for (let i = 0; d.time - T0 < sec; i++) {
+    for (let k = 0; k < 6; k++) d.ctrl[k] = i + k / 10;          // pre(): this frame's command, a new one every frame
+    acc += frameDt(i);
+    while (acc >= TS) { log.push({ t: steps * TS, c: d.ctrl[0], f: i }); steps++; d.time = T0 + steps * TS; acc -= TS; }
+    for (let k = 0; k < 6; k++) d.qpos[k] = Math.cos(d.time + k);
+    teach.sample();
+  }
+  if (stop) teach.stopRec();
+  return { teach, D: teach.demo, log, d };
+}
+
+test('recorder 3: action[t] is the command in force over [t, t + Δ), Δ = until the next frame that ran physics', () => {
+  assert.equal(RECORDER, 3);
+  // 60 Hz, 144 Hz, 500 Hz (2 ms frames: every other frame runs no physics step), jittered 60 Hz
+  const r = rng(5);
+  for (const [name, fdt] of [['60 Hz', () => 1 / 60], ['144 Hz', () => 1 / 144], ['500 Hz', () => 1 / 500], ['jitter', () => (1 / 60) * (0.6 + 0.8 * r())]]) {
+    const { D, log } = recordCommands(5, fdt);
+    const n = D.t.length;
+    assert.ok(n > 140, `${name}: ${n} samples`);
+    assert.equal(D.pend, null, `${name}: nothing left pending after stop`);
+    for (let i = 0; i < n - 1; i++) {
+      const t = D.t[i];
+      // every physics step that starts in [t, next frame's end) ran on act[i]; at least the first one exists
+      const over = log.filter((s) => s.t >= t - 1e-9 && s.t < t + 1e-9 + TS);
+      assert.ok(over.length >= 1, `${name}: a step starts at sample ${i}`);
+      assert.equal(D.act[i][0], over[0].c, `${name}: sample ${i} at ${t.toFixed(4)} s`);
+      assert.equal(D.act[i][3], over[0].c + 0.3);
+      const frame = log.filter((s) => s.f === over[0].f);          // [t, t + Δ): every step of that frame
+      assert.ok(frame[0].t >= t - 1e-9 && frame.every((s) => s.c === D.act[i][0]));
+      // and it is not the command of the frame that ended at t (recorder 2's action)
+      const before = log.filter((s) => s.t < t - 1e-9).at(-1);   // none for a sample at the very start
+      if (before) assert.notEqual(D.act[i][0], before.c, `${name}: sample ${i} is not the previous frame's command`);
+      // the observation is the state at t, read before that command acted
+      assert.equal(D.obs[i][0], Math.cos(t + 0.7531));
+    }
+  }
+});
+
+test('recorder 3: the last sample keeps the command in force when the recording stops; sample count unchanged', () => {
+  const { teach, D, d } = recordCommands(2, () => 1 / 60, false);
+  const n = D.t.length, i = D.pend;
+  assert.equal(i, n - 1, 'the last sample waits for its command');
+  d.ctrl[0] = 123.5;                                 // e.g. the controller's next command already written
+  teach.stopRec();
+  assert.equal(D.act[n - 1][0], 123.5);
+  assert.equal(D.t.length, n);
+  assert.ok(Math.abs(n - 2 * FPS) <= 2, 'still one sample per 30 fps slot');
+});
+
+test('older recorders: actions read one 60 Hz frame later (replay and export), recorder 3 as stored', () => {
+  assert.equal(actionLag(3), 0);
+  for (const r of [1, 2, undefined, null, '3', 2.5]) assert.equal(actionLag(r), OLD_ACTION_LAG);
+  assert.equal(OLD_ACTION_LAG, 1 / 60);
+  const T = [0, 1 / 30, 2 / 30, 3 / 30], A = T.map((t) => [t * 30, 0, 0, 0, 0, 100 - t]);
+  assert.deepEqual(alignActions(T, A, 0), A);
+  const B = alignActions(T, A, 1 / 60);
+  for (let i = 0; i < 3; i++) assert.ok(Math.abs(B[i][0] - (i + 0.5)) < 1e-12, `row ${i}: halfway to the next sample`);
+  assert.deepEqual(B[3], A[3], 'clamped at the end');
+  // the exporter applies it by printedrobotics.recorder
+  const demo = (rec) => ({ fps: 30, printedrobotics: { mission: 'bowl', ...(rec ? { recorder: rec } : {}) }, episodes: [{ frames: T.map((t, i) => ({ frame_index: i, timestamp: t, 'observation.state': A[i], action: A[i] })) }] });
+  assert.deepEqual(parseDemo(demo(3)).action, A);
+  for (const rec of [null, 1, 2]) assert.deepEqual(parseDemo(demo(rec)).action, B);
+  // a recorder 3 recording read as recorder 2 would be shifted: replay of the recorder 2 meaning (Teach.pre)
+  const { teach, D } = recordCommands(1, () => 1 / 60);
+  D.recorder = 2;
+  const c = new Float64Array(6);
+  teach.app = { act: [0, 1, 2, 3, 4, 5] }; teach.d = { time: 0, ctrl: c }; teach.replaying = true; teach.rt0 = 0; teach.k = 0; teach.ka = 0;
+  teach.belt = () => null;
+  teach.d.time = D.t[3]; teach.pre();
+  const want = alignActions(D.t, D.act, 1 / 60)[3][0];
+  assert.ok(Math.abs(c[0] - want) < 1e-9, `${c[0]} vs ${want}`);
+  D.recorder = 3; teach.k = 0; teach.ka = 0; teach.pre();
+  assert.equal(c[0], D.act[3][0]);
 });

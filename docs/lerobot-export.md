@@ -19,11 +19,19 @@ Written by `Teach.toJSON()` / `Teach.download()`:
 - `fps: 30`, `robot_type: so101_follower`, `printedrobotics.mission` (mission id), `printedrobotics.snapshot` (scene state, ignored here)
 - `episodes[0].frames[]`: `{ frame_index, timestamp, observation.state: [6], action: [6] }`
   - `observation.state` = joint positions (MuJoCo `qpos`), `action` = position targets (MuJoCo `ctrl`)
+  - order within a frame (`printedrobotics.recorder: 3`, from Nov 2026, LeRobot's convention): at the frame's time t
+    the joints are read first, then `action` is the command the arm gets from t to the next page frame (observe →
+    command). Recorders 1 and 2 stored the command of the page frame that *ended* at t, one frame earlier. Readers
+    convert those on the fly: the Teach replay, the SIL replay and both exporters read a recorder 1 / 2 (or absent)
+    `action` at t + 1/60 s (`OLD_ACTION_LAG`, one 60 Hz frame; the real frame length was not recorded) with linear
+    interpolation, clamped at the last frame (`sim/so101/src/policy/episodes.js` `actionLag` / `alignActions`,
+    `tools/hf/demos_to_lerobot.py` `action_lag` / `align_actions`, the same arithmetic). The demo JSON keeps its
+    version number on import and download, so an old demo is never relabelled
   - joints in **degrees**, gripper in **0–100 % open** (`teach.js` converts radians and the gripper range)
   - frames are sampled on physics steps, so timestamps are only about 1/30 s apart. `printedrobotics.recorder: 2`
-    (from Nov 2026): one frame per slot of a fixed 30 fps grid of simulated time, at any display rate; recorder 1
-    (field absent) took a frame 1/30 s after the previous one, about 20.8 fps at 16 ms frames. Both load and export
-    the same way (the exporters resample onto the exact grid)
+    and `3` (from Nov 2026): one frame per slot of a fixed 30 fps grid of simulated time, at any display rate;
+    recorder 1 (field absent) took a frame 1/30 s after the previous one, about 20.8 fps at 16 ms frames. All load and
+    export (the exporters resample onto the exact grid; actions as in the item above)
 - Conveyor missions (11 `waste_hand` on) add, all optional (older files load and export unchanged):
   - `episodes[0].frames[].env`: `{ belt, target, next }`, on every frame or on none. `belt` = commanded belt speed
     (m/s, 0 = paused); `target` = the item in the closed jaws, else the most downstream item on the belt; `next` = the
@@ -98,7 +106,7 @@ python3 tools/hf/demos_to_lerobot.py OUT/replay-000.json -o OUT/lerobot-py      
 - **Replay** (`tools/sil/lib/replay.mjs`): the scene is compiled exactly as the page does it (`tools/sil/lib/plant.mjs`
   `loadScene({ scene: 'conveyor' })`), the demo is imported and replayed by the page's own `Teach` (snapshot restore,
   the mission batch restarted with the same seed, recorded actions written to `ctrl` with linear interpolation once
-  per 16 ms frame, the recorded belt command). No servo emulation in the loop ("kinematic" replay). Items, belt and
+  per 16 ms frame, recorder 1 / 2 actions read 1/60 s later, the recorded belt command). No servo emulation in the loop ("kinematic" replay). Items, belt and
   contacts are simulated again and are not forced to match.
 - **Divergence** is measured and reported (`OUT/report.json`, and `printedrobotics.replay` in each replayed demo):
   joint error (degrees) and gripper error (% open) at every recorded frame, the error of the recorded target / next
@@ -106,8 +114,9 @@ python3 tools/hf/demos_to_lerobot.py OUT/replay-000.json -o OUT/lerobot-py      
   replay.
 - **What goes into the dataset** is the replay: `observation.state` (the replay's joints), the environment state and
   the per-item segments are recomputed from the replay (its own mission events, `cutEpisodes` / `cutFrames`), on an
-  exact 30 fps grid (each frame = the 4 ms physics step nearest to `k / 30`); `action` is the recorded command at that
-  time. Images and state are therefore from the same instant.
+  exact 30 fps grid (each frame = the 4 ms physics step nearest to `k / 30`); `action` is the recorded command in
+  force from that time on, which is what the replay applied, so a replayed demo is written as `recorder: 3` whatever
+  the input's version (the exporters do not shift it again). Images and state are therefore from the same instant.
 - **Items whose outcome changed** in the replay (recorded `sorted`, replayed `dropped`, or no episode at all) are left
   out of the dataset (`--keep-diverged` / `keepDiverged` keeps them with the replay's label).
 - **Images**: `observation.images.<camera>`, `dtype: image`, `shape: [H, W, 3]`, `names: [height, width, channels]`;
@@ -178,6 +187,27 @@ python3 tools/hf/demos_to_lerobot.py OUT/replay-000.json -o OUT/lerobot-py      
   command that was applied during the 16 ms frame *ending* at the frame's timestamp, while the replay applies it from
   that timestamp on: one frame late. Replaying one frame earlier (an experiment, not in the code) gives joints p95
   0.41° (recorder 2) / 0.72° (recorder 1), and 0.08° when every frame is recorded (80 s run).
+
+- Recorder 2 vs 3 (observe → command), 12 Nov 2026, node, the same method and tooling as above (scripted planner,
+  `replayDemo` without cameras). Each run is recorded once by each version; the simulated run is the same, only the
+  stored `action` differs. "Recorder 2, read 1/60 s later" is the recorder 2 demo replayed by this version's
+  compatibility rule:
+
+  | Run | Recorder 2, old replay | Recorder 3 | Recorder 2, read 1/60 s later |
+  |---|---|---|---|
+  | M11, 125 s, 16 ms frames: joints p95 / max | 1.67° / 7.88° | 0.57° / 6.26° | 0.46° / 7.20° |
+  | M11, same: gripper p95, item outcomes as recorded | 2.0 %, 10 / 11 | 1.3 %, 9 / 11 | 1.8 %, 10 / 11 |
+  | M12, 40 s, 16 ms frames: joints p95 / max | 1.87° / 6.01° | 0.50° / 6.04° | 0.73° / 6.00° |
+  | M12, same: gripper p95, item outcomes | 0.3 %, 3 / 3 | 0.1 %, 3 / 3 | 0.5 %, 3 / 3 |
+  | M11, 60 Hz frames (4–5 physics steps): joints p95 | 1.68° | 0.75° | 0.79° |
+  | M11, 144 Hz frames: joints p95 | 1.16° | 0.83° | 0.65° |
+
+  Recorder 3 lowers the joint p95 against the old replay in every setting (by a factor of 1.4 at 144 Hz frames up to
+  3.7 for M12), not the maximum everywhere (M11 at 144 Hz frames: 15.1° against 5.5°). It is not
+  always below the recorder 2 demo read 1/60 s later (M11 at 16 ms and 144 Hz frames): what remains is mostly the
+  30 fps sampling of commands that change every frame and their linear interpolation, which both share. Item outcomes
+  move by one either way: in the M11 recorder 3 replay `vial_glass2` (dropped in the recording) is sorted, as in the
+  recorder 2 replay, and the spoon, dropped in the recording, has no episode in the replay.
 
 ## Using it
 

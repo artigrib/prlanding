@@ -6,13 +6,16 @@
 import { store } from './store.js';
 import { MISSIONS } from '../missions.js';
 import { track } from '../analytics.js';
-import { envOf, cutEpisodes, cutFrames, trimSegments, validEnv, validSegments, packEnv, unpackEnv } from '../policy/episodes.js';
+import { envOf, cutEpisodes, cutFrames, trimSegments, validEnv, validSegments, packEnv, unpackEnv, actionLag } from '../policy/episodes.js';
 
 const FPS = 30, MAX_S = 180;
 // Recorder version, written to the demo JSON as printedrobotics.recorder (the demo format stays @1: same fields, old
 // files load unchanged). 1 (or absent): a sample 1/30 s after the previous one, ~20.8 fps at 16 ms frames;
-// 2: one sample per slot of a fixed 30 fps grid of simulated time (sample()).
-export const RECORDER = 2;
+// 2: one sample per slot of a fixed 30 fps grid of simulated time (sample()); 1 and 2 store as `action` the command of
+// the frame that ended at the sample time. 3: the same grid, and `action` is the command applied from the sample time
+// to the next frame (LeRobot's order: observe, then command). Replay and export read 1 and 2 one frame later
+// (src/policy/episodes.js actionLag / alignActions).
+export const RECORDER = 3;
 const recorderOf = (v) => (Number.isInteger(v) && v >= 1 && v <= RECORDER ? v : 1);
 const SNAP_KEYS = ['qpos', 'qvel', 'ctrl', 'act', 'mpos', 'mquat'];
 const MAX_FRAMES = MAX_S * FPS + 60;
@@ -123,6 +126,8 @@ export class Teach {
   stopRec() {
     if (!this.recording) return;
     this.recording = false;
+    // the last sample's next command never came: it keeps the command in force now
+    if (this.demo && this.demo.pend != null) { this.fillAction(); }
     if (this.demo && this.demo.t.length < 5) this.demo = null;   // too short to be useful
     if (this.demo && this.demo.env) this.cut();
     if (this.demo && this.ux.policy) this.ux.policy.harvest(this.demo);   // mission 12: the episodes become examples
@@ -267,22 +272,34 @@ export class Teach {
     return D.t.length;
   }
 
+  /** Recorder 3: the pending sample's action = the ctrl now (the command the arm got from that sample's time on). */
+  fillAction() {
+    const D = this.demo, c = this.d.ctrl, act = this.app.act, a = D.act[D.pend];
+    for (let i = 0; i < 6; i++) a[i] = c[act[i]];
+    D.pend = null;
+  }
+
   /**
    * Called after physics each frame. Samples on a fixed 30 fps grid of simulated time (slot k = [k/30, (k+1)/30)):
    * the first frame that reaches a new slot is recorded, with its own exact time. The rate is therefore 30 fps at
    * any display rate (60 / 120 / 144 Hz) and frame jitter; a frame longer than a slot (throttled tab) records once
    * and the skipped slots stay empty (the exporters resample onto the exact grid). Before recorder 2 the next sample
    * was due 1/30 s after the previous one, which at 16 ms frames recorded every third frame (20.8 fps).
+   * Recorder 3 (observe, then command): a sample reads the joints at its time t; its action is filled in by the first
+   * later frame that advanced the physics (fillAction), with the ctrl that frame ran on, the command over [t, t + Δ).
+   * Nothing writes ctrl between the page's pre (before physics) and this call, so ctrl here is that frame's command.
    */
   sample() {
     if (!this.recording) return;
     const D = this.demo, t = this.d.time - D.t0;
+    if (D.pend != null && t > D.t[D.pend]) this.fillAction();
     const slot = Math.floor(t * FPS + 1e-6);   // 1e-6: a frame that lands on k/30 up to float error counts as slot k
     if (slot < D.next) return;
     D.next = slot + 1;
     const qp = this.d.qpos, c = this.d.ctrl, act = this.app.act, o = new Array(6), a = new Array(6);
     for (let i = 0; i < 6; i++) { o[i] = qp[i]; a[i] = c[act[i]]; }
-    D.t.push(t); D.obs.push(o); D.act.push(a);
+    D.t.push(t); D.obs.push(o); D.act.push(a);   // a: this frame's command until the next frame fills the right one
+    D.pend = D.t.length - 1;
     if (D.env) {
       const run = this.ux.wasteRun ? this.ux.wasteRun() : null, w = this.ux.world;
       D.env.push(run ? envOf(run, w, this.envBuf || (this.envBuf = [0, 0, 0])) : { belt: Math.round(this.belt().speed * 1e4) / 1e4, target: null, next: null });
@@ -336,7 +353,7 @@ export class Teach {
     this.ux.beginReplayReset(this.demo);
     this.restore(this.demo.snap);
     if (this.shift) this.applyShift();
-    this.rt0 = this.d.time; this.k = 0;
+    this.rt0 = this.d.time; this.k = 0; this.ka = 0;
     // conveyor: the batch runs from the first replayed frame, as it did from the first recorded one (runner.start()
     // without its analytics event: a replay is not a mission start)
     if (this.demo.mission.belt && this.belt() && this.ux.runner) this.ux.runner.started = true;
@@ -354,8 +371,12 @@ export class Teach {
     }
     while (this.k < T.length - 2 && T[this.k + 1] < t) this.k++;
     const k = this.k, k2 = Math.min(T.length - 1, k + 1), span = T[k2] - T[k] || 1, f = Math.max(0, Math.min(1, (t - T[k]) / span));
-    const c = this.d.ctrl, act = this.app.act, A = D.act[k], B = D.act[k2];
-    for (let i = 0; i < 6; i++) c[act[i]] = A[i] + (B[i] - A[i]) * f;
+    // the command in force from t on: recorder 3 stores it at t, recorders 1 and 2 one frame later (actionLag)
+    const ta = t + actionLag(D.recorder);
+    while (this.ka < T.length - 2 && T[this.ka + 1] < ta) this.ka++;
+    const ka = this.ka, ka2 = Math.min(T.length - 1, ka + 1), sa = T[ka2] - T[ka] || 1, fa = Math.max(0, Math.min(1, (ta - T[ka]) / sa));
+    const c = this.d.ctrl, act = this.app.act, A = D.act[ka], B = D.act[ka2];
+    for (let i = 0; i < 6; i++) c[act[i]] = A[i] + (B[i] - A[i]) * fa;
     const b = D.env && this.belt();
     if (b) this.setBelt(D.env[f < 1 ? k : k2].belt);   // the recorded command (a pause replays as a pause; ramped by the belt)
   }
@@ -387,7 +408,7 @@ export class Teach {
       printedrobotics: {
         mission: D.mission.id,
         recorder: D.recorder || 1,
-        recorder_note: 'recorder 2: jeden snímek na každý slot pevné mřížky 30 fps v čase simulace (timestamp je přesný čas snímku); recorder 1 nebo chybí: snímek 1/30 s po předchozím, při 16ms snímcích asi 20,8 fps.',
+        recorder_note: 'recorder 3: jeden snímek na každý slot pevné mřížky 30 fps v čase simulace (timestamp je přesný čas snímku); observation.state je poloha kloubů v tom čase, action je povel, který rameno dostává od toho času do dalšího snímku (pořadí jako v LeRobotu: nejdřív pozorování, pak povel). Recorder 2: stejná mřížka, ale action je povel snímku, který v tom čase skončil (o snímek dřív); recorder 1 nebo chybí: navíc snímek 1/30 s po předchozím, při 16ms snímcích asi 20,8 fps. Přehrávání a export čtou action recorderu 1 a 2 o 1/60 s později.',
         note: 'Výchozí stav scény pro přehrání v simulátoru (qpos, qvel, ctrl, mocap); LeRobot tuto část ignoruje.',
         snapshot: Object.fromEntries(SNAP_KEYS.map((k) => [k, D.snap[k] ? Array.from(D.snap[k]) : null]).concat([['time', D.snap.time]],
           D.snap.belt != null ? [['belt', D.snap.belt]] : [])),
