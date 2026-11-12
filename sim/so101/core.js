@@ -197,6 +197,7 @@ export class ArmSim {
     this.belt = belt || null;   // conveyor scene only (src/objects/belt.js)
     this.won = false; this.inBowl = 0; this.fellAt = null;
     this.onFrame = null; this.onAfter = null; this.onWin = null; this.onRender = null;
+    this.preStep = null;        // optional hook before every MuJoCo step (dt = timestep)
     this.ids();
     this.three(OrbitControls);
     this.build();
@@ -479,7 +480,8 @@ export class ArmSim {
     this.ts = this.ts || this.m.opt.timestep;
     this.acc = (this.acc || 0) + dt;
     const belt = this.belt;   // conveyor scene: slat velocities are set before every physics step
-    while (this.acc >= this.ts) { if (belt) belt.step(this.ts); this.mj.mj_step(this.m, this.d); this.acc -= this.ts; }
+    const pre = this.preStep; // mobile scene: the cart's drive command (src/mobile/base.js) per physics step
+    while (this.acc >= this.ts) { if (belt) belt.step(this.ts); if (pre) pre(this.ts); this.mj.mj_step(this.m, this.d); this.acc -= this.ts; }
   }
 
   loop(now) {

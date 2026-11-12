@@ -863,3 +863,26 @@
   .ux-lfracs{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ux-lfoot{gap:2px 12px}
 }
+
+/* ---- mobile scene (lab transport, src/mobile/drive.js): Jízda | Ruka segmented control first in the action bar,
+   the front camera's caption ---- */
+.mb-seg{display:flex}
+.mb-abar>.mb-seg~.ux-ab,.mb-seg>.mb-segb+.mb-segb{border-left:1px solid var(--ink)}
+.mb-segb[aria-pressed=true]{background:var(--ink);color:#fff}
+.mb-segb[aria-pressed=true]:hover{background:var(--ink-2)}
+.mb-segb[aria-pressed=true] .kbd{color:#fff;border-color:#fff}
+.mb-cap{position:absolute;z-index:2;left:16px;bottom:88px;max-width:calc(100% - 32px);margin:0;padding:6px 10px;background:rgba(255,255,255,.92);border:1px solid var(--ink);font-size:13px;line-height:1.3;pointer-events:none}
+.mb-cap[hidden]{display:none}
+@media (max-width:860px) and (min-height:501px){
+  .mb-seg{grid-column:span 2;display:grid;grid-template-columns:1fr 1fr}
+  .mb-abar>.mb-seg~.ux-ab,.mb-seg>.mb-segb+.mb-segb{border-left:1px solid var(--line)}
+  .mb-cap{font-size:12px;padding:4px 8px;left:8px;bottom:8px;max-width:calc(100% - 16px)}
+}
+/* the mobile scene has no Nástroje toggle yet: on desktop the panel sits beside the scene, so the canvas centre is the
+   centre of what the player sees */
+@media (min-width:861px) and (min-height:501px){
+  .mb-scene .sim{display:grid;grid-template-columns:minmax(0,1fr) min(360px,40vw)}
+  .mb-scene .stage{position:relative;inset:auto;grid-column:1;grid-row:1;min-height:0}
+  .mb-scene .panel{grid-column:2;grid-row:1;position:relative;width:auto;box-shadow:none;z-index:auto}
+  .mb-scene .ux-under{left:calc((100% - min(360px,40vw)) / 2)}
+}
