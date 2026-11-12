@@ -41,16 +41,23 @@ export class Belt {
     this.lo = cfg.y0 - cfg.pitch / 2;            // slat centres cycle through [lo, lo + P)
     this.P = this.n * cfg.pitch;
     this.speed = 0;                              // target (m/s)
-    this._v = d.qvel[this.slats[0].v];
+    this._v = d.qvel[this.slats[0].v]; this._t = null;
     this.accel = cfg.accel;
     this.wraps = 0;
     this.onWrap = null;                          // (slat index) => void, just before a slat jumps to the tail
     this.sync();
   }
 
-  /** Belt velocity (m/s) commanded in the last step. Follows the physics state when that jumps (keyframe reset,
-   *  snapshot restore); otherwise the solver's per-step deviation (µm/s) is not fed back. */
-  get v() { const q = this.d.qvel[this.slats[0].v]; return Math.abs(q - this._v) > 1e-3 ? q : this._v; }
+  /** Belt velocity (m/s) commanded in the last step. Follows the physics state only when that was replaced
+   *  (keyframe reset, snapshot restore: d.time is not one timestep after the last step()); otherwise the solver's
+   *  per-step deviation is not fed back. (Comparing velocities instead let an item wedged against a rail, which
+   *  slows the slats by more than 1 mm/s, read as a reset every step and stall the belt for good.) */
+  get v() {
+    const d = this.d, q = d.qvel[this.slats[0].v];
+    if (this._t == null) return q;
+    const t = d.time - this._t;
+    return t >= 0 && t <= this.m.opt.timestep * 1.5 ? this._v : q;
+  }
   get moving() { return Math.abs(this.v) > 1e-6; }
   pause() { this.speed = 0; }
 
@@ -75,7 +82,7 @@ export class Belt {
       if (Math.abs(c - prev) > this.P / 2) { this.wraps++; if (this.onWrap) this.onWrap(i); }
       d.qpos[s.q] = c - s.y; d.qvel[s.v] = v;
     }
-    this._v = v;
+    this._v = v; this._t = d.time;   // step() runs just before mj_step
     this.contacts();
   }
 

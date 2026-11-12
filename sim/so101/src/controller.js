@@ -4,6 +4,12 @@
 // Coordinates are MuJoCo world (z up, metres). The controller writes d.ctrl only while it is active
 // (following a dragged target or executing a plan); anything else that drives the arm (joint sliders,
 // the scripted demo, replay) calls cancel() first.
+//
+// Moving targets (conveyor): a `move` or `grip` step may carry `track`, a tracker object shared by the steps of one
+// pick: { v: (ctl) => [vx, vy] | null, off: [ox, oy], lead: s }. While such a step runs, off integrates v · dt, and
+// the step's waypoints from index `st.trackFrom` (default 0) are shifted by off + v · lead (lead compensates the
+// servo lag). A step with `hold: tracker` applies the frozen offset without integrating (the lift after the close).
+// Steps without track/hold are never shifted, so a place planned later from startPoint() is unaffected.
 
 import { Kin, chainFromModel } from './kin.js';
 
@@ -31,7 +37,7 @@ export class ArmController {
     this.plan = null;                             // { steps, i, t, ... }
     this.listeners = {};
     this._q = new Float64Array(6); this._qa = new Float64Array(6);
-    this._p = new Float64Array(3);
+    this._p = new Float64Array(3); this._sh = [0, 0]; this._ld = [0, 0];
     this.syncFromCtrl();
   }
 
@@ -264,19 +270,37 @@ export class ArmController {
   tickPlan(dt) {
     const P = this.plan, st = P.steps[P.i];
     P.t += dt;
+    const trk = st.track || st.hold, sh = this._sh;
+    if (trk) {
+      const v = st.track ? st.track.v(this) : null;
+      if (v) { trk.off[0] += v[0] * dt; trk.off[1] += v[1] * dt; }
+      const ld = v ? trk.lead || 0 : 0;
+      sh[0] = trk.off[0] + (v ? v[0] * ld : 0); sh[1] = trk.off[1] + (v ? v[1] * ld : 0);
+      this._ld[0] = sh[0] - trk.off[0]; this._ld[1] = sh[1] - trk.off[1];
+    } else { this._ld[0] = 0; this._ld[1] = 0; }
     if (st.k === 'move') {
       const u = Math.min(1, P.t / st.T), e = u * u * (3 - 2 * u);  // ease in/out along the path
       const s = e * st.len, L = st.L;
       let k = 1; while (k < L.length - 1 && L[k] < s) k++;
       const a = st.pts[k - 1], b = st.pts[k], seg = L[k] - L[k - 1] || 1, f = Math.min(1, Math.max(0, (s - L[k - 1]) / seg));
-      this.setTarget(a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f);
+      let ax = a[0], ay = a[1], bx = b[0], by = b[1];
+      if (trk) {
+        const from = st.trackFrom || 0;
+        if (k - 1 >= from) { ax += sh[0]; ay += sh[1]; }
+        if (k >= from) { bx += sh[0]; by += sh[1]; }
+      }
+      this.setTarget(ax + (bx - ax) * f, ay + (by - ay) * f, a[2] + (b[2] - a[2]) * f);
+      P.base = b;
       if (u >= 1) {
         // wait for the real arm to catch up (or give up after a while)
-        const tip = this.actualTip(this._p);
-        const close = dist(tip, this.target) < (st.settle ? 0.004 : 0.012);
+        // (a tracked target leads the item by v · lead; the arm has arrived when it is at the item)
+        const tip = this.actualTip(this._p), T = this.target, L = this._ld;
+        const close = Math.hypot(tip[0] - T[0] + L[0], tip[1] - T[1] + L[1], tip[2] - T[2]) < (st.settle ? 0.004 : 0.012);
         if (close || P.t > st.T + (st.settle ? 1.6 : 0.6)) this.nextStep();
       }
     } else if (st.k === 'grip') {
+      // a tracked grip keeps the jaws over the moving item while they close
+      if (trk && P.base) this.setTarget(P.base[0] + sh[0], P.base[1] + sh[1], P.base[2]);
       if (P.t >= (st.t || 0)) this.nextStep();
     } else if (st.k === 'wait') {
       if (P.t >= st.t) this.nextStep();
