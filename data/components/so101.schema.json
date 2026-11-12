@@ -109,6 +109,26 @@
           "duty_eur_per_line": {
             "type": "number",
             "minimum": 0
+          },
+          "shipping_note": {
+            "type": "string",
+            "description": "The shop's own published shipping text (paraphrased or quoted); shipping_note_cs is its Czech version"
+          },
+          "dispatch_days": {
+            "$ref": "#/$defs/range",
+            "description": "Published dispatch (order processing) time in business days, before the parcel leaves the shop"
+          },
+          "transit_days": {
+            "$ref": "#/$defs/range",
+            "description": "Published carrier transit time in business days, counted after dispatch"
+          },
+          "shipping_source": {
+            "type": "object",
+            "required": ["url", "checked"],
+            "properties": {
+              "url": { "$ref": "#/$defs/url" },
+              "checked": { "$ref": "#/$defs/date" }
+            }
           }
         }
       }
@@ -686,6 +706,10 @@
                 },
                 "recommend": {
                   "type": "boolean"
+                },
+                "kind": {
+                  "enum": ["offer", "reference"],
+                  "description": "offer (default): an orderable shop page. reference: a price or link taken from documentation (e.g. a README); never selectable as a source"
                 },
                 "price": {
                   "type": [
