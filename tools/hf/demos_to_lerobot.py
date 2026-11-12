@@ -118,6 +118,30 @@ def parse_segments(segs, n):
     return out
 
 
+OLD_ACTION_LAG = 1 / 60   # sim/so101/src/policy/episodes.js OLD_ACTION_LAG
+
+
+def action_lag(recorder):
+    """Seconds to add to read the command in force from a time on (0 for recorder 3, one 60 Hz frame for 1, 2, absent)."""
+    ok = isinstance(recorder, (int, float)) and not isinstance(recorder, bool) and math.isfinite(recorder) and recorder == int(recorder)
+    return 0.0 if ok and recorder >= 3 else OLD_ACTION_LAG
+
+
+def align_actions(T, A, lag):
+    """Row i = A linearly interpolated at T[i] + lag (episodes.js alignActions: the same arithmetic)."""
+    if not lag:
+        return [list(r) for r in A]
+    n, k, out = len(T), 0, []
+    for i in range(n):
+        t = T[i] + lag
+        while k < n - 2 and T[k + 1] <= t:
+            k += 1
+        k2 = min(n - 1, k + 1); span = T[k2] - T[k]
+        f = max(0.0, min(1.0, (t - T[k]) / span)) if span > 0 else 0.0
+        out.append([a + (b - a) * f for a, b in zip(A[k], A[k2])])
+    return out
+
+
 def parse_demo(j, task=None):
     if not isinstance(j, dict):
         raise ValueError("not a demo: expected an object")
@@ -143,6 +167,9 @@ def parse_demo(j, task=None):
         env_raw.append(f.get("env", None) if "env" in f else ...)
     pr = j.get("printedrobotics") or {}
     mission = pr.get("mission")
+    # LeRobot's order: action at t = the command applied from t on. Recorder 3 stores that; recorders 1 and 2 stored the
+    # command of the frame that ended at t, read here one frame later (sim/so101/src/policy/episodes.js actionLag)
+    action = align_actions(t, action, action_lag(pr.get("recorder")))
     name = task or MISSION_TASKS.get(mission) or (eps[0].get("task") or "").strip() or "SO-101 simulator demonstration"
     env = segments = None
     if any(e is not ... for e in env_raw):   # env on every frame or on none
@@ -322,6 +349,7 @@ Teleoperated demonstrations of the **SO-101** robot arm recorded in the browser 
 - `observation.state` and `action`: {names}.
   Joints in degrees (0 = the simulator's zero pose), gripper 0–100 % open.
   These follow LeRobot's SO-101 naming and degree mode, but the zero offsets of a calibrated real arm differ.
+  `action` at a frame is the position target applied from that frame's time to the next frame (LeRobot's order: state first, then the command).
 - Tasks: {", ".join('"%s"' % t for t in tasks)}.{env_line}{cam_line}{item_line}
 - Licence: {lic}.
 

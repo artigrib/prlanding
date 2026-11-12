@@ -34,9 +34,9 @@ test('Teach.toJSON() output converts to a LeRobot dataset with exact 30 fps time
   // gripper in 0–100 %, joints in degrees (well inside ±180)
   assert.ok(st.action.min[5] >= 0 && st.action.max[5] <= 100);
   for (let j = 0; j < 5; j++) assert.ok(Math.abs(st['observation.state'].max[j]) < 180);
-  // recorder 2 (fixed 30 fps grid) is marked in the demo; the demo format itself is unchanged
+  // recorder 3 (fixed 30 fps grid, observe then command) is marked in the demo; the demo format itself is unchanged
   assert.equal(demo.format, 'printedrobotics.cz/so101-sim-demo@1');
-  assert.equal(demo.printedrobotics.recorder, 2);
+  assert.equal(demo.printedrobotics.recorder, 3);
   const rate = (src.length - 1) / (src.at(-1).timestamp - src[0].timestamp);
   assert.ok(Math.abs(rate - FPS) < 0.5, `${rate} fps`);
   // an older demo (no recorder field) still loads, exports and keeps saying it is recorder 1
@@ -45,4 +45,8 @@ test('Teach.toJSON() output converts to a LeRobot dataset with exact 30 fps time
   assert.equal(teach.importJSON(old), src.length);
   assert.equal(teach.toJSON().printedrobotics.recorder, 1);
   assert.equal(JSON.parse((await buildDataset([old]))['meta/info.json']).total_frames, info.total_frames);
+  for (const r of [2, 3]) {   // a recorder 2 demo keeps its number through import and download
+    const v = JSON.parse(JSON.stringify(demo)); v.printedrobotics.recorder = r;
+    teach.importJSON(v); assert.equal(teach.toJSON().printedrobotics.recorder, r);
+  }
 });

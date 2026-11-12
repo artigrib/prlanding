@@ -48,7 +48,7 @@ def item(name, cls, y):
     return {"item": name, "class": cls, "pos": [0.24, y, 0.03], "yaw": 0.3}
 
 
-def make_replay(folder, tag="000", n=40):
+def make_replay(folder, tag="000", n=40, recorder=None):
     """A replay of 40 frames: a sorted cup (frames 0-19), a socket whose outcome changed in the replay (20-39)."""
     frames, sm = [], {c: [] for c in CAMS}
     os.makedirs(os.path.join(folder, "images", tag, "up")); os.makedirs(os.path.join(folder, "images", tag, "wrist"))
@@ -68,7 +68,7 @@ def make_replay(folder, tag="000", n=40):
     demo = {
         "format": "printedrobotics.cz/so101-sim-demo@1", "robot_type": "so101_follower", "fps": 30,
         "printedrobotics": {
-            "mission": "waste_teach", "segments": segs,
+            "mission": "waste_teach", "segments": segs, **({"recorder": recorder} if recorder is not None else {}),
             "replay": {"format": "printedrobotics.cz/so101-sil-replay@1", "width": W, "height": H,
                        "cameras": [{"name": c, "preset": c} for c in CAMS],
                        "items": [{"item": "cup_paper1", "recorded": "sorted", "replay": "sorted"},
@@ -159,6 +159,30 @@ class SameDataset(unittest.TestCase):
         self.assertNotIn("observation.environment_state", info["features"])
         eps = [json.loads(x) for x in open(os.path.join(a, "meta/episodes.jsonl"))]
         self.assertEqual([e["length"] for e in eps], [20, 20])
+
+    def test_action_order_by_recorder(self):
+        """Recorder 3 actions export as stored; older ones (here: no recorder field) one 60 Hz frame later, in both."""
+        src = [f["action"] for f in self.demo["episodes"][0]["frames"]]
+        a, b = self.both(keep=True)
+        self.compare(a, b)
+        old = pq.read_table(os.path.join(a, "data/chunk-000/episode_000000.parquet")).to_pylist()
+        self.assertGreater(abs(old[3]["action"][0] - src[3][0]), 0.01)
+        mid = [x + (y - x) * 0.5 for x, y in zip(src[3], src[4])]   # frames 1/30 s apart: halfway to the next one
+        self.assertLess(close(old[3]["action"], mid), 1e-4)
+        shutil.rmtree(self.rep); os.makedirs(self.rep)
+        self.demo = make_replay(self.rep, recorder=3)
+        a, b = self.both(keep=True)
+        self.compare(a, b)
+        new = pq.read_table(os.path.join(a, "data/chunk-000/episode_000000.parquet")).to_pylist()
+        self.assertLess(close([r["action"] for r in new], src[:20]), 1e-4)
+
+
+class ActionLag(unittest.TestCase):
+    def test_lag(self):
+        self.assertEqual(d2l.action_lag(3), 0.0)
+        self.assertEqual(d2l.action_lag(3.0), 0.0)
+        for r in (None, 1, 2, "3", 2.5, True):
+            self.assertEqual(d2l.action_lag(r), 1 / 60)
 
 
 if __name__ == "__main__":

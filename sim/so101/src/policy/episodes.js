@@ -33,6 +33,34 @@ const ON_BELT = new Set(['belt', 'stuck']);
 const FINAL = new Set(['bin', 'tote', 'floor', 'stuck', 'table']);   // WasteRun states that end an item's story (for now)
 const r4 = (v) => Math.round(v * 1e4) / 1e4;
 
+/* ---------------------------------------------------------------- action timing (recorder versions) ------------ */
+
+// Recorder 3 (src/ui/teach.js, from Nov 2026): at a sample time t the joints are read first, then `action` is the
+// command the arm gets from t to the next frame (LeRobot's order: observe, then command). Recorders 1 and 2
+// (printedrobotics.recorder absent, 1 or 2) stored the command of the page frame that ENDED at t, one frame earlier.
+// Readers (Teach's replay, the LeRobot exporters) convert those on the fly: the command in force from t on is the
+// recorded one interpolated at t + OLD_ACTION_LAG, one 60 Hz frame (the real frame length was not recorded).
+export const OLD_ACTION_LAG = 1 / 60;
+/** Seconds to add to a time to read the command in force from that time on out of a demo of this recorder version. */
+export function actionLag(recorder) { return Number.isInteger(recorder) && recorder >= 3 ? 0 : OLD_ACTION_LAG; }
+/**
+ * Recorded actions A at times T as recorder-3 actions: row i = A linearly interpolated at T[i] + lag (clamped to the
+ * last row). tools/hf/demos_to_lerobot.py align_actions is the same arithmetic (node and Python write the same bytes).
+ */
+export function alignActions(T, A, lag) {
+  if (!lag) return A.map((r) => r.slice());
+  const n = T.length, out = new Array(n);
+  let k = 0;
+  for (let i = 0; i < n; i++) {
+    const t = T[i] + lag;
+    while (k < n - 2 && T[k + 1] <= t) k++;
+    const k2 = Math.min(n - 1, k + 1), span = T[k2] - T[k];
+    const f = span > 0 ? Math.max(0, Math.min(1, (t - T[k]) / span)) : 0;
+    out[i] = A[k].map((a, j) => a + (A[k2][j] - a) * f);
+  }
+  return out;
+}
+
 /* ---------------------------------------------------------------- environment state ---------------------------- */
 
 function itemState(w, name, buf) {
