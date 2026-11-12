@@ -77,3 +77,10 @@ copies of the licence texts are included next to each component.
        (the single convex hull is a filled shape the jaws cannot close on); mass and inertia unchanged.
      - dishware_bowl_a01: authored mass of exactly 1 kg (placeholder) set to 0.3 kg, inertia scaled.
      - Bins, plate, tray, screwdriver holder and vial rack are new, simple geometry by printedrobotics.cz.
+   Conveyor scene (waste sorting, src/objects/scene.js CONVEYOR_ITEMS): paper cup, plastic cup, plastic fork and
+   spoon, glass vial, 3/8" and 1/2" sockets and the M8 nut from nvidia/simready-assets by NVIDIA, licensed CC BY 4.0
+   (per-object attribution: objects/LICENSES.md). Changes made by printedrobotics.cz:
+     - Paper cup ("Dishware cup paper", dishware_cup_paper_a01) shown at 75 % (6.0 cm instead of 8.0 cm across;
+       collision, mass and visual scaled together), so the SO-101's printed jaws can close on it.
+     - M8 nut shown 2.5x larger and fork and spoon with the slice collision, as in missions 06–10 above.
+     - Slat belt, side rails, drums, end tote and the four waste bins are new, simple geometry by printedrobotics.cz.

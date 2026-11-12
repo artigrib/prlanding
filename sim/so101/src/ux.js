@@ -3,7 +3,7 @@
 
 import { ArmController, GRIP_OPEN, GRIP_CLOSED } from './controller.js';
 import { World } from './world.js';
-import { MISSIONS, MissionRunner, bowlDrop, pushPlan, libPick, libPlace, libTarget, libGrasp, libPickPlace, inZone, autopilotAllowed } from './missions.js';
+import { MISSIONS, MissionRunner, bowlDrop, pushPlan, libPick, libPlace, libTarget, libGrasp, libPickPlace, inZone, autopilotAllowed, runsIn } from './missions.js';
 import { runOutcome, mergeRecord, migrateProgress, partialPlan, HintCoach, PROGRESS_VERSION } from './mastery.js';
 import { Extras } from './ui/extras.js';
 import { Gizmo } from './ui/gizmo.js';
@@ -154,7 +154,7 @@ class UX {
     this.runner.select(this.startRoute(new URLSearchParams(location.search)));
     // hint buttons (both play the planner's solution, see startDemo): which one was used
     addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('#ux-mhint,#ux-hintnext'); if (b) track('hint_used', { mission: this.runner.m.id, level: b.id === 'ux-mhint' ? 1 : 2 }); }, true);
-    if (this.runner.m.objects && !this.world.lib) this.runner.select('bowl');   // app.js loads the object scene when needed
+    if (!runsIn(this.runner.m, this.world.scene)) this.runner.select('bowl');   // app.js loads the mission's scene when needed
     this.setMode(this.mode, true);
     this.panel.showPitch(this.ctl.pitch);
     this.panel.showSound(this.sound.on);
@@ -340,10 +340,10 @@ class UX {
 
   selectMission(id) {
     const m = MISSIONS.find((x) => x.id === id);
-    if (m && m.objects && !this.world.lib) {
-      // the object missions run in a scene with the objects compiled in: reload into it (engine from cache)
+    if (m && !runsIn(m, this.world.scene)) {
+      // the object / conveyor missions run in a scene with their objects compiled in: reload into it (engine from cache)
       store.set('mission', id);
-      const u = new URL(location.href); u.searchParams.set('mise', id); u.searchParams.delete('rekord');
+      const u = new URL(location.href); u.searchParams.set('mise', id); u.searchParams.delete('rekord'); u.searchParams.delete('scene');
       this.panel.toast('Načítám předměty mise…');
       document.getElementById('loader').hidden = false;
       setTimeout(() => location.assign(u.href), 50);

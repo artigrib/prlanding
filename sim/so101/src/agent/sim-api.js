@@ -11,6 +11,7 @@
 // Internally MuJoCo radians / metres. Motions advance with simulated time (tick(dt) from the page frame hook).
 
 import { Kin } from '../kin.js';
+import { runsIn } from '../missions.js';
 
 export const ARM = ['shoulder_pan', 'shoulder_lift', 'elbow_flex', 'wrist_flex', 'wrist_roll'];
 export const SPEED_CAP_DPS = 90;           // peak joint speed of any AI motion
@@ -322,7 +323,7 @@ export function createSimApi(env) {
   }
 
   const missionList = () => env.missions.filter((x) => AGENT_MISSIONS.includes(x.id));
-  const needsReload = (x) => !!x.objects && !world.lib;
+  const needsReload = (x) => !runsIn(x, world.scene || (world.lib ? 'objects' : 'plain'));
 
   // ---------------- handler (backend/bridge-client/README.md) ----------------
   const api = {

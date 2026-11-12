@@ -18,8 +18,9 @@ export async function loadScene() {
   return { mj, m, d };
 }
 
-/** The object-mission scene (src/objects/scene.js) compiled in node. Returns { mj, m, d, items, sizes }. */
-export async function loadObjectScene() {
+/** An object scene profile (src/objects/scene.js PROFILES: 'objects' = missions 06–10, 'conveyor') compiled in
+ *  node. Returns { mj, m, d, items, sizes, xml }. */
+export async function loadObjectScene(profile = 'objects') {
   const { pathToFileURL } = await import('node:url');
   const { ObjectLibrary, injectObjects, instanceXml } = await import('../src/objects/library.js');
   const { objectSceneXml, itemSize } = await import('../src/objects/scene.js');
@@ -30,7 +31,7 @@ export async function loadObjectScene() {
       arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) };
   };
   const lib = new ObjectLibrary({ base: pathToFileURL(OBJ + '/'), fetch: fsFetch });
-  const { xml, items } = await objectSceneXml(fs.readFileSync(path.join(DIR, 'model/scene.xml'), 'utf8'), lib, { injectObjects, instanceXml });
+  const { xml, items } = await objectSceneXml(fs.readFileSync(path.join(DIR, 'model/scene.xml'), 'utf8'), lib, { injectObjects, instanceXml }, profile);
   const loadMujoco = (await import(path.join(DIR, 'vendor/mujoco/mujoco.js'))).default;
   const mj = await loadMujoco({ wasmBinary: fs.readFileSync(path.join(DIR, 'vendor/mujoco/mujoco.wasm')) });
   mj.FS.mkdir('/m'); mj.FS.mkdir('/m/assets');

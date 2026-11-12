@@ -26,6 +26,30 @@ export class ObjectView {
       ux.extras.meshes[name] = g;          // visibility + mocap pose follow the mission layout (Extras.onLayout)
     }
     this.loading = new Map();
+    if (this.w.belt) this.beltView(parent);
+  }
+
+  /** Conveyor scene: the static belt frame (rails, drums, end tote) once, the slats every frame (syncBelt). */
+  beltView(parent) {
+    const T = this.T, m = this.m, mj = this.ux.mj || this.w.mj;
+    const group = (b) => {
+      const g = new T.Group();
+      for (let k = m.body_geomadr[b], n = k + m.body_geomnum[b]; k < n; k++) { const mesh = this.geomMesh(k, false); if (mesh) g.add(mesh); }
+      parent.add(g); return g;
+    };
+    const fb = mj.mj_name2id(m, mj.mjtObj.mjOBJ_BODY.value, 'belt'), x = this.d.xpos;
+    if (fb >= 0) { const g = group(fb); g.position.set(x[3 * fb], x[3 * fb + 1], x[3 * fb + 2]); this.beltFrame = g; }
+    this.slatGroups = this.w.belt.slats.map((s) => group(s.body));
+    this.syncBelt();
+  }
+
+  syncBelt() {
+    const x = this.d.xpos, belt = this.w.belt;
+    for (const [i, g] of this.slatGroups.entries()) {
+      const b = belt.slats[i].body;
+      g.visible = belt.carrying(i);   // past the head drum: turned down, not drawn
+      g.position.set(x[3 * b], x[3 * b + 1], x[3 * b + 2]);
+    }
   }
 
   mat(rgba, lib) {
@@ -93,6 +117,7 @@ export class ObjectView {
   /** Follow the physics (free objects; fixtures are placed by Extras.onLayout). */
   sync(all) {
     const x = this.d.xpos, q = this.d.xquat;
+    if (this.slatGroups) this.syncBelt();
     for (const [name, g] of Object.entries(this.groups)) {
       const e = this.w.o[name];
       if (!g.visible && !all) continue;

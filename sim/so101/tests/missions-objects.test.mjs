@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { loadObjectScene, loadScene } from './mj-node.mjs';
 import { ArmController } from '../src/controller.js';
 import { World } from '../src/world.js';
-import { MISSIONS, MissionRunner, libPickPlace } from '../src/missions.js';
+import { MISSIONS, MissionRunner, libPickPlace, sceneOf } from '../src/missions.js';
 import { LIB_ITEMS } from '../src/objects/scene.js';
 
 const { mj, m, d, sizes } = await loadObjectScene();
@@ -86,12 +86,14 @@ test('every library item can be picked up and carried (SO-101 gripper, real mass
   }
 });
 
-test('app.js knows which missions need the object scene (same list and order as MISSIONS)', async () => {
+test('app.js knows which missions need the object / conveyor scene (same lists and order as MISSIONS)', async () => {
   const fs = await import('node:fs');
   const src = fs.readFileSync(new URL('../app.js', import.meta.url), 'utf8');
-  const list = JSON.parse(/const OBJECT_MISSIONS = (\[[^\]]*\])/.exec(src)[1].replace(/'/g, '"'));
-  assert.deepEqual(list, OBJ.map((x) => x.id));
-  assert.deepEqual(MISSIONS.filter((x) => !x.objects).map((x) => x.id), ['bowl', 'stack', 'sort', 'ball', 'trace']);
+  const listOf = (name) => JSON.parse(new RegExp(`const ${name} = (\\[[^\\]]*\\])`).exec(src)[1].replace(/'/g, '"'));
+  assert.deepEqual(listOf('OBJECT_MISSIONS'), MISSIONS.filter((x) => sceneOf(x) === 'objects').map((x) => x.id));
+  assert.deepEqual(listOf('OBJECT_MISSIONS'), OBJ.map((x) => x.id));
+  assert.deepEqual(listOf('CONVEYOR_MISSIONS'), MISSIONS.filter((x) => sceneOf(x) === 'conveyor').map((x) => x.id));
+  assert.deepEqual(MISSIONS.filter((x) => sceneOf(x) === 'plain').map((x) => x.id), ['bowl', 'stack', 'sort', 'ball', 'trace']);
 });
 
 test('parked library objects float without contacts (no cost, no drift)', () => {
