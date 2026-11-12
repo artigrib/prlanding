@@ -680,6 +680,34 @@ async function touchDrag(page, from, to, steps = 8) {
       await q.close();
     }
     {
+      // mission 11 recorded (Učení ukázkou): env state on every frame, one episode per item, the belt pause replayed
+      // (src/ui/teach.js, src/policy/episodes.js)
+      const q = await open(browser, base + '?test=1&mise=waste_hand&detail=low', { width: 1280, height: 800 });
+      await S(q, () => { window.__sim.record(true); window.__sim.solve(); });
+      await advanceUntil(q, () => false, 24, 4);
+      await S(q, () => window.__sim.beltToggle()); await advanceUntil(q, () => false, 3, 1); await S(q, () => window.__sim.beltToggle());
+      await advanceUntil(q, () => false, 12, 4);
+      await S(q, () => window.__sim.record(false));
+      const j = await S(q, () => {
+        const j = window.__sim.exportDemo(), fr = j.episodes[0].frames;
+        return { n: fr.length, env: fr.filter((f) => f.env && 'target' in f.env && 'next' in f.env).length, paused: fr.filter((f) => f.env && f.env.belt === 0).length,
+          segs: j.printedrobotics.segments, belt: j.printedrobotics.snapshot.belt };
+      });
+      const sortedEp = (j.segs || []).filter((x) => x.outcome === 'sorted');
+      ok(j.n > 500 && j.env === j.n && j.paused > 30 && j.belt === 0.02 && sortedEp.length >= 2 && sortedEp.every((x) => x.to > x.from),
+        `mission 11 recording: env on ${j.env}/${j.n} frames, belt paused in ${j.paused}, episodes ${JSON.stringify((j.segs || []).map((x) => x.item + ':' + x.outcome))}`);
+      await S(q, () => window.__sim.replay(false));
+      const seen = [];
+      for (let k = 0; k < 34; k++) {
+        await S(q, () => window.__sim.advance(1));
+        seen.push(await S(q, () => ({ v: window.__sim.waste().belt.speed, pressed: document.getElementById('ux-belt').getAttribute('aria-pressed'), rep: window.__sim.ux().replaying, sp: window.__sim.waste().stats.spawned })));
+      }
+      const stood = seen.filter((x) => x.rep && x.v === 0);
+      ok(stood.length >= 2 && stood.every((x) => x.pressed === 'true') && seen[seen.length - 1].sp >= 3,
+        `mission 11 replay: the belt stands where it stood in the recording (${stood.length} s, Pás button pressed), the batch spawns again (${seen[seen.length - 1].sp})`);
+      await q.close();
+    }
+    {
       // mission 11 by hand on desktop: the gizmo / keyboard path. Each item: when it is in front of the arm, B stops the
       // belt, the ball goes over the item (what a gizmo drag sets: ux.userSetTarget), the wrist ring squares the jaws,
       // down, Space closes, up, over its bin, down, Space opens, B runs the belt again. The belt stands for every pick,

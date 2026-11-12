@@ -9,6 +9,9 @@
 //   stuck (on the belt but not carried along for 3 s while the belt runs: wedged between the rails; a hand can still
 //   take it off) · tote (dropped off the belt head: missed) · floor (fell off the table: missed) · table (anywhere else)
 // tote and floor are final. It also counts the time the belt stood while the run was on (the Pás star).
+// Events (this.events): { ev: <new state>, name, fraction, t (run clock, s), from: <old state>, bin?, ok? } per
+// transition (the spawn is 'belt' from 'queued'), plus { ev: 'window' } once when a riding item enters the reach window. src/policy/episodes.js cuts the
+// per-item episodes from them.
 
 import { CONVEYOR_ITEMS, CONVEYOR_BINS, FRACTION_BIN } from './scene.js';
 import { inZone } from '../missions.js';
@@ -19,7 +22,9 @@ export const WASTE = {
   retry: 0.2,      // s: next try when the entry zone is busy
   seed: 1,         // the mission's batch (same order and yaws for every player)
   still: 0.6,      // s at rest in a bin before it counts (as sortCheck)
-  free: 0.06       // m: gripper tip farther than this from the item (or open) = not holding it
+  free: 0.06,      // m: gripper tip farther than this from the item (or open) = not holding it
+  window: -0.15    // m: belt y where an item enters the reach window (= BELT_PICK.yMin, src/objects/beltpick.js): the
+                   // 'window' event, where its episode starts (src/policy/episodes.js)
 };
 
 export const FRACTIONS = ['paper', 'plastic', 'glass', 'metal'];
@@ -68,13 +73,16 @@ export class WasteRun {
     this.wasPaused = paused;
     if (this.next < this.n && this.t >= this.tNext) {
       const it = this.items[this.next];
-      if (w.spawn(it.name, { yaw: it.yaw })) { it.state = 'belt'; it.spawnT = this.t; this.next++; this.tNext = this.t + this.o.every; }
+      if (w.spawn(it.name, { yaw: it.yaw })) { it.spawnT = this.t; this.change(it, 'belt'); this.next++; this.tNext = this.t + this.o.every; }
       else { this.tNext = this.t + this.o.retry; this.retries++; }
     }
     for (const it of this.items) {
       if (it.state === 'queued' || FINAL.has(it.state)) continue;
       const s = this.classify(it, dt, c);
       if (s !== it.state) this.change(it, s);
+      if (!it.win && it.state === 'belt' && this.p[1] >= this.o.window) {   // classify left the COM in this.p
+        it.win = true; this.events.push({ ev: 'window', name: it.name, fraction: it.fraction, t: this.t });
+      }
     }
   }
 
