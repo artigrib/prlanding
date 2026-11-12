@@ -247,6 +247,15 @@ export class Panel {
       <button type="button" role="radio" data-mode="smart" data-tip="Ruka sleduje modrou kouli (M)">Táhnout ruku</button>
       <button type="button" role="radio" data-mode="joints" data-tip="Každý kloub zvlášť (M)">Klouby</button>
     </div>`));
+    // touch only: the physics pull of the arm by a finger (off by default: a one-finger "turn the view" on the arm pulled it)
+    const tp = this.tpullBox = h(`<div class="ux-tpull" hidden>
+      <button type="button" class="btn btn-o ux-tpullb" id="ux-tpull" aria-pressed="false" aria-describedby="ux-tpull-s">Tahat ruku prstem za díl</button>
+      <p class="mono-s muted" id="ux-tpull-s"></p>
+    </div>`);
+    mount.appendChild(tp);
+    tp.hidden = !this.ux.touch;
+    $('ux-tpull').addEventListener('click', () => this.ux.setTouchPull(!this.ux.touchPull));
+    this.showTouchPull(this.ux.touchPull);
     const smart = this.smart = h(`<div class="ux-smart" id="ux-smart">
       <div class="ux-draw" id="ux-draw" hidden>
         <div class="ux-row2">
@@ -298,6 +307,11 @@ export class Panel {
     if (m.draw) { this.showDraw(this.ux); $('ux-drawview').textContent = '3D pohled'; }
   }
 
+  showTouchPull(on) {
+    $('ux-tpull').setAttribute('aria-pressed', String(on));
+    $('ux-tpull-s').textContent = on ? 'Zapnuto: prst na ruce ji fyzikálně táhne.' : 'Vypnuto: prst na ruce otáčí pohledem, klepnutí na čelisti otevře nebo zavře chapadlo.';
+  }
+
   /** grab behaviour follows the mode switch now (no own control); kept for ux.js / tests */
   showGrabMode() {}
 
@@ -311,6 +325,7 @@ export class Panel {
   showMode(mode) {
     for (const b of this.seg) b.setAttribute('aria-checked', String(b.dataset.mode === mode));
     this.smart.hidden = mode !== 'smart';
+    this.tpullBox.hidden = !this.ux.touch || mode !== 'smart';
     $('joints').hidden = mode === 'smart';
     document.body.classList.toggle('ux-smartmode', mode === 'smart');
   }

@@ -9,6 +9,13 @@ const dec = (s) => String(s).replace(/(\d),(\d)/g, '$1.$2');
 const ids = (s) => dec(s).replace(/\(([^)]+)\)/g, (m, n) => '(' + T(n) + ')');
 
 const strings = {
+  /* touch quick fixes: drop, grasp height, physics pull on touch */
+  'Ještě kousek níž – čelisti jsou nad kostkou': 'A little lower – the jaws are above the cube',
+  'Kostka vypadla – otevřete chapadlo a uchopte ji znovu': 'The cube fell – open the gripper and grasp it again',
+  'Předmět vypadl – otevřete chapadlo a uchopte ho znovu': 'The object fell – open the gripper and grasp it again',
+  'Tahat ruku prstem za díl': 'Pull the arm by a part with a finger',
+  'Zapnuto: prst na ruce ji fyzikálně táhne.': 'On: a finger on the arm pulls it physically.',
+  'Vypnuto: prst na ruce otáčí pohledem, klepnutí na čelisti otevře nebo zavře chapadlo.': 'Off: a finger on the arm turns the view; a tap on the jaws opens or closes the gripper.',
   /* HUD stage 3: side view inset (src/ui/sideview.js) */
   'Pohled z boku': 'Side view', 'papír': 'paper', 've výšce': 'level',
   /* HUD stage 2: result card (measured values vs the next star, demo label, next mission) */

@@ -1,5 +1,8 @@
 // Camera presets (orbit / top / side), wrist camera picture-in-picture and the cinematic orbit on success.
 // The side-view inset (src/ui/sideview.js) draws right after the main view.
+// Touch: the orbit pivot eases sideways so the gripper never sits in the system back-gesture band at the side edges.
+
+import { edgeShift } from '../touch.js';
 
 const VIEWS = {
   // three.js coordinates: (x, z_mj, -y_mj). target, position for wide and narrow screens
@@ -23,7 +26,10 @@ export class Cameras {
     this.cam = app.d.cam_xpos ? 0 : -1;
     this.m3 = new T.Matrix4(); this.size = new T.Vector2();
     this.cine = 0;
-    app.controls.addEventListener('start', () => { this.stopCinematic(); this.tw = null; });
+    app.controls.addEventListener('start', () => { this.stopCinematic(); this.tw = null; this.userT = performance.now(); });
+    app.controls.addEventListener('end', () => { this.userT = performance.now(); });
+    this.userT = -1e9; this.framing = false;
+    this.fv = new T.Vector3(); this.fr = new T.Vector3(); this.tipB = new Float64Array(3);
     // the wrist camera mount: draw it while the wrist camera is on (it is hidden by app.js otherwise)
     this.mountMeshes = [];
     const m = app.m;
@@ -114,6 +120,7 @@ export class Cameras {
       if (k >= 1) this.tw = null;
     }
     if (this.cine > 0) { this.cine -= dt; if (this.cine <= 0) this.stopCinematic(); }
+    this.autoFrame(dt);
     if (this.wristOn) {
       // wrist camera pose from MuJoCo (camera looks along -z, y up: same convention as three.js)
       const d = this.app.d, p = d.cam_xpos, M = d.cam_xmat, e = this.m3.elements;
@@ -133,6 +140,31 @@ export class Cameras {
         el[3] = 0; el[7] = 0; el[11] = 0; el[15] = 1; mesh.matrixWorldNeedsUpdate = true;
       }
     }
+  }
+
+  /**
+   * Touch: pan the orbit pivot (not the angle) so the gripper stays ≥ 24 px from the side edges (touch audit P0:
+   * "over the cube" projected to x = 11–19 px, inside the Android / iOS back gesture). Paused for 3 s after the
+   * player moved the camera, while a handle or the arm is held, and during camera tweens / the win orbit.
+   */
+  autoFrame(dt) {
+    const ux = this.ux;
+    if (!ux.touch || !dt || this.tw || this.cine > 0 || this.ux.explode && this.ux.explode.on) { this.framing = false; return; }
+    if (performance.now() - this.userT < 3000 || ux.gizmo.drag || ux.gizmo.pend || ux.links.drag || ux.links.pend) { this.framing = false; return; }
+    const c = ux.ctl, p = c.active ? c.target : c.actualTip(this.tipB), cam = this.app.camera, cv = this.app.renderer.domElement;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    const v = this.fv.set(p[0], p[1], p[2]); this.app.world.localToWorld(v);
+    const depth = v.distanceTo(cam.position);
+    v.project(cam);
+    if (v.z > 1 || !h) return;
+    const dx = edgeShift((v.x + 1) / 2 * w, w, this.framing);
+    this.framing = Math.abs(dx) > 1;
+    if (!this.framing) return;
+    const r = this.fr.setFromMatrixColumn(cam.matrixWorld, 0); r.y = 0;
+    if (r.lengthSq() < 1e-8) return;
+    r.normalize();
+    const m = dx * 2 * depth * Math.tan(cam.fov * Math.PI / 360) / h * (1 - Math.exp(-dt * 6));
+    cam.position.addScaledVector(r, m); this.app.controls.target.addScaledVector(r, m);
   }
 
   /** Draw the frame: main view, then the wrist camera into a corner (scissor). */

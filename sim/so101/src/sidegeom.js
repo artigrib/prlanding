@@ -53,10 +53,11 @@ export function measure(tip, p) {
 }
 const cm = (v) => Math.max(1, Math.round(Math.abs(v) * 100));
 /** short label in the inset: "6 cm" / "ve výšce" (within the grasp band) */
-export function heightText(dz) { return Math.abs(dz) < GRASP.dz ? 've výšce' : `${cm(dz)} cm`; }
+const level = (dz) => dz > -GRASP.dz && dz < GRASP.top;   // the grasp hint's "close now" band (jaws below the top face)
+export function heightText(dz) { return level(dz) ? 've výšce' : `${cm(dz)} cm`; }
 /** accessible name of the inset */
 export function sideLabel(dz, dh, label) {
-  const hgt = Math.abs(dz) < GRASP.dz ? `chapadlo ve výšce cíle (${label})` : `chapadlo ${cm(dz)} cm ${dz > 0 ? 'nad' : 'pod'} cílem (${label})`;
+  const hgt = level(dz) ? `chapadlo ve výšce cíle (${label})` : `chapadlo ${cm(dz)} cm ${dz > 0 ? 'nad' : 'pod'} cílem (${label})`;
   return `Pohled z boku: ${hgt}` + (dh >= GRASP.dh ? `, ${cm(dh)} cm vedle` : '');
 }
 

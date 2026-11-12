@@ -23,6 +23,8 @@ import { HiDetail } from './ui/hidetail.js';
 import { store } from './ui/store.js';
 import { track } from './analytics.js';
 import { calmMode } from './ui/calm.js';
+import { DropWatch } from './touch.js';
+import { sideTarget } from './sidegeom.js';
 
 export async function install(page, env) {
   // core.js layout (servo-emulator branch): the page (MissionPage) owns sliders/demo/HUD, page.sim (ArmSim)
@@ -81,6 +83,9 @@ class UX {
     this.calm = calmMode();     // ?klid=1 (remembered): same as prefers-reduced-motion
     this.reduced = this.calm || matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.touch = matchMedia('(pointer: coarse)').matches;
+    // touch: the physics pull of the arm by a finger is off unless switched on in Nástroje (touch audit P1)
+    this.touchPull = store.get('touch-pull', false) === true;
+    this.dropW = new DropWatch(); this.drop = null;
     this.world = new World(mj, app.m, app.d);
     this.ctl = new ArmController(mj, app.m, app.d, app.act);
     this.runner = new MissionRunner(this.world);
@@ -214,8 +219,17 @@ class UX {
     ctx.hand = r.manual.drag || r.manual.joints || !autopilotAllowed(r.m) || this.panel.hintLevel > 0 || this.onboarding.i >= 2;
     this.extras.inkAt(ctx.tip);
     const res = r.tick(dt);
+    // a held object slipped out of the closed jaws: say so (touch audit P2: after a drop the HUD only said "closer")
+    const held = this.heldObject();
+    const closedCmd = (this.ctl.active ? this.ctl.grip : c[act[5]]) < 0.4;
+    const dropped = this.dropW.update(held, closedCmd, dt);
+    if (dropped && !this.teach.replaying && !(this.agent && this.agent.busy)) {
+      this.drop = { name: dropped, t: 4 };
+      this.sound.blip(200, 0.08, 'square', 0.05); this.sound.vibrate([12, 30, 12]);
+    }
+    if (this.drop && ((this.drop.t -= dt) <= 0 || held || ctx.gripOpen || res.ok)) this.drop = null;
     // HUD (live region: write only on change)
-    let text = res.text;
+    let text = this.drop ? dropText(this.world, this.drop.name) : res.text;
     if (this.teach.replaying) text = this.touch ? 'Přehrávám ukázku – zastavíte ji tlačítkem Stop' : 'Přehrávám ukázku – Esc ji zastaví';
     else if (!r.won && (this.ctl.busy() || this.pending)) text = this.autoText();   // one voice: no manual coaching while the planner moves
     else if (this.mode === 'smart' && this.ctl.active && !this.ctl.reachable && !this.ctl.busy()) text = 'Mimo dosah – zkuste cíl blíž k ruce';
@@ -226,7 +240,6 @@ class UX {
     if (ok !== this.app.hudOk) { document.getElementById('hud').classList.toggle('ok', ok); this.app.hudOk = ok; }
     if (r.won && !this.app.won) this.win();
     // grasp feedback
-    const held = this.heldObject();
     if (held && held !== this.held && !ctx.gripOpen) this.sound.grasp();
     this.held = held;
     // stuck? offer the hint ladder on lack of progress / repeated failed grasps (not on a flat timer)
@@ -256,6 +269,7 @@ class UX {
   onReset() {
     this.ctl.cancel(); this.pending = null; this.queued = null;
     if (this.coach) this.coach.reset();
+    this.dropW.reset(); this.drop = null;
     this.aiSteps = 0;
     if (!this.replayResetting) this.teach.stopReplay();
     this.runner.setup();
@@ -418,6 +432,20 @@ class UX {
   setPitch(p) { this.ctl.pitch = p; this.panel.showPitch(p); if (!this.ctl.active) this.ctl.begin(); this.onUserMove('pitch'); }
   cycleView() { const v = this.cameras.cycle(); this.panel.showView(v); }
   setWrist(on) { this.cameras.setWrist(on); this.panel.showWrist(on); store.set('wrist', on); }
+  setTouchPull(on) { this.touchPull = !!on; store.set('touch-pull', this.touchPull); this.panel.showTouchPull(this.touchPull); }
+  /** The object the player works on now (the side view's target: the next one to pick, or where the held one goes). */
+  focusPoint() {
+    const tip = this.ctl.actualTip(this.tipBuf), st = sideTarget(this.world, this.runner.m, this.heldObject(), tip, inZone);
+    return st ? st.p : null;
+  }
+  /** Camera: frame the gripper and the current target (touch: double tap on the empty table). */
+  frameWork() {
+    const g = Array.from(this.ctl.active ? this.ctl.target : this.ctl.actualTip(this.tipBuf)), f = this.focusPoint() || g;
+    const c = [(g[0] + f[0]) / 2, (g[1] + f[1]) / 2, (g[2] + f[2]) / 2];
+    this.cameras.frameSphere(c, Math.hypot(g[0] - f[0], g[1] - f[1], g[2] - f[2]) / 2 + 0.08);
+    this.panel.showView(this.cameras.view);
+    this.onboarding.notify('frame');
+  }
   setSide(on) { this.side.set(on); this.panel.showSide(on); }
   setSound(on) { this.sound.set(on); this.panel.showSound(on); if (on) this.sound.blip(660, 0.08); }
   toggleExplode() {
@@ -856,6 +884,11 @@ class UX {
 }
 
 void GRIP_OPEN; void GRIP_CLOSED;
+
+/** HUD line after a drop (cubes: "Kostka vypadla", library items: "Předmět vypadl") */
+function dropText(w, name) {
+  return /^cube/.test(name) ? 'Kostka vypadla – otevřete chapadlo a uchopte ji znovu' : 'Předmět vypadl – otevřete chapadlo a uchopte ho znovu';
+}
 
 function fmtT(t) { t = Math.max(0, t || 0); return Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0'); }
 

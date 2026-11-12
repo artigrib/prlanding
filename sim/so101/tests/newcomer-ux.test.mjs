@@ -46,7 +46,7 @@ test('grasp hints: aligned → close, above → down, within reach → the measu
   assert.equal(reachHint(ctx([0.25, -0.11, 0.2], false), CUBE), 'Otevřete chapadlo a sjeďte níž – ještě 19 cm');
   assert.equal(reachHint(ctx([0.25 + GRASP.hoverDz + 0.01, -0.11, 0.05]), CUBE), null, 'out of reach: the mission text speaks');
   // the reach radius / alignment are the grasp's own numbers
-  assert.deepEqual(GRASP, { dh: 0.02, dz: 0.015, hoverDh: 0.03, hoverDz: 0.12 });
+  assert.deepEqual(GRASP, { dh: 0.02, dz: 0.015, hoverDh: 0.03, hoverDz: 0.12, top: 0.0125 });
 });
 
 test('mission 01 by hand never says "click the cube"; clicking it does', () => {
