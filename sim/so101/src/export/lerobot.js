@@ -12,6 +12,12 @@
 // observation.environment_state (18 float32: target item then next item, each position 3 + yaw sin/cos 2 + class
 // one-hot 4), and a demo cut into per-item segments (printedrobotics.segments) becomes one episode per item.
 //
+// Camera images (tier b, campaign "Třídění odpadu" §4.2): a demo replayed in the SIL runner (tools/sil/replay.mjs,
+// printedrobotics.replay.cameras) carries rendered frames on disk; with opts.images (a loader for the PNG bytes)
+// every camera becomes an `observation.images.<name>` feature (dtype image: PNG bytes inside the Parquet, as LeRobot's
+// own image datasets), with per-channel stats from the replay's per-frame sums. The browser itself renders no
+// camera, so the page exports joints (and env) only; images come from the SIL replay.
+//
 // Pure module: no DOM access except downloadLeRobot(); the Parquet writer (vendor/hyparquet-writer,
 // MIT) is imported lazily. Tested in node: sim/so101/tests/lerobot-export.test.mjs.
 // Usage and the LeRobot schema it follows: docs/lerobot-export.md.
@@ -28,6 +34,7 @@ const DEMO_FORMAT = 'printedrobotics.cz/so101-sim-demo@1';
 import { ENV_NAMES, ENV_DIM, envVector, validEnv, validSegments } from '../policy/episodes.js';
 export { ENV_NAMES };
 export const ENV_KEY = 'observation.environment_state';   // LeRobot's OBS_ENV_STATE (lerobot/utils/constants.py)
+export const IMAGE_PREFIX = 'observation.images.';           // LeRobot's OBS_IMAGES + '.' + camera name
 const WRITER_URL = new URL('../../vendor/hyparquet-writer/hyparquet-writer.min.js', import.meta.url);
 
 /** English task instructions for the simulator missions (the demo JSON carries the Czech title). */
@@ -79,7 +86,18 @@ export function parseDemo(j, { task } = {}) {
     env = ok.map(envVector);
     if (pr.segments != null) { segments = validSegments(pr.segments, n); if (!segments) throw new Error('bad segments'); }
   } else if (pr.segments != null) throw new Error('segments without env frames');
-  return { task: String(name).slice(0, 500), mission, t, state, action, env, segments };
+  // SIL replay (tools/sil/lib/replay.mjs): cameras rendered per frame, per-frame channel sums for the stats
+  let images = null;
+  const rp = pr.replay;
+  if (rp && Array.isArray(rp.cameras) && rp.cameras.length) {
+    const names = rp.cameras.map((c) => c && c.name), sums = rp.images && rp.images.sums;
+    const ok = names.every((c) => typeof c === 'string' && /^[A-Za-z0-9_.-]+$/.test(c)) && new Set(names).size === names.length &&
+      Number.isInteger(rp.width) && Number.isInteger(rp.height) && rp.width >= 16 && rp.height >= 16 && rp.width <= 1920 && rp.height <= 1080 &&
+      sums && names.every((c) => Array.isArray(sums[c]) && sums[c].length === n && sums[c].every((r) => Array.isArray(r) && r.length === 13 && r.every(Number.isFinite)));
+    if (!ok) throw new Error('bad replay cameras');
+    images = { names, width: rp.width, height: rp.height, sums, items: Array.isArray(rp.items) ? rp.items : [] };
+  }
+  return { task: String(name).slice(0, 500), mission, t, state, action, env, segments, images, fidx: t.map((_, i) => i) };
 }
 
 /**
@@ -90,7 +108,7 @@ export function parseDemo(j, { task } = {}) {
 export function resample(ep, fps = FPS) {
   const T = ep.t, t0 = T[0], dur = T[T.length - 1] - t0;
   const n = Math.floor(dur * fps + 1e-6) + 1;
-  const state = new Array(n), action = new Array(n), env = ep.env ? new Array(n) : null;
+  const state = new Array(n), action = new Array(n), env = ep.env ? new Array(n) : null, fidx = new Array(n);
   let k = 0;
   for (let i = 0; i < n; i++) {
     const t = t0 + i / fps;
@@ -101,8 +119,9 @@ export function resample(ep, fps = FPS) {
     state[i] = lerp(ep.state); action[i] = lerp(ep.action);
     // environment state: the nearest recorded frame (a one-hot or a change of target must not be blended)
     if (env) env[i] = ep.env[f < 0.5 ? k : k2].slice();
+    fidx[i] = ep.fidx ? ep.fidx[f < 0.5 ? k : k2] : (f < 0.5 ? k : k2);   // camera frame: the nearest recorded one too
   }
-  return { task: ep.task, mission: ep.mission, n, state, action, env, item: ep.item || null };
+  return { task: ep.task, mission: ep.mission, n, state, action, env, item: ep.item || null, images: ep.images || null, fidx, demo: ep.demo };
 }
 
 const f32 = (x) => Math.fround(x);
@@ -129,41 +148,65 @@ function mergeStats(list) {                  // weighted merge of per-episode st
  * LeRobot feature spec of this dataset (meta/info.json "features"). env: add observation.environment_state
  * (LeRobot maps that exact key to FeatureType.ENV, lerobot/utils/feature_utils.py dataset_to_policy_features).
  */
-export function features({ env = false } = {}) {
+export function features({ env = false, images = null } = {}) {
   const vec = { dtype: 'float32', shape: [6], names: NAMES.slice() };
   const one = (dtype) => ({ dtype, shape: [1], names: null });
+  const img = images ? Object.fromEntries(images.names.map((c) => [IMAGE_PREFIX + c, { dtype: 'image', shape: [images.height, images.width, 3], names: ['height', 'width', 'channels'] }])) : {};
   return {
     action: { ...vec, names: NAMES.slice() }, 'observation.state': { ...vec, names: NAMES.slice() },
-    ...(env ? { [ENV_KEY]: { dtype: 'float32', shape: [ENV_DIM], names: ENV_NAMES.slice() } } : {}),
+    ...(env ? { [ENV_KEY]: { dtype: 'float32', shape: [ENV_DIM], names: ENV_NAMES.slice() } } : {}), ...img,
     timestamp: one('float32'), frame_index: one('int64'), episode_index: one('int64'), index: one('int64'), task_index: one('int64')
   };
 }
 // Hugging Face `datasets` feature types, stored in the Parquet key-value metadata like LeRobot does
-function hfFeatures(env) {
+function hfFeatures(env, cams = []) {
   const seq = (length) => ({ feature: { dtype: 'float32', _type: 'Value' }, length, _type: 'Sequence' }), val = (dtype) => ({ dtype, _type: 'Value' });
   return { action: seq(6), 'observation.state': seq(6), ...(env ? { [ENV_KEY]: seq(ENV_DIM) } : {}),
+    ...Object.fromEntries(cams.map((c) => [IMAGE_PREFIX + c, { _type: 'Image' }])),
     timestamp: val('float32'), frame_index: val('int64'), episode_index: val('int64'), index: val('int64'), task_index: val('int64') };
 }
-function parquetSchema(env) {
+function parquetSchema(env, cams = []) {
   const list = (name) => [
     { name, repetition_type: 'OPTIONAL', converted_type: 'LIST', num_children: 1 },
     { name: 'list', repetition_type: 'REPEATED', num_children: 1 },
     { name: 'element', type: 'FLOAT', repetition_type: 'OPTIONAL' }
   ];
   const col = (name, type) => ({ name, type, repetition_type: 'OPTIONAL' });
-  return [{ name: 'schema', num_children: env ? 8 : 7 }, ...list('action'), ...list('observation.state'), ...(env ? list(ENV_KEY) : []),
+  // an image column = HF datasets' Image struct { bytes: binary, path: string } (what pyarrow writes for it)
+  const image = (name) => [{ name, repetition_type: 'OPTIONAL', num_children: 2 },
+    { name: 'bytes', type: 'BYTE_ARRAY', repetition_type: 'OPTIONAL' }, { name: 'path', type: 'BYTE_ARRAY', converted_type: 'UTF8', repetition_type: 'OPTIONAL' }];
+  return [{ name: 'schema', num_children: (env ? 8 : 7) + cams.length }, ...list('action'), ...list('observation.state'), ...(env ? list(ENV_KEY) : []),
+    ...cams.flatMap((c) => image(IMAGE_PREFIX + c)),
     col('timestamp', 'FLOAT'), col('frame_index', 'INT64'), col('episode_index', 'INT64'), col('index', 'INT64'), col('task_index', 'INT64')];
 }
 
 /** A parsed demo → its LeRobot episodes: one per item segment (perItem, when the demo has segments), else one. */
-export function splitDemo(ep, { perItem = true } = {}) {
+export function splitDemo(ep, { perItem = true, keepDiverged = false } = {}) {
   if (!perItem || !ep.segments || !ep.segments.length) return [ep];
-  return ep.segments.map((s) => {
+  // SIL replay: an item that ended differently than in the recording is left out (keepDiverged keeps it, labelled
+  // with the replay's outcome, which is what its images show)
+  const diverged = new Set(ep.images && !keepDiverged ? ep.images.items.filter((x) => x && x.recorded !== x.replay).map((x) => x.item) : []);
+  return ep.segments.filter((s) => !diverged.has(s.item)).map((s) => {
     const sl = (A) => A.slice(s.from, s.to + 1);
-    return { task: ep.task, mission: ep.mission, t: sl(ep.t), state: sl(ep.state), action: sl(ep.action), env: sl(ep.env),
+    return { task: ep.task, mission: ep.mission, t: sl(ep.t), state: sl(ep.state), action: sl(ep.action), env: ep.env ? sl(ep.env) : null,
+      images: ep.images, fidx: sl(ep.fidx || ep.t.map((_, i) => i)), demo: ep.demo,
       item: { item: s.item, class: s.class, outcome: s.outcome, bin: s.bin } };
   });
 }
+
+/** Per-channel image stats (LeRobot's shape (3, 1, 1), values in 0–1) from per-frame sums
+ *  [min r g b, max r g b, Σ r g b, Σ² r g b, pixels] (tools/sil/lib/replay.mjs imageSums). */
+export function imageStats(rows) {
+  const min = [255, 255, 255], max = [0, 0, 0], s = [0, 0, 0], q = [0, 0, 0];
+  let px = 0;
+  for (const r of rows) {
+    for (let c = 0; c < 3; c++) { min[c] = Math.min(min[c], r[c]); max[c] = Math.max(max[c], r[3 + c]); s[c] += r[6 + c]; q[c] += r[9 + c]; }
+    px += r[12];
+  }
+  const mean = s.map((v) => v / px), std = q.map((v, c) => Math.sqrt(Math.max(0, v / px - mean[c] * mean[c])));
+  return { min: min.map((v) => v / 255), max: max.map((v) => v / 255), mean: mean.map((v) => v / 255), std: std.map((v) => v / 255), count: [rows.length] };
+}
+const nest3 = (st) => ({ min: st.min.map((v) => [[v]]), max: st.max.map((v) => [[v]]), mean: st.mean.map((v) => [[v]]), std: st.std.map((v) => [[v]]), count: st.count });
 
 // Stats are written with the number types LeRobot's own (numpy) stats have: min / max in the feature's dtype, mean and
 // std always floats, count an integer. JSON.stringify writes 0.0 as 0, and LeRobot's v2.1 → v3.0 converter builds one
@@ -173,8 +216,8 @@ const FLOAT_MARK = '#float#';   // only numbers are marked, so no real string lo
 function typedStats(st, feats) {
   const out = {};
   for (const [k, v] of Object.entries(st)) {
-    const fl = (a) => a.map((x) => (Number.isInteger(x) ? FLOAT_MARK + x : x));
-    const isF = feats[k] && feats[k].dtype === 'float32';
+    const fl = (a) => a.map((x) => (Array.isArray(x) ? fl(x) : Number.isInteger(x) ? FLOAT_MARK + x : x));
+    const isF = feats[k] && (feats[k].dtype === 'float32' || feats[k].dtype === 'image');
     out[k] = { min: isF ? fl(v.min) : v.min, max: isF ? fl(v.max) : v.max, mean: fl(v.mean), std: fl(v.std), count: v.count };
   }
   return out;
@@ -184,13 +227,18 @@ const typedJSON = (o, indent) => JSON.stringify(o, null, indent).replace(/"#floa
 let writerP = null;
 async function parquetWriter() { return (writerP ||= import(WRITER_URL.href).then((m) => m.parquetWriteBuffer)); }
 
-function datasetCard({ repoId, license, totalEpisodes, totalFrames, tasks, env, items }) {
+function datasetCard({ repoId, license, totalEpisodes, totalFrames, tasks, env, items, images = null }) {
   const out = {}; for (const it of items) if (it) out[it.outcome] = (out[it.outcome] || 0) + 1;
   const envLine = env ? `
 - \`${ENV_KEY}\` (${ENV_DIM} float32, simulator ground truth, no camera): the target item (in the jaws, else the most
   downstream item on the belt) and the next item on the belt, each \`x, y, z\` (centre of mass, m, world frame),
   \`yaw_sin, yaw_cos\` and a class one-hot (${ENV_NAMES.slice(5, 9).map((n) => n.split('.')[1]).join(', ')}); an absent item is all zeros.
   A real \`so101_follower\` has no such sensor: a policy trained on it runs only in the simulator.` : '';
+  const camLine = images ? `
+- ${images.names.map((c) => '`' + IMAGE_PREFIX + c + '`').join(', ')} (${images.width}×${images.height} RGB, PNG): virtual cameras rendered by
+  the SIL runner's software rasteriser while it replayed the recorded actions (tools/sil/replay.mjs). Flat-shaded
+  geometry, items as collision hulls in one colour per material, no textures, shadows or noise: not photographs.
+  \`observation.state\` and the item state are the replay's, so they match the images; \`action\` is the recording's.` : '';
   const itemLine = items.some(Boolean) ? `
 - One episode per waste item, cut at the mission's events (approach → 0.5 s after the release, or the miss):
   ${Object.entries(out).map(([k, v]) => `${v} ${k}`).join(', ')}.` : '';
@@ -216,13 +264,13 @@ Teleoperated demonstrations of the **SO-101** robot arm recorded in the browser 
 [printedrobotics.cz/sim/so101](https://printedrobotics.cz/sim/so101/?lang=en)
 (MuJoCo physics, robot model from MuJoCo Menagerie / The Robot Studio, Apache-2.0).
 
-- **Source: simulation.** Not recorded on real hardware; no camera streams, joint positions only${env ? ' plus the simulator\'s item state' : ''}.
+- **Source: simulation.** Not recorded on real hardware; ${images ? 'rendered camera images, joint positions' : 'no camera streams, joint positions only'}${env ? ' plus the simulator\'s item state' : ''}.
 - Format: [LeRobot](https://github.com/huggingface/lerobot) dataset ${CODEBASE_VERSION}, robot_type \`${ROBOT_TYPE}\`, ${FPS} fps,
   ${totalEpisodes} episode(s), ${totalFrames} frames.
 - \`observation.state\` and \`action\`: ${NAMES.map((n) => '`' + n + '`').join(', ')}.
   Joints in degrees (0 = the simulator's zero pose), gripper 0–100 % open.
   These follow LeRobot's SO-101 naming and degree mode, but the zero offsets of a calibrated real arm differ.
-- Tasks: ${tasks.map((t) => '"' + t + '"').join(', ')}.${envLine}${itemLine}
+- Tasks: ${tasks.map((t) => '"' + t + '"').join(', ')}.${envLine}${camLine}${itemLine}
 - Licence: ${license === 'cc-by-4.0' ? 'CC BY 4.0' : license}.
 
 Made with the free SO-101 simulator by [printedrobotics.cz](https://printedrobotics.cz/?lang=en).
@@ -231,16 +279,26 @@ Made with the free SO-101 simulator by [printedrobotics.cz](https://printedrobot
 
 /**
  * Build all files of a LeRobot v2.1 dataset from one or more demo JSON objects.
- * @param {object[]} demos  Teach.toJSON() objects (one episode each, or one per item segment)
- * @param {{ repoId?: string, license?: string, task?: string, perItem?: boolean }} opts
+ * @param {object[]} demos  Teach.toJSON() objects (one episode each, or one per item segment), or SIL replays
+ * @param {{ repoId?: string, license?: string, task?: string, perItem?: boolean, keepDiverged?: boolean, envState?: boolean,
+ *   images?: false | ((demo: number, camera: string, frame: number) => Uint8Array | Promise<Uint8Array>) }} opts
+ *   images: for SIL replays (printedrobotics.replay.cameras), the PNG bytes of frame `frame` of camera `camera` of
+ *   demos[demo]; false = export without the images.
  * @returns {Promise<Record<string, string|Uint8Array>>}
  */
 export async function buildDataset(demos, opts = {}) {
-  const list = (Array.isArray(demos) ? demos : [demos]).flatMap((j) => splitDemo(parseDemo(j, opts), opts)).map((ep) => resample(ep));
+  // envState: false leaves observation.environment_state out (per-item episodes stay): a policy trained on cameras and
+  // joints only can also run on a real arm, which has no such sensor
+  const parse = (j, di) => { const ep = parseDemo(j, opts); ep.demo = di; if (opts.envState === false) ep.env = null; return ep; };
+  const list = (Array.isArray(demos) ? demos : [demos]).flatMap((j, di) => splitDemo(parse(j, di), opts)).map((ep) => resample(ep));
   if (!list.length) throw new Error('no demonstrations');
   const env = !!list[0].env;
   if (list.some((ep) => !!ep.env !== env)) throw new Error('mixed demos: only some have environment state (conveyor missions); export them separately');
-  const HF_FEATURES = hfFeatures(env), PARQUET_SCHEMA = parquetSchema(env);
+  const im = opts.images === false ? null : list[0].images, key = (x) => (x ? `${x.names.join(',')}@${x.width}x${x.height}` : '');
+  if (opts.images !== false && list.some((ep) => key(ep.images) !== key(im))) throw new Error('mixed demos: different cameras or image sizes; export them separately');
+  if (im && typeof opts.images !== 'function') throw new Error('the demos carry camera frames (SIL replay): pass opts.images (a PNG loader), or images: false');
+  const cams = im ? im.names : [];
+  const HF_FEATURES = hfFeatures(env, cams), PARQUET_SCHEMA = parquetSchema(env, cams);
   const license = opts.license || DEFAULT_LICENSE;
   const write = await parquetWriter();
   const tasks = [], taskIdx = new Map(), files = {}, episodes = [], epStats = [];
@@ -252,11 +310,18 @@ export async function buildDataset(demos, opts = {}) {
     const fi = Array.from({ length: n }, (_, i) => i), gi = fi.map((i) => index + i);
     const state = ep.state.map((r) => r.map(f32)), action = ep.action.map((r) => r.map(f32)), envs = env ? ep.env.map((r) => r.map(f32)) : null;
     const kv = [{ key: 'huggingface', value: JSON.stringify({ info: { features: HF_FEATURES } }) }];
+    const imgCols = [];
+    for (const c of cams) {
+      const data = new Array(n);
+      for (let i = 0; i < n; i++) data[i] = { bytes: await opts.images(ep.demo, c, ep.fidx[i]), path: null };
+      imgCols.push({ name: IMAGE_PREFIX + c, data });
+    }
     const buf = write({
       schema: PARQUET_SCHEMA, kvMetadata: kv,
       columnData: [
         { name: 'action', data: action }, { name: 'observation.state', data: state },
         ...(env ? [{ name: ENV_KEY, data: envs }] : []),
+        ...imgCols,
         { name: 'timestamp', data: ts }, { name: 'frame_index', data: fi.map(BigInt) },
         { name: 'episode_index', data: fi.map(() => BigInt(e)) }, { name: 'index', data: gi.map(BigInt) },
         { name: 'task_index', data: fi.map(() => BigInt(ti)) }
@@ -269,7 +334,8 @@ export async function buildDataset(demos, opts = {}) {
     epStats.push({
       episode_index: e,
       stats: {
-        action: stats(action), 'observation.state': stats(state), ...(env ? { [ENV_KEY]: stats(envs) } : {}), timestamp: stats(col(ts)),
+        action: stats(action), 'observation.state': stats(state), ...(env ? { [ENV_KEY]: stats(envs) } : {}),
+        ...Object.fromEntries(cams.map((c) => [IMAGE_PREFIX + c, imageStats(ep.fidx.map((i) => ep.images.sums[c][i]))])), timestamp: stats(col(ts)),
         frame_index: stats(col(fi)), episode_index: stats(col(fi.map(() => e))), index: stats(col(gi)), task_index: stats(col(fi.map(() => ti)))
       }
     });
@@ -281,7 +347,7 @@ export async function buildDataset(demos, opts = {}) {
     total_episodes: E, total_frames: index, total_tasks: tasks.length, total_videos: 0,
     total_chunks: Math.floor((E - 1) / CHUNK) + 1, chunks_size: CHUNK, fps: FPS, splits: { train: `0:${E}` },
     data_path: 'data/chunk-{episode_chunk:03d}/episode_{episode_index:06d}.parquet', video_path: null,
-    features: features({ env }),
+    features: features({ env, images: im }),
     // not read by LeRobot; kept with the data so the provenance travels with copies of the dataset
     source: 'simulation', license
   };
@@ -291,10 +357,11 @@ export async function buildDataset(demos, opts = {}) {
   files['meta/info.json'] = JSON.stringify(info, null, 4) + '\n';
   files['meta/tasks.jsonl'] = jsonl(tasks.map((task, task_index) => ({ task_index, task })));
   files['meta/episodes.jsonl'] = jsonl(episodes);
-  const feats = features({ env });
-  files['meta/episodes_stats.jsonl'] = epStats.map((r) => typedJSON({ episode_index: r.episode_index, stats: typedStats(r.stats, feats) })).join('\n') + '\n';
-  files['meta/stats.json'] = typedJSON(typedStats(agg, feats), 4) + '\n';
-  files['README.md'] = datasetCard({ repoId: opts.repoId, license, totalEpisodes: E, totalFrames: index, tasks, env, items: list.map((ep) => ep.item) });
+  const feats = features({ env, images: im });
+  const nested = (st) => Object.fromEntries(Object.entries(st).map(([k, v]) => [k, k.startsWith(IMAGE_PREFIX) ? nest3(v) : v]));
+  files['meta/episodes_stats.jsonl'] = epStats.map((r) => typedJSON({ episode_index: r.episode_index, stats: typedStats(nested(r.stats), feats) })).join('\n') + '\n';
+  files['meta/stats.json'] = typedJSON(typedStats(nested(agg), feats), 4) + '\n';
+  files['README.md'] = datasetCard({ repoId: opts.repoId, license, totalEpisodes: E, totalFrames: index, tasks, env, items: list.map((ep) => ep.item), images: im });
   return files;
 }
 

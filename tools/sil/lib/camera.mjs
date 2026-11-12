@@ -29,6 +29,32 @@ export const CAMERA_PRESETS = {
   wrist: { mjcf: 'wrist_cam', about: 'the wrist camera mount of the SO-101 model (gripper and what is in front of it)' }
 };
 
+// Library items (object scenes) are drawn as their collision hulls in one flat colour per waste fraction: the
+// assets' textures (WebP inside the GLBs) are not decoded here. Plastic is the plastic cup's and cutlery's own glTF
+// base colour (linear 0.0078 0.0667 0.2706 -> sRGB); paper, glass and metal are set by hand to read as the material.
+export const FRACTION_RGB = { paper: [214, 190, 150], plastic: [22, 73, 142], glass: [170, 215, 225], metal: [150, 152, 158] };
+
+/**
+ * What a camera draws of an object scene: extractScene() options (the belt frame and slats; item colours) and,
+ * per frame, the geoms to hide (slats past the head drum: turned down, not drawn, as in the browser).
+ * sc: a tools/sil/lib/plant.mjs loadScene() result. Plain scene: no extras.
+ */
+export function sceneView({ mj, m, items = [], belt = null }) {
+  const id = (n) => mj.mj_name2id(m, mj.mjtObj.mjOBJ_BODY.value, n);
+  const bodies = new Set(), colors = new Map();
+  if (belt) {
+    if (id('belt') >= 0) bodies.add(id('belt'));
+    for (const s of belt.slats) bodies.add(s.body);
+  }
+  for (const it of items) if (it.fraction && FRACTION_RGB[it.fraction] && id(it.name) >= 0) colors.set(id(it.name), FRACTION_RGB[it.fraction]);
+  const slatGeoms = belt ? belt.slats.map((s) => { const g = []; for (let k = m.body_geomadr[s.body], n = k + m.body_geomnum[s.body]; k < n; k++) g.push(k); return g; }) : [];
+  return {
+    opts: { bodies, colors },
+    floorZ: belt ? -0.2 : -0.05,   // conveyor: the end tote hangs below the table edge (its floor at z = −0.085)
+    hide() { const out = []; if (belt) belt.slats.forEach((s, i) => { if (!belt.carrying(i)) out.push(...slatGeoms[i]); }); return out; }
+  };
+}
+
 /** "up" -> {name: up, preset: up}; "top=up" -> {name: top, preset: up} (name = LeRobot camera_name). */
 export function parseCameraSpec(spec) {
   const [name, preset = name] = String(spec).split('=');
@@ -62,14 +88,14 @@ export function cameraPoses(mj, m, d, cams) {
  * Start the cameras: a render worker and the ZMQ publisher. Call tick() from the physics loop; it
  * hands the current poses to the worker whenever the previous frame is done and 1/fps has passed.
  */
-export async function startCameras({ mj, m, d, specs, width = 640, height = 480, fps = 15, port = 5555, host = '127.0.0.1', log = () => {} }) {
+export async function startCameras({ mj, m, d, specs, width = 640, height = 480, fps = 15, port = 5555, host = '127.0.0.1', log = () => {}, view = null }) {
   const cams = specs.map(parseCameraSpec);
   const names = new Set();
   for (const c of cams) { if (names.has(c.name)) throw new Error(`camera "${c.name}" given twice`); names.add(c.name); }
   cameraPoses(mj, m, d, cams);                              // fail early on a bad MJCF camera
   const pub = await startZmqPub({ port, host, log });
   const worker = new Worker(new URL('./camera-worker.mjs', import.meta.url));
-  worker.postMessage({ type: 'init', scene: extractScene(m), width, height });
+  worker.postMessage({ type: 'init', scene: extractScene(m, view ? view.opts : {}), width, height, floorZ: view ? view.floorZ : undefined });
   const latest = new Map();                                 // name -> raw RGB of the last frame (for the preview)
   let busy = false, lastPost = -Infinity, frames = 0, renderMs = 0, closed = false, failed = null;
   const ready = new Promise((resolve) => {
@@ -89,7 +115,7 @@ export async function startCameras({ mj, m, d, specs, width = 640, height = 480,
     tick(nowS) {
       if (busy || closed || failed || nowS - lastPost < 1 / fps) return false;
       busy = true; lastPost = nowS;
-      worker.postMessage({ type: 'render', poses: geomPoses(m, d), cams: cameraPoses(mj, m, d, cams), t: Date.now() / 1000 });
+      worker.postMessage({ type: 'render', poses: geomPoses(m, d, view ? view.hide() : null), cams: cameraPoses(mj, m, d, cams), t: Date.now() / 1000 });
       return true;
     },
     /** Normal (unswapped) PNG of the newest frame of one camera, or null. */

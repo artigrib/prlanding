@@ -1,0 +1,140 @@
+<!--meta
+{"title":"Cameras from demos: a LeRobot dataset from the sorting line",
+ "description":"SO-101 simulator waste-sorting demos replayed with virtual cameras: a LeRobot dataset with images, conversion to v3.0 and ACT training on your computer.",
+ "ogTitle":"Cameras from demos: a LeRobot dataset from the sorting line",
+ "ogDesc":"Turn browser demos into a LeRobot 0.6.1 dataset with camera images. What is replayed, how closely, and what you can train on it.",
+ "h":"Cameras from demos",
+ "crumb":[["Guides","navody"]],
+ "article":true,"date":"2026-11-12",
+ "image":"assets/media/sil-conveyor-cameras.jpg","imageW":960,"imageH":360,"imageAlt":"Two virtual camera frames of the sorting cell: a top-down view of the belt and bins, and the view from the wrist camera"}
+-->
+<section class="g doc-hero">
+<div class="a1 mono">Guide · 12 Nov 2026</div>
+<div class="a4" style="display:flex;flex-direction:column;gap:20px">
+<h1>Cameras from demos: a LeRobot dataset from the sorting line</h1>
+<p class="lead">In missions 11 and 12 of the simulator you record the SO-101 arm sorting waste off a conveyor. The browser saves joint positions and the state of the items, but no images, while policies such as ACT learn mostly from cameras on a real arm. <code>tools/sil/replay.mjs</code> therefore replays your demos in the same scene, renders virtual cameras along the way and writes a LeRobot dataset with images. You then convert it and train on your own computer.</p>
+<p class="doc-note"><i aria-hidden="true"></i><span><b>Verified on 12 Nov 2026</b> with LeRobot 0.6.1 (PyPI, <code>lerobot[dataset,training]</code>), Python 3.13, PyTorch 2.11 and Node.js 22 on Linux (x86_64, 2 cores, CPU only). We verified loading the dataset and a few training steps, not a trained policy: how many demos and steps it takes for the arm to actually sort, we have not measured yet.</span></p>
+<ol class="toc" aria-label="Contents">
+<li><a href="#princip">How it works</a></li><li><a href="#nahrani">Demos</a></li><li><a href="#prehrani">Replay and cameras</a></li><li><a href="#prevod">Conversion to v3.0</a></li><li><a href="#trenink">Training</a></li><li><a href="#presnost">How close it is</a></li><li><a href="#limity">Limits</a></li><li><a href="#zrcadlo">The cell in SIL</a></li>
+</ol>
+</div>
+</section>
+
+<section class="section" id="princip">
+<div class="g rule">
+<div class="a1 mono">01 — Principle</div>
+<div class="a4 prose">
+<h2>Replay the actions, render the cameras</h2>
+<p>A demo downloaded from the browser holds the complete starting state of the physics (a MuJoCo snapshot) and, for every recorded frame, the command sent to the joints (<code>action</code>). The program builds the same scene with the belt and bins in Node.js, restores the starting state, starts the same batch of items (same order, orientations and timing) and writes the commands straight into the simulated motors, just as the Replay button in the browser does. Hence a "kinematic" replay: the STS3215 servo emulation of the <a href="{root}en/guides/so101-lerobot-simulation/">virtual arm for LeRobot</a> is not in the loop, because it would drift further from the browser.</p>
+<p>The items, the belt and the gripper's contacts are simulated again, though; nothing pins them to the recording. So the program compares the replay with the recording and measures the difference (see <a href="#presnost">How close it is</a>). What goes into the dataset is what happened in the replay: joint positions, item state and images come from the same instant; the command (<code>action</code>) is the recorded one.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="nahrani">
+<div class="g rule">
+<div class="a1 mono">02 — Demos</div>
+<div class="a4 prose">
+<h2>Record and download in the browser</h2>
+<p>Open <a href="{root}sim/so101/?mise=waste_teach">mission 12 Waste sorting II</a> (or 11), sort a few items and choose <b>Download the last recording (JSON)</b> under Tools → Policy. The file <code>so101-ukazka-waste_teach.json</code> also carries the split into episodes: one episode per item, from the moment it enters the arm's reach to 0.5 s after the release. You can download several recordings and process them together.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="prehrani">
+<div class="g rule">
+<div class="a1 mono">03 — Replay</div>
+<div class="a4 prose">
+<h2>Replay with cameras</h2>
+<pre tabindex="0"><code>git clone --depth 1 https://github.com/artigrib/prlanding.git
+cd prlanding
+node tools/sil/replay.mjs ~/Downloads/so101-ukazka-waste_teach.json -o sorting</code></pre>
+<p>The default cameras are <code>up</code> (top-down, 75 cm above the table) and <code>wrist</code> (the wrist camera of the arm model), 320 × 240 pixels, 30 frames per second. Change them with <code>--camera side</code> or <code>--camera top=up</code> and <code>--camera-size 640x480</code>. The program needs nothing from npm. At the end it prints, per recording, the replay error and the rendering speed, and leaves in <code>sorting/</code>:</p>
+<ul>
+<li><code>lerobot/</code>: a LeRobot dataset in format v2.1 with the features <code>observation.images.up</code>, <code>observation.images.wrist</code> (PNG images inside the Parquet files), <code>observation.state</code>, <code>observation.environment_state</code> and <code>action</code>, one episode per item;</li>
+<li><code>images/</code>: every frame as a PNG; <code>replay-000.json</code>: the replayed demo; <code>report.json</code>: the measured errors.</li>
+</ul>
+<p>An item that ended differently in the replay than in the recording (it slipped out of the gripper, say) is left out of the dataset and listed. <code>--keep-diverged</code> keeps it, with the outcome of the replay. The Python script writes the same dataset from the same folder: <code>python3 tools/hf/demos_to_lerobot.py sorting/replay-000.json -o sorting-py</code> (needs <code>pyarrow</code>).</p>
+<figure class="doc-fig"><img src="{root}assets/media/sil-conveyor-cameras.jpg" alt="Two virtual camera frames: on the left a top-down view of the belt, bins and arm, on the right the wrist camera's view of an item in the gripper" width="960" height="360" loading="lazy"><figcaption>Fig. 1 – The <code>up</code> and <code>wrist</code> cameras from a replay of mission 11. Items are drawn as their collision shapes in one colour per material, without textures or shadows.</figcaption></figure>
+</div>
+</div>
+</section>
+
+<section class="section" id="prevod">
+<div class="g rule">
+<div class="a1 mono">04 — Conversion</div>
+<div class="a4 prose">
+<h2>To format v3.0 for LeRobot 0.6.1</h2>
+<pre tabindex="0"><code>python3.13 -m venv .venv-lerobot
+source .venv-lerobot/bin/activate
+pip install "lerobot[dataset,training]==0.6.1"
+python -m lerobot.scripts.convert_dataset_v21_to_v30 --repo-id=local/so101_sorting --root=sorting/lerobot --push-to-hub=false</code></pre>
+<p>The conversion rewrites <code>sorting/lerobot</code> as v3.0 and keeps the original next to it as <code>sorting/lerobot_old</code>. Nothing is uploaded to Hugging Face; <code>--push-to-hub=false</code> is required, the default is the opposite. To check that it loads:</p>
+<pre tabindex="0"><code>python -c "from lerobot.datasets.lerobot_dataset import LeRobotDataset as D; d = D('local/so101_sorting', root='sorting/lerobot'); print(d.num_episodes, d[0]['observation.images.up'].shape)"</code></pre>
+</div>
+</div>
+</section>
+
+<section class="section" id="trenink">
+<div class="g rule">
+<div class="a1 mono">05 — Training</div>
+<div class="a4 prose">
+<h2>ACT on your own computer</h2>
+<pre tabindex="0"><code>lerobot-train --dataset.repo_id=local/so101_sorting --dataset.root=sorting/lerobot \
+    --policy.type=act --policy.device=cpu --policy.push_to_hub=false \
+    --batch_size=8 --steps=20000 --output_dir=outputs/act_sorting</code></pre>
+<p>ACT picks its inputs from the dataset: both cameras, the joint positions and the item state. With a graphics card, use <code>--policy.device=cuda</code>. On the first run torchvision downloads the ResNet18 weights (about 45 MB); where downloading is not possible, <code>--policy.pretrained_backbone_weights=null</code> helps (the network then starts from random weights). 20,000 steps is only an example, not a verified figure.</p>
+<p><b>What we verified.</b> From a mission 11 demo (125 s, the planner sorted 10 of 11 items) and a mission 12 demo (40 s) we got a dataset of 13 episodes and 3,799 frames, 59 MB. Converting it to v3.0 took 0.4 s, and <code>LeRobotDataset</code> returns the images as 3 × 240 × 320 tensors. <code>lerobot-train</code> with ACT (52 million parameters) ran three steps with batch size 8 on our 2-core machine, shared with another test: a step took 20 s of computation plus 38 to 67 s of data loading. We checked separately that ACT really uses the images: both cameras are among its inputs, the ResNet18 backbone receives a gradient, and with blacked-out images the policy proposes a different motion. The same holds for the dataset without the item state (<code>--no-env-state</code>).</p>
+<p><b>Without the item state.</b> <code>observation.environment_state</code> is ground truth from the simulator (position and class of the item). A real arm has no such sensor, so a policy trained with it runs only in the simulator. With <code>--no-env-state</code> (for <code>replay.mjs</code> and for the Python script) you get a dataset with cameras and joints only, which is what a real SO-101 has too.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="presnost">
+<div class="g rule">
+<div class="a1 mono">06 — Accuracy</div>
+<div class="a4 prose">
+<h2>How closely the replay matches</h2>
+<p>We measured on demos recorded by the planner in Node.js the same way the page records them. For a mission 11 demo (125 s, 11 items), the joints in the replay differed from the recording by at most 0.75° in 95 % of the frames, 10° at worst; the gripper by 1.8 % of its opening in 95 % of the frames. Ten of the eleven items ended as in the recording; for nine of them the largest position error was 4 to 21 mm. The spoon fell out of the gripper both in the recording and in the replay, but somewhere else (up to 126 mm). The fork, which the planner sorted in the recording, had not reached a bin by the end of the replay, so it is not in the dataset. In a shorter mission 12 demo (40 s, 3 items) every item ended as recorded, with at most 17 mm of error. We have not taken the causes apart in detail. One is certain: the recording stores the commands about 20 times a second (2,605 frames in 125 s) and the replay interpolates between them, while during recording they changed every 16 ms. Replaying the same demo twice gives an identical result (a test checks this).</p>
+<p>Rendering: 60 images of 320 × 240 per second on one core (two cameras, so 30 dataset frames per second, roughly the pace of the recording). Replaying both demos (165 s) including writing the PNGs and the dataset took 3 minutes.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="limity">
+<div class="g rule">
+<div class="a1 mono">07 — Limits</div>
+<div class="a4 prose">
+<h2>What this is and what it is not</h2>
+<ul>
+<li>The images come from a simple renderer: flat colours, items as collision shapes in one colour per material (paper, plastic, glass, metal), no textures, shadows or noise. A policy trained on them will not work on photos from a real camera.</li>
+<li>Joint angles are in degrees from the simulation model's zero pose, the gripper in 0–100 % open. The zero of a calibrated real arm is elsewhere.</li>
+<li>Running a policy trained this way back on the virtual arm (<code>lerobot-rollout</code> against the cell in SIL) is not verified yet.</li>
+<li>Only a demo with a physics snapshot can be replayed; a JSON downloaded from mission 11 or 12 always has one.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="section" id="zrcadlo">
+<div class="g rule">
+<div class="a1 mono">08 — The cell in SIL</div>
+<div class="a4 prose">
+<h2>The sorting cell for LeRobot, with a live view</h2>
+<p>The virtual arm for LeRobot can run the same cell with the belt: <code>node tools/sil/so101-virtual.mjs --scene conveyor --batch 2 --camera up --camera wrist --mirror</code>. The belt runs at 2 cm/s, items arrive every 10 s in the batch order (2 = the verification batch of mission 12) and the program prints where each item ended up. The cameras go over ZeroMQ as in the <a href="{root}en/guides/so101-lerobot-simulation/#politika">policy guide</a>. The <a href="{root}sim/so101/?mise=waste_teach&amp;mirror=8765">simulator page with <code>mirror=8765</code></a> then shows the arm, the belt and the items of the running program live.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="zdroje">
+<div class="g rule">
+<div class="a1 mono">Sources</div>
+<ol class="a4 prose src">
+<li>Hugging Face: <a href="https://github.com/huggingface/lerobot/tree/v0.6.1">LeRobot 0.6.1</a> (<code>scripts/convert_dataset_v21_to_v30.py</code>, <code>datasets/feature_utils.py</code>, <code>policies/act</code>; Apache-2.0).</li>
+<li>Hugging Face: <a href="https://huggingface.co/docs/lerobot/il_robots">LeRobot – Getting started with real-world robots</a> (training and running a policy).</li>
+<li>Zhao et al.: <a href="https://arxiv.org/abs/2304.13705">Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware</a> (ACT), 2023.</li>
+<li>Google DeepMind: <a href="https://mujoco.org/">MuJoCo</a>; arm model from MuJoCo Menagerie (Apache-2.0).</li>
+<li>Repository: <code>tools/sil/replay.mjs</code>, <code>tools/sil/lib/replay.mjs</code>, <code>docs/lerobot-export.md</code>.</li>
+</ol>
+</div>
+</section>
