@@ -10,6 +10,11 @@
 const STATUSES = ['verified', 'carried', 'unverified', 'estimate'];
 const REVIEW_SIGNALS = ['variant_mismatch', 'shipping_time', 'quality', 'missing_parts', 'positive'];
 const round2 = (x) => Math.round(x * 100) / 100;
+const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, '').split('.').slice(-2).join('.'); } catch { return ''; } };
+// a "docs" page (wiki, repository) is information, not an orderable offer
+const DOMAIN_IN_TEXT = /\b(?:[a-z0-9-]+\.)+(?:fr|de|com|cz|sk|pl|ro|store|io|eu|co\.uk)\b/gi;
+const labelNames = (label, name) => new RegExp(`(^|[^a-z])${name.split(/[ (]/)[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^a-z])`, 'i').test(label);
+const DOCS_URL = /^https:\/\/(github\.com|huggingface\.co)\/|\/wiki\//;
 
 /* ---------------- data checks ---------------- */
 
@@ -73,6 +78,13 @@ export function checkData(data, schema) {
       if (s.flag && (!s.flag_reason || !s.flag_reason_cs)) errors.push(`${where}: flag "${s.flag}" needs flag_reason and flag_reason_cs`);
       if (s.flag === 'mislabeled' && s.recommend) errors.push(`${where}: a mislabeled source cannot be recommended`);
       if (s.price != null && !s.currency) errors.push(`${where}: price without currency`);
+      // a shop label must match its link: the source URL is on the supplier's own domain, and no other supplier is named
+      const sup = data.suppliers[s.supplier];
+      if (sup && host(s.url) !== host(sup.url)) errors.push(`${where}: URL ${host(s.url)} is not on the supplier's domain ${host(sup.url)}`);
+      for (const t of s.label.match(DOMAIN_IN_TEXT) || []) if (host('https://' + t) !== host(s.url)) errors.push(`${where}: label "${s.label}" names ${t} but links to ${host(s.url)}`);
+      for (const [k, o] of Object.entries(data.suppliers)) if (k !== s.supplier && k !== 'none' && labelNames(s.label, o.name)) errors.push(`${where}: label "${s.label}" names another shop (${o.name})`);
+      if (s.kind && !['offer', 'reference'].includes(s.kind)) errors.push(`${where}: unknown kind "${s.kind}"`);
+      if (DOCS_URL.test(s.url) && s.kind !== 'reference' && s.supplier !== 'none') errors.push(`${where}: ${s.url} is documentation, not a shop offer (set kind "reference")`);
       if (s.reviews) {
         const r = s.reviews;
         if (r.checked > gen) errors.push(`${where}: reviews checked ${r.checked} is after meta.generated ${gen}`);
@@ -122,6 +134,8 @@ export function checkData(data, schema) {
   for (const n of [...(data.notes || []), ...(data.safety || [])]) for (const src of n.sources || []) {
     if (!/^https:\/\//.test(src.url)) errors.push(`note ${n.id}: source without https URL`);
     if (!src.checked || src.checked > gen) errors.push(`note ${n.id}: source checked date missing or after meta.generated`);
+    if (src.kind && !['docs', 'shop'].includes(src.kind)) errors.push(`note ${n.id}: unknown source kind "${src.kind}"`);
+    if (DOCS_URL.test(src.url) && /\/wiki\//.test(src.url) && src.kind !== 'docs') errors.push(`note ${n.id}: ${src.url} is a wiki page: mark it kind "docs"`);
   }
   for (const arm of Object.values(data.variants.arms || {})) for (const j of arm.joints) for (const code of j.codes) {
     const v = data.variants.codes[code];
@@ -156,6 +170,33 @@ export function checkData(data, schema) {
 }
 
 /* ---------------- plan ---------------- */
+
+/**
+ * Stock text as the shop showed it on the source's checked date. A restock date ("Backorder: N expected YYYY-MM-DD")
+ * that is already before `today` (the date the plan is rendered) is stale: it is never shown as current.
+ */
+const BACKORDER = /^Backorder: (\d+) expected (\d{4}-\d\d-\d\d)$/;
+export const isoToday = () => new Date().toISOString().slice(0, 10);
+export function stockState(stock, today = isoToday()) {
+  const m = BACKORDER.exec(stock || '');
+  if (m) return { backorder: true, expected: m[2], past: m[2] < today };
+  return { backorder: /^Backorder/.test(stock || ''), expected: null, past: false };
+}
+const dmy = (iso) => { const [y, m, d] = iso.split('-'); return `${d}.${m}.${y}`; };
+/** Localised stock text for the plan page (lang 'cs' | 'en'); `checked` = the source's last check, shown with a stale date. */
+export function stockText(stock, lang, { checked = null, today = isoToday(), date = dmy } = {}) {
+  const st = stockState(stock, today);
+  if (st.past) {
+    const when = checked ? ` (${lang === 'en' ? 'last checked' : 'ověřeno'} ${date(checked)})` : '';
+    return lang === 'en' ? `Backorder: check the date at the shop${when}` : `na objednávku, termín ověřte v obchodě${when}`;
+  }
+  if (lang === 'en') return String(stock);
+  return String(stock)
+    .replace(BACKORDER, (m, n, d) => `na objednávku, naskladnění ${date(d)}`)
+    .replace(/^Available$/, 'skladem').replace(/^Available \(rarely stocked\)$/, 'skladem (zřídka naskladňováno)').replace(/^In store \/ 1–2 days$/, 'na prodejně / 1–2 dny').replace(/^>(\d+) pcs$/, '>$1 ks')
+    .replace(/^Not shown$/, 'neuvedeno').replace(/ sold$/, ' prodáno')
+    .replace(/^In stock \((\d+) pcs\)$/, 'skladem ($1 ks)').replace(/^In stock$/, 'skladem').replace(/^Out of stock$/, 'vyprodáno');
+}
 
 export const CONFIGS = ['pair_74v', 'pair', 'follower_74v', 'follower_12v'];   // SO-101 (first = default); every data file lists its own in data.configs
 export const PRINT = ['self', 'service'];
@@ -214,9 +255,11 @@ function arrivalList(data, cfg, groups, arrivals) {
  *   robot/config = a key of data.configs (SO-101: pair_74v | pair | follower_74v | follower_12v; SVRN: robot_only | starter);
  *   any key of data.options (SVRN: module = flipper | wedge | grabber) picks that option's value;
  *   sources = { component id: source id } swaps a line to another recommended, priced source (e.g. when one is on backorder).
+ *   today = ISO date the plan is rendered on (default: now); a restock date before it is flagged stock_date_past.
  */
 export function buildPlan(data, opts = {}) {
   const configs = Object.keys(data.configs);
+  const today = opts.today || isoToday();
   const robot = opts.config || opts.robot || configs[0], print = opts.print || 'self';
   const cfg = data.configs[robot];
   if (!cfg) throw new RangeError(`unknown robot config "${robot}" (use ${configs.join(' or ')})`);
@@ -241,7 +284,7 @@ export function buildPlan(data, opts = {}) {
   for (const l of [...cfg.lines, ...optLines]) {
     const c = comps[l.component];
     const want = swaps[l.component];
-    const swap = want && want !== l.source ? c.sources.find((x) => x.id === want && x.recommend && x.price != null) : null;
+    const swap = want && want !== l.source ? c.sources.find((x) => x.id === want && x.recommend && x.price != null && x.kind !== 'reference') : null;
     const s = swap || c.sources.find((x) => x.id === l.source);
     const sup = data.suppliers[s.supplier];
     const packs = Math.ceil(l.qty / (s.per || 1));
@@ -253,13 +296,14 @@ export function buildPlan(data, opts = {}) {
     const alternatives = c.sources.filter((x) => x.id !== s.id).map((x) => ({
       id: x.id, supplier: x.supplier, label: x.label, url: x.url, price: x.price, currency: x.currency, per: x.per,
       checked: x.checked, status: x.status, recommend: x.recommend, flag: x.flag || null, stock: x.stock || null,
-      selectable: !!(x.recommend && x.price != null && x.flag !== 'out_of_stock'),
+      stock_date_past: stockState(x.stock, today).past, kind: x.kind || 'offer',
+      selectable: !!(x.recommend && x.price != null && x.flag !== 'out_of_stock' && x.kind !== 'reference'),
       flag_reason: x.flag_reason || null, flag_reason_cs: x.flag_reason_cs || null, reviews: pickReviews(x.reviews)
     }));
     const line = {
       component: c.id, name: c.name, name_cs: c.name_cs, role: c.role || null, role_cs: c.role_cs || null, qty: l.qty, packs, per: s.per || 1, arm: l.arm || null,
       source: s.id, label: s.label, url: s.url, price: s.price, currency: s.currency, unit_eur: round2(unit), subtotal_eur: subtotal,
-      checked: s.checked, status: s.status, stock: s.stock, eta_days: eta,
+      checked: s.checked, status: s.status, stock: s.stock, stock_date_past: stockState(s.stock, today).past, eta_days: eta,
       flag: s.flag || null, flag_reason: s.flag_reason || null, flag_reason_cs: s.flag_reason_cs || null,
       note: s.note_cs ? s.note : null, note_cs: s.note_cs || null, reviews: pickReviews(s.reviews),
       default_source: l.source, swapped: !!swap,

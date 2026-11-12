@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { buildPlan, buildTime, checkData, checkPartVariant, parseListing, validateSchema } from '../assets/plan/plan-core.mjs';
+import { buildPlan, buildTime, checkData, checkPartVariant, parseListing, validateSchema, stockState, stockText } from '../assets/plan/plan-core.mjs';
 import { checkComponents } from '../tools/check-components.mjs';
 
 const read = (f) => JSON.parse(fs.readFileSync(new URL('../' + f, import.meta.url), 'utf8'));
@@ -194,4 +194,67 @@ test('build time comes from the guide stages and agrees with the assembly guide'
   assert.match(guide, /odhad 10 až 19 hodin práce/);
   assert.match(guide, /≈ 16,5 h tiskárny \+ 1,5–3 h práce/);
   assert.ok(data.arrivals.every((a) => /^e[0-6]$/.test(a.guide_stage)));
+});
+
+test('a restock date already before the render date is never shown as current', () => {
+  const bo = 'Backorder: 38 expected 2026-11-04';
+  assert.deepEqual(stockState(bo, '2026-11-12'), { backorder: true, expected: '2026-11-04', past: true });
+  assert.equal(stockState(bo, '2026-11-04').past, false, 'the expected day itself is still current');
+  assert.equal(stockText(bo, 'cs', { checked: '2026-11-07', today: '2026-11-12' }), 'na objednávku, termín ověřte v obchodě (ověřeno 07.11.2026)');
+  assert.equal(stockText(bo, 'en', { checked: '2026-11-07', today: '2026-11-12' }), 'Backorder: check the date at the shop (last checked 07.11.2026)');
+  for (const l of ['cs', 'en']) assert.doesNotMatch(stockText(bo, l, { checked: '2026-11-07', today: '2026-11-12' }), /04\.11\.2026|2026-11-04/);
+  // a future date is still shown
+  assert.equal(stockText('Backorder: 10 expected 2026-11-13', 'cs', { today: '2026-11-12' }), 'na objednávku, naskladnění 13.11.2026');
+  assert.equal(stockText('Available', 'cs', { today: '2026-11-12' }), 'skladem');
+  // the plan flags it on every line and alternative, against the date it is rendered on
+  const p = buildPlan(data, { robot: 'pair_74v', today: '2099-01-01' });
+  const lines = p.groups.flatMap((g) => g.lines);
+  for (const l of lines) if (/^Backorder: \d+ expected/.test(l.stock || '')) assert.equal(l.stock_date_past, true, l.component);
+  for (const l of lines) for (const a of l.alternatives) if (/^Backorder: \d+ expected/.test(a.stock || '')) assert.equal(a.stock_date_past, true, a.id);
+  const early = buildPlan(data, { robot: 'pair_74v', today: '2000-01-01' }).groups.flatMap((g) => g.lines);
+  assert.ok(early.every((l) => !l.stock_date_past));
+});
+
+test('a shop label matches its link; documentation is never a shop offer', () => {
+  const host = (u) => new URL(u).hostname.replace(/^www\./, '').split('.').slice(-2).join('.');
+  for (const c of data.components) for (const s of c.sources) {
+    assert.equal(host(s.url), host(data.suppliers[s.supplier].url), `${c.id} / ${s.id}`);
+    for (const t of s.label.match(/\b(?:[a-z0-9-]+\.)+(?:fr|de|com|cz|sk|pl|ro|store|io|eu)\b/gi) || []) assert.equal(host('https://' + t), host(s.url), `${c.id} / ${s.id}: ${s.label}`);
+  }
+  // the README price is a reference: it cannot be picked as a source
+  const ref = data.components.find((c) => c.id === 'so101.bus_board').sources.find((s) => s.kind === 'reference');
+  assert.ok(ref && !/amazon/i.test(ref.label) && /github\.com/.test(ref.url));
+  const alt = buildPlan(data, { robot: 'pair_74v' }).groups.flatMap((g) => g.lines).find((l) => l.component === 'so101.bus_board').alternatives.find((a) => a.id === ref.id);
+  assert.equal(alt.selectable, false);
+  assert.equal(buildPlan(data, { robot: 'pair_74v', sources: { 'so101.bus_board': ref.id } }).groups.flatMap((g) => g.lines).find((l) => l.component === 'so101.bus_board').source, 'eckstein');
+  // the build check catches a label naming another shop's domain, another shop's name, or a docs page as an offer
+  const d = clone(data), s = d.components.find((c) => c.id === 'so101.bus_board').sources.find((x) => x.id === 'eckstein');
+  s.label = 'Amazon.fr (README EU link)';
+  assert.ok(checkData(d, schema).some((e) => /names amazon\.fr but links to eckstein-shop\.de/i.test(e)));
+  s.label = 'Botland'; assert.ok(checkData(d, schema).some((e) => /names another shop \(Botland\)/.test(e)));
+  s.label = 'Eckstein'; s.url = 'https://github.com/TheRobotStudio/SO-ARM100';
+  assert.ok(checkData(d, schema).some((e) => /documentation, not a shop offer/.test(e)));
+  // a wiki page in the notes is marked as documentation
+  const wiki = data.notes.flatMap((n) => n.sources || []).filter((x) => /\/wiki\//.test(x.url));
+  assert.ok(wiki.length && wiki.every((x) => x.kind === 'docs'));
+  const d2 = clone(data); for (const n of d2.notes) for (const x of n.sources || []) delete x.kind;
+  assert.ok(checkData(d2, schema).some((e) => /wiki page: mark it kind "docs"/.test(e)));
+});
+
+test('OpenELAB shipping is the shop\'s published text, dispatch and transit kept apart', () => {
+  const o = data.suppliers.openelab;
+  assert.deepEqual(o.shipping_eur, [0, 7.95]);
+  assert.deepEqual(o.dispatch_days, [1, 1]);
+  assert.deepEqual(o.transit_days, [3, 5]);
+  assert.equal(o.shipping_source.url, 'https://openelab.io/pages/shipping-order');
+  assert.notEqual(o.shipping_status, 'verified', 'Czechia is not named on the page');
+  assert.match(o.shipping_note, /€7\.95.*free over €100/);
+  assert.match(o.shipping_note_cs, /7,95 €.*nad 100 € zdarma/);
+});
+
+test('Botland kit says business customers only, in both languages, from its own page', () => {
+  const k = data.kits.find((x) => x.id === 'seeed_pro_botland');
+  assert.equal(k.buyers, 'business_only');
+  assert.match(k.note, /This store sells to registered businesses only/);
+  assert.match(k.note_cs, /jen pro firmy/i);
 });

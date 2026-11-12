@@ -2,7 +2,7 @@
  "$schema": "./so101.schema.json",
  "meta": {
   "robot": "so101",
-  "generated": "2026-11-07",
+  "generated": "2026-11-12",
   "fx_czk_per_eur": 24.2,
   "fx_ron_per_eur": 5.09,
   "fx_note": "Assumption: CNB daily rate not fetched; update before use.",
@@ -44,15 +44,31 @@
    "url": "https://openelab.io/",
    "vat": "eu_oss",
    "shipping_eur": [
-    5,
-    10
+    0,
+    7.95
    ],
-   "shipping_status": "estimate",
+   "shipping_status": "unverified",
+   "shipping_note": "Shop's published rate for “selected EU countries” (FedEx Regional Economy): €7.95 for orders €0–100, free over €100. Czechia is not named; destinations are shown at checkout.",
+   "shipping_note_cs": "Sazba zveřejněná obchodem pro „vybrané země EU“ (FedEx Regional Economy): 7,95 € u objednávek do 100 €, nad 100 € zdarma. Česko není jmenováno; cíle doručení ukáže pokladna.",
+   "dispatch_days": [
+    1,
+    1
+   ],
+   "dispatch_note": "Dispatch (order processing): in-stock orders “usually dispatched within 1 business day after order confirmation”.",
+   "transit_days": [
+    3,
+    5
+   ],
+   "transit_note": "Transit (FedEx Regional Economy): 3–5 business days, counted after dispatch.",
+   "shipping_source": {
+    "url": "https://openelab.io/pages/shipping-order",
+    "checked": "2026-11-12"
+   },
    "eta_days_estimate": [
     5,
     21
    ],
-   "eta_note": "Warehouse not stated: China warehouse if EU stock is out."
+   "eta_note": "Our estimate. The shop publishes dispatch within 1 business day plus 3–5 business days FedEx transit for in-stock orders only; warehouse not stated: China warehouse if EU stock is out."
   },
   "alza": {
    "name": "Alza",
@@ -99,20 +115,17 @@
    ],
    "shipping_status": "estimate"
   },
-  "amazon_fr": {
-   "name": "Amazon.fr",
-   "country": "FR",
-   "url": "https://www.amazon.fr/",
-   "vat": "eu_oss",
+  "readme": {
+   "name": "SO-ARM100 README (reference price, not a shop)",
+   "name_cs": "SO-ARM100 README (orientační cena, není obchod)",
+   "country": "—",
+   "url": "https://github.com/TheRobotStudio/SO-ARM100",
+   "vat": "none",
    "shipping_eur": [
     0,
-    8
+    0
    ],
-   "shipping_status": "estimate",
-   "eta_days_estimate": [
-    3,
-    7
-   ]
+   "shipping_status": "unverified"
   },
   "prusa": {
    "name": "Prusa Center (Praha)",
@@ -1085,8 +1098,8 @@
    "in_stock": false,
    "stock": "Sold out",
    "landed_eur_cz": [
-    330,
-    341
+    325,
+    339
    ],
    "checked": "2026-11-07",
    "status": "verified",
@@ -1321,8 +1334,8 @@
    ],
    "checked": "2026-11-07",
    "status": "verified",
-   "note": "EU shop (PL), business customers with a VAT ID only. Ratios per joint on the page match the leader; follower 6× 12 V 1:345. No printed parts, no camera.",
-   "note_cs": "Obchod v EU (PL), jen pro firmy s DIČ. Převody po kloubech odpovídají leaderu; follower 6× 12 V 1:345. Bez tištěných dílů a kamery.",
+   "note": "EU shop (PL). Business customers only: the page says “This store sells to registered businesses only” and “Ordering on botland.store requires a verified business account with a VAT ID” (seen 12 Nov 2026). Ratios per joint on the page match the leader; follower 6× 12 V 1:345. No printed parts, no camera.",
+   "note_cs": "Obchod v EU (PL). Jen pro firmy: stránka uvádí „This store sells to registered businesses only“ (prodává jen registrovaným firmám) a že objednávka na botland.store vyžaduje ověřený firemní účet s DIČ (viděno 12. 11. 2026). Převody po kloubech odpovídají leaderu; follower 6× 12 V 1:345. Bez tištěných dílů a kamery.",
    "reviews": {
     "rating": null,
     "count": null,
@@ -1435,8 +1448,8 @@
    "in_stock": false,
    "stock": "Sold out",
    "landed_eur_cz": [
-    508,
-    523
+    503,
+    521
    ],
    "checked": "2026-11-07",
    "status": "verified",
@@ -2201,9 +2214,10 @@
      }
     },
     {
-     "id": "amazon_fr",
-     "supplier": "amazon_fr",
-     "label": "Amazon.fr (README EU link)",
+     "id": "readme",
+     "supplier": "readme",
+     "kind": "reference",
+     "label": "SO-ARM100 README on GitHub (EU list price, not a shop)",
      "country": "FR",
      "url": "https://github.com/TheRobotStudio/SO-ARM100",
      "price": 11.4,
@@ -2539,9 +2553,10 @@
    "substitutes": [],
    "sources": [
     {
-     "id": "amazon_fr",
-     "supplier": "amazon_fr",
-     "label": "README EU reference (Amazon.fr)",
+     "id": "readme",
+     "supplier": "readme",
+     "kind": "reference",
+     "label": "SO-ARM100 README on GitHub (EU list price, not a shop)",
      "country": "FR",
      "url": "https://github.com/TheRobotStudio/SO-ARM100",
      "price": 9,
@@ -2941,8 +2956,10 @@
     },
     {
      "label": "Waveshare wiki: Bus Servo Adapter (A)",
+     "label_cs": "Waveshare wiki: Bus Servo Adapter (A)",
+     "kind": "docs",
      "url": "https://www.waveshare.com/wiki/Bus_Servo_Adapter_(A)",
-     "checked": "2026-10-30"
+     "checked": "2026-11-12"
     },
     {
      "label": "SO-ARM100 README (bill of materials)",
