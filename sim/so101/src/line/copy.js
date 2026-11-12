@@ -72,9 +72,10 @@ export const COPY = {
   headWin: 'Linka splnila zakázku {id}.',
   starWin: '★ splněno',
   starWinNo: '☆ splněno: {sorted}/min, cíl {F}',
-  starsNeedWin: 'Hvězdy za čistotu a za počet robotů se počítají až se splněnou zakázkou.',
-  starPurity: '★ čistota ≥ {X} % v každém z {seeds} běhů',
-  starPurityNo: '☆ čistota v nejhorším běhu {p}',
+  starsNeedWin: 'Hvězdy za rezervu a za počet robotů se počítají až se splněnou zakázkou.',
+  starReserve: '★ rezerva: i v horších 10 % běhů ≥ {F}/min',
+  starReserveNo: '☆ rezerva: v horších 10 % běhů jen {p10}/min, cíl {F}',
+  reserveNone: 'U zakázky {id} nemá rezervu žádná linka s {n} buňkami: rezervu i minimum robotů tu naráz získat nejde.',
   starMin: '★ minimum robotů: {n}',
   starMinNo: '☆ robotů {n}, stačí {nmin}',
   assisted: 'Linku načetla nápověda – splněno, bez hvězdiček.',
@@ -87,6 +88,8 @@ export const COPY = {
   // "Jak to počítáme"
   close: 'Zavřít',
   nminText: 'Minimum robotů pro zakázku {id}: {n}. Vyhledávání prověřilo každou linku s nejvýš {n} buňkami (každá buňka jedna nebo dvě frakce, v každém pořadí, buňky vedle sebe od začátku pásu); s {n} buňkami zakázku splní {passing} z {total}.',
+  nminReserve: 'Z nich {reserve} splní cíl i v horších 10 % běhů (★ rezerva).',
+  nminReserveNone: 'Žádná z nich nesplní cíl i v horších 10 % běhů: ★ rezerva tu chce víc buněk.',
   arrivalsUniform: 'Přijíždění v zakázkách: rovnoměrně, {lambda} kusů za minutu, takže linka nic neodmítne.',
   // hints
   hintCap: 'Jedna buňka v této zakázce roztřídí v modelu nejvýš {cap}/min (nejlepší dvojice: {pair}). Na {F}/min tedy potřebujete aspoň {k}. Po běhu ukazuje schéma u každé buňky vytížení a pod pásem, co propadá.',

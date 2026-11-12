@@ -3,13 +3,14 @@
 //     (regenerate: node sim/so101/tools/line.mjs orders --write);
 //   - only proven orders (no budget stop, no "not reachable"), uniform arrivals, measured speeds, λ within the belt;
 //   - the stored best line passes when the page's configuration of it runs; one cell fewer cannot;
-//   - stars (team lead's rule): ★ met, ★ purity in every run, ★ N ≤ N_min; the mission check and rate;
+//   - stars: ★ met, ★ reserve (p10 output ≥ F), ★ N ≤ N_min; which orders have an N_min line with the reserve (and
+//     that one more cell gives it where none has); the mission check and rate;
 //   - histogram, own-run records, the line checks; every page string has its English entry.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ORDERS, ORDER_DEFS, ORDER_COMMON, SEARCH, searchOrder, lineConfig, lineProblems, lineStars, cellsAtLeast, histogram, cleanRuns, RUNS_VER, RUNS_MAX, beltMax } from '../src/line/orders.js';
+import { ORDERS, ORDER_DEFS, ORDER_COMMON, SEARCH, searchOrder, lineConfig, lineProblems, lineStars, reserveAtNmin, cellsAtLeast, histogram, cleanRuns, RUNS_VER, RUNS_MAX, beltMax } from '../src/line/orders.js';
 import { NMIN } from '../src/line/nmin.js';
-import { LINE, runLine, lambdaMax, fractionSets } from '../src/line/des.js';
+import { LINE, runLine, lambdaMax, fractionSets, bestOf } from '../src/line/des.js';
 import { COPY, PLURAL, VENDOR_SOURCES } from '../src/line/copy.js';
 import { MISSIONS, lineCheck } from '../src/missions.js';
 import { loadProfiles, ordersModule } from '../tools/line.mjs';
@@ -52,27 +53,44 @@ test('the stored best line passes as the page runs it; the capacity hint is cons
     const cells = o.search.best.cells.map((f, i) => ({ slot: i, fractions: f }));
     assert.deepEqual(lineProblems(cells), []);
     const r = runLine(lineConfig(o, cells), { skript: P[o.v] });
-    const st = lineStars(o, r.summary, r.runs, cells.length);
+    const st = lineStars(o, r.summary, cells.length);
     assert.ok(st.win && st.fewest && st.stars >= 2, `${o.id}: ${r.summary.sorted.mean}`);
+    // the search prefers a line with the reserve: the stored best has it exactly when some N_min line has
+    assert.equal(st.reserve, reserveAtNmin(o), `${o.id}: p10 ${r.summary.sorted.p10} vs F ${o.F}`);
+    assert.ok(Math.abs(r.summary.sorted.p10 - o.search.best.p10) < 1e-3);
     assert.ok(Math.abs(r.summary.sorted.mean - o.search.best.sorted) < 1e-3);
     // the hint "⌈F / one cell⌉" never asks for more cells than N_min
     assert.ok(cellsAtLeast(o) <= o.search.n, `${o.id}: ${cellsAtLeast(o)} ≤ ${o.search.n}`);
   }
 });
 
-test('stars: met, purity in every run, N ≤ N_min; nothing extra without the order met', () => {
+test('stars: met, reserve (p10 output ≥ F), N ≤ N_min; nothing extra without the order met', () => {
   const o = ORDERS[0], S = (mean, p10, pur) => ({ sorted: { mean, p10 }, purity: { mean: pur, p10: pur } });
-  const runs = (ps) => ps.map((p) => ({ purity: p }));
-  const ok = lineStars(o, S(o.F + 1, o.F, 1), runs([1, 1, 1]), o.search.n);
-  assert.deepEqual([ok.win, ok.purity, ok.fewest, ok.stars], [true, true, true, 3]);
-  const more = lineStars(o, S(o.F + 1, o.F, 1), runs([1, 1]), o.search.n + 1);
+  const ok = lineStars(o, S(o.F + 1, o.F, 1), o.search.n);
+  assert.deepEqual([ok.win, ok.reserve, ok.fewest, ok.stars], [true, true, true, 3]);
+  const more = lineStars(o, S(o.F + 1, o.F, 1), o.search.n + 1);
   assert.deepEqual([more.fewest, more.stars], [false, 2]);
-  const dirty = lineStars(o, S(o.F + 1, o.F, 0.97), runs([1, 0.9, 1]), o.search.n);
-  assert.deepEqual([dirty.win, dirty.purity, dirty.minPurity, dirty.stars], [true, false, 0.9, 2]);
-  const short = lineStars(o, S(o.F - 0.5, o.F - 1, 1), runs([1]), 1);
-  assert.deepEqual([short.win, short.stars], [false, 0]);
-  const impure = lineStars(o, S(o.F + 1, o.F, o.X - 0.01), runs([o.X - 0.01]), 1);
-  assert.equal(impure.win, false);
+  const thin = lineStars(o, S(o.F + 0.2, o.F - 0.3, 1), o.search.n);
+  assert.deepEqual([thin.win, thin.reserve, thin.p10, thin.stars], [true, false, o.F - 0.3, 2]);
+  const short = lineStars(o, S(o.F - 0.5, o.F - 1, 1), 1);
+  assert.deepEqual([short.win, short.reserve, short.stars], [false, false, 0]);
+  // purity below X still fails the order, even with output and reserve to spare
+  const impure = lineStars(o, S(o.F + 1, o.F + 1, o.X - 0.01), 1);
+  assert.deepEqual([impure.win, impure.reserve, impure.stars], [false, false, 0]);
+});
+
+test('reserve at N_min: stored per order; where no N_min line has it, one more cell does', () => {
+  for (const o of ORDERS) {
+    const s = o.search;
+    assert.ok(Number.isInteger(s.reserve) && s.reserve >= 0 && s.reserve <= s.passing, o.id);
+    assert.equal(reserveAtNmin(o), s.reserve > 0);
+    assert.equal(s.best.p10 >= o.F - 1e-9, s.reserve > 0, `${o.id}: best p10 ${s.best.p10}`);
+    if (s.reserve > 0) continue;
+    const b = bestOf(o, { skript: P }, s.n + 1);
+    assert.ok(b.summary.sorted.p10 >= o.F, `${o.id}: ${s.n + 1} cells keep the reserve (p10 ${b.summary.sorted.p10})`);
+  }
+  // the orders as chosen: every order but D has an N_min line with the reserve (src/line/orders.js header)
+  assert.deepEqual(ORDERS.filter((o) => !reserveAtNmin(o)).map((o) => o.id), ['D']);
 });
 
 test('mission 13: entry, check and rate', () => {
