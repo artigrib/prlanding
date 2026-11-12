@@ -736,6 +736,14 @@ export class Panel {
     this.winVals.textContent = '';
     const cell = (dt, dd, ok) => this.winVals.appendChild(h(`<div><dt>${dt}</dt><dd${/\d/.test(dd) ? '' : ' class="ux-wtxt"'}><span>${dd}</span>${ok ? '<span class="ux-wok" aria-hidden="true">✓</span>' : ''}</dd></div>`));
     let stats = [];
+    const wp = $('ux-wpol'); if (wp) wp.hidden = true;   // mission 12's analysis (src/ui/policy.js)
+    this.win.classList.remove('ux-result-pol');
+    if (m.teach && res.stats && this.ux.policy) {
+      this.ux.policy.fillWin(m, res, this, cell, again, manual);
+      this.winNext.textContent = next ? `Další: ${next.n} · ${next.short}` : 'To byla poslední mise.';
+      this.nextBtn.hidden = !next;
+      return;
+    }
     if (m.belt && res.stats) {
       this.beltWin(m, res, best, isNew, by, manual, cell, again);
       this.winNext.textContent = next ? `Další: ${next.n} · ${next.short}` : 'To byla poslední mise.';
@@ -901,7 +909,7 @@ export class Panel {
       ['T / L', 'nahrát / přehrát ukázku'],
       ['H', 'ruka domů'],
       ['R', 'začít misi znovu'],
-      ['B', 'pás stát / jet (mise 11)'],
+      ['B', 'pás stát / jet (mise 11, 12)'],
       ['S', 'zvuk'],
       ['Esc', 'zrušit pohyb, zavřít okno']
     ];

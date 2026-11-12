@@ -569,14 +569,89 @@ Object.assign(strings, {
   'Ruka sama třídí předmět z pásu…': 'The arm is sorting an item from the belt…', 'Pás jede': 'The belt is running', 'Pás stojí': 'The belt has stopped',
   'Běží: Skript (plánovač)': 'Running: Script (planner)',
   'Pás ⏸': 'Belt ⏸', 'Pás ▶': 'Belt ▶', 'Rozjet pás (B)': 'Start the belt (B)', 'Zastavit pás (B)': 'Stop the belt (B)',
-  'pás stát / jet (mise 11)': 'belt: stop / run (mission 11)', 'Skutečná ruka': 'Real arm',
+  'pás stát / jet (mise 11, 12)': 'belt: stop / run (missions 11, 12)', 'Skutečná ruka': 'Real arm',
   'Roztříděno': 'Sorted', 'Čistota': 'Purity', 'Propadlo': 'Lost', 'Pás stál': 'Belt stopped', 'ani jednou': 'never',
   '★ hotovo': '★ done', '★ čistota 100 %': '★ purity 100 %', '★ bez zastavení pásu': '★ belt never stopped',
   'Tohle roztřídila ruka sama (Skript, plánovač). Zkuste to teď vy.': 'The arm sorted this by itself (Script, planner). Now you try.',
   'S ukázkou – hvězdičky jsou za ruční třídění.': 'With a demo – stars are for sorting by hand.'
 });
 
+// mission 12 "Třídění odpadu II: Naučte robota" (tier (a) policy: src/policy/knn.js, src/ui/policy.js)
+Object.assign(strings, {
+  'Třídění odpadu II: Naučte robota': 'Waste sorting II: Teach the robot', 'Naučte robota třídit': 'Teach the robot to sort',
+  'Ukažte robotovi, jak třídit, a pak ho nechte pracovat samotného. 1) Ukázky: roztřiďte rukou pár předmětů z pásu, nahrává se to samo. 2) Naučit: z ukázek vznikne naučené pravidlo (kNN) – který koš, kdy na pásu a jak vysoko vzít. 3) Ověřit: Spustit politiku roztřídí novou dávku bez vás. Rukou pohybuje plánovač, pravidlo jen rozhoduje; předmět a jeho polohu zná ze simulace, kamera tu není. Co neukážete, to nechá projet; co ukážete špatně, udělá špatně taky.':
+    'Show the robot how to sort, then let it work on its own. 1) Demos: sort a few items from the belt by hand; it records by itself. 2) Teach: the demos become a learned rule (kNN) – which bin, when on the belt and how high to grasp. 3) Check: Run policy sorts a new batch without you. The planner moves the arm, the rule only decides; it knows the item and its pose from the simulation, there is no camera. What you don’t show, it lets pass; what you show wrong, it does wrong too.',
+  'Ukažte každou frakci aspoň jednou a každý předmět dejte do jeho koše – politika kopíruje i chyby.': 'Show every material at least once and put every item into its own bin – the policy copies mistakes too.',
+  'Pro všechny 3 ★: ukázky bez chyby, všechny 4 frakce, nejvýš 6 ukázek.': 'For all 3 ★: demos without mistakes, all 4 materials, at most 6 demos.',
+  'Politika roztřídila odpad': 'The policy sorted the waste', 'Politika roztřídila odpad.': 'The policy sorted the waste.',
+  '★ hotovo (8 z 11) · ★ čistota ≥ 95 % · ★ nejvýš 6 ukázek': '★ done (8 of 11) · ★ purity ≥ 95 % · ★ at most 6 demos',
+  'Po běhu politiky ukáže rozbor u každého předmětu, podle které ukázky se rozhodla (Nástroje → Politika). Koš pro předmět u chapadla svítí.':
+    'After a policy run, the analysis shows for every item which demo the decision came from (Tools → Policy). The bin for the item at the gripper lights up.',
+  'Jak politika rozhoduje': 'How the policy decides', 'Nahrát ukázky skriptem': 'Record demos with the script',
+  'Plánovač nahraje 4 ukázky sám (Běží: Skript (plánovač)). Politika z nich naučená se počítá jako s pomocí, bez hvězdiček.':
+    'The planner records 4 demos by itself (Running: Script (planner)). A policy learned from them counts as assisted, without stars.',
+  'Ukažte robotovi, jak třídit: roztřiďte rukou pár předmětů z pásu (nahrává se), pak stiskněte Naučit. Pás se rozjede, jakmile pohnete rukou.':
+    'Show the robot how to sort: sort a few items from the belt by hand (it records), then press Teach. The belt starts as soon as you move the arm.',
+  'Stiskněte Spustit politiku – roztřídí novou dávku sama.': 'Press Run policy – it sorts a new batch on its own.',
+  'Naučená politika třídí předmět z pásu…': 'The learned policy is sorting an item from the belt…',
+  'Naučené pravidlo (kNN) + plánovač': 'Learned rule (kNN) + planner',
+  'Ovládáte vy': 'You are in control', 'Běží: Naučené pravidlo (kNN) + plánovač': 'Running: Learned rule (kNN) + planner', 'Přehrávání ukázky': 'Replaying a demo',
+  'Zasáhli jste do běhu – politika se zastavila. Tenhle běh se počítá bez hvězdiček.': 'You stepped in – the policy stopped. This run counts without stars.',
+  'Zatím žádná ukázka: roztřiďte rukou aspoň jeden předmět do koše': 'No demo yet: sort at least one item into a bin by hand',
+  'Zatím žádná nahrávka': 'No recording yet', 'Ukázky smazány': 'Demos deleted',
+  'Naučit': 'Teach', 'Spustit politiku': 'Run policy', 'Ukázky': 'Demos', 'Naučit · Spustit': 'Teach · Run', 'Ověřit': 'Check',
+  'Zpět k ukázkám': 'Back to the demos', 'Spustit naučenou politiku na nové dávce': 'Run the learned policy on a new batch',
+  'Politika': 'Policy', 'Spustit': 'Run', 'Politika pro Spustit': 'Policy for Run',
+  'Naučené pravidlo (kNN) + plánovač: z vašich ukázek se učí, do kterého koše, kdy na pásu a jak vysoko brát. Rukou pohybuje plánovač. Nevidí: druh a polohu předmětu zná ze simulace.':
+    'Learned rule (kNN) + planner: from your demos it learns which bin, when on the belt and how high to grasp. The planner moves the arm. It does not see: it knows the kind and pose of an item from the simulation.',
+  'Zatím žádná ukázka: roztřiďte rukou pár předmětů z pásu': 'No demo yet: sort a few items from the belt by hand',
+  'smazáno': 'deleted', 'nahrává se': 'recording', 'Vrátit': 'Restore', 'Vrátit ukázku': 'Restore the demo',
+  'Skript (plánovač)': 'Script (planner)', 'Importovaná ze SIL (ACT / SmolVLA, mimo prohlížeč) – zatím není': 'Imported from SIL (ACT / SmolVLA, outside the browser) – not yet',
+  'Stáhnout poslední nahrávku (JSON)': 'Download the last recording (JSON)', 'Převést nahrávku na dataset LeRobot': 'Convert the recording to a LeRobot dataset',
+  'Smazat všechny ukázky': 'Delete all demos', 'Všechny předměty ve svém koši.': 'Every item in its own bin.',
+  'Vaše politika': 'Your policy', 'Váš ruční pokus (mise 11)': 'Your manual try (mission 11)', 'zatím neběžela': 'not run yet', 'zatím žádný': 'none yet',
+  'naměřeno teď v prohlížeči': 'measured now in the browser', 'naměřeno v MuJoCo mimo prohlížeč (tools/belt-measure.mjs)': 'measured in MuJoCo outside the browser (tools/belt-measure.mjs)',
+  'jiná dávka (č. 1)': 'another batch (no. 1)', 'Ověřeno na': 'Checked on', 'žádné': 'none',
+  'Skript roztřídil odpad.': 'The script sorted the waste.', '★ čistota ≥ 95 %': '★ purity ≥ 95 %',
+  'Níže je, co u kterého předmětu selhalo. Upravte ukázky (smazat špatné, doplnit chybějící frakce), stiskněte Naučit a Spustit znovu.':
+    'Below is what failed for which item. Edit the demos (delete wrong ones, add missing materials), press Teach and Run again.',
+  'Tohle roztřídil Skript (plánovač), ne vaše politika – bez hvězdiček.': 'The Script (planner) sorted this, not your policy – no stars.',
+  'Zasáhli jste do běhu – bez hvězdiček.': 'You stepped in during the run – no stars.', 'Ukázky nahrál skript – bez hvězdiček.': 'The script recorded the demos – no stars.',
+  'Co neumí: nevidí (druh a polohu zná ze simulace), pohyb je plánovače, druh bez ukázky nechá projet.': 'What it can’t do: it does not see (it knows kind and pose from the simulation), the motion is the planner’s, a kind without a demo is let through.',
+  'Upravit ukázky': 'Edit the demos',
+  'správně': 'correct', 'špatný koš': 'wrong bin', 'neznámá třída – nechal projet': 'unknown class – let it pass', 'minul úchop': 'missed the grasp',
+  'upustil': 'dropped it', 'nestihl (mimo dosah)': 'too late (out of reach)', 'žádný koš': 'no bin', 'zasažení hráče': 'player stepped in'
+});
+
 const patterns = [
+  /* mission 12: teach the robot */
+  [/^Dávka ukázek skončila: (\d+) (?:ukázka|ukázky|ukázek)\. Stiskněte Naučit$/, (m, a) => `The demo batch is over: ${a} demo${a === '1' ? '' : 's'}. Press Teach`],
+  [/^Ukázky: (\d+) · na pásu (\d+) · pak Naučit$/, 'Demos: $1 · $2 on the belt · then Teach'],
+  [/^Politika roztřídila (\d+) z (\d+), potřeba (\d+)\. Rozbor je v Nástroje → Politika$/, 'The policy sorted $1 of $2, $3 needed. The analysis is in Tools → Policy'],
+  [/^Politika: hotovo (\d+) z (\d+) · na pásu (\d+)$/, 'Policy: $1 of $2 done · $3 on the belt'],
+  [/^Naučit \((\d+)\)$/, 'Teach ($1)'], [/^Naučit politiku z ukázek \((\d+)\)$/, 'Teach the policy from the demos ($1)'],
+  [/^(▸ )?1 Ukázky · (▸ )?2 Naučit · (▸ )?3 Ověřit$/, (m, a, b, c) => `${a || ''}1 Demos · ${b || ''}2 Teach · ${c || ''}3 Check`],
+  [/^([123])\/3 (Ukázky|Naučit|Ověřit)$/, (m, a, b) => `${a}/3 ${{ Ukázky: 'Demos', Naučit: 'Teach', Ověřit: 'Check' }[b]}`],
+  [/^Natrénováno za (.+?) ms z (\d+) (?:ukázka|ukázky|ukázek)(.*)$/, (m, a, b, rest) => `Trained in ${dec(a).replace(/^méně než /, 'under ')} ms from ${b} demo${b === '1' ? '' : 's'}` +
+    rest.replace(/^ · ukázky se změnily, stiskněte Naučit$/, ' · the demos changed, press Teach')
+      .replace(/^\. Bez ukázky: (.+) – ty politika nechá projet$/, (q, l) => `. No demo: ${l.split(', ').map(T).join(', ')} – the policy will let those pass`)],
+  [/^Ukázek: (\d+) · zatím nenaučeno$/, 'Demos: $1 · not taught yet'],
+  [/^Ukázané frakce: (.+)$/, (m, a) => 'Materials shown: ' + a.split(' · ').map((x) => x.replace(/^(\S+) /, (q, f) => T(f) + ' ')).join(' · ')],
+  [/^č\. (\d+)$/, 'no. $1'], [/^Smazat ukázku č\. (\d+)$/, 'Delete demo no. $1'],
+  [/^([✓✗]) (papír|plast|sklo|kov): (.+) → koš (papír|plast|sklo|kov)( \(skript\))?$/, (m, a, b, c, d, e) => `${a} ${T(b)}: ${T(c)} → ${T(d)} bin${e ? ' (script)' : ''}`],
+  [/^Nepoužito: (\d+) \(předmět propadl nebo vypadl, žádný koš\)$/, 'Not used: $1 (the item was lost or dropped, no bin)'],
+  [/^· dávka č\. (\d+): (\d+) z (\d+) · čistota (.+?) %( · zasažení hráče)?$/, (m, a, b, c, d, e) => `· batch no. ${a}: ${b} of ${c} · purity ${dec(d)} %${e ? ' · player stepped in' : ''}`],
+  [/^(.+) \((papír|plast|sklo|kov)\): špatný koš – koš (papír|plast|sklo|kov)(?: \(podle ukázky č\. (\d+)\))?$/, (m, a, b, c, d) => `${T(a)} (${T(b)}): wrong bin – ${T(c)} bin` + (d ? ` (from demo no. ${d})` : '')],
+  [/^(.+) \((papír|plast|sklo|kov)\): (minul úchop|upustil|nestihl \(mimo dosah\)|neznámá třída – nechal projet)$/, (m, a, b, c) => `${T(a)} (${T(b)}): ${T(c)}`],
+  [/^Stejná dávka č\. (\d+)$/, 'Same batch no. $1'],
+  [/^· ověřeno na nové dávce č\. (\d+)( · zasažení hráče)?$/, (m, a, b) => `· checked on a new batch, no. ${a}${b ? ' · player stepped in' : ''}`],
+  [/^Běží: (.+)$/, (m, a) => `Running: ${T(a)}`],
+  [/^(\d+) (?:ukázka|ukázky|ukázek)$/, (m, a) => `${a} demo${a === '1' ? '' : 's'}`],
+  [/^(\d+) \(natrénováno za (.+) ms\)$/, (m, a, b) => `${a} (trained in ${dec(b).replace(/^méně než /, 'under ')} ms)`],
+  [/^nové dávce č\. (\d+)$/, 'a new batch, no. $1'],
+  [/^(Politika roztřídila|Skript roztřídil) (\d+) z (\d+) – na splnění je potřeba (\d+)\.$/, (m, a, b, c, d) => `The ${a === 'Skript roztřídil' ? 'script' : 'policy'} sorted ${b} of ${c} – ${d} are needed to pass.`],
+  [/^Mise (\d+) \/ (\d+) · nesplněno$/, 'Mission $1 / $2 · not passed'],
+  [/^★ nejvýš (\d+) ukázek$/, '★ at most $1 demos'], [/^☆ ukázek: (\d+)$/, '☆ demos: $1'],
   /* mission 11: waste sorting */
   [/^Roztříděno (\d+) z (\d+)…$/, 'Sorted $1 of $2…'],
   [/^Dávka skončila: (\d+) z (\d+) ve správném koši, potřeba (\d+)\. R spustí dávku znovu$/, 'Batch over: $1 of $2 in the right bin, $3 needed. R starts the batch again'],
@@ -706,7 +781,8 @@ const patterns = [
 ];
 
 // pieces of composed messages, translated as a whole by the patterns above (for tools/i18n-extract.mjs)
-const fragments = ['Zaseklo se na pásu: {} – vezměte to rukou', '({} v cizím koši)', 'Pás stojí {}', 'Teď nad koš: {}', '☆ pás stál {}', '☆ čistota {}', 'Táhněte modrou kouli nad', 'Posuňte prstem chapadlo nad', 'Pohled z boku: {}', 'chapadlo ve výšce cíle ({})', 'chapadlo {} cm {} cílem ({})', ', {} cm vedle', 'STOP uvolněn. {} Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.', 'STOP uvolněn. {} Řízení zapnete tlačítkem „Znovu zapnout moment“.', 'Pauza po dlouhé relaci: pohyb půjde aktivovat za {}.', 'Skutečná ruka · POHYB POVOLEN · {} · zbývá {}', 'Skutečná ruka · jen čtení (shadow) · pauza {}', '· další: {}', '{} / {} misí · {} ★ z {}', '· sdílený čas {}', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
+const fragments = ['méně než 0,1 ms', 'ukázka', 'ukázky', 'ukázek', 'Běží:', 'Ukázané frakce:', '· dávka č. {}: {} z {} · čistota {}{}', '· ověřeno na nové dávce č. {}{}', '{}: špatný koš – {}',
+  '{}: z vašich ukázek se učí, do kterého koše, kdy na pásu a jak vysoko brát. Rukou pohybuje plánovač. Nevidí: druh a polohu předmětu zná ze simulace.', 'Natrénováno za {} z {} {}', '. Bez ukázky: {} – ty politika nechá projet', ' · ukázky se změnily, stiskněte Naučit', 'Ukázek: {} · zatím nenaučeno', 'Ukázané frakce: {}', 'Nepoužito: {} (předmět propadl nebo vypadl, žádný koš)', 'Stejná dávka č. {}', 'nové dávce č. {}', '{} (natrénováno za {})', 'Smazat ukázku č. {}', 'Dávka ukázek skončila: {} {}. Stiskněte Naučit', 'Ukázky: {} · na pásu {} · pak Naučit', 'Politika: hotovo {} z {} · na pásu {}', 'Politika roztřídila {} z {}, potřeba {}. Rozbor je v Nástroje → Politika', '{} {} z {} – na splnění je potřeba {}.', 'Mise {} / {} · nesplněno', '★ nejvýš {} ukázek', '☆ ukázek: {}', '· dávka č. {}: {} z {} · čistota {}', '· ověřeno na nové dávce č. {}', 'Běží: {}', ': špatný koš – {}', ' (podle ukázky č. {})', 'koš {}', 'Naučit ({})', 'Naučit politiku z ukázek ({})', 'Zaseklo se na pásu: {} – vezměte to rukou', '({} v cizím koši)', 'Pás stojí {}', 'Teď nad koš: {}', '☆ pás stál {}', '☆ čistota {}', 'Táhněte modrou kouli nad', 'Posuňte prstem chapadlo nad', 'Pohled z boku: {}', 'chapadlo ve výšce cíle ({})', 'chapadlo {} cm {} cílem ({})', ', {} cm vedle', 'STOP uvolněn. {} Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.', 'STOP uvolněn. {} Řízení zapnete tlačítkem „Znovu zapnout moment“.', 'Pauza po dlouhé relaci: pohyb půjde aktivovat za {}.', 'Skutečná ruka · POHYB POVOLEN · {} · zbývá {}', 'Skutečná ruka · jen čtení (shadow) · pauza {}', '· další: {}', '{} / {} misí · {} ★ z {}', '· sdílený čas {}', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
 
 // object library names: generated map, hand-written keys above win
 for (const [k, v] of Object.entries(objectNames)) if (!(k in strings)) strings[k] = v;

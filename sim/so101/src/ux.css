@@ -677,3 +677,29 @@
   .ux-chips{right:8px;top:112px}
 }
 @media (max-height:500px){.ux-chips{top:60px;right:8px}}
+
+/* ---- mission 12 (src/ui/policy.js): Naučit / Spustit in the action bar, stepper chip, Nástroje → Politika, result analysis ---- */
+.ux-chip-step{border-color:var(--line-2)!important;color:var(--ink2,var(--ink))}
+.ux-polsec[hidden]{display:none}
+.ux-pol-what{margin:0;font-size:14px}
+.ux-polsec>.mono-s{margin:0}
+.ux-pol-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.ux-pol-list li{display:flex;gap:8px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.ux-pol-list li>span:nth-child(2){flex:1;min-width:0}
+.ux-pol-list li.off>span{color:var(--mute);text-decoration:line-through}
+.ux-pol-list .ux-link{min-height:32px}
+.ux-pol-sel{display:flex;flex-direction:column;gap:4px}
+.ux-pol-sel select{font:500 15px/1.2 var(--sans);padding:8px;border:1px solid var(--ink);background:#fff;color:var(--ink);max-width:100%}
+.ux-pol-rep{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--ink);padding-top:8px}
+.ux-pol-rep p{margin:0}
+.ux-pol-fail{margin:0;padding-left:18px;font-size:13.5px}
+.ux-pol-cmp{border-collapse:collapse;font-size:13.5px;width:100%}
+.ux-pol-cmp caption{text-align:left;padding-bottom:4px}
+.ux-pol-cmp th,.ux-pol-cmp td{text-align:left;padding:3px 8px 3px 0;border-top:1px solid var(--line);vertical-align:top;font-weight:500}
+.ux-pol-cmp td.muted{font-size:12px}
+.ux-wpol[hidden]{display:none}
+@media (min-width:861px),(max-height:500px){.win.ux-result.ux-result-pol{max-height:calc(100% - 24px);overflow-y:auto;overscroll-behavior:contain;gap:16px}}
+@media (max-width:860px) and (min-height:501px){
+  .ux-abar.ux-ab6{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .ux-abar.ux-ab6 .ux-ab{font-size:13px}
+}
