@@ -14,7 +14,7 @@ const TEST = new URLSearchParams(location.search).get('test') === '1';  // Playw
 // 'conveyor' scene, the rest the plain one. Same start rule as ux.startRoute(): ?mise=, otherwise the stored mission,
 // or the first unfinished one when it is done. Keep the lists in sync with MISSIONS (tests/missions-objects.test.mjs).
 const OBJECT_MISSIONS = ['line', 'breakfast', 'tidy', 'workshop', 'lab'];
-const CONVEYOR_MISSIONS = ['waste_hand', 'waste_teach'];
+const CONVEYOR_MISSIONS = ['waste_hand', 'waste_teach', 'waste_line'];
 const MISSION_ORDER = ['bowl', 'stack', 'sort', 'ball', 'trace', ...OBJECT_MISSIONS, ...CONVEYOR_MISSIONS];
 const sceneOfId = (id) => (CONVEYOR_MISSIONS.includes(id) ? 'conveyor' : OBJECT_MISSIONS.includes(id) ? 'objects' : 'plain');
 function sceneFor() {

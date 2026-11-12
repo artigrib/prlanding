@@ -271,7 +271,9 @@ export class ArmSim {
 
     canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); this.lost = true; this.opts.onContextLost && this.opts.onContextLost(); });
     canvas.addEventListener('webglcontextrestored', () => { this.lost = false; this.opts.onContextRestored && this.opts.onContextRestored(); });
-    const ro = new ResizeObserver(() => this.resize()); ro.observe(canvas.parentElement);
+    // the canvas fills its parent, except where a page lays it out itself (mission 13: the right third beside the line
+    // editor): observe both and size the drawing buffer to the canvas box
+    const ro = new ResizeObserver(() => this.resize()); ro.observe(canvas.parentElement); ro.observe(canvas);
     this.resize();
   }
 
@@ -285,8 +287,8 @@ export class ArmSim {
   }
 
   resize() {
-    const el = this.renderer.domElement.parentElement;
-    const w = el.clientWidth, h = el.clientHeight;
+    const cv = this.renderer.domElement, el = cv.parentElement;
+    const w = cv.clientWidth || el.clientWidth, h = cv.clientHeight || el.clientHeight;
     if (!w || !h) return;
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;

@@ -153,7 +153,7 @@ export class Panel {
         html = `<span>${m.strategy || ''}</span>` + (now ? `<br><span class="ux-hintnow"><b>Teď:</b> <span>${now}</span></span>` : '');
       } else {
         const grasp = Object.values(m.targets || {}).includes('pick'), own = m.hints && m.hints[cur.id];
-        html = `<span>${own ? own.text : cur.id === 'partial' && !grasp ? 'Ruka se postaví na začátek – dokončete to vy. Mise se pak počítá jako splněná, bez hvězdiček.' : cur.text}</span>`;
+        html = `<span>${own ? (typeof own.text === 'function' ? own.text(ux) : own.text) : cur.id === 'partial' && !grasp ? 'Ruka se postaví na začátek – dokončete to vy. Mise se pak počítá jako splněná, bez hvězdiček.' : cur.text}</span>`;
       }
       if (this.hintText.innerHTML !== html) this.hintText.innerHTML = html;
     }
@@ -331,7 +331,7 @@ export class Panel {
   /** drawing tools only in the drawing mission (pen up / down takes the gripper's place in the action bar) */
   showTips(m) {
     this.drawBox.hidden = !m.draw;
-    this.gripBtn.hidden = !!m.draw;
+    this.gripBtn.hidden = !!m.draw || !!m.line;   // mission 13: Spustit linku is the main action (src/ui/line.js)
     this.penUpBtn.hidden = !m.draw;
     if (!m.draw) this.gripOpen = undefined;   // let tick() rewrite the button label
     if (m.draw) { this.showDraw(this.ux); $('ux-drawview').textContent = '3D pohled'; }
@@ -737,7 +737,14 @@ export class Panel {
     const cell = (dt, dd, ok) => this.winVals.appendChild(h(`<div><dt>${dt}</dt><dd${/\d/.test(dd) ? '' : ' class="ux-wtxt"'}><span>${dd}</span>${ok ? '<span class="ux-wok" aria-hidden="true">✓</span>' : ''}</dd></div>`));
     let stats = [];
     const wp = $('ux-wpol'); if (wp) wp.hidden = true;   // mission 12's analysis (src/ui/policy.js)
-    this.win.classList.remove('ux-result-pol');
+    const wl = $('ux-wlx'); if (wl) wl.hidden = true;     // mission 13's "where it falls short" (src/ui/line.js)
+    this.win.classList.remove('ux-result-pol', 'ux-result-line');
+    if (m.line && this.ux.line) {
+      this.ux.line.fillWin(m, res, this, cell, again, manual);
+      this.winNext.textContent = next ? `Další: ${next.n} · ${next.short}` : 'To byla poslední mise.';
+      this.nextBtn.hidden = !next;
+      return;
+    }
     if (m.teach && res.stats && this.ux.policy) {
       this.ux.policy.fillWin(m, res, this, cell, again, manual);
       this.winNext.textContent = next ? `Další: ${next.n} · ${next.short}` : 'To byla poslední mise.';
@@ -948,12 +955,12 @@ export class Panel {
   }
   openHelp() { this.closeMenu(false); this.lastFocus = document.activeElement; this.help.hidden = false; this.help.querySelector('.ux-x').focus(); }
   closeHelp() { this.help.hidden = true; if (this.lastFocus) this.lastFocus.focus({ preventScroll: true }); }
-  modalOpen() { return !this.help.hidden || !this.picker.hidden; }
-  closeModals() { if (!this.help.hidden) this.closeHelp(); if (!this.picker.hidden) this.closePicker(); }
+  modalOpen() { return !this.help.hidden || !this.picker.hidden || !!(this.ux.line && this.ux.line.modalOpen()); }
+  closeModals() { if (!this.help.hidden) this.closeHelp(); if (!this.picker.hidden) this.closePicker(); if (this.ux.line) this.ux.line.closeExplain(); }
 }
 
 // keep Tab inside an aria-modal dialog
-function trapFocus(dlg) {
+export function trapFocus(dlg) {
   dlg.addEventListener('keydown', (e) => {
     if (e.key !== 'Tab') return;
     const f = [...dlg.querySelectorAll('button:not([disabled]), a[href], input, [tabindex]:not([tabindex="-1"])')].filter((x) => x.offsetParent !== null);

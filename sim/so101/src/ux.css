@@ -719,3 +719,147 @@
 .ux-meas-tab th[scope=col]{font-size:12px;color:var(--mute);vertical-align:bottom;padding-right:10px}
 .ux-meas-tab td:not(.muted){white-space:nowrap}
 .ux-meas-tab td.muted{overflow-wrap:anywhere}
+
+/* ---- mission 13 (src/ui/line.js): line editor (desktop: left two thirds; phones: a sheet above the thumb bar, the
+        belt top → bottom), the 3D measuring cell in the right third, result card metrics with own-run histograms ---- */
+.ux-line{position:absolute;left:16px;top:76px;bottom:auto;max-height:calc(100% - 76px - 88px);width:calc(66.667% - 24px);z-index:4;background:#fff;border:1px solid var(--ink);
+  display:flex;flex-direction:column;gap:14px;padding:16px 20px 14px;overflow-y:auto;overscroll-behavior:contain;font-variant-numeric:tabular-nums}
+.ux-line[hidden]{display:none}
+.ux-line-on #c{position:absolute;right:0;top:0;width:33.333%;height:100%}
+.ux-line-on .ux-cam,.ux-line-on .ux-pip{left:calc(66.667% + 8px)}
+.ux-line-on .ux-pip{width:min(240px,calc(33.333% - 32px))}
+.ux-line-on .ux-side{display:none}   /* the depth inset helps a hand move; the line has none */
+@media (min-width:861px) and (min-height:501px){.ux-line-on .ux-under{left:calc(33.333% + 4px)}}   /* under the editor, clear of the 3D cell */
+.ux-chip-cell{border-color:var(--line-2)!important}
+.ux-line-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.ux-line-h{margin:0;font:inherit;display:flex;flex-wrap:wrap;gap:0 6px;align-items:baseline}
+.ux-line-h .mono{color:var(--ink);font-weight:500;letter-spacing:.06em;text-transform:uppercase;font-size:12px}
+.ux-line-how{padding:0;min-height:32px;font-size:14px;white-space:nowrap}
+/* order cards: a radio group */
+.ux-lorders{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.ux-lorder{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;border:1px solid var(--ink);background:#fff;padding:10px 12px;cursor:pointer;font:inherit;color:var(--ink);min-width:0}
+.ux-lorder:hover{background:var(--sand)}
+.ux-lorder[aria-checked=true]{box-shadow:inset 0 0 0 2px var(--accent)}
+.ux-lorder[disabled]{color:var(--line-2);cursor:not-allowed}
+.ux-lorder b{font-weight:600;font-size:15.5px;line-height:1.2;letter-spacing:-.01em}
+.ux-lorder .mono-s{line-height:1.35}
+.ux-lo-k{font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.ux-lo-min{color:var(--ink)}
+.ux-lo-st{font-size:14px;margin-top:2px}
+.ux-lo-id,.ux-lo-s{display:none}
+.ux-lo-x{font-weight:500}
+/* the belt: 8 slots at 0.25 + 0.5 k m of a 4 m belt; columns (desktop) or rows (phones) of equal size, so the slot
+   centres sit exactly at their belt positions */
+.ux-lflow{display:flex;flex-direction:column;gap:6px}
+.ux-lin,.ux-lout{margin:0;color:var(--ink-2)}
+.ux-lout{text-align:right}
+.ux-lstrip{position:relative;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:auto 30px auto;column-gap:6px;row-gap:6px}
+.ux-lslot{grid-column:var(--k);grid-row:1;display:flex;flex-direction:column;gap:4px;min-width:0}
+.ux-lutil{grid-column:var(--k);grid-row:3;display:flex;flex-direction:column;gap:2px;min-height:18px;color:var(--ink)}
+.ux-lbar{display:block;height:6px;background:var(--stone)}
+.ux-lbar i{display:block;height:100%;width:var(--u);background:var(--ink)}
+.ux-lx{text-align:center}
+.ux-lbelt{grid-column:1/-1;grid-row:2;position:relative;margin:0 -3px;background:repeating-linear-gradient(90deg,#3A3A36 0 10px,#2B2B2B 10px 20px);border-top:2px solid var(--ink);border-bottom:2px solid var(--ink)}
+.ux-lwins{position:absolute;inset:0}
+.ux-lwins span{position:absolute;top:-2px;bottom:-2px;left:var(--a);width:var(--b);background:rgba(244,244,241,.32);border-left:1px solid #fff;border-right:1px solid #fff}
+.ux-lwins span.sel{background:rgba(232,70,30,.45)}
+.ux-litems{position:absolute;inset:0}
+.ux-litems i{position:absolute;left:var(--p);top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--c);border:1.5px solid #fff}
+.ux-ladd{min-height:96px;border:1px dashed var(--line-2);background:#fff;color:var(--mute);font:400 24px/1 var(--sans);cursor:pointer}
+.ux-ladd:hover{border-color:var(--ink);color:var(--ink);background:var(--sand)}
+.ux-ladd[disabled]{cursor:not-allowed;color:var(--line)}
+.ux-lcell{min-height:96px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 4px;border:1px solid var(--ink);background:#fff;cursor:pointer;font:inherit;color:var(--ink);min-width:0;box-shadow:inset 0 -4px 0 var(--hold,transparent)}
+.ux-lcell:hover{background:var(--sand)}
+.ux-lcell.sel{box-shadow:inset 0 0 0 2px var(--accent)}
+.ux-lcell.bad{border-color:var(--accent)}
+.ux-lcell.busy{background:var(--sand)}
+.ux-lcell[disabled]{cursor:default}
+.ux-lcell svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ux-lfr{display:flex;flex-direction:column;gap:3px;align-items:stretch;width:100%;min-width:0}
+.ux-lfr i{font-style:normal;font-size:12.5px;line-height:1.2;display:flex;align-items:center;gap:5px;min-width:0;overflow-wrap:anywhere}
+.ux-lfr i b,.ux-lfrac b{width:10px;height:10px;flex:none;background:var(--c);border:1px solid var(--ink)}
+.ux-lfr i.none{color:var(--accent-text);justify-content:center}
+/* fraction picker of the selected cell */
+.ux-lpick{border:1px solid var(--ink);padding:12px 14px;display:flex;flex-direction:column;gap:8px;background:#fff}
+.ux-lpick-h{color:var(--ink)}
+.ux-lpick-help{margin:0}
+.ux-lfracs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.ux-lfrac{min-height:44px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--ink);background:#fff;font:500 15px/1.2 var(--sans);color:var(--ink);cursor:pointer;padding:0 8px}
+.ux-lfrac[aria-pressed=true]{background:var(--ink);color:#fff}
+.ux-lfrac[aria-pressed=true] b{border-color:#fff}
+.ux-lfrac[disabled]{color:var(--line-2);border-color:var(--line);cursor:not-allowed}
+.ux-lpick-b{display:flex;flex-wrap:wrap;gap:6px}
+.ux-lpick-b .btn{min-height:44px;padding:0 14px;font-size:14.5px;flex:1 1 auto}
+.ux-lfoot{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;margin-top:auto}
+.ux-lstatus{margin:0;color:var(--ink);flex:1 1 280px}
+.ux-lpol{margin:0;flex:1 1 100%}
+.ux-lclear{padding:0;min-height:32px;font-size:14px}
+.ux-lrun{flex:1 1 100%;display:grid;grid-template-columns:auto minmax(80px,1fr) auto auto;align-items:center;gap:6px 12px}
+.ux-lrun b{display:block;height:6px;background:var(--stone)}
+.ux-lrun b i{display:block;height:100%;width:0;background:var(--accent)}
+.ux-lrun .ux-link{padding:0;min-height:32px;font-size:14px}
+.ux-abar.ux-line-ab .ux-ab-main span[aria-hidden]{font-size:12px}
+/* "Jak to počítáme" */
+.ux-lexp .ux-modal-in{width:min(760px,100%)}
+.ux-lexp h3{margin:6px 0 0;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
+.ux-lexp ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14.5px;color:var(--ink-2)}
+.ux-lexp p.ink2{margin:0;font-size:15px}
+.ux-lexp-order{display:flex;flex-direction:column;gap:6px;background:var(--sand);padding:10px 12px}
+.ux-lexp-order p{margin:0;color:var(--ink);font-size:12.5px;line-height:1.45}
+/* result card: four metrics, each with the histogram of the player's runs of this order */
+.ux-result-line .ux-wvals>div{display:flex;flex-direction:column;gap:2px}
+.win.ux-result .ux-lm-sub{margin:2px 0 0;line-height:1.35;font-size:12px}
+.ux-lhist{margin:6px 0 0}
+.ux-lhist svg{display:block;width:100%;height:26px;overflow:visible}
+.ux-lhist rect{fill:var(--line-2)}
+.ux-lhist rect.now{fill:var(--accent)}
+.ux-lhist line.ax{stroke:var(--ink);stroke-width:1;vector-effect:non-scaling-stroke}
+.ux-lhist line.tg{stroke:var(--ok);stroke-width:1.5;stroke-dasharray:3 2;vector-effect:non-scaling-stroke}
+.ux-lhist figcaption{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;margin-top:2px;font-size:10.5px;line-height:1.3}
+.ux-lhist figcaption>span:first-child,.ux-lhist figcaption>span:last-child{white-space:nowrap}
+.ux-lhist figcaption>span:nth-child(2){text-align:center}
+.ux-lhist figcaption b{color:var(--accent-text);font-weight:500}
+.ux-wlx{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--ink);padding-top:10px}
+.ux-wlx[hidden]{display:none}
+.win.ux-result .ux-wlx p{margin:0;font-size:12px;line-height:1.45}
+.win.ux-result .ux-wlx p.ux-wlx-h{font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.ux-wlx-h{color:var(--ink)}
+.ux-wlx-cells{margin:0;padding-left:18px;font-size:13.5px;color:var(--ink-2)}
+.ux-wlx .ux-link{padding:4px 0;min-height:40px;font-size:14.5px}
+.ux-wlx-real a{color:var(--mute)}
+@media (prefers-reduced-motion:reduce){.ux-litems{display:none}}
+/* phones in portrait: the editor is a sheet between the 3D cell and the thumb bar, the belt runs top → bottom */
+@media (max-width:860px) and (min-height:501px){
+  .ux-line{position:relative;left:auto;top:auto!important;bottom:auto;width:auto;flex:0 0 auto;max-height:50svh;border-width:1px 0 0;padding:10px 16px 12px;gap:10px;z-index:auto}
+  .ux-line-on #c{position:static;width:100%;height:100%}
+  .ux-line-on .ux-cam,.ux-line-on .ux-pip{left:8px}
+  .ux-result-open .ux-line{display:none}
+  .ux-line-top{flex-wrap:wrap;gap:0 12px}
+  .ux-line-h .mono-s{font-size:11px}
+  .ux-line-how{font-size:13px}
+  .ux-lorders{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .ux-lorder{padding:6px 8px;gap:1px}
+  .ux-lo-k,.ux-lo-l,.ux-lo-x{display:none}
+  .ux-lo-id{display:block;font:600 18px/1.1 var(--sans)}
+  .ux-lo-s{display:block}
+  .ux-lorder b{font-size:13.5px}
+  .ux-lorder .mono-s{font-size:10.5px}
+  .ux-lo-st{font-size:12px}
+  .ux-lstrip{grid-template-columns:30px minmax(0,1fr) 64px;grid-template-rows:repeat(8,minmax(52px,auto));column-gap:8px;row-gap:4px}
+  .ux-lslot{grid-row:var(--k);grid-column:2;flex-direction:row;align-items:stretch;gap:8px}
+  .ux-lutil{grid-row:var(--k);grid-column:3;justify-content:center}
+  .ux-lx{flex:0 0 48px;align-self:center;text-align:left}
+  .ux-lbelt{grid-row:1/-1;grid-column:1;margin:-2px 0;background:repeating-linear-gradient(180deg,#3A3A36 0 10px,#2B2B2B 10px 20px);border:0;border-left:2px solid var(--ink);border-right:2px solid var(--ink)}
+  .ux-lwins span{top:var(--a);height:var(--b);left:-2px;right:-2px;width:auto;border:0;border-top:1px solid #fff;border-bottom:1px solid #fff}
+  .ux-litems i{left:50%;top:var(--p)}
+  .ux-ladd,.ux-lcell{min-height:48px;flex:1 1 auto}
+  .ux-ladd{font-size:20px}
+  .ux-lcell{flex-direction:row;padding:4px 8px;gap:8px;box-shadow:inset 4px 0 0 var(--hold,transparent)}
+  .ux-lcell.sel{box-shadow:inset 0 0 0 2px var(--accent)}
+  .ux-lcell svg{width:22px;height:22px}
+  .ux-lfr{flex-direction:row;flex-wrap:wrap;gap:4px 10px}
+  .ux-lfr i{font-size:13px}
+  .ux-lout{text-align:left}
+  .ux-lfracs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ux-lfoot{gap:2px 12px}
+}
