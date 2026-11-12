@@ -7,7 +7,7 @@ import { createRequire } from 'node:module';
 import en from '../src/i18n/en.js';
 
 // time-rated missions (the conveyor missions rate named stars: tests/waste-hand.test.mjs)
-const TIMED = MISSIONS.filter((m) => !m.belt);
+const TIMED = MISSIONS.filter((m) => !m.belt && !m.line);   // conveyor missions rate named stars (waste-hand, knn-policy, line-orders tests)
 
 const require = createRequire(import.meta.url);
 const I18N = new URL('../../../assets/i18n.js', import.meta.url).pathname;

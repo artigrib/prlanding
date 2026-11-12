@@ -434,8 +434,42 @@ export const MISSIONS = [
     rate: (t, prec, st) => teachStars(MISSIONS.find((m) => m.id === 'waste_teach').stars, st),
     // "Ukázat řešení": the scripted planner sorts the batch (in the demo phase this records scripted demonstrations)
     solve: (ctl, w, runner) => beltSolve(ctl, w, { stop: () => !!(runner && runner.ctx.s.run && runner.ctx.s.run.done()) })
+  },
+  {
+    id: 'waste_line', n: '13', title: 'Třídění odpadu III: Navrhněte linku',
+    desc: 'Navrhněte linku z robotických buněk podél 4m pásu, která splní zakázku. Každá buňka je jedna SO-101 se dvěma koši, takže třídí nejvýš dvě frakce. Zakázka určuje rychlost pásu, přítok a cíl; vy volíte počet buněk, jejich místa a frakce. Linku počítá diskrétní simulace z naměřených profilů měřicí buňky (Jak to počítáme), 3D scéna ukazuje tu jednu fyzikální buňku. Rozpoznávání je tu dokonalé; skutečné linky se pletou i v tom, co předmět je.',
+    short: 'Navrhněte třídicí linku',
+    scene: 'conveyor', line: true,
+    credit: 'Objekty: NVIDIA SimReady (CC BY 4.0)',
+    layout: Object.fromEntries(Object.entries(CONVEYOR_BINS).map(([n, p]) => [n, [p[0], p[1], 0]])),
+    targets: {},
+    strategy: 'Každá buňka má dva koše, takže třídí nejvýš dvě frakce. Buňka blíž začátku pásu vidí předměty dřív. Spusťte linku a podívejte se, co propadá a které buňky jsou vytížené.',
+    advice: 'Pro všechny 3 ★: splnit zakázku, čistota v každém z 20 běhů a nejvýš tolik robotů, kolik našlo vyhledávání.',
+    // Named stars (team lead's rule for mission 13, src/line/orders.js lineStars): ★ splněno = mean output ≥ F at
+    // mean purity ≥ X over the 20 seeded runs; ★ čistota = purity ≥ X in every run; ★ minimum robotů = N ≤ N_min of the
+    // order (stored search, src/line/nmin.js). The order's numbers are on its card (src/line/orders.js).
+    stars: {},
+    done: 'Linka splnila zakázku',
+    starsHint: '★ splněno · ★ čistota v každém běhu · ★ minimum robotů',
+    // hint ladder: rung 2 quotes the model's capacity of one cell, rung 3 loads the search's line (src/ui/line.js)
+    hints: {
+      ghost: { text: (ux) => ux.line.hintText('ghost'), next: 'Kolik buněk je potřeba' },
+      partial: { text: (ux) => ux.line.hintText('partial'), next: 'Ukázat platnou linku' }
+    },
+    look: { t: [0.24, 0.0, 0.0], p: [0.92, 0.8, 0.0001], pn: [0.25, 1.05, -0.62] },
+    openStart: true,
+    check(c) { return lineCheck(c); },
+    rate: (t, prec, st) => (st && st.stars) || 1
   }
 ];
+
+// ---------------- mission 13: design a line (src/line/des.js, src/line/orders.js; the page: src/ui/line.js) ---------
+/** The objective line and the win of mission 13: the page runs the line model and puts its state in c.line. */
+export function lineCheck(c) {
+  const L = c.line;
+  if (!L || !c.w.belt) return { text: '' };
+  return { text: L.text, ok: !!L.ok, won: !!L.won, stats: L.stats || undefined, progress: L.ok ? 1 : 0 };
+}
 
 // ---------------- mission 11: waste sorting by hand ----------------
 const FR = { paper: 'papír', plastic: 'plast', glass: 'sklo', metal: 'kov' };

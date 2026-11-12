@@ -30,6 +30,7 @@ import { beltSolve } from './objects/beltpick.js';
 import { WASTE } from './objects/wastebatch.js';
 import { BeltView } from './ui/beltview.js';
 import { PolicyUI } from './ui/policy.js';
+import { LineUI } from './ui/line.js';
 
 export async function install(page, env) {
   // core.js layout (servo-emulator branch): the page (MissionPage) owns sliders/demo/HUD, page.sim (ArmSim)
@@ -118,6 +119,7 @@ class UX {
     this.teach = new Teach(this);
     this.panel = new Panel(this);
     this.policy = new PolicyUI(this);   // mission 12: Ukázky → Naučit → Ověřit, Nástroje → Politika
+    this.line = new LineUI(this);       // mission 13: the line editor, the line model's runs, "Jak to počítáme"
     if (this.world.belt && this.objView) this.beltView = new BeltView(this);   // mission 11 overlays
     this.gizmo = new Gizmo(this);
     this.cameras = new Cameras(this);
@@ -236,8 +238,10 @@ class UX {
     if (pad) ctx.hand = true;   // trackpad: a tap selects, it never picks: no click-to-grab coaching
     this.extras.inkAt(ctx.tip);
     this.policy.preTick();
+    this.line.preTick();
     const res = r.tick(dt);
     this.policy.postTick();
+    this.line.postTick();
     // a held object slipped out of the closed jaws: say so (touch audit P2: after a drop the HUD only said "closer")
     const held = this.heldObject();
     const closedCmd = (this.ctl.active ? this.ctl.grip : c[act[5]]) < 0.4;
@@ -325,10 +329,12 @@ class UX {
     this.held = null;
     if (this.teach.recording && !this.recResetting) { this.teach.stopRec(); this.panel.toast('Nahrávání zastaveno (mise začala znovu)'); }
     this.policy.afterReset();
+    this.line.afterReset();
     this.panel.showTips(this.runner.m);
   }
 
   startDemo() {
+    if (this.runner.m.line) { track('solution_shown', { mission: this.runner.m.id }); return this.line.solve(); }   // mission 13: the search's line
     this.teach.stopReplay();
     const rec = this.teach.recording;
     this.recResetting = true; this.app.reset(); this.recResetting = false;
@@ -360,6 +366,7 @@ class UX {
     const r = this.runner, c = r.ctx;
     if (r.m.draw || r.won) return (r.last && r.last.text) || '';
     if (r.m.teach) return this.policy.coverageText();   // mission 12: what the policy has seen
+    if (r.m.line) return this.line.objectiveText();     // mission 13: the order
     const h = c.hand; c.hand = true;
     try { const res = r.m.check(c, 0); return (res && res.text) || ''; } finally { c.hand = h; }
   }
@@ -718,6 +725,7 @@ class UX {
   }
   /** Rung 2: a ghost path to the next subgoal only (nothing moves). */
   hintGhost() {
+    if (this.runner.m.line) return this.line.hintGhost();
     if (this.runner.m.belt) return !!this.beltView;   // the overlay follows the hint level (src/ui/beltview.js)
     let plan; try { plan = partialPlan(this.nextPlan()); } catch (e) { return false; }
     this.gizmo.showPath(plan, !this.reduced);
@@ -728,6 +736,7 @@ class UX {
   hintPartial() {
     if (this.teach.replaying) this.teach.stopReplay();
     if (this.mode !== 'smart') this.setMode('smart');
+    if (this.runner.m.line) return this.line.hintPartial();
     if (this.runner.m.belt) return this.beltShowMe(this.runner.m.teach ? 4 : 1);
     let plan; try { plan = partialPlan(this.nextPlan()); } catch (e) { return false; }
     this.hintRun = true;
@@ -821,7 +830,7 @@ class UX {
       // Space is the gripper, also while a panel button has focus (a stray Space pressed "Znovu" and lost the run,
       // or advanced the hint ladder). The button keeps Enter and its click; dialogs (win card, guide, pickers) keep Space.
       if (k === ' ' && (tag === 'BUTTON' || tag === 'SUMMARY')) {
-        if (tg.closest('[role=dialog],dialog,#win')) return;
+        if (tg.closest('[role=dialog],dialog,#win,#ux-line')) return;   // the line editor's buttons keep Space too
         this.spaceEaten = true;
       }
       // Tab on the focused canvas cycles the joints 1…6, then leaves the canvas (no focus trap)
@@ -930,6 +939,14 @@ class UX {
     api.measure = (o) => this.policy.meas.start(o || {});
     api.measureCancel = () => this.policy.meas.cancel();
     api.measureState = () => this.policy.meas.state();
+    // mission 13: the line editor (src/ui/line.js): state, order, line ([{ slot, fractions }] or [[fractions], …]),
+    // run ({ instant, hold }: resolves when the result is in), skip the replay, "Jak to počítáme"
+    api.line = () => this.line.state();
+    api.lineOrder = (id) => this.line.setOrder(id);
+    api.lineSet = (cells) => this.line.setCells(cells);
+    api.lineRun = (o) => this.line.run(o || {});
+    api.lineSkip = () => this.line.skip();
+    api.lineExplain = (open) => (open === false ? this.line.closeExplain() : this.line.openExplain());
     api.objectsReady = () => (this.objView ? this.objView.ready() : true);
     api.record = (on) => { if (on !== this.teach.recording) this.toggleRec(); };
     api.replay = (loop) => { this.teach.loop = !!loop; return this.teach.startReplay(); };

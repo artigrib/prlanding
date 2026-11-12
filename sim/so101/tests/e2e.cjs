@@ -409,7 +409,7 @@ async function touchDrag(page, from, to, steps = 8) {
       await S(p, () => { window.__srN = 0; window.__sim.advance(1); });
       await S(p, () => new Promise((res) => setTimeout(res, 50)));
       let r = await ux(p), c = await card();
-      ok(r.result.kind === 'manual' && r.result.stars >= 1 && c.open && c.focus && c.k === 'Mise 01 / 12 · splněno' && c.h === 'Kostka je v misce.' && !c.demo,
+      ok(r.result.kind === 'manual' && r.result.stars >= 1 && c.open && c.focus && c.k === 'Mise 01 / 13 · splněno' && c.h === 'Kostka je v misce.' && !c.demo,
         'result card opens with focus on it: header, headline (done text), no demo label ' + JSON.stringify(c));
       ok(c.on === r.result.stars && c.label === `${r.result.stars} ze 3 hvězdiček`, `result card shows the ${r.result.stars} ★ earned`);
       ok(c.vals[0][0] === 'Váš čas' && c.vals[0][1] === fmtT(r.result.time) && /^Pro [23] ★$/.test(c.vals[1][0]) && /^do (0:25|1:00)/.test(c.vals[1][1]),
@@ -879,6 +879,100 @@ async function touchDrag(page, from, to, steps = 8) {
       const iv = await S(q, () => ({ pol: window.__sim.policy(), run: window.__sim.run() }));
       ok(iv.pol.intervened && !iv.pol.running && iv.pol.chip === 'Ovládáte vy' && iv.run.auto, `player input during the policy run: intervened ${iv.pol.intervened}, chip "${iv.pol.chip}", no stars`);
       await q.close();
+    }
+    {
+      // ---------------- mission 13: design a line (src/ui/line.js; the line model src/line/des.js, orders src/line/orders.js) ----------
+      // set the order and the line through the hooks, run (20 seeded runs of the model), result card with the four
+      // metrics and "vaše běhy"; no request to an aggregate endpoint (/agg); layout at 1440 × 900 and 390 × 844: the
+      // action bar, the objective line and the line editor stay off the centre of the 3D view
+      const LAYOUT = () => {
+        const c = document.getElementById('c').getBoundingClientRect(), cx = c.left + c.width / 2, cy = c.top + c.height / 2;
+        const R = (sel) => { const e = document.querySelector(sel); if (!e || !e.getClientRects().length) return null; const r = e.getBoundingClientRect(); return [r.left, r.top, r.right, r.bottom].map(Math.round); };
+        const box = { abar: R('#ux-abar'), hud: R('#hud'), editor: R('#ux-line') };
+        const hit = Object.keys(box).filter((k) => box[k] && cx >= box[k][0] && cx <= box[k][2] && cy >= box[k][1] && cy <= box[k][3]);
+        const ov = (a, b) => a && b && a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3];
+        const clash = [['editor', 'abar'], ['editor', 'hud']].filter(([a, b]) => ov(box[a], box[b])).map((x) => x.join('/'));
+        return { hit, clash, centre: [Math.round(cx), Math.round(cy)], canvas: [Math.round(c.width), Math.round(c.height)], box, docW: document.documentElement.scrollWidth, vw: innerWidth };
+      };
+      const layoutOk = (g) => !g.hit.length && !g.clash.length && g.box.editor && g.box.abar && g.box.hud && Math.min(...g.canvas) >= 200 && g.docW <= g.vw;
+      const q = await open(browser, base + '?test=1&mise=waste_line&detail=low', { width: 1440, height: 900 });
+      await q.waitForFunction(() => window.__sim.line && window.__sim.line().loaded, null, { timeout: 60000 });
+      const l0 = await S(q, () => ({ scene: window.__sim.scene(), st: window.__sim.line(), hud: window.__sim.ux().hud, run: !document.getElementById('ux-line-run').hidden,
+        grip: document.getElementById('ux-grip').hidden, belt: document.getElementById('ux-belt').hidden, chip: document.querySelector('.ux-chip-cell').textContent,
+        speed: window.__sim._ux.world.belt.speed, cards: document.querySelectorAll('.ux-lorder').length }));
+      ok(l0.scene === 'conveyor' && l0.st.on && l0.st.orders.length === l0.cards && l0.cards >= 3 && l0.st.orders.every((o) => o.nmin >= 1) && l0.run && l0.grip && l0.belt &&
+        /^Zakázka [A-D]: aspoň \d+ kusů\/min/.test(l0.hud) && l0.chip === 'Fyzikální buňka (MuJoCo)' && Math.abs(l0.speed - l0.st.orders.find((o) => o.id === l0.st.order).v) < 1e-9,
+        'mission 13: conveyor scene, order cards with N_min, Spustit linku in the action bar, objective "' + l0.hud + '", 3D cell labelled, belt at the order speed');
+      await S(q, () => window.__sim.lineOrder('A'));
+      const g1 = await S(q, LAYOUT);
+      ok(layoutOk(g1), '1440×900: action bar, objective and line editor off the 3D centre ' + JSON.stringify(g1));
+      // a line short of the order: the result card says "nesplněno" with the four metrics and "první běh"
+      await S(q, () => window.__sim.lineSet([['plastic'], ['glass']]));
+      await shot(q, 'm13-1440-editor');
+      ok(await S(q, () => window.__sim.lineRun({ instant: true })), 'Spustit linku runs');
+      const f = await S(q, () => ({ st: window.__sim.line(), open: !document.getElementById('win').hidden, k: document.getElementById('ux-wk').textContent,
+        dt: [...document.querySelectorAll('#ux-wvals dt')].map((e) => e.textContent), hist: document.querySelectorAll('#ux-wvals .ux-lhist').length,
+        cap: document.querySelector('#ux-wvals .ux-lhist figcaption').textContent, line: document.getElementById('ux-wline').textContent }));
+      ok(f.open && /nesplněno/.test(f.k) && f.st.last && !f.st.last.stars.win && f.dt.join() === 'Roboti,Výkon,Čistota,Propadlo' && f.hist === 4 && /první běh této zakázky/.test(f.cap) && /☆ splněno/.test(f.line),
+        `a line short of the order: "nesplněno" card, ${f.dt.join(', ')}, ${f.hist} histograms, ${f.st.last && f.st.last.sorted.toFixed(2)}/min`);
+      await S(q, () => document.getElementById('again').click());
+      // the search's line of the order (stored N_min): met with every star; the card compares with the earlier run
+      const best = await S(q, () => window.__sim._ux.line.order.search.best.cells);
+      await S(q, (b) => window.__sim.lineSet(b), best);
+      const p = S(q, () => window.__sim.lineRun({ hold: 2 }));
+      await q.waitForTimeout(2500);
+      const mid = await S(q, () => ({ st: window.__sim.line(), hud: window.__sim.ux().hud, dots: [...document.querySelectorAll('.ux-litems i')].filter((e) => !e.hidden).length }));
+      ok(mid.st.phase === 'running' && /^Počítám 20 běhů/.test(mid.hud) && (mid.st.replay ? mid.dots > 0 : true), `running: replay of run 1 on the schema (${mid.dots} items on the belt), objective "${mid.hud}"`);
+      await shot(q, 'm13-1440-running');
+      await S(q, () => window.__sim.lineSkip()); await p;
+      const won = await advanceUntil(q, () => window.__sim.ux().won, 4, 0.2);
+      await q.waitForTimeout(400);
+      const w = await S(q, () => ({ st: window.__sim.line(), res: window.__sim.ux().result, open: !document.getElementById('win').hidden, k: document.getElementById('ux-wk').textContent,
+        dt: [...document.querySelectorAll('#ux-wvals dt')].map((e) => e.textContent), caps: [...document.querySelectorAll('#ux-wvals .ux-lhist figcaption')].map((e) => e.textContent),
+        line: document.getElementById('ux-wline').textContent, where: document.getElementById('ux-wlx').textContent, again: document.getElementById('again').textContent.trim() }));
+      ok(won > 0 && w.open && /splněno/.test(w.k) && w.res.stars === 3 && w.st.last.stars.stars === 3 && w.dt.join() === 'Roboti,Výkon,Čistota,Propadlo' && w.caps.length === 4 && w.caps.every((c) => /vaše běhy \(2\)/.test(c)) &&
+        /★ minimum robotů/.test(w.line) && /Rozbor linky/.test(w.where) && /Profil: Skript \(plánovač\)/.test(w.where) && /údaj výrobce/.test(w.where) && /^Upravit linku/.test(w.again),
+        `the search's line meets the order: ${w.res.stars} ★, card "${w.k}", histograms "${w.caps[0]}"`);
+      await shot(q, 'm13-1440-result');
+      // "Jak to počítáme": the model's rules, this order's N_min search and the check against the measured mission 11 batches
+      await S(q, () => { window.__sim._ux.panel.closeWin(); return window.__sim.lineExplain(); });
+      const ex = await S(q, () => { const d = document.getElementById('ux-line-explain'); return { open: !d.hidden, text: d.textContent }; });
+      ok(ex.open && /Minimum robotů pro zakázku A: \d/.test(ex.text) && /Kontrola modelu: .* průměrně \d+,\d z 11/.test(ex.text) && /Co model nezná/.test(ex.text) && /Přijíždění v zakázkách: rovnoměrně/.test(ex.text),
+        '"Jak to počítáme" opens with the order\'s N_min search and the model check');
+      await shot(q, 'm13-1440-explain');
+      await q.keyboard.press('Escape');
+      ok(await S(q, () => document.getElementById('ux-line-explain').hidden), 'Esc closes "Jak to počítáme"');
+      ok(!q.reqs.some((u) => /\/agg(\/|\?|$)/.test(u)), 'mission 13 makes no request to an aggregate endpoint (/agg)');
+      await q.close();
+      // phone 390 × 844: the editor is a sheet between the 3D cell and the thumb bar; the result card a bottom sheet
+      const ph = await open(browser, base + '?test=1&mise=waste_line&detail=low', { width: 390, height: 844 }, true);
+      await ph.waitForFunction(() => window.__sim.line && window.__sim.line().loaded, null, { timeout: 60000 });
+      await S(ph, () => { window.__sim.lineOrder('A'); window.__sim.lineSet([['paper', 'metal'], ['plastic', 'glass']]); });
+      const g2 = await S(ph, LAYOUT);
+      ok(layoutOk(g2), '390×844: action bar, objective and line editor off the 3D centre ' + JSON.stringify(g2));
+      const tap = await S(ph, () => [...document.querySelectorAll('#ux-line button:not([hidden]), #ux-abar button:not([hidden])')].filter((b) => b.getClientRects().length && b.closest('.ux-lslot, .ux-lorders, #ux-abar'))
+        .map((b) => Math.round(Math.min(b.getBoundingClientRect().width, b.getBoundingClientRect().height))));
+      ok(tap.length >= 10 && tap.every((x) => x >= 44), 'phone: slot, order and action-bar buttons ≥ 44 px ' + JSON.stringify(tap));
+      await shot(ph, 'm13-390-editor');
+      await S(ph, () => window.__sim.lineRun({ instant: true }));
+      await advanceUntil(ph, () => window.__sim.ux().won, 4, 0.2);
+      const g3 = await S(ph, () => { const w = document.getElementById('win'), r = w.getBoundingClientRect(); return { open: !w.hidden, top: Math.round(r.top), bottom: Math.round(r.bottom), vh: innerHeight, hists: w.querySelectorAll('.ux-lhist').length, docW: document.documentElement.scrollWidth, vw: innerWidth }; });
+      ok(g3.open && g3.bottom <= g3.vh + 1 && g3.hists === 4 && g3.docW <= g3.vw, 'phone: the result card with the four histograms is a bottom sheet ' + JSON.stringify(g3));
+      await shot(ph, 'm13-390-result');
+      ok(!ph.reqs.some((u) => /\/agg(\/|\?|$)/.test(u)), 'phone: no request to /agg');
+      await ph.close();
+      // English: no Czech left in the editor, its labels and the order cards
+      const en = await open(browser, base + '?test=1&lang=en&mise=waste_line&detail=low', { width: 1440, height: 900 });
+      await en.waitForFunction(() => window.__sim.line && window.__sim.line().loaded, null, { timeout: 60000 });
+      await S(en, () => { window.__sim.lineSet([['paper', 'metal'], []]); window.__sim._ux.line.sel = 1; window.__sim._ux.line.render(); });
+      const cz = await S(en, () => {
+        const root = document.getElementById('ux-line'), out = [];
+        const txt = [root.innerText, ...[...root.querySelectorAll('[aria-label]')].map((e) => e.getAttribute('aria-label')), document.getElementById('ux-line-run').textContent, document.getElementById('ux-line-add').textContent, document.getElementById('hud-text').textContent];
+        for (const t of txt) for (const l of t.split('\n')) if (/[ěščřžýáíéůúťďňó]/i.test(l)) out.push(l);
+        return out;
+      });
+      ok(!cz.length, 'English: the line editor has no Czech left' + (cz.length ? ': ' + cz.join(' | ') : ''));
+      await en.close();
     }
     {
       // record link for an object mission: validated (unknown missions / absurd times are ignored)

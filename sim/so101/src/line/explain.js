@@ -63,5 +63,17 @@ export const M11_BATCH = {
   lost: 'seed 3: a vial released beside its bin, the plastic cup released and fell to the tote, the nut missed then too late; seed 4: a vial left to pass, its bin full; seed 6: the spoon released and fell to the tote, a paper cup too late'
 };
 
+/** The order mix of the mission 11 batch (2 paper, 3 plastic, 3 glass, 3 metal of 11): the default "složení zakázky"
+ *  of the line tools and the mix of the mission 13 orders (a game parameter, not a statistic of real waste). */
+export const M11_MIX = { paper: 2, plastic: 3, glass: 3, metal: 3 };
+
+/** The mission 11 cell in the line model, for EXPLAIN.check: one cell with all four fractions on the mission 11 belt
+ *  (0.53 m from the spawn point to the tote edge, the cell 0.26 m downstream of it), 11 items one every 10 s at 2 cm/s
+ *  in the batch mix (world.js spawn: y = BELT.y0 + BELT.entry / 2 = −0.26; the belt edge BELT.edge = 0.27). */
+export function m11Config() {
+  return { v: 0.02, lambda: 6, arrivals: 'uniform', jitter: 0, mix: M11_MIX, length: 0.53, count: 11,
+    cells: [{ x: 0.26, fractions: ['paper', 'plastic', 'glass', 'metal'], policy: 'skript' }] };
+}
+
 /** Source labels of a profile (profile.source). */
 export const SOURCE = { ci: 'v CI', browser: 'v prohlížeči', sil: 'v SIL' };
