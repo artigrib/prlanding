@@ -802,7 +802,7 @@ export class Panel {
     // named stars: earned ones plain, missed ones with the measured value
     const named = [`★ hotovo`, pur ? '★ čistota 100 %' : `☆ čistota ${pct(st.purity)}`, still ? '★ bez zastavení pásu' : `☆ pás stál ${sec(st.paused)}`];
     if (manual) {
-      this.winText.innerHTML = named.map((x) => `<span>${x}</span>`).join(' · ') + (res.stars < 3 && m.advice ? ` <span>${m.advice}</span>` : '');
+      this.winText.innerHTML = named.map((x) => `<span>${x}</span>`).join(' · ') + (res.stars < 3 && m.advice ? `<br><span>${m.advice}</span>` : '');
       again.firstChild.textContent = 'Zkusit znovu ';
       again.classList.remove('btn-act'); again.classList.add('btn-o');
     } else {
