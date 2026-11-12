@@ -119,6 +119,7 @@ async function winM01(T) {
     if (!only || only === 'classic') await classic(browser, base);
     if (!only || only === 'pad') await trackpad(browser, base);
     if (!only || only === 'm11') await m11(browser, base.replace('mise=bowl', 'mise=waste_hand'));
+    if (!only || only === 'm12') await m12(browser, base.replace('mise=bowl', 'mise=waste_teach'));
   } catch (e) { console.log('FAIL exception', e); fails++; }
   await browser.close(); srv.kill();
   console.log(fails ? `\n${fails} FAILED` : '\nALL OK', '— screenshots in', OUT);
@@ -622,4 +623,62 @@ async function m11(browser, base) {
     await T.shot('t3-04-m11-pad-sorted');
     await T.ctx.close();
   }
+}
+
+/** Mission 12 at 390 × 844 with CDP touch: the 6-slot thumb bar, Naučit / Spustit reachable by a finger, the hint rung
+ *  that records scripted demos, the policy chip, Nástroje → Politika, the result card as a bottom sheet. */
+async function m12(browser, base) {
+  const T = await phone(browser, base, { width: 390, height: 844 });
+  await T.S(() => { window.__sim._app.sim.paused = true; });
+  const center = async (sel) => { const r = await rectOf(T, sel); return r && [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2]; };
+  const top = (sel) => T.S((s) => { const e = document.querySelector(s); if (!e) return false; const r = e.getBoundingClientRect(), x = (r.left + r.right) / 2, y = (r.top + r.bottom) / 2;
+    const h = document.elementFromPoint(x, y); return !!h && (h === e || e.contains(h)) && r.top >= 0 && r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth; }, sel);
+  const lay = await T.S(() => { const b = document.getElementById('ux-abar'), r = [...b.querySelectorAll('.ux-ab:not([hidden])')].map((x) => x.getBoundingClientRect());
+    return { n: r.length, six: b.classList.contains('ux-ab6'), minW: Math.round(Math.min(...r.map((x) => x.width))), minH: Math.round(Math.min(...r.map((x) => x.height))), docW: document.documentElement.scrollWidth,
+      labels: [...b.querySelectorAll('.ux-ab:not([hidden])')].map((x) => x.textContent.trim()) }; });
+  ok(lay.n === 6 && lay.six && lay.minW >= 44 && lay.minH >= 44 && lay.docW <= 390 && await top('#ux-policy'), 'm12 phone: 6-slot thumb bar, each ≥ 44 px, Naučit reachable ' + JSON.stringify(lay));
+  // a tap on Naučit before any demo: refused with the reason
+  await T.tap(...(await center('#ux-policy')));
+  const t0 = await T.S(() => { const t = document.querySelector('.ux-toast'); return t && !t.hidden ? t.textContent : ''; });
+  ok(/Zatím žádná ukázka/.test(t0) && !(await T.S(() => window.__sim.policy().model)), 'm12 phone: Naučit with no demo says why: ' + t0);
+  // Poradit → next rung → next rung ("Nahrát ukázky skriptem"), all by finger
+  await T.tap(...(await center('#ux-mhint')));
+  for (let i = 0; i < 2; i++) { await T.tap(...(await center('#ux-hintnext'))); }
+  await T.adv(1);
+  const rung = await T.S(() => ({ chip: window.__sim.policy().chip, rec: window.__sim.ux().recording }));
+  let live = 0;
+  for (let i = 0; i < 30 && live < 3; i++) { await T.adv(3); live = await T.S(() => (window.__sim.ux().busy ? 0 : window.__sim.policy().live)); }
+  await T.adv(2);
+  await T.S(() => document.querySelector('#ux-hintbox .ux-x') && document.querySelector('#ux-hintbox .ux-x').click());
+  await T.S(() => { window.__sim._ux.panel.openDrawer(false); document.getElementById('ux-sec-policy').scrollIntoView({ block: 'start' }); });
+  await sleep(400); await T.S(() => window.__sim.renderNow());
+  ok(rung.chip === 'Běží: Skript (plánovač)' && rung.rec && live >= 3, `m12 phone: "Nahrát ukázky skriptem" by taps: chip "${rung.chip}", ${live} demos recorded`);
+  await T.shot('t4-01-m12-teach');
+  await T.S(() => window.__sim._ux.panel.closeDrawer(false));
+  await T.tap(...(await center('#ux-policy')));   // Naučit (n)
+  const tr = await T.S(() => window.__sim.policy());
+  ok(tr.model && tr.model.n >= 3 && tr.button === 'Spustit politiku' && await top('#ux-policy'), 'm12 phone: a tap on Naučit trains (' + (tr.model && tr.model.n) + ' demos), the button becomes "' + tr.button + '"');
+  await T.tap(...(await center('#ux-policy')));   // Spustit politiku
+  await T.adv(2);
+  const run = await T.S(() => { window.__sim.renderNow(); const c = document.querySelector('.ux-chip-run'), r = c.getBoundingClientRect(), s = document.querySelector('.ux-chip-step').getBoundingClientRect();
+    return { chip: !c.hidden && c.textContent, inView: r.left >= 0 && r.right <= innerWidth && r.top >= 0, step: document.querySelector('.ux-chip-step').textContent, apart: s.bottom <= r.top + 1 || r.bottom <= s.top + 1, pol: window.__sim.policy() }; });
+  ok(run.chip === 'Běží: Naučené pravidlo (kNN) + plánovač' && run.inView && run.apart && run.step === '3/3 Ověřit' && run.pol.running, 'm12 phone: a tap on Spustit runs the policy, chip "' + run.chip + '" in view, stepper "' + run.step + '"');
+  await T.S(() => window.__sim.renderNow());
+  await T.shot('t4-02-m12-running');
+  // Nástroje → Politika: the section and its buttons are reachable in the sheet
+  await T.tap(...(await center('#ux-qtools')));
+  await T.S(() => { document.getElementById('ux-pol-learn').scrollIntoView({ block: 'center' }); });
+  const sec = { learn: await top('#ux-pol-learn'), run: await top('#ux-pol-run'), demos: await top('#ux-pol-demos') };
+  ok(sec.learn && sec.run && sec.demos, 'm12 phone: Nástroje → Politika buttons reachable in the sheet ' + JSON.stringify(sec));
+  await T.shot('t4-03-m12-politika');
+  await T.tap(...(await center('#ux-drawer-x')));
+  // the run goes on without the player (the drawer is not an input to the arm); the card opens as a bottom sheet
+  let open = false;
+  for (let i = 0; i < 90 && !open; i++) { await T.adv(4); open = await T.S(() => !document.getElementById('win').hidden); }
+  const card = await T.S(() => ({ cmp: document.querySelectorAll('#ux-wpol .ux-pol-cmp tr').length, again: (() => { const b = document.getElementById('again'); return b && !b.hidden && b.textContent.trim(); })(), pol: window.__sim.policy() }));
+  ok(open && card.cmp === 3 && /^Upravit ukázky/.test(card.again || '') && !card.pol.intervened, 'm12 phone: the result card with the side-by-side, "' + card.again + '"');
+  if (open) { await sleep(1500); await T.S(() => { const w = document.getElementById('ux-wpol'); if (w) w.scrollIntoView({ block: 'center' }); window.__sim.renderNow(); }); await T.shot('t4-04-m12-result'); }
+  await T.S(() => document.getElementById('again').scrollIntoView({ block: 'center' }));
+  ok(open && await top('#again'), 'm12 phone: "Upravit ukázky" reachable on the card');
+  await T.ctx.close();
 }

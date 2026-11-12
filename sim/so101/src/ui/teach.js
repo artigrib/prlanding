@@ -120,6 +120,7 @@ export class Teach {
     this.recording = false;
     if (this.demo && this.demo.t.length < 5) this.demo = null;   // too short to be useful
     if (this.demo && this.demo.env) this.cut();
+    if (this.demo && this.ux.policy) this.ux.policy.harvest(this.demo);   // mission 12: the episodes become examples
     this.restored = false; this.shared = false;
     this.persist();
     this.changed();

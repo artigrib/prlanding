@@ -12,6 +12,12 @@
 //   node sim/so101/tools/belt-measure.mjs mission [--n 10] [--seed 1] [--hz 60]
 //       mission 11 ("Ukázat řešení") as the page runs it: MissionRunner + its check every frame, the controller once
 //       per frame at `hz`, physics by the page's accumulator; seeds seed … seed + n − 1.
+//   node sim/so101/tools/belt-measure.mjs teach [--demos 4,6,11] [--n 10] [--seed 2] [--hz 60] [--wrong glass:bin_plastic]
+//       mission 12: the scripted planner sorts the first `demos` items of the demo batch (WASTE.seed) while a
+//       30 fps recorder takes the env frames (as src/ui/teach.js); the episodes are cut, the kNN rule is trained
+//       (src/policy/knn.js) and runs the verification batch (seeds seed … seed + n − 1; the mission's is TEACH.seed)
+//       through MissionRunner. Also the Skript (beltSolve) on the same batches. --wrong: the demos put that fraction
+//       into that bin (a wrong demonstration).
 //
 // Trial outcome: held (lifted off the belt after the close), placed (at rest inside the target bin), tipped (an
 // upright item lying before the grasp), slat (control ticks with a gripper–slat contact during
@@ -27,10 +33,14 @@ import { beltPick, beltSolve, heldBy, binDrop, fractionOf, BELT_PICK } from '../
 import { libPlace } from '../src/missions.js';
 import { CONVEYOR_ITEMS, CONVEYOR_BINS, FRACTION_BIN } from '../src/objects/scene.js';
 import { WasteRun, WASTE, rng, yawFor, batchOrder } from '../src/objects/wastebatch.js';
+import { TEACH } from '../src/missions.js';
+import { envOf, cutEpisodes, cutFrames } from '../src/policy/episodes.js';
+import { examplesFromDemo, train, report, coverage } from '../src/policy/knn.js';
+import { knnSolve } from '../src/policy/run.js';
 
 const args = process.argv.slice(2), mode = args[0] || 'pick';
 const opt = (k, dflt) => { const i = args.indexOf('--' + k); return i < 0 ? dflt : args[i + 1]; };
-const N = +opt('n', mode === 'bins' ? 6 : 10), SEED = +opt('seed', 1), OUT = opt('out', null);
+const N = +opt('n', mode === 'bins' ? 6 : 10), SEED = +opt('seed', mode === 'teach' ? 2 : 1), OUT = opt('out', null);
 const SPEEDS = String(opt('speeds', opt('speed', mode === 'pick' ? '0.02,0.04,0.06' : '0.02'))).split(',').map(Number);
 const ONLY = opt('only', null), FLOOR = opt('floor', null);
 
@@ -179,6 +189,27 @@ async function main() {
     for (let k = 0; k < N; k++) rows.push(missionRun(C, { seed: SEED + k, hz }));
     console.log(`| seed | won | correct | wrong bin | missed | purity | belt stood | sim s |\n|---|---|---|---|---|---|---|---|`);
     for (const x of rows) console.log(`| ${x.seed} | ${x.won ? 'yes' : 'no'} | ${x.correct}/${x.n} | ${x.wrong} | ${x.missed} | ${x.purity == null ? '–' : (100 * x.purity).toFixed(1) + ' %'} | ${x.paused.toFixed(1)} s | ${x.time.toFixed(0)} |`);
+  } else if (mode === 'teach') {
+    const hz = +opt('hz', 60), DEMOS = String(opt('demos', '4,6,11')).split(',').map(Number);
+    const wrong = opt('wrong', null), bins = wrong ? Object.assign({}, FRACTION_BIN, Object.fromEntries([wrong.split(':')])) : null;
+    const script = [];
+    for (let k = 0; k < N; k++) script.push(teachRun(C, null, { seed: SEED + k, hz }));
+    console.log(`\n### Skript (beltSolve) on the verification batches\n\n| seed | correct | wrong bin | purity | causes |\n|---|---|---|---|---|`);
+    for (const x of script) console.log(`| ${x.seed} | ${x.correct}/${x.n} | ${x.wrong} | ${x.purity == null ? '–' : (100 * x.purity).toFixed(1) + ' %'} | ${x.causes} |`);
+    for (const nd of DEMOS) {
+      const demo = teachDemos(C, { n: nd, hz, bins });
+      const ex = demo.examples, used = ex.filter((e) => e.use);
+      const t0 = process.hrtime.bigint(), model = train(ex), ms = Number(process.hrtime.bigint() - t0) / 1e6;
+      console.log(`\n### kNN policy from ${nd} scripted demos${wrong ? ' (wrong: ' + wrong + ')' : ''}: ${used.length} used of ${ex.length} episodes, coverage ${JSON.stringify(coverage(ex))}, trained in ${ms.toFixed(3)} ms`);
+      console.log('episodes: ' + ex.map((e) => `${e.item}:${e.outcome}${e.use ? `(y ${e.y}, dz ${e.dz})` : ''}`).join(', '));
+      console.log(`\n| seed | won | correct | wrong bin | purity | causes |\n|---|---|---|---|---|---|`);
+      for (let k = 0; k < N; k++) {
+        const x = teachRun(C, model, { seed: SEED + k, hz });
+        rows.push(Object.assign({ demos: nd, used: used.length, ms }, x));
+        console.log(`| ${x.seed} | ${x.won ? 'yes' : 'no'} | ${x.correct}/${x.n} | ${x.wrong} | ${x.purity == null ? '–' : (100 * x.purity).toFixed(1) + ' %'} | ${x.causes} |`);
+      }
+    }
+    rows.push(...script.map((x) => Object.assign({ script: true }, x)));
   }
   if (OUT) fs.writeFileSync(OUT, JSON.stringify({ mode, seed: SEED, n: N, speeds: SPEEDS, belt_pick: BELT_PICK, rows }, null, 1));
 }
@@ -229,6 +260,70 @@ export function missionRun(C, { seed = WASTE.seed, hz = 60, limit = 300 } = {}) 
     return { seed, hz, won: runner.won, n: st.n, correct: st.correct, wrong: st.wrong, missed: st.missed, purity: st.purity, paused: st.paused, time: d.time - t0,
       states: runner.ctx.s.run.items.map((it) => `${it.name}:${it.state}${it.bin ? '@' + it.bin : ''}`) };
   } finally { WASTE.seed = keep; ctl.cancel(); ctl.syncFromCtrl(); }
+}
+
+/** One page-like frame loop (controller at hz, physics by accumulator, mission check, recorder) until done(). */
+function frames(C, runner, { hz = 60, limit = 300, done, frame }) {
+  const { ctl, d, m, mj, belt, ts } = C, dt = 1 / hz, t0 = d.time;
+  let acc = 0;
+  while (d.time - t0 < limit && !done()) {
+    ctl.update(dt);
+    acc += dt; while (acc >= ts) { belt.step(ts); mj.mj_step(m, d); acc -= ts; }
+    ctl.actualTip(runner.ctx.tip); runner.ctx.gripOpen = ctl.gripOpen();
+    runner.tick(dt);
+    if (frame) frame(d.time - t0);
+  }
+  return d.time - t0;
+}
+
+/** Mission 12 demo phase: beltSolve (optionally with other bins) sorts until n items were released, recorded at
+ *  30 fps (t, joints, env, run clock); then the episodes are cut and turned into kNN examples (src/policy/knn.js). */
+export function teachDemos(C, { n = 6, hz = 60, bins = null, seed = WASTE.seed } = {}) {
+  const { w, ctl, d, m, mj } = C, runner = new MissionRunner(w), keep = WASTE.seed;
+  WASTE.seed = seed;
+  try {
+    mj.mj_resetDataKeyframe(m, d, 0);
+    runner.ctx.policy = { verify: false, demos: 0 };
+    runner.select('waste_teach'); runner.setup(); mj.mj_forward(m, d);
+    ctl.cancel(); ctl.syncFromCtrl();
+    runner.start();
+    let rel = 0, quiet = 0;
+    const plan = beltSolve(ctl, w, Object.assign({ stop: () => rel >= n, log: (e) => { if (e.ev === 'release') rel++; } }, bins ? { bins } : {}));
+    ctl.run(plan);
+    const D = { t: [], obs: [], env: [], rt: [] }, buf = [0, 0, 0];
+    let next = 0;
+    frames(C, runner, { hz, limit: 400, done: () => { if (rel >= n && !ctl.busy()) quiet += 1 / hz; return quiet > 2; },
+      frame: (t) => {
+        if (t < next) return;
+        next = t + 1 / 30;
+        D.t.push(t); D.obs.push(Array.from(d.qpos.subarray(0, 6))); D.env.push(envOf(runner.ctx.s.run, w, buf)); D.rt.push(runner.ctx.s.run.t);
+      } });
+    const run = runner.ctx.s.run;
+    D.segments = cutFrames(cutEpisodes(run.events, { end: run.t }), D.rt);
+    D.examples = examplesFromDemo(D, { tipOf: (q) => Array.from(ctl.kin.fk(q)), src: 'script' });
+    return D;
+  } finally { WASTE.seed = keep; ctl.cancel(); ctl.syncFromCtrl(); }
+}
+
+/** Mission 12 policy run (model) or the Skript (model null) on the verification batch `seed`, as the page runs it. */
+export function teachRun(C, model, { seed = TEACH.seed, hz = 60, limit = 320 } = {}) {
+  const { w, ctl, d, m, mj } = C, runner = new MissionRunner(w), keep = TEACH.seed;
+  TEACH.seed = seed;
+  try {
+    mj.mj_resetDataKeyframe(m, d, 0);
+    runner.ctx.policy = { verify: true, demos: model ? model.n : 0 };
+    runner.select('waste_teach'); runner.setup(); mj.mj_forward(m, d);
+    ctl.cancel(); ctl.syncFromCtrl();
+    runner.start();
+    const events = [], log = (e) => events.push(e), stop = () => !!(runner.ctx.s.run && runner.ctx.s.run.done());
+    const plan = model ? knnSolve(ctl, w, model, { stop, log }) : beltSolve(ctl, w, { stop, log });
+    let pend = 0.6;
+    const time = frames(C, runner, { hz, limit, done: () => { if (pend > 0 && (pend -= 1 / hz) <= 0) ctl.run(plan); return runner.won || (pend <= 0 && stop() && !ctl.busy()); } });
+    const run = runner.ctx.s.run, st = run.stats(), rep = report(run.items, events, plan.decisions || {});
+    const causes = rep.filter((r) => !r.ok).map((r) => `${r.item}:${r.cause}${r.by ? '#' + r.by : ''}`).join(', ');
+    return { seed, hz, won: runner.won, n: st.n, correct: st.correct, wrong: st.wrong, missed: st.missed, purity: st.purity, time, causes, report: rep,
+      stars: runner.won ? runner.result.stars : 0 };
+  } finally { TEACH.seed = keep; ctl.cancel(); ctl.syncFromCtrl(); }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) await main();

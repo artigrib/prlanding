@@ -409,7 +409,7 @@ async function touchDrag(page, from, to, steps = 8) {
       await S(p, () => { window.__srN = 0; window.__sim.advance(1); });
       await S(p, () => new Promise((res) => setTimeout(res, 50)));
       let r = await ux(p), c = await card();
-      ok(r.result.kind === 'manual' && r.result.stars >= 1 && c.open && c.focus && c.k === 'Mise 01 / 11 · splněno' && c.h === 'Kostka je v misce.' && !c.demo,
+      ok(r.result.kind === 'manual' && r.result.stars >= 1 && c.open && c.focus && c.k === 'Mise 01 / 12 · splněno' && c.h === 'Kostka je v misce.' && !c.demo,
         'result card opens with focus on it: header, headline (done text), no demo label ' + JSON.stringify(c));
       ok(c.on === r.result.stars && c.label === `${r.result.stars} ze 3 hvězdiček`, `result card shows the ${r.result.stars} ★ earned`);
       ok(c.vals[0][0] === 'Váš čas' && c.vals[0][1] === fmtT(r.result.time) && /^Pro [23] ★$/.test(c.vals[1][0]) && /^do (0:25|1:00)/.test(c.vals[1][1]),
@@ -785,6 +785,68 @@ async function touchDrag(page, from, to, steps = 8) {
       await shot(q, 'desk-m11-hand-result');
       const named = await S(q, () => document.getElementById('ux-wline').textContent);
       ok(/★ hotovo/.test(named) && /☆ pás stál \d+(,\d)? s/.test(named), 'result card names the stars, the missed one with its measured value: ' + named);
+      await q.close();
+    }
+    {
+      // ---------------- mission 12: teach the robot (src/policy/knn.js, src/policy/run.js, src/ui/policy.js) ----------
+      // demonstrate a few items via the scripted path (hint rung 3 "Nahrát ukázky skriptem", recorded), Naučit,
+      // Spustit politiku on the verification batch: chip, result card with the per-item analysis and the side-by-side
+      const q = await open(browser, base + '?test=1&mise=waste_teach&detail=low', { width: 1440, height: 900 });
+      await S(q, () => { window.__sim._app.sim.paused = true; });   // simulated time only through advance()
+      const p0 = await S(q, () => { window.__sim.renderNow(); const c = document.querySelector('.ux-chip-run'); return { scene: window.__sim.scene(), m: window.__sim.ux().mission, pol: window.__sim.policy(),
+        chip: !c.hidden && c.textContent, sec: !document.getElementById('ux-sec-policy').hidden, step: document.querySelector('.ux-chip-step').textContent, hud: window.__sim.ux().hud }; });
+      ok(p0.scene === 'conveyor' && p0.m === 'waste_teach' && p0.chip === 'Ovládáte vy' && p0.sec && p0.pol.button && /^Naučit/.test(p0.pol.button) && /▸ 1 Ukázky/.test(p0.step) && /Naučit/.test(p0.hud),
+        'mission 12: conveyor scene, chip "' + p0.chip + '", button "' + p0.pol.button + '", stepper "' + p0.step + '", Nástroje → Politika');
+      await S(q, () => window.__sim.hintRung(3));
+      await S(q, () => window.__sim.advance(1));
+      const rec = await S(q, () => ({ recording: window.__sim.ux().recording, chip: window.__sim.policy().chip }));
+      const dt = await advanceUntil(q, () => !window.__sim.ux().busy && window.__sim.policy().live >= 3, 90, 3);
+      await S(q, () => window.__sim.advance(2));
+      ok(rec.recording && rec.chip === 'Běží: Skript (plánovač)' && dt > 0, `"Nahrát ukázky skriptem": recording on, chip "${rec.chip}", ${(await S(q, () => window.__sim.policy().live))} demos in ${dt} s`);
+      // the teach phase with Nástroje → Politika open: the recorded episodes, the coverage line
+      await S(q, () => { const x = document.querySelector('#ux-hintbox .ux-x'); if (x) x.click(); window.__sim._ux.panel.openDrawer(false); document.getElementById('ux-sec-policy').scrollIntoView({ block: 'start' }); });
+      await q.waitForTimeout(400); await S(q, () => window.__sim.renderNow());
+      const live = await S(q, () => ({ rows: document.querySelectorAll('#ux-pol-list li.live').length, cov: document.getElementById('ux-pol-cov').textContent }));
+      ok(live.rows >= 3 && /papír ✓/.test(live.cov), 'Politika lists the episodes of the running recording: ' + live.rows + ' rows, ' + live.cov);
+      await shot(q, 'desk-m12-teach');
+      await S(q, () => window.__sim._ux.panel.closeDrawer(false));
+      await S(q, () => window.__sim.policyLearn());
+      const p1 = await S(q, () => ({ pol: window.__sim.policy(), cov: document.getElementById('ux-pol-cov').textContent, st: document.getElementById('ux-pol-st').textContent, rows: document.querySelectorAll('#ux-pol-list li').length }));
+      const used = p1.pol.examples.filter((e) => e.use);
+      ok(p1.pol.model && p1.pol.model.n === used.length && used.length >= 3 && used.every((e) => e.src === 'script' && e.y != null && e.dz != null) && p1.rows === used.length &&
+        /^Natrénováno za .+ ms z \d+ ukáz/.test(p1.st) && /Ukázané frakce: /.test(p1.cov) && p1.pol.button === 'Spustit politiku' && p1.pol.step === 2,
+        `Naučit: ${p1.st}; ${p1.cov}; button "${p1.pol.button}" ` + JSON.stringify(used.map((e) => e.item + '→' + e.bin)));
+      await S(q, () => window.__sim.policyRun());
+      await S(q, () => window.__sim.advance(2));
+      const run1 = await S(q, () => { window.__sim.renderNow(); const c = document.querySelector('.ux-chip-run'); return { chip: !c.hidden && c.textContent, pol: window.__sim.policy(), seed: window.__sim._ux.wasteRun().o.seed, hud: window.__sim.ux().hud }; });
+      ok(run1.chip === 'Běží: Naučené pravidlo (kNN) + plánovač' && run1.pol.verify && run1.pol.running && run1.seed === 2 && run1.pol.step === 3,
+        `Spustit politiku: chip "${run1.chip}", verification batch seed ${run1.seed}, objective "${run1.hud}"`);
+      await advanceUntil(q, () => { const s = window.__sim; s.renderNow(); return s.ux().won || !document.getElementById('win').hidden; }, 50, 4);
+      await S(q, () => window.__sim.renderNow());
+      await shot(q, 'desk-m12-running');
+      const fin = await advanceUntil(q, () => window.__sim.ux().won || !document.getElementById('win').hidden, 300, 4);
+      const card = await S(q, () => ({ open: !document.getElementById('win').hidden, k: document.getElementById('ux-wk').textContent, h: document.getElementById('win-h').textContent,
+        vals: [...document.querySelectorAll('#ux-wvals > div')].map((d) => [d.querySelector('dt').textContent, d.querySelector('dd').textContent]),
+        cmp: [...document.querySelectorAll('#ux-wpol .ux-pol-cmp tr')].map((r) => r.querySelector('th').textContent + ': ' + r.querySelector('td').textContent),
+        fails: [...document.querySelectorAll('#ux-wpol .ux-pol-fail li')].map((x) => x.textContent), label: (document.querySelector('#ux-wpol .ux-pol-rep > p') || {}).textContent || '', pol: window.__sim.policy(), won: window.__sim.ux().won, line: document.getElementById('ux-wline').textContent }));
+      const val = (k) => (card.vals.find((v) => v[0] === k) || [])[1];
+      const last = card.pol.last;
+      ok(fin > 0 && card.open && /^Běží: Naučené pravidlo \(kNN\) \+ plánovač · ověřeno na nové dávce č\. 2/.test(card.label) && /^\d+ \(natrénováno za /.test(val('Ukázky') || '') && /^\d+ z 11✓?$/.test(val('Roztříděno') || '') &&
+        card.cmp.length === 3 && /^Skript \(plánovač\): \d+ z 11$/.test(card.cmp[0]) && /^Vaše politika: \d+ z 11$/.test(card.cmp[1]) && last && last.rows.length === 11 &&
+        card.fails.length === last.rows.filter((r) => !r.ok).length && /Co neumí/.test(card.line),
+        `mission 12 result card (${card.won ? 'won' : 'not passed'}, ${fin} s): ${card.k} · ${card.h} · ${card.label} · ${JSON.stringify(card.vals)} · ${JSON.stringify(card.cmp)} · failures ${JSON.stringify(card.fails)}`);
+      // the demos came from the script: no stars either way; unseen fractions pass ("neznámá třída – nechal projet")
+      const unseen = Object.entries(p1.pol.model.coverage).filter(([, k]) => !k).map(([f]) => f);
+      ok(!card.won || (await ux(q)).result.stars === 0, 'scripted demos: the policy run earns no stars');
+      ok(!unseen.length || last.rows.filter((r) => unseen.includes(r.fraction)).every((r) => r.cause === 'unknown'), `unseen fractions [${unseen}] are let through: ` + JSON.stringify(last.rows.filter((r) => !r.ok).map((r) => r.item + ':' + r.cause)));
+      await q.waitForTimeout(1500); await S(q, () => window.__sim.renderNow());   // the card fades in
+      await shot(q, 'desk-m12-result');
+      // any player input during a policy run stops it: chip back to "Ovládáte vy", the run counts without stars
+      await S(q, () => window.__sim.policyRun());
+      await S(q, () => window.__sim.advance(3));
+      await q.keyboard.press('ArrowLeft'); await S(q, () => window.__sim.advance(0.5));
+      const iv = await S(q, () => ({ pol: window.__sim.policy(), run: window.__sim.run() }));
+      ok(iv.pol.intervened && !iv.pol.running && iv.pol.chip === 'Ovládáte vy' && iv.run.auto, `player input during the policy run: intervened ${iv.pol.intervened}, chip "${iv.pol.chip}", no stars`);
       await q.close();
     }
     {

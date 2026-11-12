@@ -11,7 +11,8 @@
 // beltSolve: one `dyn` loop. Each round it takes the most downstream item of a known fraction whose predicted
 // grasp point lies in the pick window [yMin, yMax], picks it with tracking and drops it into the bin of its fraction;
 // with nothing in the window it waits 0.2 s. An item whose bin is full (it would rest higher than the bin counts)
-// is left to pass. Past yMax an item is left to the end tote: near the head drum the
+// is left to pass. opts.decide replaces the fixed fraction → bin rule (the M12 policy, src/policy/run.js): per item,
+// once, which bin (null: let it pass), from which belt y on to commit, and the grasp height relative to the COM. Past yMax an item is left to the end tote: near the head drum the
 // slats turn down, items slow down and tip, and tracking stops at yStop.
 
 import { libGrasp, libPick, libPlace, inZone } from '../missions.js';
@@ -57,11 +58,13 @@ export function timeToClose(plan) {
 
 /**
  * Tracking pick of a belt item. Returns the pick plan (libPick fields: ref, dz, roll, end) plus
- * { tracker, y: predicted grasp y, T: predicted time to close }. o.floor overrides BELT_FLOOR.
+ * { tracker, y: predicted grasp y, T: predicted time to close }. o.floor overrides BELT_FLOOR; o.dz sets the grasp
+ * height relative to the item's COM (m; kept between the floor and 6 mm under the item's top).
  */
 export function beltPick(ctl, w, name, from, o = {}) {
   const v = o.v != null ? o.v : beltV(w), floor = o.floor != null ? o.floor : BELT_FLOOR;
   const g0 = libGrasp(w, name), sz = w.o[name].size;
+  if (o.dz != null) g0.z = Math.max(floor, Math.min(g0.top - 0.006, g0.c[2] + o.dz));
   // a narrow round item (vial, socket, nut) is gripped across the belt: the jaws then close at right angles to
   // the motion, so a few mm of tracking lag along the belt does not put a jaw on it. Cups keep libGrasp's heading
   // (measured: the plastic cup across the belt 0/6 at 6 cm/s, 2/6 at 2 cm/s; with libGrasp's heading 4/6 and 6/6).
@@ -151,13 +154,17 @@ function carryOver(w, fx, name, dz, pl) {
 /**
  * Scripted baseline for the conveyor: sorts belt items into the bins of their fractions until opts.stop() is true.
  * opts: { bins: { fraction: fixture } (default FRACTION_BIN), stop: () => bool, log: (event) => void,
- *         pick: (name) => bool (which items to handle; default: every pool item with a fraction) }
+ *         pick: (name) => bool (which items to handle; default: every pool item with a fraction),
+ *         decide: (name) => { bin, y?, dz? } | null (asked once per item the first time it is seen on the belt;
+ *           null or no bin = let it pass, skip event why 'unknown'; y = commit once the predicted grasp point
+ *           reaches it; dz = grasp height relative to the COM; default: the bin of its fraction, the planner's grasp) }
  * Events: { ev: 'commit' | 'close' | 'held' | 'miss' | 'release' | 'skip', name, t, y, ... } (t = sim time).
  */
 export function beltSolve(ctl, w, opts = {}) {
   const bins = opts.bins || FRACTION_BIN, log = opts.log || (() => {}), d = w.d;
-  const want = opts.pick || ((n) => !!bins[fractionOf(n)]);
-  const tries = {}, gone = new Set();
+  const want = opts.pick || (opts.decide ? (() => true) : ((n) => !!bins[fractionOf(n)]));
+  const tries = {}, gone = new Set(), dec = {};
+  const decision = (n) => (n in dec ? dec[n] : (dec[n] = opts.decide ? opts.decide(n) : { bin: bins[fractionOf(n)] }));
   const ev = (e) => log(Object.assign({ t: d.time }, e));
   const onBelt = (e) => { const p = w.com(e.name, [0, 0, 0]), z = w.belt.zone(p); return (z === 'belt' || z === 'entry') ? p : null; };
 
@@ -170,15 +177,17 @@ export function beltSolve(ctl, w, opts = {}) {
     }
     list.sort((a, b) => b[0] - a[0]);   // most downstream first
     for (const [, n] of list) {
+      const D = decision(n);
+      if (!D || !D.bin) { gone.add(n); ev({ ev: 'skip', name: n, y: w.com(n, [0, 0, 0])[1], why: 'unknown' }); continue; }
       // bin full: the item would end higher than the bin counts (inZone: top + 6 cm), so it is left to the tote
-      const fx = bins[fractionOf(n)], dr = binDrop(w, fx, n), e = w.o[n], f = w.pos(fx, [0, 0, 0]);
+      const fx = D.bin, dr = binDrop(w, fx, n), e = w.o[n], f = w.pos(fx, [0, 0, 0]);
       if (dr.surface + (e.restZ - BELT.top) > f[2] + w.o[fx].fixture.zone.top + 0.06 - 0.01) {
         gone.add(n); ev({ ev: 'skip', name: n, y: w.com(n, [0, 0, 0])[1], why: 'full' }); continue;
       }
-      const pick = beltPick(c, w, n, c.startPoint());
+      const pick = beltPick(c, w, n, c.startPoint(), D.dz != null ? { dz: D.dz } : {});
       if (pick.y > BELT_PICK.yMax || !pick.ok) { gone.add(n); ev({ ev: 'skip', name: n, y: pick.y, why: pick.ok ? 'late' : 'reach' }); continue; }
-      if (pick.y < BELT_PICK.yMin) continue;   // not in the window yet; a downstream item may be
-      return { n, pick, v };
+      if (pick.y < Math.max(BELT_PICK.yMin, D.y != null ? D.y : -Infinity)) continue;   // not in the window (or at its commit point) yet; a downstream item may be
+      return { n, pick, v, fx };
     }
     return null;
   };
@@ -187,9 +196,9 @@ export function beltSolve(ctl, w, opts = {}) {
     if (opts.stop && opts.stop()) return null;
     const ch = choose(c);
     if (!ch) return [{ k: 'wait', t: 0.2 }, { k: 'dyn', fn: loop }];
-    const { n, pick } = ch;
+    const { n, pick, fx } = ch;
     tries[n] = (tries[n] || 0) + 1;
-    ev({ ev: 'commit', name: n, y: w.com(n, [0, 0, 0])[1], yGrasp: pick.y, T: pick.T, v: ch.v, try: tries[n] });
+    ev({ ev: 'commit', name: n, y: w.com(n, [0, 0, 0])[1], yGrasp: pick.y, T: pick.T, v: ch.v, try: tries[n], bin: fx });
     const close = pick.steps.findIndex((st) => st.k === 'grip' && !st.open);
     pick.steps.splice(close + 1, 0, { k: 'dyn', fn: () => { ev({ ev: 'close', name: n, y: w.com(n, [0, 0, 0])[1] }); return null; } });
     const place = (cc) => {
@@ -201,7 +210,7 @@ export function beltSolve(ctl, w, opts = {}) {
       }
       ev({ ev: 'held', name: n });
       gone.add(n);
-      const fx = bins[fractionOf(n)], t = binDrop(w, fx, n);
+      const t = binDrop(w, fx, n);
       const pl = libPlace(cc, w, { dz: pick.dz, ref: pick.ref, roll: cc.roll, end: cc.startPoint() }, t.xy, t.surface, t.closeYaw);
       carryOver(w, fx, n, pick.dz, pl);
       // a fork or spoon caught in half-opened jaws rode along to the next pick: open them wide

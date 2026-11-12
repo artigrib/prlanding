@@ -29,6 +29,7 @@ import { sideTarget } from './sidegeom.js';
 import { beltSolve } from './objects/beltpick.js';
 import { WASTE } from './objects/wastebatch.js';
 import { BeltView } from './ui/beltview.js';
+import { PolicyUI } from './ui/policy.js';
 
 export async function install(page, env) {
   // core.js layout (servo-emulator branch): the page (MissionPage) owns sliders/demo/HUD, page.sim (ArmSim)
@@ -116,6 +117,7 @@ class UX {
     };
     this.teach = new Teach(this);
     this.panel = new Panel(this);
+    this.policy = new PolicyUI(this);   // mission 12: Ukázky → Naučit → Ověřit, Nástroje → Politika
     if (this.world.belt && this.objView) this.beltView = new BeltView(this);   // mission 11 overlays
     this.gizmo = new Gizmo(this);
     this.cameras = new Cameras(this);
@@ -233,7 +235,9 @@ class UX {
     const pad = this.pad.on();
     if (pad) ctx.hand = true;   // trackpad: a tap selects, it never picks: no click-to-grab coaching
     this.extras.inkAt(ctx.tip);
+    this.policy.preTick();
     const res = r.tick(dt);
+    this.policy.postTick();
     // a held object slipped out of the closed jaws: say so (touch audit P2: after a drop the HUD only said "closer")
     const held = this.heldObject();
     const closedCmd = (this.ctl.active ? this.ctl.grip : c[act[5]]) < 0.4;
@@ -289,6 +293,7 @@ class UX {
   }
 
   onReset() {
+    this.policy.beforeReset();   // mission 12: a running recording is cut while its batch still exists
     this.ctl.cancel(); this.pending = null; this.queued = null;
     if (this.coach) this.coach.reset();
     this.dropW.reset(); this.drop = null;
@@ -319,6 +324,7 @@ class UX {
     this.panel.showMission(this.runner.m, this.progress[this.runner.m.id]);
     this.held = null;
     if (this.teach.recording && !this.recResetting) { this.teach.stopRec(); this.panel.toast('Nahrávání zastaveno (mise začala znovu)'); }
+    this.policy.afterReset();
     this.panel.showTips(this.runner.m);
   }
 
@@ -346,12 +352,14 @@ class UX {
     if (/^pick/.test(k)) return 'Ruka sama bere předmět…';
     if (/^place/.test(k)) return 'Ruka sama pokládá předmět…';
     if (k === 'belt') return 'Ruka sama třídí předmět z pásu…';
+    if (k === 'knn') return 'Naučená politika třídí předmět z pásu…';
     return 'Ruka jede po naplánované cestě…';
   }
   /** the mission's next step as if moving by hand (hint ladder "Teď:"); the drawing mission keeps its own line */
   handNow() {
     const r = this.runner, c = r.ctx;
     if (r.m.draw || r.won) return (r.last && r.last.text) || '';
+    if (r.m.teach) return this.policy.coverageText();   // mission 12: what the policy has seen
     const h = c.hand; c.hand = true;
     try { const res = r.m.check(c, 0); return (res && res.text) || ''; } finally { c.hand = h; }
   }
@@ -435,6 +443,7 @@ class UX {
 
   toggleGrip() {
     if (this.teach.replaying) return;
+    this.policy.interrupt();   // mission 12: the gripper is the player's input too
     const open = this.d.ctrl[this.app.act[5]] > 0.5;
     if (this.mode === 'joints') {
       // joint mode: drive only the gripper joint (the IK controller would re-pose the wrist)
@@ -460,6 +469,7 @@ class UX {
     const b = this.world.belt;
     if (!b || !this.runner.m.belt || this.app.won) return;
     b.speed = b.speed ? 0 : WASTE.speed;
+    this.policy.interrupt();   // mission 12: the belt is the player's input too (no-op outside a policy run)
     this.runner.start();
     this.panel.showBelt(b.speed === 0);
     this.sound.blip(b.speed ? 520 : 300, 0.06);
@@ -527,7 +537,7 @@ class UX {
   // called by the gizmo
   /** the player moved the arm by hand: Táhnout ruku (drag) or Klouby (joints) */
   markManual() { this.runner.manual[this.mode === 'joints' ? 'joints' : 'drag'] = true; }
-  onUserMove(kind) { this.runner.start(); this.markManual(); this.pending = null; this.onboarding.notify(kind); if (this.teach.replaying) this.teach.stopReplay(); }
+  onUserMove(kind) { this.policy.interrupt(); this.runner.start(); this.markManual(); this.pending = null; this.onboarding.notify(kind); if (this.teach.replaying) this.teach.stopReplay(); }
   onDragEnd(kind) {
     this.onboarding.notify('dragend-' + kind);
     if (!this.touch && !store.get('tip-keys', false) && !this.onboarding.active()) {
@@ -669,6 +679,8 @@ class UX {
     const { rec, isNew } = mergeRecord(best, out, res.time);
     if (own) { this.wins = (store.get('wins', 0) || 0) + 1; store.set('wins', this.wins); }
     if (own && rec) { this.progress[m.id] = rec; store.set('progress', this.progress); store.set('progress-v', PROGRESS_VERSION); }
+    // mission 11 by hand: kept for mission 12's side-by-side ("Váš ruční pokus")
+    if (m.id === 'waste_hand' && own && out.kind === 'manual' && res.stats) store.set('waste-hand-last', { correct: res.stats.correct, n: res.stats.n, purity: res.stats.purity });
     this.panel.showWin(m, res, best, isNew, by);
     this.onboarding.notify('won');
     const guided = this.onboarding.atWin();
@@ -716,7 +728,7 @@ class UX {
   hintPartial() {
     if (this.teach.replaying) this.teach.stopReplay();
     if (this.mode !== 'smart') this.setMode('smart');
-    if (this.runner.m.belt) return this.beltShowMe();
+    if (this.runner.m.belt) return this.beltShowMe(this.runner.m.teach ? 4 : 1);
     let plan; try { plan = partialPlan(this.nextPlan()); } catch (e) { return false; }
     this.hintRun = true;
     const ok = this.preview(plan);
@@ -725,12 +737,13 @@ class UX {
   }
 
   /** "Ukaž mi" (mission 11, hint rung 3): the scripted tracking planner sorts the next item from the belt, then the
-   *  player goes on. Counts as autopilot (no stars). */
-  beltShowMe() {
-    let done = false, misses = 0;
+   *  player goes on. Counts as autopilot (no stars). Mission 12 ("Nahrát ukázky skriptem"): n = 4 items, recorded as
+   *  scripted demonstrations (src/ui/policy.js). */
+  beltShowMe(n = 1) {
+    let done = false, misses = 0, k = 0;
     const plan = beltSolve(this.ctl, this.world, {
       stop: () => done || this.app.won,
-      log: (e) => { if (e.ev === 'release' || e.ev === 'skip') done = true; if (e.ev === 'miss' && ++misses >= 2) done = true; }
+      log: (e) => { if ((e.ev === 'release' || e.ev === 'skip') && ++k >= n) done = true; if (e.ev === 'miss' && ++misses >= 2 * n) done = true; }
     });
     this.runner.start();
     this.hintRun = true;
@@ -741,6 +754,7 @@ class UX {
   /** chip text while the planner moves the arm in a conveyor mission (design §7: every label says which policy runs) */
   policyChip() {
     if (!this.runner.m.belt) return null;
+    if (this.runner.m.teach) return this.policy.chip();   // mission 12: always one of the labels (design §2 M12)
     const plan = this.pending ? this.pending.plan : this.ctl.plan && this.ctl.plan.plan;
     return plan && plan.kind === 'belt' ? 'Běží: Skript (plánovač)' : null;
   }
@@ -902,6 +916,16 @@ class UX {
         belt: { speed: this.world.belt.speed, v: this.world.belt.v }, chip: this.policyChip() };
     };
     api.beltToggle = () => this.toggleBelt();
+    // mission 12: the policy (src/ui/policy.js): state, Naučit, Spustit (knn | script), back to the demos
+    api.policy = () => {
+      const P = this.policy;
+      return { verify: P.verify, step: P.step(), examples: P.ex.map((e) => ({ item: e.item, class: e.class, outcome: e.outcome, bin: e.bin, use: e.use, off: !!e.off, src: e.src, y: e.y, dz: e.dz })),
+        model: P.model ? { n: P.model.n, coverage: P.model.coverage } : null, ms: P.trainMs, running: !!P.plan && !P.intervened, intervened: P.intervened, chip: P.chip(),
+        last: P.last, script: P.scriptLive, button: P.btn.hidden ? null : P.btn.textContent, live: P.liveDemos() };
+    };
+    api.policyLearn = () => this.policy.learn();
+    api.policyRun = (kind) => this.policy.start(kind || 'knn');
+    api.policyDemos = () => this.policy.toDemos();
     api.objectsReady = () => (this.objView ? this.objView.ready() : true);
     api.record = (on) => { if (on !== this.teach.recording) this.toggleRec(); };
     api.replay = (loop) => { this.teach.loop = !!loop; return this.teach.startReplay(); };

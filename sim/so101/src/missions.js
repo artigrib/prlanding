@@ -6,6 +6,8 @@ import { track } from './analytics.js';
 import { CONVEYOR_ITEMS, CONVEYOR_BINS, FRACTION_BIN, labelOf } from './objects/scene.js';
 import { WasteRun, WASTE } from './objects/wastebatch.js';
 import { beltSolve } from './objects/beltpick.js';
+import { cutEpisodes } from './policy/episodes.js';
+import { USED } from './policy/knn.js';
 
 const STAR_PTS = (() => {
   // 5-point star outline (closed), centre (0.215, 0.0), outer radius 5.5 cm, sampled every ~7 mm
@@ -391,6 +393,45 @@ export const MISSIONS = [
     rate: (t, prec, st) => wasteStars(MISSIONS.find((m) => m.id === 'waste_hand').stars, st),
     // the scripted tracking planner sorts until the batch is done (src/objects/beltpick.js)
     solve: (ctl, w, runner) => beltSolve(ctl, w, { stop: () => !!(runner && runner.ctx.s.run && runner.ctx.s.run.done()) })
+  },
+  {
+    id: 'waste_teach', n: '12', title: 'Třídění odpadu II: Naučte robota',
+    desc: 'Ukažte robotovi, jak třídit, a pak ho nechte pracovat samotného. 1) Ukázky: roztřiďte rukou pár předmětů z pásu, nahrává se to samo. 2) Naučit: z ukázek vznikne naučené pravidlo (kNN) – který koš, kdy na pásu a jak vysoko vzít. 3) Ověřit: Spustit politiku roztřídí novou dávku bez vás. Rukou pohybuje plánovač, pravidlo jen rozhoduje; předmět a jeho polohu zná ze simulace, kamera tu není. Co neukážete, to nechá projet; co ukážete špatně, udělá špatně taky.',
+    short: 'Naučte robota třídit',
+    scene: 'conveyor', belt: true, teach: true,
+    credit: 'Objekty: NVIDIA SimReady (CC BY 4.0)',
+    layout: Object.fromEntries(Object.entries(CONVEYOR_BINS).map(([n, p]) => [n, [p[0], p[1], 0]])),
+    sort: Object.fromEntries(CONVEYOR_ITEMS.map((it) => [it.name, FRACTION_BIN[it.fraction]])),
+    targets: Object.assign(Object.fromEntries(CONVEYOR_ITEMS.map((it) => [it.name, 'pick'])), Object.fromEntries(Object.keys(CONVEYOR_BINS).map((b) => [b, 'place']))),
+    strategy: 'Ukažte každou frakci aspoň jednou a každý předmět dejte do jeho koše – politika kopíruje i chyby.',
+    advice: 'Pro všechny 3 ★: ukázky bez chyby, všechny 4 frakce, nejvýš 6 ukázek.',
+    // Named stars (design §2 M12): ★ hotovo = the policy run wins, ★ čistota = purity of the policy run,
+    // ★ ukázky = trained on at most `demos` demonstrations. Thresholds from measured runs (numbers in the mission PR):
+    //   tools/belt-measure.mjs teach --demos 4,6,11 --n 10 (MissionRunner, 60 Hz frames as the page; the policy trained
+    //   on demos the scripted planner recorded in the demo batch, WASTE.seed; verification batches seeds 2–11):
+    //   - kNN from the first 6 demos (all 4 fractions): 8, 10, 7, 11, 9, 8, 9, 10, 10, 10 of 11 (seed 2, the mission's
+    //     batch TEACH.seed: 8), purity 100 % in all 10;
+    //   - kNN from 4 demos (no plastic shown): 7, 8, 8, 7, 8, 8, 8, 8, 8, 8 (the 3 plastic items pass: at most 8);
+    //   - Skript (beltSolve) on the same batches: 9, 10, 9, 10, 9, 10, 11, 9, 10, 10 (seed 2: 9).
+    //   - --wrong glass:bin_plastic (6 demos, both glass demos into plastic): 7, 7, 6 of 11, purity 70 / 70 / 75 %.
+    // win = 8: what the 6-demo policy reached on the mission's batch (and on 8 of the 10 batches); it is also the most a
+    // policy that never saw plastic can reach. purity 0.95: every measured run from correct demos had 100 %; one item in
+    // a wrong bin already gives ≤ 10/11. demos = 6: in the demo batch the first plastic item comes 6th (paper 1st,
+    // metal 2nd, glass 3rd), so 6 is the fewest demos in arrival order that show all four fractions.
+    stars: { win: 8, purity: 0.95, demos: 6 },
+    done: 'Politika roztřídila odpad',
+    starsHint: '★ hotovo (8 z 11) · ★ čistota ≥ 95 % · ★ nejvýš 6 ukázek',
+    hints: {
+      ghost: { text: 'Po běhu politiky ukáže rozbor u každého předmětu, podle které ukázky se rozhodla (Nástroje → Politika). Koš pro předmět u chapadla svítí.', next: 'Jak politika rozhoduje' },
+      partial: { text: 'Plánovač nahraje 4 ukázky sám (Běží: Skript (plánovač)). Politika z nich naučená se počítá jako s pomocí, bez hvězdiček.', next: 'Nahrát ukázky skriptem' }
+    },
+    look: { t: [0.24, 0.0, 0.0], p: [0.92, 0.8, 0.0001], pn: [0.25, 1.05, -0.62] },
+    openStart: true,
+    setup(w) { if (w.belt) w.belt.speed = WASTE.speed; },
+    check(c, dt) { return teachCheck(this, c, dt); },
+    rate: (t, prec, st) => teachStars(MISSIONS.find((m) => m.id === 'waste_teach').stars, st),
+    // "Ukázat řešení": the scripted planner sorts the batch (in the demo phase this records scripted demonstrations)
+    solve: (ctl, w, runner) => beltSolve(ctl, w, { stop: () => !!(runner && runner.ctx.s.run && runner.ctx.s.run.done()) })
   }
 ];
 
@@ -415,20 +456,75 @@ function wasteCheck(m, c, dt) {
     if (st.correct >= W) return out(`Roztříděno ${st.correct} z ${st.n}…`, { ok: true, won: true });
     return out(`Dávka skončila: ${st.correct} z ${st.n} ve správném koši, potřeba ${W}. R spustí dávku znovu`);
   }
-  const ev = run.last, held = run.items.find((it) => it.state === 'held');
-  if (ev && run.t - ev.t < 3 && !held) {
-    const lab = labelOf(ev.name)[0];
-    if (ev.ev === 'bin' && !ev.ok) {
-      const bf = Object.keys(FRACTION_BIN).find((f) => FRACTION_BIN[f] === ev.bin);
-      return out(`Pozor: ${lab} je ${FR[ev.fraction]}, ne ${FR[bf]}`);
-    }
-    if (ev.ev === 'tote') return out(`Propadlo: ${lab} (${FR[ev.fraction]}) · ${st.lost} z ${st.n}`);
-    if (ev.ev === 'floor') return out(`Spadlo ze stolu: ${lab} (${FR[ev.fraction]})`);
-    if (ev.ev === 'stuck') return out(`Zaseklo se na pásu: ${lab} – vezměte to rukou`);
-  }
+  const live = wasteLive(run, st);
+  if (live) return out(live);
+  const held = run.items.find((it) => it.state === 'held');
   if (st.lost > st.n - W) return out(`Už to na ${W} nestačí – R spustí dávku znovu`);
   if (held) return out(`Teď nad koš: ${FR[held.fraction]}`);
   return out(`Hotovo ${st.correct} z ${st.n} · na pásu ${st.onBelt}`);
+}
+/** The last item event of a waste run for 3 s (wrong bin, lost, fell, stuck), or null; nothing while one is held. */
+function wasteLive(run, st) {
+  const ev = run.last, held = run.items.find((it) => it.state === 'held');
+  if (!ev || run.t - ev.t >= 3 || held) return null;
+  const lab = labelOf(ev.name)[0];
+  if (ev.ev === 'bin' && !ev.ok) {
+    const bf = Object.keys(FRACTION_BIN).find((f) => FRACTION_BIN[f] === ev.bin);
+    return `Pozor: ${lab} je ${FR[ev.fraction]}, ne ${FR[bf]}`;
+  }
+  if (ev.ev === 'tote') return `Propadlo: ${lab} (${FR[ev.fraction]}) · ${st.lost} z ${st.n}`;
+  if (ev.ev === 'floor') return `Spadlo ze stolu: ${lab} (${FR[ev.fraction]})`;
+  if (ev.ev === 'stuck') return `Zaseklo se na pásu: ${lab} – vezměte to rukou`;
+  return null;
+}
+
+// ---------------- mission 12: teach the robot (tier (a) policy, src/policy/knn.js) ----------------
+/** The verification batch of mission 12: another order and other yaws than the demo batch (WASTE.seed). script: the
+ *  Skript (beltSolve) on that batch, measured outside the page (tools/belt-measure.mjs teach, seed 2, 60 Hz frames),
+ *  shown in the side-by-side until the player runs the Skript in the page (Nástroje → Politika). */
+export const TEACH = { seed: 2, script: { correct: 9, n: 11 } };
+/** Named stars of mission 12: 1 for the win, +1 purity of the policy run at the threshold, +1 at most S.demos demos. */
+export function teachStars(S, st) {
+  if (!st) return 1;
+  return 1 + (st.purity != null && st.purity >= S.purity - 1e-9 ? 1 : 0) + (st.demos > 0 && st.demos <= S.demos ? 1 : 0);
+}
+/** Demonstrations so far in a demo-phase run: items the player put into a bin (own or wrong) after holding them. */
+function demosOf(s, run) {
+  if (s.evN !== run.events.length) { s.evN = run.events.length; s.demos = cutEpisodes(run.events, { end: run.t }).filter((e) => USED.includes(e.outcome)).length; }
+  return s.demos;
+}
+/**
+ * Mission 12 check. c.policy (set by the page, src/ui/policy.js): { verify: the policy run on the TEACH batch,
+ * demos: number of demonstrations the model was trained on }. Demo phase (verify false): the demo batch, sorted by
+ * the player while it records; never a win. Policy run: the TEACH batch; the win when it is done with ≥ win correct.
+ */
+function teachCheck(m, c, dt) {
+  const s = c.s;
+  if (!c.w.belt) return { text: '' };
+  const P = c.policy || {}, verify = !!P.verify;
+  if (!s.run) s.run = new WasteRun(c.w, { seed: verify ? TEACH.seed : WASTE.seed });
+  const run = s.run;
+  run.tick(dt, c);
+  const st = Object.assign(run.stats(), { demos: P.demos || 0, verify }), W = m.stars.win;
+  const out = (text, o) => Object.assign({ text, stats: st, progress: st.correct / st.n, ok: st.correct > 0 }, o);
+  if (!verify) {
+    const n = demosOf(s, run);
+    if (!c.started) return out('Ukažte robotovi, jak třídit: roztřiďte rukou pár předmětů z pásu (nahrává se), pak stiskněte Naučit. Pás se rozjede, jakmile pohnete rukou.', { ok: false });
+    if (run.done()) return out(`Dávka ukázek skončila: ${n} ${n === 1 ? 'ukázka' : n >= 2 && n <= 4 ? 'ukázky' : 'ukázek'}. Stiskněte Naučit`, { ok: n > 0 });
+    const live = wasteLive(run, st);
+    if (live) return out(live, { ok: false });
+    const held = run.items.find((it) => it.state === 'held');
+    if (held) return out(`Teď nad koš: ${FR[held.fraction]}`, { ok: false });
+    return out(`Ukázky: ${n} · na pásu ${st.onBelt} · pak Naučit`, { ok: n > 0 });
+  }
+  if (!c.started) return out('Stiskněte Spustit politiku – roztřídí novou dávku sama.', { ok: false });
+  if (run.done()) {
+    if (st.correct >= W) return out(`Roztříděno ${st.correct} z ${st.n}…`, { ok: true, won: true });
+    return out(`Politika roztřídila ${st.correct} z ${st.n}, potřeba ${W}. Rozbor je v Nástroje → Politika`, { ok: false });
+  }
+  const live = wasteLive(run, st);
+  if (live) return out(live);
+  return out(`Politika: hotovo ${st.correct} z ${st.n} · na pásu ${st.onBelt}`);
 }
 
 /**
