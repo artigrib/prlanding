@@ -425,7 +425,7 @@ export function pushPlan(ctl, w, tries = 3, from) {
 
 // ---------------- library objects (object missions) ----------------
 const FIXED_JAW = 0.0195;
-const LIB_FLOOR = 0.007;   // controller site offset for a zero-width object (cube: 0.007 at 25 mm)
+export const LIB_FLOOR = 0.007;   // controller site offset for a zero-width object (cube: 0.007 at 25 mm)
 
 /** Grasp geometry of a library object in its current pose: closing direction across the narrowest horizontal
  *  body axis, grasp height, top. Returns { c: COM, dir, yaw (closing heading), width, z, top, bottom }. */
@@ -499,10 +499,13 @@ function cut(H, s0) {
 
 /** Pick a library object; returns the pick plan with .ref (held reference point fn) and .dz (grasp height above bottom). */
 export function libPick(ctl, w, name, from, o = {}) {
-  const g = libGrasp(w, name);
-  if (o.z != null) g.z = Math.max(LIB_FLOOR, Math.min(g.top - 0.006, g.bottom + o.z * (g.top - g.bottom)));
+  // o.grasp: a libGrasp result to use (e.g. moved to where a belt item will be); o.floor: lowest site height
+  // (a belt grasp keeps the finger pads clear of the moving slats)
+  const g = o.grasp || libGrasp(w, name), fl = o.floor != null ? o.floor : LIB_FLOOR;
+  if (o.z != null) g.z = Math.max(fl, Math.min(g.top - 0.006, g.bottom + o.z * (g.top - g.bottom)));
+  else if (g.z < fl) g.z = fl;
   const off = Math.max(-0.014, FIXED_JAW - g.width / 2 - 0.004);   // 4 mm clear of the fixed jaw
-  const plan = ctl.planPick([g.g[0], g.g[1], g.z], 0, g.yaw, from || null, { z: g.z, top: g.top, period: Math.PI, offset: off, floor: LIB_FLOOR });
+  const plan = ctl.planPick([g.g[0], g.g[1], g.z], 0, g.yaw, from || null, { z: g.z, top: g.top, period: Math.PI, offset: off, floor: fl });
   const dzc = g.z - g.c[2];
   plan.ref = () => { const p = w.com(name, [0, 0, 0]); p[2] += dzc; return p; };
   plan.dz = g.z - g.bottom;
