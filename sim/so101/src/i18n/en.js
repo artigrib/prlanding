@@ -9,6 +9,9 @@ const dec = (s) => String(s).replace(/(\d),(\d)/g, '$1.$2');
 const ids = (s) => dec(s).replace(/\(([^)]+)\)/g, (m, n) => '(' + T(n) + ')');
 
 const strings = {
+  /* lab-transport campaign PR 1: mobile scene preview (src/mobile/view.js, app.js) */
+  'Vozík ve stylu XLeRobot (zjednodušený model: podvozek LeKiwi + vozík + ruka SO-101) · náhled scény, zatím bez misí': 'XLeRobot-style cart (simplified model: LeKiwi base + cart + SO-101 arm) · scene preview, no missions yet',
+  'Převoz mezi laboratořemi · náhled': 'Lab transport · preview', 'Laboratoř A · Příjem vzorků': 'Lab A · Sample intake', 'Laboratoř B · Analytika': 'Lab B · Analysis',
   /* trackpad touch scheme (src/ui/touchpad.js) */
   'Ovládání dotykem': 'Touch controls', 'Klasické': 'Classic', 'Trackpad (beta)': 'Trackpad (beta)',
   'Jeden prst kdekoli posouvá chapadlo po stole, lišta vpravo mění výšku, pruh dole otáčí zápěstím, dva prsty otáčí pohledem. Klepnutí na předmět ho vybere za cíl.': 'One finger anywhere moves the gripper on the table, the rail on the right sets the height, the strip at the bottom turns the wrist, two fingers turn the view. A tap on an object makes it the target.',

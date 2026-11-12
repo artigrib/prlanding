@@ -18,8 +18,8 @@ export async function loadScene() {
   return { mj, m, d };
 }
 
-/** An object scene profile (src/objects/scene.js PROFILES: 'objects' = missions 06–10, 'conveyor') compiled in
- *  node. Returns { mj, m, d, items, sizes, xml }. */
+/** A scene profile (src/objects/scene.js: 'objects' = missions 06–10, 'conveyor', 'mobile') compiled in node.
+ *  Returns { mj, m, d, items, sizes, xml }. */
 export async function loadObjectScene(profile = 'objects') {
   const { pathToFileURL } = await import('node:url');
   const { ObjectLibrary, injectObjects, instanceXml } = await import('../src/objects/library.js');
@@ -31,11 +31,12 @@ export async function loadObjectScene(profile = 'objects') {
       arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) };
   };
   const lib = new ObjectLibrary({ base: pathToFileURL(OBJ + '/'), fetch: fsFetch });
-  const { xml, items } = await objectSceneXml(fs.readFileSync(path.join(DIR, 'model/scene.xml'), 'utf8'), lib, { injectObjects, instanceXml }, profile);
+  const { xml, items, arm } = await objectSceneXml(fs.readFileSync(path.join(DIR, 'model/scene.xml'), 'utf8'), lib, { injectObjects, instanceXml }, profile);
   const loadMujoco = (await import(path.join(DIR, 'vendor/mujoco/mujoco.js'))).default;
   const mj = await loadMujoco({ wasmBinary: fs.readFileSync(path.join(DIR, 'vendor/mujoco/mujoco.wasm')) });
   mj.FS.mkdir('/m'); mj.FS.mkdir('/m/assets');
   mj.FS.writeFile('/m/so101.xml', fs.readFileSync(path.join(DIR, 'model', 'so101.xml')));
+  if (arm) mj.FS.writeFile('/m/' + arm.file, arm.edit(fs.readFileSync(path.join(DIR, 'model', 'so101.xml'), 'utf8')));
   mj.FS.writeFile('/m/scene_objects.xml', xml);
   for (const f of fs.readdirSync(path.join(DIR, 'model/assets'))) mj.FS.writeFile('/m/assets/' + f, fs.readFileSync(path.join(DIR, 'model/assets', f)));
   const m = mj.MjModel.from_xml_path('/m/scene_objects.xml');

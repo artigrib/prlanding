@@ -12,15 +12,19 @@ const TEST = new URLSearchParams(location.search).get('test') === '1';  // Playw
 // Scene profile per mission (core.js loadSim opts.scene, src/objects/scene.js PROFILES): object missions (chapters
 // 06–10, src/missions.js `objects: true`) need the 'objects' scene, conveyor missions (`scene: 'conveyor'`) the
 // 'conveyor' scene, the rest the plain one. Same start rule as ux.startRoute(): ?mise=, otherwise the stored mission,
-// or the first unfinished one when it is done. Keep the lists in sync with MISSIONS (tests/missions-objects.test.mjs).
+// or the first unfinished one when it is done. Keep the lists in sync with MISSIONS (tests/missions-objects.test.mjs,
+// tests/scene-profiles.test.mjs). The mobile scene (lab transport, src/mobile/scene.js) has no missions yet (they
+// come with campaign PR 5): MOBILE_MISSIONS stays empty until then.
 const OBJECT_MISSIONS = ['line', 'breakfast', 'tidy', 'workshop', 'lab'];
 const CONVEYOR_MISSIONS = ['waste_hand', 'waste_teach', 'waste_line'];
-const MISSION_ORDER = ['bowl', 'stack', 'sort', 'ball', 'trace', ...OBJECT_MISSIONS, ...CONVEYOR_MISSIONS];
-const sceneOfId = (id) => (CONVEYOR_MISSIONS.includes(id) ? 'conveyor' : OBJECT_MISSIONS.includes(id) ? 'objects' : 'plain');
+const MOBILE_MISSIONS = [];
+const MISSION_ORDER = ['bowl', 'stack', 'sort', 'ball', 'trace', ...OBJECT_MISSIONS, ...CONVEYOR_MISSIONS, ...MOBILE_MISSIONS];
+const sceneOfId = (id) => (MOBILE_MISSIONS.includes(id) ? 'mobile' : CONVEYOR_MISSIONS.includes(id) ? 'conveyor' : OBJECT_MISSIONS.includes(id) ? 'objects' : 'plain');
+// scenes a test / dev run may open without a mission: ?scene=<name>&test=1
+const DEV_SCENES = ['conveyor', 'mobile'];
 function sceneFor() {
   const q = new URLSearchParams(location.search), mise = q.get('mise');
-  // dev / test view of the conveyor cell without a mission: ?scene=conveyor&test=1
-  if (TEST && !mise && q.get('scene') === 'conveyor') return 'conveyor';
+  if (TEST && !mise && DEV_SCENES.includes(q.get('scene'))) return q.get('scene');
   if (mise) return sceneOfId(mise);
   try {
     const prog = JSON.parse(localStorage.getItem('pr-sim-progress') || '{}') || {};
@@ -69,8 +73,11 @@ async function main() {
   // [ux-hook:install] optional UX layer (src/ux.js: smart move, missions, replay, cameras, exploded view…).
   // The plain slider sim keeps working if it fails to load.
   const MIRROR = new URLSearchParams(location.search).has('mirror');   // live LeRobot mirror (see below)
-  try { await (await import('./src/ux.js')).install(app, { THREE: ctx.THREE, mj: ctx.mj, TEST, objects: ctx.objects }); }
-  catch (e) { console.warn('UX layer disabled:', e); app.ux = null; sim.onRender = null; }
+  if (ctx.scene === 'mobile') await app.mobile(ctx);   // lab-transport preview: the cart + rooms, joint sliders only
+  else {
+    try { await (await import('./src/ux.js')).install(app, { THREE: ctx.THREE, mj: ctx.mj, TEST, objects: ctx.objects }); }
+    catch (e) { console.warn('UX layer disabled:', e); app.ux = null; sim.onRender = null; }
+  }
   $('loader').hidden = true;
   $('hud').hidden = false;
   $('sr').textContent = 'Simulace je připravena, ovládání je dostupné.';
@@ -80,6 +87,7 @@ async function main() {
   if (TEST) {
     const api = app.api(); api.loadMs = Math.round(performance.now() - t0);
     api.scene = () => ctx.scene;
+    if (app.mobileView) api.mobile = app.mobileApi();
     if (ctx.belt && app.ux) api.conveyor = (await import('./src/objects/conveyor-dev.js')).conveyorDev(app, ctx);
     window.__sim = api;
   }
@@ -191,6 +199,37 @@ class MissionPage {
       sw.appendChild(b); return b;
     });
     this.refreshSliders();
+  }
+
+  /** Mobile scene (lab transport, campaign PR 1): no missions and no driving UI yet. The cart and the rooms are drawn
+   *  by src/mobile/view.js, the arm keeps its joint sliders, the HUD names the model. */
+  async mobile(ctx) {
+    const { MobileView } = await import('./src/mobile/view.js');
+    const view = this.mobileView = new MobileView(this.sim, ctx.THREE);
+    this.sim.onAfter = (dt) => { view.update(dt); this.hud({ text: 'Vozík ve stylu XLeRobot (zjednodušený model: podvozek LeKiwi + vozík + ruka SO-101) · náhled scény, zatím bez misí', ok: false }); };
+    $('demo').hidden = true;   // the cube demo has nothing to do here
+    // the mission chip names the scene (no mission picker without the UX layer)
+    const chip = $('ux-pick-mission'); chip.disabled = true; $('ux-chip-n').hidden = true;
+    chip.querySelector('.ux-chip-v').hidden = true;
+    $('mission-h').textContent = 'Převoz mezi laboratořemi · náhled';
+  }
+  mobileApi() {
+    const sim = this.sim, view = this.mobileView, mj = sim.mj, m = sim.m;
+    const act = ['base_vx', 'base_vy', 'base_wz'].map((n) => mj.mj_name2id(m, mj.mjtObj.mjOBJ_ACTUATOR.value, n));
+    return {
+      base: () => view.base(),
+      view: () => view.stats(),
+      // test hook only (no driving UI before PR 2): world-frame velocity actuator targets (m/s, m/s, rad/s)
+      baseCtrl: (vx, vy, wz) => { [vx, vy, wz].forEach((v, k) => { sim.d.ctrl[act[k]] = v; }); },
+      // physics cost in this browser: wall ms per MuJoCo step over n steps (the state is restored afterwards)
+      stepCost: (n = 500) => {
+        const snap = { q: Float64Array.from(sim.d.qpos), v: Float64Array.from(sim.d.qvel), t: sim.d.time };
+        const t0 = performance.now(); for (let i = 0; i < n; i++) mj.mj_step(m, sim.d);
+        const ms = (performance.now() - t0) / n;
+        sim.d.qpos.set(snap.q); sim.d.qvel.set(snap.v); sim.d.time = snap.t; mj.mj_forward(m, sim.d);
+        return { msPerStep: ms, realTime: m.opt.timestep * 1000 / ms };
+      }
+    };
   }
 
   setCtrl(i, v) { this.sim.setCtrl(i, v); this.refreshSlider(i); }

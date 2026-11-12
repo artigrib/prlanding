@@ -53,21 +53,37 @@ export const labelOf = (name) => LIB_LABELS[name.replace(/\d+$/, '')] || [name, 
 
 // Fixtures: static mocap bodies made of simple boxes / cylinders (collision group 3, drawn by objects/view.js
 // with the colours below). Sizes are MJCF half sizes. Wall thickness 4 mm, like a 3D-printed part.
-const C = { orange: '0.91 0.27 0.12 1', blue: '0.12 0.23 1 1', grey: '0.62 0.62 0.59 1', white: '0.95 0.95 0.93 1', dark: '0.17 0.17 0.17 1',
+export const C = { orange: '0.91 0.27 0.12 1', blue: '0.12 0.23 1 1', grey: '0.62 0.62 0.59 1', white: '0.95 0.95 0.93 1', dark: '0.17 0.17 0.17 1',
   yellow: '0.96 0.76 0.1 1', green: '0.12 0.55 0.3 1' };
-function box(name, size, pos, rgba, euler) {
+// Box / bin / rack helpers, shared with the mobile profile (src/mobile/scene.js: the same rack and crate as static geoms
+// of the cart). `at`: offset added to every position (rounded to 0.01 mm); without it the output is unchanged.
+const shift = (pos, at) => (at ? pos.map((v, i) => +(v + at[i]).toFixed(5)) : pos);
+export function box(name, size, pos, rgba, euler) {
   return `<geom name="${name}" type="box" size="${size.join(' ')}" pos="${pos.join(' ')}"${euler ? ` euler="0 0 ${euler}"` : ''} rgba="${rgba}" group="3" friction="0.9 0.005 0.0001"/>`;
 }
-function bin(name, hx, hy, h, rgba) {   // open box, inside hx × hy (half), wall height h
+export function bin(name, hx, hy, h, rgba, at) {   // open box, inside hx × hy (half), wall height h
   const t = 0.002;
   return [
     // floor: drawn only (contype 0) – parts rest on the table; a 3 mm collision plate let thin parts sink into it
-    box(name + '_f', [hx + 2 * t, hy + 2 * t, 0.0008], [0, 0, 0.0008], rgba).replace('group="3"', 'group="3" contype="0" conaffinity="0"'),
-    box(name + '_w0', [t, hy + 2 * t, h / 2], [hx + t, 0, h / 2], rgba),
-    box(name + '_w1', [t, hy + 2 * t, h / 2], [-hx - t, 0, h / 2], rgba),
-    box(name + '_w2', [hx, t, h / 2], [0, hy + t, h / 2], rgba),
-    box(name + '_w3', [hx, t, h / 2], [0, -hy - t, h / 2], rgba)
+    box(name + '_f', [hx + 2 * t, hy + 2 * t, 0.0008], shift([0, 0, 0.0008], at), rgba).replace('group="3"', 'group="3" contype="0" conaffinity="0"'),
+    box(name + '_w0', [t, hy + 2 * t, h / 2], shift([hx + t, 0, h / 2], at), rgba),
+    box(name + '_w1', [t, hy + 2 * t, h / 2], shift([-hx - t, 0, h / 2], at), rgba),
+    box(name + '_w2', [hx, t, h / 2], shift([0, hy + t, h / 2], at), rgba),
+    box(name + '_w3', [hx, t, h / 2], shift([0, -hy - t, h / 2], at), rgba)
   ].join('\n');
+}
+/** The 3-slot vial rack (FIXTURES.rack): base plate + 4 walls per slot, slots along x. `alongY`: turned 90° (slots
+ *  along y); `at`: offset of the rack centre. Returns geom strings named `${name}_base`, `${name}_s{k}{a..d}`. */
+export function rackGeoms(name, rgba, { at, alongY = false } = {}) {
+  const xy = (v) => (alongY ? [v[1], v[0], v[2]] : v);
+  const g = [box(name + '_base', xy([0.074, 0.026, 0.002]), shift(xy([0, 0, 0.002]), at), rgba)];
+  for (const [k, x] of FIXTURES.rack.slots.entries()) {
+    const t = 0.0025, hi = 0.021, h = 0.015, z = 0.004 + h;
+    g.push(
+      box(`${name}_s${k}a`, xy([t, hi + 2 * t, h]), shift(xy([x + hi + t, 0, z]), at), rgba), box(`${name}_s${k}b`, xy([t, hi + 2 * t, h]), shift(xy([x - hi - t, 0, z]), at), rgba),
+      box(`${name}_s${k}c`, xy([hi, t, h]), shift(xy([x, hi + t, z]), at), rgba), box(`${name}_s${k}d`, xy([hi, t, h]), shift(xy([x, -hi - t, z]), at), rgba));
+  }
+  return g;
 }
 export const FIXTURES = {
   bin_nut: { label: ['přihrádka na matice', 'přihrádku na matice'], zone: { hx: 0.045, hy: 0.045, top: 0.03 } },
@@ -94,13 +110,7 @@ function fixturesXml() {
     const a = k * Math.PI / 8;
     rim.push(box('plate_r' + k, [0.0035, 0.021, 0.006], [(0.103 * Math.cos(a)).toFixed(4), (0.103 * Math.sin(a)).toFixed(4), 0.006], C.white, a.toFixed(4)));
   }
-  const rack = [box('rack_base', [0.074, 0.026, 0.002], [0, 0, 0.002], C.blue)];
-  for (const [k, x] of FIXTURES.rack.slots.entries()) {
-    const t = 0.0025, hi = 0.021, h = 0.015, z = 0.004 + h;
-    rack.push(
-      box(`rack_s${k}a`, [t, hi + 2 * t, h], [x + hi + t, 0, z], C.blue), box(`rack_s${k}b`, [t, hi + 2 * t, h], [x - hi - t, 0, z], C.blue),
-      box(`rack_s${k}c`, [hi, t, h], [x, hi + t, z], C.blue), box(`rack_s${k}d`, [hi, t, h], [x, -hi - t, z], C.blue));
-  }
+  const rack = rackGeoms('rack', C.blue);
   return `
     <body name="bin_nut" pos="1.6 0.6 -0.75" mocap="true">
 ${bin('bin_nut', 0.045, 0.045, 0.03, C.orange)}
@@ -292,17 +302,24 @@ export const PROFILES = {
       `$1size="0.40 ${+((0.32 + BELT.edge) / 2).toFixed(4)} 0.015" pos="0.14 ${+((BELT.edge - 0.32) / 2).toFixed(4)} -0.015"`)
   }
 };
-export const SCENES = ['plain', 'objects', 'conveyor'];
+// 'mobile' = the lab-transport cart in two rooms (src/mobile/scene.js MOBILE_PROFILE, loaded only for that scene)
+export const SCENES = ['plain', 'objects', 'conveyor', 'mobile'];
+/** The profile object of a scene name (the mobile one is imported on demand, so other scenes never load it). */
+export async function profileOf(profile) {
+  if (PROFILES[profile]) return PROFILES[profile];
+  if (profile === 'mobile') return (await import('../mobile/scene.js')).MOBILE_PROFILE;
+  throw new Error('unknown scene profile: ' + profile);
+}
 
 /**
  * Build an object scene: the profile's fixtures + every profile item (parked) injected into scene.xml.
- * lib: ObjectLibrary (fetch-based). profile: 'objects' (missions 06–10, default) | 'conveyor'.
- * Returns { xml, items: [{ name, id, entry, scale }] }.
+ * lib: ObjectLibrary (fetch-based). profile: 'objects' (missions 06–10, default) | 'conveyor' | 'mobile'.
+ * Returns { xml, items: [{ name, id, entry, scale }], arm }. arm (mobile only): { file, edit(so101Xml) } = the arm
+ * MJCF the scene includes instead of so101.xml (the page writes edit(so101.xml) to that file before compiling).
  */
 export async function objectSceneXml(sceneXml, lib, { injectObjects, instanceXml }, profile = 'objects') {
-  const P = PROFILES[profile];
-  if (!P) throw new Error('unknown scene profile: ' + profile);
-  await lib.manifest();
+  const P = await profileOf(profile);
+  if (P.items.length) await lib.manifest();
   const items = [], inst = [];
   for (const [i, it] of P.items.entries()) {
     const entry = await lib.entry(it.id);
@@ -321,7 +338,7 @@ export async function objectSceneXml(sceneXml, lib, { injectObjects, instanceXml
     .replace(/\bqvel="([^"]*)"/, (m, a) => `qvel="${a.trim()} ${Array(P.slats).fill(0).join(' ')}"`));
   const j = xml.lastIndexOf('</worldbody>');
   const withFx = xml.slice(0, j) + P.fixtures() + '\n  ' + xml.slice(j);
-  return { xml: injectObjects(withFx, inst), items };
+  return { xml: injectObjects(withFx, inst), items, arm: P.arm || null };
 }
 
 /** Body-frame size (m) of an item after scaling. */

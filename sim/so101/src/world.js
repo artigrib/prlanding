@@ -54,6 +54,8 @@ export class World {
       this.o[name] = { name, body: b, kind: 'mocap', fixture: fx, mocap: m.body_mocapid[b], label: fx.label[0], acc: fx.label[1], active: false };
       PARK[name] = [...FIXTURE_PARK[name], -0.75];
     }
+    // lab transport: the arm rides on a cart (src/mobile/scene.js)
+    if (mj.mj_name2id(m, O.mjOBJ_BODY.value, 'chassis') >= 0) this.scene = 'mobile';
     this.p = new Float64Array(3);
   }
   /** Size (m, body frame) of a library item, set by the page / tests from the manifest (sizes()). */
