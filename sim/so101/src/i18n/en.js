@@ -217,6 +217,7 @@ const strings = {
   'Slouží k pochopení principu, není to přímo načitatelný LeRobot dataset (ten používá Parquet a videa z kamer).': 'Meant for understanding the idea; it isn’t a directly loadable LeRobot dataset (those use Parquet and camera videos).',
   'stupně, gripper.pos = 0–100 % otevření': 'degrees, gripper.pos = 0–100 % open',
   'Výchozí stav scény pro přehrání v simulátoru (qpos, qvel, ctrl, mocap); LeRobot tuto část ignoruje.': 'Initial scene state for replay in the simulator (qpos, qvel, ctrl, mocap); LeRobot ignores this part.',
+  'recorder 2: jeden snímek na každý slot pevné mřížky 30 fps v čase simulace (timestamp je přesný čas snímku); recorder 1 nebo chybí: snímek 1/30 s po předchozím, při 16ms snímcích asi 20,8 fps.': 'recorder 2: one frame per slot of a fixed 30 fps grid of simulated time (timestamp is the frame’s exact time); recorder 1 or absent: a frame 1/30 s after the previous one, about 20.8 fps at 16 ms frames.',
   /* ux toasts */
   'Níž to nejde, tam je stůl': 'Can’t go lower, that’s the table',
   'Šipky posouvají cíl ruky, PageUp a PageDown mění výšku, mezerník otevře a zavře chapadlo, otazník ukáže všechny zkratky.': 'Arrow keys move the arm’s target, PageUp and PageDown change the height, space opens and closes the gripper, ? shows all shortcuts.',

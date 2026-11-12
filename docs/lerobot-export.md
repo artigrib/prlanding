@@ -20,7 +20,10 @@ Written by `Teach.toJSON()` / `Teach.download()`:
 - `episodes[0].frames[]`: `{ frame_index, timestamp, observation.state: [6], action: [6] }`
   - `observation.state` = joint positions (MuJoCo `qpos`), `action` = position targets (MuJoCo `ctrl`)
   - joints in **degrees**, gripper in **0–100 % open** (`teach.js` converts radians and the gripper range)
-  - frames are sampled on physics steps, so timestamps are only about 1/30 s apart
+  - frames are sampled on physics steps, so timestamps are only about 1/30 s apart. `printedrobotics.recorder: 2`
+    (from Nov 2026): one frame per slot of a fixed 30 fps grid of simulated time, at any display rate; recorder 1
+    (field absent) took a frame 1/30 s after the previous one, about 20.8 fps at 16 ms frames. Both load and export
+    the same way (the exporters resample onto the exact grid)
 - Conveyor missions (11 `waste_hand` on) add, all optional (older files load and export unchanged):
   - `episodes[0].frames[].env`: `{ belt, target, next }`, on every frame or on none. `belt` = commanded belt speed
     (m/s, 0 = paused); `target` = the item in the closed jaws, else the most downstream item on the belt; `next` = the
@@ -167,6 +170,14 @@ python3 tools/hf/demos_to_lerobot.py OUT/replay-000.json -o OUT/lerobot-py      
   (batch 8, CPU); ACT lists both cameras in `image_features`, its ResNet18 backbone receives gradients, and blanking
   the images changes the predicted action chunk. The same with `envState: false` (cameras + joints only). Node and
   Python exports of the same replay folder: identical Parquet values and metadata, stats equal to 1e-13.
+
+- Recorder 1 vs 2 (30 fps grid), 12 Nov 2026, node, same tooling (`tools/sil/lib/replay.mjs`, no cameras). The same
+  125 s mission 11 run (scripted planner, 16 ms frames) recorded both ways: recorder 1 2,605 frames (20.8 fps),
+  joints p95 1.77°, max 7.55°; recorder 2 3,751 frames (30.0 fps), joints p95 1.67°, max 7.88°; gripper p95 1.7 / 2.0 %;
+  10 of 11 outcomes in both. The sampling rate is not what drives the joint error. The recorded `action` is the
+  command that was applied during the 16 ms frame *ending* at the frame's timestamp, while the replay applies it from
+  that timestamp on: one frame late. Replaying one frame earlier (an experiment, not in the code) gives joints p95
+  0.41° (recorder 2) / 0.72° (recorder 1), and 0.08° when every frame is recorded (80 s run).
 
 ## Using it
 
