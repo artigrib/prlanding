@@ -8,7 +8,10 @@
 //   node sim/so101/tools/belt-measure.mjs bins  [--n 6] [--speed 0.02]
 //       every batch kind into each of the 4 bins (near (0.12, ±0.17), far (0.38, ±0.14)), picked around y = 0.
 //   node sim/so101/tools/belt-measure.mjs batch [--n 10] [--speed 0.02] [--every 10]
-//       beltSolve on the 12-item batch, seeded order and yaws, one item every `every` s.
+//       beltSolve on the 11-item batch, seeded order and yaws, one item every `every` s (mission 11 rules).
+//   node sim/so101/tools/belt-measure.mjs mission [--n 10] [--seed 1] [--hz 60]
+//       mission 11 ("Ukázat řešení") as the page runs it: MissionRunner + its check every frame, the controller once
+//       per frame at `hz`, physics by the page's accumulator; seeds seed … seed + n − 1.
 //
 // Trial outcome: held (lifted off the belt after the close), placed (at rest inside the target bin), tipped (an
 // upright item lying before the grasp), slat (control ticks with a gripper–slat contact during
@@ -19,10 +22,11 @@ import fs from 'node:fs';
 import { loadObjectScene } from '../tests/mj-node.mjs';
 import { World } from '../src/world.js';
 import { ArmController } from '../src/controller.js';
-import { inZone } from '../src/missions.js';
+import { inZone, MissionRunner } from '../src/missions.js';
 import { beltPick, beltSolve, heldBy, binDrop, fractionOf, BELT_PICK } from '../src/objects/beltpick.js';
 import { libPlace } from '../src/missions.js';
-import { CONVEYOR_ITEMS, CONVEYOR_BINS, FRACTION_BIN, BELT } from '../src/objects/scene.js';
+import { CONVEYOR_ITEMS, CONVEYOR_BINS, FRACTION_BIN } from '../src/objects/scene.js';
+import { WasteRun, WASTE, rng, yawFor, batchOrder } from '../src/objects/wastebatch.js';
 
 const args = process.argv.slice(2), mode = args[0] || 'pick';
 const opt = (k, dflt) => { const i = args.indexOf('--' + k); return i < 0 ? dflt : args[i + 1]; };
@@ -73,12 +77,9 @@ export async function cell() {
   return { mj, m, d, w, ctl, belt, ts, step, reset, touch: { get: () => touch, zmin: () => zmin, zero: () => { touch = 0; zmin = Infinity; } } };
 }
 
-export function rng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
+export { rng, yawFor, batchOrder };
 export const KINDS = [...new Map(CONVEYOR_ITEMS.map((it) => [it.id + (it.scale || 1), it])).values()];
 export const kindOf = (name) => name.replace(/\d+$/, '');
-const LONG = /^(fork|spoon)_/;
-/** Yaw on the belt: long items lengthwise (± 0.35 rad), the rest any. */
-export const yawFor = (name, r) => (LONG.test(name) ? Math.PI / 2 + (r() - 0.5) * 0.7 : r() * Math.PI * 2);
 
 /** At rest inside bin fx (the sortCheck rule: in the zone, still). */
 export function inBin(C, name, fx) { return inZone(C.w, name, fx) && C.w.speed(name) < 0.02; }
@@ -167,58 +168,67 @@ async function main() {
     const every = +opt('every', 10);
     for (const speed of SPEEDS) for (let k = 0; k < N; k++) rows.push(batch(C, { speed, every, seed: SEED + k }));
     console.log('| run | speed | correct | wrong bin | missed | purity | skipped | sim s |\n|---|---|---|---|---|---|---|---|');
-    for (const [i, x] of rows.entries()) console.log(`| ${i} | ${x.speed * 100} cm/s | ${x.correct}/12 | ${x.wrong} | ${x.missed} | ${x.purity == null ? '–' : (100 * x.purity).toFixed(1) + ' %'} | ${x.skipped} | ${x.time.toFixed(0)} |`);
+    for (const [i, x] of rows.entries()) console.log(`| ${i} | ${x.speed * 100} cm/s | ${x.correct}/${x.n} | ${x.wrong} | ${x.missed} | ${x.purity == null ? '–' : (100 * x.purity).toFixed(1) + ' %'} | ${x.skipped} | ${x.time.toFixed(0)} |`);
     console.log('\nNot in their bin (item: where it ended; events):');
     for (const [i, x] of rows.entries()) {
       const lost = Object.entries(x.where).filter(([n, wh]) => wh !== FRACTION_BIN[fractionOf(n)]);
       console.log(`- run ${i} (seed ${x.seed}): ` + lost.map(([n, wh]) => `${n} → ${wh} [${x.events.filter((e) => e.name === n && e.ev !== 'close' && e.ev !== 'commit').map((e) => e.ev + (e.why ? '/' + e.why : '')).join(',')}]`).join('; '));
     }
+  } else if (mode === 'mission') {
+    const hz = +opt('hz', 60);
+    for (let k = 0; k < N; k++) rows.push(missionRun(C, { seed: SEED + k, hz }));
+    console.log(`| seed | won | correct | wrong bin | missed | purity | belt stood | sim s |\n|---|---|---|---|---|---|---|---|`);
+    for (const x of rows) console.log(`| ${x.seed} | ${x.won ? 'yes' : 'no'} | ${x.correct}/${x.n} | ${x.wrong} | ${x.missed} | ${x.purity == null ? '–' : (100 * x.purity).toFixed(1) + ' %'} | ${x.paused.toFixed(1)} s | ${x.time.toFixed(0)} |`);
   }
   if (OUT) fs.writeFileSync(OUT, JSON.stringify({ mode, seed: SEED, n: N, speeds: SPEEDS, belt_pick: BELT_PICK, rows }, null, 1));
 }
 
-/** Seeded batch order: 12 pool items, interleaved so that a fraction never comes twice in a row more than once. */
-export function batchOrder(seed) {
-  const r = rng(seed);
-  for (;;) {
-    const a = CONVEYOR_ITEMS.map((it) => it.name);
-    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
-    let rep = 0; for (let i = 1; i < a.length; i++) if (fractionOf(a[i]) === fractionOf(a[i - 1])) rep++;
-    if (rep <= 1) return { order: a, yaw: a.map((n) => yawFor(n, r)) };
-  }
-}
-
-/** beltSolve on a seeded 12-item batch: one item every `every` s at the entry; ends when every item is spawned and
- *  none is left on the belt (or after `limit` s). Counts per the M11 rules: correct, wrong bin, missed. */
+/** beltSolve on a seeded batch with the rules of mission 11 (src/objects/wastebatch.js WasteRun): one item every
+ *  `every` s at the entry (retried while the entry is busy), counted in a bin when at rest there; ends when every item
+ *  is spawned and none is left on the belt or in the jaws (or after `limit` s). */
 export function batch(C, { speed, every = 10, seed = 1, limit = 240, log }) {
-  const { w, ctl, d, belt } = C;
+  const { w, ctl, d } = C;
   C.reset(speed);
-  const { order, yaw } = batchOrder(seed), events = [];
-  let next = 0, tNext = d.time;
-  const onBelt = () => w.active().some((e) => e.lib && ['belt', 'entry'].includes(belt.zone(w.com(e.name, [0, 0, 0]))));
+  const run = new WasteRun(w, { seed, every, speed }), events = [], tip = new Float64Array(3);
+  const tick = (dt) => { ctl.actualTip(tip); run.tick(dt, { started: true, tip, gripOpen: ctl.gripOpen() }); };
   const held = () => w.active().some((e) => e.lib && heldBy(ctl, w, e.name));
-  const done = () => next >= order.length && !onBelt() && !held();
+  const done = () => run.next >= run.n && !run.items.some((it) => it.state === 'belt') && !held();
   ctl.run(beltSolve(ctl, w, { stop: done, log: (e) => { events.push(e); if (log) log(e); } }));
   const t0 = d.time;
   while (d.time - t0 < limit) {
-    if (next < order.length && d.time >= tNext) {
-      if (w.spawn(order[next], { yaw: yaw[next] })) { next++; tNext += every; } else tNext += 0.2;
-    }
-    C.step(0.1);
+    C.step(0.1); tick(0.1);
     if (!ctl.busy() && done()) break;
   }
-  C.step(1.5);
-  let correct = 0, wrong = 0;
-  const where = {};
-  for (const n of order) {
-    const fx = FRACTION_BIN[fractionOf(n)], p = w.com(n, [0, 0, 0]);
-    const b = Object.keys(CONVEYOR_BINS).find((k) => inZone(w, n, k));
-    where[n] = !w.o[n].active ? 'not spawned' : b || belt.zone(p) || (p[2] < -0.1 ? 'floor' : 'table');
-    if (b === fx) correct++; else if (b) wrong++;
-  }
-  const inBins = correct + wrong;
-  return { speed, seed, correct, wrong, missed: order.length - inBins, purity: inBins ? correct / inBins : null,
-    skipped: events.filter((e) => e.ev === 'skip').length, where, misses: events.filter((e) => e.ev === 'miss').length, time: d.time - t0, events };
+  for (let k = 0; k < 15; k++) { C.step(0.1); tick(0.1); }
+  const st = run.stats(), where = {};
+  for (const it of run.items) where[it.name] = it.state === 'bin' ? it.bin : it.state === 'queued' ? 'not spawned' : it.state;
+  return { speed, seed, n: run.n, correct: st.correct, wrong: st.wrong, missed: st.missed, purity: st.purity,
+    skipped: events.filter((e) => e.ev === 'skip').length, where, misses: events.filter((e) => e.ev === 'miss').length, time: d.time - t0, events, order: run.items.map((it) => it.name) };
+}
+
+/** Mission 11 solved by its automatic plan the way the page runs it (ux.startDemo: 0.6 s path preview, then the plan;
+ *  app.js frame: controller update, physics by accumulator, mission check). Ends at the win or after `limit` s. */
+export function missionRun(C, { seed = WASTE.seed, hz = 60, limit = 300 } = {}) {
+  const { w, ctl, d, m, mj, belt, ts } = C, runner = new MissionRunner(w), keep = WASTE.seed;
+  WASTE.seed = seed;
+  try {
+    mj.mj_resetDataKeyframe(m, d, 0);
+    runner.select('waste_hand'); runner.setup(); mj.mj_forward(m, d);
+    ctl.cancel(); ctl.syncFromCtrl();
+    runner.start();
+    const plan = runner.m.solve(ctl, w, runner), dt = 1 / hz, t0 = d.time;
+    let acc = 0, pend = 0.6;
+    while (d.time - t0 < limit && !runner.won) {
+      if (pend > 0 && (pend -= dt) <= 0) ctl.run(plan);
+      ctl.update(dt);
+      acc += dt; while (acc >= ts) { belt.step(ts); mj.mj_step(m, d); acc -= ts; }
+      ctl.actualTip(runner.ctx.tip); runner.ctx.gripOpen = ctl.gripOpen();
+      runner.tick(dt);
+    }
+    const st = runner.ctx.s.run.stats();
+    return { seed, hz, won: runner.won, n: st.n, correct: st.correct, wrong: st.wrong, missed: st.missed, purity: st.purity, paused: st.paused, time: d.time - t0,
+      states: runner.ctx.s.run.items.map((it) => `${it.name}:${it.state}${it.bin ? '@' + it.bin : ''}`) };
+  } finally { WASTE.seed = keep; ctl.cancel(); ctl.syncFromCtrl(); }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) await main();

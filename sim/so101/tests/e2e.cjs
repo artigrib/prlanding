@@ -409,7 +409,7 @@ async function touchDrag(page, from, to, steps = 8) {
       await S(p, () => { window.__srN = 0; window.__sim.advance(1); });
       await S(p, () => new Promise((res) => setTimeout(res, 50)));
       let r = await ux(p), c = await card();
-      ok(r.result.kind === 'manual' && r.result.stars >= 1 && c.open && c.focus && c.k === 'Mise 01 / 10 · splněno' && c.h === 'Kostka je v misce.' && !c.demo,
+      ok(r.result.kind === 'manual' && r.result.stars >= 1 && c.open && c.focus && c.k === 'Mise 01 / 11 · splněno' && c.h === 'Kostka je v misce.' && !c.demo,
         'result card opens with focus on it: header, headline (done text), no demo label ' + JSON.stringify(c));
       ok(c.on === r.result.stars && c.label === `${r.result.stars} ze 3 hvězdiček`, `result card shows the ${r.result.stars} ★ earned`);
       ok(c.vals[0][0] === 'Váš čas' && c.vals[0][1] === fmtT(r.result.time) && /^Pro [23] ★$/.test(c.vals[1][0]) && /^do (0:25|1:00)/.test(c.vals[1][1]),
@@ -619,6 +619,144 @@ async function touchDrag(page, from, to, steps = 8) {
         const v = await S(q, () => window.__sim.ux().result);
         ok(v && v.prec < 0.07, 'lab: the vial stands upright in the rack (tilt ' + (v ? (v.prec * 180 / Math.PI).toFixed(1) : '?') + '°)');
       }
+      await q.close();
+    }
+    // ---------------- mission 11: waste sorting on the conveyor (src/objects/wastebatch.js, src/ui/beltview.js) --------
+    {
+      // the mission picker in a plain-scene mission reloads into the conveyor scene
+      const q = await open(browser, base + '?test=1&mise=bowl&detail=low', { width: 1280, height: 800 });
+      await Promise.all([q.waitForURL(/mise=waste_hand/, { timeout: 60000 }), S(q, () => window.__sim.mission('waste_hand'))]);
+      await q.waitForFunction(() => /mise=waste_hand/.test(location.search) && window.__sim && window.__sim.ready, null, { timeout: 300000 });
+      ok(await S(q, () => window.__sim.scene() === 'conveyor' && window.__sim.ux().mission === 'waste_hand'), 'mission picker → mission 11 reloads into the conveyor scene');
+      await q.close();
+    }
+    {
+      const q = await open(browser, base + '?test=1&mise=waste_hand&detail=low', { width: 1280, height: 800 });
+      await S(q, () => { window.__sim._app.sim.paused = true; });   // simulated time only through advance()
+      const st0 = await S(q, () => ({ scene: window.__sim.scene(), m: window.__sim.ux().mission, hud: window.__sim.ux().hud, belt: !document.getElementById('ux-belt').hidden,
+        five: document.getElementById('ux-abar').classList.contains('ux-ab5'), credit: !document.querySelector('.ux-credit').hidden && /NVIDIA SimReady \(CC BY 4\.0\)/.test(document.querySelector('.ux-credit').textContent),
+        waste: window.__sim.waste() }));
+      ok(st0.scene === 'conveyor' && st0.m === 'waste_hand' && st0.belt && st0.credit && st0.waste && st0.waste.stats.spawned === 0 && /pohnete rukou/.test(st0.hud),
+        'mission 11: conveyor scene, Pás button in the action bar, credit line, nothing on the belt before the first input ' + JSON.stringify({ hud: st0.hud, belt: st0.belt, credit: st0.credit }));
+      // key B: the belt stops (slats ramp to 0) and the first item spawns (B starts the run); B again: it runs
+      await q.keyboard.press('b'); await S(q, () => window.__sim.advance(1));
+      let w = await S(q, () => window.__sim.waste());
+      const chip = await S(q, () => { window.__sim.renderNow(); const c = document.querySelector('.ux-chip-belt'); return !c.hidden && c.textContent; });
+      ok(w.belt.speed === 0 && Math.abs(w.belt.v) < 1e-6 && w.stats.spawned === 1 && await S(q, () => document.getElementById('ux-belt').getAttribute('aria-pressed') === 'true') && /^Pás stojí 0:0\d$/.test(chip || ''),
+        `key B stops the belt (speed ${w.belt.speed}, v ${w.belt.v}), the batch starts, chip "${chip}"`);
+      await q.keyboard.press('b'); await S(q, () => window.__sim.advance(2));
+      w = await S(q, () => window.__sim.waste());
+      const hud = (await ux(q)).hud;
+      ok(Math.abs(w.belt.v - 0.02) < 1e-6 && /^Hotovo 0 z 11 · na pásu 1$/.test(hud), `B again: the belt runs at 2 cm/s; objective "${hud}"`);
+      // hint rung 2: the bin of the item nearest the gripper is outlined, the 3 s line lies on the belt
+      await S(q, () => window.__sim.hintRung(2));
+      await S(q, () => { const u = window.__sim._ux, it = window.__sim.waste().items.find((x) => x.state === 'belt'); u.ctl.begin(); u.userSetTarget(it.p[0], it.p[1], 0.1); window.__sim.advance(1.5); window.__sim.renderNow(); });
+      const ov = await S(q, () => { const b = window.__sim._ux.beltView; return { outl: Object.entries(b.bins).filter(([, x]) => x.outline.visible).map(([k]) => k), line: b.line.visible, plates: Object.values(b.bins).filter((x) => x.plate.visible).length }; });
+      const want = await S(q, () => { const it = window.__sim.waste().items.find((x) => x.state === 'belt'); return it && { paper: 'bin_paper', plastic: 'bin_plastic', glass: 'bin_glass', metal: 'bin_metal' }[it.fraction]; });
+      ok(ov.plates === 4 && ov.outl.length === 1 && ov.outl[0] === want && ov.line, 'hint rung 2: the item\'s bin outlined, 3 s prediction line on the belt, 4 bin name plates ' + JSON.stringify(ov));
+      await shot(q, 'desk-m11-hint2');
+      // hint rung 3 "Ukaž mi": the scripted planner sorts the next item, chip "Běží: Skript (plánovač)", run = autopilot
+      await S(q, () => window.__sim.hintRung(3));
+      await S(q, () => window.__sim.advance(1));
+      const ch = await S(q, () => { window.__sim.renderNow(); const c = document.querySelector('.ux-chip-run'); return { chip: !c.hidden && c.textContent, api: window.__sim.waste().chip }; });
+      const sorted = await advanceUntil(q, () => window.__sim.waste().stats.correct >= 1 && !window.__sim.ux().busy, 40, 2);
+      const r3 = await S(q, () => window.__sim.run());
+      ok(ch.chip === 'Běží: Skript (plánovač)' && ch.api === ch.chip && sorted > 0 && r3.auto, '"Ukaž mi" sorts one item with beltSolve, chip "' + ch.chip + '", the run counts as autopilot (' + sorted + ' s)');
+      // "Ukázat řešení" (autopilot of the whole batch, __sim.solve): wins; the result card shows sorted, purity, missed, belt
+      await S(q, () => window.__sim.solve());
+      let t = await advanceUntil(q, () => window.__sim.ux().won, 260, 4);
+      if (t < 0) {
+        // the planner's batch ends at 8–11 of 11 (tools/belt-measure.mjs batch); the win needs 8: once more when short
+        console.log('NOTE mission 11: solution demo short of the win (' + (await ux(q)).hud + '), re-run');
+        await S(q, () => window.__sim.solve());
+        t = await advanceUntil(q, () => window.__sim.ux().won, 260, 4);
+      }
+      const card = await S(q, () => ({ open: !document.getElementById('win').hidden, vals: [...document.querySelectorAll('#ux-wvals > div')].map((d) => [d.querySelector('dt').textContent, d.querySelector('dd').textContent]),
+        stats: document.querySelector('.ux-winstats').textContent, demo: !document.querySelector('.ux-wdemo').hidden, res: window.__sim.ux().result }));
+      const val = (k) => (card.vals.find((v) => v[0] === k) || [])[1];
+      ok(t > 0 && card.open && /^\d+ z 11/.test(val('Roztříděno') || '') && /%/.test(val('Čistota') || '') && val('Propadlo') != null && val('Pás stál') != null && card.demo && card.res.stats.correct >= 8,
+        `mission 11 solved by beltSolve in ${t} s; card ${JSON.stringify(card.vals)} · ${card.stats}`);
+      await shot(q, 'desk-m11-result');
+      await q.close();
+    }
+    {
+      // mission 11 by hand on desktop: the gizmo / keyboard path. Each item: when it is in front of the arm, B stops the
+      // belt, the ball goes over the item (what a gizmo drag sets: ux.userSetTarget), the wrist ring squares the jaws,
+      // down, Space closes, up, over its bin, down, Space opens, B runs the belt again. The belt stands for every pick,
+      // so this run earns ★ hotovo (and purity) but not ★ bez zastavení pásu.
+      const q = await open(browser, base + '?test=1&mise=waste_hand&detail=low', { width: 1280, height: 800 });
+      await S(q, () => { window.__sim._app.sim.paused = true; });
+      // one real mouse drag of the gizmo ball in this scene first
+      const a0 = await S(q, () => window.__sim.screen('target')), t0 = (await ux(q)).target;
+      await q.mouse.move(a0.x, a0.y); await q.mouse.down();
+      for (let i = 1; i <= 8; i++) await q.mouse.move(a0.x - 10 * i, a0.y + 6 * i);
+      await q.mouse.up(); await S(q, () => window.__sim.advance(0.5));
+      const t1 = (await ux(q)).target;
+      ok(Math.hypot(t1[0] - t0[0], t1[1] - t0[1]) > 0.01, 'mission 11: the gizmo ball drags the target');
+      // a drag of the ball to pt: the target moves in n steps with the arm following in between (a hand drags at a
+      // few cm/s; a jump straight down knocked tall cups and vials over in node runs)
+      const to = (pt, n = 1, dt = 0) => S(q, ([pt, n, dt]) => {
+        const u = window.__sim._ux; if (!u.ctl.active) u.ctl.begin();
+        const a = Array.from(u.ctl.target);
+        for (let k = 1; k <= n; k++) { u.userSetTarget(a[0] + (pt[0] - a[0]) * k / n, a[1] + (pt[1] - a[1]) * k / n, a[2] + (pt[2] - a[2]) * k / n); u.onUserMove('drag-ball'); if (dt) window.__sim.advance(dt); }
+      }, [pt, n, dt]);
+      const flow = [], skip = [];
+      let won = false;
+      for (let k = 0; k < 16 && !won; k++) {
+        // the most downstream item past y = −0.02 (in front of the arm), or one wedged on the belt
+        let name = null;
+        for (let i = 0; i < 60 && !name; i++) {
+          name = await S(q, (skip) => { const w = window.__sim.waste(), b = w.items.filter((x) => (x.state === 'belt' && x.p[1] > -0.02 || x.state === 'stuck') && !skip.includes(x.name)).sort((x, y) => y.p[1] - x.p[1])[0]; return b ? b.name : null; }, skip);
+          if (!name) { if ((await ux(q)).won || await S(q, () => window.__sim.waste().done)) break; await S(q, () => window.__sim.advance(0.5)); }
+        }
+        if (!name) break;
+        await q.keyboard.press('b'); await S(q, () => window.__sim.advance(0.6));
+        // up to 3 tries: a missed grasp opens and tries again; an item that lands beside its bin is picked up from the
+        // table again (a player would)
+        let held = false, done = false, belt = false;
+        for (let tr = 0; tr < 3 && !done; tr++) {
+          const g = await S(q, async (n) => {
+            const M = await import('./src/missions.js'), B = await import('./src/objects/beltpick.js'), u = window.__sim._ux, w = u.world;
+            const z = w.belt.zone(w.com(n, [0, 0, 0])), onBelt = z === 'belt' || z === 'entry';
+            const pl = M.libPick(u.ctl, w, n, null, onBelt ? { floor: B.BELT_FLOOR } : {});
+            return { hover: pl.steps[1].pts[pl.steps[1].pts.length - 1], at: pl.steps[2].pts[pl.steps[2].pts.length - 1], roll: pl.roll, dz: pl.dz };
+          }, name);
+          const tg = (await ux(q)).target;
+          await to([tg[0], tg[1], Math.max(tg[2], 0.16)], 8, 0.08);
+          await to([g.hover[0], g.hover[1], Math.max(0.16, g.hover[2])], 10, 0.08); await S(q, (r) => window.__sim._ux.setRoll(r), g.roll); await S(q, () => window.__sim.advance(0.8));
+          await to(g.hover, 4, 0.08); await to(g.at, 20, 0.06); await S(q, () => window.__sim.advance(0.6));
+          await q.keyboard.press('Space'); await S(q, () => window.__sim.advance(1.0));
+          await to([g.at[0], g.at[1], 0.14], 10, 0.08); await S(q, () => window.__sim.advance(0.5));
+          held = (await ux(q)).held === name;
+          if (!held) { await q.keyboard.press('Space'); await S(q, () => window.__sim.advance(0.6)); continue; }
+          belt = true;
+          const dr = await S(q, async (n) => {
+            const B = await import('./src/objects/beltpick.js'), u = window.__sim._ux, w = u.world;
+            const fx = { paper: 'bin_paper', plastic: 'bin_plastic', glass: 'bin_glass', metal: 'bin_metal' }[B.fractionOf(n)], t = B.binDrop(w, fx, n);
+            const r = t.closeYaw != null ? u.ctl.graspRoll([t.xy[0], t.xy[1], 0.1], t.closeYaw, u.ctl.home, Math.PI).roll : null;
+            return { xy: t.xy, surface: t.surface, roll: r };
+          }, name);
+          await to([dr.xy[0], dr.xy[1], 0.14], 14, 0.08); if (dr.roll != null) await S(q, (r) => window.__sim._ux.setRoll(r), dr.roll);
+          await S(q, () => window.__sim.advance(0.8));
+          await to([dr.xy[0], dr.xy[1], dr.surface + g.dz + 0.004], 12, 0.06); await S(q, () => window.__sim.advance(0.5));
+          await q.keyboard.press('Space'); await S(q, () => window.__sim.advance(0.8));
+          await to([dr.xy[0], dr.xy[1], 0.14], 8, 0.08); await S(q, () => window.__sim.advance(0.4));
+          const stt = await S(q, (n) => window.__sim.waste().items.find((x) => x.name === n).state, name);
+          done = stt === 'bin' || stt === 'moving' || stt === 'tote' || stt === 'floor';
+        }
+        await q.keyboard.press('b');   // the belt runs again once the item is in its bin (or given up)
+        if (!belt) skip.push(name);
+        flow.push(name.replace(/\d$/, '') + (held ? '' : '(missed)'));
+        if (k === 3) await shot(q, 'desk-m11-hand-mid');
+        won = (await ux(q)).won;
+      }
+      if (!won) won = (await advanceUntil(q, () => window.__sim.ux().won, 60, 3)) > 0;
+      const r = await ux(q), run = await S(q, () => window.__sim.run()), ws = await S(q, () => window.__sim.waste().stats);
+      ok(won && r.result.kind === 'manual' && !run.auto && !run.assisted && r.result.stars >= 1 && ws.paused > 0,
+        `mission 11 by hand (gizmo/keyboard): ${won ? 'won' : 'not won'}, ${ws.correct}/${ws.n} sorted, purity ${ws.purity}, belt stood ${ws.paused.toFixed(1)} s, ${r.result && r.result.stars} ★ [${flow.join(', ')}]`);
+      await shot(q, 'desk-m11-hand-result');
+      const named = await S(q, () => document.getElementById('ux-wline').textContent);
+      ok(/★ hotovo/.test(named) && /☆ pás stál \d+(,\d)? s/.test(named), 'result card names the stars, the missed one with its measured value: ' + named);
       await q.close();
     }
     {

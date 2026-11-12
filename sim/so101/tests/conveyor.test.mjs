@@ -27,7 +27,9 @@ function step(n = 1) { for (let i = 0; i < n; i++) { belt.step(ts); mj.mj_step(m
 const tilt = (name, z0) => { const a = world.axis(name, 2); return Math.acos(Math.max(-1, Math.min(1, a[0] * z0[0] + a[1] * z0[1] + a[2] * z0[2]))) * 180 / Math.PI; };
 const vy = (name) => d.qvel[world.o[name].vadr + 1];
 
-test('conveyor scene: belt, slats, bins and the 12-item pool are compiled in; keyframe matches nq', () => {
+test('conveyor scene: belt, slats, bins and the 11-item pool are compiled in; keyframe matches nq', () => {
+  assert.equal(CONVEYOR_ITEMS.length, 11);
+  assert.equal(CONVEYOR_ITEMS.filter((it) => it.fraction === 'paper').length, 2, 'at most 2 paper cups: the paper bin holds two side by side');
   assert.equal(world.scene, 'conveyor');
   assert.ok(belt && belt.n === BELT.n, 'slats');
   assert.equal(m.key_qpos.length, m.nq * m.nkey);

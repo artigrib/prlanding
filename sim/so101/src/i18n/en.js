@@ -439,7 +439,7 @@ const strings = {
   'lahvička': 'vial', 'přihrádka na matice': 'nut bin',
   'přihrádku na matice': 'the nut bin', 'přihrádka na šrouby': 'bolt bin',
   'přihrádku na šrouby': 'the bolt bin', 'držák na šroubovák': 'screwdriver holder',
-  'stojánek na lahvičky': 'vial rack', 'Kapitola 11': 'Chapter 11',
+  'stojánek na lahvičky': 'vial rack', 
   /* conveyor scene (waste sorting): pool items and bins */
   'papírový kelímek': 'paper cup', 'plastový kelímek': 'plastic cup',
   'plastová vidlička': 'plastic fork', 'plastovou vidličku': 'the plastic fork',
@@ -551,7 +551,50 @@ Object.assign(strings, {
   'režim vlastníka': 'owner mode', 'učitelský režim': 'teacher mode'
 });
 
+// mission 11 "Třídění odpadu I: Ručně" (waste sorting on the conveyor)
+Object.assign(strings, {
+  'Třídění odpadu I: Ručně': 'Waste sorting I: By hand', 'Odpad z pásu do košů': 'Waste from the belt into the bins', 'Třídění odpadu': 'Waste sorting',
+  'Z pásu přijíždí odpad: papír, plast, sklo a kov. Roztřiďte ho do košů podle barvy a nápisu – co dojede na konec pásu, propadne. Nové: Pás ⏸ (klávesa B) pás zastaví, ale stojí hvězdu. Předměty jsou čisté modely z knihovny NVIDIA SimReady jako zástupci frakcí; papírový kelímek je zmenšený na 75 % a matice zvětšená 2,5×, aby je tištěné čelisti chytly.':
+    'Waste comes in on the belt: paper, plastic, glass and metal. Sort it into the bins by colour and name – whatever reaches the end of the belt is lost. New: Belt ⏸ (key B) stops the belt, but it costs a star. The items are clean models from the NVIDIA SimReady library standing in for each material; the paper cup is scaled down to 75 % and the nut up 2.5× so the printed jaws can grip them.',
+  'Berte vždy předmět nejblíž konci pásu. Koš poznáte podle barvy a nápisu. Když nestíháte, Pás ⏸ (B) ho zastaví.': 'Always take the item closest to the end of the belt. You can tell the bins by colour and name. If you can’t keep up, Belt ⏸ (B) stops it.',
+  'Pro všechny 3 ★: každý předmět do jeho koše a pás ani jednou nezastavit.': 'For all 3 ★: every item into its own bin, and never stop the belt.',
+  'Odpad je roztříděný': 'The waste is sorted', 'Odpad je roztříděný.': 'The waste is sorted.',
+  '★ hotovo (8 z 11) · ★ čistota 100 % · ★ bez zastavení pásu': '★ done (8 of 11) · ★ purity 100 % · ★ belt never stopped',
+  'Koš pro předmět u chapadla svítí. Tenká čára na pásu ukazuje, kde ten předmět bude za 3 s.': 'The bin for the item at the gripper lights up. A thin line on the belt shows where that item will be in 3 s.',
+  'Ukázat koš a předpověď': 'Show the bin and the prediction',
+  'Ruka sama roztřídí další předmět (Běží: Skript (plánovač)). Mise se pak počítá jako splněná, bez hvězdiček.': 'The arm sorts the next item by itself (Running: Script (planner)). The mission then counts as done, without stars.',
+  'Ukaž mi': 'Show me',
+  'Roztřiďte odpad z pásu do košů: papír, plast, sklo, kov. Co dojede na konec, propadne. Odpad začne jezdit, jakmile pohnete rukou.': 'Sort the waste from the belt into the bins: paper, plastic, glass, metal. Anything that reaches the end is lost. The waste starts coming as soon as you move the arm.',
+  'papír': 'paper', 'plast': 'plastic', 'sklo': 'glass', 'kov': 'metal',
+  'Ruka sama třídí předmět z pásu…': 'The arm is sorting an item from the belt…', 'Pás jede': 'The belt is running', 'Pás stojí': 'The belt has stopped',
+  'Běží: Skript (plánovač)': 'Running: Script (planner)',
+  'Pás ⏸': 'Belt ⏸', 'Pás ▶': 'Belt ▶', 'Rozjet pás (B)': 'Start the belt (B)', 'Zastavit pás (B)': 'Stop the belt (B)',
+  'pás stát / jet (mise 11)': 'belt: stop / run (mission 11)', 'Skutečná ruka': 'Real arm',
+  'Roztříděno': 'Sorted', 'Čistota': 'Purity', 'Propadlo': 'Lost', 'Pás stál': 'Belt stopped', 'ani jednou': 'never',
+  '★ hotovo': '★ done', '★ čistota 100 %': '★ purity 100 %', '★ bez zastavení pásu': '★ belt never stopped',
+  'Tohle roztřídila ruka sama (Skript, plánovač). Zkuste to teď vy.': 'The arm sorted this by itself (Script, planner). Now you try.',
+  'S ukázkou – hvězdičky jsou za ruční třídění.': 'With a demo – stars are for sorting by hand.'
+});
+
 const patterns = [
+  /* mission 11: waste sorting */
+  [/^Roztříděno (\d+) z (\d+)…$/, 'Sorted $1 of $2…'],
+  [/^Dávka skončila: (\d+) z (\d+) ve správném koši, potřeba (\d+)\. R spustí dávku znovu$/, 'Batch over: $1 of $2 in the right bin, $3 needed. R starts the batch again'],
+  [/^Pozor: (.+) je (papír|plast|sklo|kov), ne (papír|plast|sklo|kov)$/, (m, a, b, c) => `Careful: the ${T(a)} is ${T(b)}, not ${T(c)}`],
+  [/^Propadlo: (.+) \((papír|plast|sklo|kov)\) · (\d+) z (\d+)$/, (m, a, b, c, d) => `Lost: ${T(a)} (${T(b)}) · ${c} of ${d}`],
+  [/^Spadlo ze stolu: (.+) \((papír|plast|sklo|kov)\)$/, (m, a, b) => `Fell off the table: ${T(a)} (${T(b)})`],
+  [/^Už to na (\d+) nestačí – R spustí dávku znovu$/, 'Not enough left for $1 – R starts the batch again'],
+  [/^Zaseklo se na pásu: (.+) – vezměte to rukou$/, (m, a) => `Stuck on the belt: ${T(a)} – take it off by hand`],
+  [/^Teď nad koš: (papír|plast|sklo|kov)$/, (m, a) => `Now over the bin: ${T(a)}`],
+  [/^Hotovo (\d+) z (\d+) · na pásu (\d+)$/, '$1 of $2 done · $3 on the belt'],
+  [/^Pás stojí (\d+:\d\d)$/, 'Belt stopped $1'],
+  [/^(\d+) z (\d+)$/, '$1 of $2'],
+  [/^(\d+(?:,\d+)?) %(?: \((\d+) v cizím koši\))?$/, (m, a, b) => `${dec(a)} %` + (b ? ` (${b} in a wrong bin)` : '')],
+  [/^(\d+(?:,\d+)?) s$/, (m, a) => `${dec(a)} s`],
+  [/^☆ čistota (.+) %$/, (m, a) => `☆ purity ${dec(a)} %`], [/^☆ pás stál (.+) s$/, (m, a) => `☆ belt stopped ${dec(a)} s`],
+  [/^(papír|plast|sklo|kov) (\d+)\/(\d+) · (papír|plast|sklo|kov) (\d+)\/(\d+) · (papír|plast|sklo|kov) (\d+)\/(\d+) · (papír|plast|sklo|kov) (\d+)\/(\d+)$/,
+    (m, ...g) => [0, 3, 6, 9].map((k) => `${T(g[k])} ${g[k + 1]}/${g[k + 2]}`).join(' · ')],
+  [/^propadlo: (.+)$/, (m, a) => 'lost: ' + a.split(', ').map((x) => x.replace(/^(\S+) (\d+)$/, (q, f, n) => `${T(f)} ${n}`)).join(', ')],
   /* HUD stage 3: side view inset */
   [/^Pohled z boku: chapadlo (?:(\d+) cm (nad|pod) cílem|ve výšce cíle) \((.+)\)(?:, (\d+) cm vedle)?$/, (m, a, b, c, d) =>
     `Side view: gripper ${a ? `${a} cm ${b === 'nad' ? 'above' : 'below'} the target` : 'level with the target'} (${T(c)})${d ? `, ${d} cm to the side` : ''}`],
@@ -663,7 +706,7 @@ const patterns = [
 ];
 
 // pieces of composed messages, translated as a whole by the patterns above (for tools/i18n-extract.mjs)
-const fragments = ['Táhněte modrou kouli nad', 'Posuňte prstem chapadlo nad', 'Pohled z boku: {}', 'chapadlo ve výšce cíle ({})', 'chapadlo {} cm {} cílem ({})', ', {} cm vedle', 'STOP uvolněn. {} Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.', 'STOP uvolněn. {} Řízení zapnete tlačítkem „Znovu zapnout moment“.', 'Pauza po dlouhé relaci: pohyb půjde aktivovat za {}.', 'Skutečná ruka · POHYB POVOLEN · {} · zbývá {}', 'Skutečná ruka · jen čtení (shadow) · pauza {}', '· další: {}', '{} / {} misí · {} ★ z {}', '· sdílený čas {}', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
+const fragments = ['Zaseklo se na pásu: {} – vezměte to rukou', '({} v cizím koši)', 'Pás stojí {}', 'Teď nad koš: {}', '☆ pás stál {}', '☆ čistota {}', 'Táhněte modrou kouli nad', 'Posuňte prstem chapadlo nad', 'Pohled z boku: {}', 'chapadlo ve výšce cíle ({})', 'chapadlo {} cm {} cílem ({})', ', {} cm vedle', 'STOP uvolněn. {} Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.', 'STOP uvolněn. {} Řízení zapnete tlačítkem „Znovu zapnout moment“.', 'Pauza po dlouhé relaci: pohyb půjde aktivovat za {}.', 'Skutečná ruka · POHYB POVOLEN · {} · zbývá {}', 'Skutečná ruka · jen čtení (shadow) · pauza {}', '· další: {}', '{} / {} misí · {} ★ z {}', '· sdílený čas {}', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
 
 // object library names: generated map, hand-written keys above win
 for (const [k, v] of Object.entries(objectNames)) if (!(k in strings)) strings[k] = v;

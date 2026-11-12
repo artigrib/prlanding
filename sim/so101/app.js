@@ -14,12 +14,12 @@ const TEST = new URLSearchParams(location.search).get('test') === '1';  // Playw
 // 'conveyor' scene, the rest the plain one. Same start rule as ux.startRoute(): ?mise=, otherwise the stored mission,
 // or the first unfinished one when it is done. Keep the lists in sync with MISSIONS (tests/missions-objects.test.mjs).
 const OBJECT_MISSIONS = ['line', 'breakfast', 'tidy', 'workshop', 'lab'];
-const CONVEYOR_MISSIONS = [];
+const CONVEYOR_MISSIONS = ['waste_hand'];
 const MISSION_ORDER = ['bowl', 'stack', 'sort', 'ball', 'trace', ...OBJECT_MISSIONS, ...CONVEYOR_MISSIONS];
 const sceneOfId = (id) => (CONVEYOR_MISSIONS.includes(id) ? 'conveyor' : OBJECT_MISSIONS.includes(id) ? 'objects' : 'plain');
 function sceneFor() {
   const q = new URLSearchParams(location.search), mise = q.get('mise');
-  // dev / test view of the conveyor cell before its missions exist: ?scene=conveyor&test=1
+  // dev / test view of the conveyor cell without a mission: ?scene=conveyor&test=1
   if (TEST && !mise && q.get('scene') === 'conveyor') return 'conveyor';
   if (mise) return sceneOfId(mise);
   try {
@@ -74,8 +74,8 @@ async function main() {
   $('loader').hidden = true;
   $('hud').hidden = false;
   $('sr').textContent = 'Simulace je připravena, ovládání je dostupné.';
-  // detail enum (analytics/schema.json) is plain | objects; 'conveyor' gets its own value with the first conveyor
-  // mission (schema + backend change), until then it counts as an object scene
+  // detail enum (analytics/schema.json) is plain | objects; the conveyor scene (mission 11) reports 'objects' until the
+  // schema and the backend get a 'conveyor' value (a separate backend PR)
   track('sim_loaded', { sim: 'so101', ms: Math.round(performance.now() - t0), detail: ctx.scene === 'plain' ? 'plain' : 'objects' });
   if (TEST) {
     const api = app.api(); api.loadMs = Math.round(performance.now() - t0);

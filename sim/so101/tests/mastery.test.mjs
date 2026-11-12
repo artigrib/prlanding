@@ -48,7 +48,7 @@ test('v1 progress migrates as-is (legacy stars stay displayed)', () => {
 });
 
 test('autopilot fades from mission 04', () => {
-  assert.deepEqual(MISSIONS.map((m) => autopilotAllowed(m)), [true, true, true, false, false, false, false, false, false, false]);
+  assert.deepEqual(MISSIONS.map((m) => autopilotAllowed(m)), [true, true, true, false, false, false, false, false, false, false, false]);
   for (const m of MISSIONS) assert.ok(m.strategy && !/Klikněte na/.test(m.strategy), m.id + ' has a manual strategy for hint rung 1');
   assert.equal(MISSIONS[0].desc, 'Dostaňte kostku do modré misky.', 'mission 01 states the outcome only');
   assert.ok(!/ruka sama natočí|natočí podél/.test(MISSIONS.map((m) => m.desc + (m.strategy || '')).join(' ')), 'no mission promises the planner rotates the object');

@@ -76,9 +76,13 @@ export const FIXTURES = {
   tray: { label: ['podnos', 'podnos'], zone: { hx: 0.11, hy: 0.08, top: 0.014 } },
   holder: { label: ['držák na šroubovák', 'držák na šroubovák'], zone: { hx: 0.085, hy: 0.02, top: 0.02 } },
   rack: { label: ['stojánek na lahvičky', 'stojánek na lahvičky'], zone: { hx: 0.021, hy: 0.021, top: 0.03 }, slots: [-0.047, 0, 0.047] },
-  // conveyor profile: 4 waste bins (inside 9 × 9 cm, plastic 17 × 10 cm for the 16 cm fork and spoon)
-  bin_paper: { label: ['koš na papír', 'koš na papír'], zone: { hx: 0.045, hy: 0.045, top: 0.04 } },
-  bin_plastic: { label: ['koš na plast', 'koš na plast'], zone: { hx: 0.05, hy: 0.085, top: 0.04 } },
+  // conveyor profile: 4 waste bins. Glass and metal: inside 9 × 9 cm. Paper: 10 × 17 cm, so two 6 cm paper cups
+  // stand side by side (in a 9 × 9 cm bin the second cup had to stack on the first and rested above the counted
+  // height: beltSolve batch runs, PR 2). Plastic: 12 × 17 cm: the 16 cm fork and spoon lie lengthwise in one lane and
+  // the 6.4 cm plastic cup stands in the other (objects/beltpick.js binDrop); 10 cm left no lane beside the cup
+  // (batch runs, mission PR: fork and spoon skipped as "full" in 5 of 10 seeds).
+  bin_paper: { label: ['koš na papír', 'koš na papír'], zone: { hx: 0.05, hy: 0.085, top: 0.04 } },
+  bin_plastic: { label: ['koš na plast', 'koš na plast'], zone: { hx: 0.06, hy: 0.085, top: 0.04 } },
   bin_glass: { label: ['koš na sklo', 'koš na sklo'], zone: { hx: 0.045, hy: 0.045, top: 0.04 } },
   bin_metal: { label: ['koš na kovy', 'koš na kovy'], zone: { hx: 0.045, hy: 0.045, top: 0.04 } }
 };
@@ -197,13 +201,13 @@ function applyCollision(entry, text) {
 const LYING = [Math.SQRT1_2, 0, Math.SQRT1_2, 0];
 
 // ---------------------------------------------------------------- conveyor profile (waste sorting, M11–M13)
-// Batch pool: 12 items, 3 per fraction (design: redesign/campaign-trideni.md §1). The paper cup is shown at 75 %
+// Batch pool: 11 items: 2 paper cups and 3 items of each other fraction (design: campaign §1 had 3 paper cups; the
+// paper bin holds two cups side by side, a third one had no room, so a batch has at most 2). The paper cup is shown at 75 %
 // (6.0 cm instead of 8.0 cm across: at full size the printed jaws, ~7.5 cm open, cannot close on it); the nut at 2.5×
 // as in mission 06. Scaling covers collision, mass and visual together (scaleMjcf), see NOTICE.txt §6.
 export const CONVEYOR_ITEMS = [
   { name: 'cup_paper1', id: 'dishware_cup_paper_a01', scale: 0.75, fraction: 'paper' },
   { name: 'cup_paper2', id: 'dishware_cup_paper_a01', scale: 0.75, fraction: 'paper' },
-  { name: 'cup_paper3', id: 'dishware_cup_paper_a01', scale: 0.75, fraction: 'paper' },
   { name: 'cup_plastic1', id: 'dishware_plastic_cup_a01', fraction: 'plastic' },
   { name: 'fork_plastic1', id: 'dishware_plastic_fork_a01', fraction: 'plastic' },
   { name: 'spoon_plastic1', id: 'dishware_plastic_spoon_a01', fraction: 'plastic' },
@@ -226,9 +230,9 @@ export const BELT = {
   rail: { h: 0.015, t: 0.004, gap: 0.002 }, accel: 0.05, entry: 0.08, edge: 0.27,
   tote: { hx: 0.07, y0: 0.274, y1: 0.414, floor: -0.085 }   // floor above World.rescue's −0.1 m
 };
-// Bin spots (§3): near side (0.12, ±0.17) measured as placement targets in the prototypes; far side (0.38, ±0.14)
-// not measured yet (mission PR). The plastic bin lies along y (17 cm), clear of the belt rail.
-export const CONVEYOR_BINS = { bin_paper: [0.12, -0.17], bin_plastic: [0.12, 0.17], bin_glass: [0.38, -0.14], bin_metal: [0.38, 0.14] };
+// Bin spots (§3): near side (0.12, ±0.17), far side (0.38, ±0.14); every bin measured as a placement target with
+// tools/belt-measure.mjs bins (PR 2). The paper and plastic bins lie along y (17 cm), clear of the belt rail.
+export const CONVEYOR_BINS = { bin_paper: [0.12, -0.17], bin_plastic: [0.11, 0.17], bin_glass: [0.38, -0.14], bin_metal: [0.38, 0.14] };
 export const FRACTION_BIN = { paper: 'bin_paper', plastic: 'bin_plastic', glass: 'bin_glass', metal: 'bin_metal' };
 
 function conveyorXml() {
@@ -265,10 +269,10 @@ ${frame.join('\n')}
     </body>
 ${slats.join('\n')}
     <body name="bin_paper" pos="${FIXTURE_PARK.bin_paper.join(' ')} -0.75" mocap="true">
-${bin('bin_paper', 0.045, 0.045, 0.04, C.blue)}
+${bin('bin_paper', 0.05, 0.085, 0.04, C.blue)}
     </body>
     <body name="bin_plastic" pos="${FIXTURE_PARK.bin_plastic.join(' ')} -0.75" mocap="true">
-${bin('bin_plastic', 0.05, 0.085, 0.04, C.yellow)}
+${bin('bin_plastic', 0.06, 0.085, 0.04, C.yellow)}
     </body>
     <body name="bin_glass" pos="${FIXTURE_PARK.bin_glass.join(' ')} -0.75" mocap="true">
 ${bin('bin_glass', 0.045, 0.045, 0.04, C.green)}

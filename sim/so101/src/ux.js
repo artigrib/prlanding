@@ -3,7 +3,7 @@
 
 import { ArmController, GRIP_OPEN, GRIP_CLOSED } from './controller.js';
 import { World } from './world.js';
-import { MISSIONS, MissionRunner, bowlDrop, pushPlan, libPick, libPlace, libTarget, libGrasp, libPickPlace, inZone, autopilotAllowed, runsIn, graspHint, reachHint } from './missions.js';
+import { MISSIONS, MissionRunner, bowlDrop, FRACTION_CS, pushPlan, libPick, libPlace, libTarget, libGrasp, libPickPlace, inZone, autopilotAllowed, runsIn, graspHint, reachHint } from './missions.js';
 import { runOutcome, mergeRecord, migrateProgress, partialPlan, HintCoach, PROGRESS_VERSION } from './mastery.js';
 import { Extras } from './ui/extras.js';
 import { Gizmo } from './ui/gizmo.js';
@@ -26,6 +26,9 @@ import { track } from './analytics.js';
 import { calmMode } from './ui/calm.js';
 import { DropWatch } from './touch.js';
 import { sideTarget } from './sidegeom.js';
+import { beltSolve } from './objects/beltpick.js';
+import { WASTE } from './objects/wastebatch.js';
+import { BeltView } from './ui/beltview.js';
 
 export async function install(page, env) {
   // core.js layout (servo-emulator branch): the page (MissionPage) owns sliders/demo/HUD, page.sim (ArmSim)
@@ -106,8 +109,14 @@ class UX {
 
     this.extras = new Extras(this);
     if (this.world.lib && objects) { this.world.sizes(objects.sizes); this.objView = new ObjectView(this, objects); }
+    // conveyor: an item the mission spawns onto the belt is shown at once (hull proxy until its GLB is in)
+    this.world.onSpawn = (n) => {
+      const g = this.extras.meshes[n]; if (g) g.visible = true;
+      if (this.objView) { this.objView.loadGlb(n); this.objView.sync(true); }
+    };
     this.teach = new Teach(this);
     this.panel = new Panel(this);
+    if (this.world.belt && this.objView) this.beltView = new BeltView(this);   // mission 11 overlays
     this.gizmo = new Gizmo(this);
     this.cameras = new Cameras(this);
     this.side = new SideView(this);   // "Pohled z boku" inset (depth cue, playtest problem 4)
@@ -161,7 +170,8 @@ class UX {
     this.runner.select(this.startRoute(new URLSearchParams(location.search)));
     // hint buttons (both play the planner's solution, see startDemo): which one was used
     addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('#ux-mhint,#ux-hintnext'); if (b) track('hint_used', { mission: this.runner.m.id, level: b.id === 'ux-mhint' ? 1 : 2 }); }, true);
-    if (!runsIn(this.runner.m, this.world.scene)) this.runner.select('bowl');   // app.js loads the mission's scene when needed
+    // app.js loads the mission's scene when needed; a scene opened without one of its missions shows its first one
+    if (!runsIn(this.runner.m, this.world.scene)) this.runner.select(MISSIONS.find((x) => runsIn(x, this.world.scene)).id);
     this.setMode(this.mode, true);
     this.panel.showPitch(this.ctl.pitch);
     this.panel.showSound(this.sound.on);
@@ -268,6 +278,7 @@ class UX {
     this.gizmo.sync(dt);
     this.cameras.tick(dt);
     if (this.explode) this.explode.tick(dt);
+    if (this.beltView) this.beltView.tick();   // before the frame is drawn
     this.cameras.render();
     this.confetti.tick(dt);
     this.panel.tick();
@@ -286,6 +297,10 @@ class UX {
     this.runner.setup();
     this.extras.onLayout(this.runner.m);
     if (this.objView) this.objView.onLayout(this.runner.m);
+    // conveyor missions: the batch items are spawned later, their GLBs are fetched now
+    if (this.runner.m.belt && this.objView) for (const n of Object.keys(this.runner.m.sort)) this.objView.loadGlb(n);
+    if (this.beltView) this.beltView.reset();
+    this.panel.showBelt(this.runner.m.belt ? this.world.belt.speed === 0 : null);
     // pick-and-place missions start with the gripper open: the first move is "go down and close" (P0-3)
     if (this.runner.m.openStart) {
       const a = this.app.act[5], m = this.m;
@@ -315,7 +330,7 @@ class UX {
     this.runner.start();
     this.runner.assisted = true;        // the robot solved it: no stars / record for the visitor (P1-4)
     track('solution_shown', { mission: this.runner.m.id });
-    const plan = this.runner.m.solve(this.ctl, this.world);
+    const plan = this.runner.m.solve(this.ctl, this.world, this.runner);
     this.preview(plan, true);
     this.panel.toast('Ruka plánuje řešení…');
     return true;
@@ -330,6 +345,7 @@ class UX {
     const plan = this.pending ? this.pending.plan : this.ctl.plan && this.ctl.plan.plan, k = (plan && plan.kind) || '';
     if (/^pick/.test(k)) return 'Ruka sama bere předmět…';
     if (/^place/.test(k)) return 'Ruka sama pokládá předmět…';
+    if (k === 'belt') return 'Ruka sama třídí předmět z pásu…';
     return 'Ruka jede po naplánované cestě…';
   }
   /** the mission's next step as if moving by hand (hint ladder "Teď:"); the drawing mission keeps its own line */
@@ -439,6 +455,18 @@ class UX {
     this.panel.showPen(this.penTool);
     this.panel.penHint.hidden = !this.penTool;
   }
+  /** Pás ⏸/▶ (key B, conveyor missions): stop or start the belt (ramped, src/objects/belt.js). Starts the run. */
+  toggleBelt() {
+    const b = this.world.belt;
+    if (!b || !this.runner.m.belt || this.app.won) return;
+    b.speed = b.speed ? 0 : WASTE.speed;
+    this.runner.start();
+    this.panel.showBelt(b.speed === 0);
+    this.sound.blip(b.speed ? 520 : 300, 0.06);
+    this.srSay(b.speed ? 'Pás jede' : 'Pás stojí');
+  }
+  /** The waste run of the current mission (mission 11), or null. */
+  wasteRun() { return (this.runner.m.belt && this.runner.ctx.s.run) || null; }
   setRoll(r) { if (!this.ctl.active) this.ctl.begin(); this.ctl.setRoll(r); this.onUserMove('roll'); }
   setPitch(p) { this.ctl.pitch = p; this.panel.showPitch(p); if (!this.ctl.active) this.ctl.begin(); this.onUserMove('pitch'); }
   cycleView() { const v = this.cameras.cycle(); this.panel.showView(v); }
@@ -678,6 +706,7 @@ class UX {
   }
   /** Rung 2: a ghost path to the next subgoal only (nothing moves). */
   hintGhost() {
+    if (this.runner.m.belt) return !!this.beltView;   // the overlay follows the hint level (src/ui/beltview.js)
     let plan; try { plan = partialPlan(this.nextPlan()); } catch (e) { return false; }
     this.gizmo.showPath(plan, !this.reduced);
     clearTimeout(this.ghostT); this.ghostT = setTimeout(() => this.gizmo.fadePath(), 6000);
@@ -687,11 +716,33 @@ class UX {
   hintPartial() {
     if (this.teach.replaying) this.teach.stopReplay();
     if (this.mode !== 'smart') this.setMode('smart');
+    if (this.runner.m.belt) return this.beltShowMe();
     let plan; try { plan = partialPlan(this.nextPlan()); } catch (e) { return false; }
     this.hintRun = true;
     const ok = this.preview(plan);
     this.hintRun = false;
     return ok;
+  }
+
+  /** "Ukaž mi" (mission 11, hint rung 3): the scripted tracking planner sorts the next item from the belt, then the
+   *  player goes on. Counts as autopilot (no stars). */
+  beltShowMe() {
+    let done = false, misses = 0;
+    const plan = beltSolve(this.ctl, this.world, {
+      stop: () => done || this.app.won,
+      log: (e) => { if (e.ev === 'release' || e.ev === 'skip') done = true; if (e.ev === 'miss' && ++misses >= 2) done = true; }
+    });
+    this.runner.start();
+    this.hintRun = true;
+    const ok = this.preview(plan);
+    this.hintRun = false;
+    return ok;
+  }
+  /** chip text while the planner moves the arm in a conveyor mission (design §7: every label says which policy runs) */
+  policyChip() {
+    if (!this.runner.m.belt) return null;
+    const plan = this.pending ? this.pending.plan : this.ctl.plan && this.ctl.plan.plan;
+    return plan && plan.kind === 'belt' ? 'Běží: Skript (plánovač)' : null;
   }
 
   /** "Sdílet rekord": a link that opens the mission with this time as the target (?mise=&rekord=). */
@@ -801,6 +852,7 @@ class UX {
         case 'l': case 'L': this.togglePlay(); break;
         case 'h': case 'H': this.ctl.cancel(); this.pending = null; this.app.goHome(); this.ctl.syncFromCtrl(); break;
         case 'r': case 'R': this.app.reset(); break;
+        case 'b': case 'B': if (this.runner.m.belt) this.toggleBelt(); else used = false; break;
         case 's': case 'S': this.setSound(!this.sound.on); break;
         case '?': this.panel.openHelp(); break;
         default:
@@ -842,6 +894,13 @@ class UX {
       return this.gizmo.project(p, {});
     };
     api.objectScene = () => !!this.world.lib;
+    // mission 11: the waste run (items and their states, counts, purity, pause) and the Pás control
+    api.waste = () => {
+      const run = this.wasteRun(); if (!run) return null;
+      return { stats: run.stats(), done: run.done(), t: run.t, items: run.items.map((it) => ({ name: it.name, fraction: it.fraction, state: it.state, bin: it.bin, p: it.state === 'queued' ? null : Array.from(this.world.com(it.name, [0, 0, 0])) })),
+        belt: { speed: this.world.belt.speed, v: this.world.belt.v }, chip: this.policyChip() };
+    };
+    api.beltToggle = () => this.toggleBelt();
     api.objectsReady = () => (this.objView ? this.objView.ready() : true);
     api.record = (on) => { if (on !== this.teach.recording) this.toggleRec(); };
     api.replay = (loop) => { this.teach.loop = !!loop; return this.teach.startReplay(); };

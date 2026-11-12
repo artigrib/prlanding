@@ -115,8 +115,10 @@ async function winM01(T) {
   const base = `http://127.0.0.1:${port}/sim/so101/?test=1&detail=low&mise=bowl`;
   const browser = await chromium.launch({ args: ARGS });
   try {
-    if (process.env.TOUCH_ONLY !== 'pad') await classic(browser, base);
-    if (process.env.TOUCH_ONLY !== 'classic') await trackpad(browser, base);
+    const only = process.env.TOUCH_ONLY;
+    if (!only || only === 'classic') await classic(browser, base);
+    if (!only || only === 'pad') await trackpad(browser, base);
+    if (!only || only === 'm11') await m11(browser, base.replace('mise=bowl', 'mise=waste_hand'));
   } catch (e) { console.log('FAIL exception', e); fails++; }
   await browser.close(); srv.kill();
   console.log(fails ? `\n${fails} FAILED` : '\nALL OK', '— screenshots in', OUT);
@@ -496,4 +498,128 @@ async function trackpad(browser, base) {
   ok(dp.pad.chosen && !dp.pad.on && !dp.rail && ds.active && Math.hypot(ds.goal[0] - want[0], ds.goal[1] - want[1]) < 0.003, 'pad: mission 05 keeps the absolute finger trace ' + JSON.stringify({ on: dp.pad.on, goal: ds.goal.map((v) => +v.toFixed(3)), want: want.map((v) => +v.toFixed(3)) }));
   await D.shot('t2-29-pad-m05');
   await D.ctx.close();
+}
+
+// ---------------- mission 11 (conveyor) by hand with touch, portrait 390×844: classic scheme and trackpad ----------------
+
+/** perfect aim at a belt item for the current wrist roll: the gripper point where the jaws close around it (as libPick
+ *  plans it; a round item may be gripped from any heading, so the heading that needs no wrist turn is taken) */
+async function aimAt(T, name) {
+  return T.S(async (n) => {
+    const M = await import('./src/missions.js'), B = await import('./src/objects/beltpick.js'), u = window.__sim._ux, c = u.ctl;
+    const g = M.libGrasp(u.world, n), z = Math.max(g.z, B.BELT_FLOOR), off = Math.max(-0.014, 0.0195 - g.width / 2 - 0.004);
+    const roll0 = c.active ? c.roll : u.app.d.ctrl[u.app.act[4]];
+    let best = null;
+    for (let k = 0; k < 64; k++) {
+      const r = c.graspRoll([g.g[0], g.g[1], z], k * Math.PI / 64, c.home, Math.PI, off), dd = Math.abs(r.roll - roll0);
+      if (!best || dd < best.d) best = { d: dd, at: r.at };
+    }
+    const fx = { paper: 'bin_paper', plastic: 'bin_plastic', glass: 'bin_glass', metal: 'bin_metal' }[B.fractionOf(n)], dr = B.binDrop(u.world, fx, n);
+    return { at: best.at, z, top: g.top, dRoll: best.d, bin: fx, drop: dr.xy, dz: z - g.bottom, surface: dr.surface };
+  }, name);
+}
+/** the first input starts the batch: Pás (pause) – Pás (run) – wait until the first item is in front of the arm –
+ *  Pás (pause). Returns the item's name. */
+async function m11Start(T, flow) {
+  const pas = async () => { const b = await rectOf(T, '#ux-belt'); await T.tap((b[0] + b[2]) / 2, (b[1] + b[3]) / 2); };
+  await pas(); await T.adv(0.5); flow.push('Pás ⏸ (start)');
+  const paused = await T.S(() => window.__sim.waste().belt.speed === 0);
+  await pas(); await T.adv(0.3); flow.push('Pás ▶');
+  let it = null;
+  for (let i = 0; i < 40; i++) {
+    it = await T.S(() => window.__sim.waste().items.find((x) => x.state === 'belt'));
+    if (it && it.p[1] > -0.02) break;
+    await T.adv(1);
+  }
+  await pas(); await T.adv(0.8); flow.push('Pás ⏸');
+  const st = await T.S(() => window.__sim.waste().belt);
+  return { name: it && it.name, paused, stopped: st.speed === 0 && Math.abs(st.v) < 1e-6 };
+}
+async function m11Done(T, name) {
+  let s = null;
+  for (let i = 0; i < 10; i++) { await T.adv(0.5); s = await T.S((n) => { const w = window.__sim.waste(); return { it: w.items.find((x) => x.name === n), st: w.stats }; }, name); if (s.it.state === 'bin') break; }
+  const run = await T.S(() => window.__sim.run());
+  return { state: s.it.state, bin: s.it.bin, correct: s.st.correct, auto: run.auto, assisted: run.assisted, manual: run.manual };
+}
+
+async function m11(browser, base) {
+  // M11_DEBUG=1: every step with the target, the tip and the item
+  const dbg = async (T, name, k) => { if (!process.env.M11_DEBUG) return; const u = await T.ux(), it = await T.S((n) => { const w = window.__sim._ux.world; return [Array.from(w.com(n, [0, 0, 0])).map((v) => +v.toFixed(3)), +w.axis(n, 2)[2].toFixed(2)]; }, name); console.log('   ', k, 'target', u.target.map((v) => +v.toFixed(3)), 'tip', u.tip.map((v) => +v.toFixed(3)), 'item', JSON.stringify(it), 'held', u.held, u.hud); };
+  // ---- classic: ball, height arrows, Chapadlo, Pás ----
+  {
+    const T = await phone(browser, base, { width: 390, height: 844 });
+    await T.S(() => { window.__sim._app.sim.paused = true; });   // simulated time only through advance(): the belt waits for the finger
+    await T.shot('t3-01-m11-classic-start');
+    const lay = await T.S(() => { const b = document.getElementById('ux-abar'), r = [...b.querySelectorAll('.ux-ab:not([hidden])')].map((x) => x.getBoundingClientRect());
+      return { n: r.length, five: b.classList.contains('ux-ab5'), minW: Math.round(Math.min(...r.map((x) => x.width))), minH: Math.round(Math.min(...r.map((x) => x.height))), docW: document.documentElement.scrollWidth }; });
+    ok(lay.n === 5 && lay.five && lay.minW >= 44 && lay.minH >= 44 && lay.docW <= 390, 'm11 phone: thumb bar has 5 slots (Pás added), each ≥ 44 px ' + JSON.stringify(lay));
+    const flow = [];
+    const s0 = await m11Start(T, flow);
+    ok(!!s0.name && s0.paused && s0.stopped, 'm11 classic: a tap on Pás starts the batch and stops the belt ' + JSON.stringify(s0));
+    const A = await aimAt(T, s0.name);
+    // 1. up above the item's top (a paper cup is 8 cm tall), then the ball over it at that height
+    let h = await T.handles(), u0 = await T.ux();
+    const z0 = u0.active ? u0.target[2] : u0.tip[2];
+    if (z0 < A.top + 0.05) { await T.drag([h.up, await T.P([u0.tip[0], u0.tip[1], A.top + 0.05 + 0.036 * h.scale])]); await T.adv(1.2); flow.push('up'); }
+    u0 = await T.ux(); h = await T.handles();
+    await T.drag([h.ball, await T.P([A.at[0], A.at[1], u0.target[2]])]); await T.adv(1.5); flow.push('ball→' + s0.name); await dbg(T, s0.name, 'ball');
+    // 2. down arrow to the grasp height, a few short drags (a finger lowers it slowly; the arm follows in between:
+    //    a jump of the target straight down knocked tall cups and vials over in node runs)
+    const zTop = (await T.ux()).target[2];
+    for (let i = 1; i <= 6; i++) {
+      const u = await T.ux(); if (u.target[2] < A.z + 0.004) break;
+      h = await T.handles();
+      const z = Math.max(A.z, zTop + (A.z - zTop) * i / 4);
+      await T.drag([h.down, await T.P([u.target[0], u.target[1], z - 0.04 * h.scale])]); await T.adv(0.5); flow.push('down'); await dbg(T, s0.name, 'down');
+    }
+    await T.adv(0.8);
+    // 3. close, 4. up, 5. ball over the bin, 6. open
+    await gripTap(T); await T.adv(1.2); flow.push('close'); await dbg(T, s0.name, 'close');
+    let u = await T.ux();
+    for (const z of [0.07, 0.12]) { h = await T.handles(); u = await T.ux(); await T.drag([h.up, await T.P([u.target[0], u.target[1], z + 0.036 * h.scale])]); await T.adv(0.6); }
+    flow.push('up');
+    const held = (await T.ux()).held === s0.name;
+    u = await T.ux(); h = await T.handles();
+    await T.drag([h.ball, await T.P([A.drop[0], A.drop[1], u.target[2]])], 12, 40); await T.adv(2); flow.push('ball→' + A.bin);
+    // lower over the bin before letting go (a cup dropped from 12 cm bounced)
+    h = await T.handles(); u = await T.ux();
+    await T.drag([h.down, await T.P([u.target[0], u.target[1], Math.max(0.07, A.surface + A.dz + 0.02) - 0.04 * h.scale])]); await T.adv(1); flow.push('down');
+    await T.shot('t3-02-m11-classic-carry');
+    await gripTap(T); flow.push('open');
+    const r = await m11Done(T, s0.name);
+    ok(held && r.state === 'bin' && r.bin === A.bin && r.correct === 1 && !r.auto && !r.assisted,
+      `m11 classic touch: ${s0.name} sorted by hand into ${r.bin} (${r.state}) in ${T.gestures} gestures [${flow.join(', ')}] aim roll off ${A.dRoll.toFixed(2)} rad ` + JSON.stringify(r));
+    await T.shot('t3-03-m11-classic-sorted');
+    await T.ctx.close();
+  }
+  // ---- trackpad (?touch=pad): select, pad, rail, Chapadlo, Pás ----
+  {
+    const T = await phone(browser, base + '&touch=pad', { width: 390, height: 844 });
+    await T.S(() => { window.__sim._app.sim.paused = true; });
+    await sleep(1500);   // the first-play ghost hand
+    const flow = [];
+    const s0 = await m11Start(T, flow);
+    const c = await T.P(await T.S((n) => Array.from(window.__sim._ux.world.com(n, [0, 0, 0])), s0.name));
+    await T.tap(...c); flow.push('tap ' + s0.name);
+    const sel = (await T.S(() => window.__sim.pad())).sel;
+    const A = await aimAt(T, s0.name);
+    await railTo(T, A.top + 0.05, 0.006); await T.adv(1); flow.push('rail up');
+    await padTo(T, A.at[0], A.at[1]); flow.push('pad→item');
+    const det = await T.S((n) => window.__sim._ux.pad.heights(n), s0.name);
+    const zh = (await T.ux()).target[2];
+    for (const k of [1, 2, 3]) { await railTo(T, zh + (det[0] - zh) * k / 3, 0.002); await T.adv(0.4); }
+    await T.adv(0.8); flow.push('rail→grasp');
+    await gripTap(T); await T.adv(1.2); flow.push('close');
+    for (const z of [0.07, 0.12]) { await railTo(T, z, 0.004); await T.adv(0.5); }
+    await T.adv(0.5); flow.push('rail up');
+    const held = (await T.ux()).held === s0.name;
+    await padTo(T, A.drop[0], A.drop[1], 0.008); await T.adv(1.5); flow.push('pad→' + A.bin);
+    await railTo(T, Math.max(0.07, A.surface + A.dz + 0.02), 0.006); await T.adv(1); flow.push('rail down');
+    await gripTap(T); flow.push('open');
+    const r = await m11Done(T, s0.name);
+    ok(sel === s0.name && Math.abs(det[0] - A.z) < 1e-6 && held && r.state === 'bin' && r.bin === A.bin && r.correct === 1 && !r.auto && !r.assisted,
+      `m11 trackpad: ${s0.name} selected (${sel}), grasp detent ${(det[0] * 1000).toFixed(1)} mm (belt floor), sorted into ${r.bin} in ${T.gestures} gestures [${flow.join(', ')}] ` + JSON.stringify(r));
+    await T.shot('t3-04-m11-pad-sorted');
+    await T.ctx.close();
+  }
 }

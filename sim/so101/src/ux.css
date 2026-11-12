@@ -664,3 +664,16 @@
   .ux-pad .ux-pip,.ux-pad .ux-side-on .ux-pip{top:218px;bottom:auto}
 }
 .ux-result-open .ux-rail,.ux-result-open .ux-wstrip,.ux-drawer-open .ux-rail,.ux-drawer-open .ux-wstrip{display:none}
+
+/* ---- conveyor missions (mission 11): Pás button, chips under the top row, chapter header in the picker ---- */
+.ux-ab[aria-pressed=true]#ux-belt{background:var(--ink);color:#fff}
+.ux-chips{position:absolute;right:16px;top:76px;display:flex;flex-direction:column;align-items:flex-end;gap:6px;z-index:3;pointer-events:none}
+.ux-chips>span{background:#fff;border:1px solid var(--ink);padding:5px 10px;font-weight:500}
+.ux-chips>span[hidden]{display:none}
+.ux-chip-belt{border-color:var(--accent)!important;color:var(--accent-text)}
+.ux-cardh{grid-column:1/-1;margin:8px 0 0;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+@media (max-width:860px) and (min-height:501px){
+  .ux-abar.ux-ab5{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .ux-chips{right:8px;top:112px}
+}
+@media (max-height:500px){.ux-chips{top:60px;right:8px}}
