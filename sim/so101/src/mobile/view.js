@@ -1,23 +1,28 @@
 // three.js visuals of the mobile scene (src/mobile/scene.js): the floor, the two labs, the cart and its LeKiwi base.
 // core.js build() already draws the arm and the chassis geoms with a colour (tray, vial rack, crate) and moves them
 // every frame. This adds what MuJoCo does not need:
-// - the static rooms: walls one mesh each (a wall between the camera and the cart is faded, so the cart never hides
-//   behind it), bench tops and legs merged into one mesh per material;
+// - the static rooms: walls one mesh each, bench tops and legs merged into one mesh per material. A wall between the
+//   camera and the cart (and the middle wall, from either lab) is drawn cut down to bench height (0.76 m), so both
+//   labs stay readable over it and the door gap stays visible (campaign PR 2; PR 1 faded it). The front camera view
+//   never cuts walls: a real camera cannot see through them;
 // - the cart frame: corner posts and the two lower shelves (schematic: the tier spacing is not published), the two
 //   LeKiwi plates and 3 procedural omni wheels (hub + 2 × 6 rollers, sizes measured from the LeKiwi wheel STL) that
 //   spin at the wheel speeds the LeRobot matrix gives for the chassis's measured velocity (scene.js wheelSpeeds);
-// - room labels; the sun's shadow camera follows the cart.
+// - a schematic head post with the front camera box (front_cam in scene.js, where XLeRobot mounts its head camera);
+// - room labels; the sun's shadow camera follows the cart;
+// - the camera views (src/mobile/camera.js).
 // Everything lives in app.world (MuJoCo frame, z up).
 
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { CART, LEKIWI, MAP, wheelSpeeds, wheelPose } from './scene.js';
+import { CART, LEKIWI, MAP, FRONT_CAM, wheelSpeeds, wheelPose } from './scene.js';
+import { CameraRig } from './camera.js';
 
 const t = (s) => (globalThis.PRI18N ? globalThis.PRI18N.t(s) : s);
 const LABEL = { A: 'Laboratoř A · Příjem vzorků', B: 'Laboratoř B · Analytika' };
-const WALL_FADE = 0.18;   // opacity of a wall between the camera and the cart
+const CUT_H = MAP.bench.top;   // cutaway walls end at bench height: bench tops, racks and the cart show over them
 
 export class MobileView {
-  constructor(sim, THREE) {
+  constructor(sim, THREE, opts = {}) {
     const T = this.T = THREE, m = this.m = sim.m, mj = sim.mj;
     this.sim = sim; this.d = sim.d;
     const id = (type, n) => mj.mj_name2id(m, mj.mjtObj[type].value, n);
@@ -33,7 +38,7 @@ export class MobileView {
     this.rooms(mj);
     this.cart();
     this.labels();
-    this.camera();
+    this.camera(opts);
     this.w = [0, 0, 0]; this.spin = [0, 0, 0];
     this.update(0);
   }
@@ -70,8 +75,20 @@ export class MobileView {
       const s = [size[3 * g], size[3 * g + 1], size[3 * g + 2]], p = [pos[3 * g], pos[3 * g + 1], pos[3 * g + 2]];
       const geo = new T.BoxGeometry(2 * s[0], 2 * s[1], 2 * s[2]); geo.translate(p[0], p[1], p[2]);
       if (/^(wall_|door_)/.test(name)) {
-        const mat = new T.MeshStandardMaterial({ color: this.rgbaHex(g), roughness: 0.9, transparent: true, opacity: 1 });
-        const mesh = new T.Mesh(geo, mat); mesh.receiveShadow = true; mesh.userData.box = [p, s];
+        const mat = this.mat(this.rgbaHex(g), { roughness: 0.9 });
+        const mesh = new T.Mesh(geo, mat); mesh.receiveShadow = true; mesh.userData.box = [p, s]; mesh.userData.name = name;
+        // the cutaway copy: the same wall from the floor up to CUT_H (none for the lintel above the door)
+        let cut = null;
+        if (p[2] - s[2] < CUT_H) {
+          const top = Math.min(CUT_H, p[2] + s[2]), bot = p[2] - s[2];
+          const cg = new T.BoxGeometry(2 * s[0], 2 * s[1], top - bot); cg.translate(p[0], p[1], (top + bot) / 2);
+          cut = new T.Group(); cut.visible = false; this.root.add(cut);
+          const cm = new T.Mesh(cg, mat); cm.receiveShadow = true; cut.add(cm);
+          // a dark cap on the cut face: reads as "wall cut here", like a floor plan
+          const cap = new T.Mesh(new T.BoxGeometry(2 * s[0], 2 * s[1], 0.012), this.mat(0x3a3b3d, { roughness: 0.8 }));
+          cap.position.set(p[0], p[1], top + 0.006); cut.add(cap);   // on top: no z-fighting with the cut face
+        }
+        mesh.userData.cut = cut;
         this.root.add(mesh); this.walls.push(mesh);
       } else {
         const hex = this.rgbaHex(g);
@@ -100,6 +117,11 @@ export class MobileView {
     // corner posts up to the cart's overall height
     const post = new T.BoxGeometry(S.post, S.post, S.height - z0), px = S.hx - S.post / 2, py = S.hy - S.post / 2;
     for (const [sx, sy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) add(post, grey, sx * px, sy * py, (S.height + z0) / 2);
+    // head post and front camera (schematic: a 2 cm post from the tray's rear centre up to the camera, a small box)
+    const F = FRONT_CAM.pos, postH = F[2] - 0.02 - S.tray;
+    add(new T.BoxGeometry(S.post, S.post, postH), grey, F[0] - 0.03, F[1], S.tray + postH / 2);
+    const head = add(new T.BoxGeometry(0.04, 0.06, 0.04), black, F[0] - 0.025, F[1], F[2]);   // behind the lens
+    head.rotation.y = FRONT_CAM.tilt * Math.PI / 180;
     // omni wheels: hub + 2 rows × 6 barrel rollers (axis tangent to the rim), the second row turned by 30°
     const W = L.wheel, hubMat = this.mat(0x3a3b3d, { roughness: 0.5 }), rolMat = this.mat(0x111111, { roughness: 0.6 });
     const hub = new T.CylinderGeometry(W.hubR * 0.86, W.hubR * 0.86, W.hubW * 0.9, 24); hub.rotateX(Math.PI / 2);
@@ -146,11 +168,13 @@ export class MobileView {
     }
   }
 
-  /** A wider camera than the arm-on-a-table view: both rooms fit, the target is the cart. */
-  camera() {
-    const sim = this.sim, cam = sim.camera, c = sim.controls;
+  /** Camera views (src/mobile/camera.js): Za vozíkem by default, the target is the cart. */
+  camera(opts) {
+    const sim = this.sim, cam = sim.camera, mj = sim.mj;
     cam.far = 30; cam.updateProjectionMatrix();
-    c.minDistance = 0.4; c.maxDistance = 6; c.maxPolarAngle = Math.PI * 0.45;
+    this.rig = new CameraRig(sim, this.T, { reduced: !!opts.reduced, base: () => this.base(), map: MAP, fovy: FRONT_CAM.fovy,
+      frontCam: mj.mj_name2id(this.m, mj.mjtObj.mjOBJ_CAMERA.value, 'front_cam'),
+      insetTop: () => { const top = document.getElementById('ux-top'), cv = sim.renderer.domElement; return top ? Math.max(0, top.getBoundingClientRect().bottom - cv.getBoundingClientRect().top) : 0; } });
     this.resetView();
     // the shadow camera covers the cart and the arm (it follows the cart in update())
     this.sun = sim.scene.children.find((o) => o.isDirectionalLight && o.castShadow);
@@ -161,14 +185,8 @@ export class MobileView {
     }
   }
 
-  resetView() {
-    // three coords: (x, z_mj, −y_mj). Behind and above the cart in lab A, looking towards the door and lab B.
-    const sim = this.sim, narrow = matchMedia('(max-width:860px)').matches, p = MAP.start;
-    sim.controls.target.set(p[0] + 0.45, 0.45, -p[1]);
-    if (narrow) sim.camera.position.set(p[0] - 0.75, 2.6, -p[1] + 2.1);
-    else sim.camera.position.set(p[0] - 0.85, 2.3, -p[1] + 2.4);
-    sim.controls.update();
-  }
+  /** Back to the default view: Za vozíkem, over the cart's right shoulder towards the door and lab B. */
+  resetView() { this.rig.set('chase'); this.sim.controls.update(); }
 
   /** Chassis pose (x, y, yaw) and its body-frame velocity (u forward, v left, w yaw rate) from qpos / qvel. */
   base() {
@@ -189,7 +207,8 @@ export class MobileView {
     // about the outward axle, the wheel turns the other way round: angle −= ω dt.
     wheelSpeeds(b.u, b.v, b.w, this.w);
     for (let k = 0; k < 3; k++) { this.spin[k] -= this.w[k] * dt; this.wheels[k].rotation.z = this.spin[k]; }
-    this.fadeWalls(b);
+    this.rig.update(dt);
+    this.cutWalls(b);
     if (this.sun) {
       this.sun.target.position.set(b.x, 0, -b.y);
       this.sun.position.copy(this.sun.target.position).add(this.sunOff);
@@ -197,21 +216,44 @@ export class MobileView {
     }
   }
 
-  /** Fade a wall whose box the line camera → cart (or camera → orbit target) passes through. */
-  fadeWalls(b) {
-    const cp = this.sim.camera.position, tg = this.sim.controls.target;
+  /**
+   * Cutaway (main views only): a wall is drawn cut down to bench height when the camera is beyond its inner face
+   * (an outer wall on the camera's side; the middle wall from either lab, so the other lab is never hidden behind
+   * it), or when it stands between the camera and the cart or the orbit target. Shora cuts every wall (a map).
+   */
+  cutWalls(b) {
+    const cp = this.sim.camera.position, tg = this.sim.controls.target, top = this.rig.view === 'top';
     const cam = [cp.x, -cp.z, cp.y], ends = [[b.x, b.y, 0.6], [tg.x, -tg.z, tg.y]];
     for (const w of this.walls) {
-      const [p, s] = w.userData.box;
-      const hit = ends.some((e) => segBox(cam, e, p, s));
-      const o = hit ? WALL_FADE : 1;
-      if (w.material.opacity !== o) { w.material.opacity = o; w.material.depthWrite = !hit; }
+      const [p, s] = w.userData.box, k = s[0] < s[1] ? 0 : 1;   // the wall's thin axis
+      const beyond = Math.abs(cam[k]) > Math.abs(p[k]) - s[k] && (Math.abs(p[k]) < 1e-9 || Math.sign(cam[k]) === Math.sign(p[k]));
+      w.userData.hit = top || beyond || ends.some((e) => segBox(cam, e, p, s));
+    }
+    this.showWalls(this.rig.view !== 'front');
+  }
+  /** Draw the cut walls as cut (main views) or whole (the front camera's picture). */
+  showWalls(cutaway) {
+    for (const w of this.walls) {
+      const cut = cutaway && w.userData.hit;
+      w.visible = !cut;
+      if (w.userData.cut) w.userData.cut.visible = cut;
     }
   }
+  /** sim.onRender: the frame of the current view. */
+  render() { this.rig.render((v) => this.showWalls(v !== 'front'), () => this.showWalls(true)); }
 
   /** Test hook: what is drawn (counts) and the current wheel speeds / angles. */
+  /** Test hook: the view, camera and orbit target (MuJoCo frame), the sun's shadow target, the front picture. */
+  camStats() {
+    const r = this.rig, p = this.sim.camera.position, tg = this.sim.controls.target, f = r.front.position;
+    r.frontPose();
+    const st = this.sun ? this.sun.target.position : null, r3 = (v) => +v.toFixed(3);
+    return { view: r.view, reduced: r.reduced, pos: [p.x, -p.z, p.y].map(r3), target: [tg.x, -tg.z, tg.y].map(r3),
+      front: [f.x, -f.z, f.y].map(r3), frontRect: r.frontRect(), sun: st ? [st.x, -st.z].map(r3) : null, orbit: this.sim.controls.enabled };
+  }
+
   stats() {
-    return { walls: this.walls.length, faded: this.walls.filter((w) => w.material.opacity < 1).length,
+    return { walls: this.walls.length, cut: this.walls.filter((w) => w.userData.hit).map((w) => w.userData.name), cam: this.camStats(),
       wheelSpeeds: this.w.slice(), wheelAngles: this.spin.slice(), labels: this.root.children.filter((o) => o.isSprite).map((s) => s.userData.label) };
   }
 }

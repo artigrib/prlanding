@@ -12,6 +12,15 @@ const strings = {
   /* lab-transport campaign PR 1: mobile scene preview (src/mobile/view.js, app.js) */
   'Vozík ve stylu XLeRobot (zjednodušený model: podvozek LeKiwi + vozík + ruka SO-101) · náhled scény, zatím bez misí': 'XLeRobot-style cart (simplified model: LeKiwi base + cart + SO-101 arm) · scene preview, no missions yet',
   'Převoz mezi laboratořemi · náhled': 'Lab transport · preview', 'Laboratoř A · Příjem vzorků': 'Lab A · Sample intake', 'Laboratoř B · Analytika': 'Lab B · Analysis',
+  /* lab-transport campaign PR 2: driving and camera views (src/mobile/drive.js, camera.js) */
+  'Jízda': 'Drive', 'Jízda, nebo ruka': 'Drive or arm', 'Rychlost {n}': 'Speed {n}', 'Pohled: {v}': 'View: {v}',
+  'Za vozíkem': 'Behind the cart', 'Kamera vozíku': 'Cart camera', 'rychlost {n} ze 3': 'speed {n} of 3',
+  'jede {v} m/s': 'moving at {v} m/s', 'stojí': 'stopped', 'W A S D jízda, Q E otáčení, mezerník zastaví': 'W A S D drive, Q E turn, Space stops',
+  'jízda zatím jen z klávesnice': 'driving works from a keyboard only for now',
+  'vozík stojí, ruku ovládáte posuvníky kloubů v Nástrojích (J = zpět k jízdě)': 'the cart is braked; move the arm with the joint sliders in Tools (J = back to driving)',
+  'Režim Jízda: ruka je složená v přepravní poloze': 'Drive mode: the arm is folded in the carry pose', 'Režim Ruka: vozík stojí': 'Arm mode: the cart is braked',
+  'Kamera vozíku · obraz 4:3 jako 640 × 480 u LeKiwi · zorné pole 61° převzaté z kamery na zápěstí': 'Cart camera · 4:3 picture like LeKiwi\'s 640 × 480 · 61° field of view taken from the wrist camera',
+  'Vozík ve stylu XLeRobot s rukou SO-101 ve dvou laboratořích. Klávesy: W A S D jízda, Q E otáčení, 1 až 3 rychlost, mezerník zastaví, J přepíná jízdu a ruku, C mění pohled.': 'XLeRobot-style cart with an SO-101 arm in two labs. Keys: W A S D drive, Q E turn, 1 to 3 speed, Space stops, J switches between driving and the arm, C changes the view.',
   /* trackpad touch scheme (src/ui/touchpad.js) */
   'Ovládání dotykem': 'Touch controls', 'Klasické': 'Classic', 'Trackpad (beta)': 'Trackpad (beta)',
   'Jeden prst kdekoli posouvá chapadlo po stole, lišta vpravo mění výšku, pruh dole otáčí zápěstím, dva prsty otáčí pohledem. Klepnutí na předmět ho vybere za cíl.': 'One finger anywhere moves the gripper on the table, the rail on the right sets the height, the strip at the bottom turns the wrist, two fingers turn the view. A tap on an object makes it the target.',

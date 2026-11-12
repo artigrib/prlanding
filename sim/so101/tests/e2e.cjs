@@ -1111,19 +1111,108 @@ async function touchDrag(page, from, to, steps = 8) {
     }
     await ph.close();
 
-    // ---------------- mobile scene preview (lab transport PR 1: ?scene=mobile&test=1, no missions yet) ----------------
+    // ---------------- mobile scene (lab transport PR 1–2: ?scene=mobile&test=1, no missions yet) ----------------
     {
-      const mb = await open(browser, base + '?scene=mobile&test=1', { width: 1280, height: 800 });
-      const m0 = await S(mb, () => ({ scene: window.__sim.scene(), base: window.__sim.mobile.base(), view: window.__sim.mobile.view(), hud: document.getElementById('hud-text').textContent }));
-      ok(m0.scene === 'mobile' && Math.abs(m0.base.x + 1.25) < 1e-3 && m0.view.walls === 7 && m0.view.labels.length === 2 && /XLeRobot/.test(m0.hud),
-        'mobile scene: cart in lab A, 7 walls, 2 room labels, the HUD names the model ' + JSON.stringify({ hud: m0.hud, view: m0.view }));
-      await S(mb, () => { window.__sim.mobile.baseCtrl(0.2, 0, 0); window.__sim.advance(1); });
-      const m1 = await S(mb, () => ({ base: window.__sim.mobile.base(), view: window.__sim.mobile.view() }));
+      const mb = await open(browser, base + '?scene=mobile&test=1', { width: 1440, height: 900 });
+      const M = (fn, a) => S(mb, fn, a);
+      const m0 = await M(() => ({ scene: window.__sim.scene(), base: window.__sim.mobile.base(), view: window.__sim.mobile.view(), aria: document.getElementById('c').getAttribute('aria-label') }));
+      ok(m0.scene === 'mobile' && Math.abs(m0.base.x + 1.25) < 1e-3 && m0.view.walls === 7 && m0.view.labels.length === 2 && /XLeRobot/.test(m0.aria),
+        'mobile scene: cart in lab A, 7 walls, 2 room labels, the canvas names the model ' + JSON.stringify({ aria: m0.aria, view: m0.view.walls }));
+      // default view: Za vozíkem, and lab B is readable (the middle wall and the lintel are cut down to bench height)
+      ok(m0.view.cam.view === 'chase' && ['wall_mid_s', 'wall_mid_n', 'door_lintel'].every((n) => m0.view.cut.includes(n)),
+        'mobile: default view Za vozíkem, the middle wall is cut away so lab B shows ' + JSON.stringify({ cut: m0.view.cut, cam: m0.view.cam }));
+      // test hook still drives the actuators directly; the wheels spin at the LeRobot wheel speeds
+      await M(() => { window.__sim.mobile.baseCtrl(0.2, 0, 0); window.__sim.advance(1); });
+      const m1 = await M(() => ({ base: window.__sim.mobile.base(), view: window.__sim.mobile.view() }));
       // forward 0.2 m/s: LeRobot matrix gives the left and right wheels ∓0.2·cos 30°/0.05 rad/s, the back wheel 0
       ok(m1.base.x - m0.base.x > 0.15 && Math.abs(m1.view.wheelSpeeds[0] + 3.464) < 0.05 && Math.abs(m1.view.wheelSpeeds[2] - 3.464) < 0.05 && Math.abs(m1.view.wheelAngles[0]) > 1,
         'mobile scene: the cart drives (test hook) and the wheels spin at the LeRobot wheel speeds ' + JSON.stringify(m1));
       await shot(mb, 'mobile-01-scene');
+      // Jízda ⇄ Ruka: J and the segmented control; Jízda folds the arm into the carry pose, Ruka brakes.
+      // Deterministic: the page's own frame loop is paused while driving (simulated time only via advance())
+      await M(() => { window.__sim._app.sim.paused = true; window.__sim.reset(); window.__sim.advance(1.5); });
+      const seg = () => M(() => ({ mode: window.__sim.mobile.mode(), pressed: [...document.querySelectorAll('.mb-segb')].map((b) => b.getAttribute('aria-pressed')),
+        first: document.getElementById('ux-abar').firstElementChild.className, hud: document.getElementById('hud-text').textContent, ctrl: window.__sim.state().ctrl.slice(0, 6) }));
+      const j0 = await seg();
+      const carry = [0, -1.74, -1.69, 0, 0, 0];
+      ok(j0.mode === 'drive' && j0.pressed.join() === 'true,false' && /mb-seg/.test(j0.first) && /^Jízda · /.test(j0.hud) && j0.ctrl.every((v, i) => Math.abs(v - carry[i]) < 1e-6),
+        'mobile: starts in Jízda (segmented control first in the action bar, goal line "Jízda ·", arm in the carry pose) ' + JSON.stringify(j0));
+      await mb.keyboard.press('j');
+      const j1 = await seg();
+      ok(j1.mode === 'arm' && j1.pressed.join() === 'false,true' && /^Ruka · /.test(j1.hud), 'mobile: J switches to Ruka ' + JSON.stringify(j1));
+      await mb.keyboard.down('w'); await M(() => window.__sim.advance(1)); await mb.keyboard.up('w');
+      const j2 = await M(() => window.__sim.mobile.base());
+      ok(Math.hypot(j2.x - (-1.25), j2.y) < 0.002, 'mobile: in Ruka mode W does not drive (the cart is braked) ' + JSON.stringify(j2));
+      await M(() => { document.querySelector('.mb-segb[data-mode="drive"]').click(); });
+      const j3 = await seg();
+      ok(j3.mode === 'drive' && j3.pressed.join() === 'true,false', 'mobile: the segmented control switches back to Jízda ' + JSON.stringify(j3.pressed));
+      // drive forward 1 m: level 2 (0.2 m/s), W held 5 s, released; the ramp is symmetric, so 1.000 m
+      await mb.keyboard.press('2');
+      const d0 = await M(() => window.__sim.mobile.base());
+      await mb.keyboard.down('w'); await M(() => window.__sim.advance(5)); await mb.keyboard.up('w'); await M(() => window.__sim.advance(1.5));
+      const d1 = await M(() => ({ base: window.__sim.mobile.base(), drive: window.__sim.mobile.drive(), hud: document.getElementById('hud-text').textContent }));
+      ok(Math.abs(d1.base.x - d0.x - 1) < 0.01 && Math.abs(d1.base.y - d0.y) < 0.002 && Math.abs(d1.base.yaw) < 0.002 && d1.drive.level === 1 && Math.abs(d1.base.u) < 1e-3,
+        'mobile: level 2, W for 5 s drives 1 m forward (±1 cm) and stops ' + JSON.stringify({ dx: d1.base.x - d0.x, dy: d1.base.y - d0.y, yaw: d1.base.yaw, drive: d1.drive }));
+      // brake: W held at level 3, Space stops the cart within the 3 m/s² ramp although W is still down
+      await mb.keyboard.press('3');
+      await mb.keyboard.down('w'); await M(() => window.__sim.advance(1.5));
+      const b0 = await M(() => ({ base: window.__sim.mobile.base(), hud: document.getElementById('hud-text').textContent }));
+      await mb.keyboard.press(' '); await M(() => window.__sim.advance(0.4));
+      const b1 = await M(() => ({ base: window.__sim.mobile.base(), drive: window.__sim.mobile.drive() }));
+      await mb.keyboard.up('w');
+      ok(Math.abs(b0.base.u - 0.2657) < 0.01 && /jede 0,2[67] m\/s/.test(b0.hud) && Math.abs(b1.base.u) < 0.005 && b1.drive.braked,
+        'mobile: level 3 tops out at the LeRobot clamp (0.266 m/s, shown measured), Space brakes to 0 ' + JSON.stringify({ u0: b0.base.u, hud: b0.hud, u1: b1.base.u }));
+      // the shadow camera follows the cart
+      const sh = await M(() => window.__sim.mobile.view().cam);
+      ok(Math.hypot(sh.sun[0] - b1.base.x, sh.sun[1] - b1.base.y) < 1e-3, 'mobile: the sun shadow follows the cart ' + JSON.stringify(sh.sun));
+      await M(() => { window.__sim._app.sim.paused = false; });
+      // views: C cycles Za vozíkem → Shora → Kamera vozíku → Za vozíkem
+      const views = [];
+      for (let k = 0; k < 3; k++) {
+        await mb.keyboard.press('c'); await M(() => window.__sim.advance(0.05));
+        views.push(await M(() => ({ cam: window.__sim.mobile.view().cam, btn: document.getElementById('mb-view').textContent, cap: !document.querySelector('.mb-cap').hidden, cut: window.__sim.mobile.view().cut })));
+        if (k < 2) await shot(mb, 'mobile-02-view-' + views[k].cam.view);
+      }
+      const [vt, vf, vc] = views;
+      ok(vt.cam.view === 'top' && vt.cam.pos[2] > 4 && Math.hypot(vt.cam.pos[0] - vt.cam.target[0], vt.cam.pos[1] - vt.cam.target[1]) < 0.01 && /Shora/.test(vt.btn) && vt.cut.length === 7,
+        'mobile: C → Shora (straight down over both rooms, all walls cut) ' + JSON.stringify(vt));
+      ok(vf.cam.view === 'front' && !vf.cam.orbit && vf.cap && Math.abs(vf.cam.frontRect.w / vf.cam.frontRect.h - 4 / 3) < 0.01 && Math.abs(vf.cam.front[2] - 1.125) < 1e-3,
+        'mobile: C → Kamera vozíku (4:3 picture from front_cam at 1.125 m, orbit off, caption shown) ' + JSON.stringify(vf));
+      ok(vc.cam.view === 'chase' && vc.cam.orbit && !vc.cap, 'mobile: C → back to Za vozíkem ' + JSON.stringify(vc.cam.view));
+      // chase follow: critically damped, the target catches up with the cart and keeps its offset in the chassis frame
+      await M(() => { window.__sim._app.sim.paused = true; window.__sim.mobile.override(null); });
+      await mb.keyboard.down('q'); await M(() => window.__sim.advance(1)); await mb.keyboard.up('q'); await M(() => window.__sim.advance(1.5));
+      const cf = await M(() => ({ cam: window.__sim.mobile.view().cam, base: window.__sim.mobile.base() }));
+      const ahead = [cf.base.x + 1.1 * Math.cos(cf.base.yaw), cf.base.y + 1.1 * Math.sin(cf.base.yaw)];
+      ok(Math.hypot(cf.cam.target[0] - ahead[0], cf.cam.target[1] - ahead[1]) < 0.02 && Math.abs(cf.base.yaw) > 0.5,
+        'mobile: Za vozíkem follows the cart and turns with it ' + JSON.stringify(cf));
+      // layout at 1440×900: the action bar stays clear of the canvas centre; no horizontal scroll
+      const lay = (page) => S(page, () => {
+        const c = document.getElementById('c').getBoundingClientRect(), a = document.getElementById('ux-abar').getBoundingClientRect();
+        const cx = c.left + c.width / 2, cy = c.top + c.height / 2, bx = c.width * 0.15, by = c.height * 0.15;
+        const hit = !(a.right < cx - bx || a.left > cx + bx || a.bottom < cy - by || a.top > cy + by);
+        return { c: [c.left, c.top, c.width, c.height].map(Math.round), a: [a.left, a.top, a.width, a.height].map(Math.round), hit, docW: document.documentElement.scrollWidth, vw: innerWidth };
+      });
+      const l1 = await lay(mb);
+      ok(!l1.hit && l1.docW <= l1.vw && l1.c[2] >= 1000, 'mobile 1440×900: action bar clear of the canvas centre ±15 %, the canvas beside the panel ' + JSON.stringify(l1));
       await mb.close();
+      const mp = await open(browser, base + '?scene=mobile&test=1', { width: 390, height: 844 }, true);
+      const l2 = await lay(mp);
+      const pb = await S(mp, () => [...document.querySelectorAll('#ux-abar .ux-ab')].map((b) => Math.round(b.getBoundingClientRect().height)));
+      ok(!l2.hit && l2.docW <= l2.vw && pb.every((h) => h >= 44), 'mobile 390×844: action bar clear of the canvas centre, buttons ≥ 44 px, no horizontal scroll ' + JSON.stringify({ l2, pb }));
+      await shot(mp, 'mobile-03-phone');
+      await mp.close();
+      // prefers-reduced-motion: Za vozíkem slides along but does not turn with the cart
+      const rm = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
+      const rp = await rm.newPage();
+      await rp.goto(base + '?scene=mobile&test=1');
+      await rp.waitForFunction(() => window.__sim && (window.__sim.ready || window.__sim.error), null, { timeout: 300000 });
+      const r0 = await S(rp, () => window.__sim.mobile.view().cam);
+      await rp.keyboard.down('e'); await S(rp, () => window.__sim.advance(1)); await rp.keyboard.up('e'); await S(rp, () => window.__sim.advance(1));
+      const r1 = await S(rp, () => ({ cam: window.__sim.mobile.view().cam, base: window.__sim.mobile.base() }));
+      const dir = (c) => Math.atan2(c.target[1] - c.pos[1], c.target[0] - c.pos[0]);
+      ok(r0.reduced && Math.abs(r1.base.yaw) > 0.3 && Math.abs(dir(r1.cam) - dir(r0)) < 1e-3, 'mobile, reduced motion: the chase camera keeps its heading ' + JSON.stringify({ yaw: r1.base.yaw, d0: dir(r0), d1: dir(r1.cam) }));
+      await rm.close();
     }
   } catch (e) { console.log('FAIL exception', e); fails++; diagnose('exception ' + (e && e.message)); }
   await diag;

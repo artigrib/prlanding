@@ -73,7 +73,7 @@ async function main() {
   // [ux-hook:install] optional UX layer (src/ux.js: smart move, missions, replay, cameras, exploded view…).
   // The plain slider sim keeps working if it fails to load.
   const MIRROR = new URLSearchParams(location.search).has('mirror');   // live LeRobot mirror (see below)
-  if (ctx.scene === 'mobile') await app.mobile(ctx);   // lab-transport preview: the cart + rooms, joint sliders only
+  if (ctx.scene === 'mobile') await app.mobile(ctx);   // lab-transport preview: drive the cart (desktop keys), joint sliders
   else {
     try { await (await import('./src/ux.js')).install(app, { THREE: ctx.THREE, mj: ctx.mj, TEST, objects: ctx.objects }); }
     catch (e) { console.warn('UX layer disabled:', e); app.ux = null; sim.onRender = null; }
@@ -201,12 +201,16 @@ class MissionPage {
     this.refreshSliders();
   }
 
-  /** Mobile scene (lab transport, campaign PR 1): no missions and no driving UI yet. The cart and the rooms are drawn
-   *  by src/mobile/view.js, the arm keeps its joint sliders, the HUD names the model. */
+  /** Mobile scene (lab transport, campaign PR 1–2): no missions yet. src/mobile/view.js draws the cart, the rooms and
+   *  the camera views; src/mobile/drive.js drives the cart from the keyboard (Jízda ⇄ Ruka, action bar, goal line);
+   *  the arm keeps its joint sliders (arm control on the moving base comes with campaign PR 4). */
   async mobile(ctx) {
-    const { MobileView } = await import('./src/mobile/view.js');
-    const view = this.mobileView = new MobileView(this.sim, ctx.THREE);
-    this.sim.onAfter = (dt) => { view.update(dt); this.hud({ text: 'Vozík ve stylu XLeRobot (zjednodušený model: podvozek LeKiwi + vozík + ruka SO-101) · náhled scény, zatím bez misí', ok: false }); };
+    const [{ MobileView }, { MobileDrive }, { calmMode }] = await Promise.all([import('./src/mobile/view.js'), import('./src/mobile/drive.js'), import('./src/ui/calm.js')]);
+    const reduced = calmMode() || matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const view = this.mobileView = new MobileView(this.sim, ctx.THREE, { reduced });
+    const drive = this.mobileDrive = new MobileDrive(this, view, { touch: matchMedia('(pointer: coarse)').matches });
+    this.sim.onAfter = (dt) => { view.update(dt); this.hud({ text: drive.hudText(), ok: false }); };
+    this.sim.onRender = () => view.render();
     $('demo').hidden = true;   // the cube demo has nothing to do here
     // the mission chip names the scene (no mission picker without the UX layer)
     const chip = $('ux-pick-mission'); chip.disabled = true; $('ux-chip-n').hidden = true;
@@ -219,8 +223,9 @@ class MissionPage {
     return {
       base: () => view.base(),
       view: () => view.stats(),
-      // test hook only (no driving UI before PR 2): world-frame velocity actuator targets (m/s, m/s, rad/s)
-      baseCtrl: (vx, vy, wz) => { [vx, vy, wz].forEach((v, k) => { sim.d.ctrl[act[k]] = v; }); },
+      ...this.mobileDrive.api(),
+      // test hook: world-frame velocity actuator targets (m/s, m/s, rad/s), bypassing the drive until a drive key
+      baseCtrl: (vx, vy, wz) => { this.mobileDrive.override = [vx, vy, wz]; [vx, vy, wz].forEach((v, k) => { sim.d.ctrl[act[k]] = v; }); },
       // physics cost in this browser: wall ms per MuJoCo step over n steps (the state is restored afterwards)
       stepCost: (n = 500) => {
         const snap = { q: Float64Array.from(sim.d.qpos), v: Float64Array.from(sim.d.qvel), t: sim.d.time };
@@ -258,6 +263,7 @@ class MissionPage {
     $('win').hidden = true;
     if (hadFocus) { const f = [$('demo'), $('reset')].find((b) => b && b.offsetParent); if (f) f.focus({ preventScroll: true }); }
     if (this.ux) this.ux.onReset();  // [ux-hook:reset] mission layout, controller sync
+    if (this.mobileDrive) this.mobileDrive.onReset();   // mobile scene: drive state, carry pose, camera follow
     this.refreshSliders();
   }
 

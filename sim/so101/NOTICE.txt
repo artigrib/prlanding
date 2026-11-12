@@ -85,13 +85,22 @@ copies of the licence texts are included next to each component.
      - M8 nut shown 2.5x larger and fork and spoon with the slice collision, as in missions 06–10 above.
      - Slat belt, side rails, drums, end tote and the four waste bins are new, simple geometry by printedrobotics.cz.
 
-7) Lab-transport cart (src/mobile/scene.js, src/mobile/view.js)
+7) Lab-transport cart (src/mobile/scene.js, src/mobile/view.js, src/mobile/base.js, src/mobile/keys.js)
    Base kinematics: wheelSpeeds() in src/mobile/scene.js is a JavaScript port of the body-to-wheel matrix in
    LeKiwi._body_to_wheel_raw (wheel angles [240, 0, 120] - 90 deg, wheel_radius 0.05 m, base_radius 0.125 m) from
    LeRobot, src/lerobot/robots/lekiwi/lekiwi.py, https://github.com/huggingface/lerobot at commit
    e6ffde60312365c5452c46189a26872483943154, Copyright 2024 The HuggingFace Inc. team, licensed under the Apache
    License 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Changed by printedrobotics.cz: rewritten in
    JavaScript, returns wheel angular speeds in rad/s (no raw-tick conversion or clamp).
+   Driving (src/mobile/base.js, src/mobile/keys.js): bodyToWheelRaw() and degpsToRaw() port the rest of
+   LeKiwi._body_to_wheel_raw (max_raw 3000 ticks/s, proportional scaling of all three wheels) and
+   LeKiwi._degps_to_raw from the same file and commit; clampBody() applies the same scaling to the body-frame
+   command. The speed levels (0.1 / 0.2 / 0.3 m/s, 30 / 60 / 90 deg/s) and the teleop key directions follow
+   src/lerobot/robots/lekiwi/lekiwi_client.py and config_lekiwi.py at the same commit. Changed by
+   printedrobotics.cz: rewritten in JavaScript; added arrow and Q/E keys, 1-3 instead of r/f for the speed level,
+   a 3 m/s^2 / 6 rad/s^2 command ramp (a game parameter, not from LeRobot).
+   Front camera position (src/mobile/scene.js FRONT_CAM): the head tilt joint position of
+   simulation/mujoco/xlerobot.xml of XLeRobot at the commit below (numbers only, no files copied).
    Dimensions only (no files copied): the omni wheel and base plates were measured from the STL files
    URDF/meshes/4-Omni-Directional-Wheel_Single_Body-v1.stl and base_plate_layer{1,2}*.stl of LeKiwi,
    https://github.com/SIGRobotics-UIUC/LeKiwi at commit efa608d7ee5a495a4803b1d28cd0c955b4f1e033 (Apache-2.0);

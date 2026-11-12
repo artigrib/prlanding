@@ -25,7 +25,7 @@
 //   38.1 mm wide, 2 rows × 6 rollers (Ø 19.8 mm, 28.8 mm long, centres at r = 40.9 mm, rows at ±9.5 mm), all measured
 //   from the STL's connected components; plates `base_plate_layer{1,2}` 215.87 × 212.94 × 7 mm (bounding box).
 // - XLeRobot (github.com/Vector-Wangel/XLeRobot @ b017b5e6, Apache-2.0) `simulation/mujoco/xlerobot.xml`: chassis
-//   z 0.035 (layer-1 plate), layer-2 plate 0.057 above it.
+//   z 0.035 (layer-1 plate), layer-2 plate 0.057 above it; the head tilt joint (front camera position, below).
 // - LeRobot (github.com/huggingface/lerobot @ e6ffde60, Apache-2.0) `src/lerobot/robots/lekiwi/lekiwi.py`
 //   `_body_to_wheel_raw`: wheel_radius 0.05, base_radius 0.125, wheel angles [240, 0, 120] − 90°. Ported in
 //   wheelSpeeds() (NOTICE.txt §7).
@@ -102,6 +102,28 @@ function chassisXml(pose) {
 ${geoms.join('\n')}`;
 }
 
+// Front camera "Kamera vozíku" (campaign PR 2, design §3.3): where XLeRobot mounts its head camera, with the LeKiwi
+// front camera's picture.
+// - Position: the head tilt joint of XLeRobot's simulation/mujoco/xlerobot.xml (@ b017b5e6; the MJCF has no camera
+//   element): head_pan_link at (−0.125, 0, 0.91) in the chassis, head_tilt_link 0.05 ahead and 0.18 above it, the
+//   chassis 0.035 above the floor → (−0.075, 0, 1.125) m in our chassis frame (origin on the floor, x forward).
+// - Picture: 640 × 480 (LeRobot config_lekiwi.py `front` @ e6ffde60), so 4:3. LeKiwi's BOM lists the same USB camera
+//   twice (front and wrist) and publishes no field of view; we use the vertical field of view of the SO-101 wrist
+//   camera in so101.xml (fovy 61°, Menagerie), stated as that assumption.
+// - Tilt: not published either (XLeRobot's head tilt joint ranges −0.76…1.45 rad). Derived from the geometry: tilted
+//   down just enough that the lower edge of the picture meets the cart's front edge at tray height, so the picture
+//   shows the floor ahead of the cart and not the tray.
+export const FRONT_CAM = { pos: [-0.075, 0, 1.125], fovy: 61, aspect: 4 / 3 };
+FRONT_CAM.tilt = Math.atan2(FRONT_CAM.pos[2] - CART.tray, CART.hx - FRONT_CAM.pos[0]) * 180 / Math.PI - FRONT_CAM.fovy / 2;
+function frontCamXml() {
+  // MuJoCo cameras look along −z with y up: x axis = image right (−y of the chassis), y axis = image up (tilted)
+  const a = FRONT_CAM.tilt * Math.PI / 180, s = Math.sin(a), c = Math.cos(a);
+  // its own body after the arm: camera ids follow the body order, so the arm's wrist_cam keeps id 0
+  return `      <body name="front_cam_mount" pos="${at(FRONT_CAM.pos)}">
+        <camera name="front_cam" mode="fixed" pos="0 0 0" xyaxes="0 -1 0 ${f5(s)} 0 ${f5(c)}" fovy="${FRONT_CAM.fovy}"/>
+      </body>\n`;
+}
+
 /** so101.xml → so101_mobile.xml: the arm on the cart (its base body inside `chassis`). */
 export function mobileArmXml(so101Xml) {
   const BASE = '<body name="base" pos="0 0 0" quat="1 0 0 0"';
@@ -109,7 +131,7 @@ export function mobileArmXml(so101Xml) {
   return so101Xml
     .replace(BASE, `<body name="base" pos="${at(CART.arm)}" quat="1 0 0 0"`)
     .replace('<worldbody>', '<worldbody>' + chassisXml())
-    .replace('</worldbody>', '    </body>\n  </worldbody>');
+    .replace('</worldbody>', frontCamXml() + '    </body>\n  </worldbody>');
 }
 
 // ---------------------------------------------------------------- map "Dvě laboratoře" (world frame, floor z = 0)
