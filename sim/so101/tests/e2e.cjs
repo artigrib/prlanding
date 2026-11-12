@@ -478,7 +478,7 @@ async function touchDrag(page, from, to, steps = 8) {
     }
 
     // every mission: automatic solution
-    for (const id of await S(p, () => window.__sim.missions.filter((m) => !window.__sim.objectMissions.includes(m)))) {   // object missions: below
+    for (const id of await S(p, () => window.__sim.missions.filter((m) => !window.__sim.objectMissions.includes(m) && !window.__sim.conveyorMissions.includes(m)))) {   // object and conveyor missions: below
       await S(p, (m) => window.__sim.mission(m), id);
       await S(p, () => window.__sim.solve());
       const t = await advanceUntil(p, () => window.__sim.ux().won, 45, 3);
