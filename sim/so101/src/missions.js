@@ -418,9 +418,11 @@ export const MISSIONS = [
     // policy that never saw plastic can reach. purity 0.95: every measured run from correct demos had 100 %; one item in
     // a wrong bin already gives ≤ 10/11. demos = 6: in the demo batch the first plastic item comes 6th (paper 1st,
     // metal 2nd, glass 3rd), so 6 is the fewest demos in arrival order that show all four fractions.
-    stars: { win: 8, purity: 0.95, demos: 6 },
+    // fractions = 4: the ukázky star also needs every fraction demonstrated (a model without plastic lets the 3 plastic
+    // items pass; few demos alone would reward a policy that never saw a whole fraction).
+    stars: { win: 8, purity: 0.95, demos: 6, fractions: 4 },
     done: 'Politika roztřídila odpad',
-    starsHint: '★ hotovo (8 z 11) · ★ čistota ≥ 95 % · ★ nejvýš 6 ukázek',
+    starsHint: '★ hotovo (8 z 11) · ★ čistota ≥ 95 % · ★ všechny 4 frakce, nejvýš 6 ukázek',
     hints: {
       ghost: { text: 'Po běhu politiky ukáže rozbor u každého předmětu, podle které ukázky se rozhodla (Nástroje → Politika). Koš pro předmět u chapadla svítí.', next: 'Jak politika rozhoduje' },
       partial: { text: 'Plánovač nahraje 4 ukázky sám (Běží: Skript (plánovač)). Politika z nich naučená se počítá jako s pomocí, bez hvězdiček.', next: 'Nahrát ukázky skriptem' }
@@ -483,10 +485,15 @@ function wasteLive(run, st) {
  *  Skript (beltSolve) on that batch, measured outside the page (tools/belt-measure.mjs teach, seed 2, 60 Hz frames),
  *  shown in the side-by-side until the player runs the Skript in the page (Nástroje → Politika). */
 export const TEACH = { seed: 2, script: { correct: 9, n: 11 } };
-/** Named stars of mission 12: 1 for the win, +1 purity of the policy run at the threshold, +1 at most S.demos demos. */
+/** Named stars of mission 12: 1 for the win, +1 purity of the policy run at the threshold, +1 at most S.demos demos
+ *  that show all S.fractions fractions (st.fractions: classes with at least one demonstration in the model). */
 export function teachStars(S, st) {
   if (!st) return 1;
-  return 1 + (st.purity != null && st.purity >= S.purity - 1e-9 ? 1 : 0) + (st.demos > 0 && st.demos <= S.demos ? 1 : 0);
+  return 1 + (st.purity != null && st.purity >= S.purity - 1e-9 ? 1 : 0) + (fewDemos(S, st) ? 1 : 0);
+}
+/** The ukázky star of mission 12: 1…S.demos demonstrations covering all S.fractions fractions. */
+export function fewDemos(S, st) {
+  return st.demos > 0 && st.demos <= S.demos && (st.fractions || 0) >= (S.fractions || 0);
 }
 /** Demonstrations so far in a demo-phase run: items the player put into a bin (own or wrong) after holding them. */
 function demosOf(s, run) {
@@ -495,7 +502,7 @@ function demosOf(s, run) {
 }
 /**
  * Mission 12 check. c.policy (set by the page, src/ui/policy.js): { verify: the policy run on the TEACH batch,
- * demos: number of demonstrations the model was trained on }. Demo phase (verify false): the demo batch, sorted by
+ * demos: number of demonstrations the model was trained on, fractions: how many fractions they show }. Demo phase (verify false): the demo batch, sorted by
  * the player while it records; never a win. Policy run: the TEACH batch; the win when it is done with ≥ win correct.
  */
 function teachCheck(m, c, dt) {
@@ -505,7 +512,7 @@ function teachCheck(m, c, dt) {
   if (!s.run) s.run = new WasteRun(c.w, { seed: verify ? TEACH.seed : WASTE.seed });
   const run = s.run;
   run.tick(dt, c);
-  const st = Object.assign(run.stats(), { demos: P.demos || 0, verify }), W = m.stars.win;
+  const st = Object.assign(run.stats(), { demos: P.demos || 0, fractions: P.fractions || 0, verify }), W = m.stars.win;
   const out = (text, o) => Object.assign({ text, stats: st, progress: st.correct / st.n, ok: st.correct > 0 }, o);
   if (!verify) {
     const n = demosOf(s, run);
