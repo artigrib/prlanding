@@ -252,6 +252,18 @@ export class Panel {
       <button type="button" class="btn btn-o ux-tpullb" id="ux-tpull" aria-pressed="false" aria-describedby="ux-tpull-s">Tahat ruku prstem za díl</button>
       <p class="mono-s muted" id="ux-tpull-s"></p>
     </div>`);
+    // touch only: which touch scheme (beta "Trackpad + rails", src/ui/touchpad.js; also ?touch=pad)
+    const ts = this.tschemeBox = h(`<div class="ux-tscheme" hidden>
+      <p class="mono" id="ux-tscheme-l">Ovládání dotykem</p>
+      <div class="ux-seg ux-seg-s" role="radiogroup" aria-labelledby="ux-tscheme-l">
+        <button type="button" role="radio" data-ts="classic">Klasické</button>
+        <button type="button" role="radio" data-ts="pad">Trackpad (beta)</button>
+      </div>
+      <p class="mono-s muted" id="ux-tscheme-s"></p>
+    </div>`);
+    mount.appendChild(ts);
+    ts.hidden = !this.ux.touch;
+    for (const b of ts.querySelectorAll('[data-ts]')) b.addEventListener('click', () => this.ux.pad.set(b.dataset.ts === 'pad'));
     mount.appendChild(tp);
     tp.hidden = !this.ux.touch;
     $('ux-tpull').addEventListener('click', () => this.ux.setTouchPull(!this.ux.touchPull));
@@ -307,6 +319,14 @@ export class Panel {
     if (m.draw) { this.showDraw(this.ux); $('ux-drawview').textContent = '3D pohled'; }
   }
 
+  /** the touch scheme switch; the physics-pull switch only matters for the classic scheme */
+  showPad(on) {
+    for (const b of this.tschemeBox.querySelectorAll('[data-ts]')) b.setAttribute('aria-checked', String((b.dataset.ts === 'pad') === on));
+    $('ux-tscheme-s').textContent = on ? 'Jeden prst kdekoli posouvá chapadlo po stole, lišta vpravo mění výšku, pruh dole otáčí zápěstím, dva prsty otáčí pohledem. Klepnutí na předmět ho vybere za cíl.'
+      : 'Modrou kouli táhnete přímo, šipky na ní mění výšku. Jeden prst mimo kouli otáčí pohledem.';
+    this.padOn = on;
+    this.tpullBox.hidden = !this.ux.touch || on || this.ux.mode !== 'smart';
+  }
   showTouchPull(on) {
     $('ux-tpull').setAttribute('aria-pressed', String(on));
     $('ux-tpull-s').textContent = on ? 'Zapnuto: prst na ruce ji fyzikálně táhne.' : 'Vypnuto: prst na ruce otáčí pohledem, klepnutí na čelisti otevře nebo zavře chapadlo.';
@@ -325,7 +345,7 @@ export class Panel {
   showMode(mode) {
     for (const b of this.seg) b.setAttribute('aria-checked', String(b.dataset.mode === mode));
     this.smart.hidden = mode !== 'smart';
-    this.tpullBox.hidden = !this.ux.touch || mode !== 'smart';
+    this.tpullBox.hidden = !this.ux.touch || mode !== 'smart' || !!this.padOn;
     $('joints').hidden = mode === 'smart';
     document.body.classList.toggle('ux-smartmode', mode === 'smart');
   }

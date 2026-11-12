@@ -132,6 +132,11 @@ Findings: scratchpad usability report (P0/P1/P2). Changes:
   and "Ještě kousek níž …" instead of "Teď sevřete" while the jaw tips are above the cube's top (`GRASP.top`; the side
   view's "ve výšce" uses the same band). Landscape phones: the scene fills the screen, Chapadlo sits bottom-right
   with the bar to its left; no key-caps on coarse pointers.
+- **Trackpad touch scheme (beta)** (`src/ui/touchpad.js`, maths in `src/touch.js`): `?touch=pad` or Nástroje ›
+  "Ovládání dotykem: Trackpad (beta)" (`pr-sim-touch-scheme`), touch devices only, default off. One finger anywhere =
+  gripper on the table relative to the camera (0.25 → 1.2 mm/px ballistic), tap = select target (outline, side view,
+  objective; never autopilot), right rail = height 0.4 mm/px with detents at grasp height / top face, strip = wrist
+  0.5°/px, 15° detents, magnet + "Lícuje ✓" within 3°, two fingers = orbit / pinch. Mission 05 keeps its pen trace.
 
 ### Physics grab (branch `so101-grab`)
 - `src/grab.js` (node-tested in `tests/grab.test.mjs`): like MuJoCo `simulate`'s perturbation – a spring-damper force

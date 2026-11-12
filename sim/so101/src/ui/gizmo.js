@@ -122,7 +122,7 @@ export class Gizmo {
       let s = Math.max(0.55, Math.min(1.8, dist / 0.75)) * (this.ux.touch ? 1.25 : 1);
       // touch: the height arrows sit ≥ 44 px from the ball centre on screen, so each owns a finger-sized hit cell
       // (landscape phones drew them 8×16 px)
-      if (this.ux.touch) s *= touchScale(this.screenDist(p, 0.038 * s));
+      if (this.ux.touch && !(this.ux.pad && this.ux.pad.on())) s *= touchScale(this.screenDist(p, 0.038 * s));   // trackpad: the ball is only a cursor
       this.root.scale.setScalar(s);
       this.drop.scale.set(1, Math.max(0.0001, p[2]), 1);
       this.drop.position.set(p[0], p[1], p[2] / 2);
@@ -293,8 +293,10 @@ export class Gizmo {
   }
   horizPlane(z) { this.plane.set(this.v.set(0, 1, 0), -z); }   // MuJoCo z = three y
 
+  /** touch in the trackpad scheme belongs to src/ui/touchpad.js (and OrbitControls for two fingers) */
+  padOwns(e) { return e.pointerType === 'touch' && this.ux.pad && this.ux.pad.on(); }
   onDown(e) {
-    if (e.target !== this.canvas || this.forwarding) return;
+    if (e.target !== this.canvas || this.forwarding || this.padOwns(e)) return;
     this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (this.pend && e.pointerId !== this.pend.id) {
       // a second finger while pressing a handle: it is a drag (and a twist), not a tap
@@ -427,6 +429,7 @@ export class Gizmo {
   }
 
   onMove(e) {
+    if (this.padOwns(e) && !this.pointers.has(e.pointerId)) return;
     if (this.pointers.has(e.pointerId)) this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (this.ux.links.move(e)) { e.stopPropagation(); e.preventDefault(); return; }
     if (this.drawing && e.pointerId === this.drawing.id) {
@@ -487,6 +490,7 @@ export class Gizmo {
   }
 
   onUp(e, cancelled) {
+    if (this.padOwns(e) && !this.pointers.has(e.pointerId)) return;
     this.pointers.delete(e.pointerId);
     if (this.ux.links.up(e, cancelled)) { e.stopPropagation(); return; }
     if (this.drawing && e.pointerId === this.drawing.id) { this.drawing = null; e.stopPropagation(); return; }

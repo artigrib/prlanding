@@ -31,7 +31,13 @@ async function phone(browser, url, vp) {
   T.start = (x, y) => cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: tp([[x, y]]) });
   T.move = (x, y) => cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: tp([[x, y]]) });
   T.end = () => cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-  T.tap = async (x, y) => { T.gestures++; await T.start(x, y); await sleep(40); await T.end(); };
+  // event timestamps 60 ms apart: at software-GL frame rates the acks alone would stretch a tap past 300 ms
+  T.tap = async (x, y) => {
+    T.gestures++; const t0 = Date.now() / 1000;
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: tp([[x, y]]), timestamp: t0 });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [], timestamp: t0 + 0.06 });
+    await sleep(150);
+  };
   /** one finger through points, n steps per segment */
   T.drag = async (pts, n = 8, dt = 25) => {
     T.gestures++;
@@ -109,15 +115,26 @@ async function winM01(T) {
   const base = `http://127.0.0.1:${port}/sim/so101/?test=1&detail=low&mise=bowl`;
   const browser = await chromium.launch({ args: ARGS });
   try {
+    if (process.env.TOUCH_ONLY !== 'pad') await classic(browser, base);
+    if (process.env.TOUCH_ONLY !== 'classic') await trackpad(browser, base);
+  } catch (e) { console.log('FAIL exception', e); fails++; }
+  await browser.close(); srv.kill();
+  console.log(fails ? `\n${fails} FAILED` : '\nALL OK', '— screenshots in', OUT);
+  process.exit(fails ? 1 : 0);
+})();
+
+/** the classic scheme (IK ball, height arrows) with the touch quick fixes */
+async function classic(browser, base) {
+  let u, h, run, a;
     // ================= portrait 390×844 =================
     const T = await phone(browser, base, { width: 390, height: 844 });
     ok(await T.S(() => window.__sim._ux.touch), 'phone: coarse pointer detected');
     await T.shot('t2-01-portrait-start');
 
     // ---- 2: height handles ≥ 44 px and never swallowed by the object under them ----
-    let u = await T.ux(); const cube = u.objects.cube;
+    u = await T.ux(); const cube = u.objects.cube;
     await T.target(cube[0], cube[1], 0.06); await T.adv(2);
-    let h = await T.handles();
+    h = await T.handles();
     const sep = Math.hypot(h.down[0] - h.ball[0], h.down[1] - h.ball[1]);
     ok(sep >= 44, `down arrow ${sep.toFixed(0)} px from the ball centre (≥ 44 px cell)`);
     const around = [];
@@ -128,7 +145,7 @@ async function winM01(T) {
     await T.shot('t2-02-arrow-over-cube');
     // a tap on the down arrow over the cube: no pick, no autopilot
     await T.tap(...h.down); await sleep(500);
-    u = await T.ux(); let run = await T.S(() => window.__sim.run());
+    u = await T.ux(); run = await T.S(() => window.__sim.run());
     ok(!u.busy && !run.auto, 'tap on the down arrow over the cube starts no autopilot ' + JSON.stringify({ busy: u.busy, auto: run.auto, hud: u.hud }));
     // a drag on it lowers the target
     const z1 = u.target[2];
@@ -290,8 +307,193 @@ async function winM01(T) {
     ok(wl.won && !wl.auto, `landscape M01 by hand: ${wl.won ? 'won' : 'not won'} in ${wl.gestures} gestures (${wl.flow.join(', ')})`);
     await L.shot('t2-12-landscape-win');
     await L.ctx.close();
-  } catch (e) { console.log('FAIL exception', e); fails++; }
-  await browser.close(); srv.kill();
-  console.log(fails ? `\n${fails} FAILED` : '\nALL OK', '— screenshots in', OUT);
-  process.exit(fails ? 1 : 0);
-})();
+}
+
+// ---------------- trackpad scheme (?touch=pad, src/ui/touchpad.js) ----------------
+
+/** one-finger drag by (dx, dy) px from `from` in `ms` (event timestamps set, so the finger speed is real) */
+async function padDrag(T, from, dx, dy, ms, steps = 10) {
+  T.gestures++;
+  const t0 = Date.now() / 1000, tp = (x, y) => [{ x, y, id: 1, radiusX: 8, radiusY: 8, force: 1 }];
+  await T.cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: tp(from[0], from[1]), timestamp: t0 });
+  for (let k = 1; k <= steps; k++) {
+    await T.cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: tp(from[0] + dx * k / steps, from[1] + dy * k / steps), timestamp: t0 + ms / 1000 * k / steps });
+  }
+  // Chromium holds the last touch move for the next frame: repeat it so it is delivered before the finger lifts
+  await T.cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: tp(from[0] + dx, from[1] + dy), timestamp: t0 + ms / 1000 + 0.005 });
+  await T.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [], timestamp: t0 + ms / 1000 + 0.01 });
+  await sleep(250);   // touch moves are dispatched without waiting: let the last ones land
+}
+/** finger px that move the gripper by (d0, d1) m at gain k mm/px (inverse of src/touch.js tableDelta) */
+async function fingerFor(T, d0, d1, k) {
+  const f = await T.S(() => { const a = window.__sim._ux.app, c = a.camera.position, t = a.controls.target; return [t.x - c.x, -(t.z - c.z)]; });
+  const L = Math.hypot(f[0], f[1]), ux = f[0] / L, uy = f[1] / L, m = k / 1000;
+  return [(uy * d0 - ux * d1) / m, (-ux * d0 - uy * d1) / m];
+}
+const rectOf = (T, sel) => T.S((s) => { const e = document.querySelector(s); if (!e || !e.offsetParent) return null; const r = e.getBoundingClientRect(); return [r.left, r.top, r.right, r.bottom].map(Math.round); }, sel);
+const overlap = (a, b) => a && b && a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3];
+
+/** a free spot of the scene to start finger drags (not on the rail, strip, side view, camera chip or bar) */
+async function padSpot(T) {
+  return T.S(() => {
+    const st = document.querySelector('.stage').getBoundingClientRect(), no = ['.ux-rail', '.ux-wstrip', '.ux-side', '.ux-cam', '.ux-under', '.ux-top', '.ux-edge']
+      .map((s) => document.querySelector(s)).filter((e) => e && e.offsetParent).map((e) => e.getBoundingClientRect());
+    const ok = (x, y) => no.every((r) => x < r.left - 70 || x > r.right + 70 || y < r.top - 70 || y > r.bottom + 70);
+    let best = null;
+    for (let y = st.top + 60; y < st.bottom - 60; y += 10) for (let x = st.left + 60; x < st.right - 60; x += 10) {
+      if (!ok(x, y)) continue;
+      const d = Math.hypot(x - (st.left + st.right) / 2, y - (st.top + st.bottom) / 2);
+      if (!best || d < best[2]) best = [x, y, d];
+    }
+    return best && [best[0], best[1]];
+  });
+}
+/** move the gripper over a table point (x, y) with trackpad drags: a fast flick for the bulk, slow corrections */
+async function padTo(T, x, y, tol = 0.004, max = 4) {
+  for (let i = 0; i < max; i++) {
+    const u = await T.ux(), t = u.active ? u.target : u.tip, d0 = x - t[0], d1 = y - t[1], d = Math.hypot(d0, d1);
+    if (d < tol) return true;
+    const fast = d > 0.03, k = fast ? 1.2 : 0.25;
+    let [fx, fy] = await fingerFor(T, d0, d1, k);
+    const len = Math.hypot(fx, fy), cap = 220;
+    if (len > cap) { fx *= cap / len; fy *= cap / len; }
+    const spot = await padSpot(T);
+    const from = [spot[0] - fx / 2, spot[1] - fy / 2];
+    await padDrag(T, from, fx, fy, fast ? Math.max(40, len / 4) : Math.max(300, len * 12), fast ? 6 : 12);
+    await T.adv(0.6);
+  }
+  const u = await T.ux(), t = u.target;
+  return Math.hypot(x - t[0], y - t[1]) < tol;
+}
+/** rail drags until the target height is z (m), from the top part of the track */
+async function railTo(T, z, tol = 0.001, max = 4) {
+  for (let i = 0; i < max; i++) {
+    const u = await T.ux(), cur = u.active ? u.target[2] : u.tip[2];
+    if (Math.abs(cur - z) < tol) return true;
+    const r = await rectOf(T, '.ux-rail-t'), dy = (cur - z) / 0.0004, room = r[3] - r[1] - 12;
+    const step = Math.max(-room, Math.min(room, dy)), y0 = step > 0 ? r[1] + 6 : r[3] - 6;
+    await padDrag(T, [(r[0] + r[2]) / 2, y0], 0, step, Math.max(300, Math.abs(step) * 6), 12);
+    await T.adv(0.3);
+  }
+  const u = await T.ux(); return Math.abs(u.target[2] - z) < tol;
+}
+async function gripTap(T) { const g = await rectOf(T, '#ux-grip'); await T.tap((g[0] + g[2]) / 2, (g[1] + g[3]) / 2); }
+
+/** Mission 01 by hand with the trackpad: select, pad over the cube, rail to the grasp detent, close, rail up, pad
+ *  over the bowl, open. Perfect aim; counts every touch gesture. */
+async function padWinM01(T) {
+  T.gestures = 0;
+  const flow = [], u0 = await T.ux(), cube = u0.objects.cube, bowl = u0.objects.bowl;
+  const c = await T.P(cube); await T.tap(...c); flow.push('tap cube');
+  await padTo(T, cube[0], cube[1]); flow.push('pad→cube');
+  const det = await T.S(() => window.__sim._ux.pad.heights('cube'));
+  await railTo(T, det[0]); await T.adv(1.5); flow.push('rail→grasp');
+  await gripTap(T); await T.adv(1.2); flow.push('close' + ((await T.ux()).held ? '' : ' (missed)'));
+  await railTo(T, 0.10, 0.004); await T.adv(1.5); flow.push('rail up');
+  await padTo(T, bowl[0], bowl[1], 0.01); await T.adv(1.5); flow.push('pad→bowl');
+  await gripTap(T); flow.push('open');
+  let won = false;
+  for (let i = 0; i < 8 && !won; i++) { await T.adv(0.5); won = (await T.ux()).won; }
+  const run = await T.S(() => window.__sim.run());
+  return { won, gestures: T.gestures, flow, auto: run.auto, assisted: run.assisted };
+}
+
+async function trackpad(browser, base) {
+  for (const [vp, tag] of [[{ width: 390, height: 844 }, 'portrait'], [{ width: 844, height: 390 }, 'landscape']]) {
+    const T = await phone(browser, base + '&touch=pad', vp);
+    const p0 = await T.S(() => window.__sim.pad());
+    ok(p0.chosen && p0.on, `${tag} pad: ?touch=pad turns the trackpad on ` + JSON.stringify(p0));
+    const hint = await T.page.waitForFunction(() => window.__sim.pad().hint, null, { timeout: 15000 }).then(() => true).catch(() => false);
+    ok(hint, `${tag} pad: first-play ghost hand is shown`);
+    await T.shot(`t2-2${tag === 'portrait' ? 0 : 5}-pad-${tag}-start`);
+    await sleep(1500);
+    // ---- layout: rail, strip, buttons ≥ 44 px, nothing on top of each other ----
+    const R = {};
+    for (const [k, s] of [['rail', '.ux-rail'], ['up', '.ux-rail-up'], ['dn', '.ux-rail-dn'], ['strip', '.ux-wstrip'], ['side', '.ux-side'], ['cam', '.ux-cam'], ['bar', '.ux-abar'], ['grip', '#ux-grip'], ['edge', '.ux-edge'], ['top', '.ux-top']]) R[k] = await rectOf(T, s);
+    const vw = vp.width, vh = vp.height;
+    const sizes = R.up && R.dn && R.strip && R.rail && R.up[3] - R.up[1] >= 44 && R.dn[3] - R.dn[1] >= 44 && R.rail[2] - R.rail[0] >= 44 && R.strip[3] - R.strip[1] >= 44;
+    const clash = [['rail', 'strip'], ['rail', 'side'], ['rail', 'cam'], ['rail', 'bar'], ['rail', 'edge'], ['rail', 'top'], ['strip', 'side'], ['strip', 'cam'], ['strip', 'bar'], ['side', 'top'], ['cam', 'top']]
+      .filter(([a, b]) => overlap(R[a], R[b])).map((x) => x.join('/'));
+    ok(sizes && !clash.length && R.rail[2] <= vw - 16 && R.strip[3] <= (tag === 'portrait' ? R.bar[1] : vh), `${tag} pad: rail + strip ≥ 44 px, no overlaps ${clash.join(',')} ` + JSON.stringify({ rail: R.rail, strip: R.strip, grip: R.grip }));
+    if (tag === 'landscape') ok(R.grip[2] >= vw - 16 && R.rail[1] < R.grip[1] && R.rail[3] <= R.grip[1] && R.rail[0] > vw * 0.75, 'landscape pad: rail in the right column above Chapadlo');
+
+    let u = await T.ux(); const cube = u.objects.cube;
+    // ---- tap on an object = select it (no autopilot) ----
+    const cp = await T.P(cube); await T.tap(...cp); await sleep(400);
+    let st = await T.S(() => ({ pad: window.__sim.pad(), ux: window.__sim.ux(), run: window.__sim.run(), side: window.__sim.sideState().name }));
+    ok(st.pad.sel === 'cube' && !st.ux.busy && !st.run.auto, `${tag} pad: tap on the cube selects it, no autopilot ` + JSON.stringify({ sel: st.pad.sel, busy: st.ux.busy, auto: st.run.auto, side: st.side }));
+    // ---- one finger: slow = 0.25 mm/px, fast = 1.2 mm/px, on the table, relative to the camera ----
+    const spot = await padSpot(T);
+    u = await T.ux(); const a0 = u.active ? u.target : u.tip;
+    await padDrag(T, spot, 0, -80, 1000, 16);   // 80 px upwards in 1 s = 80 px/s
+    u = await T.ux(); const a1 = u.target;
+    const slow = Math.hypot(a1[0] - a0[0], a1[1] - a0[1]) * 1000;
+    const f = await T.S(() => { const a = window.__sim._ux.app, c = a.camera.position, t = a.controls.target; const L = Math.hypot(t.x - c.x, t.z - c.z); return [(t.x - c.x) / L, -(t.z - c.z) / L]; });
+    const awayMm = ((a1[0] - a0[0]) * f[0] + (a1[1] - a0[1]) * f[1]) * 1000;
+    ok(Math.abs(slow - 20) < 3 && awayMm > 17 && Math.abs(a1[2] - a0[2]) < 1e-3, `${tag} pad: slow 80 px drag up = ${slow.toFixed(1)} mm (${awayMm.toFixed(1)} mm away from the camera; 0.25 mm/px), height ${(a0[2] * 1000).toFixed(1)} → ${(a1[2] * 1000).toFixed(1)} mm`);
+    await padDrag(T, spot, 0, 80, 60, 6);       // 80 px in 60 ms
+    u = await T.ux(); const a2 = u.target;
+    const fast = Math.hypot(a2[0] - a1[0], a2[1] - a1[1]) * 1000;
+    ok(fast > 55 && fast <= 96.5, `${tag} pad: fast 80 px flick = ${fast.toFixed(1)} mm (ballistic gain, ≤ 1.2 mm/px)`);
+    // ---- rail: relative 0.4 mm/px, detent at the grasp height, readout follows the thumb; ▲ = +1 cm ----
+    await T.target(cube[0], cube[1], 0.06); await T.adv(1.5);
+    const det = await T.S(() => window.__sim._ux.pad.heights('cube'));
+    const r = await rectOf(T, '.ux-rail-t');
+    const t0 = Date.now() / 1000, x = (r[0] + r[2]) / 2, y0 = r[1] + 10, want = (0.06 - det[0]) / 0.0004 - 2;
+    T.gestures++;
+    await T.cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y: y0, id: 1 }], timestamp: t0 });
+    for (let k = 1; k <= 11; k++) await T.cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: y0 + want * Math.min(k, 10) / 10, id: 1 }], timestamp: t0 + 0.05 * k });
+    await sleep(300);
+    const mid = await T.S(() => { const e = document.querySelector('.ux-rail-r'); return { txt: e.textContent, on: e.classList.contains('on'), top: Math.round(e.getBoundingClientRect().top) }; });
+    await T.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [], timestamp: t0 + 0.6 });
+    await sleep(300);
+    // the last move is delivered with the lift (Chromium holds it for the next frame): its text stays after the lift
+    mid.txt = await T.S(() => document.querySelector('.ux-rail-r').textContent);
+    u = await T.ux();
+    ok(Math.abs(u.target[2] - det[0]) < 1e-6 && mid.on && /úchop/.test(mid.txt) && Math.abs(mid.top - (y0 + want - 12)) < 20, `${tag} pad: rail drag snaps to the grasp detent ${(det[0] * 1000).toFixed(1)} mm, readout "${mid.txt}" at the thumb`);
+    await T.shot(`t2-2${tag === 'portrait' ? 1 : 6}-pad-${tag}-rail`);
+    const up = await rectOf(T, '.ux-rail-up'); await T.tap((up[0] + up[2]) / 2, (up[1] + up[3]) / 2); await sleep(300);
+    const zu = (await T.ux()).target[2];
+    ok(Math.abs(zu - det[0] - 0.01) < 1e-6, `${tag} pad: ▲ on the rail = +1 cm (${(zu * 1000).toFixed(1)} mm)`);
+    // ---- wrist strip: 0.5°/px, "Lícuje ✓" within 3° of the cube's faces ----
+    const al = await T.S(() => { const u = window.__sim._ux; return { a: u.pad.alignment('cube'), roll: u.ctl.roll * 180 / Math.PI }; });
+    const sr = await rectOf(T, '.ux-wstrip'), sx = (sr[0] + sr[2]) / 2, sy = (sr[1] + sr[3]) / 2;
+    const off = (r) => ((r - al.a.roll) % 90 + 135) % 90 - 45;   // jaw misalignment (deg) at roll r
+    // first away from square (20°), then back by the measured amount
+    const away = (20 - off(al.roll)) / 0.5;
+    await padDrag(T, [sx - away / 2, sy], away, 0, 400, 8);
+    const s0 = await T.S(() => ({ roll: window.__sim._ux.ctl.roll * 180 / Math.PI, ok: !document.querySelector('.ux-wstrip-ok').hidden }));
+    ok(!s0.ok && Math.abs(off(s0.roll)) > 10, `${tag} pad: strip 0.5°/px turns the wrist (${off(s0.roll).toFixed(1)}° off square, no "Lícuje")`);
+    const need = -off(s0.roll) / 0.5 + 2;   // 1° past square: the magnet takes it
+    await padDrag(T, [sx - need / 2, sy], need, 0, 600, 12);
+    await sleep(400);
+    const s1 = await T.S(() => ({ roll: window.__sim._ux.ctl.roll * 180 / Math.PI, ok: !document.querySelector('.ux-wstrip-ok').hidden, txt: document.querySelector('.ux-wstrip').textContent.replace(/\s+/g, ' ').trim() }));
+    const mis = Math.abs(((s1.roll - al.a.roll) % 90 + 135) % 90 - 45);
+    ok(s1.ok && mis < 0.5, `${tag} pad: wrist strip squares the jaws to the cube ("${s1.txt}", ${mis.toFixed(2)}° off)`);
+    await T.shot(`t2-2${tag === 'portrait' ? 2 : 7}-pad-${tag}-wrist`);
+    // ---- two fingers = camera (target unchanged) ----
+    u = await T.ux(); const tg = u.target.slice();
+    const d0 = await T.S(() => window.__sim._ux.app.controls.getDistance());
+    const sp = await padSpot(T);
+    await T.two([sp[0] - 30, sp[1]], [sp[0] + 30, sp[1]], [sp[0] - 90, sp[1]], [sp[0] + 90, sp[1]]); await sleep(600);
+    const d1 = await T.S(() => window.__sim._ux.app.controls.getDistance());
+    u = await T.ux();
+    ok(Math.abs(d1 - d0) > 0.02 && Math.hypot(u.target[0] - tg[0], u.target[1] - tg[1]) < 0.002, `${tag} pad: pinch zooms (${d0.toFixed(2)} → ${d1.toFixed(2)} m), the gripper stays`);
+    // ---- M01 by hand with the trackpad ----
+    await T.S(() => { window.__sim.reset(); window.__sim.cameraNow('orbit'); }); await T.adv(0.5);
+    const w = await padWinM01(T);
+    ok(w.won && !w.auto && !w.assisted, `${tag} pad: M01 by hand with the trackpad: ${w.won ? 'won' : 'not won'} in ${w.gestures} gestures (${w.flow.join(', ')}), autopilot ${w.auto}`);
+    await T.shot(`t2-2${tag === 'portrait' ? 3 : 8}-pad-${tag}-win`);
+    await T.ctx.close();
+  }
+  // ---- mission 05 keeps its absolute finger trace on the paper ----
+  const D = await phone(browser, base.replace('mise=bowl', 'mise=trace') + '&touch=pad', { width: 390, height: 844 });
+  const dp = await D.S(() => ({ pad: window.__sim.pad(), rail: !document.querySelector('.ux-rail').hidden }));
+  const pp = await D.P([0.215, 0.0, 0.0]);
+  await D.drag([pp, [pp[0] + 30, pp[1] + 10]]); await sleep(300);
+  const ds = await D.S(() => window.__sim.drawState());
+  const want = await D.S(([x, y]) => window.__sim._ux.gizmo.tablePoint({ clientX: x, clientY: y }), [pp[0] + 30, pp[1] + 10]);
+  ok(dp.pad.chosen && !dp.pad.on && !dp.rail && ds.active && Math.hypot(ds.goal[0] - want[0], ds.goal[1] - want[1]) < 0.003, 'pad: mission 05 keeps the absolute finger trace ' + JSON.stringify({ on: dp.pad.on, goal: ds.goal.map((v) => +v.toFixed(3)), want: want.map((v) => +v.toFixed(3)) }));
+  await D.shot('t2-29-pad-m05');
+  await D.ctx.close();
+}

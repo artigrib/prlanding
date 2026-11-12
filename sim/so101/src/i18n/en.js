@@ -9,6 +9,15 @@ const dec = (s) => String(s).replace(/(\d),(\d)/g, '$1.$2');
 const ids = (s) => dec(s).replace(/\(([^)]+)\)/g, (m, n) => '(' + T(n) + ')');
 
 const strings = {
+  /* trackpad touch scheme (src/ui/touchpad.js) */
+  'Ovládání dotykem': 'Touch controls', 'Klasické': 'Classic', 'Trackpad (beta)': 'Trackpad (beta)',
+  'Jeden prst kdekoli posouvá chapadlo po stole, lišta vpravo mění výšku, pruh dole otáčí zápěstím, dva prsty otáčí pohledem. Klepnutí na předmět ho vybere za cíl.': 'One finger anywhere moves the gripper on the table, the rail on the right sets the height, the strip at the bottom turns the wrist, two fingers turn the view. A tap on an object makes it the target.',
+  'Modrou kouli táhnete přímo, šipky na ní mění výšku. Jeden prst mimo kouli otáčí pohledem.': 'Drag the blue ball directly; its arrows change the height. One finger off the ball turns the view.',
+  'Výška chapadla': 'Gripper height', 'O 1 cm výš': '1 cm up', 'O 1 cm níž': '1 cm down', 'Lícuje ✓': 'Square ✓',
+  'Táhněte prstem kdekoli – chapadlo jede po stole. Dvěma prsty otáčíte pohledem.': 'Drag a finger anywhere – the gripper moves on the table. Two fingers turn the view.',
+  'Cíl: {name}': 'Target: {name}', 'úchop': 'grasp', 'horní hrana': 'top face', '{n}° od hrany': '{n}° off square', '{n}°, lícuje': '{n}°, square',
+  'Posuňte prstem chapadlo nad kostku': 'Move the gripper over the cube with your finger',
+  'Posuňte prstem chapadlo nad oranžovou kostku': 'Move the gripper over the orange cube with your finger',
   /* touch quick fixes: drop, grasp height, physics pull on touch */
   'Ještě kousek níž – čelisti jsou nad kostkou': 'A little lower – the jaws are above the cube',
   'Kostka vypadla – otevřete chapadlo a uchopte ji znovu': 'The cube fell – open the gripper and grasp it again',
@@ -654,7 +663,7 @@ const patterns = [
 ];
 
 // pieces of composed messages, translated as a whole by the patterns above (for tools/i18n-extract.mjs)
-const fragments = ['Pohled z boku: {}', 'chapadlo ve výšce cíle ({})', 'chapadlo {} cm {} cílem ({})', ', {} cm vedle', 'STOP uvolněn. {} Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.', 'STOP uvolněn. {} Řízení zapnete tlačítkem „Znovu zapnout moment“.', 'Pauza po dlouhé relaci: pohyb půjde aktivovat za {}.', 'Skutečná ruka · POHYB POVOLEN · {} · zbývá {}', 'Skutečná ruka · jen čtení (shadow) · pauza {}', '· další: {}', '{} / {} misí · {} ★ z {}', '· sdílený čas {}', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
+const fragments = ['Táhněte modrou kouli nad', 'Posuňte prstem chapadlo nad', 'Pohled z boku: {}', 'chapadlo ve výšce cíle ({})', 'chapadlo {} cm {} cílem ({})', ', {} cm vedle', 'STOP uvolněn. {} Pro další pohyb znovu projděte kontrolní seznam a stiskněte „Aktivovat pohyb“.', 'STOP uvolněn. {} Řízení zapnete tlačítkem „Znovu zapnout moment“.', 'Pauza po dlouhé relaci: pohyb půjde aktivovat za {}.', 'Skutečná ruka · POHYB POVOLEN · {} · zbývá {}', 'Skutečná ruka · jen čtení (shadow) · pauza {}', '· další: {}', '{} / {} misí · {} ★ z {}', '· sdílený čas {}', 'Chybí přitom {} {} – {} nejspíš také ID {}.', 'Na ID {} odpovídá více serv najednou, jejich odpovědi se na sběrnici přepisují a nedají se přečíst (chybný kontrolní součet).{}', 'Neodpovídá {} {}', '${keys.map(([k, v]) =>', ").join('')}"];
 
 // object library names: generated map, hand-written keys above win
 for (const [k, v] of Object.entries(objectNames)) if (!(k in strings)) strings[k] = v;

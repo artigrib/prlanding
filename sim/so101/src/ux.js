@@ -3,7 +3,7 @@
 
 import { ArmController, GRIP_OPEN, GRIP_CLOSED } from './controller.js';
 import { World } from './world.js';
-import { MISSIONS, MissionRunner, bowlDrop, pushPlan, libPick, libPlace, libTarget, libGrasp, libPickPlace, inZone, autopilotAllowed, runsIn } from './missions.js';
+import { MISSIONS, MissionRunner, bowlDrop, pushPlan, libPick, libPlace, libTarget, libGrasp, libPickPlace, inZone, autopilotAllowed, runsIn, graspHint, reachHint } from './missions.js';
 import { runOutcome, mergeRecord, migrateProgress, partialPlan, HintCoach, PROGRESS_VERSION } from './mastery.js';
 import { Extras } from './ui/extras.js';
 import { Gizmo } from './ui/gizmo.js';
@@ -16,6 +16,7 @@ import { Confetti } from './ui/fx.js';
 import { Onboarding } from './ui/onboarding.js';
 import { Explode } from './ui/explode.js';
 import { Links } from './ui/links.js';
+import { Touchpad } from './ui/touchpad.js';
 import { DrawAssist } from './draw.js';
 import { Grab } from './grab.js';
 import { t as tr } from './i18n/index.js';
@@ -118,6 +119,7 @@ class UX {
     this.hd = new HiDetail(this);
     this.grab = new Grab(mj, app.m, app.d, app.act);   // physics pull of any link (before Links)
     this.links = new Links(this);
+    this.pad = new Touchpad(this);   // "Trackpad + rails" touch scheme (beta: ?touch=pad or Nástroje › Ovládání dotykem)
     this.panel.showGrabMode(this.links.mode);
     if (this.links.realArmed) this.panel.grabSeg.hidden = true;
     this.draw = new DrawAssist(); this.draw.help = store.get('draw-help', 1);
@@ -176,7 +178,8 @@ class UX {
       this.panel.openTeach(true, true);
       this.panel.toast('Máte sdílenou ukázku – spusťte ji tlačítkem Přehrát v nástroji Učit ukázkou');
     });
-    if (this.touch && !this.TEST && !store.get('tip-orbit', false)) {
+    if (this.pad.chosen()) setTimeout(() => this.pad.firstHint(), 900);   // 2 s ghost hand, once
+    else if (this.touch && !this.TEST && !store.get('tip-orbit', false)) {
       store.set('tip-orbit', true);
       setTimeout(() => this.panel.toast('Jedním prstem otáčíte pohled, dvěma přibližujete'), 2500);
     }
@@ -217,6 +220,8 @@ class UX {
     // moving by hand (no click-to-grab coaching): the player has dragged / turned joints, the mission refuses clicks,
     // the hint ladder is open, or the first-task guide is on its hands-on steps
     ctx.hand = r.manual.drag || r.manual.joints || !autopilotAllowed(r.m) || this.panel.hintLevel > 0 || this.onboarding.i >= 2;
+    const pad = this.pad.on();
+    if (pad) ctx.hand = true;   // trackpad: a tap selects, it never picks: no click-to-grab coaching
     this.extras.inkAt(ctx.tip);
     const res = r.tick(dt);
     // a held object slipped out of the closed jaws: say so (touch audit P2: after a drop the HUD only said "closer")
@@ -230,6 +235,11 @@ class UX {
     if (this.drop && ((this.drop.t -= dt) <= 0 || held || ctx.gripOpen || res.ok)) this.drop = null;
     // HUD (live region: write only on change)
     let text = this.drop ? dropText(this.world, this.drop.name) : res.text;
+    if (pad && !this.drop && !r.won) {
+      // trackpad: there is no ball to drag; the selected target gets the grasp coaching
+      const sh = res.ok ? null : this.padHint(held, ctx);
+      text = sh || text.replace('Táhněte modrou kouli nad', 'Posuňte prstem chapadlo nad');
+    }
     if (this.teach.replaying) text = this.touch ? 'Přehrávám ukázku – zastavíte ji tlačítkem Stop' : 'Přehrávám ukázku – Esc ji zastaví';
     else if (!r.won && (this.ctl.busy() || this.pending)) text = this.autoText();   // one voice: no manual coaching while the planner moves
     else if (this.mode === 'smart' && this.ctl.active && !this.ctl.reachable && !this.ctl.busy()) text = 'Mimo dosah – zkuste cíl blíž k ruce';
@@ -263,6 +273,7 @@ class UX {
     this.panel.tick();
     this.onboarding.tick();
     this.links.tick();
+    this.pad.tick();
     if (this.draw.active && this.drawMode()) this.gizmo.drawCursor(this.draw);
   }
 
@@ -433,10 +444,21 @@ class UX {
   cycleView() { const v = this.cameras.cycle(); this.panel.showView(v); }
   setWrist(on) { this.cameras.setWrist(on); this.panel.showWrist(on); store.set('wrist', on); }
   setTouchPull(on) { this.touchPull = !!on; store.set('touch-pull', this.touchPull); this.panel.showTouchPull(this.touchPull); }
-  /** The object the player works on now (the side view's target: the next one to pick, or where the held one goes). */
-  focusPoint() {
-    const tip = this.ctl.actualTip(this.tipBuf), st = sideTarget(this.world, this.runner.m, this.heldObject(), tip, inZone);
-    return st ? st.p : null;
+  /** The object the player works on now: the trackpad's selection, else the side view's target (the next one to pick,
+   *  or where the held one goes). Returns { name, label, p } or null. */
+  workTarget() {
+    const sel = this.pad && this.pad.selected();
+    if (sel) { const e = this.world.o[sel]; return { name: sel, label: e.label, p: Array.from(e.lib ? this.world.com(sel, [0, 0, 0]) : this.world.pos(sel, [0, 0, 0])) }; }
+    const tip = this.ctl.actualTip(this.tipBuf);
+    return sideTarget(this.world, this.runner.m, this.heldObject(), tip, inZone);
+  }
+  focusPoint() { const st = this.workTarget(); return st ? st.p : null; }
+  /** trackpad: grasp coaching toward the selected cube (when it is one the mission wants picked) */
+  padHint(held, c) {
+    const n = this.pad.selected(), m = this.runner.m;
+    if (!n || held || !/^cube/.test(n) || (m.targets || {})[n] !== 'pick') return null;
+    const p = this.world.pos(n, [0, 0, 0]), cc = { tip: c.tip, gripOpen: c.gripOpen, touch: true, hand: true };
+    return graspHint(cc, p) || reachHint(cc, p);
   }
   /** Camera: frame the gripper and the current target (touch: double tap on the empty table). */
   frameWork() {
@@ -842,6 +864,7 @@ class UX {
       objects: Object.fromEntries(this.world.active().map((e) => [e.name, Array.from(this.world.pos(e.name, [0, 0, 0]))])),
       explode: this.explode ? this.explode.amount : null, hiDetail: this.hiDetail || false
     });
+    api.pad = () => { const p = this.pad; return { chosen: p.chosen(), on: p.on(), sel: p.selected(), camera: p.camera, gain: p.lastGain || 0, hint: !!p.hintShown }; };
     api.grabMode = (m) => { this.links.setMode(m); this.panel.showGrabMode(this.links.mode); };
     api.grabState = () => ({ active: this.grab.active, force: this.grab.force, atLimit: this.grab.atLimit, blend: this.grab.blend, mode: this.links.mode });
     api.drawPoint = (x, y) => this.drawPoint(x, y);
