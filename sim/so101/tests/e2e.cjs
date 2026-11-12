@@ -831,7 +831,7 @@ async function touchDrag(page, from, to, steps = 8) {
         fails: [...document.querySelectorAll('#ux-wpol .ux-pol-fail li')].map((x) => x.textContent), label: (document.querySelector('#ux-wpol .ux-pol-rep > p') || {}).textContent || '', pol: window.__sim.policy(), won: window.__sim.ux().won, line: document.getElementById('ux-wline').textContent }));
       const val = (k) => (card.vals.find((v) => v[0] === k) || [])[1];
       const last = card.pol.last;
-      ok(fin > 0 && card.open && /^Běží: Naučené pravidlo \(kNN\) \+ plánovač · ověřeno na nové dávce č\. 2/.test(card.label) && /^\d+ \(natrénováno za /.test(val('Ukázky') || '') && /^\d+ z 11$/.test(val('Roztříděno') || '') &&
+      ok(fin > 0 && card.open && /^Běží: Naučené pravidlo \(kNN\) \+ plánovač · ověřeno na nové dávce č\. 2/.test(card.label) && /^\d+ \(natrénováno za /.test(val('Ukázky') || '') && /^\d+ z 11✓?$/.test(val('Roztříděno') || '') &&
         card.cmp.length === 3 && /^Skript \(plánovač\): \d+ z 11$/.test(card.cmp[0]) && /^Vaše politika: \d+ z 11$/.test(card.cmp[1]) && last && last.rows.length === 11 &&
         card.fails.length === last.rows.filter((r) => !r.ok).length && /Co neumí/.test(card.line),
         `mission 12 result card (${card.won ? 'won' : 'not passed'}, ${fin} s): ${card.k} · ${card.h} · ${card.label} · ${JSON.stringify(card.vals)} · ${JSON.stringify(card.cmp)} · failures ${JSON.stringify(card.fails)}`);
