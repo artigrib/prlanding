@@ -117,6 +117,11 @@ export class Cameras {
       const cam = this.app.camera, c = this.app.controls;
       cam.position.lerpVectors(this.from.p, this.to.p, e);
       c.target.lerpVectors(this.from.t, this.to.t, e);
+      // aim at the new target in this frame: controls.update() runs before tick(), so without this the frame is drawn
+      // from the new position with the previous frame's aim. With slow frames (software GL: 0.25–2.5 s, one frame can
+      // cover most of the 700 ms tween) that skewed view stays until the next frame; if frames stop there (the test
+      // hook pauses the loop) the scene stays aimed past the arm (the e2e mission 11 gizmo drag missed the ball)
+      cam.lookAt(c.target);
       if (k >= 1) this.tw = null;
     }
     if (this.cine > 0) { this.cine -= dt; if (this.cine <= 0) this.stopCinematic(); }

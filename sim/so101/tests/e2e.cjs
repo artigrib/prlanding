@@ -713,14 +713,18 @@ async function touchDrag(page, from, to, steps = 8) {
       // down, Space closes, up, over its bin, down, Space opens, B runs the belt again. The belt stands for every pick,
       // so this run earns ★ hotovo (and purity) but not ★ bez zastavení pásu.
       const q = await open(browser, base + '?test=1&mise=waste_hand&detail=low', { width: 1280, height: 800 });
+      // the mission's camera (m.look) tweens in over rendered frames: pause the frame loop only after it arrived, so the
+      // drag below meets the view a player gets (a pause mid-tween froze a transient view, see src/ui/cameras.js tick)
+      await q.waitForFunction(() => !window.__sim._ux.cameras.tw, null, { timeout: 60000 }).catch(() => {});
       await S(q, () => { window.__sim._app.sim.paused = true; });
       // one real mouse drag of the gizmo ball in this scene first
       const a0 = await S(q, () => window.__sim.screen('target')), t0 = (await ux(q)).target;
+      const under = await S(q, (a) => { const e = document.elementFromPoint(a.x, a.y); return e ? e.id || e.className || e.tagName : 'outside the window'; }, a0);
       await q.mouse.move(a0.x, a0.y); await q.mouse.down();
       for (let i = 1; i <= 8; i++) await q.mouse.move(a0.x - 10 * i, a0.y + 6 * i);
       await q.mouse.up(); await S(q, () => window.__sim.advance(0.5));
       const t1 = (await ux(q)).target;
-      ok(Math.hypot(t1[0] - t0[0], t1[1] - t0[1]) > 0.01, 'mission 11: the gizmo ball drags the target');
+      ok(Math.hypot(t1[0] - t0[0], t1[1] - t0[1]) > 0.01, `mission 11: the gizmo ball drags the target (ball at ${Math.round(a0.x)}, ${Math.round(a0.y)} px over ${under}, moved ${(Math.hypot(t1[0] - t0[0], t1[1] - t0[1]) * 100).toFixed(1)} cm)`);
       // a drag of the ball to pt: the target moves in n steps with the arm following in between (a hand drags at a
       // few cm/s; a jump straight down knocked tall cups and vials over in node runs)
       const to = (pt, n = 1, dt = 0) => S(q, ([pt, n, dt]) => {
