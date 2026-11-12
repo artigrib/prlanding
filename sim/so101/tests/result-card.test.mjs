@@ -6,6 +6,9 @@ import { MISSIONS, nextStar } from '../src/missions.js';
 import { createRequire } from 'node:module';
 import en from '../src/i18n/en.js';
 
+// time-rated missions (the conveyor missions rate named stars: tests/waste-hand.test.mjs)
+const TIMED = MISSIONS.filter((m) => !m.belt);
+
 const require = createRequire(import.meta.url);
 const I18N = new URL('../../../assets/i18n.js', import.meta.url).pathname;
 function enDict() {
@@ -35,19 +38,19 @@ const OLD = {
 };
 
 test('rate() from the threshold data gives the same stars as the old closures over a grid of inputs', () => {
-  assert.deepEqual(MISSIONS.map((m) => m.id).sort(), Object.keys(OLD).sort(), 'every mission has a reference');
+  assert.deepEqual(TIMED.map((m) => m.id).sort(), Object.keys(OLD).sort(), 'every mission has a reference');
   const eps = 1e-9;
   const times = [0, 0.1, 1, 300, 3600];
   for (let t = 0; t <= 260; t += 0.5) times.push(t);
   const precs = [0, 1, 0.5, 0.1];
   for (let p = 0; p <= 0.1; p += 0.00025) precs.push(p);
-  for (const m of MISSIONS) {
+  for (const m of TIMED) {
     const S = m.stars;
     for (const v of [S.t3, S.t2]) times.push(v - eps, v, v + eps);
     for (const v of [S.p3, S.p2]) if (v != null) precs.push(v - eps, v, v + eps);
   }
   let n = 0;
-  for (const m of MISSIONS) for (const t of times) for (const p of precs) {
+  for (const m of TIMED) for (const t of times) for (const p of precs) {
     const a = m.rate(t, p), b = OLD[m.id](t, p);
     if (a !== b) assert.fail(`${m.id} rate(${t}, ${p}) = ${a}, was ${b}`);
     n++;
@@ -56,8 +59,8 @@ test('rate() from the threshold data gives the same stars as the old closures ov
 });
 
 test('nextStar: the limit of the next star level and whether the run meets it', () => {
-  const bowl = MISSIONS.find((m) => m.id === 'bowl'), stack = MISSIONS.find((m) => m.id === 'stack');
-  const ball = MISSIONS.find((m) => m.id === 'ball'), trace = MISSIONS.find((m) => m.id === 'trace');
+  const bowl = TIMED.find((m) => m.id === 'bowl'), stack = TIMED.find((m) => m.id === 'stack');
+  const ball = TIMED.find((m) => m.id === 'ball'), trace = TIMED.find((m) => m.id === 'trace');
   assert.deepEqual(nextStar(bowl, 41, 0), { stars: 2, next: 3, time: { v: 41, limit: 25, met: false }, prec: null });
   assert.deepEqual(nextStar(bowl, 70, 0).time, { v: 70, limit: 60, met: false });
   assert.equal(nextStar(bowl, 70, 0).next, 2);
@@ -71,7 +74,7 @@ test('nextStar: the limit of the next star level and whether the run meets it', 
   const bl = nextStar(ball, 70, 0.03);       // ball: no precision limit for 2 ★
   assert.deepEqual([bl.stars, bl.next, bl.prec.limit, bl.prec.met], [1, 2, null, true]);
   // the card's numbers match the star rule the brief shows (starsHint)
-  for (const m of MISSIONS) assert.ok(m.starsHint.includes(String(m.stars.t3)), m.id + ': starsHint names the 3 ★ time');
+  for (const m of TIMED) assert.ok(m.starsHint.includes(String(m.stars.t3)), m.id + ': starsHint names the 3 ★ time');
 });
 
 test('every result card string has an English translation', () => {
@@ -81,7 +84,7 @@ test('every result card string has an English translation', () => {
     'S ukázkou – hvězdičky jsou za ruční přenesení.', 'Zkusit znovu', 'Další mise', 'To byla poslední mise.', 'Výsledek mise',
     'Mise 01 / 10 · splněno', 'Pro 3 ★', 'do 0:25', 'pod 4 mm', 'pod 2,5 mm', 'pod 4°', '0:41,3', '3,2 mm', '4,1°', 'splněno',
     'Další: 02 · Věž ze dvou kostek', '2 ze 3 hvězdiček'];
-  for (const m of MISSIONS) {
+  for (const m of TIMED) {
     say.push(m.done.replace(/[^.!]$/, '$&.'));
     if (m.stars.prec) say.push(m.stars.prec);
   }

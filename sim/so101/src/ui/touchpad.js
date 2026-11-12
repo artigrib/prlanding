@@ -13,6 +13,7 @@
 
 import { PAD, padGain, Speed, tableDelta, classify, railSnap, scrubSnap, isDoubleTap } from '../touch.js';
 import { libGrasp } from '../missions.js';
+import { BELT_FLOOR } from '../objects/beltpick.js';
 import { t as tr, isEn } from '../i18n/index.js';
 import { store } from './store.js';
 
@@ -214,7 +215,11 @@ export class Touchpad {
   heights(name) {
     const w = this.ux.world, e = w.o[name];
     if (!e) return [];
-    if (e.lib) { const g = libGrasp(w, name); return [g.z, g.top]; }
+    if (e.lib) {
+      // on the moving belt the grasp detent keeps the closing jaw above the slats (src/objects/beltpick.js BELT_FLOOR)
+      const g = libGrasp(w, name), belt = w.belt && w.belt.zone(w.com(name, [0, 0, 0]));
+      return [belt === 'belt' || belt === 'entry' ? Math.max(g.z, BELT_FLOOR) : g.z, g.top];
+    }
     if (e.kind !== 'free') return [];
     const p = w.pos(name, [0, 0, 0]);
     return [Math.max(0.009, p[2] - 0.002), p[2] + e.half];   // the planner's grasp height (controller.planPick), the top

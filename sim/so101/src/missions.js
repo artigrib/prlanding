@@ -3,6 +3,9 @@
 
 import { ArmController } from './controller.js';
 import { track } from './analytics.js';
+import { CONVEYOR_ITEMS, CONVEYOR_BINS, FRACTION_BIN, labelOf } from './objects/scene.js';
+import { WasteRun, WASTE } from './objects/wastebatch.js';
+import { beltSolve } from './objects/beltpick.js';
 
 const STAR_PTS = (() => {
   // 5-point star outline (closed), centre (0.215, 0.0), outer radius 5.5 cm, sampled every ~7 mm
@@ -349,8 +352,84 @@ export const MISSIONS = [
     spot: () => [0, 0],
     grip: { vial: 0.72 },
     solve: (ctl, w) => libSolve(ctl, w, 'lab')
+  },
+
+  // ---------------- chapters 11–13: waste sorting on the conveyor (design: redesign campaign "Třídění odpadu") --------
+  {
+    id: 'waste_hand', n: '11', title: 'Třídění odpadu I: Ručně',
+    desc: 'Z pásu přijíždí odpad: papír, plast, sklo a kov. Roztřiďte ho do košů podle barvy a nápisu – co dojede na konec pásu, propadne. Nové: Pás ⏸ (klávesa B) pás zastaví, ale stojí hvězdu. Předměty jsou čisté modely z knihovny NVIDIA SimReady jako zástupci frakcí; papírový kelímek je zmenšený na 75 % a matice zvětšená 2,5×, aby je tištěné čelisti chytly.',
+    short: 'Odpad z pásu do košů',
+    scene: 'conveyor', belt: true,
+    credit: 'Objekty: NVIDIA SimReady (CC BY 4.0)',
+    layout: Object.fromEntries(Object.entries(CONVEYOR_BINS).map(([n, p]) => [n, [p[0], p[1], 0]])),
+    sort: Object.fromEntries(CONVEYOR_ITEMS.map((it) => [it.name, FRACTION_BIN[it.fraction]])),
+    targets: Object.assign(Object.fromEntries(CONVEYOR_ITEMS.map((it) => [it.name, 'pick'])), Object.fromEntries(Object.keys(CONVEYOR_BINS).map((b) => [b, 'place']))),
+    strategy: 'Berte vždy předmět nejblíž konci pásu. Koš poznáte podle barvy a nápisu. Když nestíháte, Pás ⏸ (B) ho zastaví.',
+    advice: 'Pro všechny 3 ★: každý předmět do jeho koše a pás ani jednou nezastavit.',
+    // Stars are named, not timed (design §2): ★ hotovo = the win, ★ čistota = purity, ★ bez zastavení pásu = never paused.
+    // Thresholds from the measured scripted baseline, beltSolve on this batch (11 items, 2 cm/s, one item every 10 s,
+    // these bins), seeds 1–10, numbers in the mission PR:
+    //   tools/belt-measure.mjs batch (control tick every 4th physics step): 11, 11, 8, 10, 11, 9, 11, 11, 11, 11 of 11;
+    //   tools/belt-measure.mjs mission (MissionRunner, 60 Hz frames as the page): 8, 9, 10, 9, 10, 9, 10, 11, 9, 10 of 11;
+    //   purity 100 % and no belt pause in all 20 runs.
+    // win = the lowest count (8), so the planner behind "Ukaž mi" / "Ukázat řešení" reached it on every measured run;
+    // purity 1 and pause 0 are what it reached in all of them.
+    stars: { win: 8, purity: 1, pause: 0 },
+    done: 'Odpad je roztříděný',
+    starsHint: '★ hotovo (8 z 11) · ★ čistota 100 % · ★ bez zastavení pásu',
+    // hint ladder rungs 2 and 3 (src/ui/panel.js HINT_STEPS) in this mission
+    hints: {
+      ghost: { text: 'Koš pro předmět u chapadla svítí. Tenká čára na pásu ukazuje, kde ten předmět bude za 3 s.', next: 'Ukázat koš a předpověď' },
+      partial: { text: 'Ruka sama roztřídí další předmět (Běží: Skript (plánovač)). Mise se pak počítá jako splněná, bez hvězdiček.', next: 'Ukaž mi' }
+    },
+    // belt left → right across the screen, bins in front of and behind it, the end tote at the right edge; phones
+    // (portrait): the belt runs top → bottom, the tote at the bottom (three.js coords: x, z_mj, -y_mj)
+    look: { t: [0.24, 0.0, 0.0], p: [0.92, 0.8, 0.0001], pn: [0.25, 1.05, -0.62] },
+    openStart: true,
+    setup(w) { if (w.belt) w.belt.speed = WASTE.speed; },
+    check(c, dt) { return wasteCheck(this, c, dt); },
+    rate: (t, prec, st) => wasteStars(MISSIONS.find((m) => m.id === 'waste_hand').stars, st),
+    // the scripted tracking planner sorts until the batch is done (src/objects/beltpick.js)
+    solve: (ctl, w, runner) => beltSolve(ctl, w, { stop: () => !!(runner && runner.ctx.s.run && runner.ctx.s.run.done()) })
   }
 ];
+
+// ---------------- mission 11: waste sorting by hand ----------------
+const FR = { paper: 'papír', plastic: 'plast', glass: 'sklo', metal: 'kov' };
+export const FRACTION_CS = FR;
+/** Named stars of the waste missions: 1 for the win, +1 purity at the threshold, +1 belt never paused. */
+export function wasteStars(S, st) {
+  if (!st) return 1;
+  return 1 + (st.purity != null && st.purity >= S.purity - 1e-9 ? 1 : 0) + (st.paused <= S.pause + 1e-9 ? 1 : 0);
+}
+/** The live objective line of mission 11 (one channel): idle → progress; a held item → its bin; an event → 3 s. */
+function wasteCheck(m, c, dt) {
+  const s = c.s;
+  if (!c.w.belt) return { text: '' };   // only in the conveyor scene (the page reloads into it)
+  if (!s.run) s.run = new WasteRun(c.w, { seed: WASTE.seed });
+  const run = s.run;
+  run.tick(dt, c);
+  const st = run.stats(), W = m.stars.win, out = (text, o) => Object.assign({ text, stats: st, progress: st.correct / st.n, ok: st.correct > 0 }, o);
+  if (!c.started) return out('Roztřiďte odpad z pásu do košů: papír, plast, sklo, kov. Co dojede na konec, propadne. Odpad začne jezdit, jakmile pohnete rukou.', { ok: false });
+  if (run.done()) {
+    if (st.correct >= W) return out(`Roztříděno ${st.correct} z ${st.n}…`, { ok: true, won: true });
+    return out(`Dávka skončila: ${st.correct} z ${st.n} ve správném koši, potřeba ${W}. R spustí dávku znovu`);
+  }
+  const ev = run.last, held = run.items.find((it) => it.state === 'held');
+  if (ev && run.t - ev.t < 3 && !held) {
+    const lab = labelOf(ev.name)[0];
+    if (ev.ev === 'bin' && !ev.ok) {
+      const bf = Object.keys(FRACTION_BIN).find((f) => FRACTION_BIN[f] === ev.bin);
+      return out(`Pozor: ${lab} je ${FR[ev.fraction]}, ne ${FR[bf]}`);
+    }
+    if (ev.ev === 'tote') return out(`Propadlo: ${lab} (${FR[ev.fraction]}) · ${st.lost} z ${st.n}`);
+    if (ev.ev === 'floor') return out(`Spadlo ze stolu: ${lab} (${FR[ev.fraction]})`);
+    if (ev.ev === 'stuck') return out(`Zaseklo se na pásu: ${lab} – vezměte to rukou`);
+  }
+  if (st.lost > st.n - W) return out(`Už to na ${W} nestačí – R spustí dávku znovu`);
+  if (held) return out(`Teď nad koš: ${FR[held.fraction]}`);
+  return out(`Hotovo ${st.correct} z ${st.n} · na pásu ${st.onBelt}`);
+}
 
 /**
  * Star rating from a mission's thresholds (m.stars): time stars (≤ t3 → 3, ≤ t2 → 2, else 1); missions that rate
@@ -362,7 +441,7 @@ export function rateBy(S, t, prec) {
   if (S.p3 == null) return ts;
   return Math.min(ts, prec < S.p3 ? 3 : S.p2 == null || prec < S.p2 ? 2 : 1);
 }
-for (const m of MISSIONS) m.rate = (t, prec) => rateBy(m.stars, t, prec);
+for (const m of MISSIONS) if (!m.rate) m.rate = (t, prec) => rateBy(m.stars, t, prec);
 
 /**
  * What the next star asks for, from the measured run (result card): the rating, the star level above it (3 when
@@ -661,18 +740,21 @@ export class MissionRunner {
   /** Apply the layout (call after the sim was reset to its keyframe). */
   setup() {
     this.w.layout(this.m.layout);
+    if (this.m.setup) this.m.setup(this.w);
     this.ctx.s = {}; this.time = 0; this.won = false; this.result = null; this.started = false; this.assisted = false; this.last = { text: '' };
     // how the object was moved during this run (src/mastery.js): autopilot / hint rung, Táhnout ruku, Klouby
     this.auto = false; this.manual = { drag: false, joints: false };
   }
   /** Returns the check result; sets this.won / this.result once. */
   tick(dt) {
+    this.ctx.started = this.started;
     const r = this.m.check(this.ctx, dt) || { text: '' };
     if (this.started && !this.won) this.time += dt;
     if (r.won && !this.won) {
       this.won = true;
       const prec = r.prec != null ? r.prec : 0;
-      this.result = { id: this.m.id, time: this.time, prec, stars: this.m.rate(this.time, prec) };
+      this.result = { id: this.m.id, time: this.time, prec, stars: this.m.rate(this.time, prec, r.stats) };
+      if (r.stats) this.result.stats = r.stats;
     }
     this.last = r;
     return r;

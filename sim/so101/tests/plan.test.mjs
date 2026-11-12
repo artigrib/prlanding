@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { loadScene } from './mj-node.mjs';
 import { ArmController } from '../src/controller.js';
 import { World } from '../src/world.js';
-import { MISSIONS, MissionRunner } from '../src/missions.js';
+import { MISSIONS, MissionRunner, sceneOf } from '../src/missions.js';
 
 const { mj, m, d } = await loadScene();
 const act = ['shoulder_pan', 'shoulder_lift', 'elbow_flex', 'wrist_flex', 'wrist_roll', 'gripper']
@@ -34,7 +34,7 @@ function run(sec, stopWhen) {
   return sec;
 }
 
-for (const mis of MISSIONS.filter((x) => !x.objects)) {   // object missions: tests/missions-objects.test.mjs
+for (const mis of MISSIONS.filter((x) => sceneOf(x) === 'plain')) {   // object missions: tests/missions-objects.test.mjs, conveyor: tests/waste-hand.test.mjs
   test(`mission "${mis.id}" is solved by its automatic plan`, () => {
     reset(mis.id);
     runner.start();

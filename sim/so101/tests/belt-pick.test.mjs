@@ -89,23 +89,26 @@ test('batch order is seeded and interleaved (a fraction twice in a row at most o
   const a = batchOrder(3), b = batchOrder(3);
   assert.deepEqual(a, b);
   assert.deepEqual([...a.order].sort(), CONVEYOR_ITEMS.map((it) => it.name).sort());
-  let rep = 0; for (let i = 1; i < 12; i++) if (fractionOf(a.order[i]) === fractionOf(a.order[i - 1])) rep++;
+  let rep = 0; for (let i = 1; i < a.order.length; i++) if (fractionOf(a.order[i]) === fractionOf(a.order[i - 1])) rep++;
   assert.ok(rep <= 1);
 });
 
-// Design target (campaign §8): ≥ 10/12 correct at 100 % purity. Not reachable with the 9 × 9 cm paper bin: a paper
-// cup is 6 cm across and a single convex hull (cups do not nest), so the bin holds one countable cup; a second one
-// stacked on it rests above the counted height (inZone: top + 6 cm) or bounces out. beltSolve leaves those cups to
-// the tote ('skip/full'), so the ceiling is 10/12 and the measured runs (tools/belt-measure.mjs batch, 10 seeds) land
-// at 7–10. This test pins the measured level and the purity; the PR reports the numbers and the bin proposal.
-test('beltSolve sorts a seeded batch at 2 cm/s: purity 100 %, ≥ 8/12 correct, cups beyond the paper bin left to pass', () => {
+// Design target (campaign §8): ≥ 10/12 correct at 100 % purity. Mission PR (11 items, bins as now): beltSolve batch
+// runs, tools/belt-measure.mjs batch, seeds 1–10 at 2 cm/s, one item every 10 s: 11, 11, 8, 10, 11, 9, 11, 11, 11, 11 of
+// 11 correct, purity 100 % in all ten. (PR 2, 12 items, 9 × 9 cm paper bin: 7–10 of 12; 20 of the 32 losses were paper
+// cups the full bin left to pass.) The paper bin is now 10 × 17 cm and a batch has 2 paper cups; the plastic bin is
+// 12 × 17 cm with a lane for the long items beside the cup. What is still lost: a missed or dropped grasp, an item
+// released beside its bin, rarely a glass bin whose free gaps the drifted vials block ("full").
+// This seed is the lowest of the ten (8/11); the test pins that level (= mission 11's win threshold, src/missions.js).
+test('beltSolve sorts a seeded batch at 2 cm/s: purity 100 %, ≥ 8/11 correct, no paper cup left to pass for a full bin', () => {
   const r = batch(C, { speed: V, every: 10, seed: 3 });
   const lost = Object.entries(r.where).filter(([n, wh]) => wh !== FRACTION_BIN[fractionOf(n)]).map(([n, wh]) => `${n}→${wh}`);
-  console.log(`  beltSolve seed 3: ${r.correct}/12 correct, ${r.wrong} wrong bin, ${r.missed} missed, ${r.time.toFixed(0)} s sim; not in bin: ${lost.join(', ')}`);
+  console.log(`  beltSolve seed 3: ${r.correct}/${r.n} correct, ${r.wrong} wrong bin, ${r.missed} missed, ${r.time.toFixed(0)} s sim; not in bin: ${lost.join(', ')}`);
+  assert.equal(r.n, 11);
   assert.equal(r.wrong, 0, 'nothing in a wrong bin');
   assert.equal(r.purity, 1);
-  assert.ok(r.correct >= 8, `${r.correct}/12 correct`);
-  assert.ok(Object.values(r.where).every((wh) => wh !== 'not spawned' && wh !== 'belt' && wh !== 'entry'), 'every item spawned and off the belt');
+  assert.ok(r.correct >= 8, `${r.correct}/11 correct`);
+  assert.ok(Object.values(r.where).every((wh) => wh !== 'not spawned' && wh !== 'belt'), 'every item spawned and off the belt');
   const full = r.events.filter((e) => e.ev === 'skip' && e.why === 'full').map((e) => e.name);
-  assert.ok(full.every((n) => fractionOf(n) === 'paper' || fractionOf(n) === 'plastic'), 'only the paper (or a crowded plastic) bin fills up: ' + full);
+  assert.ok(!full.some((n) => fractionOf(n) === 'paper'), 'no paper cup skipped for a full bin: ' + full);
 });

@@ -114,13 +114,20 @@ export function binDrop(w, fx, name) {
   const f = w.pos(fx, [0, 0, 0]), z = w.o[fx].fixture.zone, sz = w.o[name].size || [0.03, 0.03, 0.03], long = LONG.test(name);
   const rx = long ? Math.min(sz[0], sz[1]) / 2 : Math.max(sz[0], sz[1]) / 2, ry = long ? Math.max(sz[0], sz[1]) / 2 : rx;
   const ax = Math.max(0, z.hx - rx - 0.004), ay = Math.max(0, z.hy - ry - 0.004);
-  const xs = ax > 0.003 ? [-ax, ax, 0] : [0], ys = ay > 0.003 ? [-ay, ay, 0] : [0];
+  // candidate spots: a 5 × 5 grid over the room the footprint has (placed items drift 1–2 cm on release, so a coarse
+  // grid found every spot blocked while a gap was still free)
+  const grid = (a) => (a > 0.003 ? [-a, a, 0, -a / 2, a / 2] : [0]);
+  let xs = grid(ax);
+  const ys = grid(ay);
+  // a long bin that takes long items (plastic: fork, spoon and the cup): two lanes, so neither blocks the other.
+  // Long items lie in the lane on the robot side (they stack there), everything else stands in the belt-side lane.
+  if (z.hy > 1.5 * z.hx && fx === 'bin_plastic' && ax > 0.003) xs = [long ? -ax : ax];
   // score: pile height plus 0.3 × the reach beyond the bin centre, so the spots nearer the robot fill first and a
   // flat item rather lands on a flat one than on the far edge (a far drop at the reach limit tipped over the wall)
   let best = null;
   const r0 = Math.hypot(f[0], f[1]);
   for (const dy of ys) for (const dx of xs) {
-    const x = f[0] + dx, y = f[1] + dy, { top, on } = pileTop(w, fx, x, y, Math.max(rx, 0.015) + 0.006, Math.max(ry, 0.015) + 0.006, name);
+    const x = f[0] + dx, y = f[1] + dy, { top, on } = pileTop(w, fx, x, y, Math.max(rx, 0.015) + 0.003, Math.max(ry, 0.015) + 0.003, name);
     const score = top + 0.3 * (Math.hypot(x, y) - r0);
     if (!best || score < best.score - 1e-4) best = { xy: [x, y], top, on, score };
   }

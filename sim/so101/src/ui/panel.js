@@ -1,7 +1,8 @@
 // DOM for the UX layer: HUD (top row, action bar, camera, Nástroje drawer, ☰ menu), mission picker, teach & replay,
 // wrist-cam frame, toasts, win dialog extras, keyboard shortcuts dialog. Formal Czech ("vy").
 
-import { MISSIONS, nextStar } from '../missions.js';
+import { MISSIONS, nextStar, FRACTION_CS } from '../missions.js';
+import { FRACTION_BIN } from '../objects/scene.js';
 import { VIEW_LABELS } from './cameras.js';
 import { store } from './store.js';
 
@@ -72,7 +73,10 @@ export class Panel {
     // the one prominent action: the gripper (in the drawing mission the gripper holds the marker: pen up / down)
     this.gripBtn = h(`<button type="button" class="ux-ab ux-ab-main" id="ux-grip" aria-pressed="false">Zavřít chapadlo <span class="kbd" aria-hidden="true">␣</span></button>`);
     this.penUpBtn = h(`<button type="button" class="ux-ab ux-ab-main" id="ux-penup" aria-pressed="false" hidden>Pero nahoru <span class="kbd" aria-hidden="true">P</span></button>`);
-    bar.prepend(this.gripBtn, this.penUpBtn);
+    // conveyor missions: Pás ⏸/▶ stops and starts the belt (key B)
+    this.beltBtn = h(`<button type="button" class="ux-ab" id="ux-belt" aria-pressed="false" hidden>Pás ⏸ <span class="kbd" aria-hidden="true">B</span></button>`);
+    bar.prepend(this.gripBtn, this.penUpBtn, this.beltBtn);
+    this.beltBtn.addEventListener('click', () => ux.toggleBelt());
     this.hintB = h(`<button type="button" class="ux-ab" id="ux-mhint" aria-controls="ux-hintbox" aria-expanded="false">Poradit</button>`);
     this.toolsQ = h(`<button type="button" class="ux-ab ux-ab-tools" id="ux-qtools" aria-controls="panel" aria-expanded="false">Nástroje</button>`);
     bar.append(this.hintB, this.toolsQ);
@@ -93,6 +97,17 @@ export class Panel {
     this.hintNextBtn = h(`<button type="button" class="ux-link ux-solve" id="ux-hintnext">Další krok <span aria-hidden="true">→</span></button>`);
     this.hintNextBtn.addEventListener('click', () => this.hintNext());
     hb.querySelector('.ux-hintnext').append(this.hintNextBtn, demo);
+  }
+
+  /** paused: true / false in a conveyor mission, null = no belt control */
+  showBelt(paused) {
+    const b = this.beltBtn, on = paused != null;
+    b.hidden = !on;
+    $('ux-abar').classList.toggle('ux-ab5', on);
+    if (!on) return;
+    b.firstChild.textContent = paused ? 'Pás ▶ ' : 'Pás ⏸ ';
+    b.setAttribute('aria-pressed', String(!!paused));
+    b.setAttribute('aria-label', paused ? 'Rozjet pás (B)' : 'Zastavit pás (B)');
   }
 
   goHome() { const ux = this.ux; ux.ctl.cancel(); ux.pending = null; ux.app.goHome(); ux.ctl.syncFromCtrl(); }
@@ -137,8 +152,8 @@ export class Panel {
         if (ux.touch) now = now.replace(/Klikněte/g, 'Klepněte');
         html = `<span>${m.strategy || ''}</span>` + (now ? `<br><span class="ux-hintnow"><b>Teď:</b> <span>${now}</span></span>` : '');
       } else {
-        const grasp = Object.values(m.targets || {}).includes('pick');
-        html = `<span>${cur.id === 'partial' && !grasp ? 'Ruka se postaví na začátek – dokončete to vy. Mise se pak počítá jako splněná, bez hvězdiček.' : cur.text}</span>`;
+        const grasp = Object.values(m.targets || {}).includes('pick'), own = m.hints && m.hints[cur.id];
+        html = `<span>${own ? own.text : cur.id === 'partial' && !grasp ? 'Ruka se postaví na začátek – dokončete to vy. Mise se pak počítá jako splněná, bez hvězdiček.' : cur.text}</span>`;
       }
       if (this.hintText.innerHTML !== html) this.hintText.innerHTML = html;
     }
@@ -148,7 +163,7 @@ export class Panel {
     const nx = HINT_STEPS[lv];
     const nb = this.hintNextBtn, demo = $('demo');
     nb.hidden = !nx || nx.id === 'solution';
-    if (nx && nx.id !== 'solution') nb.firstChild.textContent = nx.next + ' ';
+    if (nx && nx.id !== 'solution') nb.firstChild.textContent = ((m.hints && m.hints[nx.id] && m.hints[nx.id].next) || nx.next) + ' ';
     demo.hidden = !nx || nx.id !== 'solution';
     this.hintB.hidden = won;
   }
@@ -189,6 +204,8 @@ export class Panel {
     this.cards.textContent = '';
     for (const m of MISSIONS) {
       const p = prog[m.id];
+      // chapter header before the waste-sorting missions (11–)
+      if (m.id === 'waste_hand') this.cards.appendChild(h(`<p class="mono ux-cardh">Třídění odpadu</p>`));
       const b = h(`<button type="button" class="ux-card${m.id === this.ux.runner.m.id ? ' cur' : ''}">
         <span class="mono">Mise ${m.n}</span>
         <b>${m.title}</b>
@@ -198,10 +215,10 @@ export class Panel {
       b.addEventListener('click', () => { this.closePicker(); this.ux.selectMission(m.id); });
       this.cards.appendChild(b);
     }
-    // chapter 11 (after the missions): the real arm (servo setup wizard) – visible from the start, never locked (teachers link it directly)
+    // after the missions: the real arm (servo setup wizard) – visible from the start, never locked (teachers link it directly)
     const pr = progressOf(prog);
     const ch = h(`<a class="ux-card ux-chapter" href="nastaveni/">
-        <span class="mono">Kapitola 11</span>
+        <span class="mono">Skutečná ruka</span>
         <b>Ke skutečné ruce</b>
         <span class="ink2">Nastavení serv nanečisto: ID, kalibrace, test</span>
         <span class="mono-s muted">${pr.done >= 3 ? 'Odemčeno: zvládli jste 3 mise' : 'Doporučujeme po 3 misích – otevřít můžete hned'}</span>
@@ -223,8 +240,9 @@ export class Panel {
     this.mTitle.textContent = m.title;
     this.mDesc.textContent = m.desc;
     // credits for the scanned / authored objects (CC BY 4.0 needs attribution where they are shown): on the stage
-    this.credit.hidden = !m.objects;
-    if (m.objects) this.credit.firstChild.textContent = m.credit || 'Objekty: NVIDIA SimReady (CC BY 4.0)';
+    const lib = m.objects || m.scene === 'conveyor';
+    this.credit.hidden = !lib;
+    if (lib) this.credit.firstChild.textContent = m.credit || 'Objekty: NVIDIA SimReady (CC BY 4.0)';
     const s = prog ? prog.stars : 0;
     this.mStars.innerHTML = this.bStars.innerHTML = starStr(s) + badgeStr(prog, true);
     const lab = s ? `Nejlepší hodnocení ${s} ze 3 hvězdiček` : prog ? 'Splněno, zatím bez hvězdiček' : 'Zatím nesplněno';
@@ -481,6 +499,10 @@ export class Panel {
     // credits for the scanned / authored objects (CC BY 4.0 needs attribution where they are shown)
     this.credit = h(`<p class="mono-s ux-credit" hidden><a href="objects/LICENSES.md" target="_blank" rel="noopener"></a></p>`);
     st.appendChild(this.credit);
+    // conveyor missions: which policy moves the arm ("Běží: Skript (plánovač)") and how long the belt has stood
+    this.chips = h(`<div class="ux-chips" aria-hidden="true"><span class="ux-chip-run mono-s" hidden></span><span class="ux-chip-belt mono-s" hidden></span></div>`);
+    st.appendChild(this.chips);
+    this.chipRun = this.chips.firstChild; this.chipBelt = this.chips.lastChild;
   }
   /** shared time from a challenge link, shown next to the timer until the page is left */
   showChallenge(t) {
@@ -621,6 +643,11 @@ export class Panel {
     const open = (ux.ctl.active ? ux.ctl.grip : ux.app.d.ctrl[ux.app.act[5]]) > 0.5;
     if (open !== this.gripOpen) { this.gripOpen = open; this.showGrip(open); }
     // stuck: "Poradit" is marked (never opened by itself)
+    // conveyor chips (text only on change)
+    const run = ux.wasteRun ? ux.wasteRun() : null, pol = ux.policyChip ? ux.policyChip() : null;
+    const bt = run && run.pauseT > 0 && !r.won ? `Pás stojí ${fmt(run.pauseT)}` : '';
+    if (pol !== this.chipRunT) { this.chipRunT = pol; this.chipRun.textContent = pol || ''; this.chipRun.hidden = !pol; }
+    if (bt !== this.chipBeltT) { this.chipBeltT = bt; this.chipBelt.textContent = bt; this.chipBelt.hidden = !bt; }
     const hint = !!this.offered && !r.won && !ux.ctl.busy() && !ux.pending && !ux.teach.replaying && !ux.explode.on;
     if (hint !== this.offerOn) { this.offerOn = hint; this.hintB.classList.toggle('ux-offer', hint); }
   }
@@ -709,6 +736,12 @@ export class Panel {
     this.winVals.textContent = '';
     const cell = (dt, dd, ok) => this.winVals.appendChild(h(`<div><dt>${dt}</dt><dd${/\d/.test(dd) ? '' : ' class="ux-wtxt"'}><span>${dd}</span>${ok ? '<span class="ux-wok" aria-hidden="true">✓</span>' : ''}</dd></div>`));
     let stats = [];
+    if (m.belt && res.stats) {
+      this.beltWin(m, res, best, isNew, by, manual, cell, again);
+      this.winNext.textContent = next ? `Další: ${next.n} · ${next.short}` : 'To byla poslední mise.';
+      this.nextBtn.hidden = !next;
+      return;
+    }
     if (manual) {
       const ns = nextStar(m, res.time, res.prec);
       cell('Váš čas', fmtTime(res.time, ns.time.limit));
@@ -753,6 +786,40 @@ export class Panel {
     // what comes next: the next mission's number and short title (the mission list has no "what it adds" data)
     this.winNext.textContent = next ? `Další: ${next.n} · ${next.short}` : 'To byla poslední mise.';
     this.nextBtn.hidden = !next;
+  }
+  /** Result card of a conveyor mission: sorted, purity (overall and per bin), missed (by fraction), belt stood,
+   *  time; the named stars with the measured value next to each one that was missed. */
+  beltWin(m, res, best, isNew, by, manual, cell, again) {
+    const st = res.stats, S = m.stars, pct = (v) => (v == null ? '–' : `${String(+(100 * v).toFixed(1)).replace('.', ',')} %`);
+    const sec = (v) => `${String(+v.toFixed(1)).replace('.', ',')} s`;
+    const pur = st.purity != null && st.purity >= S.purity - 1e-9, still = st.paused <= S.pause + 1e-9;
+    cell('Roztříděno', `${st.correct} z ${st.n}`, st.correct >= S.win);
+    cell('Čistota', pct(st.purity) + (st.wrong ? ` (${st.wrong} v cizím koši)` : ''), pur);
+    cell('Propadlo', String(st.missed));
+    cell('Pás stál', st.paused > 0 ? sec(st.paused) : 'ani jednou', still);
+    cell(by ? 'Čas' : 'Váš čas', fmtTime(res.time, null));
+    this.winH.textContent = /[.!]$/.test(m.done) ? m.done : m.done + '.';
+    // named stars: earned ones plain, missed ones with the measured value
+    const named = [`★ hotovo`, pur ? '★ čistota 100 %' : `☆ čistota ${pct(st.purity)}`, still ? '★ bez zastavení pásu' : `☆ pás stál ${sec(st.paused)}`];
+    if (manual) {
+      this.winText.innerHTML = named.map((x) => `<span>${x}</span>`).join(' · ') + (res.stars < 3 && m.advice ? `<br><span>${m.advice}</span>` : '');
+      again.firstChild.textContent = 'Zkusit znovu ';
+      again.classList.remove('btn-act'); again.classList.add('btn-o');
+    } else {
+      this.winText.textContent = by ? 'Tohle roztřídila ruka sama (Skript, plánovač). Zkuste to teď vy.' : 'S ukázkou – hvězdičky jsou za ruční třídění.';
+      again.firstChild.textContent = by ? 'Teď to zkuste vy ' : 'Zkusit ručně ';
+      again.classList.toggle('btn-act', !!by); again.classList.toggle('btn-o', !by);
+    }
+    const stats = [];
+    // per bin: correct / everything in it; missed by fraction
+    stats.push(Object.entries(FRACTION_BIN).map(([f, fx]) => { const b = st.byBin[fx]; return `${FRACTION_CS[f]} ${b.correct}/${b.correct + b.wrong}`; }).join(' · '));
+    const lost = Object.entries(st.missedBy).filter(([, k]) => k > 0).map(([f, k]) => `${FRACTION_CS[f]} ${k}`);
+    if (lost.length) stats.push('propadlo: ' + lost.join(', '));
+    if (manual && res.badges && res.badges.drag) stats.push('✋ ručně');
+    if (manual && res.badges && res.badges.joints) stats.push('⚙ klouby');
+    if (manual && isNew) stats.push('nový rekord');
+    // one text node per piece (the English table translates them one by one)
+    this.winStats.innerHTML = stats.map((x) => `<span>${x}</span>`).join(' · '); this.winStats.hidden = false;
   }
   /** one more item for the badges / record line (e.g. a friend's shared time) */
   addStat(t) { const s = this.winStats; s.textContent = s.textContent ? s.textContent + ' · ' + t : t; s.hidden = false; }
@@ -834,6 +901,7 @@ export class Panel {
       ['T / L', 'nahrát / přehrát ukázku'],
       ['H', 'ruka domů'],
       ['R', 'začít misi znovu'],
+      ['B', 'pás stát / jet (mise 11)'],
       ['S', 'zvuk'],
       ['Esc', 'zrušit pohyb, zavřít okno']
     ];

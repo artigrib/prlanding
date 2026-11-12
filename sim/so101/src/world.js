@@ -148,6 +148,7 @@ export class World {
     e.active = true; this.activeList = null;
     this.mj.mj_forward(this.m, this.d);
     e.restZ = this.d.xipos[3 * e.body + 2];
+    if (this.onSpawn) this.onSpawn(name);   // the page shows it (src/ux.js)
     return true;
   }
   /** No awake item (other than `except`) has its centre of mass in the belt's entry zone. */
