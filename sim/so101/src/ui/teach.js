@@ -9,6 +9,11 @@ import { track } from '../analytics.js';
 import { envOf, cutEpisodes, cutFrames, trimSegments, validEnv, validSegments, packEnv, unpackEnv } from '../policy/episodes.js';
 
 const FPS = 30, MAX_S = 180;
+// Recorder version, written to the demo JSON as printedrobotics.recorder (the demo format stays @1: same fields, old
+// files load unchanged). 1 (or absent): a sample 1/30 s after the previous one, ~20.8 fps at 16 ms frames;
+// 2: one sample per slot of a fixed 30 fps grid of simulated time (sample()).
+export const RECORDER = 2;
+const recorderOf = (v) => (Number.isInteger(v) && v >= 1 && v <= RECORDER ? v : 1);
 const SNAP_KEYS = ['qpos', 'qvel', 'ctrl', 'act', 'mpos', 'mquat'];
 const MAX_FRAMES = MAX_S * FPS + 60;
 const MAX_HASH = 400000, MAX_JSON = 4 * 1024 * 1024;     // shared links: base64 chars / decompressed bytes
@@ -110,7 +115,7 @@ export class Teach {
     const run = conveyor && this.ux.wasteRun ? this.ux.wasteRun() : null;
     if (run && run.next > 0 && this.ux.app.reset) { this.ux.recResetting = true; this.ux.app.reset(); this.ux.recResetting = false; }
     this.recording = true;
-    this.demo = { t: [], obs: [], act: [], snap: this.snapshot(), mission, t0: this.d.time, next: 0 };
+    this.demo = { t: [], obs: [], act: [], snap: this.snapshot(), mission, t0: this.d.time, next: 0, recorder: RECORDER };
     if (conveyor) { this.demo.env = []; this.demo.rt = []; this.demo.segments = []; }
     this.ux.runner.ctx.s = {};   // mission progress counts from the start of the recording
     this.changed();
@@ -141,7 +146,7 @@ export class Teach {
     const D = this.demo, r = (v) => Math.round(v * 1e5) / 1e5;
     const snap = {}; for (const k of SNAP_KEYS) snap[k] = D.snap[k] ? Array.from(D.snap[k], r) : null;
     snap.time = D.snap.time; snap.belt = D.snap.belt == null ? null : D.snap.belt;
-    const j = { v: 1, mission: D.mission.id, t: D.t.map(r), obs: D.obs.map((a) => a.map(r)), act: D.act.map((a) => a.map(r)), snap };
+    const j = { v: 1, r: D.recorder || 1, mission: D.mission.id, t: D.t.map(r), obs: D.obs.map((a) => a.map(r)), act: D.act.map((a) => a.map(r)), snap };
     if (D.env) { j.env = D.env.map(packEnv); j.segments = D.segments || []; }   // optional: older entries load without
     store.set('demo', j);
   }
@@ -152,7 +157,7 @@ export class Teach {
     const mission = MISSIONS.find((m) => m.id === j.mission), snap = this.validSnap(j.snap), fr = this.validFrames(j.t, j.act, j.obs);
     const ex = fr && this.validExtras(j.env != null ? (Array.isArray(j.env) ? j.env.map(unpackEnv) : j.env) : null, j.segments, fr.t.length);
     if (!mission || !snap || !fr || !ex) { store.set('demo', null); return false; }   // older scene or damaged: forget it
-    this.demo = Object.assign({ t: fr.t, obs: fr.obs, act: fr.act, snap, mission, t0: 0, next: 0 }, ex.env ? ex : {});
+    this.demo = Object.assign({ t: fr.t, obs: fr.obs, act: fr.act, snap, mission, t0: 0, next: 0, recorder: recorderOf(j.r) }, ex.env ? ex : {});
     this.restored = true;
     this.changed();
     return true;
@@ -180,7 +185,7 @@ export class Teach {
     const r = (v) => Math.round(v * 1e4) / 1e4, snap = {};
     for (const k of SNAP_KEYS) snap[k] = D.snap[k] ? Array.from(D.snap[k], r) : null;
     snap.time = D.snap.time; snap.belt = D.snap.belt == null ? null : D.snap.belt;
-    const link = { v: 1, m: D.mission.id, t: D.t.map(r), a: D.act.map((x) => x.map(r)), o: D.obs.map((x) => x.map(r)), s: snap };
+    const link = { v: 1, r: D.recorder || 1, m: D.mission.id, t: D.t.map(r), a: D.act.map((x) => x.map(r)), o: D.obs.map((x) => x.map(r)), s: snap };
     if (D.env) { link.e = D.env.map(packEnv); link.g = D.segments || []; }
     const body = JSON.stringify(link);
     const gz = await new Response(new Blob([body]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
@@ -213,7 +218,7 @@ export class Teach {
       const mission = j && MISSIONS.find((x) => x.id === j.m), snap = j && this.validSnap(j.s), fr = j && this.validFrames(j.t, j.a, j.o);
       const ex = fr && this.validExtras(j.e != null ? (Array.isArray(j.e) ? j.e.map(unpackEnv) : j.e) : null, j.g, fr.t.length);
       if (!mission || !snap || !fr || !ex) { this.rejected = 'invalid'; return 0; }
-      this.demo = Object.assign({ t: fr.t, obs: fr.obs, act: fr.act, snap, mission, t0: 0, next: 0 }, ex.env ? ex : {});
+      this.demo = Object.assign({ t: fr.t, obs: fr.obs, act: fr.act, snap, mission, t0: 0, next: 0, recorder: recorderOf(j.r) }, ex.env ? ex : {});
       this.restored = false; this.shared = true;
       this.persist(); this.changed();
       return fr.t.length;
@@ -243,7 +248,7 @@ export class Teach {
     if (!ex) throw new Error('bad env');
     let snap = null;
     if (pr.snapshot != null) { snap = this.validSnap(pr.snapshot); if (!snap) throw new Error('bad snapshot'); }   // partial = reject
-    const D = { t: fr.t, obs: fr.obs, act: fr.act, mission, t0: 0, next: 0 };
+    const D = { t: fr.t, obs: fr.obs, act: fr.act, mission, t0: 0, next: 0, recorder: recorderOf(pr.recorder) };
     if (ex.env) { D.env = ex.env; D.segments = ex.segments; }
     if (this.recording) this.stopRec();
     this.stopReplay();
@@ -262,12 +267,19 @@ export class Teach {
     return D.t.length;
   }
 
-  /** Called after physics each frame. */
+  /**
+   * Called after physics each frame. Samples on a fixed 30 fps grid of simulated time (slot k = [k/30, (k+1)/30)):
+   * the first frame that reaches a new slot is recorded, with its own exact time. The rate is therefore 30 fps at
+   * any display rate (60 / 120 / 144 Hz) and frame jitter; a frame longer than a slot (throttled tab) records once
+   * and the skipped slots stay empty (the exporters resample onto the exact grid). Before recorder 2 the next sample
+   * was due 1/30 s after the previous one, which at 16 ms frames recorded every third frame (20.8 fps).
+   */
   sample() {
     if (!this.recording) return;
     const D = this.demo, t = this.d.time - D.t0;
-    if (t < D.next) return;
-    D.next = t + 1 / FPS;
+    const slot = Math.floor(t * FPS + 1e-6);   // 1e-6: a frame that lands on k/30 up to float error counts as slot k
+    if (slot < D.next) return;
+    D.next = slot + 1;
     const qp = this.d.qpos, c = this.d.ctrl, act = this.app.act, o = new Array(6), a = new Array(6);
     for (let i = 0; i < 6; i++) { o[i] = qp[i]; a[i] = c[act[i]]; }
     D.t.push(t); D.obs.push(o); D.act.push(a);
@@ -374,6 +386,8 @@ export class Teach {
       },
       printedrobotics: {
         mission: D.mission.id,
+        recorder: D.recorder || 1,
+        recorder_note: 'recorder 2: jeden snímek na každý slot pevné mřížky 30 fps v čase simulace (timestamp je přesný čas snímku); recorder 1 nebo chybí: snímek 1/30 s po předchozím, při 16ms snímcích asi 20,8 fps.',
         note: 'Výchozí stav scény pro přehrání v simulátoru (qpos, qvel, ctrl, mocap); LeRobot tuto část ignoruje.',
         snapshot: Object.fromEntries(SNAP_KEYS.map((k) => [k, D.snap[k] ? Array.from(D.snap[k]) : null]).concat([['time', D.snap.time]],
           D.snap.belt != null ? [['belt', D.snap.belt]] : [])),

@@ -27,10 +27,22 @@ test('Teach.toJSON() output converts to a LeRobot dataset with exact 30 fps time
   const info = JSON.parse(files['meta/info.json']);
   const src = demo.episodes[0].frames;
   assert.equal(info.total_episodes, 1);
-  assert.equal(info.total_frames, Math.floor(src[src.length - 1].timestamp * FPS + 1e-6) + 1);
+  // the exporter's grid starts at the first frame (the recorder's first sample is one physics step after the start)
+  assert.equal(info.total_frames, Math.floor((src[src.length - 1].timestamp - src[0].timestamp) * FPS + 1e-6) + 1);
   assert.equal(JSON.parse(files['meta/tasks.jsonl']).task, 'Build a tower');
   const st = JSON.parse(files['meta/episodes_stats.jsonl']).stats;
   // gripper in 0–100 %, joints in degrees (well inside ±180)
   assert.ok(st.action.min[5] >= 0 && st.action.max[5] <= 100);
   for (let j = 0; j < 5; j++) assert.ok(Math.abs(st['observation.state'].max[j]) < 180);
+  // recorder 2 (fixed 30 fps grid) is marked in the demo; the demo format itself is unchanged
+  assert.equal(demo.format, 'printedrobotics.cz/so101-sim-demo@1');
+  assert.equal(demo.printedrobotics.recorder, 2);
+  const rate = (src.length - 1) / (src.at(-1).timestamp - src[0].timestamp);
+  assert.ok(Math.abs(rate - FPS) < 0.5, `${rate} fps`);
+  // an older demo (no recorder field) still loads, exports and keeps saying it is recorder 1
+  const old = JSON.parse(JSON.stringify(demo));
+  delete old.printedrobotics.recorder; delete old.printedrobotics.recorder_note;
+  assert.equal(teach.importJSON(old), src.length);
+  assert.equal(teach.toJSON().printedrobotics.recorder, 1);
+  assert.equal(JSON.parse((await buildDataset([old]))['meta/info.json']).total_frames, info.total_frames);
 });
