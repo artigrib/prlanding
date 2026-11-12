@@ -30,11 +30,14 @@ const near2 = (a, b, r) => Math.hypot(a[0] - b[0], a[1] - b[1]) < r;
  * Returns null when the tip is not near the cube. The numbers are the ones of the grasp itself: aligned = within 2 cm
  * sideways and 1.5 cm in height (then "close the gripper"), the hover band reaches 3 cm sideways and 12 cm up.
  */
-export const GRASP = { dh: 0.02, dz: 0.015, hoverDh: 0.03, hoverDz: 0.12 };
+export const GRASP = { dh: 0.02, dz: 0.015, hoverDh: 0.03, hoverDz: 0.12, top: 0.0125 };
 export function graspHint(c, p) {
   const t = c.tip, dh = Math.hypot(t[0] - p[0], t[1] - p[1]), dz = t[2] - p[2];
   const key = c.touch ? (c.gripOpen ? 'tlačítkem Zavřít chapadlo' : 'tlačítkem Otevřít chapadlo') : 'mezerníkem';
   if (dh < GRASP.dh && dz > -GRASP.dz && dz < GRASP.dz) {
+    // the jaws' tips still above the cube's top face (GRASP.top = half its size): closing there misses it
+    // (touch audit run 1: "Teď sevřete" at 27 mm, the grasp failed); one more step down first
+    if (c.gripOpen && dz >= GRASP.top) return 'Ještě kousek níž – čelisti jsou nad kostkou';
     return c.gripOpen ? `Teď sevřete chapadlo (${key})` : 'Držíte ji – zvedněte kouli nahoru';
   }
   if (dh < GRASP.hoverDh && dz >= GRASP.dz && dz < GRASP.hoverDz) {

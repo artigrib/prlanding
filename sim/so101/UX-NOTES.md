@@ -119,6 +119,19 @@ Findings: scratchpad usability report (P0/P1/P2). Changes:
   hint. Drawn into a render target at 0.75 px per CSS px, only when the arm / target moved and at most every 3rd frame;
   every frame blits it (one quad). ☰ › Nastavení › "Pohled z boku" (`pr-sim-side`), on by default everywhere
   (swiftshader: −3.1 % fps at 1440×900, −3.5 % at 390×844 while moving). `role="img"` with the measurement as its name.
+- **Touch quick fixes** (touch audit; pure helpers in `src/touch.js`, `tests/touch.test.mjs`, CDP touch checks in
+  `tests/touch-e2e.cjs` at 390×844 and 844×390). Coarse pointers only, the mouse is unchanged:
+  handles are hit in screen space with ≥ 44 px cells (nearest centre wins) and always beat the object behind them;
+  a tap that began on a handle never picks (no autopilot). On touch the gizmo grows until the height arrows sit
+  ≥ 48 px from the ball centre (cap ×3). No physics pull by a finger unless Nástroje › "Tahat ruku prstem za díl"
+  (`pr-sim-touch-pull`): a drag on the arm turns the view, a tap on the jaws still toggles them. The ball's drag plane
+  stays horizontal on touch (no switch to a vertical plane at level views). The orbit pivot pans sideways so the
+  gripper stays ≥ 24 px from the side edges (eases to 60 px; paused 3 s after a camera gesture and while a handle is
+  held); a double tap on the empty table frames gripper + target (a single table tap waits 350 ms for it). HUD:
+  "Kostka vypadla …" when the held object leaves the still-closed jaws for 0.3 s (`DropWatch`, from `heldObject()`),
+  and "Ještě kousek níž …" instead of "Teď sevřete" while the jaw tips are above the cube's top (`GRASP.top`; the side
+  view's "ve výšce" uses the same band). Landscape phones: the scene fills the screen, Chapadlo sits bottom-right
+  with the bar to its left; no key-caps on coarse pointers.
 
 ### Physics grab (branch `so101-grab`)
 - `src/grab.js` (node-tested in `tests/grab.test.mjs`): like MuJoCo `simulate`'s perturbation – a spring-damper force

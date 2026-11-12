@@ -144,7 +144,7 @@ export class SideView {
     a(this.lv, 'x1', tx); a(this.lv, 'y1', ty); a(this.lv, 'x2', tx); a(this.lv, 'y2', py);
     a(this.lh, 'x1', Math.min(tx, px) - 14); a(this.lh, 'y1', py); a(this.lh, 'x2', Math.max(tx, px) + 14); a(this.lh, 'y2', py);
     a(this.dot, 'cx', tx); a(this.dot, 'cy', ty);
-    const okH = Math.abs(st.dz) < GRASP.dz;
+    const okH = st.dz > -GRASP.dz && st.dz < GRASP.top;   // same band as heightText (src/sidegeom.js)
     el.classList.toggle('ok', okH);
     const txt = heightText(st.dz);
     if (txt !== this.hTxt) { this.hEl.textContent = txt; this.hTxt = txt; }
