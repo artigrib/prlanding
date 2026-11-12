@@ -262,6 +262,9 @@ test('N_min search: returns a configuration that passes, and none with one cell 
   // a synthetic line with a known answer: cycle 10 s, F = 15 items/min of one fraction needs 3 cells
   const syn = searchNmin({ F: 15, X: 0.95, mix: { paper: 1 }, v: 0.04, lambda: 30, arrivals: 'uniform' }, { skript: constant(0.04, 10, ['paper']) }, { seeds: seedsOf(3) });
   assert.equal(syn.n, 3);
+  // a search that would need more runs than its budget says so instead of claiming an answer
+  const cut = searchNmin({ F: 15, X: 0.95, mix: { paper: 1 }, v: 0.04, lambda: 30, arrivals: 'uniform' }, { skript: constant(0.04, 10, ['paper']) }, { seeds: seedsOf(3), budget: 2 });
+  assert.equal(cut.n, null); assert.equal(cut.reason, 'budget');
 });
 
 test('meets: win on the mean, ★ spolehlivě on the 10th percentile', () => {

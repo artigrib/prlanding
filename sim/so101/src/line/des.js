@@ -495,7 +495,7 @@ function profileAt(profiles, policy, v) {
  * The best passing configuration prefers ★ spolehlivě (p10 meets the order), then the higher mean output.
  */
 export function searchNmin(order, profiles, opts = {}) {
-  const policy = order.policy || 'skript', seeds = opts.seeds || seedsOf(), maxN = opts.maxN || LINE.maxCells, budget = opts.budget || 2e5;
+  const policy = order.policy || 'skript', seeds = opts.seeds || seedsOf(), maxN = opts.maxN || LINE.maxCells, budget = opts.budget || 2e4;
   const vs = order.vs || [order.v], lambdas = order.lambdas || [order.lambda], sets = fractionSets(order.mix), S = seeds.length;
   const perN = [], F = order.F - 1e-9, ctx = [];
   for (const v of vs) {

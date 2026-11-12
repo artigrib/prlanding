@@ -6,9 +6,9 @@
 //                                       [--policy skript] [--minutes 30] [--json]
 //       one configuration over seeds 1 … n: sorted/min, purity, refused/min, missed by class, utilisation per cell
 //       (mean and 5–95 % across seeds). Cells sit in slots 0, 1, … (0.25 m, 0.75 m, …) in the order given.
-//   node sim/so101/tools/line.mjs nmin  --v 0.02 --lambda 15 --F 12 [--X 0.95] [--mix …] [--max-n 8]
+//   node sim/so101/tools/line.mjs nmin  --v 0.02 --lambda 15 --F 12 [--X 0.95] [--mix …] [--max-n 8] [--budget N]
 //       the N_min search for one order (exhaustive over fraction sets and their order along the belt)
-//   node sim/so101/tools/line.mjs table [--F 6,12,18] [--lambdas …] [--X 0.95] [--arrivals poisson|uniform] [--cap-n 2]
+//   node sim/so101/tools/line.mjs table [--F 6,12,18] [--lambdas …] [--X 0.95] [--arrivals poisson|uniform] [--cap-n 2] [--budget N]
 //       N_min for every measured speed × inflow × target (markdown), and the best mean output of any 1 … cap-n
 //       cells; the default inflows are 6, 9, 12, 15 items/min and, at 4 and 6 cm/s, also 20, 30 and the belt maximum
 //   node sim/so101/tools/line.mjs m11   [--seeds 200]
@@ -69,7 +69,7 @@ function main(args) {
     s.cells.forEach((c, i) => console.log(`cell ${i + 1} @ ${cells[i].x} m [${cells[i].fractions.join('+')}]: utilisation ${band(c.utilisation, pc)}, sorted ${f1(c.sorted.mean)} in ${config.horizon / 60} min`));
   } else if (mode === 'nmin') {
     const order = { F: +opt('F', 12), X: +opt('X', 0.95), mix, v: +opt('v', 0.02), lambda: +opt('lambda', 15), arrivals: opt('arrivals', 'poisson'), policy };
-    const t0 = Date.now(), r = searchNmin(order, { [policy]: all }, { seeds, maxN: +opt('max-n', LINE.maxCells) });
+    const t0 = Date.now(), r = searchNmin(order, { [policy]: all }, { seeds, maxN: +opt('max-n', LINE.maxCells), budget: +opt('budget', 2e4) });
     console.log(`order F ${order.F}/min, X ${pc(order.X)}, v ${order.v * 100} cm/s, λ ${order.lambda}/min: N_min = ${r.n == null ? 'none (' + r.reason + (r.reason === 'inflow' ? `: the belt brings ${f1(r.reach)}/min` : '') + ')' : r.n} (${r.evaluated} configurations run, ${r.skipped} skipped by the bound, ${((Date.now() - t0) / 1000).toFixed(1)} s)`);
     for (const p of r.perN) console.log(`  N ${p.n}: ${p.evaluated} run to the end or dropped, ${p.passing} pass`);
     if (r.best) console.log(`  best: ${r.best.config.cells.map((c) => c.fractions.join('+')).join(' | ')} → ${band(r.best.summary.sorted)}/min, purity ${pc(r.best.summary.purity.mean)}, reliable ${r.best.reliable}`);
@@ -85,7 +85,7 @@ function main(args) {
         const caps = []; let acc = null;
         for (let n = 1; n <= capN; n++) { const b = bestOf(order, prof, n, { seeds }); caps.push(`${f1(b.summary.sorted.mean)} (${name(b.config)})`); acc = b.summary.accepted.mean; }
         const cells = Fs.map((F) => {
-          const r = searchNmin(Object.assign({ F }, order), prof, { seeds });
+          const r = searchNmin(Object.assign({ F }, order), prof, { seeds, budget: +opt('budget', 2e4) });
           return r.n == null ? (r.reason === 'inflow' ? `– (belt brings ${f1(r.reach)}/min)` : r.reason === 'budget' ? '? (budget)' : '> 8') : `**${r.n}** (${name(r.best.config)}: ${f1(r.best.summary.sorted.mean)}${r.best.reliable ? ', p10 ✓' : ''}; ${r.passing} pass)`;
         });
         rows.push(`| ${v * 100} cm/s | ${f1(lambda)} | ${f1(acc)} | ${caps.join('<br>')} | ${cells.join(' | ')} |`);
